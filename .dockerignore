@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.*
+*.db
+*.sqlite
+*.sqlite3
+data
+models
+__pycache__
+*.py[cod]
+.venv
+venv
