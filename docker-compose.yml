@@ -1,0 +1,49 @@
+services:
+  prime:
+    build:
+      context: .
+    image: prime:local
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
+      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
+      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      PRIME_DATA_DIR: /data
+    volumes:
+      - prime-data:/data
+    depends_on:
+      ollama:
+        condition: service_started
+      model-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
+  model-init:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
+      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
+      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until ollama list >/dev/null 2>&1; do sleep 2; done
+        ollama pull "$${PRIME_FAST_MODEL}"
+        if [ "$${PRIME_DEEP_MODEL}" != "$${PRIME_FAST_MODEL}" ]; then ollama pull "$${PRIME_DEEP_MODEL}"; fi
+        ollama pull "$${PRIME_EMBED_MODEL}"
+    depends_on:
+      - ollama
+    restart: "no"
+
+volumes:
+  prime-data:
+  ollama-data:
