@@ -1,0 +1,29 @@
+name: Portal Integration Verify
+
+on:
+  push:
+    branches:
+      - feature/portal-experiment-ingest
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Compile
+        run: python -m compileall -q app tests
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Import composed runtime
+        env:
+          PRIME_DATA_DIR: /tmp/prime-test
+        run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/api/integrations/portal/experiments' in paths"
+      - name: Build container
+        run: docker build -t prime:portal-integration .
