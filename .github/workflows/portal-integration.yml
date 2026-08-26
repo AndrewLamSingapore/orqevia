@@ -18,9 +18,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Compile
-        run: python -m compileall -q app tests
+        run: python -m compileall -q app tests scripts
       - name: Unit tests
         run: python -m unittest discover -s tests -v
+      - name: Verify real Portal candidate
+        run: python scripts/verify_portal_integration.py
       - name: Import composed runtime
         env:
           PRIME_DATA_DIR: /tmp/prime-test
