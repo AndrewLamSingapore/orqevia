@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prime/contracts/experiment-spec.schema.json",
+  "title": "ExperimentSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "experiment_id", "candidate_id", "source", "objective", "method", "evidence_requirements", "approval_state"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "experiment_id": {"type": "string", "pattern": "^PRM-EXP-[A-Z0-9-]+$"},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "source": {"const": "prime"},
+    "objective": {"type": "string", "minLength": 1},
+    "method": {"type": "string", "minLength": 1},
+    "evidence_requirements": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "success_criteria": {"type": "array", "items": {"type": "string"}},
+    "safety_constraints": {"type": "array", "items": {"type": "string"}},
+    "target_system": {"type": ["string", "null"]},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "specialist": {"type": "string"},
+        "verdict": {"enum": ["pass", "revise", "not_run"]},
+        "score": {"type": ["number", "null"]},
+        "notes": {"type": ["string", "null"]}
+      }
+    },
+    "approval_state": {"enum": ["draft", "verified", "approved", "rejected", "completed"]},
+    "created_at": {"type": ["string", "null"], "format": "date-time"}
+  }
+}
