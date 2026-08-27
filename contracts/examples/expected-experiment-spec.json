@@ -1,0 +1,8 @@
+{
+  "candidate_id": "PTL-EXP-AQUA-001",
+  "source": "prime",
+  "target_system": "velyqua",
+  "approval_state": "verified",
+  "verification_verdict": "pass",
+  "requires_human_approval": true
+}

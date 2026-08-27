@@ -1,0 +1,55 @@
+name: Portal Integration Verify
+
+on:
+  push:
+    branches:
+      - feature/portal-experiment-ingest
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Compile
+        run: python -m compileall -q app tests scripts
+      - name: Unit and API tests
+        run: python -m unittest discover -s tests -v
+      - name: Verify real Portal candidate
+        run: python -m scripts.verify_portal_integration
+      - name: Import composed runtime
+        env:
+          PRIME_DATA_DIR: /tmp/prime-test
+        run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/api/integrations/portal/experiments' in paths"
+      - name: Build container
+        run: docker build -t prime:portal-integration .
+      - name: Container health and API smoke
+        run: |
+          docker run -d --name prime-smoke -p 18000:8000 -e PRIME_DATA_DIR=/data prime:portal-integration
+          trap 'docker logs prime-smoke || true; docker rm -f prime-smoke || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18000/health >/tmp/health.json; then break; fi
+            sleep 1
+          done
+          python - <<'PY'
+          import json, urllib.request
+          health=json.load(open('/tmp/health.json'))
+          assert health['ok'] is True, health
+          candidate=json.load(open('contracts/examples/portal-aquarium-candidate.json'))
+          body=json.dumps({'candidate':candidate}).encode()
+          req=urllib.request.Request('http://127.0.0.1:18000/api/integrations/portal/experiments',data=body,headers={'Content-Type':'application/json'},method='POST')
+          with urllib.request.urlopen(req) as r: result=json.load(r)
+          assert result['experiment_spec']['target_system']=='velyqua', result
+          assert result['experiment_spec']['approval_state']!='approved', result
+          cid=candidate['candidate_id']
+          with urllib.request.urlopen(f'http://127.0.0.1:18000/api/integrations/portal/experiments/{cid}') as r: persisted=json.load(r)
+          assert persisted['experiment_spec']['experiment_id']==result['experiment_spec']['experiment_id']
+          print('container smoke passed')
+          PY

@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "PTL-EXP-AQUA-001",
+  "source": "the-portal",
+  "title": "Earlier aquarium risk detection",
+  "question": "Can inexpensive continuous signals reveal developing aquarium risk earlier or more meaningfully than periodic testing alone?",
+  "hypothesis": "Continuous temperature, pH and conductivity signals combined with reference tests and care events may expose developing risk earlier than periodic tests alone.",
+  "node_ids": ["PTL-VELYQUA-EARLY-WARNING"],
+  "concepts": ["aquarium", "sensor", "ecology", "velyqua"],
+  "provenance": ["VELYQUA README physical sensor-fusion hypothesis and evidence boundary"],
+  "evidence_boundary": "The VELYQUA product is a working prototype; the physical sensor-fusion early-warning hypothesis remains unvalidated until real observations accumulate.",
+  "status": "proposed"
+}
