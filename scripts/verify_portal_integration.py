@@ -1,10 +1,15 @@
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from app.portal_integration import build_experiment_spec, validate_experiment_candidate, validate_experiment_spec
 
-candidate = json.loads(Path("contracts/examples/portal-aquarium-candidate.json").read_text())
-expected = json.loads(Path("contracts/examples/expected-experiment-spec.json").read_text())
+candidate = json.loads((ROOT / "contracts/examples/portal-aquarium-candidate.json").read_text())
+expected = json.loads((ROOT / "contracts/examples/expected-experiment-spec.json").read_text())
 candidate = validate_experiment_candidate(candidate)
 spec = validate_experiment_spec(build_experiment_spec(candidate))
 assert spec["candidate_id"] == expected["candidate_id"]
