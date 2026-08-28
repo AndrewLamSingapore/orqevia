@@ -27,12 +27,12 @@ jobs:
       - name: Import composed runtime
         env:
           PRIME_DATA_DIR: /tmp/prime-test
-        run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/api/integrations/portal/experiments' in paths"
+        run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/api/integrations/portal/experiments' in paths; assert '/api/integrations/velyqua/events' in paths; assert '/api/integrations/portal/results/flush' in paths"
       - name: Build container
         run: docker build -t prime:portal-integration .
       - name: Container health and API smoke
         run: |
-          docker run -d --name prime-smoke -p 18000:8000 -e PRIME_DATA_DIR=/data prime:portal-integration
+          docker run -d --name prime-smoke -p 18000:8000 -e PRIME_DATA_DIR=/data -e PRIME_INTEGRATION_TOKEN=smoke-integration-token prime:portal-integration
           trap 'docker logs prime-smoke || true; docker rm -f prime-smoke || true' EXIT
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:18000/health >/tmp/health.json; then break; fi
@@ -51,5 +51,34 @@ jobs:
           cid=candidate['candidate_id']
           with urllib.request.urlopen(f'http://127.0.0.1:18000/api/integrations/portal/experiments/{cid}') as r: persisted=json.load(r)
           assert persisted['experiment_spec']['experiment_id']==result['experiment_spec']['experiment_id']
-          print('container smoke passed')
+          spec=result['experiment_spec']
+          execution={
+              'experiment_id':spec['experiment_id'],
+              'candidate_id':spec['candidate_id'],
+              'state':'awaiting_owner_approval',
+              'objective':spec['objective'],
+              'evidence_requirements':spec['evidence_requirements'],
+              'owner_approval':None,
+              'created_at':spec['created_at'],
+          }
+          event={'event':{
+              'schema_version':'1.0',
+              'operation_id':'smoke-awaiting-owner-approval',
+              'account_id':'smoke-owner',
+              'aggregate_type':'experiment_execution',
+              'aggregate_id':spec['experiment_id'],
+              'event_type':'experiment_execution.awaiting_owner_approval',
+              'payload':execution,
+              'occurred_at':spec['created_at'],
+          }}
+          req=urllib.request.Request(
+              'http://127.0.0.1:18000/api/integrations/velyqua/events',
+              data=json.dumps(event).encode(),
+              headers={'Content-Type':'application/json','Authorization':'Bearer smoke-integration-token'},
+              method='POST')
+          with urllib.request.urlopen(req) as r: accepted=json.load(r)
+          assert accepted['accepted'] is True, accepted
+          assert accepted['operation_id']=='smoke-awaiting-owner-approval', accepted
+          assert accepted['evaluation']['safety']['actuation_authorized'] is False, accepted
+          print('container closed-loop smoke passed')
           PY
