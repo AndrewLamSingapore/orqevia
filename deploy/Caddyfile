@@ -1,0 +1,26 @@
+{
+	admin off
+}
+
+:8080 {
+	@health path /health
+	handle @health {
+		reverse_proxy prime:8000
+	}
+
+	@authenticated_integrations {
+		path /api/integrations/*
+		header Authorization "Bearer {$PRIME_INTEGRATION_TOKEN}"
+	}
+	handle @authenticated_integrations {
+		reverse_proxy prime:8000
+	}
+
+	handle /api/integrations/* {
+		respond "Unauthorized" 401
+	}
+
+	handle {
+		respond "Not Found" 404
+	}
+}
