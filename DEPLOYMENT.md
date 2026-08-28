@@ -36,6 +36,9 @@ Copy `.env.example` to an untracked `.env` on the owner-controlled host and popu
 | `PRIME_INTEGRATION_TOKEN` | Authenticates VELYQUA events to PRIME | VELYQUA runtime token |
 | `PORTAL_RESULT_URL` | Authenticated result-return endpoint | Portal production `/api/experiment-result` |
 | `PORTAL_RESULT_TOKEN` | Authenticates PRIME results to Portal | Portal encrypted production token |
+| `PORTAL_PRIME_TOKEN` | Authenticates the owner into Portal's candidate relay | Portal encrypted production token |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Starts the remotely managed tunnel | Owner-controlled Cloudflare tunnel |
+| `PRIME_PUBLIC_URL` | Restricted integration hostname | Cloudflare public hostname |
 | `PRIME_BIND_ADDRESS` | Host listener | Keep `127.0.0.1` unless a protected private network requires otherwise |
 | `PRIME_PORT` | Host port | Default `8000` |
 
@@ -56,6 +59,34 @@ Remote access is not considered verified until all of the following pass from th
 5. successful PRIME health and read-only status requests;
 6. revocation and recovery procedure tested.
 
+The owner-private access path above is separate from the public integration gateway. The integration gateway deliberately blocks PRIME's dashboard and status routes.
+
+## Restricted connected-loop gateway
+
+Create a remotely managed Cloudflare Tunnel and configure its public hostname's origin service as `http://integration-gateway:8080`. Then bootstrap the untracked local configuration on Windows:
+
+```powershell
+.\scripts\bootstrap_connected_loop.ps1 `
+  -PrimePublicUrl "https://prime.example.com" `
+  -CloudflareTunnelToken "<owner tunnel token>"
+```
+
+Start the connected stack with:
+
+```powershell
+docker compose --profile tunnel up -d --build
+```
+
+Cloudflare never targets `prime:8000` directly. Caddy exposes only unauthenticated `GET /health` and bearer-authenticated `/api/integrations/*`; every other public path returns `404`. Local dashboard access remains `http://127.0.0.1:8000`.
+
+Install the generated values only at these server-side boundaries:
+
+1. The Portal: `PORTAL_RESULT_TOKEN`, `PORTAL_PRIME_TOKEN`, `PRIME_BASE_URL=<PRIME_PUBLIC_URL>`, and `PRIME_INTEGRATION_TOKEN`.
+2. VELYQUA server: `PRIME_BASE_URL=<PRIME_PUBLIC_URL>`, `PRIME_INTEGRATION_TOKEN`, `VELYQUA_OWNER_USER_ID`, and `VELYQUA_ALLOWED_ORIGIN=https://velyqua.vercel.app`.
+3. VELYQUA public build: only `EXPO_PUBLIC_VELYQUA_BRIDGE_URL=https://velyqua.vercel.app`.
+
+Never put an application token in an `EXPO_PUBLIC_*` value, browser bundle, URL, screenshot, prompt, log or command history.
+
 ## Production gate
 
 Do not deploy a revision unless `Portal Integration Verify` succeeds for that exact revision.
@@ -64,12 +95,12 @@ Before any host mutation, run the retained read-only host inventory and preserve
 
 1. pin `PRIME_IMAGE` to the exact green commit-addressable image;
 2. populate the untracked runtime secrets;
-3. pull and start the Compose stack;
+3. pull and start the Compose stack with the `tunnel` profile;
 4. wait for both Ollama and PRIME health checks to pass;
-5. confirm `GET /health` returns `ok: true`;
-6. confirm `GET /api/status` responds;
-7. confirm a wrong integration token is rejected;
-8. post only the non-physical synthetic `ExperimentCandidate` fixture;
+5. confirm local and public `GET /health` return `ok: true`;
+6. confirm local `GET /api/status` responds and public `GET /api/status` returns `404`;
+7. confirm a missing or wrong public integration token is rejected;
+8. post only the non-physical synthetic `ExperimentCandidate` fixture through Portal's authenticated `/api/prime-experiment` relay;
 9. confirm its `ExperimentSpec` is persisted and is not automatically `approved`;
 10. deliver only synthetic VELYQUA observation events through authenticated HTTPS;
 11. flush the synthetic PRIME result to Portal and verify the matching authenticated acknowledgement and graph attachment;
