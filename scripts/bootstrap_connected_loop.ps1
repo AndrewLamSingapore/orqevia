@@ -9,7 +9,9 @@ param(
     [string]$CloudflareTunnelToken,
 
     [ValidatePattern('^https://')]
-    [string]$PortalResultUrl = 'https://the-portal-ten.vercel.app/api/experiment-result'
+    [string]$PortalResultUrl = 'https://the-portal-ten.vercel.app/api/experiment-result',
+
+    [switch]$RotateTokens
 )
 
 Set-StrictMode -Version Latest
@@ -25,6 +27,25 @@ function New-SecureToken {
         $rng.Dispose()
     }
     return -join ($bytes | ForEach-Object { $_.ToString('x2') })
+}
+
+function Get-DotEnvValue {
+    param(
+        [Parameter(Mandatory = $true)][string]$EnvPath,
+        [Parameter(Mandatory = $true)][string]$Key
+    )
+
+    if (-not (Test-Path -LiteralPath $EnvPath)) {
+        return ''
+    }
+    $prefix = $Key + '='
+    $line = Get-Content -LiteralPath $EnvPath |
+        Where-Object { $_.StartsWith($prefix) } |
+        Select-Object -Last 1
+    if ($null -eq $line) {
+        return ''
+    }
+    return $line.Substring($prefix.Length).Trim()
 }
 
 function Set-DotEnvValue {
@@ -70,9 +91,19 @@ if (-not (Test-Path -LiteralPath $envPath)) {
     Copy-Item -LiteralPath $examplePath -Destination $envPath
 }
 
-$integrationToken = New-SecureToken
-$portalToken = New-SecureToken
-$portalPrimeToken = New-SecureToken
+$integrationToken = Get-DotEnvValue -EnvPath $envPath -Key 'PRIME_INTEGRATION_TOKEN'
+$portalToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_RESULT_TOKEN'
+$portalPrimeToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_PRIME_TOKEN'
+
+if ($RotateTokens -or [string]::IsNullOrWhiteSpace($integrationToken)) {
+    $integrationToken = New-SecureToken
+}
+if ($RotateTokens -or [string]::IsNullOrWhiteSpace($portalToken)) {
+    $portalToken = New-SecureToken
+}
+if ($RotateTokens -or [string]::IsNullOrWhiteSpace($portalPrimeToken)) {
+    $portalPrimeToken = New-SecureToken
+}
 
 Set-DotEnvValue -EnvPath $envPath -Key 'PRIME_INTEGRATION_TOKEN' -Value $integrationToken
 Set-DotEnvValue -EnvPath $envPath -Key 'PORTAL_RESULT_URL' -Value $PortalResultUrl
@@ -92,6 +123,12 @@ finally {
 Write-Host ''
 Write-Host 'Connected-loop configuration is valid and stored in .env.'
 Write-Host 'The populated .env is intentionally excluded from Git.'
+if ($RotateTokens) {
+    Write-Host 'Application tokens were rotated; update both remote server environments before testing.'
+}
+else {
+    Write-Host 'Existing non-empty application tokens were preserved.'
+}
 Write-Host ''
 Write-Host 'Next owner-controlled secret handoffs:'
 Write-Host '1. Configure The Portal with both PORTAL tokens, plus PRIME_BASE_URL=<PRIME_PUBLIC_URL> and PRIME_INTEGRATION_TOKEN.'
