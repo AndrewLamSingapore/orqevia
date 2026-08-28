@@ -44,6 +44,8 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("RandomNumberGenerator", script)
+        self.assertIn("[switch]$RotateTokens", script)
+        self.assertIn("Existing non-empty application tokens were preserved.", script)
         self.assertIn("PRIME_INTEGRATION_TOKEN", script)
         self.assertIn("PORTAL_RESULT_TOKEN", script)
         self.assertIn("PORTAL_PRIME_TOKEN", script)
