@@ -128,6 +128,27 @@ class VelyquaApiTests(unittest.TestCase):
         self.assertEqual(fetched.status_code, 200, fetched.text)
         self.assertEqual(fetched.json()["result"]["result_id"], result["result_id"])
 
+    def test_authenticated_owner_bridge_can_list_specs(self):
+        response = self.client.get(
+            "/api/integrations/portal/experiments",
+            headers=AUTH,
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        experiments = response.json()["experiments"]
+        self.assertTrue(
+            any(
+                item["experiment_id"] == self.spec["experiment_id"]
+                for item in experiments
+            )
+        )
+
+    def test_experiment_feed_rejects_invalid_token(self):
+        response = self.client.get(
+            "/api/integrations/portal/experiments",
+            headers={"Authorization": "Bearer wrong"},
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_rejects_invalid_token(self):
         response = self.client.post(
             "/api/integrations/velyqua/events",
