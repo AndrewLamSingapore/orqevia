@@ -4,13 +4,16 @@ services:
       context: .
     image: prime:local
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       OLLAMA_URL: http://ollama:11434
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
       PRIME_DATA_DIR: /data
+      PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
+      PORTAL_RESULT_URL: ${PORTAL_RESULT_URL:-}
+      PORTAL_RESULT_TOKEN: ${PORTAL_RESULT_TOKEN:-}
     volumes:
       - prime-data:/data
     depends_on:
@@ -43,6 +46,33 @@ services:
     depends_on:
       - ollama
     restart: "no"
+
+  integration-gateway:
+    image: caddy:2-alpine
+    profiles: ["tunnel"]
+    environment:
+      PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
+    command:
+      - /bin/sh
+      - -c
+      - test -n "$${PRIME_INTEGRATION_TOKEN}" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      prime:
+        condition: service_started
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    command: tunnel --no-autoupdate --loglevel info --metrics 0.0.0.0:2000 run
+    depends_on:
+      integration-gateway:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   prime-data:
