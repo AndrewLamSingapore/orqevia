@@ -27,15 +27,16 @@ Production should deploy the commit-addressable image, not an unpinned floating 
 
 ## Closed-loop runtime configuration
 
-The complete observation-only evidence loop requires four owner-controlled values in the untracked `.env` file:
+The complete observation-only evidence loop requires six owner-controlled values in the untracked `.env` file:
 
 - `PRIME_INTEGRATION_TOKEN`: authenticates VELYQUA evidence events and administrative result flushes.
 - `PORTAL_RESULT_URL`: exact HTTPS Portal endpoint, currently `https://the-portal-ten.vercel.app/api/experiment-result`.
-- `PORTAL_RESULT_TOKEN`: shared only with The Portal production environment.
+- `PORTAL_RESULT_TOKEN`: authenticates PRIME results returning to The Portal.
+- `PORTAL_PRIME_TOKEN`: independently authenticates owner requests into The Portal candidate relay.
 - `CLOUDFLARE_TUNNEL_TOKEN`: starts the remotely managed tunnel from Docker.
 - `PRIME_PUBLIC_URL`: the persistent HTTPS hostname assigned to the restricted integration gateway.
 
-Generate the two application tokens independently with a cryptographically secure random generator. Never commit the populated `.env`, put either token in an `EXPO_PUBLIC_*` variable, or send a token in a URL.
+Generate the three application tokens independently with a cryptographically secure random generator. Never commit the populated `.env`, put either token in an `EXPO_PUBLIC_*` variable, or send a token in a URL.
 
 On Windows, after creating a remotely managed Cloudflare Tunnel and public hostname, run:
 
@@ -66,11 +67,19 @@ All other paths, including the PRIME dashboard, return `404` through the tunnel.
 
 The same values must be installed at the two remote boundaries:
 
-1. Set The Portal production `PORTAL_RESULT_TOKEN` to the exact value in PRIME's local `.env`.
-2. Configure the VELYQUA owner runtime with:
-   - `PRIME_BASE_URL=<PRIME_PUBLIC_URL>`
-   - `PRIME_INTEGRATION_TOKEN=<same PRIME token>`
-3. Do not place the PRIME token in a browser bundle or public Vercel/Expo variable. A server-side or owner-secure runtime must call PRIME.
+1. Configure The Portal's server environment:
+   - `PORTAL_RESULT_TOKEN=<local PORTAL_RESULT_TOKEN>`
+   - `PORTAL_PRIME_TOKEN=<local PORTAL_PRIME_TOKEN>`
+   - `PRIME_BASE_URL=<local PRIME_PUBLIC_URL>`
+   - `PRIME_INTEGRATION_TOKEN=<local PRIME_INTEGRATION_TOKEN>`
+2. Configure the VELYQUA server environment:
+   - `PRIME_BASE_URL=<local PRIME_PUBLIC_URL>`
+   - `PRIME_INTEGRATION_TOKEN=<local PRIME_INTEGRATION_TOKEN>`
+   - `VELYQUA_OWNER_USER_ID=<exact Supabase owner UUID>`
+   - `VELYQUA_ALLOWED_ORIGIN=https://velyqua.vercel.app`
+3. Configure the VELYQUA public build with only:
+   - `EXPO_PUBLIC_VELYQUA_BRIDGE_URL=https://velyqua.vercel.app`
+4. Do not place any application token in a browser bundle or public Vercel/Expo variable. Only the server-side relay and owner bridge may call PRIME.
 
 The physical scope remains observation-only. This deployment does not authorize dosing, medication, mains switching, device control or autonomous livestock care.
 
@@ -84,7 +93,7 @@ After deployment, verify in order:
 2. Public `GET <PRIME_PUBLIC_URL>/health` returns `ok: true`.
 3. Public `GET <PRIME_PUBLIC_URL>/api/status` returns `404`.
 4. An integration request without the bearer token returns `401`.
-5. POST a known `ExperimentCandidate` through the authenticated public integration gateway.
+5. POST a known synthetic `ExperimentCandidate` through The Portal's authenticated `/api/prime-experiment` relay.
 6. Confirm the returned `ExperimentSpec` is not automatically `approved`.
 7. Send only synthetic, non-physical VELYQUA state and observation events.
 8. Confirm PRIME persists the deterministic evaluation.
