@@ -43,6 +43,7 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         self.assertIn("RandomNumberGenerator", script)
         self.assertIn("PRIME_INTEGRATION_TOKEN", script)
         self.assertIn("PORTAL_RESULT_TOKEN", script)
+        self.assertIn("PORTAL_PRIME_TOKEN", script)
         self.assertIn("CLOUDFLARE_TUNNEL_TOKEN", script)
         self.assertIn(
             "docker compose --profile tunnel config --quiet",
