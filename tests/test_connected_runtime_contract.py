@@ -9,7 +9,10 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
     def test_compose_keeps_prime_local_and_tunnel_opt_in(self) -> None:
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
 
-        self.assertIn("127.0.0.1:8000:8000", compose)
+        self.assertIn(
+            "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000",
+            compose,
+        )
         self.assertIn('profiles: ["tunnel"]', compose)
         self.assertIn("integration-gateway:", compose)
         self.assertIn("cloudflared:", compose)
