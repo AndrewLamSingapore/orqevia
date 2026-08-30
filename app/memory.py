@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import uuid
 from datetime import datetime, timezone
@@ -14,15 +15,21 @@ from pathlib import Path
 from typing import Any, Mapping
 
 DURABLE_KINDS = {"semantic", "preference", "entity", "project", "decision", "task"}
+TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9_-]{2,}")
 
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _tokens(text: str) -> set[str]:
+    return set(TOKEN_RE.findall((text or "").lower()))
+
+
 class MemoryStore:
     def __init__(self, path: str | None = None):
-        self.path = path or os.getenv("PRIME_MEMORY_DB") or "/tmp/jarvis-memory.db"
+        data_dir = os.getenv("PRIME_DATA_DIR", "/data").strip() or "/data"
+        self.path = path or os.getenv("PRIME_MEMORY_DB") or str(Path(data_dir) / "jarvis-memory.db")
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 
@@ -109,6 +116,38 @@ class MemoryStore:
         result = dict(row)
         result["value"] = json.loads(result.pop("value_json"))
         return result
+
+    def search(self, query: str, *, kinds: set[str] | None = None, limit: int = 10) -> list[dict[str, Any]]:
+        """Deterministic lexical retrieval with confidence/recency preserved.
+
+        This is intentionally simple and inspectable. Embedding retrieval can be added
+        later behind the same interface without changing the memory contract.
+        """
+        wanted = {kind.lower() for kind in kinds} if kinds else DURABLE_KINDS
+        wanted &= DURABLE_KINDS
+        if not wanted:
+            return []
+        q = _tokens(query)
+        if not q:
+            return []
+        placeholders = ",".join("?" for _ in wanted)
+        with self.connect() as db:
+            rows = db.execute(
+                f"select * from durable_memory where memory_kind in ({placeholders}) order by updated_at desc limit 500",
+                tuple(sorted(wanted)),
+            ).fetchall()
+        ranked: list[tuple[float, dict[str, Any]]] = []
+        for row in rows:
+            item = dict(row)
+            value = json.loads(item.pop("value_json"))
+            haystack = f"{item['memory_kind']} {item['memory_key']} {json.dumps(value, sort_keys=True)}"
+            overlap = len(q & _tokens(haystack))
+            if not overlap:
+                continue
+            score = overlap + float(item.get("confidence") or 0)
+            ranked.append((score, {**item, "value": value, "retrieval_score": round(score, 4)}))
+        ranked.sort(key=lambda pair: (pair[0], pair[1]["updated_at"]), reverse=True)
+        return [item for _, item in ranked[: max(1, min(limit, 50))]]
 
     def recent_episodes(self, limit: int = 50) -> list[dict[str, Any]]:
         with self.connect() as db:
