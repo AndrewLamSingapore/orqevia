@@ -9,6 +9,7 @@ import json
 import os
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -47,23 +48,26 @@ class PortalGrounder:
     def query(self, query: str, limit: int = 8) -> list[dict[str, Any]]:
         if not self.base_url:
             return []
+        capped = max(1, min(int(limit), 20))
+        params = urllib.parse.urlencode({"q": query, "limit": capped})
         try:
-            request = urllib.request.Request(f"{self.base_url}/api/graph", headers={"Accept": "application/json"})
+            request = urllib.request.Request(f"{self.base_url}/api/graph?{params}", headers={"Accept": "application/json"})
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 graph = json.loads(response.read().decode("utf-8"))
         except (urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError):
             return []
-        q = tokens(query)
         ranked: list[tuple[int, dict[str, Any]]] = []
         for node in graph.get("nodes", []) if isinstance(graph, dict) else []:
             if not isinstance(node, dict):
                 continue
-            text = " ".join(str(node.get(k, "")) for k in ("label", "title", "name", "summary", "description", "type"))
-            score = len(q & tokens(text))
+            score = int(node.get("grounding_score") or 0)
+            if not score:
+                text = " ".join(str(node.get(k, "")) for k in ("label", "title", "name", "summary", "description", "type"))
+                score = len(tokens(query) & tokens(text))
             if score:
                 ranked.append((score, node))
         ranked.sort(key=lambda pair: pair[0], reverse=True)
-        return [{"score": score, "node": node} for score, node in ranked[: max(1, min(limit, 20))]]
+        return [{"score": score, "node": node} for score, node in ranked[:capped]]
 
 
 class CognitiveOrchestrator:
