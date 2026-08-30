@@ -46,6 +46,18 @@ FORBIDDEN_EFFECT_WORDS = {
     "login", "credential", "withdraw", "trade", "execute transaction",
 }
 
+# Phrase variants for consequential actions must not be bypassable by harmless
+# filler words (for example, "send an external message" vs "send message").
+CONSEQUENTIAL_PATTERNS = (
+    re.compile(r"\bsend\b(?:\s+[a-z0-9_-]+){0,4}\s+\b(?:email|message)\b"),
+    re.compile(r"\b(?:publish|post)\b(?:\s+[a-z0-9_-]+){0,4}\s+\b(?:publicly|online|externally)\b"),
+    re.compile(r"\b(?:purchase|buy|pay|transfer|withdraw|trade)\b"),
+    re.compile(r"\b(?:delete|remove)\b(?:\s+[a-z0-9_-]+){0,4}\s+\b(?:external|remote|account|data|file|record)\b"),
+    re.compile(r"\bchange\b(?:\s+[a-z0-9_-]+){0,3}\s+\b(?:password|account|credential|permissions?)\b"),
+    re.compile(r"\b(?:login|log in|sign in)\b"),
+    re.compile(r"\bexecute\b(?:\s+[a-z0-9_-]+){0,3}\s+\btransaction\b"),
+)
+
 @dataclass(frozen=True)
 class RouteDecision:
     specialist: str
@@ -81,7 +93,9 @@ def choose_specialist(department: str, title: str, description: str) -> RouteDec
 
 def has_consequential_intent(title: str, description: str) -> bool:
     text = _norm(f"{title} {description}")
-    return any(word in text for word in FORBIDDEN_EFFECT_WORDS)
+    if any(word in text for word in FORBIDDEN_EFFECT_WORDS):
+        return True
+    return any(pattern.search(text) for pattern in CONSEQUENTIAL_PATTERNS)
 
 
 def build_task_brief(*, objective_title: str, objective_description: str, project_title: str,
