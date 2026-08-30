@@ -5,18 +5,28 @@ on:
     paths:
       - 'app/spine.py'
       - 'app/spine_api.py'
+      - 'app/memory.py'
+      - 'app/meta_review.py'
+      - 'app/cognitive_api.py'
       - 'app/entry.py'
       - 'contracts/**'
       - 'tests/test_stable_spine.py'
+      - 'tests/test_memory_meta.py'
+      - 'docker-compose.yml'
       - '.github/workflows/stable-spine.yml'
   push:
     branches: [main]
     paths:
       - 'app/spine.py'
       - 'app/spine_api.py'
+      - 'app/memory.py'
+      - 'app/meta_review.py'
+      - 'app/cognitive_api.py'
       - 'app/entry.py'
       - 'contracts/**'
       - 'tests/test_stable_spine.py'
+      - 'tests/test_memory_meta.py'
+      - 'docker-compose.yml'
       - '.github/workflows/stable-spine.yml'
 
 jobs:
@@ -28,4 +38,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt pytest
-      - run: pytest -q tests/test_stable_spine.py tests/test_router_registration.py
+      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_router_registration.py
