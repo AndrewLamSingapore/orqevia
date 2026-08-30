@@ -1,0 +1,113 @@
+name: Release Acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'app/**'
+      - '.github/workflows/release-acceptance.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'app/**'
+      - '.github/workflows/release-acceptance.yml'
+  workflow_dispatch:
+
+jobs:
+  docker-acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build production image
+        run: docker build -t prime:acceptance .
+      - name: Create persistent data volume
+        run: docker volume create prime-acceptance-data
+      - name: Boot PRIME
+        run: |
+          docker run -d --name prime-acceptance \
+            -p 18000:8000 \
+            -v prime-acceptance-data:/data \
+            -e PRIME_SPINE_TOKEN=acceptance-secret \
+            -e PRIME_SPINE_DB=/data/prime-spine.db \
+            -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
+            -e PORTAL_BASE_URL=https://the-portal-ten.vercel.app \
+            prime:acceptance
+      - name: Verify health, auth, memory, grounding and proposal-only cognition
+        run: |
+          python - <<'PY'
+          import json, time, urllib.error, urllib.request
+
+          base='http://127.0.0.1:18000'
+          token='acceptance-secret'
+          headers={'Authorization':f'Bearer {token}','Content-Type':'application/json'}
+
+          def request(path, method='GET', body=None, headers_override=None):
+              data=None if body is None else json.dumps(body).encode()
+              req=urllib.request.Request(base+path, data=data, method=method, headers=headers_override or headers)
+              with urllib.request.urlopen(req, timeout=10) as r:
+                  return r.status, json.loads(r.read().decode())
+
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen(base+'/health', timeout=2) as r:
+                      assert r.status == 200
+                  break
+              except Exception:
+                  time.sleep(1)
+          else:
+              raise SystemExit('PRIME never became healthy')
+
+          try:
+              request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'}, headers_override={'Content-Type':'application/json'})
+              raise AssertionError('unauthenticated cognitive write unexpectedly succeeded')
+          except urllib.error.HTTPError as e:
+              assert e.code == 401
+
+          status, _ = request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'})
+          assert status == 200
+          status, consolidated = request('/api/cognitive/consolidate', method='POST')
+          assert status == 200 and consolidated['promoted'] >= 1
+          status, memory = request('/api/cognitive/memory/search?q=release%20acceptance&limit=5')
+          assert status == 200 and memory['results']
+
+          status, plan = request('/api/cognitive/plan', method='POST', body={'intent':'Research release acceptance architecture and send an external message','department':'engineering','context':'This would be an external consequential action.'})
+          assert status == 200
+          p=plan['plan']
+          assert p['specialist'] in {'engineering','research','strategy','general'}
+          assert p['needs_approval'] is True
+          assert p['proposed_action'] and p['proposed_action']['action'] == 'external.action.proposal'
+          assert isinstance(p['portal_context'], list)
+          print('acceptance plan confidence:', p['confidence'])
+          PY
+      - name: Verify persistence across restart
+        run: |
+          docker rm -f prime-acceptance
+          docker run -d --name prime-acceptance \
+            -p 18000:8000 \
+            -v prime-acceptance-data:/data \
+            -e PRIME_SPINE_TOKEN=acceptance-secret \
+            -e PRIME_SPINE_DB=/data/prime-spine.db \
+            -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
+            -e PORTAL_BASE_URL=https://the-portal-ten.vercel.app \
+            prime:acceptance
+          python - <<'PY'
+          import json, time, urllib.request
+          base='http://127.0.0.1:18000'
+          headers={'Authorization':'Bearer acceptance-secret'}
+          for _ in range(30):
+              try:
+                  req=urllib.request.Request(base+'/api/cognitive/memory/search?q=release%20acceptance&limit=5',headers=headers)
+                  with urllib.request.urlopen(req, timeout=2) as r:
+                      body=json.loads(r.read().decode())
+                      assert body['results']
+                      print('persistent memory verified')
+                      break
+              except Exception:
+                  time.sleep(1)
+          else:
+              raise SystemExit('persistent memory was not available after restart')
+          PY
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs prime-acceptance || true
