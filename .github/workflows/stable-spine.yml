@@ -8,10 +8,12 @@ on:
       - 'app/memory.py'
       - 'app/meta_review.py'
       - 'app/cognitive_api.py'
+      - 'app/cognitive_orchestrator.py'
       - 'app/entry.py'
       - 'contracts/**'
       - 'tests/test_stable_spine.py'
       - 'tests/test_memory_meta.py'
+      - 'tests/test_cognitive_orchestrator.py'
       - 'docker-compose.yml'
       - '.github/workflows/stable-spine.yml'
   push:
@@ -22,10 +24,12 @@ on:
       - 'app/memory.py'
       - 'app/meta_review.py'
       - 'app/cognitive_api.py'
+      - 'app/cognitive_orchestrator.py'
       - 'app/entry.py'
       - 'contracts/**'
       - 'tests/test_stable_spine.py'
       - 'tests/test_memory_meta.py'
+      - 'tests/test_cognitive_orchestrator.py'
       - 'docker-compose.yml'
       - '.github/workflows/stable-spine.yml'
 
@@ -38,4 +42,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt pytest
-      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_router_registration.py
+      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_cognitive_orchestrator.py tests/test_router_registration.py
