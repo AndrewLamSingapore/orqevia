@@ -1,4 +1,4 @@
-"""Guarded cognitive maintenance endpoints for Personal JARVIS."""
+"""Guarded cognitive endpoints for Personal JARVIS."""
 from __future__ import annotations
 
 import hmac
@@ -8,12 +8,14 @@ from typing import Any
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
+from .cognitive_orchestrator import CognitiveOrchestrator
 from .memory import MemoryStore
 from .meta_review import MetaReviewer
 
-router = APIRouter(prefix="/api/cognitive", tags=["cognitive-maintenance"])
+router = APIRouter(prefix="/api/cognitive", tags=["cognitive"])
 memory = MemoryStore()
 reviewer = MetaReviewer()
+orchestrator = CognitiveOrchestrator(memory=memory)
 
 
 class EpisodeRequest(BaseModel):
@@ -25,13 +27,19 @@ class EpisodeRequest(BaseModel):
     durable_key: str | None = None
 
 
+class PlanRequest(BaseModel):
+    intent: str
+    department: str = ""
+    context: str = ""
+
+
 def require_token(authorization: str | None) -> None:
     expected = os.getenv("PRIME_SPINE_TOKEN", "").strip()
     supplied = authorization[7:].strip() if authorization and authorization.lower().startswith("bearer ") else ""
     if not expected:
-        raise HTTPException(status_code=503, detail="Cognitive maintenance authentication is not configured")
+        raise HTTPException(status_code=503, detail="Cognitive authentication is not configured")
     if not supplied or not hmac.compare_digest(supplied, expected):
-        raise HTTPException(status_code=401, detail="Cognitive maintenance authorization required")
+        raise HTTPException(status_code=401, detail="Cognitive authorization required")
 
 
 @router.post("/episodes")
@@ -53,6 +61,21 @@ def consolidate(authorization: str | None = Header(default=None)):
 def recent_episodes(limit: int = 50, authorization: str | None = Header(default=None)):
     require_token(authorization)
     return {"episodes": memory.recent_episodes(limit)}
+
+
+@router.get("/memory/search")
+def search_memory(q: str, limit: int = 10, authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    return {"query": q, "results": memory.search(q, limit=limit)}
+
+
+@router.post("/plan")
+def cognitive_plan(request: PlanRequest, authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    try:
+        return {"ok": True, "plan": orchestrator.plan(**request.model_dump()).as_dict()}
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @router.get("/meta-review")
