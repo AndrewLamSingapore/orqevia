@@ -13,7 +13,9 @@ services:
       PRIME_DATA_DIR: /data
       PRIME_SPINE_DB: /data/prime-spine.db
       PRIME_MEMORY_DB: /data/jarvis-memory.db
+      PRIME_SPINE_TOKEN: ${PRIME_SPINE_TOKEN:-}
       PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
+      PORTAL_BASE_URL: ${PORTAL_BASE_URL:-https://the-portal-ten.vercel.app}
       PORTAL_RESULT_URL: ${PORTAL_RESULT_URL:-}
       PORTAL_RESULT_TOKEN: ${PORTAL_RESULT_TOKEN:-}
     volumes:
