@@ -9,11 +9,13 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from .cognitive_orchestrator import CognitiveOrchestrator
+from .compute_ledger import ComputeLedger
 from .memory import MemoryStore
 from .meta_review import MetaReviewer
 
 router = APIRouter(prefix="/api/cognitive", tags=["cognitive"])
 memory = MemoryStore()
+ledger = ComputeLedger()
 reviewer = MetaReviewer()
 orchestrator = CognitiveOrchestrator(memory=memory)
 
@@ -32,6 +34,10 @@ class PlanRequest(BaseModel):
     department: str = ""
     context: str = ""
     allow_frontier: bool = False
+
+
+class ExecuteRequest(PlanRequest):
+    deep: bool = False
 
 
 def require_token(authorization: str | None) -> None:
@@ -67,7 +73,7 @@ def recent_episodes(limit: int = 50, authorization: str | None = Header(default=
 @router.get("/memory/search")
 def search_memory(q: str, limit: int = 10, authorization: str | None = Header(default=None)):
     require_token(authorization)
-    return {"query": q, "results": memory.search(q, limit=limit)}
+    return {"query": q, "results": orchestrator.hybrid_memory.search(q, limit=limit)}
 
 
 @router.post("/plan")
@@ -77,6 +83,29 @@ def cognitive_plan(request: PlanRequest, authorization: str | None = Header(defa
         return {"ok": True, "plan": orchestrator.plan(**request.model_dump()).as_dict()}
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@router.post("/reason")
+def cognitive_reason(request: ExecuteRequest, authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    try:
+        return {"ok": True, **orchestrator.execute(**request.model_dump())}
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@router.get("/models")
+def model_manifest(authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    return orchestrator.gateway.manifest()
+
+
+@router.get("/compute")
+def compute_events(limit: int = 100, authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    return {"events": ledger.recent(limit)}
 
 
 @router.get("/meta-review")
