@@ -24,6 +24,8 @@ class ControlSurfaceContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, html)
         self.assertIn("remember:false", html)
+        self.assertNotIn("/api/cognitive/consolidate", html)
+        self.assertNotIn("/api/cognitive/episodes',{method:'POST'", html)
 
     def test_router_declares_read_only_boundaries(self):
         source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
@@ -31,6 +33,27 @@ class ControlSurfaceContractTests(unittest.TestCase):
         self.assertIn('"mode": "read-only"', source)
         self.assertIn('"autonomous_actions": False', source)
         self.assertIn('"velyqua_dependency": False', source)
+        self.assertIn('"memory_write": False', source)
+        self.assertIn('"runtime_mutation": False', source)
+        self.assertIn('"off_host": "unavailable"', source)
+
+    def test_every_view_has_a_real_read_path_or_health_contract(self):
+        source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
+        for path in (
+            "/health",
+            "/api/status",
+            "/api/phase3/artifacts",
+            "/api/cognitive/memory/search",
+            "/api/actions",
+            "/api/spine/events",
+        ):
+            self.assertIn(path, source)
+
+    def test_audit_explorer_and_memory_layers_are_explicit(self):
+        html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
+        self.assertIn("Audit Explorer", html)
+        self.assertIn('id="auditQuery"', html)
+        self.assertIn("Session, episodic, durable and evidence layers remain separate", html)
 
 
 if __name__ == "__main__":

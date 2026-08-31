@@ -1,8 +1,13 @@
+name: ${COMPOSE_PROJECT_NAME:-prime}
+
 services:
   prime:
     build:
       context: .
     image: ${PRIME_IMAGE:-prime:local}
+    labels:
+      com.lamjarvis.managed: "true"
+      com.lamjarvis.role: "prime"
     ports:
       - "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000"
     environment:
@@ -40,7 +45,10 @@ services:
         max-file: "3"
 
   ollama:
-    image: ollama/ollama:latest
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    labels:
+      com.lamjarvis.managed: "true"
+      com.lamjarvis.role: "model-runtime"
     volumes:
       - ollama-data:/root/.ollama
     healthcheck:
@@ -58,7 +66,10 @@ services:
         max-file: "3"
 
   model-init:
-    image: ollama/ollama:latest
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    labels:
+      com.lamjarvis.managed: "true"
+      com.lamjarvis.role: "model-init"
     environment:
       OLLAMA_HOST: http://ollama:11434
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
@@ -77,8 +88,11 @@ services:
     restart: "no"
 
   integration-gateway:
-    image: caddy:2-alpine
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
     profiles: ["tunnel"]
+    labels:
+      com.lamjarvis.managed: "true"
+      com.lamjarvis.role: "integration-gateway"
     environment:
       PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
     command:
@@ -99,8 +113,11 @@ services:
         max-file: "3"
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
     profiles: ["tunnel"]
+    labels:
+      com.lamjarvis.managed: "true"
+      com.lamjarvis.role: "tunnel"
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     command: tunnel --no-autoupdate --loglevel info --metrics 0.0.0.0:2000 run
@@ -117,4 +134,8 @@ services:
 
 volumes:
   prime-data:
+    external: true
+    name: ${PRIME_DATA_VOLUME:-prime-data}
   ollama-data:
+    external: true
+    name: ${OLLAMA_DATA_VOLUME:-prime-ollama-data}

@@ -1,118 +1,66 @@
 # PRIME Deployment
 
-PRIME is a stateful Docker application, not a serverless web application.
+PRIME is a stateful Docker application for the owner-controlled Dell host. Vercel is not its runtime target.
 
-## Runtime contract
+## Canonical local runtime
 
-A production host must provide:
+The repository Compose file has one stable project identity: `prime`. Do not create project-name copies such as `prime-main`, `prime_v731`, or `prime-github-ready1` for normal operation.
 
-- Docker Compose or equivalent long-running container orchestration;
-- persistent storage for PRIME `/data`;
-- persistent storage for Ollama `/root/.ollama`;
-- enough CPU/RAM for the configured Ollama models;
-- an internal network path from PRIME to Ollama;
-- encrypted secret injection for cross-project tokens;
-- TLS plus authenticated access if PRIME is reachable beyond the local machine.
+Run `JARVIS.cmd repair` once after installing a green release. The operator performs this order:
 
-Vercel is not the deployment target for the current architecture because PRIME expects a persistent process, Docker volumes, and an Ollama service.
+1. validate Docker and Compose;
+2. save container, volume, network and inspect inventory under `%LOCALAPPDATA%\JARVIS\checkpoints`;
+3. adopt the currently mounted PRIME `/data` and Ollama `/root/.ollama` named volumes into the untracked `.env`;
+4. stop and remove only running legacy PRIME/Ollama container objects;
+5. leave all volumes and stopped rollback containers intact;
+6. start the `prime` project using the exact pinned image;
+7. verify runtime version, integrity, Control Surface routes and no-actuation manifest;
+8. when tunnel secrets are present, start the canonical restricted gateway/tunnel and supersede their running legacy container objects;
+9. open the Control Surface only after the complete contract passes.
 
-## Canonical image
+An unrelated process or container on port 8000 is a hard stop. The operator will not terminate it.
 
-After a verified merge to `main`, GitHub Actions publishes:
+## Exact image gate
 
-`ghcr.io/andrewlamsingapore/prime:latest`
+Production `.env` must pin:
 
-and a commit-addressable `sha-<40-character-commit>` image.
-
-Production must set `PRIME_IMAGE` to the commit-addressable image. Do not use a floating image tag when rollback precision matters. The Compose file continues to support `docker compose up --build -d` for local source development.
-
-## Required configuration
-
-Copy `.env.example` to an untracked `.env` on the owner-controlled host and populate these values without printing or committing them:
-
-| Variable | Purpose | Must match |
-| --- | --- | --- |
-| `PRIME_IMAGE` | Exact verified PRIME image | Merged, green PRIME commit |
-| `PRIME_INTEGRATION_TOKEN` | Authenticates VELYQUA events to PRIME | VELYQUA runtime token |
-| `PORTAL_RESULT_URL` | Authenticated result-return endpoint | Portal production `/api/experiment-result` |
-| `PORTAL_RESULT_TOKEN` | Authenticates PRIME results to Portal | Portal encrypted production token |
-| `PORTAL_PRIME_TOKEN` | Authenticates the owner into Portal's candidate relay | Portal encrypted production token |
-| `CLOUDFLARE_TUNNEL_TOKEN` | Starts the remotely managed tunnel | Owner-controlled Cloudflare tunnel |
-| `PRIME_PUBLIC_URL` | Restricted integration hostname | Cloudflare public hostname |
-| `PRIME_BIND_ADDRESS` | Host listener | Keep `127.0.0.1` unless a protected private network requires otherwise |
-| `PRIME_PORT` | Host port | Default `8000` |
-
-Generate independent high-entropy secrets locally. Never place populated tokens in Git, screenshots, task prompts, logs, chat, command history, or public deployment metadata.
-
-## Always-on and remote access
-
-The containers use `restart: unless-stopped`, health checks, bounded log rotation, persistent volumes, and graceful shutdown. The host must also start Docker automatically after login or reboot.
-
-The Compose default binds PRIME to `127.0.0.1`. For phone or remote access, place an identity-aware private overlay or authenticated TLS reverse proxy in front of the loopback listener. Do not change the bind address to `0.0.0.0` and do not forward router port 8000 directly to the public Internet.
-
-Remote access is not considered verified until all of the following pass from the actual phone or remote client:
-
-1. TLS certificate and hostname validation;
-2. authenticated access by the owner;
-3. rejection of an unauthenticated client;
-4. no direct public reachability of port 8000;
-5. successful PRIME health and read-only status requests;
-6. revocation and recovery procedure tested.
-
-The owner-private access path above is separate from the public integration gateway. The integration gateway deliberately blocks PRIME's dashboard and status routes.
-
-## Restricted connected-loop gateway
-
-Create a remotely managed Cloudflare Tunnel and configure its public hostname's origin service as `http://integration-gateway:8080`. Then bootstrap the untracked local configuration on Windows:
-
-```powershell
-.\scripts\bootstrap_connected_loop.ps1 `
-  -PrimePublicUrl "https://prime.example.com" `
-  -CloudflareTunnelToken "<owner tunnel token>"
+```dotenv
+PRIME_IMAGE=ghcr.io/andrewlamsingapore/prime:sha-<green-main-commit>
 ```
 
-Start the connected stack with:
+The update action rejects floating tags and images outside `AndrewLamSingapore/prime`.
 
-```powershell
-docker compose --profile tunnel up -d --build
-```
+## Required health contract
 
-Cloudflare never targets `prime:8000` directly. Caddy exposes only unauthenticated `GET /health` and bearer-authenticated `/api/integrations/*`; every other public path returns `404`. Local dashboard access remains `http://127.0.0.1:8000`.
+Local:
 
-Install the generated values only at these server-side boundaries:
+| Route | Required |
+| --- | --- |
+| `/health` | HTTP 200, `ok: true`, version `7.3.1.1-evidence-grounded`, integrity `ok` |
+| `/control` | HTTP 200 |
+| `/api/control-surface/manifest` | HTTP 200, read-only, all mutation/actuation boundaries false |
+| `/api/status` | HTTP 200 |
 
-1. The Portal: `PORTAL_RESULT_TOKEN`, `PORTAL_PRIME_TOKEN`, `PRIME_BASE_URL=<PRIME_PUBLIC_URL>`, and `PRIME_INTEGRATION_TOKEN`.
-2. VELYQUA server: `PRIME_BASE_URL=<PRIME_PUBLIC_URL>`, `PRIME_INTEGRATION_TOKEN`, `VELYQUA_OWNER_USER_ID`, and `VELYQUA_ALLOWED_ORIGIN=https://velyqua.vercel.app`.
-3. VELYQUA public build: only `EXPO_PUBLIC_VELYQUA_BRIDGE_URL=https://velyqua.vercel.app`.
+Public restricted integration hostname, when configured:
 
-Never put an application token in an `EXPO_PUBLIC_*` value, browser bundle, URL, screenshot, prompt, log or command history.
+| Route | Required |
+| --- | --- |
+| `/health` | HTTP 200 |
+| `/control` | HTTP 404 |
+| `/api/status` | HTTP 404 |
+| `/api/control-surface/manifest` | HTTP 404 |
 
-## Production gate
+## Persistence and rollback
 
-Do not deploy a revision unless `Portal Integration Verify` succeeds for that exact revision.
+`JARVIS.cmd stop` uses Compose down without `--volumes`. Repair removes only replaceable running container objects after inventory; it never invokes Docker volume removal.
 
-Before any host mutation, run the retained read-only host inventory and preserve a verified backup of the PRIME and Ollama volumes. Then:
+The existing rollback checkpoint and stopped rollback container remain outside the cleanup target. To restore, pin the checkpoint's immutable image and named volumes in `.env`, then run the status contract before accepting the rollback.
 
-1. pin `PRIME_IMAGE` to the exact green commit-addressable image;
-2. populate the untracked runtime secrets;
-3. pull and start the Compose stack with the `tunnel` profile;
-4. wait for both Ollama and PRIME health checks to pass;
-5. confirm local and public `GET /health` return `ok: true`;
-6. confirm local `GET /api/status` responds and public `GET /api/status` returns `404`;
-7. confirm a missing or wrong public integration token is rejected;
-8. post only the non-physical synthetic `ExperimentCandidate` fixture through Portal's authenticated `/api/prime-experiment` relay;
-9. confirm its `ExperimentSpec` is persisted and is not automatically `approved`;
-10. deliver only synthetic VELYQUA observation events through authenticated HTTPS;
-11. flush the synthetic PRIME result to Portal and verify the matching authenticated acknowledgement and graph attachment;
-12. restart the stack and verify persistence;
-13. verify rollback to the immediately preceding known-good image and restore the current image.
+## Secrets
 
-If any authentication, health, persistence, exact-revision, or rollback check fails, stop and retain or restore the previous known-good runtime.
+Keep populated `.env` values off Git, screenshots, prompts, logs and command history. Use independent high-entropy values for `PRIME_SPINE_TOKEN`, `PRIME_INTEGRATION_TOKEN`, `PORTAL_RESULT_TOKEN`, `PORTAL_PRIME_TOKEN` and the Cloudflare tunnel token.
 
 ## Physical safety boundary
 
-This deployment authorizes software observation and synthetic verification only. It does not authorize dosing, mains switching, heater/filter/pump control, medication, diagnosis, autonomous livestock-care action, or any other physical actuation. Those capabilities require a separately approved design, qualified electrical and domain safety review, fail-safe hardware, manual override, commissioning evidence, and explicit owner approval for the exact action.
+This release authorizes software observation, synthetic verification and human-readable proposals only. It does not authorize dosing, mains switching, heater/filter/pump control, medication, diagnosis, autonomous livestock-care action or any other physical actuation.
 
-## Recommended target
-
-For the current local-first design, the simplest production target is the owner's always-on Docker host: desktop, mini PC, NAS, or Linux server. A managed container VM is suitable only if its privacy, persistence, cost, Ollama resource, backup, access-control, and rollback requirements are explicitly accepted.
