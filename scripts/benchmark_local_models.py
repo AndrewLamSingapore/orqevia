@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import statistics
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -37,7 +39,13 @@ def main() -> int:
         raise SystemExit("benchmark endpoint must be loopback or the internal Ollama service from inside Docker")
     tasks = json.loads(args.tasks.read_text(encoding="utf-8")) if args.tasks else DEFAULT_TASKS
     available = [item["name"] for item in request_json(args.base_url.rstrip("/") + "/api/tags").get("models", [])]
-    models = args.models or available
+    configured = []
+    for key in ("PRIME_FAST_MODEL", "PRIME_DEEP_MODEL"):
+        model = os.environ.get(key, "").strip()
+        if model and model in available and model not in configured:
+            configured.append(model)
+    generation_models = [model for model in available if "embed" not in model.lower()]
+    models = args.models or configured or generation_models
     if not models:
         raise SystemExit("no local models are available")
     privacy = "docker-internal-only" if docker_internal else "loopback-only"
@@ -48,11 +56,15 @@ def main() -> int:
         results = []
         for task in tasks:
             started = time.perf_counter()
-            body = request_json(args.base_url.rstrip("/") + "/api/generate", {"model": model, "prompt": task["prompt"], "stream": False})
-            latency = time.perf_counter() - started
-            answer = str(body.get("response", ""))
-            required = [str(value).lower() for value in task.get("must_include", [])]
-            results.append({"category": task["category"], "latency_seconds": round(latency, 3), "passed": all(value in answer.lower() for value in required), "response_chars": len(answer)})
+            try:
+                body = request_json(args.base_url.rstrip("/") + "/api/generate", {"model": model, "prompt": task["prompt"], "stream": False})
+                answer = str(body.get("response", ""))
+                required = [str(value).lower() for value in task.get("must_include", [])]
+                result = {"category": task["category"], "passed": all(value in answer.lower() for value in required), "response_chars": len(answer)}
+            except (urllib.error.URLError, TimeoutError) as error:
+                result = {"category": task["category"], "passed": False, "response_chars": 0, "error": str(error)}
+            result["latency_seconds"] = round(time.perf_counter() - started, 3)
+            results.append(result)
         report["models"].append({"model": model, "pass_rate": sum(x["passed"] for x in results) / len(results), "median_latency_seconds": round(statistics.median(x["latency_seconds"] for x in results), 3), "tasks": results})
     encoded = json.dumps(report, indent=2, sort_keys=True)
     if args.output:
