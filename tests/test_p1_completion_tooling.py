@@ -13,6 +13,7 @@ class P1CompletionToolingTests(unittest.TestCase):
         self.assertIn("EnableDelayedExpansion", wrapper)
         self.assertIn("exit /b !ERRORLEVEL!", wrapper)
         self.assertNotIn("exit /b %ERRORLEVEL%", wrapper)
+        self.assertNotIn('Join-Path $Root "app\\control_surface.html"', script)
 
     def test_model_benchmark_is_loopback_only_and_scores_required_dimensions(self):
         source = (ROOT / "scripts" / "benchmark_local_models.py").read_text(encoding="utf-8")
