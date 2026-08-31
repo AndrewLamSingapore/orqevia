@@ -53,6 +53,7 @@ def control_surface_manifest() -> dict:
             "direct_protected_apis": "token-required",
         },
         "views": [
+            "overview",
             "conversation",
             "evidence",
             "memory",
@@ -82,6 +83,16 @@ def control_surface_manifest() -> dict:
             {"name": "durable", "persistence": "PRIME database", "writable": False},
             {"name": "evidence", "persistence": "verified artifacts", "writable": False},
         ],
+        "owner_workspace": {
+            "version": "2.0.0",
+            "executive_overview": True,
+            "global_read_search": True,
+            "health_guidance": True,
+            "evidence_filtering": True,
+            "audit_timeline": True,
+            "client_side_export": True,
+            "server_side_writes": False,
+        },
     }
 
 
@@ -122,6 +133,12 @@ def control_surface_acceptance(request: Request) -> dict:
         for method in getattr(route, "methods", set())
     }
     checks = [
+        {
+            "view": "overview",
+            "label": "Owner intelligence workspace",
+            "required": [("/api/status", "GET"), ("/api/projects", "GET")],
+            "assertion": "Executive state, priorities and guidance are assembled from read paths only.",
+        },
         {
             "view": "conversation",
             "label": "Read-only answer flow",

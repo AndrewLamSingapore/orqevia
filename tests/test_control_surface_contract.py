@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class ControlSurfaceContractTests(unittest.TestCase):
     def test_six_canonical_views_are_present(self):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
-        for view in ("conversation", "evidence", "memory", "system", "actions", "audit"):
+        for view in ("overview", "conversation", "evidence", "memory", "system", "actions", "audit"):
             self.assertIn(f'id="{view}"', html)
             self.assertIn(f'data-view="{view}"', html)
 
@@ -54,7 +54,7 @@ class ControlSurfaceContractTests(unittest.TestCase):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         self.assertIn('@router.get("/api/control-surface/acceptance")', source)
         self.assertIn("request.app.routes", source)
-        for view in ("conversation", "evidence", "memory", "system", "actions", "audit"):
+        for view in ("overview", "conversation", "evidence", "memory", "system", "actions", "audit"):
             self.assertIn(f'"view": "{view}"', source)
         self.assertIn('id="acceptance"', html)
         self.assertIn("/api/control-surface/acceptance", html)
@@ -85,6 +85,24 @@ class ControlSurfaceContractTests(unittest.TestCase):
         self.assertIn("Audit Explorer", html)
         self.assertIn('id="auditQuery"', html)
         self.assertIn("Session, episodic, durable and evidence layers remain separate", html)
+
+    def test_p2_owner_workspace_is_read_only_and_complete(self):
+        source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
+        html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
+        self.assertIn('"owner_workspace"', source)
+        self.assertIn('"server_side_writes": False', source)
+        for feature in (
+            'id="overview"',
+            'id="overviewMetrics"',
+            'id="guidance"',
+            'id="workspaceQuery"',
+            'id="evidenceQuery"',
+            'id="exportReport"',
+            "jarvis-owner-report-",
+        ):
+            self.assertIn(feature, html)
+        self.assertIn("Search memory, projects and verified evidence", html)
+        self.assertIn("Audit Explorer timeline", html)
 
 
 if __name__ == "__main__":

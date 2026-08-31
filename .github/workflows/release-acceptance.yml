@@ -86,7 +86,9 @@ jobs:
           status, manifest=request('/api/control-surface/manifest')
           assert status==200 and manifest['mode']=='read-only'
           assert all(value is False for value in manifest['boundaries'].values())
-          assert set(manifest['views'])=={'conversation','evidence','memory','system','actions','audit'}
+          assert set(manifest['views'])=={'overview','conversation','evidence','memory','system','actions','audit'}
+          assert manifest['owner_workspace']['version']=='2.0.0'
+          assert manifest['owner_workspace']['server_side_writes'] is False
           try:
               request('/api/cognitive/episodes', headers_override={})
               raise AssertionError('protected episodes unexpectedly readable without auth')
