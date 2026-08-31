@@ -82,7 +82,7 @@ jobs:
               except Exception: time.sleep(1)
           else: raise SystemExit('PRIME never became healthy')
           with urllib.request.urlopen(base+'/control', timeout=5) as r:
-              html=r.read().decode(); assert r.status==200 and 'READ-ONLY CONTROL SURFACE' in html
+              html=r.read().decode(); assert r.status==200 and 'APPROVAL-GATED CONTROL SURFACE' in html
           status, manifest=request('/api/control-surface/manifest')
           assert status==200 and manifest['mode']=='approval-gated'
           assert manifest['boundaries']['approval_decision'] is True
