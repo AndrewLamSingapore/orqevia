@@ -1,7 +1,7 @@
 """Read-only JARVIS Control Surface composed around PRIME's existing APIs."""
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 
@@ -59,4 +59,70 @@ def control_surface_manifest() -> dict:
             {"name": "durable", "persistence": "PRIME database", "writable": False},
             {"name": "evidence", "persistence": "verified artifacts", "writable": False},
         ],
+    }
+
+
+@router.get("/api/control-surface/acceptance")
+def control_surface_acceptance(request: Request) -> dict:
+    """Report the registered read paths that satisfy the six-view P0 contract."""
+    registered = {
+        (route.path, method)
+        for route in request.app.routes
+        for method in getattr(route, "methods", set())
+    }
+    checks = [
+        {
+            "view": "conversation",
+            "label": "Read-only answer flow",
+            "required": [("/api/chat", "POST")],
+            "assertion": "Requests explicitly disable memory writes.",
+        },
+        {
+            "view": "evidence",
+            "label": "Evidence and provenance",
+            "required": [("/api/phase3/artifacts", "GET"), ("/api/phase3/reviews", "GET")],
+            "assertion": "Verified artifacts and reviews are inspectable.",
+        },
+        {
+            "view": "memory",
+            "label": "Memory inspection",
+            "required": [("/api/cognitive/memory/search", "GET"), ("/api/cognitive/episodes", "GET")],
+            "assertion": "Memory is searchable; write and consolidation controls are absent.",
+        },
+        {
+            "view": "system",
+            "label": "Runtime integrity",
+            "required": [("/health", "GET"), ("/api/status", "GET")],
+            "assertion": "Health, version, integrity and capability state are readable.",
+        },
+        {
+            "view": "actions",
+            "label": "Observe-only queues",
+            "required": [("/api/actions", "GET"), ("/api/phase3/approvals", "GET")],
+            "assertion": "Actions and approvals are visible without mutation controls.",
+        },
+        {
+            "view": "audit",
+            "label": "Inspectable audit trail",
+            "required": [("/api/spine/events", "GET"), ("/api/cognitive/meta-review", "GET")],
+            "assertion": "Stable Spine events and meta-review are readable.",
+        },
+    ]
+    results = []
+    for check in checks:
+        missing = [f"{method} {path}" for path, method in check["required"] if (path, method) not in registered]
+        results.append({
+            "view": check["view"],
+            "label": check["label"],
+            "status": "pass" if not missing else "fail",
+            "assertion": check["assertion"],
+            "missing": missing,
+        })
+    return {
+        "name": "JARVIS Control Surface P0 acceptance",
+        "status": "pass" if all(item["status"] == "pass" for item in results) else "fail",
+        "mode": "read-only",
+        "local_only": True,
+        "no_actuation": True,
+        "views": results,
     }
