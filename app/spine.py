@@ -188,17 +188,72 @@ class SpineStore:
                 (envelope["idempotency_key"], envelope["correlation_id"], envelope["action"], "PENDING", json.dumps(dict(envelope), sort_keys=True), json.dumps(dict(decision), sort_keys=True), utc_now()),
             )
 
-    def decide_approval(self, idempotency_key: str, approved: bool, note: str | None = None) -> dict[str, Any] | None:
-        status = "APPROVED" if approved else "REJECTED"
+    def decide_approval(self, idempotency_key: str, decision: str, note: str | None = None,
+                        modifications: Mapping[str, Any] | None = None) -> dict[str, Any] | None:
+        decision = decision.strip().lower()
+        if decision not in {"approve", "modify", "reject"}:
+            raise ValueError("decision must be approve, modify, or reject")
+        if decision == "modify" and not modifications:
+            raise ValueError("modify requires explicit modifications")
+        if decision in {"modify", "reject"} and not (note or "").strip():
+            raise ValueError(f"{decision} requires a decision note")
+        status = {"approve": "APPROVED", "modify": "MODIFIED", "reject": "REJECTED"}[decision]
         with self.connect() as db:
             row = db.execute("select * from approvals where idempotency_key=?", (idempotency_key,)).fetchone()
             if not row:
                 return None
             if row["status"] != "PENDING":
-                return dict(row)
-            db.execute("update approvals set status=?,decided_at=?,decision_note=? where idempotency_key=?", (status, utc_now(), note, idempotency_key))
+                return {**dict(row), "decision_recorded": False}
+            decision_note = json.dumps({"note": note, "modifications": dict(modifications or {})}, sort_keys=True)
+            db.execute("update approvals set status=?,decided_at=?,decision_note=? where idempotency_key=?", (status, utc_now(), decision_note, idempotency_key))
             updated = db.execute("select * from approvals where idempotency_key=?", (idempotency_key,)).fetchone()
-        return dict(updated) if updated else None
+        return {**dict(updated), "decision_recorded": True} if updated else None
+
+    def list_approvals(self, limit: int = 100) -> list[dict[str, Any]]:
+        with self.connect() as db:
+            rows = db.execute("select * from approvals order by created_at desc limit ?", (max(1, min(limit, 200)),)).fetchall()
+        output = []
+        for row in rows:
+            item = dict(row)
+            envelope = json.loads(item.pop("envelope_json"))
+            policy = json.loads(item.pop("decision_json"))
+            parameters = envelope.get("parameters", {})
+            context = envelope.get("context", {})
+            item.update({
+                "title": context.get("title") or envelope.get("action"),
+                "risk": context.get("risk", "consequential"),
+                "source": context.get("source", envelope.get("actor_id", "unknown")),
+                "evidence": context.get("evidence", []),
+                "reversibility": context.get("reversibility", "unknown"),
+                "expected_effect": context.get("expected_effect", parameters),
+                "policy": policy,
+                "parameters": parameters,
+            })
+            output.append(item)
+        return output
+
+    def audit_explorer(self, limit: int = 100) -> list[dict[str, Any]]:
+        with self.connect() as db:
+            rows = db.execute("select * from audit_trail order by created_at desc limit ?", (max(1, min(limit, 200)),)).fetchall()
+            approvals = {row["idempotency_key"]: dict(row) for row in db.execute("select * from approvals").fetchall()}
+        traces = []
+        for row in rows:
+            item = dict(row)
+            envelope = json.loads(item["envelope_json"])
+            record = json.loads(item["decision_record_json"])
+            verification = json.loads(item["verification_json"])
+            approval = approvals.get(item["idempotency_key"])
+            traces.append({
+                "correlation_id": item["correlation_id"],
+                "request": {"action": item["action_type"], "parameters": envelope.get("parameters", {}), "actor": envelope.get("actor_id")},
+                "evidence": record.get("evidence", envelope.get("context", {}).get("evidence", [])),
+                "reasoning_route": record.get("reasoning_route", record.get("source", "deterministic_prime_spine")),
+                "policy": {"state": item["policy_state"], "record": record},
+                "approval": None if not approval else {"status": approval["status"], "decided_at": approval["decided_at"], "decision": approval["decision_note"]},
+                "result": {"execution_status": item["execution_status"], "verification": verification},
+                "created_at": item["created_at"],
+            })
+        return traces
 
     def list_events(self, limit: int = 50) -> list[dict[str, Any]]:
         with self.connect() as db:

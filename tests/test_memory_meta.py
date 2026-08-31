@@ -35,6 +35,29 @@ def test_durable_memory_updates_in_place():
             assert db.execute("select count(*) from durable_memory where memory_kind='preference' and memory_key='tone'").fetchone()[0] == 1
 
 
+def test_five_memory_classes_have_retention_and_authority_rules():
+    policy = MemoryStore.policy_manifest()
+    assert set(policy) == {"working", "episodic", "semantic", "procedural", "protected"}
+    assert all(item["retention"] and item["authority"] for item in policy.values())
+
+
+def test_protected_memory_requires_owner_and_cannot_auto_promote():
+    with NamedTemporaryFile(suffix=".db") as temp:
+        memory = MemoryStore(temp.name)
+        try:
+            memory.record_episode(event_type="secret", content={"value": "x"}, source="test", salience=1, durable_kind="protected", durable_key="secret")
+            assert False, "protected episode must not auto-promote"
+        except ValueError:
+            pass
+        try:
+            memory.put_governed(memory_class="protected", key="secret", value={"value": "x"}, authority="prime")
+            assert False, "protected write must require owner"
+        except PermissionError:
+            pass
+        record = memory.put_governed(memory_class="protected", key="secret", value={"value": "x"}, authority="owner")
+        assert record["value"]["governance"]["retention"] == "owner_controlled"
+
+
 def test_meta_review_never_applies_changes():
     with NamedTemporaryFile(suffix=".db") as temp:
         store = SpineStore(temp.name)

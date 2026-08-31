@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Verify read-only and runtime operations contracts
+      - name: Verify approval-gated and runtime operations contracts
         run: python -m unittest tests.test_control_surface_contract tests.test_runtime_operations_contract
       - name: Parse the Windows operator
         shell: pwsh
@@ -84,11 +84,19 @@ jobs:
           with urllib.request.urlopen(base+'/control', timeout=5) as r:
               html=r.read().decode(); assert r.status==200 and 'READ-ONLY CONTROL SURFACE' in html
           status, manifest=request('/api/control-surface/manifest')
-          assert status==200 and manifest['mode']=='read-only'
-          assert all(value is False for value in manifest['boundaries'].values())
+          assert status==200 and manifest['mode']=='approval-gated'
+          assert manifest['boundaries']['approval_decision'] is True
+          assert manifest['boundaries']['approval_executes_action'] is False
+          assert manifest['boundaries']['autonomous_actions'] is False
+          assert manifest['boundaries']['memory_write'] is False
+          assert manifest['boundaries']['runtime_mutation'] is False
+          assert manifest['boundaries']['velyqua_dependency'] is False
+          assert manifest['boundaries']['physical_actuation'] is False
           assert set(manifest['views'])=={'overview','conversation','evidence','memory','system','actions','audit'}
           assert manifest['owner_workspace']['version']=='2.0.0'
-          assert manifest['owner_workspace']['server_side_writes'] is False
+          assert manifest['owner_workspace']['server_side_writes']=='approval-decisions-only'
+          assert manifest['owner_workspace']['executes_actions'] is False
+          assert set(manifest['memory_classes'])=={'working','episodic','semantic','procedural','protected'}
           assert manifest['routing_policy']['version']=='1.0.0'
           assert manifest['routing_policy']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
           assert manifest['routing_policy']['executes_models'] is False

@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 
 from . import cognitive_api, spine_api
 from .routing_policy import policy_manifest
+from .memory import MemoryStore
 
 
 router = APIRouter(tags=["control-surface"])
@@ -16,7 +17,7 @@ LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
 def _trusted_authorization(request: Request) -> str:
-    """Grant read-only Control Surface adapters access only on the local origin."""
+    """Grant bounded Control Surface adapters access only on the local origin."""
     if request.url.hostname not in LOCAL_HOSTS:
         raise HTTPException(status_code=403, detail="JARVIS Control is available only on this device")
     origin = request.headers.get("origin")
@@ -40,8 +41,8 @@ def control_surface() -> HTMLResponse:
 def control_surface_manifest() -> dict:
     return {
         "name": "JARVIS Control Surface",
-        "version": "1.0.0",
-        "mode": "read-only",
+        "version": "2.0.0",
+        "mode": "approval-gated",
         "authority": "PRIME CORE",
         "availability": {
             "host": "local-only",
@@ -64,7 +65,8 @@ def control_surface_manifest() -> dict:
         ],
         "boundaries": {
             "autonomous_actions": False,
-            "approval_mutation": False,
+            "approval_decision": True,
+            "approval_executes_action": False,
             "memory_write": False,
             "runtime_mutation": False,
             "velyqua_dependency": False,
@@ -75,15 +77,10 @@ def control_surface_manifest() -> dict:
             "system": "/api/status",
             "evidence": ["/api/phase3/artifacts", "/api/phase3/reviews"],
             "memory": ["/api/cognitive/memory/search", "/api/cognitive/episodes"],
-            "actions": ["/api/actions", "/api/phase3/approvals"],
-            "audit": ["/api/spine/events", "/api/cognitive/meta-review"],
+            "actions": ["/api/actions", "/api/control-surface/trusted/approvals"],
+            "audit": ["/api/control-surface/trusted/audit-explorer", "/api/cognitive/meta-review"],
         },
-        "memory_layers": [
-            {"name": "session", "persistence": "browser tab", "writable": False},
-            {"name": "episodic", "persistence": "PRIME database", "writable": False},
-            {"name": "durable", "persistence": "PRIME database", "writable": False},
-            {"name": "evidence", "persistence": "verified artifacts", "writable": False},
-        ],
+        "memory_classes": MemoryStore.policy_manifest(),
         "owner_workspace": {
             "version": "2.0.0",
             "executive_overview": True,
@@ -92,7 +89,8 @@ def control_surface_manifest() -> dict:
             "evidence_filtering": True,
             "audit_timeline": True,
             "client_side_export": True,
-            "server_side_writes": False,
+            "server_side_writes": "approval-decisions-only",
+            "executes_actions": False,
         },
         "routing_policy": policy_manifest(),
     }
@@ -111,6 +109,24 @@ def trusted_memory_search(request: Request, q: str, limit: int = 10) -> dict:
 @router.get("/api/control-surface/trusted/events")
 def trusted_events(request: Request, limit: int = 50) -> dict:
     return spine_api.events(limit=limit, authorization=_trusted_authorization(request))
+
+
+@router.get("/api/control-surface/trusted/approvals")
+def trusted_approvals(request: Request, limit: int = 100) -> dict:
+    return spine_api.approvals(limit=limit, authorization=_trusted_authorization(request))
+
+
+@router.post("/api/control-surface/trusted/approvals/{idempotency_key}")
+async def trusted_decide_approval(idempotency_key: str, request: Request) -> dict:
+    authorization = _trusted_authorization(request)
+    payload = await request.json()
+    approval_request = spine_api.ApprovalRequest.model_validate(payload)
+    return spine_api.decide_approval(idempotency_key, approval_request, authorization=authorization)
+
+
+@router.get("/api/control-surface/trusted/audit-explorer")
+def trusted_audit_explorer(request: Request, limit: int = 100) -> dict:
+    return spine_api.audit_explorer(limit=limit, authorization=_trusted_authorization(request))
 
 
 @router.get("/api/control-surface/trusted/meta-review")
@@ -167,15 +183,15 @@ def control_surface_acceptance(request: Request) -> dict:
         },
         {
             "view": "actions",
-            "label": "Observe-only queues",
-            "required": [("/api/actions", "GET"), ("/api/phase3/approvals", "GET")],
-            "assertion": "Actions and approvals are visible without mutation controls.",
+            "label": "Approval decision cards",
+            "required": [("/api/actions", "GET"), ("/api/control-surface/trusted/approvals", "GET"), ("/api/control-surface/trusted/approvals/{idempotency_key}", "POST")],
+            "assertion": "Owner may approve, modify or reject a proposal; decisions never execute it.",
         },
         {
             "view": "audit",
             "label": "Inspectable audit trail",
-            "required": [("/api/control-surface/trusted/events", "GET"), ("/api/control-surface/trusted/meta-review", "GET")],
-            "assertion": "Local Stable Spine events and meta-review are readable without sign-in.",
+            "required": [("/api/control-surface/trusted/audit-explorer", "GET"), ("/api/control-surface/trusted/meta-review", "GET")],
+            "assertion": "Request, evidence, route, policy, approval and result are linked by correlation ID.",
         },
     ]
     results = []
@@ -189,9 +205,9 @@ def control_surface_acceptance(request: Request) -> dict:
             "missing": missing,
         })
     return {
-        "name": "JARVIS Control Surface P0 acceptance",
+        "name": "JARVIS Control Surface P1 acceptance",
         "status": "pass" if all(item["status"] == "pass" for item in results) else "fail",
-        "mode": "read-only",
+        "mode": "approval-gated",
         "access": "trusted-local",
         "sign_in_required": False,
         "local_only": True,

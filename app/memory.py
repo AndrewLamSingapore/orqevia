@@ -14,7 +14,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-DURABLE_KINDS = {"semantic", "preference", "entity", "project", "decision", "task"}
+MEMORY_POLICIES = {
+    "working": {"persistence": "request", "retention": "request_lifetime", "authority": "runtime", "auto_promote": False},
+    "episodic": {"persistence": "episodic_memory", "retention": "until_reviewed", "authority": "prime", "auto_promote": True},
+    "semantic": {"persistence": "durable_memory", "retention": "until_superseded", "authority": "prime", "auto_promote": True},
+    "procedural": {"persistence": "durable_memory", "retention": "versioned_until_retired", "authority": "owner_or_verified_policy", "auto_promote": False},
+    "protected": {"persistence": "durable_memory", "retention": "owner_controlled", "authority": "owner_only", "auto_promote": False},
+}
+# Legacy kinds remain readable and are treated as semantic records during migration.
+DURABLE_KINDS = {"semantic", "procedural", "protected", "preference", "entity", "project", "decision", "task"}
 TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9_-]{2,}")
 
 
@@ -65,6 +73,10 @@ class MemoryStore:
             );
             """)
 
+    @staticmethod
+    def policy_manifest() -> dict[str, dict[str, Any]]:
+        return {name: dict(policy) for name, policy in MEMORY_POLICIES.items()}
+
     def record_episode(self, *, event_type: str, content: Mapping[str, Any], source: str,
                        salience: float = 0.0, durable_kind: str | None = None,
                        durable_key: str | None = None) -> dict[str, Any]:
@@ -73,6 +85,8 @@ class MemoryStore:
             raise ValueError(f"unsupported durable memory kind: {kind}")
         if bool(kind) != bool(durable_key and durable_key.strip()):
             raise ValueError("durable_kind and durable_key must be supplied together")
+        if kind in {"procedural", "protected"}:
+            raise ValueError(f"{kind} memory requires an explicit owner-authorized write path")
         episode_id = str(uuid.uuid4())
         row = {
             "episode_id": episode_id,
@@ -107,6 +121,26 @@ class MemoryStore:
                 db.execute("update episodic_memory set status='PROMOTED',promoted_at=? where episode_id=?", (now(), row["episode_id"]))
                 promoted += 1
         return {"promoted": promoted, "examined": len(rows)}
+
+    def put_governed(self, *, memory_class: str, key: str, value: Mapping[str, Any],
+                     authority: str, source_episode_id: str | None = None,
+                     confidence: float = 1.0) -> dict[str, Any]:
+        """Write an explicitly governed durable record; protected/procedural writes require owner authority."""
+        memory_class = memory_class.strip().lower()
+        if memory_class not in {"semantic", "procedural", "protected"}:
+            raise ValueError("governed memory class must be semantic, procedural, or protected")
+        required = MEMORY_POLICIES[memory_class]["authority"]
+        if memory_class in {"procedural", "protected"} and authority != "owner":
+            raise PermissionError(f"{memory_class} memory requires owner authority")
+        if not key.strip():
+            raise ValueError("memory key is required")
+        payload = {"record": dict(value), "governance": {"class": memory_class, "retention": MEMORY_POLICIES[memory_class]["retention"], "authority": required, "written_by": authority}}
+        with self.connect() as db:
+            db.execute(
+                "insert into durable_memory(memory_kind,memory_key,value_json,source_episode_id,confidence,updated_at) values(?,?,?,?,?,?) on conflict(memory_kind,memory_key) do update set value_json=excluded.value_json,source_episode_id=excluded.source_episode_id,confidence=excluded.confidence,updated_at=excluded.updated_at",
+                (memory_class, key.strip(), json.dumps(payload, sort_keys=True), source_episode_id, max(0.0, min(float(confidence), 1.0)), now()),
+            )
+        return self.get(memory_class, key.strip()) or {}
 
     def get(self, kind: str, key: str) -> dict[str, Any] | None:
         with self.connect() as db:

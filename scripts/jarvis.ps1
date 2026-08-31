@@ -209,8 +209,9 @@ function Test-PrimeContract([switch]$Quiet) {
     if ((Get-HttpStatus "$LocalBase/control") -ne 200) { $failures.Add("/control is not HTTP 200") }
     try {
         $manifest = Get-Json "$LocalBase/api/control-surface/manifest"
-        if ($manifest.mode -ne "read-only") { $failures.Add("manifest mode is not read-only") }
-        foreach ($key in @("autonomous_actions", "approval_mutation", "velyqua_dependency", "physical_actuation")) {
+        if ($manifest.mode -ne "approval-gated") { $failures.Add("manifest mode is not approval-gated") }
+        if ($manifest.boundaries.approval_decision -ne $true) { $failures.Add("approval decision boundary is not enabled") }
+        foreach ($key in @("autonomous_actions", "approval_executes_action", "memory_write", "runtime_mutation", "velyqua_dependency", "physical_actuation")) {
             if ($manifest.boundaries.$key -ne $false) { $failures.Add("boundary $key is not false") }
         }
     } catch { $failures.Add("manifest unavailable: $($_.Exception.Message)") }
@@ -225,7 +226,7 @@ function Test-PrimeContract([switch]$Quiet) {
         }
     }
     if ($failures.Count -gt 0) { throw "JARVIS contract failed:`n- $($failures -join "`n- ")" }
-    if (-not $Quiet) { Write-Host "JARVIS is healthy, local-only, read-only and no-actuation." -ForegroundColor Green }
+    if (-not $Quiet) { Write-Host "JARVIS is healthy, local-only, approval-gated and no-actuation." -ForegroundColor Green }
 }
 
 function Resolve-TunnelMode {
