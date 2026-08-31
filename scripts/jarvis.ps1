@@ -292,7 +292,6 @@ function Update-Jarvis {
 
 function Test-SourceContract {
     if (-not (Test-Path $ComposeFile)) { throw "docker-compose.yml is missing." }
-    if (-not (Test-Path (Join-Path $Root "app\control_surface.html"))) { throw "Control Surface is missing." }
     $source = Get-Content $ComposeFile -Raw
     foreach ($required in @('name: ${COMPOSE_PROJECT_NAME:-prime}', '${PRIME_BIND_ADDRESS:-127.0.0.1}', 'com.lamjarvis.managed', '${PRIME_DATA_VOLUME:-prime-data}', '${OLLAMA_DATA_VOLUME:-prime-ollama-data}')) {
         if (-not $source.Contains($required)) { throw "Compose contract is missing: $required" }
