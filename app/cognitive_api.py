@@ -31,6 +31,7 @@ class PlanRequest(BaseModel):
     intent: str
     department: str = ""
     context: str = ""
+    allow_frontier: bool = False
 
 
 def require_token(authorization: str | None) -> None:
