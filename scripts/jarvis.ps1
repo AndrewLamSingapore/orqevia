@@ -257,7 +257,7 @@ function Start-Jarvis([switch]$RepairOnly) {
     Wait-ForPrime | Out-Null
     Test-PrimeContract -Quiet
     if ($useTunnel) { Remove-LegacyEdgeContainers }
-    Write-Host "JARVIS READY — $LocalBase/control" -ForegroundColor Green
+    Write-Host "JARVIS READY - $LocalBase/control" -ForegroundColor Green
     if (-not $NoOpen) { Start-Process "$LocalBase/control" }
 }
 
