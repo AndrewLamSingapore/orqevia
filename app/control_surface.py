@@ -1,12 +1,30 @@
 """Read-only JARVIS Control Surface composed around PRIME's existing APIs."""
+import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
+
+from . import cognitive_api, spine_api
 
 
 router = APIRouter(tags=["control-surface"])
 HTML_PATH = Path(__file__).with_name("control_surface.html")
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def _trusted_authorization(request: Request) -> str:
+    """Grant read-only Control Surface adapters access only on the local origin."""
+    if request.url.hostname not in LOCAL_HOSTS:
+        raise HTTPException(status_code=403, detail="JARVIS Control is available only on this device")
+    origin = request.headers.get("origin")
+    if origin and urlsplit(origin).hostname not in LOCAL_HOSTS:
+        raise HTTPException(status_code=403, detail="Cross-origin Control Surface access is denied")
+    token = os.getenv("PRIME_SPINE_TOKEN", "").strip()
+    if not token:
+        raise HTTPException(status_code=503, detail="Trusted local access is not configured")
+    return f"Bearer {token}"
 
 
 @router.get("/control", response_class=HTMLResponse)
@@ -28,6 +46,11 @@ def control_surface_manifest() -> dict:
             "host": "local-only",
             "control_url": "http://127.0.0.1:8000/control",
             "off_host": "unavailable",
+        },
+        "access": {
+            "mode": "trusted-local",
+            "sign_in_required": False,
+            "direct_protected_apis": "token-required",
         },
         "views": [
             "conversation",
@@ -62,6 +85,34 @@ def control_surface_manifest() -> dict:
     }
 
 
+@router.get("/api/control-surface/trusted/episodes")
+def trusted_episodes(request: Request, limit: int = 25) -> dict:
+    return cognitive_api.recent_episodes(limit=limit, authorization=_trusted_authorization(request))
+
+
+@router.get("/api/control-surface/trusted/memory/search")
+def trusted_memory_search(request: Request, q: str, limit: int = 10) -> dict:
+    return cognitive_api.search_memory(q=q, limit=limit, authorization=_trusted_authorization(request))
+
+
+@router.get("/api/control-surface/trusted/events")
+def trusted_events(request: Request, limit: int = 50) -> dict:
+    return spine_api.events(limit=limit, authorization=_trusted_authorization(request))
+
+
+@router.get("/api/control-surface/trusted/meta-review")
+def trusted_meta_review(request: Request) -> dict:
+    return cognitive_api.meta_review(authorization=_trusted_authorization(request))
+
+
+@router.post("/api/control-surface/trusted/plan")
+async def trusted_plan(request: Request) -> dict:
+    authorization = _trusted_authorization(request)
+    payload = await request.json()
+    plan_request = cognitive_api.PlanRequest.model_validate(payload)
+    return cognitive_api.cognitive_plan(plan_request, authorization=authorization)
+
+
 @router.get("/api/control-surface/acceptance")
 def control_surface_acceptance(request: Request) -> dict:
     """Report the registered read paths that satisfy the six-view P0 contract."""
@@ -86,8 +137,8 @@ def control_surface_acceptance(request: Request) -> dict:
         {
             "view": "memory",
             "label": "Memory inspection",
-            "required": [("/api/cognitive/memory/search", "GET"), ("/api/cognitive/episodes", "GET")],
-            "assertion": "Memory is searchable; write and consolidation controls are absent.",
+            "required": [("/api/control-surface/trusted/memory/search", "GET"), ("/api/control-surface/trusted/episodes", "GET")],
+            "assertion": "Local memory is freely readable; write and consolidation controls are absent.",
         },
         {
             "view": "system",
@@ -104,8 +155,8 @@ def control_surface_acceptance(request: Request) -> dict:
         {
             "view": "audit",
             "label": "Inspectable audit trail",
-            "required": [("/api/spine/events", "GET"), ("/api/cognitive/meta-review", "GET")],
-            "assertion": "Stable Spine events and meta-review are readable.",
+            "required": [("/api/control-surface/trusted/events", "GET"), ("/api/control-surface/trusted/meta-review", "GET")],
+            "assertion": "Local Stable Spine events and meta-review are readable without sign-in.",
         },
     ]
     results = []
@@ -122,6 +173,8 @@ def control_surface_acceptance(request: Request) -> dict:
         "name": "JARVIS Control Surface P0 acceptance",
         "status": "pass" if all(item["status"] == "pass" for item in results) else "fail",
         "mode": "read-only",
+        "access": "trusted-local",
+        "sign_in_required": False,
         "local_only": True,
         "no_actuation": True,
         "views": results,
