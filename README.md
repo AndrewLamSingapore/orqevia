@@ -45,8 +45,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\jarvis.ps1 -Action
 
 ## Control Surface
 
-The six canonical views are:
+The seven canonical views are:
 
+- Overview: owner state, priorities, evidence and guidance.
 - Conversation: read-only cognition with `remember:false`.
 - Evidence: verified artifacts and reviews.
 - Memory: explicit session, episodic, durable and evidence boundaries; protected reads only.
@@ -54,7 +55,13 @@ The six canonical views are:
 - Actions: proposals and approvals displayed as observation-only cards.
 - Audit: filterable Stable Spine events and meta-review.
 
-The browser tab may hold the owner-controlled `PRIME_SPINE_TOKEN` in session storage for protected reads. The surface contains no approval, rejection, execution, automation, orchestration, consolidation, memory-write or physical-action controls.
+Direct protected APIs require the owner-controlled `PRIME_SPINE_TOKEN`; the local browser workspace does not expose or store it. The surface contains no approval, rejection, execution, automation, orchestration, consolidation, memory-write or physical-action controls.
+
+## Frozen reasoning route
+
+PRIME applies one testable sequence: **deterministic → local AI → confidence gate → frontier AI**. A verified deterministic result stops model use. A strong local result passes. Partial or limited local confidence may escalate only when a frontier resource is both explicitly allowed and actually available; otherwise PRIME labels the local output as a held draft and reports its gaps. Consequential work remains a proposal requiring explicit approval regardless of the reasoning route.
+
+The current runtime has no frontier inference resource enabled. The policy is exposed read-only in `/api/control-surface/manifest`; it does not execute models or actions.
 
 ## Architecture
 
@@ -66,4 +73,3 @@ The browser tab may hold the owner-controlled `PRIME_SPINE_TOKEN` in session sto
 - Portal integration: versioned `ExperimentCandidate` ingestion and bounded `ExperimentSpec` emission
 
 PRIME is stateful and is not deployed to Vercel. GitHub Actions publishes the verified application image to GHCR. See `DEPLOYMENT.md` for production, rollback and physical-safety gates.
-

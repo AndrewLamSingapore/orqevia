@@ -32,6 +32,9 @@ def test_plan_combines_memory_and_portal_without_execution(tmp_path):
     assert plan.needs_approval is False
     assert plan.proposed_action is None
     assert plan.confidence == "strong"
+    assert plan.reasoning_route["sequence"] == ["deterministic", "local_ai", "confidence_gate", "frontier_ai"]
+    assert plan.reasoning_route["selected_stage"] == "local_ai"
+    assert plan.reasoning_route["confidence_gate"] == "pass"
 
 
 def test_consequential_intent_stops_at_proposal(tmp_path):
@@ -40,3 +43,14 @@ def test_consequential_intent_stops_at_proposal(tmp_path):
     assert plan.needs_approval is True
     assert plan.proposed_action is not None
     assert plan.proposed_action["action"] == "external.action.proposal"
+    assert plan.reasoning_route["approval_required"] is True
+
+
+def test_low_confidence_plan_holds_without_frontier(tmp_path):
+    store = MemoryStore(str(tmp_path / "empty.db"))
+    engine = CognitiveOrchestrator(memory=store, portal=FakePortal())
+    plan = engine.plan(intent="Unrelated request with no available grounding")
+    assert plan.confidence == "partial"
+    assert plan.reasoning_route["selected_stage"] == "confidence_hold"
+    assert plan.reasoning_route["frontier_available"] is False
+    assert "held at the confidence gate" in plan.gaps[-1]

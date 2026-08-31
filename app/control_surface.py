@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from . import cognitive_api, spine_api
+from .routing_policy import policy_manifest
 
 
 router = APIRouter(tags=["control-surface"])
@@ -93,6 +94,7 @@ def control_surface_manifest() -> dict:
             "client_side_export": True,
             "server_side_writes": False,
         },
+        "routing_policy": policy_manifest(),
     }
 
 

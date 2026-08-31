@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ControlSurfaceContractTests(unittest.TestCase):
-    def test_six_canonical_views_are_present(self):
+    def test_seven_canonical_views_are_present(self):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         for view in ("overview", "conversation", "evidence", "memory", "system", "actions", "audit"):
             self.assertIn(f'id="{view}"', html)
@@ -36,6 +36,7 @@ class ControlSurfaceContractTests(unittest.TestCase):
         self.assertIn('"memory_write": False', source)
         self.assertIn('"runtime_mutation": False', source)
         self.assertIn('"off_host": "unavailable"', source)
+        self.assertIn('"routing_policy": policy_manifest()', source)
 
     def test_every_view_has_a_real_read_path_or_health_contract(self):
         source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
@@ -103,6 +104,16 @@ class ControlSurfaceContractTests(unittest.TestCase):
             self.assertIn(feature, html)
         self.assertIn("Search memory, projects and verified evidence", html)
         self.assertIn("Audit Explorer timeline", html)
+
+    def test_frozen_routing_policy_is_visible_but_non_executing(self):
+        source = (ROOT / "app" / "routing_policy.py").read_text(encoding="utf-8")
+        html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
+        self.assertIn('ROUTING_SEQUENCE = ("deterministic", "local_ai", "confidence_gate", "frontier_ai")', source)
+        self.assertIn('"executes_models": False', source)
+        self.assertIn('"executes_actions": False', source)
+        self.assertIn("decision.selected_stage", html)
+        self.assertIn("allow_frontier:false", html)
+        self.assertIn("DRAFT — HELD AT CONFIDENCE GATE", html)
 
 
 if __name__ == "__main__":

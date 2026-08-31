@@ -89,6 +89,10 @@ jobs:
           assert set(manifest['views'])=={'overview','conversation','evidence','memory','system','actions','audit'}
           assert manifest['owner_workspace']['version']=='2.0.0'
           assert manifest['owner_workspace']['server_side_writes'] is False
+          assert manifest['routing_policy']['version']=='1.0.0'
+          assert manifest['routing_policy']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
+          assert manifest['routing_policy']['executes_models'] is False
+          assert manifest['routing_policy']['executes_actions'] is False
           try:
               request('/api/cognitive/episodes', headers_override={})
               raise AssertionError('protected episodes unexpectedly readable without auth')
@@ -100,6 +104,8 @@ jobs:
           status, plan=request('/api/cognitive/plan', method='POST', body={'intent':'Research release acceptance architecture and send an external message','department':'engineering','context':'This would be an external consequential action.'})
           assert status==200 and plan['plan']['needs_approval'] is True
           assert plan['plan']['proposed_action']['action']=='external.action.proposal'
+          assert plan['plan']['reasoning_route']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
+          assert plan['plan']['reasoning_route']['approval_required'] is True
           PY
       - name: Verify persistence across restart
         run: |

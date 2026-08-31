@@ -16,6 +16,7 @@ from typing import Any
 
 from .memory import MemoryStore
 from .orchestration import choose_specialist, has_consequential_intent
+from .routing_policy import RoutingPolicy
 
 TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9_-]{2,}")
 
@@ -35,6 +36,7 @@ class CognitivePlan:
     proposed_action: dict[str, Any] | None
     confidence: str
     gaps: list[str]
+    reasoning_route: dict[str, Any]
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -71,11 +73,12 @@ class PortalGrounder:
 
 
 class CognitiveOrchestrator:
-    def __init__(self, memory: MemoryStore | None = None, portal: PortalGrounder | None = None):
+    def __init__(self, memory: MemoryStore | None = None, portal: PortalGrounder | None = None, routing: RoutingPolicy | None = None):
         self.memory = memory or MemoryStore()
         self.portal = portal or PortalGrounder()
+        self.routing = routing or RoutingPolicy()
 
-    def plan(self, *, intent: str, department: str = "", context: str = "") -> CognitivePlan:
+    def plan(self, *, intent: str, department: str = "", context: str = "", allow_frontier: bool = False) -> CognitivePlan:
         intent = (intent or "").strip()
         if not intent:
             raise ValueError("intent is required")
@@ -97,4 +100,23 @@ class CognitiveOrchestrator:
         if use_portal and not portal_context:
             gaps.append("No relevant Portal grounding was available.")
         confidence = "strong" if memory_context and (portal_context or not use_portal) else "partial" if memory_context or portal_context else "limited"
-        return CognitivePlan(intent, route.specialist, route.reason, memory_context, portal_context, consequential, action, confidence, gaps)
+        reasoning_route = self.routing.decide(
+            local_confidence=confidence,
+            frontier_allowed=allow_frontier,
+            frontier_available=False,
+            consequential=consequential,
+        ).as_dict()
+        if reasoning_route["selected_stage"] == "confidence_hold":
+            gaps.append("Reasoning is held at the confidence gate; no frontier inference resource is currently available.")
+        return CognitivePlan(
+            intent=intent,
+            specialist=route.specialist,
+            route_reason=route.reason,
+            memory_context=memory_context,
+            portal_context=portal_context,
+            needs_approval=consequential,
+            proposed_action=action,
+            confidence=confidence,
+            gaps=gaps,
+            reasoning_route=reasoning_route,
+        )
