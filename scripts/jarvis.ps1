@@ -26,8 +26,16 @@ function Write-Step([string]$Message) {
 
 function Invoke-Docker {
     param([string[]]$Arguments, [switch]$AllowFailure)
-    $output = @(& docker @Arguments 2>&1 | ForEach-Object { "$_" })
-    $code = $LASTEXITCODE
+    $previousErrorAction = $ErrorActionPreference
+    try {
+        # Windows PowerShell 5.1 wraps native stderr (including normal Docker
+        # pull progress) as error records. Docker's exit code is authoritative.
+        $ErrorActionPreference = "Continue"
+        $output = @(& docker @Arguments 2>&1 | ForEach-Object { "$_" })
+        $code = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorAction
+    }
     if ($code -ne 0 -and -not $AllowFailure) {
         throw "docker $($Arguments -join ' ') failed (exit $code).`n$($output -join [Environment]::NewLine)"
     }
