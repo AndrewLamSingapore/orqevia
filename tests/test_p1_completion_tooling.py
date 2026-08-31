@@ -26,7 +26,10 @@ class P1CompletionToolingTests(unittest.TestCase):
         self.assertIn("prime-main-prime-1", source)
         self.assertIn("prime-github-ready1-prime-1", source)
         self.assertIn("approval-gated", source)
-        self.assertIn("volumes_mutated=$false", source)
+        self.assertIn("docker restart $Container", source)
+        self.assertIn("Compare-Object $mountsBefore $mountsAfter", source)
+        self.assertIn('"facts", "memories", "datasets", "artifacts", "pending_approvals"', source)
+        self.assertIn("volumes_deleted=$false", source)
 
 
 if __name__ == "__main__":
