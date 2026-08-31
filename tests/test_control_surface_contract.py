@@ -60,6 +60,26 @@ class ControlSurfaceContractTests(unittest.TestCase):
         self.assertIn("/api/control-surface/acceptance", html)
         self.assertIn('"no_actuation": True', source)
 
+    def test_trusted_local_access_requires_no_sign_in(self):
+        source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
+        html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
+        self.assertIn('"mode": "trusted-local"', source)
+        self.assertIn('"sign_in_required": False', source)
+        self.assertIn('LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}', source)
+        self.assertIn("Cross-origin Control Surface access is denied", source)
+        for path in (
+            "/api/control-surface/trusted/episodes",
+            "/api/control-surface/trusted/memory/search",
+            "/api/control-surface/trusted/events",
+            "/api/control-surface/trusted/meta-review",
+            "/api/control-surface/trusted/plan",
+        ):
+            self.assertIn(path, source)
+            self.assertIn(path, html)
+        self.assertIn("Trusted local access", html)
+        self.assertNotIn("prime-control-token", html)
+        self.assertNotIn('id="applyToken"', html)
+
     def test_audit_explorer_and_memory_layers_are_explicit(self):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         self.assertIn("Audit Explorer", html)
