@@ -38,7 +38,10 @@ class P1CompletionToolingTests(unittest.TestCase):
     def test_dell_verifier_requires_immutable_image_and_rollback(self):
         source = (ROOT / "scripts" / "verify_p1_runtime.ps1").read_text(encoding="utf-8")
         self.assertIn("ExpectedImageTag", source)
-        self.assertIn("prime-main-prime-1", source)
+        self.assertIn("label=com.docker.compose.project=prime", source)
+        self.assertIn("label=com.docker.compose.service=prime", source)
+        self.assertIn("Expected exactly one running canonical PRIME container", source)
+        self.assertNotIn('Container = "prime-main-prime-1"', source)
         self.assertIn("prime-github-ready1-prime-1", source)
         self.assertIn("approval-gated", source)
         self.assertIn("docker restart $Container", source)
