@@ -29,16 +29,19 @@ def main() -> int:
     parser.add_argument("--models", nargs="+")
     parser.add_argument("--tasks", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--allow-docker-internal", action="store_true")
     args = parser.parse_args()
     host = urllib.parse.urlsplit(args.base_url).hostname
-    if host not in {"127.0.0.1", "localhost", "::1"}:
-        raise SystemExit("benchmark endpoint must be loopback; prompts must remain private")
+    docker_internal = args.allow_docker_internal and host == "ollama" and Path("/.dockerenv").exists()
+    if host not in {"127.0.0.1", "localhost", "::1"} and not docker_internal:
+        raise SystemExit("benchmark endpoint must be loopback or the internal Ollama service from inside Docker")
     tasks = json.loads(args.tasks.read_text(encoding="utf-8")) if args.tasks else DEFAULT_TASKS
     available = [item["name"] for item in request_json(args.base_url.rstrip("/") + "/api/tags").get("models", [])]
     models = args.models or available
     if not models:
         raise SystemExit("no local models are available")
-    report = {"endpoint": args.base_url, "privacy": "loopback-only", "offline_resilience": "network-independent endpoint", "models": []}
+    privacy = "docker-internal-only" if docker_internal else "loopback-only"
+    report = {"endpoint": args.base_url, "privacy": privacy, "offline_resilience": "network-independent endpoint", "models": []}
     for model in models:
         if model not in available:
             raise SystemExit(f"model is not installed locally: {model}")

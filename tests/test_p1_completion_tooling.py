@@ -26,6 +26,12 @@ class P1CompletionToolingTests(unittest.TestCase):
         self.assertIn('host not in {"127.0.0.1", "localhost", "::1"}', source)
         for dimension in ("reasoning", "coding", "retrieval", "latency_seconds", "privacy", "offline_resilience"):
             self.assertIn(dimension, source)
+        self.assertIn('host == "ollama"', source)
+        self.assertIn('Path("/.dockerenv").exists()', source)
+        runner = (ROOT / "BENCHMARK-JARVIS.cmd").read_text(encoding="utf-8")
+        self.assertIn("docker cp", runner)
+        self.assertIn("--allow-docker-internal", runner)
+        self.assertIn("local-model-benchmark.json", runner)
 
     def test_portal_smoke_is_authenticated_nonphysical_and_reads_back(self):
         source = (ROOT / "scripts" / "smoke_portal_result.py").read_text(encoding="utf-8")
