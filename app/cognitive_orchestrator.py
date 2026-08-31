@@ -1,7 +1,7 @@
-"""PRIME CORE cognitive orchestrator v1.
+"""PRIME cognitive orchestrator.
 
-Assembles bounded context from Personal JARVIS Memory and The Portal before
-routing to a specialist. It never executes consequential actions directly.
+Builds governed context, routes to a specialist, executes inference through the
+model gateway, and never executes consequential actions directly.
 """
 from __future__ import annotations
 
@@ -14,7 +14,9 @@ import urllib.request
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from .hybrid_memory import HybridMemory
 from .memory import MemoryStore
+from .model_gateway import ModelGateway
 from .orchestration import choose_specialist, has_consequential_intent
 from .routing_policy import RoutingPolicy
 
@@ -73,50 +75,78 @@ class PortalGrounder:
 
 
 class CognitiveOrchestrator:
-    def __init__(self, memory: MemoryStore | None = None, portal: PortalGrounder | None = None, routing: RoutingPolicy | None = None):
+    def __init__(self, memory: MemoryStore | None = None, portal: PortalGrounder | None = None,
+                 routing: RoutingPolicy | None = None, gateway: ModelGateway | None = None):
         self.memory = memory or MemoryStore()
+        self.hybrid_memory = HybridMemory(self.memory)
         self.portal = portal or PortalGrounder()
         self.routing = routing or RoutingPolicy()
+        self.gateway = gateway or ModelGateway()
 
     def plan(self, *, intent: str, department: str = "", context: str = "", allow_frontier: bool = False) -> CognitivePlan:
         intent = (intent or "").strip()
         if not intent:
             raise ValueError("intent is required")
-        memory_context = self.memory.search(intent, limit=8)
+        memory_context = self.hybrid_memory.search(intent, limit=8)
         route = choose_specialist(department, intent, context)
         use_portal = route.specialist in {"research", "strategy", "engineering"} or len(memory_context) < 2
         portal_context = self.portal.query(intent, limit=8) if use_portal else []
         consequential = has_consequential_intent(intent, context)
         action = None
         if consequential:
-            action = {
-                "action": "external.action.proposal",
-                "parameters": {"intent": intent},
-                "context": {"department": department, "reason": "Consequential intent requires Stable Spine classification."},
-            }
+            action = {"action": "external.action.proposal", "parameters": {"intent": intent},
+                      "context": {"department": department, "reason": "Consequential intent requires Stable Spine classification."}}
         gaps: list[str] = []
         if not memory_context:
             gaps.append("No relevant durable personal memory was found.")
         if use_portal and not portal_context:
             gaps.append("No relevant Portal grounding was available.")
         confidence = "strong" if memory_context and (portal_context or not use_portal) else "partial" if memory_context or portal_context else "limited"
-        reasoning_route = self.routing.decide(
-            local_confidence=confidence,
-            frontier_allowed=allow_frontier,
-            frontier_available=False,
-            consequential=consequential,
-        ).as_dict()
+        reasoning_route = self.routing.decide(local_confidence=confidence, frontier_allowed=allow_frontier,
+                                               frontier_available=self.gateway.frontier_available,
+                                               consequential=consequential).as_dict()
         if reasoning_route["selected_stage"] == "confidence_hold":
-            gaps.append("Reasoning is held at the confidence gate; no frontier inference resource is currently available.")
-        return CognitivePlan(
-            intent=intent,
-            specialist=route.specialist,
-            route_reason=route.reason,
-            memory_context=memory_context,
-            portal_context=portal_context,
-            needs_approval=consequential,
-            proposed_action=action,
-            confidence=confidence,
-            gaps=gaps,
-            reasoning_route=reasoning_route,
-        )
+            gaps.append("Reasoning is held at the confidence gate; frontier inference is unavailable or not authorized.")
+        return CognitivePlan(intent, route.specialist, route.reason, memory_context, portal_context, consequential,
+                             action, confidence, gaps, reasoning_route)
+
+    @staticmethod
+    def _prompt(plan: CognitivePlan, context: str) -> str:
+        return f"""PRIME GOVERNED REASONING REQUEST
+Intent: {plan.intent}
+Specialist: {plan.specialist}
+Consequential action requested: {plan.needs_approval}
+
+User context:
+{context[:6000] if context else 'None supplied.'}
+
+Governed memory context:
+{json.dumps(plan.memory_context, ensure_ascii=False)[:12000]}
+
+Portal evidence context:
+{json.dumps(plan.portal_context, ensure_ascii=False)[:12000]}
+
+Rules:
+- Reason only from the supplied context and clearly marked general reasoning.
+- Never claim an external action was executed.
+- Preserve uncertainty and evidence boundaries.
+- If consequential action is appropriate, return a proposal only; explicit owner approval remains required.
+- Give the most useful bounded answer and list material evidence gaps.
+""".strip()
+
+    def execute(self, *, intent: str, department: str = "", context: str = "", allow_frontier: bool = False,
+                deep: bool = False) -> dict[str, Any]:
+        plan = self.plan(intent=intent, department=department, context=context, allow_frontier=allow_frontier)
+        prompt = self._prompt(plan, context)
+        local = self.gateway.local(prompt=prompt, deep=deep)
+        result = local
+        escalated = False
+        # The existing confidence gate remains authoritative. Frontier is used only when
+        # the pre-inference evidence confidence is insufficient and it is explicitly allowed.
+        if plan.confidence != "strong" and allow_frontier and self.gateway.frontier_available:
+            frontier_prompt = prompt + "\n\nLOCAL DRAFT TO CRITIQUE AND IMPROVE:\n" + local.text[:12000]
+            result = self.gateway.frontier(prompt=frontier_prompt, task_id=local.task_id)
+            escalated = True
+        return {"plan": plan.as_dict(), "result": result.as_dict(), "local_result": local.as_dict(),
+                "escalated": escalated, "approval_required": plan.needs_approval,
+                "executed_external_action": False}
