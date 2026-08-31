@@ -4,6 +4,10 @@ import unittest
 
 from fastapi.testclient import TestClient
 
+# The composed runtime initializes its SQLite paths at import time. CI runners
+# cannot write /data; keep this test isolated without changing production defaults.
+os.environ.setdefault("PRIME_DATA_DIR", "/tmp/prime-p1-api-import")
+
 from app import spine_api
 from app.entry import app
 from app.spine import SpineStore, StableSpine
