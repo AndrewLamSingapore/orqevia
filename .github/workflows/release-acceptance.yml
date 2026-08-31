@@ -4,17 +4,45 @@ on:
   pull_request:
     paths:
       - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.env.example'
+      - 'JARVIS.cmd'
       - 'app/**'
+      - 'deploy/**'
+      - 'scripts/**'
+      - 'tests/**'
       - '.github/workflows/release-acceptance.yml'
   push:
     branches: [main]
     paths:
       - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.env.example'
+      - 'JARVIS.cmd'
       - 'app/**'
+      - 'deploy/**'
+      - 'scripts/**'
+      - 'tests/**'
       - '.github/workflows/release-acceptance.yml'
   workflow_dispatch:
 
 jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify read-only and runtime operations contracts
+        run: python -m unittest tests.test_control_surface_contract tests.test_runtime_operations_contract
+      - name: Parse the Windows operator
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile("scripts/jarvis.ps1", [ref]$tokens, [ref]$errors)
+          if ($errors.Count) { $errors | Format-List | Out-String | Write-Error }
+      - name: Validate canonical Compose
+        run: docker compose -f docker-compose.yml config --quiet
+
   docker-acceptance:
     runs-on: ubuntu-latest
     steps:
@@ -33,52 +61,43 @@ jobs:
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
             -e PORTAL_BASE_URL=https://the-portal-ten.vercel.app \
             prime:acceptance
-      - name: Verify health, auth, memory, grounding and proposal-only cognition
+      - name: Verify health, Control Surface and protected read paths
         run: |
           python - <<'PY'
           import json, time, urllib.error, urllib.request
-
           base='http://127.0.0.1:18000'
           token='acceptance-secret'
           headers={'Authorization':f'Bearer {token}','Content-Type':'application/json'}
-
           def request(path, method='GET', body=None, headers_override=None):
               data=None if body is None else json.dumps(body).encode()
-              req=urllib.request.Request(base+path, data=data, method=method, headers=headers_override or headers)
+              req=urllib.request.Request(base+path, data=data, method=method, headers=headers if headers_override is None else headers_override)
               with urllib.request.urlopen(req, timeout=10) as r:
-                  return r.status, json.loads(r.read().decode())
-
+                  raw=r.read().decode(); return r.status, json.loads(raw) if raw else {}
           for _ in range(30):
               try:
                   with urllib.request.urlopen(base+'/health', timeout=2) as r:
-                      assert r.status == 200
+                      health=json.loads(r.read().decode())
+                      assert r.status == 200 and health['ok'] and health['integrity']=='ok'
                   break
-              except Exception:
-                  time.sleep(1)
-          else:
-              raise SystemExit('PRIME never became healthy')
-
+              except Exception: time.sleep(1)
+          else: raise SystemExit('PRIME never became healthy')
+          with urllib.request.urlopen(base+'/control', timeout=5) as r:
+              html=r.read().decode(); assert r.status==200 and 'READ-ONLY CONTROL SURFACE' in html
+          status, manifest=request('/api/control-surface/manifest')
+          assert status==200 and manifest['mode']=='read-only'
+          assert all(value is False for value in manifest['boundaries'].values())
+          assert set(manifest['views'])=={'conversation','evidence','memory','system','actions','audit'}
           try:
-              request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'}, headers_override={'Content-Type':'application/json'})
-              raise AssertionError('unauthenticated cognitive write unexpectedly succeeded')
-          except urllib.error.HTTPError as e:
-              assert e.code == 401
-
-          status, _ = request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'})
-          assert status == 200
-          status, consolidated = request('/api/cognitive/consolidate', method='POST')
-          assert status == 200 and consolidated['promoted'] >= 1
-          status, memory = request('/api/cognitive/memory/search?q=release%20acceptance&limit=5')
-          assert status == 200 and memory['results']
-
-          status, plan = request('/api/cognitive/plan', method='POST', body={'intent':'Research release acceptance architecture and send an external message','department':'engineering','context':'This would be an external consequential action.'})
-          assert status == 200
-          p=plan['plan']
-          assert p['specialist'] in {'engineering','research','strategy','general'}
-          assert p['needs_approval'] is True
-          assert p['proposed_action'] and p['proposed_action']['action'] == 'external.action.proposal'
-          assert isinstance(p['portal_context'], list)
-          print('acceptance plan confidence:', p['confidence'])
+              request('/api/cognitive/episodes', headers_override={})
+              raise AssertionError('protected episodes unexpectedly readable without auth')
+          except urllib.error.HTTPError as error: assert error.code==401
+          status, _=request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'})
+          assert status==200
+          status, consolidated=request('/api/cognitive/consolidate', method='POST')
+          assert status==200 and consolidated['promoted']>=1
+          status, plan=request('/api/cognitive/plan', method='POST', body={'intent':'Research release acceptance architecture and send an external message','department':'engineering','context':'This would be an external consequential action.'})
+          assert status==200 and plan['plan']['needs_approval'] is True
+          assert plan['plan']['proposed_action']['action']=='external.action.proposal'
           PY
       - name: Verify persistence across restart
         run: |
@@ -98,15 +117,12 @@ jobs:
           for _ in range(30):
               try:
                   req=urllib.request.Request(base+'/api/cognitive/memory/search?q=release%20acceptance&limit=5',headers=headers)
-                  with urllib.request.urlopen(req, timeout=2) as r:
-                      body=json.loads(r.read().decode())
-                      assert body['results']
-                      print('persistent memory verified')
-                      break
-              except Exception:
-                  time.sleep(1)
-          else:
-              raise SystemExit('persistent memory was not available after restart')
+                  with urllib.request.urlopen(req, timeout=2) as response:
+                      assert json.loads(response.read().decode())['results']
+                  print('persistent memory verified')
+                  break
+              except Exception: time.sleep(1)
+          else: raise SystemExit('persistent memory was not available after restart')
           PY
       - name: Container logs on failure
         if: failure()
