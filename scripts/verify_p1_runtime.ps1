@@ -1,12 +1,17 @@
 param(
     [Parameter(Mandatory=$true)][string]$ExpectedImageTag,
     [string]$LocalBase = "http://127.0.0.1:8000",
-    [string]$Container = "prime-main-prime-1",
+    [string]$Container = "",
     [string]$RollbackContainer = "prime-github-ready1-prime-1",
     [string]$PublicBase = ""
 )
 $ErrorActionPreference = "Stop"
 if ($ExpectedImageTag -notmatch '^sha-[0-9a-f]{7}$') { throw "ExpectedImageTag must be an immutable sha-xxxxxxx tag" }
+if (-not $Container) {
+    $containers = @(docker ps --filter "label=com.docker.compose.project=prime" --filter "label=com.docker.compose.service=prime" --format '{{.Names}}' | Where-Object { $_ })
+    if ($LASTEXITCODE -ne 0 -or $containers.Count -ne 1) { throw "Expected exactly one running canonical PRIME container; found $($containers.Count)" }
+    $Container = $containers[0]
+}
 $image = docker inspect --format '{{.Config.Image}}' $Container
 if ($LASTEXITCODE -ne 0 -or $image -notmatch ":$([regex]::Escape($ExpectedImageTag))$") { throw "Running container is not pinned to $ExpectedImageTag" }
 $mountsBefore = @(docker inspect --format '{{range .Mounts}}{{.Name}}|{{.Destination}}{{println}}{{end}}' $Container | Where-Object { $_ })
