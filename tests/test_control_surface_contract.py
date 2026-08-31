@@ -49,6 +49,17 @@ class ControlSurfaceContractTests(unittest.TestCase):
         ):
             self.assertIn(path, source)
 
+    def test_p0_acceptance_contract_covers_every_view(self):
+        source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
+        html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
+        self.assertIn('@router.get("/api/control-surface/acceptance")', source)
+        self.assertIn("request.app.routes", source)
+        for view in ("conversation", "evidence", "memory", "system", "actions", "audit"):
+            self.assertIn(f'"view": "{view}"', source)
+        self.assertIn('id="acceptance"', html)
+        self.assertIn("/api/control-surface/acceptance", html)
+        self.assertIn('"no_actuation": True', source)
+
     def test_audit_explorer_and_memory_layers_are_explicit(self):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         self.assertIn("Audit Explorer", html)
