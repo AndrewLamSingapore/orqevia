@@ -71,11 +71,22 @@ function Get-ComposeArgs([string[]]$Tail, [bool]$UseTunnel = $false) {
 function Get-ContainerRows([switch]$All) {
     $dockerArgs = @("ps")
     if ($All) { $dockerArgs += "-a" }
-    $dockerArgs += @("--format", '{{.ID}}|{{.Names}}|{{.Label "com.docker.compose.project"}}|{{.Label "com.docker.compose.service"}}|{{.Status}}|{{.Ports}}')
+    $dockerArgs += @("--format", "{{json .}}")
     $rows = Invoke-Docker -Arguments $dockerArgs -AllowFailure
-    return @($rows | Where-Object { $_ -and ($_ -split '\|').Count -ge 6 } | ForEach-Object {
-        $p = $_ -split '\|', 6
-        [pscustomobject]@{ Id=$p[0]; Name=$p[1]; Project=$p[2]; Service=$p[3]; Status=$p[4]; Ports=$p[5] }
+    return @($rows | Where-Object { $_ } | ForEach-Object {
+        $item = $_ | ConvertFrom-Json
+        $labels = @{}
+        foreach ($pair in ("$($item.Labels)" -split ',')) {
+            if ($pair -match '^([^=]+)=(.*)$') { $labels[$matches[1]] = $matches[2] }
+        }
+        [pscustomobject]@{
+            Id="$($item.ID)"
+            Name="$($item.Names)"
+            Project="$($labels['com.docker.compose.project'])"
+            Service="$($labels['com.docker.compose.service'])"
+            Status="$($item.Status)"
+            Ports="$($item.Ports)"
+        }
     })
 }
 
@@ -98,9 +109,12 @@ function Save-Checkpoint {
 }
 
 function Get-VolumeForContainer([string]$ContainerId, [string]$Destination) {
-    $template = '{{range .Mounts}}{{if eq .Destination "' + $Destination + '"}}{{.Name}}{{end}}{{end}}'
-    $value = Invoke-Docker -Arguments @("inspect", "--format", $template, $ContainerId) -AllowFailure | Select-Object -First 1
-    return "$value".Trim()
+    $json = (Invoke-Docker -Arguments @("inspect", $ContainerId) -AllowFailure) -join [Environment]::NewLine
+    if (-not $json.Trim()) { return "" }
+    $details = @($json | ConvertFrom-Json)
+    $mount = $details[0].Mounts | Where-Object { $_.Destination -eq $Destination } | Select-Object -First 1
+    if (-not $mount) { return "" }
+    return "$($mount.Name)".Trim()
 }
 
 function Adopt-PersistentVolumes {
