@@ -43,6 +43,12 @@ class P1CompletionToolingTests(unittest.TestCase):
         self.assertIn("/api/graph", source)
         for boundary in ("actuation_authorized", "owner_approval_inferred", "scientific_support_claimed"):
             self.assertIn(boundary, source)
+        self.assertIn("--generate-safe-smoke", source)
+        self.assertIn('"credential_exposed": False', source)
+        runner = (ROOT / "PORTAL-SMOKE-JARVIS.cmd").read_text(encoding="utf-8")
+        self.assertIn("PORTAL_RESULT_TOKEN", runner)
+        self.assertIn("--generate-safe-smoke", runner)
+        self.assertIn("portal-smoke-result.json", runner)
 
     def test_dell_verifier_requires_immutable_image_and_rollback(self):
         source = (ROOT / "scripts" / "verify_p1_runtime.ps1").read_text(encoding="utf-8")
