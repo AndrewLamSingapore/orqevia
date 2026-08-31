@@ -1,6 +1,6 @@
 # PRIME / JARVIS
 
-PRIME `7.3.1.1-evidence-grounded` is the only cognitive control plane for JARVIS. The Control Surface is local-only, read-only and no-actuation.
+PRIME `7.3.1.1-evidence-grounded` is the only cognitive control plane for JARVIS. The Control Surface is local-only, approval-gated and no-actuation.
 
 ## One-click Dell operation
 
@@ -50,12 +50,12 @@ The seven canonical views are:
 - Overview: owner state, priorities, evidence and guidance.
 - Conversation: read-only cognition with `remember:false`.
 - Evidence: verified artifacts and reviews.
-- Memory: explicit session, episodic, durable and evidence boundaries; protected reads only.
+- Memory: working, episodic, semantic, procedural and protected classes with explicit retention and authority.
 - System: live PRIME model and persistence counters.
-- Actions: proposals and approvals displayed as observation-only cards.
-- Audit: filterable Stable Spine events and meta-review.
+- Actions: approve/modify/reject cards show risk, source, evidence, reversibility and expected effect; decisions never execute actions.
+- Audit: request → evidence → reasoning route → policy → approval → result traces plus meta-review.
 
-Direct protected APIs require the owner-controlled `PRIME_SPINE_TOKEN`; the local browser workspace does not expose or store it. The surface contains no approval, rejection, execution, automation, orchestration, consolidation, memory-write or physical-action controls.
+Direct protected APIs require the owner-controlled `PRIME_SPINE_TOKEN`; the local browser workspace does not expose or store it. The surface can record approval decisions through its trusted-local adapter, but contains no execution, automation, orchestration, consolidation, memory-write or physical-action controls.
 
 ## Frozen reasoning route
 

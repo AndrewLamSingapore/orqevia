@@ -20,8 +20,9 @@ class EvaluateRequest(BaseModel):
 
 
 class ApprovalRequest(BaseModel):
-    approved: bool
+    decision: str
     note: str | None = None
+    modifications: dict[str, Any] = Field(default_factory=dict)
 
 
 def require_token(authorization: str | None) -> None:
@@ -47,15 +48,31 @@ def evaluate(request: EvaluateRequest, authorization: str | None = Header(defaul
 @router.post("/approvals/{idempotency_key}")
 def decide_approval(idempotency_key: str, request: ApprovalRequest, authorization: str | None = Header(default=None)):
     require_token(authorization)
-    row = spine.store.decide_approval(idempotency_key, request.approved, request.note)
+    try:
+        row = spine.store.decide_approval(idempotency_key, request.decision, request.note, request.modifications)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     if not row:
         raise HTTPException(status_code=404, detail="Approval not found")
     event_envelope = {
         "correlation_id": row["correlation_id"],
         "idempotency_key": row["idempotency_key"],
     }
-    spine.store.emit(event_envelope, "approval.approved" if request.approved else "approval.rejected", {"status": row["status"], "note": request.note})
+    if row.get("decision_recorded"):
+        spine.store.emit(event_envelope, f"approval.{request.decision}", {"status": row["status"], "note": request.note, "modifications": request.modifications})
     return {"ok": True, "approval": row}
+
+
+@router.get("/approvals")
+def approvals(limit: int = 100, authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    return {"approvals": spine.store.list_approvals(limit)}
+
+
+@router.get("/audit-explorer")
+def audit_explorer(limit: int = 100, authorization: str | None = Header(default=None)):
+    require_token(authorization)
+    return {"traces": spine.store.audit_explorer(limit)}
 
 
 @router.get("/events")

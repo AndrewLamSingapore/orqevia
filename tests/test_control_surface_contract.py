@@ -12,11 +12,9 @@ class ControlSurfaceContractTests(unittest.TestCase):
             self.assertIn(f'id="{view}"', html)
             self.assertIn(f'data-view="{view}"', html)
 
-    def test_p0_has_no_mutating_controls(self):
+    def test_p1_has_only_bounded_approval_mutation_controls(self):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         for forbidden in (
-            "/approve",
-            "/reject",
             "/toggle",
             "/verified-cycle",
             "/orchestration/cycle",
@@ -26,12 +24,15 @@ class ControlSurfaceContractTests(unittest.TestCase):
         self.assertIn("remember:false", html)
         self.assertNotIn("/api/cognitive/consolidate", html)
         self.assertNotIn("/api/cognitive/episodes',{method:'POST'", html)
+        self.assertIn("decideApproval", html)
+        self.assertIn("This does not execute the action", html)
 
-    def test_router_declares_read_only_boundaries(self):
+    def test_router_declares_approval_gated_boundaries(self):
         source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
         self.assertIn('@router.get("/control"', source)
-        self.assertIn('"mode": "read-only"', source)
+        self.assertIn('"mode": "approval-gated"', source)
         self.assertIn('"autonomous_actions": False', source)
+        self.assertIn('"approval_executes_action": False', source)
         self.assertIn('"velyqua_dependency": False', source)
         self.assertIn('"memory_write": False', source)
         self.assertIn('"runtime_mutation": False', source)
@@ -46,11 +47,11 @@ class ControlSurfaceContractTests(unittest.TestCase):
             "/api/phase3/artifacts",
             "/api/cognitive/memory/search",
             "/api/actions",
-            "/api/spine/events",
+            "/api/control-surface/trusted/audit-explorer",
         ):
             self.assertIn(path, source)
 
-    def test_p0_acceptance_contract_covers_every_view(self):
+    def test_p1_acceptance_contract_covers_every_view(self):
         source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         self.assertIn('@router.get("/api/control-surface/acceptance")', source)
@@ -71,7 +72,8 @@ class ControlSurfaceContractTests(unittest.TestCase):
         for path in (
             "/api/control-surface/trusted/episodes",
             "/api/control-surface/trusted/memory/search",
-            "/api/control-surface/trusted/events",
+            "/api/control-surface/trusted/approvals",
+            "/api/control-surface/trusted/audit-explorer",
             "/api/control-surface/trusted/meta-review",
             "/api/control-surface/trusted/plan",
         ):
@@ -85,13 +87,15 @@ class ControlSurfaceContractTests(unittest.TestCase):
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         self.assertIn("Audit Explorer", html)
         self.assertIn('id="auditQuery"', html)
-        self.assertIn("Session, episodic, durable and evidence layers remain separate", html)
+        self.assertIn("Working, episodic, semantic, procedural and protected", html)
+        self.assertIn("Request → evidence → reasoning route → policy → approval → result", html)
 
-    def test_p2_owner_workspace_is_read_only_and_complete(self):
+    def test_owner_workspace_is_complete_and_non_actuating(self):
         source = (ROOT / "app" / "control_surface.py").read_text(encoding="utf-8")
         html = (ROOT / "app" / "control_surface.html").read_text(encoding="utf-8")
         self.assertIn('"owner_workspace"', source)
-        self.assertIn('"server_side_writes": False', source)
+        self.assertIn('"server_side_writes": "approval-decisions-only"', source)
+        self.assertIn('"executes_actions": False', source)
         for feature in (
             'id="overview"',
             'id="overviewMetrics"',
@@ -103,7 +107,7 @@ class ControlSurfaceContractTests(unittest.TestCase):
         ):
             self.assertIn(feature, html)
         self.assertIn("Search memory, projects and verified evidence", html)
-        self.assertIn("Audit Explorer timeline", html)
+        self.assertIn("Audit Explorer", html)
 
     def test_frozen_routing_policy_is_visible_but_non_executing(self):
         source = (ROOT / "app" / "routing_policy.py").read_text(encoding="utf-8")
