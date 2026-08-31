@@ -17,6 +17,9 @@ class P1CompletionToolingTests(unittest.TestCase):
         self.assertIn('"{{json .}}"', script)
         self.assertNotIn('.Label "com.docker.compose.project"', script)
         self.assertNotIn('{{if eq .Destination', script)
+        self.assertIn('$ErrorActionPreference = "Continue"', script)
+        self.assertIn('$code = $LASTEXITCODE', script)
+        self.assertIn('$ErrorActionPreference = $previousErrorAction', script)
 
     def test_model_benchmark_is_loopback_only_and_scores_required_dimensions(self):
         source = (ROOT / "scripts" / "benchmark_local_models.py").read_text(encoding="utf-8")
