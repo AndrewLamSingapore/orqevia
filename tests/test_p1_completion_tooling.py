@@ -6,6 +6,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class P1CompletionToolingTests(unittest.TestCase):
+    def test_windows_operator_is_powershell_51_safe_and_propagates_failures(self):
+        script = (ROOT / "scripts" / "jarvis.ps1").read_text(encoding="utf-8")
+        wrapper = (ROOT / "JARVIS.cmd").read_text(encoding="utf-8")
+        self.assertTrue(script.isascii())
+        self.assertIn("EnableDelayedExpansion", wrapper)
+        self.assertIn("exit /b !ERRORLEVEL!", wrapper)
+        self.assertNotIn("exit /b %ERRORLEVEL%", wrapper)
+
     def test_model_benchmark_is_loopback_only_and_scores_required_dimensions(self):
         source = (ROOT / "scripts" / "benchmark_local_models.py").read_text(encoding="utf-8")
         self.assertIn('host not in {"127.0.0.1", "localhost", "::1"}', source)

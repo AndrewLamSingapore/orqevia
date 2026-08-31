@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions EnableDelayedExpansion
 set "JARVIS_SCRIPT=%~dp0scripts\jarvis.ps1"
 
 if not exist "%JARVIS_SCRIPT%" (
@@ -9,7 +9,7 @@ if not exist "%JARVIS_SCRIPT%" (
 
 if not "%~1"=="" (
   powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%JARVIS_SCRIPT%" %*
-  exit /b %ERRORLEVEL%
+  exit /b !ERRORLEVEL!
 )
 
 :menu
