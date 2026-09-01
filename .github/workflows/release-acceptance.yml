@@ -39,7 +39,7 @@ jobs:
       - name: Verify approval-gated and runtime operations contracts
         run: python -m unittest tests.test_control_surface_contract tests.test_runtime_operations_contract
       - name: Verify portfolio benchmark gate
-        run: python -m pytest -q tests/test_portfolio_benchmark.py
+        run: python -m unittest tests.test_portfolio_benchmark
       - name: Parse the Windows operator
         shell: pwsh
         run: |
