@@ -9,7 +9,7 @@ def envelope(action: str, key: str):
     return {
         "tenant_id": "personal", "actor_id": "prime-core", "actor_type": "reasoner",
         "action": action, "parameters": {}, "context": {}, "correlation_id": f"c-{key}",
-        "idempotency_key": key, "schema_version": "1.0", "timestamp": "2026-08-30T00:00:00Z",
+        "idempotency_key": key, "schema_version": "1.0.0", "timestamp": "2026-08-30T00:00:00Z",
     }
 
 

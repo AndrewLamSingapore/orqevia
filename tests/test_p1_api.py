@@ -19,7 +19,7 @@ def envelope(key="p1-api"):
         "tenant_id": "personal", "actor_id": "prime-core", "actor_type": "reasoner",
         "action": "email.send", "parameters": {"draft_id": "draft-1"},
         "context": {"title": "Send reviewed draft", "risk": "external", "source": "owner", "evidence": ["draft-1"], "reversibility": "not reversible", "expected_effect": "message delivered"},
-        "correlation_id": "corr-p1-api", "idempotency_key": key, "schema_version": "1.0", "timestamp": "2026-08-31T00:00:00Z",
+        "correlation_id": "corr-p1-api", "idempotency_key": key, "schema_version": "1.0.0", "timestamp": "2026-08-31T00:00:00Z",
     }
 
 

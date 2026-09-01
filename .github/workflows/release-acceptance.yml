@@ -151,7 +151,7 @@ jobs:
           status, multi=request('/api/cognitive/multi-reason', method='POST', body={'intent':'Evaluate the bounded release design','context':'Container acceptance','evidence':'Deterministic fixture'})
           assert status==200 and multi['workers']==2 and len(multi['specialists'])==6
           assert multi['critic']['stage']=='specialist_critique' and multi['synthesis']['stage']=='specialist_synthesis'
-          status, event=request('/api/cognitive/events', method='POST', body={'version':'1.0','event_id':'acceptance-event-0001','event_type':'game.simulation.completed','source':'game-platform','occurred_at':'2026-09-01T00:00:00Z','evidence_level':'E2','provenance':['acceptance:seed-1'],'payload':{'simulation_id':'acceptance-sim','scenario':'bounded'}})
+          status, event=request('/api/cognitive/events', method='POST', body={'schema_version':'1.0.0','event_id':'acceptance-event-0001','event_type':'game.simulation.completed','source':'game-platform','occurred_at':'2026-09-01T00:00:00Z','correlation_id':'acceptance-run-0001','evidence_level':'E2','provenance':['acceptance:seed-1'],'payload':{'simulation_id':'acceptance-sim','scenario':'bounded'}})
           assert status==200 and event['inserted'] and event['projected']
           status, reviews=request('/api/cognitive/event-reviews')
           assert status==200 and any(item['event_id']=='acceptance-event-0001' and item['status']=='pending' for item in reviews['reviews'])

@@ -1,21 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/AndrewLamSingapore/AndrewLamSingapore/portfolio-contracts/reasoning-output-v1.schema.json",
-  "title": "Portfolio Reasoning Output v1",
+  "$id": "https://raw.githubusercontent.com/AndrewLamSingapore/AndrewLamSingapore/main/portfolio-contracts/schemas/reasoning-output-v1.schema.json",
+  "title": "JARVIS Shared Reasoning Output v1",
   "type": "object",
-  "required": ["kind", "confidence", "decision_summary", "schema_version"],
+  "additionalProperties": false,
+  "required": ["kind", "confidence", "decision_summary", "evidence_refs", "reasoner_version", "schema_version"],
   "properties": {
-    "kind": {"type": "string", "enum": ["recommendation", "proposed_action", "abstain"]},
-    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-    "decision_summary": {"type": "string", "minLength": 1},
-    "recommendation": {"type": ["string", "null"]},
-    "proposed_action": {"$ref": "action-envelope-v1.schema.json"},
-    "evidence_refs": {"type": "array", "items": {"type": "string"}, "default": []},
-    "reasoner_version": {"type": "string", "minLength": 1},
-    "schema_version": {"const": "1.0"}
+    "kind": { "type": "string", "enum": ["recommendation", "proposed_action", "abstain"] },
+    "recommendation": { "type": "string", "minLength": 1 },
+    "proposed_action": { "$ref": "./action-envelope-v1.schema.json" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "decision_summary": { "type": "string", "minLength": 1 },
+    "evidence_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "gaps": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "reasoner_version": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": "1.0.0" }
   },
-  "allOf": [
-    {"if": {"properties": {"kind": {"const": "proposed_action"}}}, "then": {"required": ["proposed_action"]}}
-  ],
-  "additionalProperties": false
+  "oneOf": [
+    { "properties": { "kind": { "const": "recommendation" }, "recommendation": {} }, "required": ["kind", "recommendation"] },
+    { "properties": { "kind": { "const": "proposed_action" }, "proposed_action": {} }, "required": ["kind", "proposed_action"] },
+    { "properties": { "kind": { "const": "abstain" }, "gaps": {} }, "required": ["kind", "gaps"] }
+  ]
 }

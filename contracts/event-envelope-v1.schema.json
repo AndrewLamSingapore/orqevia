@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/AndrewLamSingapore/AndrewLamSingapore/main/portfolio-contracts/schemas/event-envelope-v1.schema.json",
+  "title": "JARVIS Shared Event Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "event_type", "source", "payload", "correlation_id", "occurred_at", "schema_version"],
+  "properties": {
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "event_type": { "type": "string", "pattern": "^[a-z][a-z0-9_-]+(\\.[a-z0-9_-]+)+$" },
+    "source": { "type": "string", "enum": ["prime", "the-portal", "velyqua", "game-platform", "authority-engine"] },
+    "payload": { "type": "object" },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "schema_version": { "const": "1.0.0" }
+  }
+}
