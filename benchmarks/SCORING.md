@@ -1,0 +1,1 @@
+Each case declares expected observable terms. Deterministic scoring reports matched expectations divided by total expectations. This is a smoke/regression metric only; deeper human and evidence-grounded evaluation remains authoritative for release decisions.
