@@ -13,13 +13,17 @@ def now()->str:return datetime.now(timezone.utc).isoformat()
 class EventFabric:
     def __init__(self,path:str|None=None,memory:MemoryStore|None=None):
         data=os.getenv("PRIME_DATA_DIR","/data").strip() or "/data";self.path=path or str(Path(data)/"portfolio-events.db");self.memory=memory or MemoryStore(str(Path(self.path).with_name("jarvis-memory.db")));Path(self.path).parent.mkdir(parents=True,exist_ok=True)
-        with self.connect() as db:db.executescript("""
-        create table if not exists portfolio_events(event_id text primary key,event_type text not null,source text not null,occurred_at text not null,evidence_level text not null,correlation_id text,subject_id text,provenance_json text not null,payload_json text not null,received_at text not null);
+        with self.connect() as db:
+            db.executescript("""
+        create table if not exists portfolio_events(event_id text primary key,schema_version text not null,event_type text not null,source text not null,occurred_at text not null,evidence_level text not null,correlation_id text not null,subject_id text,provenance_json text not null,payload_json text not null,received_at text not null);
         create table if not exists event_projections(event_id text not null,projector text not null,status text not null,details_json text not null,projected_at text not null,primary key(event_id,projector));
         create table if not exists semantic_graph_nodes(node_id text primary key,node_type text not null,label text not null,attributes_json text not null,last_event_id text not null,updated_at text not null);
         create table if not exists cognitive_review_queue(review_id text primary key,event_id text not null unique,status text not null,priority integer not null,reason text not null,created_at text not null,reviewed_at text);
         create table if not exists event_evaluations(event_id text primary key,evidence_level text not null,provenance_count integer not null,payload_fields integer not null,review_required integer not null,created_at text not null);
         """)
+            columns={row["name"] for row in db.execute("pragma table_info(portfolio_events)")}
+            if "schema_version" not in columns:
+                db.execute("alter table portfolio_events add column schema_version text not null default 'legacy-1.0'")
     def connect(self)->sqlite3.Connection:
         db=sqlite3.connect(self.path);db.row_factory=sqlite3.Row;return db
     def _once(self,event_id:str,projector:str,action)->dict[str,Any]:
@@ -48,12 +52,12 @@ class EventFabric:
         event_id=event["event_id"]
         return [self._once(event_id,"governed_memory_candidate",lambda:self._memory(event)),self._once(event_id,"semantic_graph",lambda:self._graph(event)),self._once(event_id,"bounded_cognitive_review",lambda:self._review(event)),self._once(event_id,"evaluation_record",lambda:self._evaluation(event))]
     def ingest(self,event:Mapping[str,Any])->dict[str,Any]:
-        value=dict(assert_contract("portfolio-event-v1",dict(event)));value.setdefault("provenance",[])
-        row=(value["event_id"],value["event_type"],value["source"],value["occurred_at"],value["evidence_level"],value.get("correlation_id"),value.get("subject_id"),json.dumps(value["provenance"],sort_keys=True),json.dumps(value["payload"],sort_keys=True),now())
+        value=dict(assert_contract("portfolio-event-v1",dict(event)))
+        row=(value["event_id"],value["schema_version"],value["event_type"],value["source"],value["occurred_at"],value["evidence_level"],value["correlation_id"],value.get("subject_id"),json.dumps(value["provenance"],sort_keys=True),json.dumps(value["payload"],sort_keys=True),now())
         with self.connect() as db:
-            inserted=db.execute("insert or ignore into portfolio_events(event_id,event_type,source,occurred_at,evidence_level,correlation_id,subject_id,provenance_json,payload_json,received_at) values(?,?,?,?,?,?,?,?,?,?)",row).rowcount==1
+            inserted=db.execute("insert or ignore into portfolio_events(event_id,schema_version,event_type,source,occurred_at,evidence_level,correlation_id,subject_id,provenance_json,payload_json,received_at) values(?,?,?,?,?,?,?,?,?,?,?)",row).rowcount==1
             if not inserted:
-                existing=db.execute("select event_type,source,occurred_at,evidence_level,correlation_id,subject_id,provenance_json,payload_json from portfolio_events where event_id=?",(value["event_id"],)).fetchone()
+                existing=db.execute("select schema_version,event_type,source,occurred_at,evidence_level,correlation_id,subject_id,provenance_json,payload_json from portfolio_events where event_id=?",(value["event_id"],)).fetchone()
                 incoming=row[1:-1]
                 if not existing or tuple(existing)!=incoming:raise ValueError("event_id already exists with a different canonical event")
         projections=self.project(value)

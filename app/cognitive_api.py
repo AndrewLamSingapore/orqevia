@@ -19,7 +19,7 @@ class PlanRequest(StrictRequest):
     intent:str; department:str=""; context:str=""; allow_frontier:bool=False
 class ExecuteRequest(PlanRequest): deep:bool=False
 class EventRequest(StrictRequest):
-    version:str="1.0"; event_id:str; event_type:str; source:str; occurred_at:str; evidence_level:str; correlation_id:str|None=None; subject_id:str|None=None; provenance:list[str]=Field(default_factory=list); payload:dict[str,Any]=Field(default_factory=dict)
+    schema_version:str=Field(pattern=r"^1\.0\.0$"); event_id:str; event_type:str; source:str; occurred_at:str; evidence_level:str; correlation_id:str; subject_id:str|None=None; provenance:list[str]=Field(min_length=1); payload:dict[str,Any]
 class MultiRequest(StrictRequest): intent:str; context:str=""; evidence:str=""; deep:bool=False
 class EvalRequest(StrictRequest): answer:str; evidence_terms:list[str]=Field(default_factory=list); required_terms:list[str]=Field(default_factory=list); executed_external_action:bool=False
 
