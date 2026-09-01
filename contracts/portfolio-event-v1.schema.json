@@ -1,1 +1,20 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"portfolio-event-v1","title":"Portfolio Event v1","type":"object","additionalProperties":false,"required":["version","event_id","event_type","source","occurred_at","evidence_level","payload"],"properties":{"version":{"const":"1.0"},"event_id":{"type":"string","minLength":8},"event_type":{"type":"string","pattern":"^[a-z][a-z0-9_-]+(\\.[a-z0-9_-]+)+$"},"source":{"enum":["prime","the-portal","velyqua","game-platform","authority-engine"]},"occurred_at":{"type":"string","format":"date-time"},"correlation_id":{"type":["string","null"]},"subject_id":{"type":["string","null"]},"evidence_level":{"enum":["E0","E1","E2","E3","E4","E5"]},"provenance":{"type":"array","items":{"type":"string"},"default":[]},"payload":{"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndrewLamSingapore/AndrewLamSingapore/portfolio-contracts/portfolio-event-v1.schema.json",
+  "title": "Portfolio Event v1",
+  "type": "object",
+  "required": ["version", "event_id", "event_type", "source", "occurred_at", "evidence_level", "payload"],
+  "properties": {
+    "version": {"const": "1.0"},
+    "event_id": {"type": "string", "minLength": 8},
+    "event_type": {"type": "string", "pattern": "^[a-z][a-z0-9_-]+(\\.[a-z0-9_-]+)+$"},
+    "source": {"enum": ["prime", "the-portal", "velyqua", "game-platform", "authority-engine"]},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "evidence_level": {"enum": ["E0", "E1", "E2", "E3", "E4", "E5"]},
+    "correlation_id": {"type": ["string", "null"]},
+    "subject_id": {"type": ["string", "null"]},
+    "provenance": {"type": "array", "items": {"type": "string"}, "default": []},
+    "payload": {"type": "object"}
+  },
+  "additionalProperties": false
+}

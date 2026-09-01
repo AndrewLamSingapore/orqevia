@@ -11,10 +11,11 @@ services:
     ports:
       - "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000"
     environment:
-      OLLAMA_URL: http://ollama:11434
+      OLLAMA_BASE_URL: http://ollama:11434
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      PRIME_MULTI_SPECIALIST_WORKERS: ${PRIME_MULTI_SPECIALIST_WORKERS:-2}
       PRIME_DATA_DIR: /data
       PRIME_SPINE_DB: /data/prime-spine.db
       PRIME_MEMORY_DB: /data/jarvis-memory.db

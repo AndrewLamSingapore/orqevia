@@ -1,0 +1,14 @@
+{
+  "contract_version": "1.0.0",
+  "schemas": {
+    "action-envelope-v1.schema.json": "8b13e2d0ea6fc5a7511e9335c5d08062a112654496201ce7ab97843403249b7e",
+    "portfolio-event-v1.schema.json": "d8eae6271dfc5048419742438fc16d7868c6ecd73844a48a3636e144c4afc04d",
+    "reasoning-output-v1.schema.json": "f1b54c29a91538cfe0de769ebb297173538fab6a7269c3a07097a6789cedc913"
+  },
+  "generated": {
+    "generated/javascript/validators.js": "ad86565c46f2c93359bc6c29662733db8d099928ebd239d0a6f101f52547851a",
+    "generated/javascript/validators.cjs": "cd604470dd590a22c8d542ab10e45c2431c8d069b286cf307c2dd56a2bbf97f4",
+    "generated/typescript/validators.ts": "5e5059e1e029bc33ca12cfe5e68e604f30c8fe6b4fecc19e41e8602b3215fb76",
+    "generated/python/portfolio_contracts.py": "a09ab5f706c486a731eb49ee4ee6605a527d27f4e030d3dbee0f834f445fb50a"
+  }
+}

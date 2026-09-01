@@ -72,4 +72,8 @@ The current runtime has no frontier inference resource enabled. The policy is ex
 - Optional restricted Caddy + Cloudflare integration path
 - Portal integration: versioned `ExperimentCandidate` ingestion and bounded `ExperimentSpec` emission
 
+`app/settings.py` is the only model-settings source. Compose, health checks, chat, `/api/cognitive/reason`, `/multi-reason`, and semantic memory use `OLLAMA_BASE_URL`, `PRIME_FAST_MODEL`, `PRIME_DEEP_MODEL`, and `PRIME_EMBED_MODEL`. Readiness is fail-closed until every exact configured model appears in Ollama `/api/tags`. Multi-specialist inference defaults to two concurrent workers and records specialist, critic, synthesis, and evaluation stages under one task trace.
+
+Generated answers pass a post-inference evaluator for source coverage, unsupported claims, contradiction, uncertainty, evidence requirements, policy conformance, and task success. A failed result is withheld; the confidence gate never returns the draft as an answer.
+
 PRIME is stateful and is not deployed to Vercel. GitHub Actions publishes the verified application image to GHCR. See `DEPLOYMENT.md` for production, rollback and physical-safety gates.

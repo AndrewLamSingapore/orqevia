@@ -183,6 +183,25 @@ class MemoryStore:
         ranked.sort(key=lambda pair: (pair[0], pair[1]["updated_at"]), reverse=True)
         return [item for _, item in ranked[: max(1, min(limit, 50))]]
 
+    def all_durable(self, *, kinds: set[str] | None = None, limit: int = 500) -> list[dict[str, Any]]:
+        """Return bounded durable candidates for the persistent semantic index."""
+        wanted = {kind.lower() for kind in kinds} if kinds else DURABLE_KINDS
+        wanted &= DURABLE_KINDS
+        if not wanted:
+            return []
+        placeholders = ",".join("?" for _ in wanted)
+        with self.connect() as db:
+            rows = db.execute(
+                f"select * from durable_memory where memory_kind in ({placeholders}) order by updated_at desc limit ?",
+                (*sorted(wanted), max(1, min(int(limit), 2000))),
+            ).fetchall()
+        output = []
+        for row in rows:
+            item = dict(row)
+            item["value"] = json.loads(item.pop("value_json"))
+            output.append(item)
+        return output
+
     def recent_episodes(self, limit: int = 50) -> list[dict[str, Any]]:
         with self.connect() as db:
             rows = db.execute("select * from episodic_memory order by created_at desc limit ?", (max(1, min(limit, 200)),)).fetchall()

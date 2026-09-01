@@ -46,6 +46,14 @@ def test_consequential_intent_stops_at_proposal(tmp_path):
     assert plan.reasoning_route["approval_required"] is True
 
 
+def test_external_deploy_and_approval_phrasing_cannot_bypass_gate(tmp_path):
+    engine = CognitiveOrchestrator(memory=seeded_memory(tmp_path), portal=FakePortal())
+    for intent in ("Deploy an external production change", "Approve an external consequential change", "Execute an external operation"):
+        plan=engine.plan(intent=intent,department="engineering")
+        assert plan.needs_approval is True
+        assert plan.proposed_action["action"] == "external.action.proposal"
+
+
 def test_low_confidence_plan_holds_without_frontier(tmp_path):
     store = MemoryStore(str(tmp_path / "empty.db"))
     engine = CognitiveOrchestrator(memory=store, portal=FakePortal())
