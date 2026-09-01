@@ -1,0 +1,3 @@
+# Portfolio runtime status
+
+PRIME owns cognition, authenticated event ingestion, governed memory, model routing, multi-specialist reasoning, critique/synthesis and evaluation. The Portal provides typed semantic-world-model utilities and event production. Game Platform provides deterministic bounded simulation and event export. VELYQUA and Authority runtime implementation remains staged on their existing portfolio-fabric branches until those repositories are private; only non-sensitive implementation planning is stored there while public. Physical actuation is never authorized by Portfolio Events.
