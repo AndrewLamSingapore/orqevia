@@ -8,16 +8,17 @@ from urllib.parse import urlparse
 import httpx
 import pandas as pd
 from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from pypdf import PdfReader
 from docx import Document as DocxDocument
 from .orchestration import SPECIALISTS, choose_specialist, has_consequential_intent, build_task_brief, compact_context, supervisor_status, grounding_guard
+from .settings import SETTINGS
 
-OLLAMA=os.getenv("OLLAMA_URL","http://ollama:11434").rstrip("/")
-FAST_MODEL=os.getenv("PRIME_FAST_MODEL","gemma3:1b")
-DEEP_MODEL=os.getenv("PRIME_DEEP_MODEL",FAST_MODEL)
-EMBED_MODEL=os.getenv("PRIME_EMBED_MODEL","embeddinggemma:300m-qat-q4_0")
+OLLAMA=SETTINGS.ollama_base_url
+FAST_MODEL=SETTINGS.fast_model
+DEEP_MODEL=SETTINGS.deep_model
+EMBED_MODEL=SETTINGS.embedding_model
 MAX_UPLOAD=int(os.getenv("PRIME_MAX_UPLOAD_MB","25"))*1024*1024
 MAX_AGENT_STEPS=max(1,min(10,int(os.getenv("PRIME_MAX_AGENT_STEPS","7"))))
 CODE_TIMEOUT=max(2,min(15,int(os.getenv("PRIME_CODE_TIMEOUT_SECONDS","6"))))
@@ -560,12 +561,16 @@ async def orchestrate(q,remember=True,automation=False):
  agents=list(dict.fromkeys(agents))[:MAX_AGENT_STEPS]
  rid,tid=make_run(q,agents);trace=[]
  try:
-  draft,model=await llm(BASE_SYSTEM,f"Use this context:\n{ctx[:15000]}\n\nUser request:\n{q}")
-  trace.append({'agent':'analyst','status':'ok'})
-  if 'critic' in agents:
-   critique,_=await llm(BASE_SYSTEM,"Critique this draft for unsupported claims and contradictions. Return only concrete corrections.\n\n"+draft)
-   trace.append({'agent':'critic','status':'ok','review':critique[:1000]})
-   draft,_=await llm(BASE_SYSTEM,f"Revise the draft using this critique. Keep only supported claims.\nCRITIQUE:\n{critique}\nDRAFT:\n{draft}",model)
+  import asyncio
+  from .runtime import orchestrator as canonical_orchestrator
+  outcome=await asyncio.to_thread(canonical_orchestrator.execute,intent=q,department=choose_specialist('',q,ctx).specialist,context=ctx,allow_frontier=False,deep=choose_model(q)[1]=='deep')
+  released=outcome.get('result')
+  if released:
+   draft=released['text'];model=released['model'];trace.append({'agent':'canonical_orchestrator','status':'released','task_id':released['task_id'],'evaluation':outcome['evaluation']})
+  else:
+   hold=outcome['confidence_hold'];draft="I’m holding this answer because it did not pass the post-generation confidence gate. " + hold['reason'] + (" Evidence gaps: " + "; ".join(hold.get('evidence_gaps') or []) if hold.get('evidence_gaps') else '')
+   model=outcome['withheld_result']['model'];trace.append({'agent':'canonical_orchestrator','status':'confidence_hold','task_id':outcome['withheld_result']['task_id'],'evaluation':outcome['evaluation']})
+  agents=list(dict.fromkeys(['memory','canonical_orchestrator','evaluator']+(['confidence_gate'] if not released else [])))
   if remember and not automation:
    try:v=await embed_one(q)
    except:v=None
@@ -655,19 +660,14 @@ class DependencyBody(BaseModel):task_id:str;depends_on_task_id:str
 async def home():return HTML
 @app.get('/health')
 async def health():
- c=connect();x=c.execute('PRAGMA quick_check').fetchone()[0];c.close();return {'ok':x=='ok','version':'7.3.1.1-evidence-grounded','integrity':x}
+ c=connect();x=c.execute('PRAGMA quick_check').fetchone()[0];c.close();models=SETTINGS.ollama_readiness();ok=x=='ok' and models['ready'];payload={'ok':ok,'version':'7.3.1.1-evidence-grounded','integrity':x,'models':models};return JSONResponse(payload,status_code=200 if ok else 503)
 @app.get('/api/status')
 async def status():
- names=[]
- try:
-  async with httpx.AsyncClient(timeout=10) as h:
-   r=await h.get(OLLAMA+'/api/tags');names=[m.get('name','') for m in r.json().get('models',[])] if r.is_success else []
- except:pass
- ready=lambda m:any(x==m or x.startswith(m.split(':')[0]+':') for x in names)
- return {'version':'7.3.1.1-evidence-grounded','fast_ready':ready(FAST_MODEL),'memory_ready':ready(EMBED_MODEL),**counts(),**governance_counts(),**phase2_counts(),**phase3_counts(),**orchestration_counts()}
+ models=SETTINGS.ollama_readiness();installed=set(models['installed_models'])
+ return {'version':'7.3.1.1-evidence-grounded','fast_ready':FAST_MODEL in installed,'deep_ready':DEEP_MODEL in installed,'memory_ready':EMBED_MODEL in installed,'model_readiness':models,**counts(),**governance_counts(),**phase2_counts(),**phase3_counts(),**orchestration_counts()}
 @app.get('/api/selftest')
 async def selftest():
- h=await health();s=await status();required={'research','data','coding','actions','automation','memory','analyst','verifier','governor','executive','portfolio','auditor','operations','watchdog','performance','dependency','evaluator','artifact_curator','loop_manager'}
+ h=await health();h=json.loads(h.body) if isinstance(h,JSONResponse) else h;s=await status();required={'research','data','coding','actions','automation','memory','analyst','verifier','governor','executive','portfolio','auditor','operations','watchdog','performance','dependency','evaluator','artifact_curator','loop_manager'}
  c=connect()
  try:
   constitution_count=c.execute("SELECT COUNT(*) FROM org_constitution WHERE locked=1").fetchone()[0]

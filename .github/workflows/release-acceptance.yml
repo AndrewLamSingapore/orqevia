@@ -8,6 +8,8 @@ on:
       - '.env.example'
       - 'JARVIS.cmd'
       - 'app/**'
+      - 'benchmarks/**'
+      - 'contracts/**'
       - 'deploy/**'
       - 'scripts/**'
       - 'tests/**'
@@ -20,6 +22,8 @@ on:
       - '.env.example'
       - 'JARVIS.cmd'
       - 'app/**'
+      - 'benchmarks/**'
+      - 'contracts/**'
       - 'deploy/**'
       - 'scripts/**'
       - 'tests/**'
@@ -31,6 +35,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install source test dependencies
+        run: python -m pip install -r requirements.txt pytest
+      - name: Run the complete source suite
+        run: python -m pytest -q
+      - name: Verify canonical generated contract copies
+        run: python scripts/verify_portfolio_contracts.py
+      - name: Verify the 50-case benchmark manifest
+        run: |
+          python benchmarks/generate_portfolio_v2.py
+          git diff --exit-code -- benchmarks/portfolio-v2.json
       - name: Verify approval-gated and runtime operations contracts
         run: python -m unittest tests.test_control_surface_contract tests.test_runtime_operations_contract
       - name: Parse the Windows operator
@@ -49,17 +67,29 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build production image
         run: docker build -t prime:acceptance .
+      - name: Start deterministic Ollama acceptance fixture
+        run: |
+          docker network create prime-acceptance
+          docker run -d --name fake-ollama --network prime-acceptance --network-alias ollama \
+            -v "${{ github.workspace }}/tests:/fixture:ro" \
+            python:3.12-alpine python /fixture/fake_ollama.py
       - name: Create persistent data volume
         run: docker volume create prime-acceptance-data
       - name: Boot PRIME
         run: |
           docker run -d --name prime-acceptance \
+            --network prime-acceptance \
             -p 18000:8000 \
             -v prime-acceptance-data:/data \
+            -e OLLAMA_BASE_URL=http://ollama:11434 \
+            -e PRIME_FAST_MODEL=gemma3:1b \
+            -e PRIME_DEEP_MODEL=gemma3:1b \
+            -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
+            -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
             -e PRIME_SPINE_TOKEN=acceptance-secret \
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
-            -e PORTAL_BASE_URL=https://the-portal-ten.vercel.app \
+            -e PORTAL_BASE_URL= \
             prime:acceptance
       - name: Verify health, Control Surface and protected read paths
         run: |
@@ -114,17 +144,41 @@ jobs:
           assert plan['plan']['proposed_action']['action']=='external.action.proposal'
           assert plan['plan']['reasoning_route']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
           assert plan['plan']['reasoning_route']['approval_required'] is True
+          status, reason=request('/api/cognitive/reason', method='POST', body={'intent':'Review release acceptance architecture','department':'engineering','context':'Use the saved release acceptance evidence.'})
+          assert status==200 and reason['result'] and reason['evaluation']['released'] is True
+          assert reason['confidence_hold']['held'] is False
+          assert reason['executed_external_action'] is False
+          status, multi=request('/api/cognitive/multi-reason', method='POST', body={'intent':'Evaluate the bounded release design','context':'Container acceptance','evidence':'Deterministic fixture'})
+          assert status==200 and multi['workers']==2 and len(multi['specialists'])==6
+          assert multi['critic']['stage']=='specialist_critique' and multi['synthesis']['stage']=='specialist_synthesis'
+          status, event=request('/api/cognitive/events', method='POST', body={'version':'1.0','event_id':'acceptance-event-0001','event_type':'game.simulation.completed','source':'game-platform','occurred_at':'2026-09-01T00:00:00Z','evidence_level':'E2','provenance':['acceptance:seed-1'],'payload':{'simulation_id':'acceptance-sim','scenario':'bounded'}})
+          assert status==200 and event['inserted'] and event['projected']
+          status, reviews=request('/api/cognitive/event-reviews')
+          assert status==200 and any(item['event_id']=='acceptance-event-0001' and item['status']=='pending' for item in reviews['reviews'])
+          status, graph=request('/api/cognitive/semantic-graph')
+          assert status==200 and any(item['last_event_id']=='acceptance-event-0001' for item in graph['nodes'])
+          status, compute=request('/api/cognitive/compute')
+          stages={item['stage'] for item in compute['events']}
+          assert {'local_ai','answer_evaluation','specialist_critique','specialist_synthesis'} <= stages
           PY
+      - name: Execute the 50-case endpoint benchmark
+        run: python benchmarks/run_endpoint.py --base-url http://127.0.0.1:18000 --token acceptance-secret --minimum-pass-rate 1.0
       - name: Verify persistence across restart
         run: |
           docker rm -f prime-acceptance
           docker run -d --name prime-acceptance \
+            --network prime-acceptance \
             -p 18000:8000 \
             -v prime-acceptance-data:/data \
+            -e OLLAMA_BASE_URL=http://ollama:11434 \
+            -e PRIME_FAST_MODEL=gemma3:1b \
+            -e PRIME_DEEP_MODEL=gemma3:1b \
+            -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
+            -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
             -e PRIME_SPINE_TOKEN=acceptance-secret \
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
-            -e PORTAL_BASE_URL=https://the-portal-ten.vercel.app \
+            -e PORTAL_BASE_URL= \
             prime:acceptance
           python - <<'PY'
           import json, time, urllib.request
@@ -142,4 +196,6 @@ jobs:
           PY
       - name: Container logs on failure
         if: failure()
-        run: docker logs prime-acceptance || true
+        run: |
+          docker logs prime-acceptance || true
+          docker logs fake-ollama || true

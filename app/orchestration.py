@@ -49,6 +49,7 @@ FORBIDDEN_EFFECT_WORDS = {
 # Phrase variants for consequential actions must not be bypassable by harmless
 # filler words (for example, "send an external message" vs "send message").
 CONSEQUENTIAL_PATTERNS = (
+    re.compile(r"\b(?:send|approve|deploy|execute)\b(?:\s+[a-z0-9_-]+){0,5}\s+\b(?:external|remote|production|public)\b"),
     re.compile(r"\bsend\b(?:\s+[a-z0-9_-]+){0,4}\s+\b(?:email|message)\b"),
     re.compile(r"\b(?:publish|post)\b(?:\s+[a-z0-9_-]+){0,4}\s+\b(?:publicly|online|externally)\b"),
     re.compile(r"\b(?:purchase|buy|pay|transfer|withdraw|trade)\b"),

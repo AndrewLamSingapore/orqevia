@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
+from .generated.portfolio_contracts import validate_action_envelope
 
 POLICY_STATES = {"AUTO", "BOUNDED_AUTO", "GATED", "PROHIBITED"}
 VERIFY_STATES = {"PENDING", "VERIFIED", "FAILED", "NOT_OBSERVABLE", "OBSERVED"}
@@ -44,18 +45,11 @@ def utc_now() -> str:
 
 
 def validate_envelope(value: Any) -> str | None:
-    if not isinstance(value, Mapping):
-        return "action_envelope must be an object"
-    missing = sorted(REQUIRED_ENVELOPE_FIELDS - set(value))
-    if missing:
-        return f"missing action envelope fields: {', '.join(missing)}"
+    result = validate_action_envelope(value)
+    if not result["valid"]:
+        return "; ".join(f"{item['path'] or '/'} {item['message']}" for item in result["errors"])
     if value.get("tenant_id") != "personal":
         return "personal JARVIS tenant_id must be 'personal'"
-    for key in ("actor_id", "actor_type", "action", "correlation_id", "idempotency_key", "schema_version", "timestamp"):
-        if not isinstance(value.get(key), str) or not value[key].strip():
-            return f"{key} must be a non-empty string"
-    if not isinstance(value.get("parameters"), Mapping) or not isinstance(value.get("context"), Mapping):
-        return "parameters and context must be objects"
     return None
 
 

@@ -1,19 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://jarvis.local/contracts/reasoning-output-v1.schema.json",
-  "title": "ReasoningOutputV1",
+  "$id": "https://github.com/AndrewLamSingapore/AndrewLamSingapore/portfolio-contracts/reasoning-output-v1.schema.json",
+  "title": "Portfolio Reasoning Output v1",
   "type": "object",
-  "additionalProperties": false,
-  "required": ["confidence","decision_summary"],
+  "required": ["kind", "confidence", "decision_summary", "schema_version"],
   "properties": {
-    "recommendation": {"type": ["string","null"]},
-    "proposed_action": {"$ref": "action-envelope-v1.schema.json"},
+    "kind": {"type": "string", "enum": ["recommendation", "proposed_action", "abstain"]},
     "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-    "decision_summary": {"type": "object"},
-    "reasoner_version": {"type": ["string","null"]}
+    "decision_summary": {"type": "string", "minLength": 1},
+    "recommendation": {"type": ["string", "null"]},
+    "proposed_action": {"$ref": "action-envelope-v1.schema.json"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}, "default": []},
+    "reasoner_version": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0"}
   },
-  "anyOf": [
-    {"required": ["recommendation"]},
-    {"required": ["proposed_action"]}
-  ]
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "proposed_action"}}}, "then": {"required": ["proposed_action"]}}
+  ],
+  "additionalProperties": false
 }

@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from .hybrid_memory import HybridMemory
+from .answer_evaluator import evaluate_generated_answer
 from .memory import MemoryStore
 from .model_gateway import ModelGateway
 from .orchestration import choose_specialist, has_consequential_intent
@@ -140,13 +141,28 @@ Rules:
         prompt = self._prompt(plan, context)
         local = self.gateway.local(prompt=prompt, deep=deep)
         result = local
+        evaluation = evaluate_generated_answer(gateway=self.gateway, task_id=local.task_id, intent=intent,
+                                               answer=local.text, memory_context=plan.memory_context,
+                                               portal_context=plan.portal_context, consequential=plan.needs_approval)
         escalated = False
-        # The existing confidence gate remains authoritative. Frontier is used only when
-        # the pre-inference evidence confidence is insufficient and it is explicitly allowed.
-        if plan.confidence != "strong" and allow_frontier and self.gateway.frontier_available:
+        if not evaluation["released"] and allow_frontier and self.gateway.frontier_available:
             frontier_prompt = prompt + "\n\nLOCAL DRAFT TO CRITIQUE AND IMPROVE:\n" + local.text[:12000]
             result = self.gateway.frontier(prompt=frontier_prompt, task_id=local.task_id)
+            evaluation = evaluate_generated_answer(gateway=self.gateway, task_id=local.task_id, intent=intent,
+                                                   answer=result.text, memory_context=plan.memory_context,
+                                                   portal_context=plan.portal_context, consequential=plan.needs_approval)
             escalated = True
-        return {"plan": plan.as_dict(), "result": result.as_dict(), "local_result": local.as_dict(),
-                "escalated": escalated, "approval_required": plan.needs_approval,
-                "executed_external_action": False}
+        post_confidence = "strong" if evaluation["released"] else "partial" if evaluation["score"] >= 0.55 else "limited"
+        final_route = self.routing.decide(local_confidence=post_confidence, frontier_allowed=allow_frontier,
+                                          frontier_available=self.gateway.frontier_available,
+                                          consequential=plan.needs_approval).as_dict()
+        plan_dict = plan.as_dict(); plan_dict["pre_inference_confidence"] = plan.confidence
+        plan_dict["confidence"] = post_confidence; plan_dict["reasoning_route"] = final_route
+        if not evaluation["released"]:
+            metadata = {key: value for key, value in result.as_dict().items() if key != "text"}
+            return {"plan": plan_dict, "result": None, "withheld_result": metadata, "evaluation": evaluation,
+                    "confidence_hold": {"held": True, "reason": final_route["reason"], "blocking_metrics": evaluation["blocking_metrics"], "evidence_gaps": evaluation["evidence_gaps"]},
+                    "escalated": escalated, "approval_required": plan.needs_approval, "executed_external_action": False}
+        return {"plan": plan_dict, "result": result.as_dict(), "local_result": local.as_dict() if escalated else None,
+                "evaluation": evaluation, "confidence_hold": {"held": False}, "escalated": escalated,
+                "approval_required": plan.needs_approval, "executed_external_action": False}
