@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/AndrewLamSingapore/AndrewLamSingapore/main/portfolio-contracts/schemas/verification-v1.schema.json",
+  "title": "JARVIS Shared Verification v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["correlation_id", "command_status", "execution_status", "outcome_status", "evidence_refs", "verified_at", "schema_version"],
+  "properties": {
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "command_status": { "type": "string", "enum": ["accepted", "rejected", "unknown"] },
+    "execution_status": { "type": "string", "enum": ["verified", "failed", "unknown", "not_applicable"] },
+    "outcome_status": { "type": "string", "enum": ["observed", "pending", "failed", "not_observable", "unknown"] },
+    "evidence_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "verified_at": { "type": "string", "format": "date-time" },
+    "schema_version": { "const": "1.0.0" }
+  }
+}

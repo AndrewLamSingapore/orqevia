@@ -13,7 +13,7 @@ def envelope(action: str, key: str = "k1"):
         "context": {"policy_limits": {}},
         "correlation_id": f"c-{key}",
         "idempotency_key": key,
-        "schema_version": "1.0",
+        "schema_version": "1.0.0",
         "timestamp": "2026-08-30T00:00:00Z",
     }
 
