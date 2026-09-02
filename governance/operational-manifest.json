@@ -119,9 +119,13 @@
   },
   "github_hygiene": {
     "stale_dependabot_pull_requests_closed": 6,
-    "content_redundant_branches": 18,
+    "last_branch_audit_utc": "2026-09-02T04:12:00Z",
+    "last_branch_audit": {
+      "content_redundant_branch_candidates": 20,
+      "unique_non_main_branches": 92
+    },
     "redundant_branch_state": "retained_pending_confirmed_deletion",
-    "unique_non_main_branches_retained": 92
+    "retention_rule": "Preserve every branch with unique tree content. Treat counts as an audit snapshot, not a continuously current cursor."
   },
   "release_gate": {
     "policy": "zero-known-defect",
