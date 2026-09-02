@@ -1,7 +1,7 @@
 {
   "schema_version": "3.0.0",
   "status": "CURRENT",
-  "as_of_utc": "2026-09-02T03:46:00Z",
+  "as_of_utc": "2026-09-02T04:06:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/PRIME",
     "branch": "main",
@@ -23,6 +23,12 @@
       }
     ]
   },
+  "alignment_state": {
+    "source_and_deployments": "ALIGNED",
+    "portfolio_relay": "CONFIGURATION_REQUIRED",
+    "authority_evidence_review": "CONFIGURATION_REQUIRED",
+    "dell_runtime": "OPERATOR_UPDATE_REQUIRED"
+  },
   "shared_contract": {
     "version": "2.0.0",
     "repository": "AndrewLamSingapore/AndrewLamSingapore",
@@ -39,9 +45,13 @@
     "authority": {
       "role": "governed evidence review and draft projection",
       "repository": "AndrewLamSingapore/authority-engine",
-      "source_sha": "f38aaf0c3c628d8d6ee6b726c7fa3f8cb2713cfc",
+      "source_sha": "68aad052b1a82a85ea1828dcac52c7f0932865f9",
       "vercel_project_id": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
       "vercel_project": "authority-engine-app",
+      "production_deployment_id": "dpl_H8P5aDEWrcugFL7pyQSEFuk9taqr",
+      "production_state": "READY",
+      "health_url": "https://authority-engine-app.vercel.app/api/health",
+      "health_revision_verified": "68aad052b1a82a85ea1828dcac52c7f0932865f9",
       "publication_mode": "explicit_draft_only"
     },
     "game": {
@@ -50,6 +60,10 @@
       "source_sha": "6aa419ac61a70985420b163070dc569ded556524",
       "vercel_project_id": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
       "vercel_project": "game-platform",
+      "production_deployment_id": "dpl_FZdjf9kZ1p7VNt4vigrCUhGjPJh2",
+      "production_state": "READY",
+      "health_url": "https://game-platform-wine-nine.vercel.app/api/health",
+      "health_revision_verified": "6aa419ac61a70985420b163070dc569ded556524",
       "ai_degradation": "deterministic-fallback-v1"
     },
     "portal": {
@@ -58,12 +72,18 @@
       "source_sha": "ca44a1a9378329712ef68cb150d545efd777aa1c",
       "vercel_project_id": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
       "vercel_project": "the-portal",
+      "production_deployment_id": "dpl_8yxmfAwddM5irYpBFqBt4fKepNfm",
+      "production_state": "READY",
+      "health_url": "https://the-portal-ten.vercel.app/api/health",
+      "health_revision_verified": "ca44a1a9378329712ef68cb150d545efd777aa1c",
       "relay_path": "/api/portfolio-relay"
     },
     "prime": {
       "role": "only cognitive control plane for JARVIS",
       "repository": "AndrewLamSingapore/PRIME",
       "source_ref": "main",
+      "last_green_source_sha": "7633d9c316613b92d3fb2d47ff0649373466b5fe",
+      "published_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
       "runtime": "private-dell-docker",
       "authority": "inference-only; external actions remain approval-gated"
     }
@@ -74,12 +94,34 @@
     "contract": "portfolio-event-v1",
     "delivery": "at-least-once with idempotent PRIME ingestion"
   },
+  "configuration_required": {
+    "portfolio_relay": {
+      "status": "CONFIGURATION_REQUIRED",
+      "shared_secret_stored": false,
+      "portal_outbox_schema_initialized": false,
+      "game_delivery_enabled": false,
+      "authority_delivery_enabled": false,
+      "rule": "Store one shared secret in the three Vercel projects and the Dell runtime; never record the value here."
+    },
+    "authority_evidence_review": {
+      "status": "CONFIGURATION_REQUIRED",
+      "sanity_credentials_stored": false,
+      "publication_mode": "explicit_draft_only"
+    }
+  },
   "dell_runtime": {
     "last_verified_source_sha": "a96187bd905b7fc15fc34e84cfa52cf7a22e2d6b",
     "target_source_ref": "main",
+    "target_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
     "status": "operator_update_required",
     "reason": "The private Dell host is not reachable from this workspace; promote only the final green GHCR sha image.",
     "rollback": "retain current named volumes and stopped rollback container"
+  },
+  "github_hygiene": {
+    "stale_dependabot_pull_requests_closed": 6,
+    "content_redundant_branches": 18,
+    "redundant_branch_state": "retained_pending_confirmed_deletion",
+    "unique_non_main_branches_retained": 92
   },
   "release_gate": {
     "policy": "zero-known-defect",
