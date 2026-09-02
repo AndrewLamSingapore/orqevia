@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "governance" / "operational-manifest.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 DEPLOYMENT_ID = re.compile(r"^dpl_[A-Za-z0-9]+$")
+EXPECTED_SCHEMA_VERSION = "3.2.0"
 EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime"}
 EXPECTED_PROJECTS = {
     "authority": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
@@ -19,7 +20,7 @@ EXPECTED_PROJECTS = {
 
 
 def verify(value: dict) -> None:
-    assert value["schema_version"] == "3.0.0"
+    assert value["schema_version"] == EXPECTED_SCHEMA_VERSION
     assert value["status"] == "CURRENT"
     canonical = value["canonical_machine_source"]
     assert canonical == {
