@@ -83,3 +83,14 @@ PRIME is stateful and is not deployed to Vercel. GitHub Actions publishes the ve
 PRIME now separates fast, deep, evaluator and embedding roles, records Ollama throughput and latency, and supports explicit `compat`, `balanced` and `max` profiles. The evaluator may run on an independent model to reduce correlated errors. The protected `/api/cognitive/compute` response includes per-provider/model success rate, latency and output-token throughput.
 
 The default Compose file remains hardware-safe. After the Dell GPU preflight passes, apply `docker-compose.gpu.yml` and tune one variable at a time. See `COMPUTE.md` for the promotion ladder. Vercel applications publish governed events to the Portal relay; PRIME pulls and acknowledges them from the private Dell runtime, so no inbound Dell exposure is required.
+
+
+## Governed 29-agent queue
+
+PRIME provides one persistent, protected compute queue for every agent. It
+enforces priority/FIFO scheduling, global and per-agent concurrency, explicit
+model roles, live RAM/VRAM reservations, worker timeouts, bounded retries and
+per-job/daily cost ceilings. Cloud-capable or externally executing jobs are held
+for an auditable owner approval. Approved cloud work remains local-first and can
+burst only for an unavailable local model, insufficient local VRAM, or an
+expired local wait threshold. See `COMPUTE.md`.
