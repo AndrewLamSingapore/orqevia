@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import sqlite3
 import uuid
@@ -15,7 +16,7 @@ def _percentile(values: list[float], percentile: float) -> float | None:
     if not values:
         return None
     ordered = sorted(float(value) for value in values)
-    rank = max(0, min(len(ordered) - 1, int((len(ordered) - 1) * percentile)))
+    rank = max(0, min(len(ordered) - 1, math.ceil(len(ordered) * percentile) - 1))
     return round(ordered[rank], 3)
 
 
