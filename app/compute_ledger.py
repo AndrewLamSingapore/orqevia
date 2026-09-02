@@ -79,6 +79,7 @@ class ComputeLedger:
                 "provider": event["provider"], "model": event["model"], "calls": 0,
                 "successful_calls": 0, "latency_ms": 0, "input_units": 0,
                 "output_units": 0, "output_tokens_per_second_samples": [],
+                "latency_samples": [], "stages": set(), "last_seen_at": "",
             })
             group["calls"] += 1
             group["successful_calls"] += int(event["success"])
