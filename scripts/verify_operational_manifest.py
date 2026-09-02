@@ -73,8 +73,11 @@ def verify(value: dict) -> None:
     assert dell["status"] in {"aligned", "operator_update_required", "verification_required"}
     assert dell["target_image"] == systems["prime"]["published_image"]
     hygiene = value["github_hygiene"]
-    assert hygiene["content_redundant_branches"] >= 0
-    assert hygiene["unique_non_main_branches_retained"] >= 0
+    assert hygiene["last_branch_audit_utc"].endswith("Z")
+    audit = hygiene["last_branch_audit"]
+    assert audit["content_redundant_branch_candidates"] >= 0
+    assert audit["unique_non_main_branches"] >= 0
+    assert hygiene["redundant_branch_state"] == "retained_pending_confirmed_deletion"
     assert value["release_gate"]["secret_values_allowed"] is False
     assert value["supersession"]["duplicate_current_checkpoints_allowed"] is False
 
