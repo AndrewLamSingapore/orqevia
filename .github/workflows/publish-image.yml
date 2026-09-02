@@ -3,10 +3,13 @@ name: Publish PRIME Image
 on:
   push:
     branches: [main]
+    tags: ['v*']
     paths:
       - 'Dockerfile'
       - 'app/**'
       - 'requirements.txt'
+      - 'docker-compose.yml'
+      - 'docker-compose.gpu.yml'
       - '.github/workflows/publish-image.yml'
   workflow_dispatch:
 
@@ -30,13 +33,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Generate immutable image tags
+      - name: Generate immutable and release image tags
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/andrewlamsingapore/prime
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short,prefix=sha-
+            type=ref,event=tag
       - name: Build and publish PRIME
         uses: docker/build-push-action@v6
         with:
