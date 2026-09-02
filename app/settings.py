@@ -26,13 +26,17 @@ class PrimeSettings:
     ollama_base_url: str
     fast_model: str
     deep_model: str
-    evaluator_model: str
     embedding_model: str
-    compute_profile: str
     multi_specialist_workers: int
-    context_tokens: int
-    max_output_tokens: int
-    keep_alive: str
+    evaluator_model: str = ""
+    compute_profile: str = "compat"
+    context_tokens: int = 8192
+    max_output_tokens: int = 2048
+    keep_alive: str = "10m"
+
+    def __post_init__(self) -> None:
+        if not self.evaluator_model:
+            object.__setattr__(self, "evaluator_model", self.deep_model)
 
     @classmethod
     def from_env(cls) -> "PrimeSettings":
