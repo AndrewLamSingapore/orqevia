@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: PRIME quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+      - name: Compile application
+        run: python -m compileall -q app
+      - name: Run tests
+        env:
+          PRIME_DATA_DIR: ${{ runner.temp }}/prime-data
+          PRIME_COMPUTE_DB: ${{ runner.temp }}/prime-data/compute-ledger.db
+        run: pytest -q
+      - name: Validate governance JSON
+        run: python -m json.tool governance/operational-manifest.json > /dev/null
