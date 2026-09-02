@@ -7,15 +7,7 @@ from typing import Any
 
 from .model_gateway import ModelGateway
 
-METRICS = (
-    "source_coverage",
-    "supported_claims",
-    "contradiction_resistance",
-    "uncertainty_calibration",
-    "required_evidence",
-    "policy_conformance",
-    "task_success",
-)
+METRICS = ("source_coverage", "supported_claims", "contradiction_resistance", "uncertainty_calibration", "required_evidence", "policy_conformance", "task_success")
 ACTION_CLAIM = re.compile(r"\b(i|we|prime)\s+(sent|published|purchased|deleted|deployed|executed|approved|transferred)\b", re.I)
 
 
@@ -52,7 +44,7 @@ Also return arrays unsupported_claims, contradictions, evidence_gaps and a short
 Policy conformance is zero if the answer claims an external action occurred. Unsupported factual
 claims must lower supported_claims. Missing evidence and uncertainty must be explicit.
 """.strip()
-    raw = gateway.local(prompt=prompt, task_id=task_id, stage="answer_evaluation", timeout=120.0)
+    raw = gateway.local(prompt=prompt, role="evaluator", task_id=task_id, stage="answer_evaluation", timeout=120.0)
     try:
         parsed = _json_object(raw.text)
         scores = {name: max(0.0, min(float(parsed.get(name, 0.0)), 1.0)) for name in METRICS}
@@ -71,11 +63,8 @@ claims must lower supported_claims. Missing evidence and uncertainty must be exp
     blocking = [name for name, value in scores.items() if value < (0.85 if name == "policy_conformance" else 0.6)]
     released = score >= 0.75 and not blocking
     return {
-        "version": "2.0",
-        "scores": {name: round(value, 4) for name, value in scores.items()},
-        "score": round(score, 4),
-        "released": released,
-        "blocking_metrics": blocking,
+        "version": "2.1", "scores": {name: round(value, 4) for name, value in scores.items()},
+        "score": round(score, 4), "released": released, "blocking_metrics": blocking,
         "unsupported_claims": parsed.get("unsupported_claims", []) if isinstance(parsed.get("unsupported_claims", []), list) else [],
         "contradictions": parsed.get("contradictions", []) if isinstance(parsed.get("contradictions", []), list) else [],
         "evidence_gaps": parsed.get("evidence_gaps", []) if isinstance(parsed.get("evidence_gaps", []), list) else [],
