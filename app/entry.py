@@ -7,6 +7,7 @@ from .cognitive_api import router as cognitive_router
 from .control_surface import router as control_surface_router
 from .portfolio_relay import PortfolioRelayPoller
 from .runtime import events
+from .compute_queue_api import router as compute_queue_router, start_compute_queue, stop_compute_queue
 
 portfolio_relay = PortfolioRelayPoller(events)
 
@@ -15,13 +16,16 @@ app.include_router(velyqua_router)
 app.include_router(spine_router)
 app.include_router(cognitive_router)
 app.include_router(control_surface_router)
+app.include_router(compute_queue_router)
 
 
 @app.on_event("startup")
 def start_portfolio_relay() -> None:
     portfolio_relay.start()
+    start_compute_queue()
 
 
 @app.on_event("shutdown")
 def stop_portfolio_relay() -> None:
+    stop_compute_queue()
     portfolio_relay.stop()
