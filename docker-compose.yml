@@ -12,10 +12,15 @@ services:
       - "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000"
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
+      PRIME_COMPUTE_PROFILE: ${PRIME_COMPUTE_PROFILE:-balanced}
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
+      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
-      PRIME_MULTI_SPECIALIST_WORKERS: ${PRIME_MULTI_SPECIALIST_WORKERS:-2}
+      PRIME_MULTI_SPECIALIST_WORKERS: ${PRIME_MULTI_SPECIALIST_WORKERS:-3}
+      PRIME_CONTEXT_TOKENS: ${PRIME_CONTEXT_TOKENS:-16384}
+      PRIME_MAX_OUTPUT_TOKENS: ${PRIME_MAX_OUTPUT_TOKENS:-4096}
+      PRIME_MODEL_KEEP_ALIVE: ${PRIME_MODEL_KEEP_ALIVE:-10m}
       PRIME_DATA_DIR: /data
       PRIME_SPINE_DB: /data/prime-spine.db
       PRIME_MEMORY_DB: /data/jarvis-memory.db
@@ -24,6 +29,13 @@ services:
       PORTAL_BASE_URL: ${PORTAL_BASE_URL:-https://the-portal-ten.vercel.app}
       PORTAL_RESULT_URL: ${PORTAL_RESULT_URL:-}
       PORTAL_RESULT_TOKEN: ${PORTAL_RESULT_TOKEN:-}
+      PORTFOLIO_RELAY_URL: ${PORTFOLIO_RELAY_URL:-}
+      PORTFOLIO_RELAY_TOKEN: ${PORTFOLIO_RELAY_TOKEN:-}
+      PORTFOLIO_RELAY_INTERVAL_SECONDS: ${PORTFOLIO_RELAY_INTERVAL_SECONDS:-15}
+      PRIME_FRONTIER_URL: ${PRIME_FRONTIER_URL:-}
+      PRIME_FRONTIER_API_KEY: ${PRIME_FRONTIER_API_KEY:-}
+      PRIME_FRONTIER_MODEL: ${PRIME_FRONTIER_MODEL:-}
+      PRIME_FRONTIER_MAX_INPUT_CHARS: ${PRIME_FRONTIER_MAX_INPUT_CHARS:-60000}
     volumes:
       - prime-data:/data
     depends_on:
@@ -41,15 +53,21 @@ services:
     stop_grace_period: 30s
     logging:
       driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+      options: { max-size: "10m", max-file: "3" }
 
   ollama:
     image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "model-runtime"
+    environment:
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
+      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-3}
+      OLLAMA_MAX_QUEUE: ${OLLAMA_MAX_QUEUE:-256}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-10m}
+      OLLAMA_FLASH_ATTENTION: ${OLLAMA_FLASH_ATTENTION:-true}
+      OLLAMA_KV_CACHE_TYPE: ${OLLAMA_KV_CACHE_TYPE:-q8_0}
     volumes:
       - ollama-data:/root/.ollama
     healthcheck:
@@ -62,9 +80,7 @@ services:
     stop_grace_period: 30s
     logging:
       driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+      options: { max-size: "10m", max-file: "3" }
 
   model-init:
     image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
@@ -75,13 +91,16 @@ services:
       OLLAMA_HOST: http://ollama:11434
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
+      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         until ollama list >/dev/null 2>&1; do sleep 2; done
+        PRIME_EVALUATOR_MODEL="$${PRIME_EVALUATOR_MODEL:-$${PRIME_DEEP_MODEL}}"
         ollama pull "$${PRIME_FAST_MODEL}"
         if [ "$${PRIME_DEEP_MODEL}" != "$${PRIME_FAST_MODEL}" ]; then ollama pull "$${PRIME_DEEP_MODEL}"; fi
+        if [ "$${PRIME_EVALUATOR_MODEL}" != "$${PRIME_FAST_MODEL}" ] && [ "$${PRIME_EVALUATOR_MODEL}" != "$${PRIME_DEEP_MODEL}" ]; then ollama pull "$${PRIME_EVALUATOR_MODEL}"; fi
         ollama pull "$${PRIME_EMBED_MODEL}"
     depends_on:
       ollama:
@@ -96,10 +115,7 @@ services:
       com.lamjarvis.role: "integration-gateway"
     environment:
       PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
-    command:
-      - /bin/sh
-      - -c
-      - test -n "${PRIME_INTEGRATION_TOKEN}" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+    command: ["/bin/sh", "-c", "test -n \"$${PRIME_INTEGRATION_TOKEN}\" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
@@ -109,9 +125,7 @@ services:
     stop_grace_period: 15s
     logging:
       driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+      options: { max-size: "10m", max-file: "3" }
 
   cloudflared:
     image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
@@ -129,9 +143,7 @@ services:
     stop_grace_period: 15s
     logging:
       driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+      options: { max-size: "10m", max-file: "3" }
 
 volumes:
   prime-data:
