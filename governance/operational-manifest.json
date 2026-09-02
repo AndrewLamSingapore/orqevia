@@ -1,7 +1,7 @@
 {
-  "schema_version": "3.0.0",
+  "schema_version": "3.1.0",
   "status": "CURRENT",
-  "as_of_utc": "2026-09-02T06:27:00Z",
+  "as_of_utc": "2026-09-02T06:57:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/PRIME",
     "branch": "main",
@@ -30,10 +30,13 @@
     ]
   },
   "alignment_state": {
-    "source_and_deployments": "ALIGNED",
+    "source_and_deployments": "CLOUD_ALIGNED_DELL_PROMOTION_PENDING",
     "portfolio_relay": "ALIGNED_VERIFIED",
     "authority_evidence_review": "READY_DRAFT_ONLY",
-    "dell_runtime": "ALIGNED_VERIFIED"
+    "dell_runtime": "HEALTHY_REVISION_DRIFT",
+    "compute_hardening": "SOURCE_RELEASED_RUNTIME_PROMOTION_PENDING",
+    "queue_hardening": "ALIGNED_VERIFIED",
+    "sanitized_observability": "ALIGNED_VERIFIED"
   },
   "shared_contract": {
     "version": "2.0.0",
@@ -51,16 +54,18 @@
     "authority": {
       "role": "governed evidence review and draft projection",
       "repository": "AndrewLamSingapore/authority-engine",
-      "source_sha": "68aad052b1a82a85ea1828dcac52c7f0932865f9",
+      "source_sha": "861e5827b6d02f96e5f6e146de566c801516b64b",
       "vercel_project_id": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
       "vercel_project": "authority-engine-app",
-      "production_deployment_id": "dpl_H8P5aDEWrcugFL7pyQSEFuk9taqr",
+      "production_deployment_id": "dpl_7Mh9Cx45x1TLSCTDXrZR8WZNQhC3",
       "production_state": "READY",
       "health_url": "https://authority-engine-app.vercel.app/api/health",
-      "health_revision_verified": "68aad052b1a82a85ea1828dcac52c7f0932865f9",
+      "health_revision_verified": "861e5827b6d02f96e5f6e146de566c801516b64b",
       "publication_mode": "explicit_draft_only",
       "production_deployment_dashboard_uid": "5qAcEq3G2rbHfAzXLEkMiY6j6yq3",
-      "evidence_review": "configured_ready"
+      "evidence_review": "configured_ready",
+      "jarvis_status_url": "https://authority-engine-app.vercel.app/api/jarvis-status",
+      "sanitized_observability": true
     },
     "game": {
       "role": "bounded simulation and interactive product",
@@ -79,26 +84,30 @@
     "portal": {
       "role": "knowledge substrate and durable portfolio relay",
       "repository": "AndrewLamSingapore/the-portal",
-      "source_sha": "ca44a1a9378329712ef68cb150d545efd777aa1c",
+      "source_sha": "c76af342264f769c72e3f07636e781082ccf5a78",
       "vercel_project_id": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
       "vercel_project": "the-portal",
-      "production_deployment_id": "dpl_8yxmfAwddM5irYpBFqBt4fKepNfm",
+      "production_deployment_id": "dpl_7q7dRxVEuwX9bSZAB3bbCAbjDNut",
       "production_state": "READY",
       "health_url": "https://the-portal-ten.vercel.app/api/health",
-      "health_revision_verified": "ca44a1a9378329712ef68cb150d545efd777aa1c",
+      "health_revision_verified": "c76af342264f769c72e3f07636e781082ccf5a78",
       "relay_path": "/api/portfolio-relay",
       "production_deployment_dashboard_uid": "Gw8Vj2YLR24tpe5EcGps1iYKmmj9",
       "portfolio_relay": true,
-      "portfolio_outbox_schema": true
+      "portfolio_outbox_schema": true,
+      "outbox_ready": 0,
+      "dead_letter_redrive": "authenticated_bounded"
     },
     "prime": {
       "role": "only cognitive control plane for JARVIS",
       "repository": "AndrewLamSingapore/PRIME",
       "source_ref": "main",
-      "last_green_source_sha": "7633d9c316613b92d3fb2d47ff0649373466b5fe",
-      "published_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
+      "last_green_source_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
+      "published_image": "ghcr.io/andrewlamsingapore/prime:sha-daeeb30",
       "runtime": "private-dell-docker",
-      "authority": "inference-only; external actions remain approval-gated"
+      "authority": "inference-only; external actions remain approval-gated",
+      "compute_scorecard": "durable_measured_evidence_only",
+      "runtime_promotion": "pending_on_dell"
     }
   },
   "event_alignment": {
@@ -127,7 +136,7 @@
   "dell_runtime": {
     "verified_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
     "source_sha": "7633d9c316613b92d3fb2d47ff0649373466b5fe",
-    "status": "healthy_aligned",
+    "status": "healthy_revision_drift",
     "health_version": "7.3.1.1-evidence-grounded",
     "integrity": "ok",
     "models_ready": true,
@@ -150,7 +159,10 @@
       "prime_endpoint": "http://host.docker.internal:11434",
       "durable_compose_override": "docker-compose.windows-igpu.yml",
       "verification": "authenticated PRIME cognitive reason request succeeded"
-    }
+    },
+    "expected_source_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
+    "promotion_required": "ghcr.io/andrewlamsingapore/prime:sha-daeeb30",
+    "drift_detected_by": "https://authority-engine-app.vercel.app/api/jarvis-status"
   },
   "github_hygiene": {
     "stale_dependabot_pull_requests_closed": 6,
@@ -174,5 +186,21 @@
   "supersession": {
     "rule": "This CURRENT manifest supersedes older architecture, deployment, resume, and branch-status checkpoints. Git and Library version history remain recovery evidence, not competing current truth.",
     "duplicate_current_checkpoints_allowed": false
+  },
+  "compute_hardening": {
+    "status": "SOURCE_RELEASED_RUNTIME_PROMOTION_PENDING",
+    "measured_routing": "durable scorecard ranks reliability, throughput, and latency; evidence only",
+    "benchmark_recording": "durable SQLite compute ledger with p95 latency, failures, stages, and throughput",
+    "queue": "Portal retries, visibility leasing, terminal DEAD state, bounded authenticated redrive, sanitized health",
+    "observability": "J Console exposes sanitized availability, revision, queue, and drift only",
+    "acceptance": {
+      "portal_health_http_status": 200,
+      "authority_health_http_status": 200,
+      "jarvis_status_http_status": 200,
+      "portal_ready_backlog": 0,
+      "portal_runtime_errors_30m": 0,
+      "authority_runtime_errors_30m": 0
+    },
+    "velyqua": "PARKED_UNTOUCHED"
   }
 }
