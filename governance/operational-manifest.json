@@ -1,7 +1,7 @@
 {
   "schema_version": "3.0.0",
   "status": "CURRENT",
-  "as_of_utc": "2026-09-02T04:06:00Z",
+  "as_of_utc": "2026-09-02T05:22:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/PRIME",
     "branch": "main",
@@ -13,7 +13,13 @@
     "rule": "mirror this manifest and live verification; never override them"
   },
   "scope": {
-    "active_systems": ["control", "authority", "game", "portal", "prime"],
+    "active_systems": [
+      "control",
+      "authority",
+      "game",
+      "portal",
+      "prime"
+    ],
     "excluded_systems": [
       {
         "id": "velyqua",
@@ -25,9 +31,9 @@
   },
   "alignment_state": {
     "source_and_deployments": "ALIGNED",
-    "portfolio_relay": "CONFIGURATION_REQUIRED",
-    "authority_evidence_review": "CONFIGURATION_REQUIRED",
-    "dell_runtime": "OPERATOR_UPDATE_REQUIRED"
+    "portfolio_relay": "ALIGNED_VERIFIED",
+    "authority_evidence_review": "READY_DRAFT_ONLY",
+    "dell_runtime": "ALIGNED_VERIFIED"
   },
   "shared_contract": {
     "version": "2.0.0",
@@ -52,7 +58,9 @@
       "production_state": "READY",
       "health_url": "https://authority-engine-app.vercel.app/api/health",
       "health_revision_verified": "68aad052b1a82a85ea1828dcac52c7f0932865f9",
-      "publication_mode": "explicit_draft_only"
+      "publication_mode": "explicit_draft_only",
+      "production_deployment_dashboard_uid": "5qAcEq3G2rbHfAzXLEkMiY6j6yq3",
+      "evidence_review": "configured_ready"
     },
     "game": {
       "role": "bounded simulation and interactive product",
@@ -64,7 +72,9 @@
       "production_state": "READY",
       "health_url": "https://game-platform-wine-nine.vercel.app/api/health",
       "health_revision_verified": "6aa419ac61a70985420b163070dc569ded556524",
-      "ai_degradation": "deterministic-fallback-v1"
+      "ai_degradation": "deterministic-fallback-v1",
+      "production_deployment_dashboard_uid": "7BGuv13gkkqUhJAStFWzT8Sz672Q",
+      "portfolio_relay": "configured_ready"
     },
     "portal": {
       "role": "knowledge substrate and durable portfolio relay",
@@ -76,7 +86,10 @@
       "production_state": "READY",
       "health_url": "https://the-portal-ten.vercel.app/api/health",
       "health_revision_verified": "ca44a1a9378329712ef68cb150d545efd777aa1c",
-      "relay_path": "/api/portfolio-relay"
+      "relay_path": "/api/portfolio-relay",
+      "production_deployment_dashboard_uid": "Gw8Vj2YLR24tpe5EcGps1iYKmmj9",
+      "portfolio_relay": true,
+      "portfolio_outbox_schema": true
     },
     "prime": {
       "role": "only cognitive control plane for JARVIS",
@@ -96,40 +109,50 @@
   },
   "configuration_required": {
     "portfolio_relay": {
-      "status": "CONFIGURATION_REQUIRED",
-      "shared_secret_stored": false,
-      "portal_outbox_schema_initialized": false,
-      "game_delivery_enabled": false,
-      "authority_delivery_enabled": false,
-      "rule": "Store one shared secret in the three Vercel projects and the Dell runtime; never record the value here."
+      "status": "ALIGNED_VERIFIED",
+      "shared_secret_stored": true,
+      "portal_outbox_schema_initialized": true,
+      "game_delivery_enabled": true,
+      "authority_delivery_enabled": true,
+      "dell_authenticated_pull_verified_http_status": 200,
+      "verified_at_utc": "2026-09-02T05:20:00Z",
+      "rule": "Keep one matching secret in the three Vercel projects and Dell runtime; never record its value here."
     },
     "authority_evidence_review": {
-      "status": "CONFIGURATION_REQUIRED",
-      "sanity_credentials_stored": false,
+      "status": "READY_DRAFT_ONLY",
+      "sanity_credentials_stored": true,
       "publication_mode": "explicit_draft_only"
     }
   },
   "dell_runtime": {
-    "last_verified_source_sha": "a96187bd905b7fc15fc34e84cfa52cf7a22e2d6b",
-    "target_source_ref": "main",
-    "target_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
-    "status": "operator_update_required",
-    "reason": "The private Dell host is not reachable from this workspace; promote only the final green GHCR sha image.",
-    "rollback": "retain current named volumes and stopped rollback container"
+    "verified_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
+    "source_sha": "7633d9c316613b92d3fb2d47ff0649373466b5fe",
+    "status": "healthy_aligned",
+    "health_version": "7.3.1.1-evidence-grounded",
+    "integrity": "ok",
+    "models_ready": true,
+    "missing_models": [],
+    "portfolio_relay_http_status": 200,
+    "verified_at_utc": "2026-09-02T05:20:00Z",
+    "rollback": "pre-promotion .env backup and prior Docker image retained"
   },
   "github_hygiene": {
     "stale_dependabot_pull_requests_closed": 6,
     "last_branch_audit_utc": "2026-09-02T04:12:00Z",
-    "last_branch_audit": {
-      "content_redundant_branch_candidates": 20,
-      "unique_non_main_branches": 92
-    },
-    "redundant_branch_state": "retained_pending_confirmed_deletion",
+    "redundant_branches_deleted": 21,
+    "unique_non_main_branches_preserved": 92,
+    "redundant_branch_state": "deleted_verified",
     "retention_rule": "Preserve every branch with unique tree content. Treat counts as an audit snapshot, not a continuously current cursor."
   },
   "release_gate": {
     "policy": "zero-known-defect",
-    "required": ["source_ci_green", "preview_ready", "production_ready", "health_verified", "rollback_recorded"],
+    "required": [
+      "source_ci_green",
+      "preview_ready",
+      "production_ready",
+      "health_verified",
+      "rollback_recorded"
+    ],
     "secret_values_allowed": false
   },
   "supersession": {
