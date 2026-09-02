@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -36,5 +36,5 @@ jobs:
           PRIME_DATA_DIR: ${{ runner.temp }}/prime-data
           PRIME_COMPUTE_DB: ${{ runner.temp }}/prime-data/compute-ledger.db
         run: pytest -q
-      - name: Validate governance JSON
-        run: python -m json.tool governance/operational-manifest.json > /dev/null
+      - name: Validate governance manifest
+        run: python scripts/verify_operational_manifest.py
