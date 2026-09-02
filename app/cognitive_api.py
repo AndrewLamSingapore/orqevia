@@ -70,6 +70,6 @@ def evaluate_run(request:EvalRequest,authorization:str|None=Header(default=None)
 @router.get("/models")
 def model_manifest(authorization:str|None=Header(default=None)): require_token(authorization); return orchestrator.gateway.manifest()
 @router.get("/compute")
-def compute_events(limit:int=100,authorization:str|None=Header(default=None)): require_token(authorization); return {"events":ledger.recent(limit),"summary":ledger.summary()}
+def compute_events(limit:int=100,authorization:str|None=Header(default=None)): require_token(authorization); return {"events":ledger.recent(limit),"summary":ledger.summary(),"scorecard":ledger.scorecard(limit)}
 @router.get("/meta-review")
 def meta_review(authorization:str|None=Header(default=None)): require_token(authorization); return reviewer.review()

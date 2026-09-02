@@ -2,12 +2,22 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+
+def _percentile(values: list[float], percentile: float) -> float | None:
+    """Nearest-rank percentile for small, durable telemetry windows."""
+    if not values:
+        return None
+    ordered = sorted(float(value) for value in values)
+    rank = max(0, min(len(ordered) - 1, math.ceil(len(ordered) * percentile) - 1))
+    return round(ordered[rank], 3)
 
 
 def _now() -> str:
@@ -70,10 +80,14 @@ class ComputeLedger:
                 "provider": event["provider"], "model": event["model"], "calls": 0,
                 "successful_calls": 0, "latency_ms": 0, "input_units": 0,
                 "output_units": 0, "output_tokens_per_second_samples": [],
+                "latency_samples": [], "stages": set(), "last_seen_at": "",
             })
             group["calls"] += 1
             group["successful_calls"] += int(event["success"])
             group["latency_ms"] += int(event["latency_ms"] or 0)
+            group["latency_samples"].append(float(event["latency_ms"] or 0))
+            group["stages"].add(event["stage"])
+            group["last_seen_at"] = max(group["last_seen_at"], event["created_at"])
             group["input_units"] += int(event["input_units"] or 0)
             group["output_units"] += int(event["output_units"] or 0)
             rate = event.get("metadata", {}).get("output_tokens_per_second")
@@ -83,9 +97,31 @@ class ComputeLedger:
         for group in groups.values():
             calls = group["calls"]
             samples = group.pop("output_tokens_per_second_samples")
+            latency_samples = group.pop("latency_samples")
+            group["stages"] = sorted(group["stages"])
+            group["failed_calls"] = calls - group["successful_calls"]
             group["success_rate"] = round(group["successful_calls"] / calls, 4)
             group["average_latency_ms"] = round(group.pop("latency_ms") / calls, 2)
+            group["p95_latency_ms"] = _percentile(latency_samples, 0.95)
             group["average_output_tokens_per_second"] = round(sum(samples) / len(samples), 3) if samples else None
             output.append(group)
         output.sort(key=lambda item: (item["provider"], item["model"]))
         return {"window": len(events), "groups": output}
+
+    def scorecard(self, limit: int = 500) -> dict[str, Any]:
+        """Rank measured model routes without granting execution authority."""
+        summary = self.summary(limit)
+        ranked = []
+        for group in summary["groups"]:
+            throughput = group.get("average_output_tokens_per_second") or 0.0
+            latency = group.get("average_latency_ms") or 0.0
+            reliability = group.get("success_rate") or 0.0
+            measured_score = round((reliability * 100.0) + min(throughput, 100.0) - min(latency / 1000.0, 60.0), 3)
+            ranked.append({**group, "measured_score": measured_score})
+        ranked.sort(key=lambda item: (-item["measured_score"], item["provider"], item["model"]))
+        return {
+            "window": summary["window"],
+            "ranking": ranked,
+            "selection_mode": "evidence_only",
+            "authority": "routing policy remains deterministic and approval-gated",
+        }
