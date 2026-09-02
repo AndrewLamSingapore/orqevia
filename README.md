@@ -77,3 +77,9 @@ The current runtime has no frontier inference resource enabled. The policy is ex
 Generated answers pass a post-inference evaluator for source coverage, unsupported claims, contradiction, uncertainty, evidence requirements, policy conformance, and task success. A failed result is withheld; the confidence gate never returns the draft as an answer.
 
 PRIME is stateful and is not deployed to Vercel. GitHub Actions publishes the verified application image to GHCR. See `DEPLOYMENT.md` for production, rollback and physical-safety gates.
+
+## Scalable compute
+
+PRIME now separates fast, deep, evaluator and embedding roles, records Ollama throughput and latency, and supports explicit `compat`, `balanced` and `max` profiles. The evaluator may run on an independent model to reduce correlated errors. The protected `/api/cognitive/compute` response includes per-provider/model success rate, latency and output-token throughput.
+
+The default Compose file remains hardware-safe. After the Dell GPU preflight passes, apply `docker-compose.gpu.yml` and tune one variable at a time. See `COMPUTE.md` for the promotion ladder. Vercel applications publish governed events to the Portal relay; PRIME pulls and acknowledges them from the private Dell runtime, so no inbound Dell exposure is required.

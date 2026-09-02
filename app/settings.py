@@ -13,6 +13,14 @@ def _env(name: str, default: str) -> str:
     return value or default
 
 
+def _int_env(name: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(_env(name, str(default)))
+    except ValueError:
+        value = default
+    return max(minimum, min(maximum, value))
+
+
 @dataclass(frozen=True)
 class PrimeSettings:
     ollama_base_url: str
@@ -20,21 +28,42 @@ class PrimeSettings:
     deep_model: str
     embedding_model: str
     multi_specialist_workers: int
+    evaluator_model: str = ""
+    compute_profile: str = "compat"
+    context_tokens: int = 8192
+    max_output_tokens: int = 2048
+    keep_alive: str = "10m"
+
+    def __post_init__(self) -> None:
+        if not self.evaluator_model:
+            object.__setattr__(self, "evaluator_model", self.deep_model)
 
     @classmethod
     def from_env(cls) -> "PrimeSettings":
         fast = _env("PRIME_FAST_MODEL", "gemma3:1b")
+        deep = _env("PRIME_DEEP_MODEL", fast)
+        profile = _env("PRIME_COMPUTE_PROFILE", "balanced").lower()
+        if profile not in {"compat", "balanced", "max"}:
+            profile = "balanced"
+        worker_default = {"compat": 2, "balanced": 3, "max": 4}[profile]
+        context_default = {"compat": 8192, "balanced": 16384, "max": 32768}[profile]
+        output_default = {"compat": 2048, "balanced": 4096, "max": 8192}[profile]
         return cls(
             ollama_base_url=_env("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/"),
             fast_model=fast,
-            deep_model=_env("PRIME_DEEP_MODEL", fast),
+            deep_model=deep,
+            evaluator_model=_env("PRIME_EVALUATOR_MODEL", deep),
             embedding_model=_env("PRIME_EMBED_MODEL", "embeddinggemma:300m-qat-q4_0"),
-            multi_specialist_workers=max(1, min(6, int(_env("PRIME_MULTI_SPECIALIST_WORKERS", "2")))),
+            compute_profile=profile,
+            multi_specialist_workers=_int_env("PRIME_MULTI_SPECIALIST_WORKERS", worker_default, 1, 6),
+            context_tokens=_int_env("PRIME_CONTEXT_TOKENS", context_default, 2048, 131072),
+            max_output_tokens=_int_env("PRIME_MAX_OUTPUT_TOKENS", output_default, 256, 32768),
+            keep_alive=_env("PRIME_MODEL_KEEP_ALIVE", "10m"),
         )
 
     @property
     def required_models(self) -> tuple[str, ...]:
-        return tuple(dict.fromkeys((self.fast_model, self.deep_model, self.embedding_model)))
+        return tuple(dict.fromkeys((self.fast_model, self.deep_model, self.evaluator_model, self.embedding_model)))
 
     def as_public_dict(self) -> dict[str, Any]:
         return {**asdict(self), "required_models": list(self.required_models)}

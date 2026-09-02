@@ -1,6 +1,6 @@
 """Guarded cognitive endpoints for Personal JARVIS."""
 from __future__ import annotations
-import hmac, os, json
+import hmac, os
 from typing import Any
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,11 +12,9 @@ router=APIRouter(prefix="/api/cognitive",tags=["cognitive"])
 reviewer=MetaReviewer()
 
 class StrictRequest(BaseModel): model_config=ConfigDict(extra="forbid")
-
 class EpisodeRequest(StrictRequest):
     event_type:str; content:dict[str,Any]; source:str; salience:float=Field(default=0.0,ge=0.0,le=1.0); durable_kind:str|None=None; durable_key:str|None=None
-class PlanRequest(StrictRequest):
-    intent:str; department:str=""; context:str=""; allow_frontier:bool=False
+class PlanRequest(StrictRequest): intent:str; department:str=""; context:str=""; allow_frontier:bool=False
 class ExecuteRequest(PlanRequest): deep:bool=False
 class EventRequest(StrictRequest):
     schema_version:str=Field(pattern=r"^1\.0\.0$"); event_id:str; event_type:str; source:str; occurred_at:str; evidence_level:str; correlation_id:str; subject_id:str|None=None; provenance:list[str]=Field(min_length=1); payload:dict[str,Any]
@@ -72,6 +70,6 @@ def evaluate_run(request:EvalRequest,authorization:str|None=Header(default=None)
 @router.get("/models")
 def model_manifest(authorization:str|None=Header(default=None)): require_token(authorization); return orchestrator.gateway.manifest()
 @router.get("/compute")
-def compute_events(limit:int=100,authorization:str|None=Header(default=None)): require_token(authorization); return {"events":ledger.recent(limit)}
+def compute_events(limit:int=100,authorization:str|None=Header(default=None)): require_token(authorization); return {"events":ledger.recent(limit),"summary":ledger.summary()}
 @router.get("/meta-review")
 def meta_review(authorization:str|None=Header(default=None)): require_token(authorization); return reviewer.review()

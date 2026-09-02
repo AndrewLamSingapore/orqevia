@@ -1,0 +1,93 @@
+{
+  "schema_version": "3.0.0",
+  "status": "CURRENT",
+  "as_of_utc": "2026-09-02T03:46:00Z",
+  "canonical_machine_source": {
+    "repository": "AndrewLamSingapore/PRIME",
+    "branch": "main",
+    "path": "governance/operational-manifest.json"
+  },
+  "human_resume_mirror": {
+    "library_file_id": "libfile_79bbf3a6138c8191a69bce305ea6094b",
+    "title": "JARVIS_Resume_Checkpoint_2026-08-30.md",
+    "rule": "mirror this manifest and live verification; never override them"
+  },
+  "scope": {
+    "active_systems": ["control", "authority", "game", "portal", "prime"],
+    "excluded_systems": [
+      {
+        "id": "velyqua",
+        "state": "PARKED",
+        "resume_phrase": "resume VELYQUA",
+        "rule": "Do not inspect, mutate, deploy, or include in active alignment without the exact resume phrase."
+      }
+    ]
+  },
+  "shared_contract": {
+    "version": "2.0.0",
+    "repository": "AndrewLamSingapore/AndrewLamSingapore",
+    "source_sha": "a05fa2e41221d0000110fb24e4641985633c14fb",
+    "path": "portfolio-contracts/manifest.json"
+  },
+  "systems": {
+    "control": {
+      "role": "public control and shared contracts",
+      "repository": "AndrewLamSingapore/AndrewLamSingapore",
+      "source_sha": "8757e06cb5f7038f044c58412cd293a08497ac2e",
+      "runtime": "github-pages"
+    },
+    "authority": {
+      "role": "governed evidence review and draft projection",
+      "repository": "AndrewLamSingapore/authority-engine",
+      "source_sha": "f38aaf0c3c628d8d6ee6b726c7fa3f8cb2713cfc",
+      "vercel_project_id": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
+      "vercel_project": "authority-engine-app",
+      "publication_mode": "explicit_draft_only"
+    },
+    "game": {
+      "role": "bounded simulation and interactive product",
+      "repository": "AndrewLamSingapore/game-platform",
+      "source_sha": "6aa419ac61a70985420b163070dc569ded556524",
+      "vercel_project_id": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
+      "vercel_project": "game-platform",
+      "ai_degradation": "deterministic-fallback-v1"
+    },
+    "portal": {
+      "role": "knowledge substrate and durable portfolio relay",
+      "repository": "AndrewLamSingapore/the-portal",
+      "source_sha": "ca44a1a9378329712ef68cb150d545efd777aa1c",
+      "vercel_project_id": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
+      "vercel_project": "the-portal",
+      "relay_path": "/api/portfolio-relay"
+    },
+    "prime": {
+      "role": "only cognitive control plane for JARVIS",
+      "repository": "AndrewLamSingapore/PRIME",
+      "source_ref": "main",
+      "runtime": "private-dell-docker",
+      "authority": "inference-only; external actions remain approval-gated"
+    }
+  },
+  "event_alignment": {
+    "flow": "Vercel producers -> Portal durable outbox -> PRIME authenticated pull/ack",
+    "inbound_dell_exposure_required": false,
+    "contract": "portfolio-event-v1",
+    "delivery": "at-least-once with idempotent PRIME ingestion"
+  },
+  "dell_runtime": {
+    "last_verified_source_sha": "a96187bd905b7fc15fc34e84cfa52cf7a22e2d6b",
+    "target_source_ref": "main",
+    "status": "operator_update_required",
+    "reason": "The private Dell host is not reachable from this workspace; promote only the final green GHCR sha image.",
+    "rollback": "retain current named volumes and stopped rollback container"
+  },
+  "release_gate": {
+    "policy": "zero-known-defect",
+    "required": ["source_ci_green", "preview_ready", "production_ready", "health_verified", "rollback_recorded"],
+    "secret_values_allowed": false
+  },
+  "supersession": {
+    "rule": "This CURRENT manifest supersedes older architecture, deployment, resume, and branch-status checkpoints. Git and Library version history remain recovery evidence, not competing current truth.",
+    "duplicate_current_checkpoints_allowed": false
+  }
+}

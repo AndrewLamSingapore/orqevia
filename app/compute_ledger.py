@@ -22,20 +22,11 @@ class ComputeLedger:
         with sqlite3.connect(self.path) as db:
             db.execute("""
                 create table if not exists compute_events (
-                    event_id text primary key,
-                    task_id text not null,
-                    stage text not null,
-                    provider text not null,
-                    model text not null,
-                    latency_ms integer not null,
-                    input_units integer,
-                    output_units integer,
-                    estimated_cost_usd real,
-                    success integer not null,
-                    confidence text,
-                    verification text,
-                    metadata_json text not null,
-                    created_at text not null
+                    event_id text primary key, task_id text not null, stage text not null,
+                    provider text not null, model text not null, latency_ms integer not null,
+                    input_units integer, output_units integer, estimated_cost_usd real,
+                    success integer not null, confidence text, verification text,
+                    metadata_json text not null, created_at text not null
                 )
             """)
             db.execute("create index if not exists compute_task_idx on compute_events(task_id, created_at)")
@@ -69,3 +60,32 @@ class ComputeLedger:
             item["metadata"] = json.loads(item.pop("metadata_json"))
             out.append(item)
         return out
+
+    def summary(self, limit: int = 500) -> dict[str, Any]:
+        events = self.recent(limit)
+        groups: dict[str, dict[str, Any]] = {}
+        for event in events:
+            key = f"{event['provider']}:{event['model']}"
+            group = groups.setdefault(key, {
+                "provider": event["provider"], "model": event["model"], "calls": 0,
+                "successful_calls": 0, "latency_ms": 0, "input_units": 0,
+                "output_units": 0, "output_tokens_per_second_samples": [],
+            })
+            group["calls"] += 1
+            group["successful_calls"] += int(event["success"])
+            group["latency_ms"] += int(event["latency_ms"] or 0)
+            group["input_units"] += int(event["input_units"] or 0)
+            group["output_units"] += int(event["output_units"] or 0)
+            rate = event.get("metadata", {}).get("output_tokens_per_second")
+            if isinstance(rate, (int, float)):
+                group["output_tokens_per_second_samples"].append(float(rate))
+        output = []
+        for group in groups.values():
+            calls = group["calls"]
+            samples = group.pop("output_tokens_per_second_samples")
+            group["success_rate"] = round(group["successful_calls"] / calls, 4)
+            group["average_latency_ms"] = round(group.pop("latency_ms") / calls, 2)
+            group["average_output_tokens_per_second"] = round(sum(samples) / len(samples), 3) if samples else None
+            output.append(group)
+        output.sort(key=lambda item: (item["provider"], item["model"]))
+        return {"window": len(events), "groups": output}
