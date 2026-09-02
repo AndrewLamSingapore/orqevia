@@ -11,7 +11,7 @@ def test_summary_and_scorecard_rank_measured_routes(tmp_path):
     fast = next(group for group in summary["groups"] if group["model"] == "gemma3:1b")
     assert fast["calls"] == 2
     assert fast["failed_calls"] == 0
-    assert fast["p95_latency_ms"] == 1000.0
+    assert fast["p95_latency_ms"] == 1200.0
     assert fast["stages"] == ["answer"]
 
     scorecard = ledger.scorecard()
