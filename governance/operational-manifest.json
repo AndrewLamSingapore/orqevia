@@ -1,7 +1,7 @@
 {
-  "schema_version": "3.1.0",
+  "schema_version": "3.2.0",
   "status": "CURRENT",
-  "as_of_utc": "2026-09-02T06:57:00Z",
+  "as_of_utc": "2026-09-02T07:19:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/PRIME",
     "branch": "main",
@@ -30,11 +30,11 @@
     ]
   },
   "alignment_state": {
-    "source_and_deployments": "CLOUD_ALIGNED_DELL_PROMOTION_PENDING",
+    "source_and_deployments": "ALIGNED_VERIFIED",
     "portfolio_relay": "ALIGNED_VERIFIED",
     "authority_evidence_review": "READY_DRAFT_ONLY",
-    "dell_runtime": "HEALTHY_REVISION_DRIFT",
-    "compute_hardening": "SOURCE_RELEASED_RUNTIME_PROMOTION_PENDING",
+    "dell_runtime": "ALIGNED_VERIFIED",
+    "compute_hardening": "ALIGNED_VERIFIED",
     "queue_hardening": "ALIGNED_VERIFIED",
     "sanitized_observability": "ALIGNED_VERIFIED"
   },
@@ -54,13 +54,13 @@
     "authority": {
       "role": "governed evidence review and draft projection",
       "repository": "AndrewLamSingapore/authority-engine",
-      "source_sha": "861e5827b6d02f96e5f6e146de566c801516b64b",
+      "source_sha": "78f60ed935cd8bb6be777d812cd4859de24d827b",
       "vercel_project_id": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
       "vercel_project": "authority-engine-app",
-      "production_deployment_id": "dpl_7Mh9Cx45x1TLSCTDXrZR8WZNQhC3",
+      "production_deployment_id": "dpl_7MQFntr9bAQBXFgoR8bh4rwSZa87",
       "production_state": "READY",
       "health_url": "https://authority-engine-app.vercel.app/api/health",
-      "health_revision_verified": "861e5827b6d02f96e5f6e146de566c801516b64b",
+      "health_revision_verified": "78f60ed935cd8bb6be777d812cd4859de24d827b",
       "publication_mode": "explicit_draft_only",
       "production_deployment_dashboard_uid": "5qAcEq3G2rbHfAzXLEkMiY6j6yq3",
       "evidence_review": "configured_ready",
@@ -107,7 +107,7 @@
       "runtime": "private-dell-docker",
       "authority": "inference-only; external actions remain approval-gated",
       "compute_scorecard": "durable_measured_evidence_only",
-      "runtime_promotion": "pending_on_dell"
+      "runtime_promotion": "complete_verified"
     }
   },
   "event_alignment": {
@@ -134,15 +134,15 @@
     }
   },
   "dell_runtime": {
-    "verified_image": "ghcr.io/andrewlamsingapore/prime:sha-7633d9c",
-    "source_sha": "7633d9c316613b92d3fb2d47ff0649373466b5fe",
-    "status": "healthy_revision_drift",
+    "verified_image": "ghcr.io/andrewlamsingapore/prime:sha-daeeb30",
+    "source_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
+    "status": "healthy_aligned",
     "health_version": "7.3.1.1-evidence-grounded",
     "integrity": "ok",
     "models_ready": true,
     "missing_models": [],
     "portfolio_relay_http_status": 200,
-    "verified_at_utc": "2026-09-02T06:27:00Z",
+    "verified_at_utc": "2026-09-02T07:16:00Z",
     "rollback": "pre-promotion .env backup and prior Docker image retained",
     "acceleration": {
       "backend": "native-windows-ollama-vulkan",
@@ -161,8 +161,19 @@
       "verification": "authenticated PRIME cognitive reason request succeeded"
     },
     "expected_source_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
-    "promotion_required": "ghcr.io/andrewlamsingapore/prime:sha-daeeb30",
-    "drift_detected_by": "https://authority-engine-app.vercel.app/api/jarvis-status"
+    "promotion_required": null,
+    "drift_detected_by": null,
+    "runtime_acceptance": {
+      "compose_env_persistent": true,
+      "compose_config_resolved": true,
+      "container_healthy": true,
+      "image_inspection": "sha-daeeb30",
+      "health_http_status": 200,
+      "integrity": "ok",
+      "models_ready": true,
+      "gpu_processor_observed": "100% GPU",
+      "model_response": "PRIME HARDENING READY"
+    }
   },
   "github_hygiene": {
     "stale_dependabot_pull_requests_closed": 6,
@@ -188,7 +199,7 @@
     "duplicate_current_checkpoints_allowed": false
   },
   "compute_hardening": {
-    "status": "SOURCE_RELEASED_RUNTIME_PROMOTION_PENDING",
+    "status": "ALIGNED_VERIFIED",
     "measured_routing": "durable scorecard ranks reliability, throughput, and latency; evidence only",
     "benchmark_recording": "durable SQLite compute ledger with p95 latency, failures, stages, and throughput",
     "queue": "Portal retries, visibility leasing, terminal DEAD state, bounded authenticated redrive, sanitized health",
@@ -199,7 +210,12 @@
       "jarvis_status_http_status": 200,
       "portal_ready_backlog": 0,
       "portal_runtime_errors_30m": 0,
-      "authority_runtime_errors_30m": 0
+      "authority_runtime_errors_30m": 0,
+      "dell_image": "ghcr.io/andrewlamsingapore/prime:sha-daeeb30",
+      "dell_container_health": "healthy",
+      "dell_health_http_status": 200,
+      "dell_gpu": "100% GPU",
+      "jarvis_drift_state": "aligned"
     },
     "velyqua": "PARKED_UNTOUCHED"
   }
