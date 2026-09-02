@@ -1,7 +1,7 @@
 {
   "schema_version": "3.0.0",
   "status": "CURRENT",
-  "as_of_utc": "2026-09-02T05:22:00Z",
+  "as_of_utc": "2026-09-02T06:27:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/PRIME",
     "branch": "main",
@@ -133,8 +133,24 @@
     "models_ready": true,
     "missing_models": [],
     "portfolio_relay_http_status": 200,
-    "verified_at_utc": "2026-09-02T05:20:00Z",
-    "rollback": "pre-promotion .env backup and prior Docker image retained"
+    "verified_at_utc": "2026-09-02T06:27:00Z",
+    "rollback": "pre-promotion .env backup and prior Docker image retained",
+    "acceleration": {
+      "backend": "native-windows-ollama-vulkan",
+      "device": "Intel Iris Xe Graphics",
+      "processor_observed": "100% GPU",
+      "ollama_version": "0.33.2",
+      "usable_shared_gpu_memory_gib": 15.9,
+      "models_verified_gpu": [
+        "gemma3:1b",
+        "embeddinggemma:300m-qat-q4_0"
+      ],
+      "gpu_tokens_per_second_observed": 30.782,
+      "docker_cpu_tokens_per_second_baseline": 25.82,
+      "prime_endpoint": "http://host.docker.internal:11434",
+      "durable_compose_override": "docker-compose.windows-igpu.yml",
+      "verification": "authenticated PRIME cognitive reason request succeeded"
+    }
   },
   "github_hygiene": {
     "stale_dependabot_pull_requests_closed": 6,
