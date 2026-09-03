@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated": "2026-09-03T20:49:00+08:00",
+  "registry_id": "jarvis-prime-agent-registry",
+  "orchestrator": {
+    "id": "prime",
+    "name": "JARVIS PRIME",
+    "role": "Cognitive Control Plane",
+    "public_description": "Coordinates bounded specialist reasoning while policy, evidence and owner approval remain authoritative."
+  },
+  "publication_policy": {
+    "default": "deny",
+    "allowed_fields": ["id", "name", "division", "role", "reports_to", "authority", "status", "public_description"],
+    "forbidden_fields": ["system_prompt", "credentials", "endpoint", "filesystem_path", "tool_secrets", "internal_instructions"]
+  },
+  "agents": [
+    {"id":"A01","name":"Strategy Lead","division":"Strategy","role":"Lead","reports_to":"prime","authority":"advisory","status":"registered","public_description":"Frames objectives, priorities and bounded decision plans."},
+    {"id":"A02","name":"Planning Agent","division":"Strategy","role":"Planning","reports_to":"A01","authority":"advisory","status":"registered","public_description":"Turns objectives into sequenced internal plans."},
+    {"id":"A03","name":"Roadmap Agent","division":"Strategy","role":"Roadmapping","reports_to":"A01","authority":"advisory","status":"registered","public_description":"Structures milestones, dependencies and decision points."},
+    {"id":"A04","name":"Decision Agent","division":"Strategy","role":"Decision Support","reports_to":"A01","authority":"advisory","status":"registered","public_description":"Compares bounded options and preserves uncertainty."},
+    {"id":"A05","name":"Portfolio Agent","division":"Strategy","role":"Portfolio Review","reports_to":"A01","authority":"advisory","status":"registered","public_description":"Reviews competing initiatives against stated objectives."},
+
+    {"id":"A06","name":"Research Lead","division":"Research","role":"Lead","reports_to":"prime","authority":"advisory","status":"registered","public_description":"Coordinates evidence-bounded research and identifies evidence gaps."},
+    {"id":"A07","name":"Evidence Agent","division":"Research","role":"Evidence Review","reports_to":"A06","authority":"advisory","status":"registered","public_description":"Reviews supplied evidence and separates support from assumption."},
+    {"id":"A08","name":"Comparison Agent","division":"Research","role":"Comparative Analysis","reports_to":"A06","authority":"advisory","status":"registered","public_description":"Builds structured comparisons from available evidence."},
+    {"id":"A09","name":"Knowledge Agent","division":"Research","role":"Knowledge Synthesis","reports_to":"A06","authority":"advisory","status":"registered","public_description":"Synthesizes verified context into bounded knowledge summaries."},
+    {"id":"A10","name":"Gap Agent","division":"Research","role":"Evidence Gaps","reports_to":"A06","authority":"advisory","status":"registered","public_description":"Identifies missing evidence required for stronger conclusions."},
+
+    {"id":"A11","name":"Data Lead","division":"Data","role":"Lead","reports_to":"prime","authority":"advisory","status":"registered","public_description":"Coordinates analysis of explicitly available verified datasets."},
+    {"id":"A12","name":"Metrics Agent","division":"Data","role":"Metrics","reports_to":"A11","authority":"advisory","status":"registered","public_description":"Structures measurements and baselines from verified data."},
+    {"id":"A13","name":"Analysis Agent","division":"Data","role":"Analysis","reports_to":"A11","authority":"advisory","status":"registered","public_description":"Performs bounded analytical reasoning over supplied data."},
+    {"id":"A14","name":"Forecast Agent","division":"Data","role":"Scenario Analysis","reports_to":"A11","authority":"advisory","status":"registered","public_description":"Builds explicitly qualified scenarios without inventing observations."},
+    {"id":"A15","name":"Data Quality Agent","division":"Data","role":"Data Quality","reports_to":"A11","authority":"review","status":"registered","public_description":"Checks dataset sufficiency, provenance and analytical limitations."},
+
+    {"id":"A16","name":"Engineering Lead","division":"Engineering","role":"Lead","reports_to":"prime","authority":"advisory","status":"registered","public_description":"Coordinates bounded technical design and validation."},
+    {"id":"A17","name":"Architecture Agent","division":"Engineering","role":"Architecture","reports_to":"A16","authority":"advisory","status":"registered","public_description":"Designs internal system structures within defined safety boundaries."},
+    {"id":"A18","name":"Implementation Agent","division":"Engineering","role":"Implementation","reports_to":"A16","authority":"proposal","status":"registered","public_description":"Produces implementation proposals and internal technical artifacts."},
+    {"id":"A19","name":"Test Agent","division":"Engineering","role":"Testing","reports_to":"A16","authority":"review","status":"registered","public_description":"Defines and evaluates bounded technical tests."},
+    {"id":"A20","name":"Reliability Agent","division":"Engineering","role":"Reliability","reports_to":"A16","authority":"review","status":"registered","public_description":"Reviews failure modes, recovery assumptions and operational resilience."},
+
+    {"id":"A21","name":"Economic Lead","division":"Economic","role":"Lead","reports_to":"prime","authority":"advisory","status":"registered","public_description":"Coordinates bounded economic and resource reasoning."},
+    {"id":"A22","name":"Value Agent","division":"Economic","role":"Value Analysis","reports_to":"A21","authority":"advisory","status":"registered","public_description":"Examines value creation, trade-offs and resource implications."},
+    {"id":"A23","name":"Cost Agent","division":"Economic","role":"Cost Analysis","reports_to":"A21","authority":"advisory","status":"registered","public_description":"Structures cost and resource comparisons from supplied evidence."},
+    {"id":"A24","name":"Asset Agent","division":"Economic","role":"Asset Analysis","reports_to":"A21","authority":"advisory","status":"registered","public_description":"Reviews asset and capability implications without executing transactions."},
+
+    {"id":"A25","name":"Quality Lead","division":"Quality","role":"Lead","reports_to":"prime","authority":"review","status":"registered","public_description":"Coordinates verification, critique and policy-conformance review."},
+    {"id":"A26","name":"Verification Agent","division":"Quality","role":"Verification","reports_to":"A25","authority":"review","status":"registered","public_description":"Checks outputs for completeness, support and consistency."},
+    {"id":"A27","name":"Critic Agent","division":"Quality","role":"Adversarial Critique","reports_to":"A25","authority":"review","status":"registered","public_description":"Challenges unsupported claims, contradictions and hidden assumptions."},
+    {"id":"A28","name":"Risk Agent","division":"Quality","role":"Risk Review","reports_to":"A25","authority":"review","status":"registered","public_description":"Surfaces bounded failure modes and consequential-risk concerns."},
+    {"id":"A29","name":"Policy Agent","division":"Quality","role":"Policy Review","reports_to":"A25","authority":"review","status":"registered","public_description":"Checks proposed outcomes against the Stable Spine safety boundary."}
+  ]
+}
