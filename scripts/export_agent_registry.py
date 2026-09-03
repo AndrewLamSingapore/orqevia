@@ -1,7 +1,19 @@
 """Export the deny-by-default public projection for publication consumers."""
 from __future__ import annotations
-import argparse, hashlib, json
+
+import argparse
+import hashlib
+import json
+import sys
 from pathlib import Path
+
+# A script launched as `python scripts/export_agent_registry.py` gets `scripts/`
+# on sys.path rather than the repository root. Add the root explicitly so the
+# canonical `app` package resolves identically in local shells and GitHub Actions.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from app.agent_registry import public_agent_registry
 
 p = argparse.ArgumentParser()
