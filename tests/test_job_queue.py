@@ -1,4 +1,5 @@
 import time
+import pytest
 from app.job_queue import JobQueue, Provider, QueuePolicy
 
 LOCAL=Provider("ollama","local","fast",8192,4096,2)
@@ -14,9 +15,16 @@ def test_priority_and_agent_concurrency(tmp_path):
     low=q.submit(agent="planner",prompt="low",priority="low")
     high=q.submit(agent="critic",prompt="high",priority="critical")
     same=q.submit(agent="critic",prompt="same agent",priority="high")
+    assert low["agent"] == "A02"
+    assert high["agent"] == "A27"
     assert q.claim("w1",[LOCAL])["id"]==high["id"]
     assert q.claim("w2",[LOCAL])["id"]==low["id"]
     assert q.get(same["id"])["status"]=="queued"
+
+def test_unknown_agent_is_rejected(tmp_path):
+    q=queue(tmp_path)
+    with pytest.raises(ValueError, match="unregistered agent identity"):
+        q.submit(agent="free-form-unregistered-agent",prompt="work")
 
 def test_cloud_is_approval_gated_and_only_fallback(tmp_path):
     q=queue(tmp_path)
