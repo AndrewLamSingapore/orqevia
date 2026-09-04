@@ -1,6 +1,7 @@
 name: Stable Spine
 
 on:
+  workflow_call:
   pull_request:
     paths:
       - 'app/spine.py'
