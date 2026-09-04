@@ -11,6 +11,9 @@ on:
       - 'app/cognitive_orchestrator.py'
       - 'app/orchestration.py'
       - 'app/agent_registry.py'
+      - 'app/agent_runtime.py'
+      - 'app/public_agent_api.py'
+      - 'app/job_queue.py'
       - 'config/agent_registry.json'
       - 'scripts/export_agent_registry.py'
       - 'app/entry.py'
@@ -20,6 +23,8 @@ on:
       - 'tests/test_cognitive_orchestrator.py'
       - 'tests/test_consequential_intent.py'
       - 'tests/test_agent_registry.py'
+      - 'tests/test_agent_runtime.py'
+      - 'tests/test_job_queue.py'
       - 'docker-compose.yml'
       - '.github/workflows/stable-spine.yml'
   push:
@@ -33,6 +38,9 @@ on:
       - 'app/cognitive_orchestrator.py'
       - 'app/orchestration.py'
       - 'app/agent_registry.py'
+      - 'app/agent_runtime.py'
+      - 'app/public_agent_api.py'
+      - 'app/job_queue.py'
       - 'config/agent_registry.json'
       - 'scripts/export_agent_registry.py'
       - 'app/entry.py'
@@ -42,6 +50,8 @@ on:
       - 'tests/test_cognitive_orchestrator.py'
       - 'tests/test_consequential_intent.py'
       - 'tests/test_agent_registry.py'
+      - 'tests/test_agent_runtime.py'
+      - 'tests/test_job_queue.py'
       - 'docker-compose.yml'
       - '.github/workflows/stable-spine.yml'
 
@@ -54,7 +64,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt pytest
-      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_cognitive_orchestrator.py tests/test_consequential_intent.py tests/test_router_registration.py tests/test_agent_registry.py
+      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_cognitive_orchestrator.py tests/test_consequential_intent.py tests/test_router_registration.py tests/test_agent_registry.py tests/test_agent_runtime.py tests/test_job_queue.py
       - name: Export public registry
         run: python scripts/export_agent_registry.py /tmp/public-agent-registry.json
       - name: Reject public disclosure leaks
@@ -67,4 +77,6 @@ jobs:
           for a in p['agents']:
               assert not forbidden.intersection(a)
           assert p['relationship_policy']['network_is_enforced'] is True
+          assert p['relationship_policy']['unknown_agent_policy'] == 'deny'
+          assert {'source':'prime','target':'A01','type':'may_delegate'} in p['relationships']
           PY
