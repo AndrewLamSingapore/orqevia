@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "snapshot_at_utc": "2026-09-04T02:58:00Z",
-  "snapshot_scope": "The 112 non-main branches present before SSOT repair branches were created.",
+  "snapshot_at_utc": "2026-09-04T03:14:47Z",
+  "snapshot_scope": "The original 112 non-main branch cohort; later repair branches are intentionally outside this fixed cohort.",
   "total_non_main_branches": 112,
   "classification_policy": {
     "active": "Branch has an open pull request.",
@@ -10,14 +10,14 @@
     "checkpoint": "Unique branch retained without an open or merged pull request."
   },
   "classification_counts": {
-    "active": 1,
+    "active": 0,
     "checkpoint": 11,
-    "merged": 94,
+    "merged": 95,
     "rollback": 6
   },
   "repositories": {
     "AndrewLamSingapore/AndrewLamSingapore": {
-      "main_head_sha": "3b522bd5c321ebf4fe3aabbe5fd3407029187ac2",
+      "main_head_sha": "98a1b745ad210a65b17cf1657ae97a379e1b3a6b",
       "non_main_branches": 7,
       "classification_counts": {
         "active": 0,
@@ -27,17 +27,17 @@
       }
     },
     "AndrewLamSingapore/authority-engine": {
-      "main_head_sha": "28645c67f2aa322b5abe0eb96ce063ce0b87e8f7",
+      "main_head_sha": "b1fa520f8916a3f8557f4bc4be2acc2fe44d60e2",
       "non_main_branches": 32,
       "classification_counts": {
-        "active": 1,
+        "active": 0,
         "checkpoint": 7,
-        "merged": 22,
+        "merged": 23,
         "rollback": 2
       }
     },
     "AndrewLamSingapore/game-platform": {
-      "main_head_sha": "47645107322c271292c7e61800f97b4eaa44de63",
+      "main_head_sha": "85a5ff8dd064b1e3ab7f09c723b117380fee3f64",
       "non_main_branches": 19,
       "classification_counts": {
         "active": 0,
@@ -47,7 +47,7 @@
       }
     },
     "AndrewLamSingapore/the-portal": {
-      "main_head_sha": "c76af342264f769c72e3f07636e781082ccf5a78",
+      "main_head_sha": "d117c918ee42e627ceefab4c1f7d3cc326f11ea8",
       "non_main_branches": 13,
       "classification_counts": {
         "active": 0,
@@ -57,7 +57,7 @@
       }
     },
     "AndrewLamSingapore/prime": {
-      "main_head_sha": "9d26ec81187417523a4ce88e8916dacfe7a9f021",
+      "main_head_sha": "7ae24c12eed21a73bb3730909de136c4ffe1fd77",
       "non_main_branches": 41,
       "classification_counts": {
         "active": 0,
@@ -347,13 +347,13 @@
     {
       "repository": "AndrewLamSingapore/authority-engine",
       "branch": "feat/runtime-derived-public-proof",
-      "classification": "active",
-      "reason": "open pull request #42",
+      "classification": "merged",
+      "reason": "merged pull request #42",
       "ahead_by": 2,
       "behind_by": 0,
       "compare_status": "ahead",
       "associated_pr_number": 42,
-      "associated_pr_state": "open",
+      "associated_pr_state": "closed",
       "associated_pr_head_sha": "8284b4e2a3269d87f69a5bd859bd1104c250e8c1"
     },
     {
