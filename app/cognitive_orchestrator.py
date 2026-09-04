@@ -1,19 +1,22 @@
 """PRIME cognitive orchestrator.
 
-Builds governed context, routes to a specialist, executes inference through the
-model gateway, and never executes consequential actions directly.
+Builds governed context, routes through the canonical agent registry, executes
+inference through the model gateway, and never executes consequential actions
+directly.
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from .agent_runtime import AgentAuthorityRuntime
 from .hybrid_memory import HybridMemory
 from .answer_evaluator import evaluate_generated_answer
 from .memory import MemoryStore
@@ -33,6 +36,7 @@ class CognitivePlan:
     intent: str
     specialist: str
     route_reason: str
+    agent_path: list[str]
     memory_context: list[dict[str, Any]]
     portal_context: list[dict[str, Any]]
     needs_approval: bool
@@ -77,12 +81,14 @@ class PortalGrounder:
 
 class CognitiveOrchestrator:
     def __init__(self, memory: MemoryStore | None = None, portal: PortalGrounder | None = None,
-                 routing: RoutingPolicy | None = None, gateway: ModelGateway | None = None):
+                 routing: RoutingPolicy | None = None, gateway: ModelGateway | None = None,
+                 authority_runtime: AgentAuthorityRuntime | None = None):
         self.memory = memory or MemoryStore()
         self.hybrid_memory = HybridMemory(self.memory)
         self.portal = portal or PortalGrounder()
         self.routing = routing or RoutingPolicy()
         self.gateway = gateway or ModelGateway()
+        self.authority_runtime = authority_runtime or AgentAuthorityRuntime()
 
     def plan(self, *, intent: str, department: str = "", context: str = "", allow_frontier: bool = False) -> CognitivePlan:
         intent = (intent or "").strip()
@@ -90,6 +96,7 @@ class CognitiveOrchestrator:
             raise ValueError("intent is required")
         memory_context = self.hybrid_memory.search(intent, limit=8)
         route = choose_specialist(department, intent, context)
+        agent_path = self.authority_runtime.resolve_path(route.specialist, intent)
         use_portal = route.specialist in {"research", "strategy", "engineering"} or len(memory_context) < 2
         portal_context = self.portal.query(intent, limit=8) if use_portal else []
         consequential = has_consequential_intent(intent, context)
@@ -108,14 +115,15 @@ class CognitiveOrchestrator:
                                                consequential=consequential).as_dict()
         if reasoning_route["selected_stage"] == "confidence_hold":
             gaps.append("Reasoning is held at the confidence gate; frontier inference is unavailable or not authorized.")
-        return CognitivePlan(intent, route.specialist, route.reason, memory_context, portal_context, consequential,
-                             action, confidence, gaps, reasoning_route)
+        return CognitivePlan(intent, route.specialist, route.reason, agent_path, memory_context, portal_context,
+                             consequential, action, confidence, gaps, reasoning_route)
 
     @staticmethod
     def _prompt(plan: CognitivePlan, context: str) -> str:
         return f"""PRIME GOVERNED REASONING REQUEST
 Intent: {plan.intent}
-Specialist: {plan.specialist}
+Specialist domain: {plan.specialist}
+Canonical agent path: {' -> '.join(plan.agent_path)}
 Consequential action requested: {plan.needs_approval}
 
 User context:
@@ -138,31 +146,58 @@ Rules:
     def execute(self, *, intent: str, department: str = "", context: str = "", allow_frontier: bool = False,
                 deep: bool = False) -> dict[str, Any]:
         plan = self.plan(intent=intent, department=department, context=context, allow_frontier=allow_frontier)
+        trace_id = self.authority_runtime.begin_path(plan.agent_path, consequential=plan.needs_approval)
+        agent_id = plan.agent_path[-1]
         prompt = self._prompt(plan, context)
-        local = self.gateway.local(prompt=prompt, deep=deep)
-        result = local
-        evaluation = evaluate_generated_answer(gateway=self.gateway, task_id=local.task_id, intent=intent,
-                                               answer=local.text, memory_context=plan.memory_context,
-                                               portal_context=plan.portal_context, consequential=plan.needs_approval)
-        escalated = False
-        if not evaluation["released"] and allow_frontier and self.gateway.frontier_available:
-            frontier_prompt = prompt + "\n\nLOCAL DRAFT TO CRITIQUE AND IMPROVE:\n" + local.text[:12000]
-            result = self.gateway.frontier(prompt=frontier_prompt, task_id=local.task_id)
+        started = time.perf_counter()
+        self.authority_runtime.stage(trace_id=trace_id, agent_id=agent_id, stage="reasoning", status="started",
+                                     consequential=plan.needs_approval)
+        try:
+            local = self.gateway.local(prompt=prompt, deep=deep, task_id=trace_id, stage=f"agent:{agent_id}")
+            result = local
             evaluation = evaluate_generated_answer(gateway=self.gateway, task_id=local.task_id, intent=intent,
-                                                   answer=result.text, memory_context=plan.memory_context,
+                                                   answer=local.text, memory_context=plan.memory_context,
                                                    portal_context=plan.portal_context, consequential=plan.needs_approval)
-            escalated = True
+            escalated = False
+            if not evaluation["released"] and allow_frontier and self.gateway.frontier_available:
+                self.authority_runtime.stage(trace_id=trace_id, agent_id=agent_id, stage="frontier_escalation", status="started",
+                                             consequential=plan.needs_approval)
+                frontier_started = time.perf_counter()
+                frontier_prompt = prompt + "\n\nLOCAL DRAFT TO CRITIQUE AND IMPROVE:\n" + local.text[:12000]
+                result = self.gateway.frontier(prompt=frontier_prompt, task_id=local.task_id)
+                self.authority_runtime.stage(
+                    trace_id=trace_id, agent_id=agent_id, stage="frontier_escalation", status="completed",
+                    latency_ms=(time.perf_counter() - frontier_started) * 1000, consequential=plan.needs_approval,
+                )
+                evaluation = evaluate_generated_answer(gateway=self.gateway, task_id=local.task_id, intent=intent,
+                                                       answer=result.text, memory_context=plan.memory_context,
+                                                       portal_context=plan.portal_context, consequential=plan.needs_approval)
+                escalated = True
+        except Exception:
+            self.authority_runtime.stage(
+                trace_id=trace_id, agent_id=agent_id, stage="reasoning", status="failed",
+                latency_ms=(time.perf_counter() - started) * 1000, consequential=plan.needs_approval,
+            )
+            raise
+
         post_confidence = "strong" if evaluation["released"] else "partial" if evaluation["score"] >= 0.55 else "limited"
         final_route = self.routing.decide(local_confidence=post_confidence, frontier_allowed=allow_frontier,
                                           frontier_available=self.gateway.frontier_available,
                                           consequential=plan.needs_approval).as_dict()
         plan_dict = plan.as_dict(); plan_dict["pre_inference_confidence"] = plan.confidence
         plan_dict["confidence"] = post_confidence; plan_dict["reasoning_route"] = final_route
+        final_status = "completed" if evaluation["released"] else "withheld"
+        self.authority_runtime.stage(
+            trace_id=trace_id, agent_id=agent_id, stage="reasoning", status=final_status,
+            latency_ms=(time.perf_counter() - started) * 1000, consequential=plan.needs_approval,
+        )
         if not evaluation["released"]:
             metadata = {key: value for key, value in result.as_dict().items() if key != "text"}
-            return {"plan": plan_dict, "result": None, "withheld_result": metadata, "evaluation": evaluation,
+            return {"trace_id": trace_id, "plan": plan_dict, "result": None, "withheld_result": metadata,
+                    "evaluation": evaluation,
                     "confidence_hold": {"held": True, "reason": final_route["reason"], "blocking_metrics": evaluation["blocking_metrics"], "evidence_gaps": evaluation["evidence_gaps"]},
                     "escalated": escalated, "approval_required": plan.needs_approval, "executed_external_action": False}
-        return {"plan": plan_dict, "result": result.as_dict(), "local_result": local.as_dict() if escalated else None,
-                "evaluation": evaluation, "confidence_hold": {"held": False}, "escalated": escalated,
+        return {"trace_id": trace_id, "plan": plan_dict, "result": result.as_dict(),
+                "local_result": local.as_dict() if escalated else None, "evaluation": evaluation,
+                "confidence_hold": {"held": False}, "escalated": escalated,
                 "approval_required": plan.needs_approval, "executed_external_action": False}
