@@ -1,5 +1,4 @@
 import time
-import pytest
 from app.job_queue import JobQueue, Provider, QueuePolicy
 
 LOCAL=Provider("ollama","local","fast",8192,4096,2)
@@ -23,8 +22,12 @@ def test_priority_and_agent_concurrency(tmp_path):
 
 def test_unknown_agent_is_rejected(tmp_path):
     q=queue(tmp_path)
-    with pytest.raises(ValueError, match="unregistered agent identity"):
+    try:
         q.submit(agent="free-form-unregistered-agent",prompt="work")
+    except ValueError as exc:
+        assert "unregistered agent identity" in str(exc)
+    else:
+        raise AssertionError("unregistered compute agent must fail closed")
 
 def test_cloud_is_approval_gated_and_only_fallback(tmp_path):
     q=queue(tmp_path)
