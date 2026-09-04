@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from .agent_registry import RegistryError, canonical_agent_id
+
 
 TERMINAL = {"completed", "failed", "cancelled", "budget_blocked"}
 PRIORITIES = {"background": 10, "low": 25, "normal": 50, "high": 75, "critical": 100}
@@ -23,7 +25,9 @@ def utcnow() -> str:
 
 @dataclass(frozen=True)
 class QueuePolicy:
-    global_concurrency: int = 4
+    # The current Dell-class local host is intentionally conservative: two
+    # concurrent jobs is the default ceiling unless the owner explicitly tunes it.
+    global_concurrency: int = 2
     per_agent_concurrency: int = 1
     local_ram_mb: int = 32768
     local_vram_mb: int = 0
@@ -42,7 +46,7 @@ class QueuePolicy:
             except ValueError: value = default
             return max(low, min(high, value))
         return cls(
-            global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 4, 1, 29),
+            global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 2, 1, 29),
             per_agent_concurrency=integer("PRIME_AGENT_CONCURRENCY", 1, 1, 8),
             local_ram_mb=integer("PRIME_LOCAL_RAM_MB", 32768, 1024, 1048576),
             local_vram_mb=integer("PRIME_LOCAL_VRAM_MB", 0, 0, 1048576),
@@ -116,6 +120,10 @@ class JobQueue:
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
                external_execution: bool = False) -> dict:
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
+        try:
+            canonical_agent = canonical_agent_id(agent)
+        except RegistryError as exc:
+            raise ValueError(str(exc)) from exc
         p = PRIORITIES.get(priority, 50) if isinstance(priority, str) else max(0, min(100, int(priority)))
         role = model_role.lower()
         if role not in {"auto", "fast", "deep", "embedding", "evaluator"}: raise ValueError("invalid model_role")
@@ -129,10 +137,10 @@ class JobQueue:
               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,timeout_seconds,max_retries,
                max_cost_usd,allow_cloud,external_execution,status,approval_status,created_at,updated_at)
               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-              (jid,agent.strip(),prompt,p,role,model.strip(),max(0,int(ram_mb)),max(0,int(vram_mb)),
+              (jid,canonical_agent,prompt,p,role,model.strip(),max(0,int(ram_mb)),max(0,int(vram_mb)),
                max(1,min(86400,int(timeout_seconds))),max(0,min(10,int(max_retries))),job_cap,
                int(allow_cloud),int(external_execution),status,approval,ts,ts))
-            self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval})
+            self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
         return self.get(jid)
 
     def approve(self, job_id: str, decision: str, actor: str, reason: str = "") -> dict:
