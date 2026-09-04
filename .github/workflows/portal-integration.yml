@@ -1,6 +1,7 @@
 name: Portal Integration Verify
 
 on:
+  workflow_call:
   push:
     branches:
       - feature/portal-experiment-ingest
