@@ -1,9 +1,10 @@
 """Outbound publisher for sanitized JARVIS authority telemetry.
 
 The publisher is disabled unless PRIME_PUBLIC_TRACE_SECRET is configured. It
-sends only AgentAuthorityRuntime.public_snapshot() data to the trusted public
-relay and authenticates each request with HMAC-SHA256. Prompts, model outputs,
-credentials and private endpoints never cross this boundary.
+sends only public-safe authority and aggregate release-gate metadata to the
+trusted relay and authenticates each request with HMAC-SHA256. Prompts, model
+outputs, rationale, claim text, credentials and private endpoints never cross
+this boundary.
 """
 from __future__ import annotations
 
@@ -16,6 +17,8 @@ import threading
 import time
 import urllib.request
 from typing import Any, Callable
+
+from .release_gate import release_gates
 
 LOGGER = logging.getLogger("prime.public_trace_publisher")
 DEFAULT_RELAY_URL = "https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/jarvis-trace-relay"
@@ -52,7 +55,7 @@ class PublicTracePublisher:
         return bool(self.url and self.secret and self.publisher_id)
 
     def _encoded_snapshot(self) -> bytes:
-        snapshot = self.authority_runtime.public_snapshot(100)
+        snapshot = release_gates.enrich_snapshot(self.authority_runtime.public_snapshot(100))
         return json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
 
     def publish_once(self) -> dict[str, Any]:
@@ -72,7 +75,7 @@ class PublicTracePublisher:
                 "X-JARVIS-Publisher": self.publisher_id,
                 "X-JARVIS-Timestamp": timestamp,
                 "X-JARVIS-Signature": signature,
-                "User-Agent": "jarvis-prime-public-trace/1.0",
+                "User-Agent": "jarvis-prime-public-trace/1.1",
             },
         )
         with self.opener(request, timeout=20) as response:
