@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import Any
 
 from .model_gateway import ModelGateway
+from .release_gate import release_gates
 
+LOGGER = logging.getLogger("prime.answer_evaluator")
 METRICS = ("source_coverage", "supported_claims", "contradiction_resistance", "uncertainty_calibration", "required_evidence", "policy_conformance", "task_success")
 ACTION_CLAIM = re.compile(r"\b(i|we|prime)\s+(sent|published|purchased|deleted|deployed|executed|approved|transferred)\b", re.I)
 
@@ -62,7 +65,7 @@ claims must lower supported_claims. Missing evidence and uncertainty must be exp
     score = sum(scores.values()) / len(scores)
     blocking = [name for name, value in scores.items() if value < (0.85 if name == "policy_conformance" else 0.6)]
     released = score >= 0.75 and not blocking
-    return {
+    evaluation = {
         "version": "2.1", "scores": {name: round(value, 4) for name, value in scores.items()},
         "score": round(score, 4), "released": released, "blocking_metrics": blocking,
         "unsupported_claims": parsed.get("unsupported_claims", []) if isinstance(parsed.get("unsupported_claims", []), list) else [],
@@ -72,3 +75,8 @@ claims must lower supported_claims. Missing evidence and uncertainty must be exp
         "parse_error": parse_error,
         "evaluation_compute": {key: value for key, value in raw.as_dict().items() if key != "text"},
     }
+    try:
+        release_gates.record(trace_id=task_id, evaluation=evaluation)
+    except Exception as exc:  # Observability must not change the release decision itself.
+        LOGGER.warning("release_gate_record_failed error=%s", type(exc).__name__)
+    return evaluation
