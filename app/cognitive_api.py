@@ -6,7 +6,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from .meta_review import MetaReviewer
 from .evaluation import evaluate
-from .runtime import memory, ledger, events, orchestrator, multi
+from .runtime import memory, ledger, events, orchestrator, multi, authority
 
 router=APIRouter(prefix="/api/cognitive",tags=["cognitive"])
 reviewer=MetaReviewer()
@@ -71,5 +71,8 @@ def evaluate_run(request:EvalRequest,authorization:str|None=Header(default=None)
 def model_manifest(authorization:str|None=Header(default=None)): require_token(authorization); return orchestrator.gateway.manifest()
 @router.get("/compute")
 def compute_events(limit:int=100,authorization:str|None=Header(default=None)): require_token(authorization); return {"events":ledger.recent(limit),"summary":ledger.summary(),"scorecard":ledger.scorecard(limit)}
+@router.get("/agent-runtime")
+def agent_runtime(limit:int=100,authorization:str|None=Header(default=None)):
+    require_token(authorization); return authority.public_snapshot(max(1,min(limit,500)))
 @router.get("/meta-review")
 def meta_review(authorization:str|None=Header(default=None)): require_token(authorization); return reviewer.review()
