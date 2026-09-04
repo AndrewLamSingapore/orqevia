@@ -17,7 +17,7 @@ $Intent = "Analyze the JARVIS runtime authority architecture and identify one re
 $Context = "Local verification only. Reasoning and inspection only."
 
 function Write-Step([string]$Message) {
-    Write-Host "" 
+    Write-Host ""
     Write-Host ("==> " + $Message) -ForegroundColor Cyan
 }
 
@@ -98,21 +98,29 @@ if ($response.approval_required -ne $false) { throw "Governance invariant failed
 
 $traceId = [string]$response.trace_id
 $path = @($response.plan.agent_path)
+$expectedDecision = if ($response.evaluation.released -eq $true) { "released" } else { "withheld" }
 Write-Host ("Real PRIME trace: " + $traceId) -ForegroundColor Green
 if ($path.Count -gt 0) {
     Write-Host ("Governed agent path: " + ($path -join " -> ")) -ForegroundColor Green
 }
+Write-Host ("Expected Stable Spine gate decision: " + $expectedDecision) -ForegroundColor Green
 
-Write-Step "Waiting for the exact trace to reach Authority Engine"
-$deadline = (Get-Date).AddSeconds(120)
+Write-Step "Waiting for the exact trace and release gate to reach Authority Engine"
+$deadline = (Get-Date).AddSeconds(150)
 $verified = $false
+$verifiedGate = $null
 do {
     Start-Sleep -Seconds 5
     try {
         $public = Invoke-RestMethod -Method Get -Uri $PublicTraceUrl -TimeoutSec 10
         $matches = @($public.events | Where-Object { $_.trace_id -eq $traceId })
-        if ($public.state -eq "verified_events" -and $matches.Count -gt 0) {
+        $terminal = @($matches | Where-Object { $_.stage -eq "reasoning" -and $_.status -in @("completed", "withheld") -and $_.gate }) | Select-Object -Last 1
+        if ($public.state -eq "verified_events" -and $matches.Count -gt 0 -and $terminal) {
+            if ([string]$terminal.gate.decision -ne $expectedDecision) {
+                throw "Public gate decision does not match PRIME's local evaluator decision."
+            }
             $verified = $true
+            $verifiedGate = $terminal.gate
             Write-Host ("Authority Engine verified " + $matches.Count + " sanitized event(s) for this trace.") -ForegroundColor Green
             break
         }
@@ -122,12 +130,17 @@ do {
 } while ((Get-Date) -lt $deadline)
 
 if (-not $verified) {
-    throw "The local governed task completed, but its exact sanitized trace did not reach Authority Engine within 120 seconds."
+    throw "The governed task completed, but its exact sanitized trace plus release-gate metadata did not reach Authority Engine within 150 seconds."
 }
 
-Write-Step "GOVERNED EXECUTION VERIFIED END TO END"
+Write-Step "GOVERNED EXECUTION AND RELEASE GATE VERIFIED END TO END"
 Write-Host "PRIME performed real local reasoning through the canonical authority path." -ForegroundColor Green
-Write-Host "Authority Engine received only sanitized execution metadata." -ForegroundColor Green
+Write-Host ("Stable Spine public gate: " + $verifiedGate.decision + " at " + [math]::Round(([double]$verifiedGate.score * 100), 1) + "%") -ForegroundColor Green
+if (@($verifiedGate.blocking_metrics).Count -gt 0) {
+    Write-Host ("Public blocking checks: " + (@($verifiedGate.blocking_metrics) -join ", ")) -ForegroundColor Yellow
+}
+Write-Host "Authority Engine received only sanitized aggregate release-gate metadata." -ForegroundColor Green
+Write-Host "No evaluator rationale, prompt, model answer, claim text or evidence text was published." -ForegroundColor Green
 Write-Host "No external action was executed." -ForegroundColor Green
 Write-Host "Opening the J Console Execution view..."
 Start-Process $PublicConsoleUrl
