@@ -11,6 +11,10 @@ on:
       - 'docker-compose.yml'
       - 'docker-compose.gpu.yml'
       - '.github/workflows/publish-image.yml'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/release-acceptance.yml'
+      - '.github/workflows/stable-spine.yml'
+      - '.github/workflows/portal-integration.yml'
   workflow_dispatch:
 
 permissions:

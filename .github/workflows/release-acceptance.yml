@@ -1,22 +1,8 @@
 name: Release Acceptance
 
 on:
+  workflow_call:
   pull_request:
-    paths:
-      - 'Dockerfile'
-      - 'docker-compose.yml'
-      - 'docker-compose.gpu.yml'
-      - 'COMPUTE.md'
-      - '.env.example'
-      - 'JARVIS.cmd'
-      - 'app/**'
-      - 'benchmarks/**'
-      - 'contracts/**'
-      - 'governance/**'
-      - 'deploy/**'
-      - 'scripts/**'
-      - 'tests/**'
-      - '.github/workflows/release-acceptance.yml'
   push:
     branches: [main]
     paths:

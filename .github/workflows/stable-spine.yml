@@ -1,36 +1,8 @@
 name: Stable Spine
 
 on:
+  workflow_call:
   pull_request:
-    paths:
-      - 'app/spine.py'
-      - 'app/spine_api.py'
-      - 'app/memory.py'
-      - 'app/meta_review.py'
-      - 'app/cognitive_api.py'
-      - 'app/cognitive_orchestrator.py'
-      - 'app/orchestration.py'
-      - 'app/agent_registry.py'
-      - 'app/agent_runtime.py'
-      - 'app/release_gate.py'
-      - 'app/public_agent_api.py'
-      - 'app/public_trace_publisher.py'
-      - 'app/job_queue.py'
-      - 'config/agent_registry.json'
-      - 'scripts/export_agent_registry.py'
-      - 'app/entry.py'
-      - 'contracts/**'
-      - 'tests/test_stable_spine.py'
-      - 'tests/test_memory_meta.py'
-      - 'tests/test_cognitive_orchestrator.py'
-      - 'tests/test_consequential_intent.py'
-      - 'tests/test_agent_registry.py'
-      - 'tests/test_agent_runtime.py'
-      - 'tests/test_release_gate.py'
-      - 'tests/test_public_trace_publisher.py'
-      - 'tests/test_job_queue.py'
-      - 'docker-compose.yml'
-      - '.github/workflows/stable-spine.yml'
   push:
     branches: [main]
     paths:
@@ -68,6 +40,7 @@ permissions:
 
 jobs:
   verify:
+    name: Stable Spine contract
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
