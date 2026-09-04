@@ -1,0 +1,52 @@
+name: Operational SSOT live verification
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: operational-ssot-live
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Resolve live GitHub and Vercel state
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: >-
+          python scripts/verify_operational_manifest.py
+          --live --allow-stale --mark-stale
+          --report operational-verification-report.json
+      - name: Persist a newly stale state
+        run: |
+          if ! git diff --quiet -- governance/operational-manifest.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add governance/operational-manifest.json
+            git commit -m "Mark operational manifest STALE [skip ci]"
+            git push
+          fi
+      - name: Enforce effective status
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: python scripts/verify_operational_manifest.py --live
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operational-verification-report
+          path: operational-verification-report.json
+          retention-days: 30
