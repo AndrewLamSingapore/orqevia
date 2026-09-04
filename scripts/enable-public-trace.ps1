@@ -71,7 +71,8 @@ $values = @{
     PRIME_QUEUE_CONCURRENCY = "2"
 }
 Set-EnvValues -Path $EnvPath -Values $values
-Write-Host "JARVIS public-safe trace configuration written to .env without exposing the secret."
+Remove-Item -Force -LiteralPath $SecretFile
+Write-Host "JARVIS public-safe trace configuration written to .env; the one-time private bootstrap file was removed."
 
 if ($NoRestart) {
     Write-Host "Configuration complete. Restart skipped by request."
@@ -91,10 +92,14 @@ try {
     docker compose -f $ComposePath up -d --no-deps --force-recreate prime
     if ($LASTEXITCODE -ne 0) { throw "PRIME container recreation failed." }
 
+    $containerId = (docker compose -f $ComposePath ps -q prime 2>$null).Trim()
+    if (-not $containerId) { throw "PRIME container ID could not be resolved after recreation." }
+
     $deadline = (Get-Date).AddMinutes(3)
+    $health = "unknown"
     do {
         Start-Sleep -Seconds 3
-        $health = (docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' prime 2>$null)
+        $health = (docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' $containerId 2>$null).Trim()
         if ($health -eq 'healthy') { break }
     } while ((Get-Date) -lt $deadline)
     if ($health -ne 'healthy') { throw "PRIME did not become healthy within 3 minutes. Current state: $health" }
