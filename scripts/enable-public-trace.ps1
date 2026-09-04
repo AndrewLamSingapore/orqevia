@@ -49,12 +49,14 @@ function Ensure-DockerVolume([string]$Name) {
     if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]+$') {
         throw "Unsafe Docker volume name: $Name"
     }
-    docker volume inspect $Name *> $null
-    if ($LASTEXITCODE -eq 0) { return }
-    Write-Host "Creating required persistent Docker volume: $Name"
-    docker volume create $Name *> $null
-    if ($LASTEXITCODE -ne 0) {
-        throw "Unable to create required Docker volume: $Name"
+    Write-Host "Ensuring required persistent Docker volume: $Name"
+    # `docker volume create` is deliberately used without an inspect probe.
+    # It is idempotent: a missing volume is created, while an existing one is
+    # returned unchanged. This also avoids Windows PowerShell treating the
+    # stderr from `docker volume inspect <missing>` as a terminating error.
+    $created = docker volume create $Name
+    if ($LASTEXITCODE -ne 0 -or -not $created) {
+        throw "Unable to ensure required Docker volume: $Name"
     }
 }
 
