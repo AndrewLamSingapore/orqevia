@@ -35,7 +35,7 @@ class MultiSpecialistRuntime:
             self.authority_runtime.stage(trace_id=task_id, agent_id=agent_id, stage=f"specialist:{role}", status="started")
             try:
                 result = self.gateway.local(prompt=prompt, deep=use_deep, task_id=task_id,
-                                            stage=f"agent:{agent_id}:specialist:{role}").as_dict()
+                                            stage=f"specialist:{role}").as_dict()
                 self.authority_runtime.stage(trace_id=task_id, agent_id=agent_id, stage=f"specialist:{role}",
                                              status="completed", latency_ms=(time.perf_counter()-started)*1000)
                 return role, result
@@ -66,7 +66,7 @@ class MultiSpecialistRuntime:
         self.authority_runtime.stage(trace_id=task_id, agent_id=critic_id, stage="specialist_critique", status="started")
         critique = self.gateway.local(
             prompt=base + "\nSPECIALIST OUTPUTS:\n" + joined[:24000] + "\n\nAct as adversarial critic. Identify contradictions, unsupported claims, missing evidence and failure modes.",
-            deep=True, task_id=task_id, stage=f"agent:{critic_id}:specialist_critique",
+            deep=True, task_id=task_id, stage="specialist_critique",
         ).as_dict()
         self.authority_runtime.stage(trace_id=task_id, agent_id=critic_id, stage="specialist_critique", status="completed",
                                      latency_ms=(time.perf_counter()-critic_started)*1000)
@@ -78,7 +78,7 @@ class MultiSpecialistRuntime:
         self.authority_runtime.stage(trace_id=task_id, agent_id=synthesis_id, stage="specialist_synthesis", status="started")
         synthesis = self.gateway.local(
             prompt=base + "\nSPECIALIST OUTPUTS:\n" + joined[:22000] + "\nCRITIQUE:\n" + critique.get("text", "")[:8000] + "\n\nSynthesize the strongest evidence-bounded answer. Preserve disagreement and uncertainty. External actions remain proposals only.",
-            deep=True, task_id=task_id, stage=f"agent:{synthesis_id}:specialist_synthesis",
+            deep=True, task_id=task_id, stage="specialist_synthesis",
         ).as_dict()
         self.authority_runtime.stage(trace_id=task_id, agent_id=synthesis_id, stage="specialist_synthesis", status="completed",
                                      latency_ms=(time.perf_counter()-synthesis_started)*1000)
