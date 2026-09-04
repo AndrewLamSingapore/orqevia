@@ -68,7 +68,7 @@ jobs:
             $errors = $null
             [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors)
             if ($errors.Count) {
-              $allErrors += $errors | ForEach-Object { "${($_.Extent.File)}:$($_.Extent.StartLineNumber): $($_.Message)" }
+              $allErrors += $errors | ForEach-Object { "$($_.Extent.File):$($_.Extent.StartLineNumber): $($_.Message)" }
             }
           }
           if ($allErrors.Count) { $allErrors -join "`n" | Write-Error }
