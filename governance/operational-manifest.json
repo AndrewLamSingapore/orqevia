@@ -15,7 +15,13 @@
     "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
     "stale_reasons": [
       "dell_status_post_update_required",
-      "dell_status_predates_latest_update"
+      "dell_status_predates_latest_update",
+      "github_head_drift:authority",
+      "github_head_drift:control",
+      "github_head_drift:game",
+      "github_head_drift:portal",
+      "vercel_runtime_drift:authority",
+      "vercel_runtime_drift:portal"
     ],
     "rule": "CURRENT requires all recorded facts to be fresh, live cloud checks to pass, and a post-update Dell JARVIS.cmd status acceptance."
   },
