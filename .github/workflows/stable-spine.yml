@@ -12,6 +12,7 @@ on:
       - 'app/orchestration.py'
       - 'app/agent_registry.py'
       - 'app/agent_runtime.py'
+      - 'app/release_gate.py'
       - 'app/public_agent_api.py'
       - 'app/public_trace_publisher.py'
       - 'app/job_queue.py'
@@ -25,6 +26,7 @@ on:
       - 'tests/test_consequential_intent.py'
       - 'tests/test_agent_registry.py'
       - 'tests/test_agent_runtime.py'
+      - 'tests/test_release_gate.py'
       - 'tests/test_public_trace_publisher.py'
       - 'tests/test_job_queue.py'
       - 'docker-compose.yml'
@@ -41,6 +43,7 @@ on:
       - 'app/orchestration.py'
       - 'app/agent_registry.py'
       - 'app/agent_runtime.py'
+      - 'app/release_gate.py'
       - 'app/public_agent_api.py'
       - 'app/public_trace_publisher.py'
       - 'app/job_queue.py'
@@ -54,6 +57,7 @@ on:
       - 'tests/test_consequential_intent.py'
       - 'tests/test_agent_registry.py'
       - 'tests/test_agent_runtime.py'
+      - 'tests/test_release_gate.py'
       - 'tests/test_public_trace_publisher.py'
       - 'tests/test_job_queue.py'
       - 'docker-compose.yml'
@@ -68,7 +72,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt pytest
-      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_cognitive_orchestrator.py tests/test_consequential_intent.py tests/test_router_registration.py tests/test_agent_registry.py tests/test_agent_runtime.py tests/test_public_trace_publisher.py tests/test_job_queue.py
+      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_cognitive_orchestrator.py tests/test_consequential_intent.py tests/test_router_registration.py tests/test_agent_registry.py tests/test_agent_runtime.py tests/test_release_gate.py tests/test_public_trace_publisher.py tests/test_job_queue.py
       - name: Export public registry
         run: python scripts/export_agent_registry.py /tmp/public-agent-registry.json
       - name: Reject public disclosure leaks
