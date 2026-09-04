@@ -1,0 +1,49 @@
+schema_version: 1
+runtime_id: jarvis-prime
+release: 7.3.1.1-evidence-grounded
+control_plane:
+  service: prime
+  authority: approval-gated
+  autonomous_actions: false
+  physical_actuation: false
+node:
+  id_env: PRIME_NODE_ID
+  default_id: prime-node-01
+  role_env: PRIME_NODE_ROLE
+  default_role: control-compute
+persistence:
+  prime_data:
+    mount: /data
+    volume_env: PRIME_DATA_VOLUME
+    default_volume: prime-data
+    durable: true
+  model_data:
+    mount: /root/.ollama
+    volume_env: OLLAMA_DATA_VOLUME
+    default_volume: prime-ollama-data
+    durable: true
+interfaces:
+  local_control:
+    bind_env: PRIME_BIND_ADDRESS
+    default_bind: 127.0.0.1
+    port_env: PRIME_PORT
+    default_port: 8000
+  health: /health
+  control: /control
+  status: /api/status
+  manifest: /api/control-surface/manifest
+recovery:
+  restart_policy: unless-stopped
+  prime_health_required: true
+  model_health_required: true
+  persistent_state_survives_container_replacement: true
+security:
+  public_control_surface: false
+  remote_integration_requires_gateway: true
+  remote_integration_requires_token: true
+principles:
+  - devices_observe
+  - agents_propose
+  - stable_spine_decides
+  - authorized_systems_act
+  - ledger_records
