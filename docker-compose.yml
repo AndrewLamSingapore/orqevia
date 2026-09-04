@@ -8,10 +8,13 @@ services:
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "prime"
+      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
     ports:
       - "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000"
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
+      PRIME_NODE_ID: ${PRIME_NODE_ID:-prime-node-01}
+      PRIME_NODE_ROLE: ${PRIME_NODE_ROLE:-control-compute}
       PRIME_COMPUTE_PROFILE: ${PRIME_COMPUTE_PROFILE:-balanced}
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
@@ -75,6 +78,7 @@ services:
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "model-runtime"
+      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
     environment:
       OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
       OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
@@ -102,6 +106,7 @@ services:
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "model-init"
+      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
     environment:
       OLLAMA_HOST: http://ollama:11434
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
@@ -128,6 +133,7 @@ services:
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "integration-gateway"
+      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
     environment:
       PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
     command: ["/bin/sh", "-c", "test -n \"$${PRIME_INTEGRATION_TOKEN}\" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
@@ -148,6 +154,7 @@ services:
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "tunnel"
+      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     command: tunnel --no-autoupdate --loglevel info --metrics 0.0.0.0:2000 run
