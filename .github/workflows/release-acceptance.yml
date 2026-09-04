@@ -59,13 +59,19 @@ jobs:
           git diff --exit-code -- benchmarks/portfolio-v2.json
       - name: Verify approval-gated and runtime operations contracts
         run: python -m unittest tests.test_control_surface_contract tests.test_runtime_operations_contract
-      - name: Parse the Windows operator
+      - name: Parse every PowerShell operator
         shell: pwsh
         run: |
-          $tokens = $null
-          $errors = $null
-          [void][System.Management.Automation.Language.Parser]::ParseFile("scripts/jarvis.ps1", [ref]$tokens, [ref]$errors)
-          if ($errors.Count) { $errors | Format-List | Out-String | Write-Error }
+          $allErrors = @()
+          Get-ChildItem -LiteralPath "scripts" -Filter "*.ps1" -File | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors.Count) {
+              $allErrors += $errors | ForEach-Object { "${($_.Extent.File)}:$($_.Extent.StartLineNumber): $($_.Message)" }
+            }
+          }
+          if ($allErrors.Count) { $allErrors -join "`n" | Write-Error }
       - name: Validate canonical Compose
         run: |
           docker compose -f docker-compose.yml config --quiet
