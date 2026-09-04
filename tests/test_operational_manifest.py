@@ -21,6 +21,7 @@ def test_current_requires_fresh_post_update_dell_acceptance():
     manifest = copy.deepcopy(manifest)
     manifest["dell_runtime"]["accepted"] = True
     manifest["dell_runtime"]["post_update_status"] = True
+    manifest["systems"]["game"]["source_head_sha"] = manifest["systems"]["game"]["release_sha"]
     manifest["status"] = "CURRENT"
     manifest["verification"]["stale_reasons"] = []
     result = assess_static(manifest, inventory, now=now)
