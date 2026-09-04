@@ -45,20 +45,36 @@ function Set-EnvValues([string]$Path, [hashtable]$Values) {
     Move-Item -Force -LiteralPath $tmp -Destination $Path
 }
 
-if (-not (Test-Path $SecretFile)) {
-    throw "Private trace secret file not found: $SecretFile"
+function Ensure-DockerVolume([string]$Name) {
+    if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]+$') {
+        throw "Unsafe Docker volume name: $Name"
+    }
+    docker volume inspect $Name *> $null
+    if ($LASTEXITCODE -eq 0) { return }
+    Write-Host "Creating required persistent Docker volume: $Name"
+    docker volume create $Name *> $null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to create required Docker volume: $Name"
+    }
 }
+
 if (-not (Test-Path $ComposePath)) {
     throw "Canonical docker-compose.yml not found: $ComposePath"
 }
 
-$private = Read-EnvMap $SecretFile
-if (-not $private.Contains('PRIME_PUBLIC_TRACE_SECRET')) {
-    throw "Private file is missing PRIME_PUBLIC_TRACE_SECRET."
+$existing = Read-EnvMap $EnvPath
+$secret = ""
+if (Test-Path $SecretFile) {
+    $private = Read-EnvMap $SecretFile
+    if ($private.Contains('PRIME_PUBLIC_TRACE_SECRET')) {
+        $secret = [string]$private['PRIME_PUBLIC_TRACE_SECRET']
+    }
 }
-$secret = [string]$private['PRIME_PUBLIC_TRACE_SECRET']
+if (-not $secret -and $existing.Contains('PRIME_PUBLIC_TRACE_SECRET')) {
+    $secret = [string]$existing['PRIME_PUBLIC_TRACE_SECRET']
+}
 if ($secret.Length -lt 32) {
-    throw "PRIME_PUBLIC_TRACE_SECRET is too short."
+    throw "PRIME_PUBLIC_TRACE_SECRET is missing or too short."
 }
 
 $values = @{
@@ -71,16 +87,27 @@ $values = @{
     PRIME_QUEUE_CONCURRENCY = "2"
 }
 Set-EnvValues -Path $EnvPath -Values $values
-Remove-Item -Force -LiteralPath $SecretFile
-Write-Host "JARVIS public-safe trace configuration written to .env; the one-time private bootstrap file was removed."
+if (Test-Path $SecretFile) {
+    Remove-Item -Force -LiteralPath $SecretFile
+    Write-Host "JARVIS public-safe trace configuration written to .env; the one-time private bootstrap file was removed."
+} else {
+    Write-Host "JARVIS public-safe trace configuration verified from the existing private .env."
+}
 
 if ($NoRestart) {
     Write-Host "Configuration complete. Restart skipped by request."
     exit 0
 }
 
+$effective = Read-EnvMap $EnvPath
+$primeDataVolume = if ($effective.Contains('PRIME_DATA_VOLUME') -and $effective['PRIME_DATA_VOLUME']) { [string]$effective['PRIME_DATA_VOLUME'] } else { 'prime-data' }
+$ollamaDataVolume = if ($effective.Contains('OLLAMA_DATA_VOLUME') -and $effective['OLLAMA_DATA_VOLUME']) { [string]$effective['OLLAMA_DATA_VOLUME'] } else { 'prime-ollama-data' }
+
 Push-Location $RepoRoot
 try {
+    Ensure-DockerVolume $primeDataVolume
+    Ensure-DockerVolume $ollamaDataVolume
+
     docker compose -f $ComposePath config --quiet
     if ($LASTEXITCODE -ne 0) { throw "Docker Compose validation failed." }
 
