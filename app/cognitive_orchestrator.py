@@ -153,7 +153,9 @@ Rules:
         self.authority_runtime.stage(trace_id=trace_id, agent_id=agent_id, stage="reasoning", status="started",
                                      consequential=plan.needs_approval)
         try:
-            local = self.gateway.local(prompt=prompt, deep=deep, task_id=trace_id, stage=f"agent:{agent_id}")
+            # Preserve the canonical compute-ledger stage name; agent identity is
+            # independently recorded in the authority ledger.
+            local = self.gateway.local(prompt=prompt, deep=deep, task_id=trace_id, stage="local_ai")
             result = local
             evaluation = evaluate_generated_answer(gateway=self.gateway, task_id=local.task_id, intent=intent,
                                                    answer=local.text, memory_context=plan.memory_context,
