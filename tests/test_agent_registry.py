@@ -1,5 +1,3 @@
-import pytest
-
 from app.agent_registry import (
     RegistryError,
     canonical_agent_id,
@@ -35,8 +33,12 @@ def test_consultation_is_bounded():
 def test_unknown_agents_fail_closed_and_aliases_canonicalize():
     assert canonical_agent_id("engineering") == "A16"
     assert canonical_agent_id("critic") == "A27"
-    with pytest.raises(RegistryError):
+    try:
         canonical_agent_id("invented-agent")
+    except RegistryError:
+        pass
+    else:
+        raise AssertionError("unknown agent identity must fail closed")
 
 
 def test_consequential_action_always_requires_owner_approval():
