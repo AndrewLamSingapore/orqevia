@@ -48,6 +48,18 @@ class FakeResponse:
         return self._body
 
 
+def all_keys(value):
+    keys = set()
+    if isinstance(value, dict):
+        for key, child in value.items():
+            keys.add(key)
+            keys.update(all_keys(child))
+    elif isinstance(value, list):
+        for child in value:
+            keys.update(all_keys(child))
+    return keys
+
+
 class PublicTracePublisherTests(unittest.TestCase):
     def test_disabled_without_secret(self):
         publisher = PublicTracePublisher(DummyAuthority(), url="https://relay.example", secret="")
@@ -78,8 +90,11 @@ class PublicTracePublisherTests(unittest.TestCase):
         body = request.data
         payload = json.loads(body.decode("utf-8"))
         self.assertEqual(payload["events"][0]["agent_id"], "A19")
-        self.assertNotIn("prompt", body.decode("utf-8"))
-        self.assertNotIn("credentials", body.decode("utf-8"))
+        forbidden_keys = {
+            "prompt", "credentials", "endpoint", "result", "answer", "rationale",
+            "claim_text", "evidence_text", "filesystem_path", "tool_secrets", "internal_instructions",
+        }
+        self.assertFalse(forbidden_keys.intersection(all_keys(payload)))
         self.assertNotIn(secret, body.decode("utf-8"))
 
         timestamp = request.get_header("X-jarvis-timestamp")
