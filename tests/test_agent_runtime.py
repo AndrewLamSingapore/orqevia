@@ -1,11 +1,17 @@
-import pytest
-
 from app.agent_runtime import AgentAuthorityError, AgentAuthorityRuntime
 from app.agent_registry import RegistryError, canonical_agent_id
 
 
 def runtime(tmp_path):
     return AgentAuthorityRuntime(tmp_path / "agent-authority.db")
+
+
+def assert_raises(exc_type, fn):
+    try:
+        fn()
+    except exc_type:
+        return
+    raise AssertionError(f"expected {exc_type.__name__}")
 
 
 def test_deterministic_path_uses_registered_lead_and_specialist(tmp_path):
@@ -27,22 +33,19 @@ def test_prime_to_lead_and_lead_to_child_handoffs_are_enforced(tmp_path):
 
 def test_cross_division_delegation_is_denied_and_audited(tmp_path):
     rt = runtime(tmp_path)
-    with pytest.raises(AgentAuthorityError):
-        rt.handoff(source="A16", target="A07", relation="delegate")
+    assert_raises(AgentAuthorityError, lambda: rt.handoff(source="A16", target="A07", relation="delegate"))
     event = rt.recent(1)[0]
     assert event["status"] == "denied"
     assert event["allowed"] == 0
 
 
 def test_unknown_agent_fails_closed():
-    with pytest.raises(RegistryError):
-        canonical_agent_id("invented-agent")
+    assert_raises(RegistryError, lambda: canonical_agent_id("invented-agent"))
 
 
 def test_consequential_external_action_requires_owner_approval(tmp_path):
     rt = runtime(tmp_path)
-    with pytest.raises(AgentAuthorityError):
-        rt.handoff(source="A16", target="A18", relation="delegate", consequential=True, external_action=True)
+    assert_raises(AgentAuthorityError, lambda: rt.handoff(source="A16", target="A18", relation="delegate", consequential=True, external_action=True))
     allowed = rt.handoff(source="A16", target="A18", relation="delegate", consequential=True,
                          external_action=True, owner_approved=True)
     assert allowed["allowed"] is True
