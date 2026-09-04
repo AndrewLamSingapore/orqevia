@@ -29,12 +29,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest
-      - name: Compile application
-        run: python -m compileall -q app
+      - name: Compile application and governance tooling
+        run: python -m compileall -q app scripts
       - name: Run tests
         env:
           PRIME_DATA_DIR: ${{ runner.temp }}/prime-data
           PRIME_COMPUTE_DB: ${{ runner.temp }}/prime-data/compute-ledger.db
         run: pytest -q
-      - name: Validate governance manifest
-        run: python scripts/verify_operational_manifest.py
+      - name: Validate truthful governance manifest
+        run: python scripts/verify_operational_manifest.py --allow-stale
+      - name: Reject manually maintained checkpoint drift
+        run: python scripts/generate_resume_checkpoint.py --check
