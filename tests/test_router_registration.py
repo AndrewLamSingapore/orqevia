@@ -9,5 +9,7 @@ class RouterTests(unittest.TestCase):
         self.assertIn("/api/integrations/portal/experiments/{candidate_id}",paths)
         self.assertIn("/api/public/jarvis/agent-trace",paths)
         self.assertIn("/api/cognitive/agent-runtime",paths)
+        self.assertIn("/api/harness/status",paths)
+        self.assertIn("/api/harness/pilot/dispatch",paths)
 
 if __name__=="__main__": unittest.main()
