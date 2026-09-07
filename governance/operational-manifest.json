@@ -1,7 +1,7 @@
 {
   "schema_version": "4.2.0",
-  "status": "STALE",
-  "as_of_utc": "2026-09-07T05:50:06Z",
+  "status": "CURRENT",
+  "as_of_utc": "2026-09-07T06:11:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -9,13 +9,11 @@
   },
   "verification": {
     "mode": "live_github_vercel_with_operator_dell_gate",
-    "verified_at_utc": "2026-09-07T05:50:06Z",
+    "verified_at_utc": "2026-09-07T06:11:00Z",
     "stale_after_hours": 24,
-    "expires_at_utc": "2026-09-08T05:50:06Z",
+    "expires_at_utc": "2026-09-08T06:11:00Z",
     "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
-    "stale_reasons": [
-      "release_runtime_drift:prime"
-    ],
+    "stale_reasons": [],
     "rule": "CURRENT requires all recorded facts to be fresh, live cloud checks to pass, and a post-update Dell JARVIS.cmd status acceptance."
   },
   "human_resume_mirror": {
@@ -43,11 +41,11 @@
     "source_and_deployments": "ALIGNED_VERIFIED",
     "portfolio_relay": "CLOUD_CONFIGURED_LOCAL_ACCEPTANCE_VERIFIED",
     "authority_evidence_review": "READY_DRAFT_ONLY",
-    "dell_runtime": "HEALTHY_RELEASE_UPDATE_PENDING",
+    "dell_runtime": "ALIGNED_VERIFIED",
     "compute_hardening": "HEALTHY_RECHECKED",
     "queue_hardening": "SOURCE_TESTED_RUNTIME_HEALTH_VERIFIED",
     "sanitized_observability": "ALIGNED_VERIFIED",
-    "overall": "STALE_PRIME_RELEASE_RUNTIME_DRIFT"
+    "overall": "CURRENT"
   },
   "shared_contract": {
     "version": "2.0.0",
@@ -131,16 +129,16 @@
       "source_head_resolution": "live",
       "source_head_observed_before_manifest_commit_sha": "ac12c037ea7be04ed1070c0b295aaabaf00b3004",
       "release_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
-      "runtime_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
-      "verified_at_utc": "2026-09-07T05:50:06Z",
+      "runtime_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
+      "verified_at_utc": "2026-09-07T06:11:00Z",
       "published_image": "ghcr.io/andrewlamsingapore/prime:sha-4ca0be6",
       "runtime": "private-dell-docker",
-      "state": "RUNTIME_HEALTHY_RELEASE_UPDATE_PENDING",
+      "state": "ALIGNED_VERIFIED",
       "authority": "inference-only; external actions remain approval-gated",
       "note": "source_head_sha is live-resolved because a Git-tracked manifest cannot contain the SHA of its own commit.",
       "source_verified_at_utc": "2026-09-07T05:50:06Z",
       "remote_health": "HEALTHY_READ_ONLY_TUNNEL_VERIFIED",
-      "remote_checked_at_utc": "2026-09-07T05:50:06Z",
+      "remote_checked_at_utc": "2026-09-07T06:11:00Z",
       "publication_workflow_run": 34078904460,
       "publication_verified_at_utc": "2026-09-07T03:18:15Z"
     },
@@ -191,29 +189,28 @@
   },
   "dell_runtime": {
     "command": "JARVIS.cmd status",
-    "runtime_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
-    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-daeeb30",
-    "verified_at_utc": "2026-09-07T05:50:06Z",
+    "runtime_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
+    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-4ca0be6",
+    "verified_at_utc": "2026-09-07T06:11:00Z",
     "accepted": true,
     "post_update_status": true,
-    "result": "Healthy, local-only, approval-gated and no-actuation. Read-only ChatGPT tunnel and system_health call verified; published PRIME release remains newer than the running image.",
+    "result": "Healthy, local-only, approval-gated and no-actuation. Latest verified PRIME release image is active and the post-update JARVIS.cmd status acceptance passed.",
     "evidence": {
-      "status_capture_library_file_id": "libfile_9c59d8030f80819186d65643bfdc2496",
-      "status_capture_title": "IMG_5586.jpeg",
+      "status_capture_library_file_id": "libfile_c563653527cc8191a9694c4b279878d2",
+      "status_capture_title": "IMG_5595.jpeg",
       "later_update_capture_library_file_id": "libfile_4db238ed342c8191966883da4fff7e54",
       "later_update_capture_title": "IMG_5367.jpeg",
       "later_update_capture_created_at_utc": "2026-09-04T01:44:53Z",
-      "runtime_tag_prefix_confirmed": "daeeb30",
-      "repository_check": "C:\\Users\\User\\JARVIS\\prime-main was not a Git repository",
+      "runtime_tag_prefix_confirmed": "4ca0be6",
+      "repository_check": "C:\\Users\\User\\JARVIS\\prime-main launcher and update script verified operational",
       "limitations": [
-        "The running image is healthy but remains behind the latest published PRIME release.",
-        "The health response identifies the runtime version; the full runtime SHA remains grounded in the retained release record and image tag."
+        "The health response identifies the runtime version; the full runtime SHA is grounded in the verified release record, exact image tag, and retained update/status capture."
       ],
       "read_only_health_capture_library_file_id": "libfile_b6e1f08c04d4819188fd13e97095e303",
       "read_only_health_capture_title": "IMG_5587.jpeg",
       "tunnel_metadata_capture_library_file_id": "libfile_e8e853ed35a08191b90ce61229b4cf9d",
       "tunnel_metadata_capture_title": "IMG_5582.jpeg",
-      "connector": "JARVIS PRIME \u2013 Read Only",
+      "connector": "JARVIS PRIME – Read Only",
       "tunnel_id": "tunnel_6a97806a99e481919b6adb92aa8b7505",
       "system_health_version": "7.3.1.1-evidence-grounded",
       "system_health_result": "healthy"
@@ -282,7 +279,7 @@
       "rollback_recorded",
       "dell_post_update_status"
     ],
-    "current_result": "PRIME_RUNTIME_UPDATE_REQUIRED",
+    "current_result": "PASSED",
     "secret_values_allowed": false
   },
   "supersession": {
@@ -296,7 +293,7 @@
     "velyqua": "RESUMED_SOFTWARE_NO_PHYSICAL_ACTUATION"
   },
   "implementation_frontier": {
-    "registry": "v1.1 source merged and image published; public 29-agent/six-lead projection and read-only runtime health verified; latest release activation pending",
+    "registry": "v1.1 source merged and image published; public 29-agent/six-lead projection, read-only runtime health, and latest release activation verified",
     "harness_v0": "ABEX commissioning and acceptance pending",
     "hermes_agentscope": "cognition-only integrations require Harness v0; not activated",
     "predictive_ml": "awaits sufficient real sensor data",
@@ -304,7 +301,7 @@
     "portal_inhabitants": "concept recovered; implementation pending",
     "sky_tablet": "source and current production artifact recovered, deployed and content-hash verified",
     "glm_track_1": "full wrapper and logging contract not recovered",
-    "checkpoint_repair": "Authority build repaired in PR45; Sky Tablet production aligned; SSOT refreshed from live GitHub, Vercel and read-only Dell evidence"
+    "checkpoint_repair": "Authority build repaired in PR45; Sky Tablet production aligned; SSOT refreshed; Dell updated to the verified PRIME release and post-update acceptance passed"
   },
   "release_results": {
     "velyqua": {
@@ -334,7 +331,7 @@
       "source_tests": 125,
       "required_ci_checks": "all five passed",
       "image_publication": "success",
-      "host_installation": "running image healthy; latest published release update still required"
+      "host_installation": "latest published release active; post-update JARVIS.cmd status passed"
     },
     "sky": {
       "source_sha": "006e4a39b7853e0198c9b735b4d3943031a204ab",
