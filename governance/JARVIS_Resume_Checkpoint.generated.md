@@ -4,7 +4,7 @@
 
 - Effective status: **CURRENT**
 - Manifest observation: `2026-09-07T07:12:00Z`
-- Verification time: `2026-09-07T06:11:00Z`
+- Verification time: `2026-09-07T07:12:00Z`
 - Freshness window: `24 hours`
 
 ## System facts
