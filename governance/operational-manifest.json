@@ -1,7 +1,7 @@
 {
   "schema_version": "4.2.0",
   "status": "CURRENT",
-  "as_of_utc": "2026-09-07T06:11:00Z",
+  "as_of_utc": "2026-09-07T07:12:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -41,9 +41,9 @@
     "source_and_deployments": "ALIGNED_VERIFIED",
     "portfolio_relay": "CLOUD_CONFIGURED_LOCAL_ACCEPTANCE_VERIFIED",
     "authority_evidence_review": "READY_DRAFT_ONLY",
-    "dell_runtime": "ALIGNED_VERIFIED",
+    "dell_runtime": "HARNESS_V0_PILOT_DEPLOYMENT_VERIFIED",
     "compute_hardening": "HEALTHY_RECHECKED",
-    "queue_hardening": "SOURCE_TESTED_RUNTIME_HEALTH_VERIFIED",
+    "queue_hardening": "HARNESS_V0_PILOT_LOCAL_SINGLE_SLOT_VERIFIED",
     "sanitized_observability": "ALIGNED_VERIFIED",
     "overall": "CURRENT"
   },
@@ -127,20 +127,20 @@
       "repository": "AndrewLamSingapore/prime",
       "source_head_sha": null,
       "source_head_resolution": "live",
-      "source_head_observed_before_manifest_commit_sha": "ac12c037ea7be04ed1070c0b295aaabaf00b3004",
-      "release_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
-      "runtime_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
-      "verified_at_utc": "2026-09-07T06:11:00Z",
-      "published_image": "ghcr.io/andrewlamsingapore/prime:sha-4ca0be6",
+      "source_head_observed_before_manifest_commit_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+      "release_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+      "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+      "verified_at_utc": "2026-09-07T07:12:00Z",
+      "published_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
       "runtime": "private-dell-docker",
       "state": "ALIGNED_VERIFIED",
-      "authority": "inference-only; external actions remain approval-gated",
+      "authority": "Stable Spine sole PDP; Harness v0 PEP active for a14, a16 and a21; inference-only; external actions remain approval-gated",
       "note": "source_head_sha is live-resolved because a Git-tracked manifest cannot contain the SHA of its own commit.",
-      "source_verified_at_utc": "2026-09-07T05:50:06Z",
+      "source_verified_at_utc": "2026-09-07T07:05:23Z",
       "remote_health": "HEALTHY_READ_ONLY_TUNNEL_VERIFIED",
       "remote_checked_at_utc": "2026-09-07T06:11:00Z",
-      "publication_workflow_run": 34078904460,
-      "publication_verified_at_utc": "2026-09-07T03:18:15Z"
+      "publication_workflow_run": 34093768658,
+      "publication_verified_at_utc": "2026-09-07T07:07:00Z"
     },
     "velyqua": {
       "role": "independent hardware-agnostic living-water intelligence",
@@ -189,20 +189,20 @@
   },
   "dell_runtime": {
     "command": "JARVIS.cmd status",
-    "runtime_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
-    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-4ca0be6",
-    "verified_at_utc": "2026-09-07T06:11:00Z",
+    "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
+    "verified_at_utc": "2026-09-07T07:12:00Z",
     "accepted": true,
     "post_update_status": true,
-    "result": "Healthy, local-only, approval-gated and no-actuation. Latest verified PRIME release image is active and the post-update JARVIS.cmd status acceptance passed.",
+    "result": "Healthy, local-only, approval-gated and no-actuation. Harness v0 pilot is ready for a14, a16 and a21; cloud overflow is disabled and local inference concurrency is one.",
     "evidence": {
-      "status_capture_library_file_id": "libfile_c563653527cc8191a9694c4b279878d2",
-      "status_capture_title": "IMG_5595.jpeg",
+      "status_capture_library_file_id": "libfile_309baa13bf38819186c7c9d2209532f0",
+      "status_capture_title": "IMG_5603.jpeg",
       "later_update_capture_library_file_id": "libfile_4db238ed342c8191966883da4fff7e54",
       "later_update_capture_title": "IMG_5367.jpeg",
       "later_update_capture_created_at_utc": "2026-09-04T01:44:53Z",
-      "runtime_tag_prefix_confirmed": "4ca0be6",
-      "repository_check": "C:\\Users\\User\\JARVIS\\prime-main launcher and update script verified operational",
+      "runtime_tag_prefix_confirmed": "c449dd1",
+      "repository_check": "C:\\\\Users\\\\User\\\\OneDrive\\\\Documents\\\\prime updated from main; JARVIS.cmd update and status verified operational",
       "limitations": [
         "The health response identifies the runtime version; the full runtime SHA is grounded in the verified release record, exact image tag, and retained update/status capture."
       ],
@@ -213,7 +213,28 @@
       "connector": "JARVIS PRIME – Read Only",
       "tunnel_id": "tunnel_6a97806a99e481919b6adb92aa8b7505",
       "system_health_version": "7.3.1.1-evidence-grounded",
-      "system_health_result": "healthy"
+      "system_health_result": "healthy",
+      "update_capture_library_file_id": "libfile_ad74e3e74ba88191b1baaad6caa83b03",
+      "update_capture_title": "IMG_5604.jpeg",
+      "harness_status_capture_library_file_id": "libfile_589afae0149c819188880c909575e3cf",
+      "harness_status_capture_title": "IMG_5602.jpeg",
+      "harness_status": {
+        "ready": true,
+        "mode": "pilot-local-only",
+        "policy_version": "harness-v0",
+        "pilot_agents": [
+          "a14",
+          "a16",
+          "a21"
+        ],
+        "cloud_overflow": false,
+        "local_concurrency": 1,
+        "counts": {
+          "authorized": 0,
+          "executed": 0,
+          "revoked": 0
+        }
+      }
     },
     "rollback": "Prior Docker image and persistent data are retained; no reinstall, volume deletion, or rollback was performed.",
     "last_benchmarked_acceleration": {
@@ -294,14 +315,14 @@
   },
   "implementation_frontier": {
     "registry": "v1.1 source merged and image published; public 29-agent/six-lead projection, read-only runtime health, and latest release activation verified",
-    "harness_v0": "ABEX commissioning and acceptance pending",
+    "harness_v0": "Dell pilot runtime deployed and status verified for a14, a16 and a21; functional dispatch/lease acceptance exercises and ABEX commissioning remain pending",
     "hermes_agentscope": "cognition-only integrations require Harness v0; not activated",
     "predictive_ml": "awaits sufficient real sensor data",
     "velyqua": "acquisition integrity implemented; full quality policy enums unrecovered",
     "portal_inhabitants": "concept recovered; implementation pending",
     "sky_tablet": "source and current production artifact recovered, deployed and content-hash verified",
     "glm_track_1": "full wrapper and logging contract not recovered",
-    "checkpoint_repair": "Authority build repaired in PR45; Sky Tablet production aligned; SSOT refreshed; Dell updated to the verified PRIME release and post-update acceptance passed"
+    "checkpoint_repair": "PRIME image sha-c449dd1 deployed on Dell; post-update health and Harness v0 pilot status verified"
   },
   "release_results": {
     "velyqua": {
@@ -326,12 +347,15 @@
     },
     "prime": {
       "merged_prs": [
-        51
+        51,
+        55,
+        56,
+        57
       ],
       "source_tests": 125,
       "required_ci_checks": "all five passed",
-      "image_publication": "success",
-      "host_installation": "latest published release active; post-update JARVIS.cmd status passed"
+      "image_publication": "sha-c449dd1 publication workflow passed",
+      "host_installation": "sha-c449dd1 active on Dell; post-update JARVIS.cmd status and Harness v0 status passed"
     },
     "sky": {
       "source_sha": "006e4a39b7853e0198c9b735b4d3943031a204ab",
