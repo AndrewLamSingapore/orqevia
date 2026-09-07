@@ -78,6 +78,8 @@ def test_missing_deployment_authentication_cannot_prove_current(monkeypatch):
     def fake(url, **kwargs):
         if '/contents/' in url:
             import base64
+            if '/sky-tablet/' in url:
+                return {"content": base64.b64encode(b'sky artifact').decode()}
             return {"content": base64.b64encode(b'{"contract_version":"2.0.0"}').decode()}
         for system in manifest['systems'].values():
             if url == system.get('health_url'): return {'ok': True, 'revision': system['runtime_sha']}
@@ -85,7 +87,19 @@ def test_missing_deployment_authentication_cannot_prove_current(monkeypatch):
                 return {'sha': system['source_head_sha'] if url.endswith('/main') else system['release_sha']}
         raise AssertionError(url)
     monkeypatch.setattr(verifier, 'http_json', fake)
+    monkeypatch.setattr(verifier, 'http_bytes', lambda *args, **kwargs: b'sky artifact')
     monkeypatch.delenv('VERCEL_TOKEN', raising=False)
     result = verifier.Assessment()
     verifier.assess_live(manifest, result)
-    assert {f'vercel_api_not_verified:{x}' for x in verifier.EXPECTED_PROJECTS}.issubset(result.stale_reasons)
+    expected = verifier.EXPECTED_PROJECTS | verifier.EXPECTED_STATIC_PROJECTS
+    assert {f'vercel_api_not_verified:{x}' for x in expected}.issubset(result.stale_reasons)
+
+
+def test_sky_static_runtime_is_part_of_the_active_ssot():
+    from scripts import verify_operational_manifest as verifier
+    manifest, inventory = fixtures()
+    now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    result = assess_static(manifest, inventory, now=now)
+    assert "sky" in verifier.EXPECTED_ACTIVE
+    assert manifest["systems"]["sky"]["production_state"] == "READY"
+    assert result.errors == []
