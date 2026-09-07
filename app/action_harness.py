@@ -238,7 +238,10 @@ class ActionHarness:
             return "policy version changed", privileged
         if not str(authorization.get("decision_id", "")).strip():
             return "Stable Spine decision id is required", privileged
-        if privileged and not str(authorization.get("owner_approval_id", "")).strip():
+        owner_approval_id = authorization.get("owner_approval_id")
+        if privileged and (
+            not isinstance(owner_approval_id, str) or not owner_approval_id.strip()
+        ):
             return "owner approval is required for privileged execution", privileged
         required_auth = {
             "key_id", "nonce", "lease_id", "issued_at", "expires_at",
