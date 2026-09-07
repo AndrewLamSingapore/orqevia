@@ -57,10 +57,11 @@ jobs:
           import json
           p=json.load(open('/tmp/public-agent-registry.json', encoding='utf-8'))
           assert len(p['agents']) == 29
-          forbidden={'system_prompt','credentials','endpoint','filesystem_path','tool_secrets','internal_instructions'}
+          forbidden={'receives','produces','system_prompt','credentials','endpoint','filesystem_path','tool_secrets','internal_instructions'}
           for a in p['agents']:
               assert not forbidden.intersection(a)
           assert p['relationship_policy']['network_is_enforced'] is True
           assert p['relationship_policy']['unknown_agent_policy'] == 'deny'
-          assert {'source':'prime','target':'A01','type':'may_delegate'} in p['relationships']
+          assert p['relationship_policy']['runtime_activation_verified'] is False
+          assert {'source':'prime','target':'a01','type':'may_delegate'} in p['relationships']
           PY
