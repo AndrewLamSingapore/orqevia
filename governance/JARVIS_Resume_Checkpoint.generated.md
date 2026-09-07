@@ -3,20 +3,21 @@
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
 - Effective status: **STALE**
-- Manifest observation: `2026-09-07T03:18:15Z`
-- Verification time: `2026-09-07T03:18:15Z`
+- Manifest observation: `2026-09-07T05:50:06Z`
+- Verification time: `2026-09-07T05:50:06Z`
 - Freshness window: `24 hours`
 
 ## System facts
 
 | System | Source head | Release | Runtime | Verified | State |
 |---|---|---|---|---|---|
-| control | `98a1b745ad21` | `98a1b745ad21` | `—` | `2026-09-07T03:18:15Z` | SOURCE_RELEASE_VERIFIED |
-| authority | `f00620f148d5` | `f00620f148d5` | `f00620f148d5` | `2026-09-07T03:18:42Z` | ALIGNED_VERIFIED |
-| game | `85a5ff8dd064` | `85a5ff8dd064` | `85a5ff8dd064` | `2026-09-07T03:18:15Z` | ALIGNED_VERIFIED |
-| portal | `d117c918ee42` | `d117c918ee42` | `d117c918ee42` | `2026-09-07T03:18:15Z` | ALIGNED_VERIFIED |
-| prime | `—` | `4ca0be64ccc4` | `daeeb30b6319` | `2026-09-04T00:39:20Z` | IMAGE_PUBLISHED_RUNTIME_ACCEPTANCE_PENDING |
-| velyqua | `7a4f32d81f5e` | `7a4f32d81f5e` | `7a4f32d81f5e` | `2026-09-07T03:18:15Z` | ALIGNED_VERIFIED |
+| control | `98a1b745ad21` | `98a1b745ad21` | `—` | `2026-09-07T05:50:06Z` | SOURCE_RELEASE_VERIFIED |
+| authority | `b2bdf9863e26` | `b2bdf9863e26` | `b2bdf9863e26` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
+| game | `85a5ff8dd064` | `85a5ff8dd064` | `85a5ff8dd064` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
+| portal | `d117c918ee42` | `d117c918ee42` | `d117c918ee42` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
+| prime | `—` | `4ca0be64ccc4` | `daeeb30b6319` | `2026-09-07T05:50:06Z` | RUNTIME_HEALTHY_RELEASE_UPDATE_PENDING |
+| sky | `006e4a39b785` | `006e4a39b785` | `006e4a39b785` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
+| velyqua | `7a4f32d81f5e` | `7a4f32d81f5e` | `7a4f32d81f5e` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
 
 ## Shared contract
 
@@ -36,41 +37,30 @@
 ## Dell acceptance gate
 
 - Command: `JARVIS.cmd status`
-- Accepted: `false`
+- Accepted: `true`
 - Last observed runtime: `daeeb30b631954211d30d838821aaca5c72fe037`
-- Last status capture: `2026-09-04T00:39:20Z`
-- Post-update status: `false`
-- Result: Healthy, local-only, approval-gated and no-actuation; acceptance withheld because this status capture predates the later installer/update capture.
+- Last status capture: `2026-09-07T05:50:06Z`
+- Post-update status: `true`
+- Result: Healthy, local-only, approval-gated and no-actuation. Read-only ChatGPT tunnel and system_health call verified; published PRIME release remains newer than the running image.
 
 ## Published software and remaining implementation
 
 - PRIME published image: `ghcr.io/andrewlamsingapore/prime:sha-4ca0be6`
 - A published image does not establish Dell installation or active agents.
-- registry: v1.1 source merged and image published; public 29-agent/six-lead projection verified; runtime activation unverified
+- registry: v1.1 source merged and image published; public 29-agent/six-lead projection and read-only runtime health verified; latest release activation pending
 - harness_v0: ABEX commissioning and acceptance pending
 - hermes_agentscope: cognition-only integrations require Harness v0; not activated
 - predictive_ml: awaits sufficient real sensor data
 - velyqua: acquisition integrity implemented; full quality policy enums unrecovered
 - portal_inhabitants: concept recovered; implementation pending
-- sky_tablet: prototype file not recovered
+- sky_tablet: source and current production artifact recovered, deployed and content-hash verified
 - glm_track_1: full wrapper and logging contract not recovered
-- checkpoint_repair: PR51 supersedes closed PR50; fixed historical branch cohort retained; final cloud release facts refreshed
+- checkpoint_repair: Authority build repaired in PR45; Sky Tablet production aligned; SSOT refreshed from live GitHub, Vercel and read-only Dell evidence
 - Branch protection: VELYQUA_MAIN_PROTECTED_VERIFIED
 
 ## Current blockers
 
-- `dell_status_post_update_required`
-- `dell_status_predates_latest_update`
-- `github_head_drift:authority`
-- `prime_tunnel_unreachable`
 - `release_runtime_drift:prime`
-- `vercel_api_not_verified:authority`
-- `vercel_api_not_verified:game`
-- `vercel_api_not_verified:portal`
-- `vercel_api_not_verified:velyqua`
-- `vercel_runtime_drift:authority`
-- `verification_expired:dell_runtime`
-- `verification_expired:prime`
 
 ## Resume rule
 
