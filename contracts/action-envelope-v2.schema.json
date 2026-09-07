@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndrewLamSingapore/prime/contracts/action-envelope-v2.schema.json",
+  "title": "JARVIS Lease-Bound Action Envelope v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "actor_id", "actor_type", "action", "parameters", "context", "correlation_id", "idempotency_key", "schema_version", "timestamp", "authorization"],
+  "properties": {
+    "tenant_id": {"const": "personal"},
+    "actor_id": {"type": "string", "minLength": 1},
+    "actor_type": {"enum": ["reasoner", "system", "service"]},
+    "action": {"type": "string", "minLength": 1},
+    "parameters": {"type": "object"},
+    "context": {"type": "object"},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "idempotency_key": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "2.0.0"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "algorithm", "key_id", "nonce", "lease_id", "issued_at", "expires_at", "lease_expires_at", "policy_version", "decision_id", "decision_source", "decision_state", "privileged", "signature"],
+      "properties": {
+        "version": {"const": "1.0.0"},
+        "algorithm": {"const": "HMAC-SHA256"},
+        "key_id": {"type": "string", "minLength": 1},
+        "nonce": {"type": "string", "format": "uuid"},
+        "lease_id": {"type": "string", "format": "uuid"},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "lease_expires_at": {"type": "string", "format": "date-time"},
+        "policy_version": {"type": "string", "minLength": 1},
+        "decision_id": {"type": "string", "minLength": 1},
+        "decision_source": {"const": "stable_spine"},
+        "decision_state": {"const": "AUTHORIZED"},
+        "privileged": {"type": "boolean"},
+        "owner_approval_id": {"type": ["string", "null"]},
+        "signature": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

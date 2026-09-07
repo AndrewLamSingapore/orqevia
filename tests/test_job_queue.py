@@ -73,3 +73,33 @@ def test_persisted_legacy_jobs_migrate_semantically_and_retired_jobs_fail(tmp_pa
     with q.connect() as db:
         events={r[0] for r in db.execute('SELECT event_type FROM compute_events')}
     assert {'registry_denied','registry_migrated'}.issubset(events)
+
+
+def test_harness_v0_defaults_to_one_local_inference_job(monkeypatch):
+    monkeypatch.delenv("PRIME_QUEUE_CONCURRENCY", raising=False)
+    assert QueuePolicy.from_env().global_concurrency == 1
+
+
+def test_old_low_priority_job_ages_out_of_starvation(tmp_path):
+    policy = QueuePolicy(
+        global_concurrency=1,
+        per_agent_concurrency=1,
+        local_ram_mb=8192,
+        local_vram_mb=4096,
+        cloud_wait_seconds=0,
+        starvation_interval_seconds=1,
+        starvation_boost_per_interval=10,
+        starvation_boost_cap=100,
+        max_job_cost_usd=2,
+        daily_cost_ceiling_usd=3,
+    )
+    q = JobQueue(tmp_path / "fair.db", policy)
+    old = q.submit(agent="planner", prompt="old", priority="background")
+    urgent = q.submit(agent="critic", prompt="new", priority="critical")
+    with q.connect() as db:
+        db.execute(
+            "UPDATE compute_jobs SET created_at=datetime('now','-20 seconds') WHERE id=?",
+            (old["id"],),
+        )
+    assert q.claim("w", [LOCAL])["id"] == old["id"]
+    assert q.get(urgent["id"])["status"] == "queued"

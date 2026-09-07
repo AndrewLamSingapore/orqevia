@@ -25,13 +25,16 @@ def utcnow() -> str:
 
 @dataclass(frozen=True)
 class QueuePolicy:
-    # The current Dell-class local host is intentionally conservative: two
-    # concurrent jobs is the default ceiling unless the owner explicitly tunes it.
-    global_concurrency: int = 2
+    # Harness v0 starts with exactly one local inference job. Raising this to two
+    # requires explicit operator configuration after monitored acceptance.
+    global_concurrency: int = 1
     per_agent_concurrency: int = 1
     local_ram_mb: int = 32768
     local_vram_mb: int = 0
     cloud_wait_seconds: int = 300
+    starvation_interval_seconds: int = 300
+    starvation_boost_per_interval: int = 10
+    starvation_boost_cap: int = 100
     max_job_cost_usd: float = 2.0
     daily_cost_ceiling_usd: float = 10.0
 
@@ -46,11 +49,14 @@ class QueuePolicy:
             except ValueError: value = default
             return max(low, min(high, value))
         return cls(
-            global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 2, 1, 29),
+            global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 1, 1, 29),
             per_agent_concurrency=integer("PRIME_AGENT_CONCURRENCY", 1, 1, 8),
             local_ram_mb=integer("PRIME_LOCAL_RAM_MB", 32768, 1024, 1048576),
             local_vram_mb=integer("PRIME_LOCAL_VRAM_MB", 0, 0, 1048576),
             cloud_wait_seconds=integer("PRIME_CLOUD_WAIT_SECONDS", 300, 0, 86400),
+            starvation_interval_seconds=integer("PRIME_STARVATION_INTERVAL_SECONDS", 300, 1, 86400),
+            starvation_boost_per_interval=integer("PRIME_STARVATION_BOOST", 10, 1, 100),
+            starvation_boost_cap=integer("PRIME_STARVATION_BOOST_CAP", 100, 1, 1000),
             max_job_cost_usd=decimal("PRIME_MAX_JOB_COST_USD", 2.0, 0, 10000),
             daily_cost_ceiling_usd=decimal("PRIME_DAILY_COST_USD", 10.0, 0, 100000),
         )
@@ -216,10 +222,29 @@ class JobQueue:
             return p,("local VRAM/model insufficient" if hard_need else "local wait threshold exceeded"),estimate
         return None,"no eligible provider",0
 
+    def _effective_priority(self, row: sqlite3.Row, now_epoch: float) -> float:
+        """Age queued work so sustained high-priority traffic cannot starve it."""
+        waited = max(0.0, now_epoch - datetime.fromisoformat(row["created_at"]).timestamp())
+        intervals = int(waited // self.policy.starvation_interval_seconds)
+        boost = min(
+            self.policy.starvation_boost_cap,
+            intervals * self.policy.starvation_boost_per_interval,
+        )
+        return float(row["priority"] + boost)
+
     def claim(self, worker_id: str, providers: list[Provider]) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
-            rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued' ORDER BY priority DESC,created_at LIMIT 100").fetchall()
+            rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued' LIMIT 1000").fetchall()
+            claim_time = time.time()
+            rows=sorted(
+                rows,
+                key=lambda row: (
+                    -self._effective_priority(row, claim_time),
+                    -int(row["priority"]),
+                    row["created_at"],
+                ),
+            )
             for row in rows:
                 # Revalidate persisted identities under the current registry before
                 # admission. Never reinterpret a retired legacy ID as a new role.
