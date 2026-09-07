@@ -14,8 +14,8 @@ def test_priority_and_agent_concurrency(tmp_path):
     low=q.submit(agent="planner",prompt="low",priority="low")
     high=q.submit(agent="critic",prompt="high",priority="critical")
     same=q.submit(agent="critic",prompt="same agent",priority="high")
-    assert low["agent"] == "A02"
-    assert high["agent"] == "A27"
+    assert low["agent"] == "a02"
+    assert high["agent"] == "a26"
     assert q.claim("w1",[LOCAL])["id"]==high["id"]
     assert q.claim("w2",[LOCAL])["id"]==low["id"]
     assert q.get(same["id"])["status"]=="queued"
@@ -58,3 +58,18 @@ def test_job_cost_ceiling_blocks_cloud(tmp_path):
     q.approve(job["id"],"approved","owner")
     assert q.claim("w",[LOCAL,expensive]) is None
     assert q.get(job["id"])["status"]=="budget_blocked"
+
+def test_persisted_legacy_jobs_migrate_semantically_and_retired_jobs_fail(tmp_path):
+    q=queue(tmp_path)
+    retired=q.submit(agent='planner',prompt='retired job',priority='critical')
+    preserved=q.submit(agent='architecture',prompt='existing architecture job')
+    with q.connect() as db:
+        db.execute('UPDATE compute_jobs SET agent=? WHERE id=?', ('A10', retired['id']))
+        db.execute('UPDATE compute_jobs SET agent=? WHERE id=?', ('A17', preserved['id']))
+    claimed=q.claim('w', [LOCAL])
+    assert claimed['id']==preserved['id']
+    assert claimed['agent']=='a16'
+    assert q.get(retired['id'])['status']=='failed'
+    with q.connect() as db:
+        events={r[0] for r in db.execute('SELECT event_type FROM compute_events')}
+    assert {'registry_denied','registry_migrated'}.issubset(events)

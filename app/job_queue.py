@@ -183,7 +183,10 @@ class JobQueue:
     def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider]) -> tuple[Provider | None,str,float]:
         active=c.execute("SELECT provider,agent,ram_mb,vram_mb FROM compute_jobs WHERE status='running'").fetchall()
         if len(active)>=self.policy.global_concurrency:return None,"global concurrency limit",0
-        if sum(1 for x in active if x["agent"]==row["agent"])>=self.policy.per_agent_concurrency:return None,"per-agent concurrency limit",0
+        def identity(value: str) -> str:
+            try: return canonical_agent_id(value)
+            except RegistryError: return value
+        if sum(1 for x in active if identity(x["agent"])==row["agent"])>=self.policy.per_agent_concurrency:return None,"per-agent concurrency limit",0
         local_names={p.name for p in providers if p.kind=="local"}
         used_ram=sum(int(x["ram_mb"]) for x in active if x["provider"] in local_names)
         used_vram=sum(int(x["vram_mb"]) for x in active if x["provider"] in local_names)
@@ -218,6 +221,19 @@ class JobQueue:
             c.execute("BEGIN IMMEDIATE")
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued' ORDER BY priority DESC,created_at LIMIT 100").fetchall()
             for row in rows:
+                # Revalidate persisted identities under the current registry before
+                # admission. Never reinterpret a retired legacy ID as a new role.
+                try:
+                    canonical = canonical_agent_id(row["agent"])
+                except RegistryError:
+                    c.execute("UPDATE compute_jobs SET status='failed',error='agent retired or unregistered',updated_at=?,completed_at=? WHERE id=?",
+                              (utcnow(), utcnow(), row["id"]))
+                    self._event(c, row["id"], "registry_denied", {"agent": row["agent"]})
+                    continue
+                if canonical != row["agent"]:
+                    self._event(c, row["id"], "registry_migrated", {"from": row["agent"], "to": canonical})
+                    c.execute("UPDATE compute_jobs SET agent=? WHERE id=?", (canonical, row["id"]))
+                    row = c.execute("SELECT * FROM compute_jobs WHERE id=?", (row["id"],)).fetchone()
                 provider,reason,estimate=self._route(c,row,providers)
                 if not provider:
                     if "cost ceiling" in reason or "job ceiling" in reason:

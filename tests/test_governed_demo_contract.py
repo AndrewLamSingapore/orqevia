@@ -15,7 +15,7 @@ def test_demo_intent_is_non_consequential():
 
 def test_demo_routes_through_engineering_architecture_agent(tmp_path):
     runtime = AgentAuthorityRuntime(tmp_path / "authority.db")
-    assert runtime.resolve_path("engineering", INTENT) == ["A16", "A17"]
+    assert runtime.resolve_path("engineering", INTENT) == ["a15", "a16"]
 
 
 def test_demo_operator_enforces_safe_contract():

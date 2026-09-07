@@ -7,18 +7,22 @@ from pathlib import Path
 from typing import Any
 
 REGISTRY_PATH = Path(__file__).resolve().parent.parent / "config" / "agent_registry.json"
-MAX_DELEGATION_DEPTH = 1
+MAX_DELEGATION_DEPTH = 2
 
 # Backward-compatible role aliases are resolved to canonical registered agent IDs
 # before work reaches the shared compute fabric. Unknown agent identities fail closed.
+MIGRATION_PATH = REGISTRY_PATH.with_name("agent_registry_migration.json")
+LEGACY_IDS = json.loads(MIGRATION_PATH.read_text())["legacy_ids"]
 AGENT_ALIASES = {
-    "prime": "prime",
-    "strategy": "A01", "planner": "A02", "planning": "A02", "roadmap": "A03", "decision": "A04", "portfolio": "A05",
-    "research": "A06", "evidence": "A07", "comparison": "A08", "knowledge": "A09", "gap": "A10",
-    "data": "A11", "metrics": "A12", "analyst": "A13", "analysis": "A13", "forecast": "A14", "data-quality": "A15",
-    "engineering": "A16", "architecture": "A17", "coding": "A18", "implementation": "A18", "test": "A19", "reliability": "A20",
-    "economic": "A21", "value": "A22", "cost": "A23", "asset": "A24",
-    "quality": "A25", "verification": "A26", "critic": "A27", "risk": "A28", "policy": "A29",
+    "prime": "prime", "strategy": "a01", "planner": "a02", "planning": "a02",
+    "roadmap": "a03", "decision": "a04", "portfolio": "a05", "research": "a06",
+    "evidence": "a07", "comparison": "a08", "knowledge": "a09", "data": "a10",
+    "metrics": "a11", "analyst": "a12", "analysis": "a12", "forecast": "a13",
+    "data-quality": "a14", "engineering": "a15", "architecture": "a16",
+    "coding": "a17", "implementation": "a17", "test": "a18", "reliability": "a19",
+    "economic": "a20", "cost": "a21", "value": "a22", "resource": "a23",
+    "commercial": "a24", "quality": "a25", "critic": "a26", "review": "a26",
+    "verification": "a27", "risk": "a28", "release": "a29",
 }
 
 
@@ -29,7 +33,25 @@ class RegistryError(RuntimeError):
 @lru_cache(maxsize=1)
 def load_agent_registry() -> dict[str, Any]:
     data = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+    if data.get("schema_version") != "1.1":
+        raise RegistryError("unsupported registry schema")
+    aliases = {lead["id"]: lead["agent_id"] for lead in data.get("leads", [])}
+    if len(aliases) != 6 or len(set(aliases.values())) != 6:
+        raise RegistryError("six unique lead aliases required")
+    domains = {lead["agent_id"]: lead["domain"] for lead in data["leads"]}
     agents = data.get("agents", [])
+    for agent in agents:
+        agent["id"] = agent["agent_id"]
+        agent["reports_to"] = aliases.get(agent["reports_to"], agent["reports_to"])
+        agent["division"] = domains.get(agent["id"], domains.get(agent["reports_to"], "")).title()
+        if agent.get("can_delegate") != (agent["id"] in domains):
+            raise RegistryError("only leads may delegate")
+        if agent.get("authority") not in {"advisory", "restricted"}:
+            raise RegistryError("unsupported agent authority")
+        if agent.get("authority") == "restricted" and agent.get("human_approval") != "required_for_execution":
+            raise RegistryError("restricted execution requires approval")
+        if agent.get("status") != "planned" or agent.get("model") != "unassigned":
+            raise RegistryError("runtime activation requires separately verified configuration")
     if len(agents) != 29:
         raise RegistryError(f"agent registry must contain exactly 29 agents; found {len(agents)}")
     ids = [a.get("id") for a in agents]
@@ -38,6 +60,12 @@ def load_agent_registry() -> dict[str, Any]:
     prime = data.get("orchestrator", {}).get("id")
     if not prime:
         raise RegistryError("orchestrator ID is required")
+    if set(ids) != {f"a{i:02}" for i in range(1, 30)} or prime in ids:
+        raise RegistryError("canonical identity set is invalid")
+    if not set(domains).issubset(ids):
+        raise RegistryError("lead aliases must resolve to registered agents")
+    if any(a["reports_to"] != prime for a in agents if a["id"] in domains):
+        raise RegistryError("leads must report to PRIME")
     known = set(ids) | {prime}
     for agent in agents:
         if agent.get("reports_to") not in known:
@@ -78,7 +106,9 @@ def canonical_agent_id(value: str) -> str:
         raise RegistryError("agent identity is required")
     if raw in registered_agent_ids():
         return raw
-    alias = AGENT_ALIASES.get(raw.lower())
+    # Case distinguishes retired A10 from the new canonical Data Lead a10.
+    alias = LEGACY_IDS.get(raw) or AGENT_ALIASES.get(raw.lower())
+    alias = alias or next((x["agent_id"] for x in load_agent_registry()["leads"] if x["id"] == raw), None)
     if alias and alias in registered_agent_ids():
         return alias
     raise RegistryError(f"unregistered agent identity: {raw}")
@@ -94,7 +124,7 @@ def agent_record(agent_id: str) -> dict[str, Any]:
 def domain_lead(division: str) -> str:
     wanted = (division or "").strip().lower()
     for agent in _index().values():
-        if agent.get("role") == "Lead" and str(agent.get("division", "")).lower() == wanted:
+        if agent.get("can_delegate") is True and str(agent.get("division", "")).lower() == wanted:
             return agent["id"]
     raise RegistryError(f"no registered lead for division: {division}")
 
@@ -113,9 +143,11 @@ def may_delegate(source: str, target: str, *, depth: int = 1) -> bool:
         return False
     prime = orchestrator_id()
     if src_id == prime:
-        return dst.get("role") == "Lead" and dst.get("reports_to") == prime
+        if depth != 1:
+            return False
+        return dst.get("can_delegate") is True and dst.get("reports_to") == prime
     src = agents.get(src_id)
-    return bool(src and src.get("role") == "Lead" and dst.get("reports_to") == src_id)
+    return bool(src and src.get("can_delegate") is True and dst.get("reports_to") == src_id)
 
 
 def may_consult(source: str, target: str) -> bool:
@@ -130,9 +162,9 @@ def may_consult(source: str, target: str) -> bool:
     src, dst = agents.get(src_id), agents.get(dst_id)
     if not src or not dst:
         return False
-    if src.get("reports_to") == dst_id and dst.get("role") == "Lead":
+    if src.get("reports_to") == dst_id and dst.get("can_delegate") is True:
         return True
-    if src.get("role") == "Lead" and dst.get("role") == "Lead":
+    if src.get("can_delegate") is True and dst.get("can_delegate") is True:
         return True
     return False
 
@@ -163,6 +195,9 @@ def public_relationships() -> list[dict[str, str]]:
 def public_agent_registry() -> dict[str, Any]:
     data = load_agent_registry()
     allowed = set(data["publication_policy"]["allowed_fields"])
+    # Explicit compatibility fields for the existing public network consumer.
+    allowed |= {"id", "division", "reports_to"}
+    allowed -= set(data["publication_policy"]["forbidden_fields"])
     return {
         "schema_version": data["schema_version"],
         "last_updated": data["last_updated"],
@@ -179,6 +214,7 @@ def public_agent_registry() -> dict[str, Any]:
             "max_delegation_depth": MAX_DELEGATION_DEPTH,
             "consequential_actions_require_owner_approval": True,
             "network_is_enforced": True,
+            "runtime_activation_verified": False,
             "unknown_agent_policy": "deny",
         },
         "disclosure": "Public-safe projection. Operational prompts, credentials, endpoints and internal instructions are excluded by policy."

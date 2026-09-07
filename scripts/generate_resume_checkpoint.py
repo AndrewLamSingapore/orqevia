@@ -53,7 +53,7 @@ def generate(value: dict[str, Any]) -> str:
         "## Branch classification",
         "",
         f"- Snapshot: `{value['github_hygiene']['branch_inventory']['snapshot_at_utc']}`",
-        f"- Total non-main branches: `{value['github_hygiene']['branch_inventory']['total_non_main_branches']}`",
+        f"- Historical branch cohort (not live total): `{value['github_hygiene']['branch_inventory']['total_non_main_branches']}`",
     ])
     for name, count in value["github_hygiene"]["branch_inventory"]["classification_counts"].items():
         lines.append(f"- {name}: `{count}`")
