@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -16,6 +17,10 @@ from .settings import SETTINGS
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
 POLICY = QueuePolicy.from_env()
+if os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower() in {"1", "true", "yes", "on"}:
+    # The pilot is deliberately single-slot even if an older host Compose file
+    # still injects the pre-pilot concurrency value.
+    POLICY = replace(POLICY, global_concurrency=1, per_agent_concurrency=1)
 queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 
 
