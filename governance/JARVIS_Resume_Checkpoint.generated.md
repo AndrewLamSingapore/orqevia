@@ -60,7 +60,7 @@
 
 ## Current blockers
 
-- None
+- None.
 
 ## Resume rule
 
