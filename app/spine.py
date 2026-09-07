@@ -19,6 +19,7 @@ POLICY_STATES = {"AUTO", "BOUNDED_AUTO", "GATED", "PROHIBITED"}
 VERIFY_STATES = {"PENDING", "VERIFIED", "FAILED", "NOT_OBSERVABLE", "OBSERVED"}
 
 PLATFORM_POLICY: dict[str, str] = {
+    "agent.infer": "AUTO",
     "web.search": "AUTO",
     "calendar.read": "AUTO",
     "sensor.read": "AUTO",
