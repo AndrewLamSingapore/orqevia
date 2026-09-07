@@ -133,7 +133,7 @@
       "repository": "AndrewLamSingapore/prime",
       "source_head_sha": null,
       "source_head_resolution": "live",
-      "source_head_observed_before_manifest_commit_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
+      "source_head_observed_before_manifest_commit_sha": "d84d4a83796a23d6c0b6f1758bbdce04199144f2",
       "release_sha": "4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f",
       "runtime_sha": "daeeb30b631954211d30d838821aaca5c72fe037",
       "verified_at_utc": "2026-09-04T00:39:20Z",
@@ -142,7 +142,7 @@
       "state": "IMAGE_PUBLISHED_RUNTIME_ACCEPTANCE_PENDING",
       "authority": "inference-only; external actions remain approval-gated",
       "note": "source_head_sha is live-resolved because a Git-tracked manifest cannot contain the SHA of its own commit.",
-      "source_verified_at_utc": "2026-09-07T03:18:15Z",
+      "source_verified_at_utc": "2026-09-07T03:30:20Z",
       "remote_health": "UNREACHABLE_TUNNEL_CLIENT_NOT_SEEN",
       "remote_checked_at_utc": "2026-09-07T03:00:32Z",
       "publication_workflow_run": 34078904460,
@@ -222,7 +222,32 @@
       "scope_note": "Historical fixed 112-branch cohort; not a live repository-wide branch total."
     },
     "retention_rule": "Preserve rollback and checkpoint evidence. A merged classification does not authorize deletion.",
-    "branch_protection": "NOT_APPLIED_AUTOMATIC_APPROVAL_REVIEW_REJECTED_EXACT_SETTINGS"
+    "branch_protection": "VELYQUA_MAIN_PROTECTED_VERIFIED",
+    "branch_protection_evidence": {
+      "repository": "AndrewLamSingapore/velyqua",
+      "branch": "main",
+      "rule_id": 82824657,
+      "verified_at_utc": "2026-09-07T03:30:20Z",
+      "verification": "saved GitHub settings reread after account reauthentication",
+      "requires_pull_request": true,
+      "required_status_checks": [
+        {
+          "context": "verify",
+          "app": "github-actions"
+        },
+        {
+          "context": "Vercel",
+          "app": "vercel"
+        }
+      ],
+      "requires_up_to_date_branch": true,
+      "required_approving_reviews": 0,
+      "allows_bypass": false,
+      "allows_force_pushes": false,
+      "allows_deletions": false,
+      "authorization": "Lam explicitly approved these exact settings and completed GitHub Mobile verification.",
+      "scope": "VELYQUA only; no claim that all repository branches are protected"
+    }
   },
   "release_gate": {
     "policy": "zero-known-defect",

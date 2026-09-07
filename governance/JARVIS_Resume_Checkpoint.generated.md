@@ -55,7 +55,7 @@
 - sky_tablet: prototype file not recovered
 - glm_track_1: full wrapper and logging contract not recovered
 - checkpoint_repair: PR51 supersedes closed PR50; fixed historical branch cohort retained; final cloud release facts refreshed
-- Branch protection: NOT_APPLIED_AUTOMATIC_APPROVAL_REVIEW_REJECTED_EXACT_SETTINGS
+- Branch protection: VELYQUA_MAIN_PROTECTED_VERIFIED
 
 ## Current blockers
 
