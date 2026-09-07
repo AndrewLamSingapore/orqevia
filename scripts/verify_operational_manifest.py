@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import re
@@ -21,14 +22,17 @@ DEFAULT_MANIFEST = ROOT / "governance" / "operational-manifest.json"
 DEFAULT_BRANCH_INVENTORY = ROOT / "governance" / "branch-inventory.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 DEPLOYMENT_ID = re.compile(r"^dpl_[A-Za-z0-9]+$")
-EXPECTED_SCHEMA_VERSION = "4.1.0"
-EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime", "velyqua"}
+EXPECTED_SCHEMA_VERSION = "4.2.0"
+EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime", "sky", "velyqua"}
 EXPECTED_CONTRACT_SHA = "a05fa2e3df80733af9ed87068b3526768d4a8394"
 EXPECTED_PROJECTS = {
     "velyqua": "prj_SixsxN06HC8wtBVwGpF4eukIXfY2",
     "authority": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
     "game": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
     "portal": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
+}
+EXPECTED_STATIC_PROJECTS = {
+    "sky": "prj_MniyVhjPHLiwQufvuqIjeYErQmEP",
 }
 
 
@@ -121,7 +125,7 @@ def assess_static(
     scope = value.get("scope", {})
     active = scope.get("active_systems", [])
     if not isinstance(active, list) or set(active) != EXPECTED_ACTIVE or len(active) != len(set(active)):
-        result.error("active system scope must contain the six unique software systems")
+        result.error("active system scope must contain the seven unique software systems")
     if scope.get("excluded_systems") != []:
         result.error("resumed software scope must not retain parked exclusions")
 
@@ -143,7 +147,7 @@ def assess_static(
 
     systems = value.get("systems", {})
     if not isinstance(systems, dict) or set(systems) != EXPECTED_ACTIVE:
-        result.error("systems must contain exactly the six active systems")
+        result.error("systems must contain exactly the seven active systems")
         systems = systems if isinstance(systems, dict) else {}
 
     for system_id in sorted(EXPECTED_ACTIVE):
@@ -184,6 +188,25 @@ def assess_static(
             result.stale(f"production_not_ready:{system_id}")
         if not str(system.get("health_url", "")).startswith("https://"):
             result.error(f"systems.{system_id}.health_url is invalid")
+        if system.get("release_sha") != system.get("runtime_sha"):
+            result.stale(f"release_runtime_drift:{system_id}")
+        if system.get("source_head_sha") != system.get("release_sha"):
+            result.stale(f"source_release_drift:{system_id}")
+
+    for system_id, project_id in EXPECTED_STATIC_PROJECTS.items():
+        system = systems.get(system_id, {})
+        if system.get("vercel_project_id") != project_id:
+            result.error(f"systems.{system_id}.vercel_project_id is invalid")
+        if not DEPLOYMENT_ID.fullmatch(str(system.get("production_deployment_id", ""))):
+            result.error(f"systems.{system_id}.production_deployment_id is invalid")
+        if system.get("production_state") != "READY":
+            result.stale(f"production_not_ready:{system_id}")
+        if not str(system.get("runtime_probe_url", "")).startswith("https://"):
+            result.error(f"systems.{system_id}.runtime_probe_url is invalid")
+        if not re.fullmatch(r"[0-9a-f]{64}", str(system.get("runtime_content_sha256", ""))):
+            result.error(f"systems.{system_id}.runtime_content_sha256 is invalid")
+        if system.get("source_path") != "index.html":
+            result.error(f"systems.{system_id}.source_path is invalid")
         if system.get("release_sha") != system.get("runtime_sha"):
             result.stale(f"release_runtime_drift:{system_id}")
         if system.get("source_head_sha") != system.get("release_sha"):
@@ -256,6 +279,18 @@ def http_json(url: str, *, token: str | None = None, timeout: int = 15) -> dict[
     return value
 
 
+def http_bytes(url: str, *, token: str | None = None, timeout: int = 15) -> bytes:
+    headers = {"Accept": "*/*", "User-Agent": "prime-operational-ssot/4.2"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+        headers["X-GitHub-Api-Version"] = "2022-11-28"
+    request = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        if response.status != 200:
+            raise RuntimeError(f"HTTP {response.status}")
+        return response.read()
+
+
 def assess_live(value: dict[str, Any], result: Assessment) -> None:
     github_token = os.getenv("GITHUB_TOKEN")
     systems = value["systems"]
@@ -310,10 +345,35 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
         except (OSError, RuntimeError, ValueError, urllib.error.URLError) as exc:
             result.stale(f"vercel_health_check_failed:{system_id}:{type(exc).__name__}")
 
+    for system_id in sorted(EXPECTED_STATIC_PROJECTS):
+        system = systems[system_id]
+        try:
+            source = http_json(
+                "https://api.github.com/repos/"
+                f"{system['repository']}/contents/{system['source_path']}?ref={system['release_sha']}",
+                token=github_token,
+            )
+            source_bytes = base64.b64decode(source["content"])
+            runtime_bytes = http_bytes(system["runtime_probe_url"])
+            source_hash = hashlib.sha256(source_bytes).hexdigest()
+            runtime_hash = hashlib.sha256(runtime_bytes).hexdigest()
+            expected_hash = system["runtime_content_sha256"]
+            vercel_evidence[system_id] = {
+                "source_content_sha256": source_hash,
+                "runtime_content_sha256": runtime_hash,
+                "deployment_id": system["production_deployment_id"],
+            }
+            if source_hash != expected_hash:
+                result.stale(f"github_release_content_drift:{system_id}")
+            if runtime_hash != expected_hash:
+                result.stale(f"vercel_runtime_content_drift:{system_id}")
+        except (KeyError, OSError, RuntimeError, ValueError, urllib.error.URLError) as exc:
+            result.stale(f"vercel_static_check_failed:{system_id}:{type(exc).__name__}")
+
     vercel_token = os.getenv("VERCEL_TOKEN")
     if vercel_token:
         team_id = value.get("verification", {}).get("vercel_team_id")
-        for system_id in sorted(EXPECTED_PROJECTS):
+        for system_id in sorted(EXPECTED_PROJECTS | EXPECTED_STATIC_PROJECTS):
             system = systems[system_id]
             try:
                 deployment = http_json(
@@ -328,13 +388,13 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
                     result.stale(f"vercel_deployment_not_ready:{system_id}")
                 if deployment.get("target") != "production":
                     result.stale(f"vercel_deployment_not_production:{system_id}")
-                if meta.get("githubCommitSha") != system.get("release_sha"):
+                if system_id in EXPECTED_PROJECTS and meta.get("githubCommitSha") != system.get("release_sha"):
                     result.stale(f"vercel_deployment_release_drift:{system_id}")
                 vercel_evidence.setdefault(system_id, {})["api_verified"] = True
             except (OSError, RuntimeError, ValueError, urllib.error.URLError) as exc:
                 result.stale(f"vercel_api_check_failed:{system_id}:{type(exc).__name__}")
     else:
-        for system_id in EXPECTED_PROJECTS:
+        for system_id in EXPECTED_PROJECTS | EXPECTED_STATIC_PROJECTS:
             result.stale(f"vercel_api_not_verified:{system_id}")
             vercel_evidence.setdefault(system_id, {})["api_verified"] = False
             vercel_evidence[system_id]["api_note"] = "VERCEL_TOKEN absent; exact deployment ID retained from last authenticated refresh"
