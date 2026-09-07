@@ -2,9 +2,9 @@
 
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
-- Effective status: **STALE**
-- Manifest observation: `2026-09-07T05:50:06Z`
-- Verification time: `2026-09-07T05:50:06Z`
+- Effective status: **CURRENT**
+- Manifest observation: `2026-09-07T06:11:00Z`
+- Verification time: `2026-09-07T06:11:00Z`
 - Freshness window: `24 hours`
 
 ## System facts
@@ -15,7 +15,7 @@
 | authority | `b2bdf9863e26` | `b2bdf9863e26` | `b2bdf9863e26` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
 | game | `85a5ff8dd064` | `85a5ff8dd064` | `85a5ff8dd064` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
 | portal | `d117c918ee42` | `d117c918ee42` | `d117c918ee42` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
-| prime | `—` | `4ca0be64ccc4` | `daeeb30b6319` | `2026-09-07T05:50:06Z` | RUNTIME_HEALTHY_RELEASE_UPDATE_PENDING |
+| prime | `—` | `4ca0be64ccc4` | `4ca0be64ccc4` | `2026-09-07T06:11:00Z` | ALIGNED_VERIFIED |
 | sky | `006e4a39b785` | `006e4a39b785` | `006e4a39b785` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
 | velyqua | `7a4f32d81f5e` | `7a4f32d81f5e` | `7a4f32d81f5e` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
 
@@ -38,16 +38,16 @@
 
 - Command: `JARVIS.cmd status`
 - Accepted: `true`
-- Last observed runtime: `daeeb30b631954211d30d838821aaca5c72fe037`
-- Last status capture: `2026-09-07T05:50:06Z`
+- Last observed runtime: `4ca0be64ccc4f36f1402fd65bade5a0f7ed43f7f`
+- Last status capture: `2026-09-07T06:11:00Z`
 - Post-update status: `true`
-- Result: Healthy, local-only, approval-gated and no-actuation. Read-only ChatGPT tunnel and system_health call verified; published PRIME release remains newer than the running image.
+- Result: Healthy, local-only, approval-gated and no-actuation. Latest verified PRIME release image is active and the post-update JARVIS.cmd status acceptance passed.
 
 ## Published software and remaining implementation
 
 - PRIME published image: `ghcr.io/andrewlamsingapore/prime:sha-4ca0be6`
 - A published image does not establish Dell installation or active agents.
-- registry: v1.1 source merged and image published; public 29-agent/six-lead projection and read-only runtime health verified; latest release activation pending
+- registry: v1.1 source merged and image published; public 29-agent/six-lead projection, read-only runtime health, and latest release activation verified
 - harness_v0: ABEX commissioning and acceptance pending
 - hermes_agentscope: cognition-only integrations require Harness v0; not activated
 - predictive_ml: awaits sufficient real sensor data
@@ -55,12 +55,12 @@
 - portal_inhabitants: concept recovered; implementation pending
 - sky_tablet: source and current production artifact recovered, deployed and content-hash verified
 - glm_track_1: full wrapper and logging contract not recovered
-- checkpoint_repair: Authority build repaired in PR45; Sky Tablet production aligned; SSOT refreshed from live GitHub, Vercel and read-only Dell evidence
+- checkpoint_repair: Authority build repaired in PR45; Sky Tablet production aligned; SSOT refreshed; Dell updated to the verified PRIME release and post-update acceptance passed
 - Branch protection: VELYQUA_MAIN_PROTECTED_VERIFIED
 
 ## Current blockers
 
-- `release_runtime_drift:prime`
+- None.
 
 ## Resume rule
 
