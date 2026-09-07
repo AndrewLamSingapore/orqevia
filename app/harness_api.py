@@ -26,7 +26,7 @@ _runtime_fingerprint: tuple[str, str, str] | None = None
 
 
 def _enabled() -> bool:
-    return os.getenv("PRIME_HARNESS_PILOT_ENABLED", "0").strip().lower() in {
+    return os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower() in {
         "1", "true", "yes", "on",
     }
 
