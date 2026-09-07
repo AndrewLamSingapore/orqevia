@@ -25,11 +25,23 @@ def test_current_requires_fresh_post_update_dell_acceptance():
         system["verified_at_utc"] = manifest["verification"]["verified_at_utc"]
         if system["source_head_sha"] is not None: system["source_head_sha"] = system["release_sha"]
     manifest["dell_runtime"]["verified_at_utc"] = manifest["verification"]["verified_at_utc"]
+    manifest["systems"]["prime"]["runtime_sha"] = manifest["systems"]["prime"]["release_sha"]
+    manifest["dell_runtime"]["runtime_sha"] = manifest["systems"]["prime"]["release_sha"]
     manifest["status"] = "CURRENT"
     manifest["verification"]["stale_reasons"] = []
     result = assess_static(manifest, inventory, now=now)
     assert result.errors == []
     assert result.stale_reasons == []
+
+
+def test_published_image_can_be_ahead_of_unverified_host():
+    manifest, inventory = fixtures()
+    manifest["systems"]["prime"]["release_sha"] = "f" * 40
+    manifest["systems"]["prime"]["published_image"] = "ghcr.io/andrewlamsingapore/prime:sha-fffffff"
+    now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    result = assess_static(manifest, inventory, now=now)
+    assert result.errors == []
+    assert "release_runtime_drift:prime" in result.stale_reasons
 
 
 def test_verification_expires_after_24_hours():
