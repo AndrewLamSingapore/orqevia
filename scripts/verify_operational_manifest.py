@@ -193,9 +193,9 @@ def assess_static(
     if prime.get("release_sha") != prime.get("runtime_sha"):
         result.stale("release_runtime_drift:prime")
     image = str(prime.get("published_image", ""))
-    runtime_sha = str(prime.get("runtime_sha", ""))
-    if valid_sha(runtime_sha) and not image.endswith(f":sha-{runtime_sha[:7]}"):
-        result.error("PRIME published image tag does not match runtime_sha")
+    release_sha = str(prime.get("release_sha", ""))
+    if valid_sha(release_sha) and not image.endswith(f":sha-{release_sha[:7]}"):
+        result.error("PRIME published image tag does not match release_sha")
 
     dell = value.get("dell_runtime", {})
     if dell.get("command") != "JARVIS.cmd status":

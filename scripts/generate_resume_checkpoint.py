@@ -70,6 +70,15 @@ def generate(value: dict[str, Any]) -> str:
         f"- Result: {dell['result']}",
     ])
     reasons = verification.get("stale_reasons", [])
+    prime = value["systems"]["prime"]
+    lines.extend([
+        "", "## Published software and remaining implementation", "",
+        f"- PRIME published image: `{prime.get('published_image', 'unverified')}`",
+        "- A published image does not establish Dell installation or active agents.",
+    ])
+    for name, state in value.get("implementation_frontier", {}).items():
+        lines.append(f"- {name}: {state}")
+    lines.append(f"- Branch protection: {value['github_hygiene'].get('branch_protection', 'unverified')}")
     lines.extend(["", "## Current blockers", ""])
     if reasons:
         lines.extend(f"- `{reason}`" for reason in reasons)
