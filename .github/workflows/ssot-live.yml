@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
       - name: Resolve live GitHub and Vercel state
@@ -31,10 +31,11 @@ jobs:
           --report operational-verification-report.json
       - name: Persist a newly stale state
         run: |
-          if ! git diff --quiet -- governance/operational-manifest.json; then
+          python scripts/generate_resume_checkpoint.py
+          if ! git diff --quiet -- governance/operational-manifest.json governance/JARVIS_Resume_Checkpoint.generated.md; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add governance/operational-manifest.json
+            git add governance/operational-manifest.json governance/JARVIS_Resume_Checkpoint.generated.md
             git commit -m "Mark operational manifest STALE [skip ci]"
             git push
           fi
@@ -45,7 +46,7 @@ jobs:
         run: python scripts/verify_operational_manifest.py --live
       - name: Upload verification evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: operational-verification-report
           path: operational-verification-report.json

@@ -10,6 +10,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -20,10 +21,11 @@ DEFAULT_MANIFEST = ROOT / "governance" / "operational-manifest.json"
 DEFAULT_BRANCH_INVENTORY = ROOT / "governance" / "branch-inventory.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 DEPLOYMENT_ID = re.compile(r"^dpl_[A-Za-z0-9]+$")
-EXPECTED_SCHEMA_VERSION = "4.0.0"
-EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime"}
+EXPECTED_SCHEMA_VERSION = "4.1.0"
+EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime", "velyqua"}
 EXPECTED_CONTRACT_SHA = "a05fa2e3df80733af9ed87068b3526768d4a8394"
 EXPECTED_PROJECTS = {
+    "velyqua": "prj_SixsxN06HC8wtBVwGpF4eukIXfY2",
     "authority": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
     "game": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
     "portal": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
@@ -119,16 +121,9 @@ def assess_static(
     scope = value.get("scope", {})
     active = scope.get("active_systems", [])
     if not isinstance(active, list) or set(active) != EXPECTED_ACTIVE or len(active) != len(set(active)):
-        result.error("active system scope must contain the five unique governed systems")
-    excluded = scope.get("excluded_systems", [])
-    if not (
-        isinstance(excluded, list)
-        and len(excluded) == 1
-        and excluded[0].get("id") == "velyqua"
-        and excluded[0].get("state") == "PARKED"
-        and excluded[0].get("resume_phrase") == "resume VELYQUA"
-    ):
-        result.error("VELYQUA exclusion boundary is invalid")
+        result.error("active system scope must contain the six unique software systems")
+    if scope.get("excluded_systems") != []:
+        result.error("resumed software scope must not retain parked exclusions")
 
     shared = value.get("shared_contract", {})
     if shared.get("version") != "2.0.0":
@@ -148,7 +143,7 @@ def assess_static(
 
     systems = value.get("systems", {})
     if not isinstance(systems, dict) or set(systems) != EXPECTED_ACTIVE:
-        result.error("systems must contain exactly the five active systems")
+        result.error("systems must contain exactly the six active systems")
         systems = systems if isinstance(systems, dict) else {}
 
     for system_id in sorted(EXPECTED_ACTIVE):
@@ -224,12 +219,25 @@ def assess_static(
     if inventory_ref.get("classification_counts") != inventory.get("classification_counts"):
         result.error("manifest branch classification counts differ from the inventory")
 
-    expected_status = "STALE" if result.stale_reasons else "CURRENT"
-    if value.get("status") != expected_status:
-        result.error(f"status must be {expected_status} for the recorded evidence")
-    recorded_reasons = sorted(verification.get("stale_reasons", []))
-    if value.get("status") == "STALE" and recorded_reasons != sorted(result.stale_reasons):
-        result.error("verification.stale_reasons do not match computed stale reasons")
+    # A saved snapshot cannot pre-list tomorrow's TTL failures. Carry forward
+    # live findings and derive effective freshness without classifying age as
+    # a schema defect. --allow-stale never permits malformed data.
+    recorded = verification.get("stale_reasons", [])
+    if not isinstance(recorded, list) or any(not isinstance(x, str) or not x for x in recorded):
+        result.error("stale_reasons must be a list of nonempty strings")
+    else:
+        if value.get("status") == "CURRENT" and recorded:
+            result.error("CURRENT snapshot cannot contain recorded stale reasons")
+        for reason in recorded:
+            result.stale(reason)
+    for label, timestamp in [("manifest", verification.get("verified_at_utc")),
+                              ("shared_contract", shared.get("verified_at_utc"))]:
+        checked = parse_utc(timestamp, label + ".verified_at_utc", result)
+        if checked:
+            if now - checked > timedelta(hours=24): result.stale("verification_expired:" + label)
+            if checked - now > timedelta(minutes=5): result.error(label + " verification is in the future")
+    if value.get("status") == "STALE" and not result.stale_reasons:
+        result.error("STALE snapshot requires a recorded or computed reason")
     return result
 
 
@@ -310,9 +318,11 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
             try:
                 deployment = http_json(
                     "https://api.vercel.com/v13/deployments/"
-                    f"{system['production_deployment_id']}?teamId={team_id}",
+                    f"{urlsplit(system['health_url']).hostname}?teamId={team_id}",
                     token=vercel_token,
                 )
+                if deployment.get("id") != system.get("production_deployment_id"):
+                    result.stale(f"vercel_production_alias_drift:{system_id}")
                 meta = deployment.get("meta", {})
                 if deployment.get("readyState", deployment.get("state")) != "READY":
                     result.stale(f"vercel_deployment_not_ready:{system_id}")
@@ -320,12 +330,13 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
                     result.stale(f"vercel_deployment_not_production:{system_id}")
                 if meta.get("githubCommitSha") != system.get("release_sha"):
                     result.stale(f"vercel_deployment_release_drift:{system_id}")
-                vercel_evidence[system_id]["api_verified"] = True
+                vercel_evidence.setdefault(system_id, {})["api_verified"] = True
             except (OSError, RuntimeError, ValueError, urllib.error.URLError) as exc:
                 result.stale(f"vercel_api_check_failed:{system_id}:{type(exc).__name__}")
     else:
-        for system_id in vercel_evidence:
-            vercel_evidence[system_id]["api_verified"] = False
+        for system_id in EXPECTED_PROJECTS:
+            result.stale(f"vercel_api_not_verified:{system_id}")
+            vercel_evidence.setdefault(system_id, {})["api_verified"] = False
             vercel_evidence[system_id]["api_note"] = "VERCEL_TOKEN absent; exact deployment ID retained from last authenticated refresh"
     result.evidence["vercel"] = vercel_evidence
 
