@@ -1,8 +1,6 @@
-import copy
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
-import pytest
 
 from app.action_harness import (
     ActionEnvelopeIssuer,
@@ -124,8 +122,12 @@ def test_privileged_ledger_failure_halts_before_executor(tmp_path):
         raise sqlite3.OperationalError("disk unavailable")
 
     harness.connect = unavailable
-    with pytest.raises(HarnessUnavailable):
+    try:
         harness.authorize(envelope, now=NOW)
+    except HarnessUnavailable:
+        pass
+    else:
+        raise AssertionError("privileged ledger failure must halt authorization")
 
 
 def test_executor_is_unreachable_when_lease_is_invalid(tmp_path):
@@ -135,8 +137,12 @@ def test_executor_is_unreachable_when_lease_is_invalid(tmp_path):
     harness.revoke(envelope["authorization"]["lease_id"], reason="stop", revoked_by="human")
     calls = []
     executor = HarnessedExecutor(harness, lambda value: calls.append(value) or "executed")
-    with pytest.raises(PermissionError):
+    try:
         executor.execute(envelope, now=NOW)
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError("revoked lease must not reach executor")
     assert calls == []
 
 
