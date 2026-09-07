@@ -61,8 +61,14 @@
 
 - `dell_status_post_update_required`
 - `dell_status_predates_latest_update`
+- `github_head_drift:authority`
 - `prime_tunnel_unreachable`
 - `release_runtime_drift:prime`
+- `vercel_api_not_verified:authority`
+- `vercel_api_not_verified:game`
+- `vercel_api_not_verified:portal`
+- `vercel_api_not_verified:velyqua`
+- `vercel_runtime_drift:authority`
 - `verification_expired:dell_runtime`
 - `verification_expired:prime`
 
