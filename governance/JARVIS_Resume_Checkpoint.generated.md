@@ -2,7 +2,7 @@
 
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
-- Effective status: **CURRENT**
+- Effective status: **STALE**
 - Manifest observation: `2026-09-07T07:12:00Z`
 - Verification time: `2026-09-07T07:12:00Z`
 - Freshness window: `24 hours`
@@ -60,7 +60,22 @@
 
 ## Current blockers
 
-- None.
+- `github_head_drift:authority`
+- `github_head_drift:control`
+- `github_head_drift:game`
+- `github_head_drift:portal`
+- `github_head_drift:sky`
+- `github_head_drift:velyqua`
+- `vercel_api_not_verified:authority`
+- `vercel_api_not_verified:game`
+- `vercel_api_not_verified:portal`
+- `vercel_api_not_verified:sky`
+- `vercel_api_not_verified:velyqua`
+- `vercel_runtime_content_drift:sky`
+- `vercel_runtime_drift:authority`
+- `vercel_runtime_drift:game`
+- `vercel_runtime_drift:portal`
+- `vercel_runtime_drift:velyqua`
 
 ## Resume rule
 

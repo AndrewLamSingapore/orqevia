@@ -1,6 +1,6 @@
 {
   "schema_version": "4.2.0",
-  "status": "CURRENT",
+  "status": "STALE",
   "as_of_utc": "2026-09-07T07:12:00Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
@@ -13,7 +13,24 @@
     "stale_after_hours": 24,
     "expires_at_utc": "2026-09-08T07:12:00Z",
     "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
-    "stale_reasons": [],
+    "stale_reasons": [
+      "github_head_drift:authority",
+      "github_head_drift:control",
+      "github_head_drift:game",
+      "github_head_drift:portal",
+      "github_head_drift:sky",
+      "github_head_drift:velyqua",
+      "vercel_api_not_verified:authority",
+      "vercel_api_not_verified:game",
+      "vercel_api_not_verified:portal",
+      "vercel_api_not_verified:sky",
+      "vercel_api_not_verified:velyqua",
+      "vercel_runtime_content_drift:sky",
+      "vercel_runtime_drift:authority",
+      "vercel_runtime_drift:game",
+      "vercel_runtime_drift:portal",
+      "vercel_runtime_drift:velyqua"
+    ],
     "rule": "CURRENT requires all recorded facts to be fresh, live cloud checks to pass, and a post-update Dell JARVIS.cmd status acceptance."
   },
   "human_resume_mirror": {
@@ -210,7 +227,7 @@
       "read_only_health_capture_title": "IMG_5587.jpeg",
       "tunnel_metadata_capture_library_file_id": "libfile_e8e853ed35a08191b90ce61229b4cf9d",
       "tunnel_metadata_capture_title": "IMG_5582.jpeg",
-      "connector": "JARVIS PRIME – Read Only",
+      "connector": "JARVIS PRIME \u2013 Read Only",
       "tunnel_id": "tunnel_6a97806a99e481919b6adb92aa8b7505",
       "system_health_version": "7.3.1.1-evidence-grounded",
       "system_health_result": "healthy",
