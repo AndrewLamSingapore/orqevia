@@ -9,6 +9,8 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
+from .agent_registry import RegistryError, canonical_agent_id
+from .action_harness import HarnessPolicy
 from .settings import SETTINGS
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
@@ -98,6 +100,12 @@ class Approval(BaseModel):
 @router.post("/jobs",status_code=202)
 def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
     authorize(authorization)
+    try:
+        canonical = canonical_agent_id(body.agent)
+    except RegistryError:
+        canonical = body.agent.strip().lower()
+    if canonical in HarnessPolicy().pilot_agents:
+        raise HTTPException(409,"Pilot agents must dispatch through /api/harness/pilot/dispatch")
     try:return queue.submit(**body.model_dump())
     except ValueError as exc:raise HTTPException(422,str(exc)) from exc
 
