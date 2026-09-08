@@ -205,6 +205,8 @@ class ActionHarness:
               state TEXT NOT NULL, result_digest TEXT, verification_ref TEXT);
             CREATE TABLE IF NOT EXISTS harness_job_queues(
               job_id TEXT PRIMARY KEY, queue_path TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS harness_results(
+              job_id TEXT PRIMARY KEY, result_json TEXT NOT NULL);
             """)
             db.execute("INSERT OR IGNORE INTO harness_policy VALUES(1,?)", (self.policy.policy_version,))
 
@@ -512,9 +514,9 @@ class ActionHarness:
     def recover(self, queue) -> dict[str, int]:
         """Monotonic reconciliation; never grant, unconsume, retry or free uncertainty.
 
-        Queue -> Harness lock order matches dispatch/admission. Only the Harness
-        ledger changes: a completed result without a durable queue result remains
-        explicitly unreconciled, rather than inventing success or verification.
+        Queue -> Harness lock order matches dispatch/admission. A persisted,
+        digest-bound completion can repair queue bookkeeping without execution.
+        Legacy digest-only completions remain pending rather than invented.
         """
         import time
         counts = {"failed": 0, "uncertain": 0, "completion_pending": 0}
@@ -534,8 +536,34 @@ class ActionHarness:
                             or (job["status"] == "running" and (job["lease_until"] or 0) <= time.time()))
                     state = row["state"]
                     if state in {"completed", "verified"}:
-                        if not job or job["status"] != "completed":
+                        saved = db.execute("SELECT result_json FROM harness_results WHERE job_id=?", (row["job_id"],)).fetchone()
+                        if not job or not saved or job["authorization_envelope"] != json.dumps(json.loads(row["envelope_json"]), sort_keys=True):
                             counts["completion_pending"] += 1
+                            continue
+                        encoded = saved[0]
+                        if hashlib.sha256(encoded.encode()).hexdigest() != row["result_digest"]:
+                            raise HarnessUnavailable("completion result digest mismatch")
+                        result = json.loads(encoded)
+                        envelope = json.loads(row["envelope_json"])
+                        completion = db.execute("SELECT created_at FROM harness_events WHERE lease_id=? AND event_type='execution.completed' ORDER BY event_sequence LIMIT 1", (row["lease_id"],)).fetchone()
+                        if (not completion or job["agent"] != envelope["actor_id"]
+                                or hashlib.sha256(job["prompt"].encode()).hexdigest() != envelope["parameters"]["prompt_sha256"]):
+                            raise HarnessUnavailable("completion provenance mismatch")
+                        if (not isinstance(result, dict) or not isinstance(result.get("result"), str)
+                                or set(result) - {"result", "input_tokens", "output_tokens", "actual_cost_usd"}
+                                or result.get("actual_cost_usd", 0) != 0
+                                or any(type(result.get(k, 0)) is not int or result.get(k, 0) < 0
+                                       for k in ("input_tokens", "output_tokens"))):
+                            raise HarnessUnavailable("completion result cannot be reconciled safely")
+                        if job["status"] == "completed":
+                            if any(job[key] != result.get(key, default) for key, default in
+                                   (("result", ""), ("input_tokens", 0), ("output_tokens", 0), ("actual_cost_usd", 0))):
+                                raise HarnessUnavailable("completed queue result differs from durable outcome")
+                            continue
+                        qdb.execute("UPDATE compute_jobs SET status='completed',result=?,input_tokens=?,output_tokens=?,actual_cost_usd=0,lease_until=NULL,error=NULL,updated_at=?,completed_at=? WHERE id=?",
+                                    (result["result"], result.get("input_tokens", 0), result.get("output_tokens", 0), _iso(utcnow()), completion[0], row["job_id"]))
+                        queue._event(qdb, row["job_id"], "completion_recovered",
+                                     {"result_digest": row["result_digest"], "execution_replayed": False, "verified": state == "verified"})
                         continue
                     if not lost or state not in {"queued", "claimed", "started"}:
                         continue
@@ -562,8 +590,10 @@ class ActionHarness:
                 if not row or row["state"] != "started":
                     raise HarnessUnavailable("execution outcome has no matching start")
                 state = "uncertain" if uncertain else "completed"
-                digest = None if uncertain else hashlib.sha256(
-                    json.dumps(result, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+                encoded = None if uncertain else json.dumps(result, sort_keys=True, ensure_ascii=False)
+                digest = None if uncertain else hashlib.sha256(encoded.encode()).hexdigest()
+                if not uncertain:
+                    db.execute("INSERT INTO harness_results VALUES(?,?)", (job_id, encoded))
                 db.execute("UPDATE harness_jobs SET state=?,result_digest=? WHERE job_id=?",
                            (state, digest, job_id))
                 self._event(db, json.loads(row["envelope_json"]), "execution." + state,

@@ -1,0 +1,30 @@
+{
+  "source": "owner report of completed pr59-runtime-readonly.ps1; raw full output not supplied",
+  "recorded_at_utc": "2026-09-08T03:47:53Z",
+  "collection_observed_at_utc": null,
+  "script_completed_without_error": true,
+  "native_ollama": {
+    "pid": 13544,
+    "listener": "127.0.0.1:11434",
+    "authority_state": "INDEPENDENT_NATIVE_LISTENER_CONFIRMED_HARD_HOLD",
+    "isolation_proven": false
+  },
+  "docker_ollama": {
+    "container_port": "11434/tcp",
+    "host_publication": false,
+    "network": "prime_default",
+    "image_digest": "ollama/ollama@sha256:075246f72d4109385b4a01c3ac8e9cbd26a0bcb21cd7aa30edbccd24e1b3180c",
+    "isolation_state": "SHARED_DEFAULT_NETWORK_NOT_PROPOSED_INFERENCE_NETWORK"
+  },
+  "prime_data": {
+    "directory": "/data",
+    "nonempty_files": ["prime-spine.db", "action-harness.db", "compute-queue.db", "jarvis-memory.db"],
+    "historical_continuity_proven": false
+  },
+  "still_unprovided": ["PRIME image digest/current revision", "effective allowlisted concurrency/cloud settings", "current /data mount details"],
+  "checkpoint_replay_state": "HARD_HOLD_UNREPAIRED",
+  "operational_status": "STALE",
+  "production_modified": false,
+  "working_tunnel_modified": false,
+  "pilot_run": false
+}

@@ -83,8 +83,8 @@ Re-run the live verifier before relying on this checkpoint. A manifest older tha
 - Recommendation: **HOLD**
 
 - Checkpoint adversary repeats one authorization through a copied pre-consumption ledger: two mock calls, no external current epoch fence. This is a failing security gate.
-- Native Ollama runtime isolation and effective Docker network/configuration remain unverified. Branch Compose isolation and endpoint restrictions are not deployed.
+- Owner confirms native Ollama 127.0.0.1:11434 and Docker Ollama on prime_default. Live isolated admission is not established; native isolation is a hard HOLD.
 - PRIME-controlled legacy inference transports are denied; independent cloud ingress/provider effects still lack an estate-wide authority/egress proof.
-- Queue/Spine writes are pinned through worker admission and execution; completion-to-queue reconciliation and provider-side uncertain outcome fencing remain incomplete. Recovery cannot invent missing results or automatically release uncertainty.
-- Dell effective settings, registry digest and historical data continuity await normal-Windows read-only evidence. File metadata alone cannot prove historical continuity.
+- New completion-to-queue reconstruction is implemented; legacy/missing-queue reconciliation and provider-side uncertain outcome fencing remain incomplete.
+- Owner supplied Docker Ollama digest and non-empty /data files. PRIME digest, effective settings, current mount details and historical continuity remain unprovided/unproved.
 - Local Dell/Library mirrors, deployment/post-deployment evidence and operator pilot acceptance remain pending. ABEX, AgentScope/Hermes and VELYQUA hardware/predictive ML remain pending.

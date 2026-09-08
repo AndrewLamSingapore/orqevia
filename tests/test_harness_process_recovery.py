@@ -18,6 +18,12 @@ from app.harness_execution import execute_job
 p=Path(sys.argv[1]); job=json.loads((p/'job.json').read_text())
 h=ActionHarness(p/'h.db', {'authority-v0': b'isolated-test-key-never-a-production-key'})
 s=StableSpine(SpineStore(str(p/'s.db')))
+if sys.argv[2]=='completion-crash':
+    original_outcome=h.record_outcome
+    def completed_then_crash(*args, **kwargs):
+        original_outcome(*args, **kwargs)
+        os._exit(43)
+    h.record_outcome=completed_then_crash
 def infer(job, provider):
     with (p/'calls').open('a') as f: f.write(job['id']+'\\n'); f.flush(); os.fsync(f.fileno())
     if sys.argv[2]=='crash': os._exit(42)
@@ -58,6 +64,18 @@ def test_two_processes_cannot_consume_one_authorization_twice(rig, tmp_path):
     assert sorted(results) == [0, 3]
     assert (tmp_path / "calls").read_text().splitlines() == [job["id"]]
     assert subprocess.run(command(tmp_path, "restart"), timeout=20).returncode == 3
+
+
+def test_process_death_after_completion_recovers_result_without_replay(rig, tmp_path):
+    job, _ = queued(rig)
+    (tmp_path / "job.json").write_text(json.dumps(job))
+    assert subprocess.run(command(tmp_path, "completion-crash"), timeout=20).returncode == 43
+    assert rig[3].get(job["id"])["status"] == "running"
+    assert rig[1].recover(rig[3])["completion_pending"] == 0
+    assert rig[3].get(job["id"])["result"] == "done"
+    assert rig[3].get(job["id"])["status"] == "completed"
+    assert subprocess.run(command(tmp_path, "restart"), timeout=20).returncode == 3
+    assert (tmp_path / "calls").read_text().splitlines() == [job["id"]]
 
 
 def test_distinct_queues_share_one_durable_inference_slot(rig, tmp_path):

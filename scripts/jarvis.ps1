@@ -19,6 +19,7 @@ $Project = "prime"
 $LocalBase = "http://127.0.0.1:8000"
 $ExpectedVersion = "7.3.1.1-evidence-grounded"
 $script:Checkpoint = $null
+. (Join-Path $PSScriptRoot 'native-inference-preflight.ps1')
 
 function Write-Step([string]$Message) {
     Write-Host "[JARVIS] $Message" -ForegroundColor Cyan
@@ -256,6 +257,7 @@ function Resolve-TunnelMode {
 }
 
 function Start-Jarvis([switch]$RepairOnly) {
+    Assert-NativeInferenceIsolated
     Assert-Docker
     Invoke-Docker -Arguments (Get-ComposeArgs @("config", "--quiet")) | Out-Null
     Adopt-PersistentVolumes
@@ -302,6 +304,7 @@ function Invoke-Doctor {
 }
 
 function Update-Jarvis {
+    Assert-NativeInferenceIsolated
     if (-not $Image) { throw "Use -Image ghcr.io/andrewlamsingapore/prime:sha-<verified-commit>." }
     if ($Image -notmatch '^ghcr\.io/andrewlamsingapore/prime:sha-[0-9a-f]{7,40}$') {
         throw "The image must be a commit-addressable AndrewLamSingapore/prime GHCR image."

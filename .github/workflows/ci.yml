@@ -36,7 +36,7 @@ jobs:
           PRIME_DATA_DIR: ${{ runner.temp }}/harness-data
           PRIME_SPINE_DB: ${{ runner.temp }}/harness-data/spine.db
           PRIME_COMPUTE_DB: ${{ runner.temp }}/harness-data/compute-ledger.db
-        run: python -m pytest -q tests/test_action_harness.py tests/test_harness_execution.py tests/test_harness_api.py tests/test_job_queue.py tests/test_agent_runtime.py tests/test_stable_spine.py tests/test_sqlite_lifecycle.py tests/test_compute_capacity.py tests/test_memory_meta.py tests/test_p1_api.py tests/test_harness_release_smoke.py tests/test_inference_ingress.py tests/test_harness_process_recovery.py tests/test_harness_admission_recovery.py
+        run: python -m pytest -q tests/test_action_harness.py tests/test_harness_execution.py tests/test_harness_api.py tests/test_job_queue.py tests/test_agent_runtime.py tests/test_stable_spine.py tests/test_sqlite_lifecycle.py tests/test_compute_capacity.py tests/test_memory_meta.py tests/test_p1_api.py tests/test_harness_release_smoke.py tests/test_inference_ingress.py tests/test_harness_process_recovery.py tests/test_harness_admission_recovery.py tests/test_native_inference_preflight.py
       - name: Require rejection of a restored execution checkpoint
         run: python -m scripts.probe_checkpoint_replay
   quality:

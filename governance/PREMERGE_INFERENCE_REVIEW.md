@@ -3,6 +3,36 @@
 Recommendation: **HOLD**. This is branch evidence, not deployed behavior or a
 claim of estate-wide admission. Operational STALE is retained.
 
+## Completion recovery and owner evidence after 4cb5de4
+
+The owner reports native Ollama PID 13544 listening on 127.0.0.1:11434.
+Docker Ollama has no published host port but still uses prime_default, not the
+proposed isolated inference network. Its reported image digest and non-empty
+PRIME database file inventory are recorded in `evidence/dell-owner-runtime-20260908.json`.
+This establishes file presence and a specific Ollama image, not historical data
+continuity, effective concurrency/cloud settings or the PRIME registry digest.
+Native isolation and restored-checkpoint replay remain explicit hard HOLDs.
+
+New completions now persist the canonical result atomically with its digest,
+completed state and completion audit event in the Harness ledger. Explicit
+recovery can restore queue result/token/cost bookkeeping from that record without
+calling the executor. It preserves the original completion timestamp, rejects
+digest/provenance/conflicting-result changes, and is idempotent after a failed
+queue commit. A real subprocess test exits after the completion commit and proves
+that recovery reconstructs the result while the consumed lease remains unusable.
+No verification is invented. Legacy digest-only outcomes or missing queue rows
+remain pending; consumed uncertain execution still holds the slot indefinitely.
+
+The Windows operator now calls a read-only native-inference preflight before
+start/repair or update mutations. Native Ollama, any host listener on 11434, or
+inventory failure blocks the operation. Synthetic PowerShell tests cover these
+conditions. This is a point-in-time guard, not a continuous host/provider fence;
+it has not been run against or installed into production and cannot clear HOLD.
+
+The checkpoint adversary remains an unsuppressed failing gate. Result persistence
+does not repair copied pre-consumption authority. A rollback-resistant current
+authority witness and isolated executor enforcement remain unfinished.
+
 ## Remediation addendum after 7d9c3a7
 
 The sections below this addendum preserve the earlier review snapshot. Current
