@@ -76,6 +76,7 @@
 - `vercel_runtime_drift:game`
 - `vercel_runtime_drift:portal`
 - `vercel_runtime_drift:velyqua`
+- `verification_expired:shared_contract`
 
 ## Resume rule
 
