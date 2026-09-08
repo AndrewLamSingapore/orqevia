@@ -76,7 +76,16 @@
 - `vercel_runtime_drift:game`
 - `vercel_runtime_drift:portal`
 - `vercel_runtime_drift:velyqua`
+- `verification_expired:authority`
+- `verification_expired:control`
+- `verification_expired:dell_runtime`
+- `verification_expired:game`
+- `verification_expired:manifest`
+- `verification_expired:portal`
+- `verification_expired:prime`
 - `verification_expired:shared_contract`
+- `verification_expired:sky`
+- `verification_expired:velyqua`
 
 ## Resume rule
 
