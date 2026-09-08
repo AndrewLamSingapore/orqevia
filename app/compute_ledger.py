@@ -5,6 +5,7 @@ import json
 import math
 import os
 import sqlite3
+from contextlib import closing
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,7 +30,7 @@ class ComputeLedger:
         data_dir = os.getenv("PRIME_DATA_DIR", "/data").strip() or "/data"
         self.path = path or os.getenv("PRIME_COMPUTE_DB") or str(Path(data_dir) / "compute-ledger.db")
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.path) as db:
+        with closing(sqlite3.connect(self.path)) as db, db:
             db.execute("""
                 create table if not exists compute_events (
                     event_id text primary key, task_id text not null, stage text not null,
@@ -54,13 +55,13 @@ class ComputeLedger:
             "confidence": confidence, "verification": verification,
             "metadata_json": json.dumps(metadata or {}, sort_keys=True), "created_at": _now(),
         }
-        with sqlite3.connect(self.path) as db:
+        with closing(sqlite3.connect(self.path)) as db, db:
             db.execute("""insert into compute_events(event_id,task_id,stage,provider,model,latency_ms,input_units,output_units,estimated_cost_usd,success,confidence,verification,metadata_json,created_at)
                         values(:event_id,:task_id,:stage,:provider,:model,:latency_ms,:input_units,:output_units,:estimated_cost_usd,:success,:confidence,:verification,:metadata_json,:created_at)""", event)
         return {**event, "success": bool(event["success"]), "metadata": metadata or {}}
 
     def recent(self, limit: int = 100) -> list[dict[str, Any]]:
-        with sqlite3.connect(self.path) as db:
+        with closing(sqlite3.connect(self.path)) as db, db:
             db.row_factory = sqlite3.Row
             rows = db.execute("select * from compute_events order by created_at desc limit ?", (max(1, min(limit, 500)),)).fetchall()
         out = []

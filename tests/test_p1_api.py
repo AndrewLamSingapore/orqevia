@@ -25,9 +25,10 @@ def envelope(key="p1-api"):
 
 class P1ApiTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.NamedTemporaryFile(suffix=".db")
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
         self.original = spine_api.spine
-        spine_api.spine = StableSpine(SpineStore(self.temp.name))
+        spine_api.spine = StableSpine(SpineStore(os.path.join(self.temp.name, "spine.db")))
         self.old_token = os.environ.get("PRIME_SPINE_TOKEN")
         os.environ["PRIME_SPINE_TOKEN"] = "p1-test-token"
         self.client = TestClient(app, base_url="http://127.0.0.1")
@@ -39,7 +40,7 @@ class P1ApiTests(unittest.TestCase):
             os.environ.pop("PRIME_SPINE_TOKEN", None)
         else:
             os.environ["PRIME_SPINE_TOKEN"] = self.old_token
-        self.temp.close()
+        self.client.close()
 
     def test_trusted_approval_card_modify_and_audit_trace(self):
         cards = self.client.get("/api/control-surface/trusted/approvals").json()["approvals"]
