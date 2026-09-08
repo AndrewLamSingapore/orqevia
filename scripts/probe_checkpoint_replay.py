@@ -13,6 +13,7 @@ from app.action_harness import ActionEnvelopeIssuer, ActionHarness, HarnessUnava
 from app.job_queue import JobQueue, QueuePolicy
 from app.spine import StableSpine, SpineStore
 from tests.test_harness_execution import SECRET, queued, run
+from app.development_witness import FakeProvider, bootstrap_development, authorize_development
 
 
 def make_rig(directory):
@@ -38,18 +39,24 @@ def main():
                 source.close()
                 destination.close()
         infer = Mock(return_value={"result": "synthetic result"})
-        run(rig, job, infer)
+        # The independent development root survives outside all three copied
+        # execution ledgers. The original adversary and one-call oracle remain.
+        boundary, _ = bootstrap_development(root / "witness.db", rig[2], rig[1],
+                                            provider=FakeProvider(observer=infer))
+        authorize_development(boundary, json.loads(job["authorization_envelope"]))
+        run(rig, job, infer, development_boundary=boundary)
         rig[3].finish(job["id"], result="synthetic result")
         copied = make_rig(clone)
         rejected = False
         try:
-            run(copied, job, infer)
+            run(copied, job, infer, development_boundary=boundary)
         except (PermissionError, HarnessUnavailable):
             rejected = True
         safe = rejected and infer.call_count == 1
         print(json.dumps({"probe": "pre-consumption checkpoint replay", "synthetic_only": True,
                           "mock_executor_calls": infer.call_count, "clone_rejected": rejected,
-                          "gate": "PASS" if safe else "HOLD", "production_touched": False}))
+                          "gate": "PASS" if safe else "HOLD", "production_touched": False,
+                          "evidence_class": "DEVELOPMENT_ONLY", "production_valid": False}))
         return 0 if safe else 1
 
 

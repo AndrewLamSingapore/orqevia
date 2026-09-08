@@ -46,7 +46,8 @@ def _spine_authorized(spine: StableSpine, envelope: dict):
 
 
 def execute_job(job: dict, provider: Provider, harness: ActionHarness,
-                spine: StableSpine, infer: Callable, *, queue: JobQueue) -> dict:
+                spine: StableSpine, infer: Callable, *, queue: JobQueue,
+                development_boundary=None) -> dict:
     """Pin the durable claim and policy in a fixed queue -> Spine -> PEP order.
 
     PEP consumption commits before inference. A crash releases the read fences
@@ -71,7 +72,7 @@ def execute_job(job: dict, provider: Provider, harness: ActionHarness,
                 if (job.get("lease_until") or 0) <= time.time():
                     raise PermissionError("worker claim expired")
                 harness.record_claim(job["id"], envelope)
-                return _execute_bound_job(job, provider, harness, infer)
+                return _execute_bound_job(job, provider, harness, infer, development_boundary)
     except sqlite3.Error as exc:
         raise HarnessUnavailable("admission store unavailable or busy") from exc
     except (KeyError, TypeError, ValueError) as exc:
@@ -79,7 +80,7 @@ def execute_job(job: dict, provider: Provider, harness: ActionHarness,
 
 
 def _execute_bound_job(job: dict, provider: Provider, harness: ActionHarness,
-                       infer: Callable) -> dict:
+                       infer: Callable, development_boundary=None) -> dict:
     """Three pilot identities only; retries require a new PDP decision and lease."""
     try:
         envelope = json.loads(job.get("authorization_envelope") or "null")
@@ -116,7 +117,15 @@ def _execute_bound_job(job: dict, provider: Provider, harness: ActionHarness,
             if (job.get("lease_until") or 0) <= time.time():
                 raise PermissionError("worker claim expired after consumption")
             with worker_call(job):
-                result = infer(job, provider)
+                if development_boundary is None:
+                    result = infer(job, provider)
+                else:
+                    # Explicit synthetic dependency injection only. No env/API
+                    # switch, provider URL or production adapter is registered.
+                    from .development_witness import Capsule
+                    if type(development_boundary) is not Capsule:
+                        raise PermissionError("unsupported development boundary")
+                    result = development_boundary.execute(_signed, job["prompt"])
         except Exception:
             # A timeout or worker error cannot prove inference stopped remotely.
             # Preserve the single slot until explicit operator reconciliation.

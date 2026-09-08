@@ -45,8 +45,9 @@ def queued(rig, actor="a14"):
     return job, envelope
 
 
-def run(rig, job, infer=None, provider=LOCAL):
-    return execute_job(job, provider, rig[1], rig[2], infer or Mock(return_value={"result": "done"}), queue=rig[3])
+def run(rig, job, infer=None, provider=LOCAL, *, development_boundary=None):
+    return execute_job(job, provider, rig[1], rig[2], infer or Mock(return_value={"result": "done"}),
+                       queue=rig[3], development_boundary=development_boundary)
 
 
 @pytest.mark.parametrize("actor", ["a14", "a16", "a21"])
