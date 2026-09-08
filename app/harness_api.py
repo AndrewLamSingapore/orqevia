@@ -17,7 +17,6 @@ from app.action_harness import (
     ActionHarness,
     HarnessPolicy,
     HarnessUnavailable,
-    HarnessedExecutor,
 )
 
 router = APIRouter(prefix="/api/harness", tags=["action-harness"])
@@ -66,7 +65,7 @@ class PilotDispatch(BaseModel):
     ram_mb: int = Field(default=1024, ge=0, le=1048576)
     vram_mb: int = Field(default=0, ge=0, le=1048576)
     timeout_seconds: int = Field(default=300, ge=1, le=86400)
-    max_retries: int = Field(default=2, ge=0, le=10)
+    max_retries: int = Field(default=0, ge=0, le=0)
     correlation_id: str = Field(default_factory=lambda: str(uuid.uuid4()), min_length=1, max_length=200)
     idempotency_key: str = Field(default_factory=lambda: str(uuid.uuid4()), min_length=1, max_length=200)
 
@@ -78,11 +77,18 @@ def status(authorization: str | None = Header(default=None)):
     with harness.connect() as db:
         counts = {
             "authorized": db.execute("select count(*) from harness_decisions").fetchone()[0],
-            "executed": db.execute("select count(*) from harness_executions").fetchone()[0],
+            "started": db.execute("select count(*) from harness_jobs where state in ('started','completed','verified','uncertain')").fetchone()[0],
+            "queued": db.execute("select count(*) from harness_jobs where state='queued'").fetchone()[0],
+            "completed": db.execute("select count(*) from harness_jobs where state in ('completed','verified')").fetchone()[0],
+            "verified": db.execute("select count(*) from harness_jobs where state='verified'").fetchone()[0],
+            "uncertain": db.execute("select count(*) from harness_jobs where state='uncertain'").fetchone()[0],
+            "legacy_consumed": db.execute("select count(*) from harness_executions where lease_id not in (select lease_id from harness_jobs)").fetchone()[0],
             "revoked": db.execute("select count(*) from harness_revocations").fetchone()[0],
         }
     return {
         "ready": True,
+        "acceptance_ready": False,
+        "acceptance_status": "operator_pilot_acceptance_pending",
         "mode": "pilot-local-only",
         "policy_version": harness.policy_version,
         "pilot_agents": sorted(harness.policy.pilot_agents),
@@ -109,7 +115,8 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
         "ram_mb": body.ram_mb,
         "vram_mb": body.vram_mb,
         "timeout_seconds": body.timeout_seconds,
-        "max_retries": body.max_retries,
+        # A consumed authorization is never retried automatically.
+        "max_retries": 0,
         "allow_cloud": False,
         "external_execution": False,
     }
@@ -155,7 +162,7 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
         privileged=False,
         now=now,
     )
-    decision = harness.authorize(envelope, now=now)
+    decision = harness.authorize(envelope)
     if not decision.authorized:
         raise HTTPException(status_code=403, detail=decision.reason)
 
@@ -175,10 +182,12 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
             max_cost_usd=0,
             allow_cloud=False,
             external_execution=False,
+            authorization_envelope=signed_envelope,
+            on_queued=harness.bind_queued,
         )
 
     try:
-        job = HarnessedExecutor(harness, enqueue).execute(envelope, now=now)
+        job = enqueue(envelope)
     except HarnessUnavailable as exc:
         raise HTTPException(status_code=503, detail="Harness ledger unavailable") from exc
     except PermissionError as exc:
@@ -189,7 +198,7 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
         "ok": True,
         "job": {key: job[key] for key in ("id", "agent", "status", "priority", "model_role", "created_at")},
         "harness": {
-            "status": "EXECUTION_PERMITTED",
+            "status": "QUEUED",
             "lease_id": decision.lease_id,
             "decision_id": decision_id,
             "policy_version": harness.policy_version,

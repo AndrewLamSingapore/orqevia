@@ -153,7 +153,6 @@ class ActionHarness:
             str(key): bytes(value) for key, value in verification_keys.items()
         }
         self.policy = policy or HarnessPolicy()
-        self._current_policy_version = self.policy.policy_version
         self.lock = threading.RLock()
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
@@ -189,16 +188,31 @@ class ActionHarness:
               event_sequence INTEGER PRIMARY KEY AUTOINCREMENT,
               correlation_id TEXT, lease_id TEXT, event_type TEXT NOT NULL,
               details_json TEXT NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS harness_policy(
+              singleton INTEGER PRIMARY KEY CHECK(singleton=1), version TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS harness_jobs(
+              job_id TEXT PRIMARY KEY, lease_id TEXT NOT NULL UNIQUE,
+              decision_id TEXT NOT NULL, envelope_json TEXT NOT NULL,
+              state TEXT NOT NULL, result_digest TEXT, verification_ref TEXT);
             """)
+            db.execute("INSERT OR IGNORE INTO harness_policy VALUES(1,?)", (self.policy.policy_version,))
 
     @property
     def policy_version(self) -> str:
-        return self._current_policy_version
+        try:
+            with self.connect() as db:
+                row = db.execute("SELECT version FROM harness_policy WHERE singleton=1").fetchone()
+                if row is None:
+                    raise HarnessUnavailable("current policy unavailable")
+                return row[0]
+        except sqlite3.Error as exc:
+            raise HarnessUnavailable("current policy unavailable") from exc
 
     def set_policy_version(self, version: str) -> None:
         if not version.strip():
             raise ValueError("policy version cannot be empty")
-        self._current_policy_version = version.strip()
+        with self.lock, self.connect() as db:
+            db.execute("UPDATE harness_policy SET version=? WHERE singleton=1", (version.strip(),))
 
     def _privileged(self, envelope: Mapping[str, Any]) -> bool:
         context = envelope.get("context")
@@ -313,7 +327,12 @@ class ActionHarness:
         self, envelope: Mapping[str, Any], now: datetime | None = None
     ) -> HarnessDecision:
         current = (now or utcnow()).astimezone(timezone.utc)
-        error, privileged = self._validate(envelope, current)
+        try:
+            error, privileged = self._validate(envelope, current)
+        except HarnessUnavailable:
+            if self._privileged(envelope):
+                raise
+            return HarnessDecision(False, "DENIED", "ledger unavailable")
         if error:
             return self._deny(envelope, error, privileged)
         authorization = envelope["authorization"]
@@ -371,10 +390,16 @@ class ActionHarness:
             return HarnessDecision(False, "DENIED", "ledger unavailable", authorization["lease_id"])
 
     def revalidate_for_execution(
-        self, envelope: Mapping[str, Any], now: datetime | None = None
+        self, envelope: Mapping[str, Any], now: datetime | None = None,
+        *, job_id: str | None = None,
     ) -> HarnessDecision:
         current = (now or utcnow()).astimezone(timezone.utc)
-        error, privileged = self._validate(envelope, current)
+        try:
+            error, privileged = self._validate(envelope, current)
+        except HarnessUnavailable:
+            if self._privileged(envelope):
+                raise
+            return HarnessDecision(False, "DENIED", "ledger unavailable")
         if error:
             return self._deny(envelope, error, privileged)
         authorization = envelope["authorization"]
@@ -382,6 +407,22 @@ class ActionHarness:
             with self.lock, self.connect() as db:
                 db.execute("BEGIN IMMEDIATE")
                 lease_id = authorization["lease_id"]
+                # Recheck durable policy after taking the transaction lock.
+                policy = db.execute("SELECT version FROM harness_policy WHERE singleton=1").fetchone()
+                if not policy or policy[0] != authorization["policy_version"]:
+                    return HarnessDecision(False, "DENIED", "policy version changed", lease_id)
+                nonce = db.execute("SELECT lease_id,correlation_id FROM harness_nonces WHERE nonce=?",
+                                   (authorization["nonce"],)).fetchone()
+                if not nonce or tuple(nonce) != (lease_id, envelope["correlation_id"]):
+                    return HarnessDecision(False, "DENIED", "nonce binding missing or changed", lease_id)
+                if job_id is not None:
+                    binding = db.execute("SELECT * FROM harness_jobs WHERE job_id=?", (job_id,)).fetchone()
+                    if (not binding or binding["state"] != "queued" or binding["lease_id"] != lease_id
+                            or binding["decision_id"] != authorization["decision_id"]
+                            or json.loads(binding["envelope_json"]) != dict(envelope)):
+                        return HarnessDecision(False, "DENIED", "queued authorization binding invalid", lease_id)
+                    if db.execute("SELECT 1 FROM harness_jobs WHERE state IN ('started','uncertain')").fetchone():
+                        return HarnessDecision(False, "DENIED", "local execution slot unavailable", lease_id)
                 if db.execute(
                     "SELECT 1 FROM harness_revocations WHERE lease_id=?", (lease_id,)
                 ).fetchone():
@@ -408,6 +449,9 @@ class ActionHarness:
                 except sqlite3.IntegrityError:
                     self._event(db, envelope, "execution.denied", {"reason": "lease replay"})
                     return HarnessDecision(False, "DENIED", "lease replay", lease_id)
+                if job_id is not None:
+                    db.execute("UPDATE harness_jobs SET state='started' WHERE job_id=?", (job_id,))
+                    self._event(db, envelope, "execution.started", {"job_id": job_id})
                 self._event(db, envelope, "execution.permitted", {
                     "policy_version": self.policy_version
                 })
@@ -416,6 +460,55 @@ class ActionHarness:
             if privileged:
                 raise HarnessUnavailable("privileged ledger unavailable") from exc
             return HarnessDecision(False, "DENIED", "ledger unavailable", authorization["lease_id"])
+
+    def bind_queued(self, job_id: str, envelope: Mapping[str, Any]) -> None:
+        """Called inside queue submission before its transaction commits."""
+        auth = envelope["authorization"]
+        try:
+            with self.lock, self.connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                row = db.execute("SELECT envelope_digest,decision_id FROM harness_decisions WHERE lease_id=?",
+                                 (auth["lease_id"],)).fetchone()
+                if not row or tuple(row) != (self._digest(envelope), auth["decision_id"]):
+                    raise PermissionError("durable decision binding missing")
+                db.execute("INSERT INTO harness_jobs VALUES(?,?,?,?,?,?,?)",
+                           (job_id, auth["lease_id"], auth["decision_id"],
+                            json.dumps(dict(envelope), sort_keys=True), "queued", None, None))
+                self._event(db, envelope, "execution.queued", {"job_id": job_id})
+        except sqlite3.Error as exc:
+            raise HarnessUnavailable("queue authorization ledger unavailable") from exc
+
+    def record_outcome(self, job_id: str, *, result: Any = None, uncertain: bool = False) -> None:
+        """Completion is an observed return, never an automatic quality verification."""
+        try:
+            with self.lock, self.connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                row = db.execute("SELECT * FROM harness_jobs WHERE job_id=?", (job_id,)).fetchone()
+                if not row or row["state"] != "started":
+                    raise HarnessUnavailable("execution outcome has no matching start")
+                state = "uncertain" if uncertain else "completed"
+                digest = None if uncertain else hashlib.sha256(
+                    json.dumps(result, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+                db.execute("UPDATE harness_jobs SET state=?,result_digest=? WHERE job_id=?",
+                           (state, digest, job_id))
+                self._event(db, json.loads(row["envelope_json"]), "execution." + state,
+                            {"job_id": job_id, "result_digest": digest})
+        except sqlite3.Error as exc:
+            raise HarnessUnavailable("execution outcome ledger unavailable") from exc
+
+    def record_verification(self, job_id: str, *, result_digest: str, evidence_ref: str) -> None:
+        """Trusted verifier only; no public endpoint or model-controlled invocation."""
+        if not evidence_ref.strip():
+            raise ValueError("verification requires an evidence reference")
+        with self.lock, self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT * FROM harness_jobs WHERE job_id=?", (job_id,)).fetchone()
+            if not row or row["state"] != "completed" or row["result_digest"] != result_digest:
+                raise PermissionError("verification must bind the completed result")
+            db.execute("UPDATE harness_jobs SET state='verified',verification_ref=? WHERE job_id=?",
+                       (evidence_ref, job_id))
+            self._event(db, json.loads(row["envelope_json"]), "execution.verified",
+                        {"job_id": job_id, "result_digest": result_digest, "evidence_ref": evidence_ref})
 
     def revoke(self, lease_id: str, *, reason: str, revoked_by: str) -> None:
         if not reason.strip() or not revoked_by.strip():
@@ -469,8 +562,9 @@ class HarnessedExecutor:
         self._harness = harness
         self._executor = executor
 
-    def execute(self, envelope: Mapping[str, Any], now: datetime | None = None) -> Any:
-        decision = self._harness.revalidate_for_execution(envelope, now=now)
+    def execute(self, envelope: Mapping[str, Any], now: datetime | None = None,
+                *, job_id: str | None = None) -> Any:
+        decision = self._harness.revalidate_for_execution(envelope, now=now, job_id=job_id)
         if not decision.authorized:
             raise PermissionError(decision.reason)
         return self._executor(envelope)

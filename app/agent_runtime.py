@@ -282,6 +282,9 @@ class AgentAuthorityRuntime:
     ) -> dict[str, Any]:
         if status not in {"started", "completed", "failed", "withheld", "blocked"}:
             raise AgentAuthorityError(f"unsupported runtime status: {status}")
+        from .action_harness import HarnessPolicy
+        if status == "started" and canonical_agent_id(agent_id) in HarnessPolicy().pilot_agents:
+            raise AgentAuthorityError("Pilot execution requires Stable Spine and the Harness queue worker")
         return self._record(
             trace_id=trace_id, source_agent=None, target_agent=agent_id, relation="execute",
             stage=stage, status=status, allowed=status != "blocked", reason="runtime stage",

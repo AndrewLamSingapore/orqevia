@@ -51,12 +51,14 @@ class HarnessApiTests(unittest.TestCase):
         body = response.json()
         self.assertEqual(body["job"]["agent"], "a14")
         self.assertEqual(body["job"]["status"], "queued")
-        self.assertEqual(body["harness"]["status"], "EXECUTION_PERMITTED")
+        self.assertEqual(body["harness"]["status"], "QUEUED")
         self.assertFalse(body["cloud_allowed"])
         status = self.client.get("/api/harness/status", headers=self.headers).json()
         self.assertTrue(status["ready"])
         self.assertEqual(status["local_concurrency"], 1)
-        self.assertEqual(status["counts"], {"authorized": 1, "executed": 1, "revoked": 0})
+        self.assertFalse(status["acceptance_ready"])
+        self.assertEqual(status["counts"], {"authorized": 1, "queued": 1, "started": 0,
+                         "completed": 0, "verified": 0, "uncertain": 0, "legacy_consumed": 0, "revoked": 0})
 
     def test_non_pilot_actor_is_denied(self):
         response = self.client.post(

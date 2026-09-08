@@ -116,6 +116,10 @@ class JobQueue:
               details_json TEXT NOT NULL, created_at TEXT NOT NULL);
             """)
 
+            columns = {r[1] for r in c.execute("PRAGMA table_info(compute_jobs)")}
+            if "authorization_envelope" not in columns:
+                c.execute("ALTER TABLE compute_jobs ADD COLUMN authorization_envelope TEXT")
+
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
                   (str(uuid.uuid4()), job_id, event, json.dumps(details, separators=(",", ":")), utcnow()))
@@ -124,7 +128,8 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False) -> dict:
+               external_execution: bool = False, authorization_envelope: dict | None = None,
+               on_queued: Callable | None = None) -> dict:
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         try:
             canonical_agent = canonical_agent_id(agent)
@@ -146,6 +151,12 @@ class JobQueue:
               (jid,canonical_agent,prompt,p,role,model.strip(),max(0,int(ram_mb)),max(0,int(vram_mb)),
                max(1,min(86400,int(timeout_seconds))),max(0,min(10,int(max_retries))),job_cap,
                int(allow_cloud),int(external_execution),status,approval,ts,ts))
+            if authorization_envelope is not None:
+                if on_queued is None:
+                    raise ValueError("signed jobs require a durable authorization binding")
+                c.execute("UPDATE compute_jobs SET authorization_envelope=? WHERE id=?",
+                          (json.dumps(authorization_envelope, sort_keys=True), jid))
+                on_queued(jid, authorization_envelope)
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
         return self.get(jid)
 
@@ -284,7 +295,7 @@ class JobQueue:
             cost=max(0.0,float(actual_cost_usd)); ts=utcnow()
             over=cost>row["max_cost_usd"] or self._daily_spend(c)+cost>self.policy.daily_cost_ceiling_usd
             if over: status="budget_blocked"; error=error or "actual cost ceiling reached"
-            elif error and row["attempts"]<=row["max_retries"]: status="queued"
+            elif error and not row["authorization_envelope"] and row["attempts"]<=row["max_retries"]: status="queued"
             elif error: status="failed"
             else: status="completed"
             c.execute("""UPDATE compute_jobs SET status=?,result=?,error=?,actual_cost_usd=?,input_tokens=?,output_tokens=?,
@@ -297,7 +308,7 @@ class JobQueue:
         with self.lock, self.connect() as c:
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='running' AND lease_until<?",(time.time(),)).fetchall()
             for row in rows:
-                status="queued" if row["attempts"]<=row["max_retries"] else "failed"
+                status="queued" if not row["authorization_envelope"] and row["attempts"]<=row["max_retries"] else "failed"
                 c.execute("UPDATE compute_jobs SET status=?,provider=NULL,lease_until=NULL,error='worker lease expired',updated_at=?,completed_at=? WHERE id=?",
                           (status,utcnow(),utcnow() if status=="failed" else None,row["id"]))
                 self._event(c,row["id"],"lease_expired",{"next_status":status})

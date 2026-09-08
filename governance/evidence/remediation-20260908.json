@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "kind": "remediation_evidence_not_current_ssot",
+  "observed_date": "2026-09-08",
+  "status": "BLOCKED_AUTOMATED_TEST_FAILURE",
+  "canonical_manifest": "governance/operational-manifest.json",
+  "dell": {
+    "source": "owner_supplied_normal_PowerShell_output",
+    "capture_timestamp": null,
+    "container_id": "6d32a3ad5fb21ed21451d3b1e8d0ea7135bd0b82463890d20970fa7bc3e319bd",
+    "name": "prime-prime-1",
+    "image_ref": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
+    "local_image_id": "sha256:e655f15a05f40272a46b28a6f7a25e7d6b58d20c6dbd5b96d8683a43a7a130e1",
+    "revision_label": "c449dd1c8e22976c97507733201807d4d73bf92e",
+    "repo_digests": null,
+    "image_created_at": null,
+    "started_at": "2026-09-08T00:38:37.718375132Z",
+    "mount": {
+      "name": "prime-data",
+      "destination": "/data",
+      "read_write": true
+    },
+    "published_port": "127.0.0.1:8000",
+    "limitations": [
+      "Image inspection projection returned null Id/RepoDigests/Created. Earlier container .Image is retained; null is not evidence of no registry digest.",
+      "Full revision is owner-reported OCI label, not an independent image-content attestation.",
+      "Current effective policy settings, data continuity and proxy ingress remain unverified."
+    ]
+  },
+  "cloud_observed_at_utc": "2026-09-08T02:10:09Z",
+  "cloud": [
+    {
+      "name": "authority",
+      "id": "dpl_kUZtz5Z6PDjymuk64jX9ANrmiLXU",
+      "url": "https://authority-engine-ht22swr7k-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "eca1b3fea76a249d125f2493a4d596f82476604e",
+      "health": {
+        "ok": true,
+        "service": "authority-engine",
+        "revision": "eca1b3fea76a249d125f2493a4d596f82476604e",
+        "evidence_review": {
+          "configured": true,
+          "state": "ready",
+          "publication_mode": "explicit_draft_only"
+        },
+        "portfolio_relay": {
+          "configured": true,
+          "state": "ready"
+        },
+        "jarvis_observability": {
+          "configured": true,
+          "state": "ready",
+          "exposure": "sanitized_public_metadata_only"
+        }
+      }
+    },
+    {
+      "name": "game",
+      "id": "dpl_CSyhTGPXrqdmctJKC5ojUyGTk93a",
+      "url": "https://game-platform-1cp1kj937-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "49e7bfab2c32db50a87798b86f506802bba7f77b",
+      "health": {
+        "ok": true,
+        "product": "game-platform",
+        "revision": "49e7bfab2c32db50a87798b86f506802bba7f77b",
+        "simulation": "bounded-v1",
+        "portfolio_outbox": true,
+        "portfolio_relay": true,
+        "prime_delivery": true,
+        "ai_degradation": "deterministic-fallback-v1"
+      }
+    },
+    {
+      "name": "portal",
+      "id": "dpl_FHjjcH8o6pwRvLRm3iM4hKxZY6gH",
+      "url": "https://the-portal-qhglc49fw-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "56a6e22f801e24b3da8c6cd71bdd96e7c0f806f0",
+      "health": {
+        "ok": true,
+        "database": true,
+        "archive": true,
+        "generation_configured": true,
+        "evidence_schema": true,
+        "public_participation": true,
+        "experiment_result_schema": true,
+        "authenticated_result_writing": true,
+        "portfolio_relay": true,
+        "portfolio_outbox_schema": true,
+        "portfolio_outbox": {
+          "configured": true,
+          "counts": {},
+          "ready": 0,
+          "oldest_ready_age_seconds": null
+        },
+        "living_observatory": true,
+        "schema_version": 6,
+        "product_version": "6.4.0",
+        "experience": "Continuous Futures Model",
+        "revision": "56a6e22f801e24b3da8c6cd71bdd96e7c0f806f0"
+      }
+    },
+    {
+      "name": "sky",
+      "id": "dpl_Cy4FMt3zhykhqDz2DNmnzajkWTmi",
+      "url": "https://sky-tablet-eccp4vu1o-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": null,
+      "health": null
+    },
+    {
+      "name": "velyqua",
+      "id": "dpl_AvxEh5bBedEjPj4w8r1ZaivSg9ZP",
+      "url": "https://velyqua-2lqvgz7uu-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "23eb80bc3fd280e4209c9f9eb3bcd764045d0cc3",
+      "health": {
+        "ok": true,
+        "service": "velyqua",
+        "product_version": "0.3.1",
+        "revision": "23eb80bc3fd280e4209c9f9eb3bcd764045d0cc3",
+        "commercial_isolation": true,
+        "cloud": {
+          "configured": true
+        },
+        "stable_spine": {
+          "server_configured": false,
+          "required_for_health": false
+        },
+        "legacy_personal_jarvis_bridge": {
+          "enabled": false
+        },
+        "safety_boundary": "deterministic policy gate; physical execution remains fail-closed without a verified adapter"
+      }
+    }
+  ],
+  "tunnel": {
+    "bookkeeping": "DEFERRED_BY_OWNER",
+    "existing_pid": 14640,
+    "preserve_process": true,
+    "preserve_profile": true,
+    "repair_attempted": false
+  },
+  "acceptance": {
+    "pilot_run": false,
+    "abex": "PENDING_NOT_COMMISSIONED",
+    "runtime_activation_of_patch": false,
+    "automated_tests": {
+      "passed": 54,
+      "failed": 8,
+      "new_boundary_tests": "all passed",
+      "failure_groups": {
+        "harness_api": "5 Windows temporary SQLite database cleanup failures (WinError 32)",
+        "stable_spine": "3 NamedTemporaryFile/SQLite open failures"
+      },
+      "policy": "No failed test skipped or weakened. Stop after first failed gate."
+    }
+  },
+  "pending": [
+    "Resolve SQLite connection lifecycle and Windows fixture failures, then rerun relevant tests.",
+    "Complete canonical manifest reconciliation and regenerate its single checkpoint; no CURRENT promotion.",
+    "Update local operational mirror only after reviewed branch/PR integration; working Dell checkout unchanged.",
+    "Add new boundary suite to CI and run broader regression checks before merge.",
+    "Review crash recovery, all inference ingress and aggregate one-slot invariants before release.",
+    "Runtime acceptance and ABEX remain separately approval-gated."
+  ]
+}

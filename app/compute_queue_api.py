@@ -49,6 +49,14 @@ def providers() -> list[Provider]:
 
 
 def _execute(job: dict, provider: Provider) -> dict:
+    # The production worker has no inference path around this boundary.
+    from .harness_execution import execute_job
+    from . import harness_api, spine_api
+    harness, _ = harness_api._runtime()
+    return execute_job(job, provider, harness, spine_api.spine, _infer)
+
+
+def _infer(job: dict, provider: Provider) -> dict:
     timeout=httpx.Timeout(float(job["timeout_seconds"]))
     if provider.kind=="local":
         with httpx.Client(timeout=timeout) as client:
@@ -105,6 +113,8 @@ class Approval(BaseModel):
 @router.post("/jobs",status_code=202)
 def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
     authorize(authorization)
+    if os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower() in {"1", "true", "yes", "on"}:
+        raise HTTPException(409, "Direct dispatch is disabled during the three-agent Harness pilot")
     try:
         canonical = canonical_agent_id(body.agent)
     except RegistryError:
@@ -117,13 +127,13 @@ def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
 
 @router.get("/jobs")
 def list_jobs(status: str|None=None,limit: int=100,authorization: str|None=Header(None)):
-    authorize(authorization);return {"jobs":queue.list(status,max(1,min(500,limit)))}
+    authorize(authorization);return {"jobs":[_public_job(job) for job in queue.list(status,max(1,min(500,limit)))]}
 
 
 @router.get("/jobs/{job_id}")
 def get_job(job_id: str,authorization: str|None=Header(None)):
     authorize(authorization)
-    try:return queue.get(job_id)
+    try:return _public_job(queue.get(job_id))
     except KeyError:raise HTTPException(404,"Job not found")
 
 
@@ -138,6 +148,10 @@ def decide_job(job_id: str,body: Approval,authorization: str|None=Header(None)):
 @router.get("/metrics")
 def metrics(authorization: str|None=Header(None)):
     authorize(authorization);return {**queue.metrics(),"providers":[p.__dict__ for p in providers()]}
+
+
+def _public_job(job: dict) -> dict:
+    return {key: value for key, value in job.items() if key != "authorization_envelope"}
 
 
 def start_compute_queue() -> None: pool.start()
