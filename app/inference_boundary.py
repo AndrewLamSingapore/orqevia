@@ -8,6 +8,7 @@ class InferenceBoundaryError(RuntimeError):
 
 
 _active_job = ContextVar("harness_active_job", default=None)
+_consumed = object()
 
 
 def deny_legacy_inference():
@@ -30,4 +31,4 @@ def require_worker_call(job):
     if _active_job.get() is not job:
         deny_legacy_inference()
     # One model call per consumed authorization, including within this scope.
-    _active_job.set(None)
+    _active_job.set(_consumed)

@@ -55,6 +55,9 @@ def test_worker_scope_is_identity_bound_one_use_and_cleared():
             require_worker_call(dict(job))
         require_worker_call(job)
         with pytest.raises(InferenceBoundaryError):
+            with worker_call({"id": "nested"}):
+                pass
+        with pytest.raises(InferenceBoundaryError):
             require_worker_call(job)
     with pytest.raises(InferenceBoundaryError):
         require_worker_call(job)
