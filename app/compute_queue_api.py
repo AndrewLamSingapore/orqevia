@@ -36,7 +36,7 @@ def providers() -> list[Provider]:
                        ("evaluator",SETTINGS.evaluator_model),("embedding",SETTINGS.embedding_model)):
         if model and not any(p.model==model for p in result):
             result.append(Provider(f"ollama-{role}","local",model,local_ram,local_vram,
-                                   _int("OLLAMA_NUM_PARALLEL",2) or 1))
+                                   1))
     return result
 
 
@@ -44,11 +44,8 @@ def _execute(job: dict, provider: Provider) -> dict:
     # The production worker has no inference path around this boundary.
     from .harness_execution import execute_job
     from . import harness_api, spine_api
-    import time
-    if queue.get(job["id"]) != job or (job.get("lease_until") or 0) <= time.time():
-        raise PermissionError("worker claim changed or expired")
     harness, _ = harness_api._runtime()
-    return execute_job(job, provider, harness, spine_api.spine, _infer)
+    return execute_job(job, provider, harness, spine_api.spine, _infer, queue=queue)
 
 
 def _infer(job: dict, provider: Provider) -> dict:
@@ -56,9 +53,11 @@ def _infer(job: dict, provider: Provider) -> dict:
     require_worker_call(job)
     if provider.kind != "local":
         raise InferenceBoundaryError("cloud overflow is disabled")
+    if SETTINGS.ollama_base_url != "http://ollama:11434":
+        raise InferenceBoundaryError("inference requires the isolated Docker Ollama endpoint")
     timeout=httpx.Timeout(float(job["timeout_seconds"]))
     if provider.kind=="local":
-        with httpx.Client(timeout=timeout) as client:
+        with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as client:
             r=client.post(f"{SETTINGS.ollama_base_url}/api/chat",json={"model":provider.model,
                 "messages":[{"role":"user","content":job["prompt"]}],"stream":False,
                 "keep_alive":SETTINGS.keep_alive,"options":{"num_ctx":SETTINGS.context_tokens,

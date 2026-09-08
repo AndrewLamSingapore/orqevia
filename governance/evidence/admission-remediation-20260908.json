@@ -1,0 +1,46 @@
+{
+  "state": "DRAFT_UNMERGED_NOT_DEPLOYED",
+  "recommendation": "HOLD",
+  "prior_head": "7d9c3a736312b8fbab3ac9cae2a145f772a51933",
+  "local_suite": {
+    "passed": 205,
+    "failed": 0,
+    "existing_deprecation_warnings": 9
+  },
+  "checkpoint_security_gate": {
+    "result": "FAIL",
+    "mock_executor_calls": 2,
+    "clone_rejected": false,
+    "production_touched": false,
+    "command": "python -m scripts.probe_checkpoint_replay"
+  },
+  "sky_component": {
+    "observed_no_later_than_utc": "2026-09-08T03:30:37Z",
+    "deployment_id": "dpl_Cy4FMt3zhykhqDz2DNmnzajkWTmi",
+    "source_sha": "299f6ef3184694c65d3e2d70380aadb437b38888",
+    "path": "index.html",
+    "unicode_character_count": 11021,
+    "deployment_response_status": 200,
+    "production_alias_response_status": 200,
+    "exact_source_content_equal_at_both_urls": true,
+    "scope": "HTML only; backend/configuration/runtime revision metadata not inferred"
+  },
+  "dell_connector": {
+    "observed_at_utc": "2026-09-08T03:17:52.652336Z",
+    "version": "7.3.1.1-evidence-grounded",
+    "running_agent_jobs": 0,
+    "read_only": true,
+    "physical_actuation": false,
+    "commit": "not exposed by connector"
+  },
+  "docker_evidence": "Sandbox executable access denied; normal-Windows allowlisted evidence requested, not yet received.",
+  "invariants": {
+    "operational_status": "STALE",
+    "working_tunnel": "untouched",
+    "production": "untouched",
+    "pilot": "not run",
+    "ABEX": "pending",
+    "AgentScope_Hermes": "pending",
+    "VELYQUA_hardware_predictive_ML_acceptance": "pending"
+  }
+}

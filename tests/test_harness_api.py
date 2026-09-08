@@ -57,7 +57,7 @@ class HarnessApiTests(unittest.TestCase):
         self.assertTrue(status["ready"])
         self.assertEqual(status["local_concurrency"], 1)
         self.assertFalse(status["acceptance_ready"])
-        self.assertEqual(status["counts"], {"authorized": 1, "queued": 1, "started": 0,
+        self.assertEqual(status["counts"], {"authorized": 1, "queued": 1, "claimed": 0, "failed": 0, "started": 0,
                          "completed": 0, "verified": 0, "uncertain": 0, "legacy_consumed": 0, "revoked": 0})
 
     def test_non_pilot_actor_is_denied(self):

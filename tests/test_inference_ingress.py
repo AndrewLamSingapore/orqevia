@@ -7,6 +7,7 @@ from app.model_gateway import ModelGateway
 from app.hybrid_memory import HybridMemory
 from app import main, compute_queue_api
 from app.job_queue import Provider
+from dataclasses import replace
 
 
 def test_all_legacy_network_sinks_deny_before_transport(monkeypatch):
@@ -46,6 +47,18 @@ def test_legacy_code_runner_never_launches_a_process(monkeypatch):
     with pytest.raises(InferenceBoundaryError):
         main.run_python("print(1)")
     launch.assert_not_called()
+
+
+@pytest.mark.parametrize("endpoint", ["http://localhost:11434", "http://host.docker.internal:11434", "https://cloud.invalid", "http://ollama:11434@cloud.invalid"])
+def test_native_or_external_endpoint_cannot_expand_authority(monkeypatch, endpoint):
+    transport = Mock(side_effect=AssertionError("unmediated provider reached"))
+    monkeypatch.setattr("httpx.Client", transport)
+    monkeypatch.setattr(compute_queue_api, "SETTINGS", replace(compute_queue_api.SETTINGS, ollama_base_url=endpoint))
+    job = {"id": "synthetic-test-only"}
+    with worker_call(job):
+        with pytest.raises(InferenceBoundaryError, match="isolated Docker"):
+            compute_queue_api._infer(job, Provider("ollama-fast", "local", "fake", 8192, 0, 1))
+    transport.assert_not_called()
 
 
 def test_worker_scope_is_identity_bound_one_use_and_cleared():

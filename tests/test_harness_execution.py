@@ -46,7 +46,7 @@ def queued(rig, actor="a14"):
 
 
 def run(rig, job, infer=None, provider=LOCAL):
-    return execute_job(job, provider, rig[1], rig[2], infer or Mock(return_value={"result": "done"}))
+    return execute_job(job, provider, rig[1], rig[2], infer or Mock(return_value={"result": "done"}), queue=rig[3])
 
 
 @pytest.mark.parametrize("actor", ["a14", "a16", "a21"])
@@ -59,7 +59,7 @@ def test_actual_execution_audit_and_separate_verification(rig, actor):
     infer.assert_called_once()
     trace = rig[1].reconstruct(envelope["correlation_id"])
     kinds = [e["event_type"] for e in trace["events"]]
-    assert kinds == ["authorization.accepted", "execution.queued", "execution.started",
+    assert kinds == ["authorization.accepted", "execution.queued", "execution.claimed", "execution.started",
                      "execution.permitted", "execution.completed"]
     with rig[1].connect() as db:
         row = db.execute("SELECT * FROM harness_jobs WHERE job_id=?", (job["id"],)).fetchone()

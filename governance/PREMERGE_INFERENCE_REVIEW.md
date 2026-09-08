@@ -3,6 +3,62 @@
 Recommendation: **HOLD**. This is branch evidence, not deployed behavior or a
 claim of estate-wide admission. Operational STALE is retained.
 
+## Remediation addendum after 7d9c3a7
+
+The sections below this addendum preserve the earlier review snapshot. Current
+component evidence is in `evidence/admission-remediation-20260908.json`.
+
+- Worker admission now takes SQLite write fences in queue -> Spine -> Harness
+  order. The durable queue snapshot and current Spine policy remain pinned
+  through the model call. PEP consumption commits before the call; process death
+  does not roll it back. Busy/unavailable admission fails closed. This deliberately
+  blocks policy/queue writers during an admitted call, sacrificing availability.
+  A revocation committed before PEP consumption is rejected; admission is the
+  irreversible linearization point, not a promise that an already admitted
+  provider request can be recalled. Provider fencing remains a separate blocker.
+- Claim is now an explicit Harness state/event before start. State progression is
+  authorized decision -> queued binding -> claimed -> started -> completed ->
+  independently verified. Failed pre-start recovery revokes the unused lease.
+  Consumed/lost started work becomes uncertain and continues to hold the slot.
+  `ActionHarness.recover(queue)` is an explicit trusted maintenance operation,
+  not a public endpoint or an automatic startup grant/reset. It uses recorded
+  queue provenance, skips other known queues, and refuses unknown legacy queue
+  provenance. Repeating recovery never grants or replays execution. Completed
+  work lacking a durable queue result is reported as `completion_pending`;
+  result reconstruction and operator reconciliation remain unresolved.
+- The sole inference adapter rejects every endpoint except the internal Docker
+  Ollama service, ignores HTTP proxy environment variables and refuses redirects.
+  Compose puts Ollama only on an internal inference network; PRIME is dual-homed,
+  while gateway/tunnel services have no membership in that network. Ollama model
+  parallelism and loaded models are fixed to one. Startup validates already staged
+  models instead of downloading on the isolated network; missing models block
+  startup. Model staging must be separately reviewed. This is proposed packaging,
+  not live isolation. Native Ollama cannot be selected by this adapter, but its
+  independent process/listener still needs owner-reviewed isolation. No host
+  firewall, native process, network or model store was changed.
+- Sky's immutable deployment and production alias both returned exactly the
+  current source `index.html` at 299f6ef3184694c65d3e2d70380aadb437b38888.
+  Only that HTML file is proved equivalent; runtime Git metadata/backend settings
+  are not promoted from this content observation.
+
+**Blocking adversarial evidence:** `python -m scripts.probe_checkpoint_replay`
+copies three synthetic databases before consumption, completes the original job,
+then presents the saved claim to the copied stores. It reaches the mock executor
+twice with the same signed authorization. The script exits 1 and now runs as an
+unsuppressed Windows/Ubuntu CI gate. It uses no real model, credentials, production
+database or three-agent acceptance pilot. Ordinary tests passing do not override
+this failed authority requirement.
+
+An epoch/counter stored in those databases, an environment variable copied with
+the process, or another file restored alongside them cannot distinguish the old
+authority from the current one. No independently protected current-epoch witness
+and provider-side admission fence is established by this repository/runtime
+evidence. A genuine repair must make the isolated executor reject stale authority
+against a durable witness outside the restore domain, reject every request when
+that witness is unavailable, retain uncertain consumption, and keep the PDP local.
+Installing/deploying that trust boundary is not authorized in this pre-merge task.
+No pretend local epoch or fail-open substitute is introduced. PR59 remains HOLD.
+
 ## Source ingress inventory
 
 | Ingress/call family | Model transport | PR behavior |

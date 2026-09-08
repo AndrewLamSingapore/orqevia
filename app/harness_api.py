@@ -79,6 +79,8 @@ def status(authorization: str | None = Header(default=None)):
             "authorized": db.execute("select count(*) from harness_decisions").fetchone()[0],
             "started": db.execute("select count(*) from harness_jobs where state in ('started','completed','verified','uncertain')").fetchone()[0],
             "queued": db.execute("select count(*) from harness_jobs where state='queued'").fetchone()[0],
+            "claimed": db.execute("select count(*) from harness_jobs where state='claimed'").fetchone()[0],
+            "failed": db.execute("select count(*) from harness_jobs where state='failed'").fetchone()[0],
             "completed": db.execute("select count(*) from harness_jobs where state in ('completed','verified')").fetchone()[0],
             "verified": db.execute("select count(*) from harness_jobs where state='verified'").fetchone()[0],
             "uncertain": db.execute("select count(*) from harness_jobs where state='uncertain'").fetchone()[0],

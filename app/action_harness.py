@@ -10,6 +10,7 @@ import copy
 import hashlib
 import hmac
 import json
+import os
 import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -202,6 +203,8 @@ class ActionHarness:
               job_id TEXT PRIMARY KEY, lease_id TEXT NOT NULL UNIQUE,
               decision_id TEXT NOT NULL, envelope_json TEXT NOT NULL,
               state TEXT NOT NULL, result_digest TEXT, verification_ref TEXT);
+            CREATE TABLE IF NOT EXISTS harness_job_queues(
+              job_id TEXT PRIMARY KEY, queue_path TEXT NOT NULL);
             """)
             db.execute("INSERT OR IGNORE INTO harness_policy VALUES(1,?)", (self.policy.policy_version,))
 
@@ -431,7 +434,7 @@ class ActionHarness:
                     return HarnessDecision(False, "DENIED", "nonce binding missing or changed", lease_id)
                 if job_id is not None:
                     binding = db.execute("SELECT * FROM harness_jobs WHERE job_id=?", (job_id,)).fetchone()
-                    if (not binding or binding["state"] != "queued" or binding["lease_id"] != lease_id
+                    if (not binding or binding["state"] != "claimed" or binding["lease_id"] != lease_id
                             or binding["decision_id"] != authorization["decision_id"]
                             or json.loads(binding["envelope_json"]) != dict(envelope)):
                         return HarnessDecision(False, "DENIED", "queued authorization binding invalid", lease_id)
@@ -475,7 +478,7 @@ class ActionHarness:
                 raise HarnessUnavailable("privileged ledger unavailable") from exc
             return HarnessDecision(False, "DENIED", "ledger unavailable", authorization["lease_id"])
 
-    def bind_queued(self, job_id: str, envelope: Mapping[str, Any]) -> None:
+    def bind_queued(self, job_id: str, envelope: Mapping[str, Any], *, queue_path=None) -> None:
         """Called inside queue submission before its transaction commits."""
         auth = envelope["authorization"]
         try:
@@ -489,8 +492,66 @@ class ActionHarness:
                            (job_id, auth["lease_id"], auth["decision_id"],
                             json.dumps(dict(envelope), sort_keys=True), "queued", None, None))
                 self._event(db, envelope, "execution.queued", {"job_id": job_id})
+                if queue_path is not None:
+                    db.execute("INSERT INTO harness_job_queues VALUES(?,?)",
+                               (job_id, os.path.normcase(str(Path(queue_path).resolve()))))
         except sqlite3.Error as exc:
             raise HarnessUnavailable("queue authorization ledger unavailable") from exc
+
+    def record_claim(self, job_id: str, envelope: Mapping[str, Any]) -> None:
+        """Worker-only: caller must hold the durable queue admission fence."""
+        with self.lock, self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT * FROM harness_jobs WHERE job_id=?", (job_id,)).fetchone()
+            if (not row or row["state"] != "queued"
+                    or json.loads(row["envelope_json"]) != dict(envelope)):
+                raise PermissionError("claim authorization binding invalid")
+            db.execute("UPDATE harness_jobs SET state='claimed' WHERE job_id=?", (job_id,))
+            self._event(db, envelope, "execution.claimed", {"job_id": job_id})
+
+    def recover(self, queue) -> dict[str, int]:
+        """Monotonic reconciliation; never grant, unconsume, retry or free uncertainty.
+
+        Queue -> Harness lock order matches dispatch/admission. Only the Harness
+        ledger changes: a completed result without a durable queue result remains
+        explicitly unreconciled, rather than inventing success or verification.
+        """
+        import time
+        counts = {"failed": 0, "uncertain": 0, "completion_pending": 0}
+        try:
+            with queue.connect() as qdb, self.lock, self.connect() as db:
+                qdb.execute("PRAGMA busy_timeout=0")
+                qdb.execute("BEGIN IMMEDIATE")
+                db.execute("BEGIN IMMEDIATE")
+                for row in db.execute("SELECT * FROM harness_jobs").fetchall():
+                    location = db.execute("SELECT queue_path FROM harness_job_queues WHERE job_id=?", (row["job_id"],)).fetchone()
+                    if not location:
+                        raise HarnessUnavailable("legacy queue provenance requires operator reconciliation")
+                    if location[0] != os.path.normcase(str(Path(queue.db_path).resolve())):
+                        continue  # Another known queue is not an orphan in this queue.
+                    job = qdb.execute("SELECT * FROM compute_jobs WHERE id=?", (row["job_id"],)).fetchone()
+                    lost = (not job or job["status"] in {"failed", "budget_blocked"}
+                            or (job["status"] == "running" and (job["lease_until"] or 0) <= time.time()))
+                    state = row["state"]
+                    if state in {"completed", "verified"}:
+                        if not job or job["status"] != "completed":
+                            counts["completion_pending"] += 1
+                        continue
+                    if not lost or state not in {"queued", "claimed", "started"}:
+                        continue
+                    consumed = db.execute("SELECT 1 FROM harness_executions WHERE lease_id=?", (row["lease_id"],)).fetchone()
+                    target = "uncertain" if consumed or state == "started" else "failed"
+                    db.execute("UPDATE harness_jobs SET state=? WHERE job_id=?", (target, row["job_id"]))
+                    # A failed pre-start orphan must also remain unusable if a
+                    # late queue row appears. Revocation is never removed here.
+                    db.execute("INSERT OR IGNORE INTO harness_revocations VALUES(?,?,?,?)",
+                               (row["lease_id"], "orphan recovery", "harness-recovery", _iso(utcnow())))
+                    self._event(db, json.loads(row["envelope_json"]), "execution." + target,
+                                {"job_id": row["job_id"], "reason": "orphan recovery", "automatic_replay": False})
+                    counts[target] += 1
+            return counts
+        except sqlite3.Error as exc:
+            raise HarnessUnavailable("recovery ledger unavailable or busy") from exc
 
     def record_outcome(self, job_id: str, *, result: Any = None, uncertain: bool = False) -> None:
         """Completion is an observed return, never an automatic quality verification."""

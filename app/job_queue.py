@@ -164,7 +164,7 @@ class JobQueue:
                     raise ValueError("signed jobs require a durable authorization binding")
                 c.execute("UPDATE compute_jobs SET authorization_envelope=? WHERE id=?",
                           (json.dumps(authorization_envelope, sort_keys=True), jid))
-                on_queued(jid, authorization_envelope)
+                on_queued(jid, authorization_envelope, queue_path=self.db_path)
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
         return self.get(jid)
 

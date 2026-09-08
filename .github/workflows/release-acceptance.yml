@@ -65,6 +65,8 @@ jobs:
         run: |
           docker compose -f docker-compose.yml config --quiet
           docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet
+          docker compose -f docker-compose.yml config --format json | python scripts/verify_inference_compose.py
+          docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --format json | python scripts/verify_inference_compose.py
 
   docker-acceptance:
     runs-on: ubuntu-latest

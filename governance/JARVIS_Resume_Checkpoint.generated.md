@@ -82,9 +82,9 @@ Re-run the live verifier before relying on this checkpoint. A manifest older tha
 - State: DRAFT_UNMERGED_NOT_DEPLOYED
 - Recommendation: **HOLD**
 
-- No current effective Docker/native/provider-network inventory proves all inference shares admission.
-- Native Ollama process and cloud generation/configuration exist outside the demonstrated PRIME worker boundary.
-- Different or restored Harness databases cannot enforce global nonce history or one-slot concurrency; coordinated durable authority recovery/fencing is not established.
-- Spine policy, queue state and Harness admission use separate databases; no atomic cross-store policy/claim fence is established.
-- Local Dell and Library mirrors are not updated; this is a proposed canonical branch checkpoint only.
-- PR59 rollout and operator pilot acceptance are pending; no ABEX/AgentScope/hardware commissioning.
+- Checkpoint adversary repeats one authorization through a copied pre-consumption ledger: two mock calls, no external current epoch fence. This is a failing security gate.
+- Native Ollama runtime isolation and effective Docker network/configuration remain unverified. Branch Compose isolation and endpoint restrictions are not deployed.
+- PRIME-controlled legacy inference transports are denied; independent cloud ingress/provider effects still lack an estate-wide authority/egress proof.
+- Queue/Spine writes are pinned through worker admission and execution; completion-to-queue reconciliation and provider-side uncertain outcome fencing remain incomplete. Recovery cannot invent missing results or automatically release uncertainty.
+- Dell effective settings, registry digest and historical data continuity await normal-Windows read-only evidence. File metadata alone cannot prove historical continuity.
+- Local Dell/Library mirrors, deployment/post-deployment evidence and operator pilot acceptance remain pending. ABEX, AgentScope/Hermes and VELYQUA hardware/predictive ML remain pending.

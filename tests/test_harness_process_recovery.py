@@ -11,7 +11,7 @@ from tests.test_harness_execution import rig, queued, SECRET
 CHILD = '''
 import json, os, sys, time
 from pathlib import Path
-from app.action_harness import ActionHarness
+from app.action_harness import ActionHarness, HarnessUnavailable
 from app.spine import SpineStore, StableSpine
 from app.job_queue import JobQueue, Provider
 from app.harness_execution import execute_job
@@ -24,13 +24,13 @@ def infer(job, provider):
     time.sleep(2 if sys.argv[2]=='hold' else .2)
     return {'result':'done'}
 try:
-    execute_job(job, Provider('ollama-fast','local','test-model',8192,0,1),h,s,infer)
-except PermissionError: sys.exit(3)
+    execute_job(job, Provider('ollama-fast','local','test-model',8192,0,1),h,s,infer,queue=JobQueue(p/sys.argv[3]))
+except (PermissionError, HarnessUnavailable): sys.exit(3)
 '''
 
 
-def command(tmp_path, mode):
-    return [sys.executable, "-c", CHILD, str(tmp_path), mode]
+def command(tmp_path, mode, queue_name="q.db"):
+    return [sys.executable, "-c", CHILD, str(tmp_path), mode, queue_name]
 
 
 def test_process_death_after_consumption_cannot_repeat_or_release_slot(rig, tmp_path):
@@ -74,7 +74,7 @@ def test_distinct_queues_share_one_durable_inference_slot(rig, tmp_path):
             time.sleep(.01)
         assert (tmp_path / "calls").exists()
         (tmp_path / "job.json").write_text(json.dumps(second))
-        assert subprocess.run(command(tmp_path, "run"), timeout=20).returncode == 3
+        assert subprocess.run(command(tmp_path, "run", "other-queue.db"), timeout=20).returncode == 3
         assert child.wait(timeout=20) == 0
         assert (tmp_path / "calls").read_text().splitlines() == [first["id"]]
     finally:

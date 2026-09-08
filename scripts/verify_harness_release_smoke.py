@@ -58,7 +58,7 @@ def verify_evidence(evidence, key):
     assert evidence["nonce"]["lease_id"] == auth["lease_id"]
     assert evidence["nonce"]["correlation_id"] == envelope["correlation_id"]
     assert [e["event_type"] for e in evidence["events"]] == [
-        "authorization.accepted", "execution.queued", "execution.started",
+        "authorization.accepted", "execution.queued", "execution.claimed", "execution.started",
         "execution.permitted", "execution.completed",
     ]
     assert len(evidence["executions"]) == 1
