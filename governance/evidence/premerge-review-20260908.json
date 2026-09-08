@@ -1,0 +1,102 @@
+{
+  "observed_at_utc": "2026-09-08T02:52:33Z",
+  "runtime": {
+    "ok": true,
+    "observed_at": "2026-09-08T02:47:30.662910+00:00",
+    "expected_version": "7.3.1.1-evidence-grounded",
+    "prime": {
+      "version": "7.3.1.1-evidence-grounded",
+      "fast_ready": true,
+      "deep_ready": true,
+      "memory_ready": true,
+      "model_readiness": {
+        "ready": true,
+        "installed_models": [
+          "embeddinggemma:300m-qat-q4_0",
+          "gemma3:1b"
+        ],
+        "required_models": [
+          "gemma3:1b",
+          "embeddinggemma:300m-qat-q4_0"
+        ],
+        "missing_models": [],
+        "error": null
+      },
+      "facts": 0,
+      "memories": 0,
+      "documents": 0,
+      "datasets": 0,
+      "code_files": 0,
+      "pending_actions": 0,
+      "automations": 0,
+      "objectives": 0,
+      "projects": 0,
+      "project_tasks": 0,
+      "departments": 6,
+      "authority_grants": 0,
+      "portfolios": 0,
+      "queued_tasks": 0,
+      "autonomous_runs": 0,
+      "recurring_jobs": 0,
+      "watchdog_events": 0,
+      "artifacts": 0,
+      "verified_artifacts": 0,
+      "project_reviews": 0,
+      "pending_approvals": 0,
+      "orchestration_runs": 0,
+      "agent_jobs": 0,
+      "running_agent_jobs": 0,
+      "agent_inbox": 0,
+      "context_summaries": 0
+    },
+    "bridge_version": "1.0.0",
+    "read_only": true,
+    "physical_actuation": false
+  },
+  "heads": {
+    "AndrewLamSingapore": "f3fec388a29cdd65548195d25d0a446d0ee2259a",
+    "authority-engine": "eca1b3fea76a249d125f2493a4d596f82476604e",
+    "game-platform": "49e7bfab2c32db50a87798b86f506802bba7f77b",
+    "the-portal": "56a6e22f801e24b3da8c6cd71bdd96e7c0f806f0",
+    "prime": "b999caabbe3371b0e1c333721bf59ea0f669f666",
+    "sky-tablet": "299f6ef3184694c65d3e2d70380aadb437b38888",
+    "velyqua": "23eb80bc3fd280e4209c9f9eb3bcd764045d0cc3"
+  },
+  "cloud": [
+    {
+      "name": "authority",
+      "id": "dpl_kUZtz5Z6PDjymuk64jX9ANrmiLXU",
+      "url": "https://authority-engine-ht22swr7k-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "eca1b3fea76a249d125f2493a4d596f82476604e"
+    },
+    {
+      "name": "game",
+      "id": "dpl_CSyhTGPXrqdmctJKC5ojUyGTk93a",
+      "url": "https://game-platform-1cp1kj937-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "49e7bfab2c32db50a87798b86f506802bba7f77b"
+    },
+    {
+      "name": "portal",
+      "id": "dpl_FHjjcH8o6pwRvLRm3iM4hKxZY6gH",
+      "url": "https://the-portal-qhglc49fw-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "56a6e22f801e24b3da8c6cd71bdd96e7c0f806f0"
+    },
+    {
+      "name": "velyqua",
+      "id": "dpl_AvxEh5bBedEjPj4w8r1ZaivSg9ZP",
+      "url": "https://velyqua-2lqvgz7uu-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": "23eb80bc3fd280e4209c9f9eb3bcd764045d0cc3"
+    },
+    {
+      "name": "sky",
+      "id": "dpl_Cy4FMt3zhykhqDz2DNmnzajkWTmi",
+      "url": "https://sky-tablet-eccp4vu1o-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "sha": null
+    }
+  ]
+}

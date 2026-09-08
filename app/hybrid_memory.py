@@ -33,13 +33,8 @@ class HybridMemory:
                 updated_at text not null, primary key(memory_kind,memory_key,model))""")
 
     def _embed(self, text: str) -> list[float]:
-        payload = json.dumps({"model": self.embedding_model, "input": text}).encode("utf-8")
-        request = urllib.request.Request(f"{self.ollama_url}/api/embed", data=payload,
-                                         headers={"Content-Type": "application/json"}, method="POST")
-        with urllib.request.urlopen(request, timeout=15) as response:
-            data = json.loads(response.read().decode("utf-8"))
-        embeddings = data.get("embeddings") or []
-        return [float(x) for x in embeddings[0]] if embeddings else []
+        from .inference_boundary import deny_legacy_inference
+        deny_legacy_inference()
 
     @staticmethod
     def _cosine(a: list[float], b: list[float]) -> float:

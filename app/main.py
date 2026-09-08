@@ -401,8 +401,9 @@ def select_next_queue_item():
 
 
 async def ollama_post(path,payload,timeout=900):
- async with httpx.AsyncClient(timeout=timeout) as h:
-  r=await h.post(OLLAMA+path,json=payload);r.raise_for_status();return r.json()
+ from .inference_boundary import deny_legacy_inference
+ deny_legacy_inference()
+
 async def embed_one(t):return (await ollama_post('/api/embed',{'model':EMBED_MODEL,'input':t},180))['embeddings'][0]
 async def embed_many(ts):return (await ollama_post('/api/embed',{'model':EMBED_MODEL,'input':ts},600))['embeddings'] if ts else []
 def cosine(a,b):
@@ -593,6 +594,9 @@ def validate_python(code):
   if isinstance(n,ast.Attribute) and n.attr.startswith('__'):return False,'Dunder attribute access is blocked.'
  return True,'Valid restricted Python.'
 def run_python(code):
+ from .inference_boundary import deny_legacy_inference
+ # AST filtering is not an OS sandbox or a signed execution authority.
+ deny_legacy_inference()
  ok,msg=validate_python(code)
  if not ok:raise HTTPException(400,msg)
  try:

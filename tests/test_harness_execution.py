@@ -161,6 +161,17 @@ def test_worker_loss_never_requeues_signed_job(rig):
     assert rig[3].claim("other", [LOCAL]) is None
 
 
+def test_expiry_is_rechecked_after_transaction_wait(rig, monkeypatch):
+    job, envelope = queued(rig)
+    first = datetime.now(timezone.utc)
+    times = iter([first, first + timedelta(minutes=6)])
+    monkeypatch.setattr("app.action_harness.utcnow", lambda: next(times, first + timedelta(minutes=6)))
+    infer = Mock()
+    with pytest.raises(PermissionError, match="expired"):
+        run(rig, job, infer)
+    infer.assert_not_called()
+
+
 @pytest.mark.parametrize("actor", ["a14", "a16", "a21", "architecture"])
 def test_legacy_specialist_entry_cannot_start_pilot(tmp_path, actor):
     rt = AgentAuthorityRuntime(tmp_path / "legacy.db")

@@ -9,6 +9,7 @@ from typing import Callable
 from .action_harness import ActionHarness, HarnessUnavailable, HarnessedExecutor
 from .job_queue import PRIORITIES, Provider
 from .spine import StableSpine, classify_action
+from .inference_boundary import worker_call
 
 
 def _spine_authorized(spine: StableSpine, envelope: dict) -> None:
@@ -68,7 +69,8 @@ def execute_job(job: dict, provider: Provider, harness: ActionHarness,
 
     def invoke(_signed):
         try:
-            result = infer(job, provider)
+            with worker_call(job):
+                result = infer(job, provider)
         except Exception:
             # A timeout or worker error cannot prove inference stopped remotely.
             # Preserve the single slot until explicit operator reconciliation.

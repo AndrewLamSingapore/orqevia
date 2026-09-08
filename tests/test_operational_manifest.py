@@ -38,7 +38,8 @@ def test_published_image_can_be_ahead_of_unverified_host():
     manifest, inventory = fixtures()
     manifest["systems"]["prime"]["release_sha"] = "f" * 40
     manifest["systems"]["prime"]["published_image"] = "ghcr.io/andrewlamsingapore/prime:sha-fffffff"
-    now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    # Partial component observations can postdate the last whole-estate verification.
+    now = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
     result = assess_static(manifest, inventory, now=now)
     assert result.errors == []
     assert "release_runtime_drift:prime" in result.stale_reasons
@@ -98,8 +99,20 @@ def test_missing_deployment_authentication_cannot_prove_current(monkeypatch):
 def test_sky_static_runtime_is_part_of_the_active_ssot():
     from scripts import verify_operational_manifest as verifier
     manifest, inventory = fixtures()
-    now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    now = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
     result = assess_static(manifest, inventory, now=now)
     assert "sky" in verifier.EXPECTED_ACTIVE
     assert manifest["systems"]["sky"]["production_state"] == "READY"
     assert result.errors == []
+
+
+def test_premerge_checkpoint_never_promotes_branch_to_runtime():
+    from scripts.generate_resume_checkpoint import generate
+    manifest, _ = fixtures()
+    assert manifest["status"] == manifest["alignment_state"]["overall"] == "STALE"
+    assert manifest["premerge_review"]["state"] == "DRAFT_UNMERGED_NOT_DEPLOYED"
+    assert manifest["premerge_review"]["recommendation"] == "HOLD"
+    assert manifest["release_gate"]["current_result"] == "HOLD_PREMERGE_REVIEW"
+    assert manifest["systems"]["prime"]["runtime_sha"] == manifest["dell_runtime"]["runtime_sha"]
+    assert manifest["dell_runtime"]["accepted"] is False
+    assert "Pre-merge review (not deployed)" in generate(manifest)

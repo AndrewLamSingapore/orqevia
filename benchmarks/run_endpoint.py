@@ -17,7 +17,7 @@ for case in cases:
     passed=False;detail='';elapsed=0.0
     try:
         if case['kind']=='retrieval':
-            token=case['token'];_,a=request('/api/cognitive/episodes','POST',{'event_type':'benchmark','content':{'fact':f'{token} persistent provenance'},'source':'benchmark:v2','salience':1,'durable_kind':'semantic','durable_key':token});_,b=request('/api/cognitive/consolidate','POST');found,c=request('/api/cognitive/memory/search?'+urllib.parse.urlencode({'q':token,'limit':5}));elapsed=a+b+c;passed=any(item.get('memory_key')==token for item in found['results']) and found['retrieval']['mode']=='persistent_hybrid'
+            token=case['token'];_,a=request('/api/cognitive/episodes','POST',{'event_type':'benchmark','content':{'fact':f'{token} persistent provenance'},'source':'benchmark:v2','salience':1,'durable_kind':'semantic','durable_key':token});_,b=request('/api/cognitive/consolidate','POST');found,c=request('/api/cognitive/memory/search?'+urllib.parse.urlencode({'q':token,'limit':5}));elapsed=a+b+c;passed=any(item.get('memory_key')==token for item in found['results']) and found['retrieval']['mode']=='lexical_fallback' and found['retrieval']['degraded'] is True and found['retrieval']['reason']=='InferenceBoundaryError'
         elif case['kind']=='reason':
             started=time.perf_counter()
             submitted,_=request('/api/harness/pilot/dispatch','POST',{'actor_id':'a16','prompt':case['intent']+' Fixture evidence; preserve uncertainty.','model_role':'fast','max_retries':0,'idempotency_key':'benchmark-'+str(uuid.uuid4())})

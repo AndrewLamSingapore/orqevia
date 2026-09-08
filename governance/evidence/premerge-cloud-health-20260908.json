@@ -1,0 +1,88 @@
+[
+  {
+    "system": "authority",
+    "status": 200,
+    "health": {
+      "ok": true,
+      "service": "authority-engine",
+      "revision": "eca1b3fea76a249d125f2493a4d596f82476604e",
+      "evidence_review": {
+        "configured": true,
+        "state": "ready",
+        "publication_mode": "explicit_draft_only"
+      },
+      "portfolio_relay": {
+        "configured": true,
+        "state": "ready"
+      },
+      "jarvis_observability": {
+        "configured": true,
+        "state": "ready",
+        "exposure": "sanitized_public_metadata_only"
+      }
+    }
+  },
+  {
+    "system": "game",
+    "status": 200,
+    "health": {
+      "ok": true,
+      "product": "game-platform",
+      "revision": "49e7bfab2c32db50a87798b86f506802bba7f77b",
+      "simulation": "bounded-v1",
+      "portfolio_outbox": true,
+      "portfolio_relay": true,
+      "prime_delivery": true,
+      "ai_degradation": "deterministic-fallback-v1"
+    }
+  },
+  {
+    "system": "portal",
+    "status": 200,
+    "health": {
+      "ok": true,
+      "database": true,
+      "archive": true,
+      "generation_configured": true,
+      "evidence_schema": true,
+      "public_participation": true,
+      "experiment_result_schema": true,
+      "authenticated_result_writing": true,
+      "portfolio_relay": true,
+      "portfolio_outbox_schema": true,
+      "portfolio_outbox": {
+        "configured": true,
+        "counts": {},
+        "ready": 0,
+        "oldest_ready_age_seconds": null
+      },
+      "living_observatory": true,
+      "schema_version": 6,
+      "product_version": "6.4.0",
+      "experience": "Continuous Futures Model",
+      "revision": "56a6e22f801e24b3da8c6cd71bdd96e7c0f806f0"
+    }
+  },
+  {
+    "system": "velyqua",
+    "status": 200,
+    "health": {
+      "ok": true,
+      "service": "velyqua",
+      "product_version": "0.3.1",
+      "revision": "23eb80bc3fd280e4209c9f9eb3bcd764045d0cc3",
+      "commercial_isolation": true,
+      "cloud": {
+        "configured": true
+      },
+      "stable_spine": {
+        "server_configured": false,
+        "required_for_health": false
+      },
+      "legacy_personal_jarvis_bridge": {
+        "enabled": false
+      },
+      "safety_boundary": "deterministic policy gate; physical execution remains fail-closed without a verified adapter"
+    }
+  }
+]

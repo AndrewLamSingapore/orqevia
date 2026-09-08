@@ -37,14 +37,6 @@ def providers() -> list[Provider]:
         if model and not any(p.model==model for p in result):
             result.append(Provider(f"ollama-{role}","local",model,local_ram,local_vram,
                                    _int("OLLAMA_NUM_PARALLEL",2) or 1))
-    url=os.getenv("PRIME_CLOUD_GPU_URL","").strip()
-    key=os.getenv("PRIME_CLOUD_GPU_API_KEY","").strip()
-    model=os.getenv("PRIME_CLOUD_GPU_MODEL","").strip()
-    if url and key and model:
-        result.append(Provider("cloud-gpu","cloud",model,_int("PRIME_CLOUD_GPU_RAM_MB",131072),
-            _int("PRIME_CLOUD_GPU_VRAM_MB",81920),_int("PRIME_CLOUD_GPU_CONCURRENCY",2) or 1,
-            float(os.getenv("PRIME_CLOUD_INPUT_USD_MTOK","0") or 0),
-            float(os.getenv("PRIME_CLOUD_OUTPUT_USD_MTOK","0") or 0)))
     return result
 
 
@@ -52,11 +44,18 @@ def _execute(job: dict, provider: Provider) -> dict:
     # The production worker has no inference path around this boundary.
     from .harness_execution import execute_job
     from . import harness_api, spine_api
+    import time
+    if queue.get(job["id"]) != job or (job.get("lease_until") or 0) <= time.time():
+        raise PermissionError("worker claim changed or expired")
     harness, _ = harness_api._runtime()
     return execute_job(job, provider, harness, spine_api.spine, _infer)
 
 
 def _infer(job: dict, provider: Provider) -> dict:
+    from .inference_boundary import require_worker_call, InferenceBoundaryError
+    require_worker_call(job)
+    if provider.kind != "local":
+        raise InferenceBoundaryError("cloud overflow is disabled")
     timeout=httpx.Timeout(float(job["timeout_seconds"]))
     if provider.kind=="local":
         with httpx.Client(timeout=timeout) as client:
@@ -68,18 +67,7 @@ def _infer(job: dict, provider: Provider) -> dict:
         return {"result":payload.get("message",{}).get("content",""),
                 "input_tokens":int(payload.get("prompt_eval_count",0) or 0),
                 "output_tokens":int(payload.get("eval_count",0) or 0),"actual_cost_usd":0}
-    # Cloud is OpenAI-chat-compatible and is impossible to reach unless the queue
-    # has already recorded explicit approval and a deterministic fallback reason.
-    base=os.environ["PRIME_CLOUD_GPU_URL"].rstrip("/")
-    with httpx.Client(timeout=timeout) as client:
-        r=client.post(f"{base}/chat/completions",headers={"Authorization":f"Bearer {os.environ['PRIME_CLOUD_GPU_API_KEY']}"},
-                      json={"model":provider.model,"messages":[{"role":"user","content":job["prompt"]}],
-                            "max_tokens":SETTINGS.max_output_tokens})
-        r.raise_for_status();payload=r.json()
-    usage=payload.get("usage",{});inp=int(usage.get("prompt_tokens",0) or 0);out=int(usage.get("completion_tokens",0) or 0)
-    cost=(inp*provider.input_cost_per_mtok+out*provider.output_cost_per_mtok)/1_000_000
-    return {"result":payload.get("choices",[{}])[0].get("message",{}).get("content",""),
-            "input_tokens":inp,"output_tokens":out,"actual_cost_usd":cost}
+
 
 
 pool=WorkerPool(queue,providers(),_execute)

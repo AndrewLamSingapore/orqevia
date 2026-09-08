@@ -416,6 +416,12 @@ class ActionHarness:
                 db.execute("BEGIN IMMEDIATE")
                 lease_id = authorization["lease_id"]
                 # Recheck durable policy after taking the transaction lock.
+                # Lock contention must not let a lease expire after its first check.
+                current = (now or utcnow()).astimezone(timezone.utc)
+                error, privileged = self._validate(envelope, current)
+                if error:
+                    self._event(db, envelope, "execution.denied", {"reason": error})
+                    return HarnessDecision(False, "DENIED", error, lease_id)
                 policy = db.execute("SELECT version FROM harness_policy WHERE singleton=1").fetchone()
                 if not policy or policy[0] != authorization["policy_version"]:
                     return HarnessDecision(False, "DENIED", "policy version changed", lease_id)

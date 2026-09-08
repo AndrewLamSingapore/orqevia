@@ -92,6 +92,14 @@ def generate(value: dict[str, Any]) -> str:
         "PRIME may be declared aligned only after a post-update Dell `JARVIS.cmd status` acceptance check.",
         "",
     ])
+    review = value.get("premerge_review")
+    if review:
+        lines.extend(["## Pre-merge review (not deployed)", "",
+                      f"- PR: {review['pull_request']}",
+                      f"- State: {review['state']}",
+                      f"- Recommendation: **{review['recommendation']}**", ""])
+        lines.extend(f"- {blocker}" for blocker in review['blockers'])
+        lines.append("")
     return "\n".join(lines)
 
 
@@ -108,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
         if actual != expected:
             print(f"Generated checkpoint drift: {args.output}", file=sys.stderr)
             return 1
-        print("Generated checkpoint: CURRENT")
+        print(f"Generated checkpoint: CONSISTENT (operational status: {value['status']})")
         return 0
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(expected, encoding="utf-8")

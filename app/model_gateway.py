@@ -58,7 +58,7 @@ class ModelGateway:
 
     @property
     def frontier_available(self) -> bool:
-        return bool(self.frontier_url and self.frontier_key and self.frontier_model)
+        return False  # No governed cloud executor in Harness v0.
 
     def manifest(self) -> dict[str, Any]:
         readiness = self.settings.ollama_readiness()
@@ -84,9 +84,8 @@ class ModelGateway:
 
     @staticmethod
     def _post(url: str, payload: dict[str, Any], headers: dict[str, str], timeout: float) -> dict[str, Any]:
-        request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json", **headers}, method="POST")
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return json.loads(response.read().decode("utf-8"))
+        from .inference_boundary import deny_legacy_inference
+        deny_legacy_inference()
 
     def local(self, *, prompt: str, deep: bool = False, role: str | None = None,
               task_id: str | None = None, stage: str = "local_ai", timeout: float = 120.0) -> ModelResult:
