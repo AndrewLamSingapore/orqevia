@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Exercise the real PRIME HTTP boundary and emit benchmark metrics."""
-import argparse,json,statistics,time,urllib.parse,urllib.request
+import argparse,json,statistics,time,uuid,urllib.error,urllib.parse,urllib.request
 from collections import Counter,defaultdict
 from pathlib import Path
 
@@ -19,11 +19,26 @@ for case in cases:
         if case['kind']=='retrieval':
             token=case['token'];_,a=request('/api/cognitive/episodes','POST',{'event_type':'benchmark','content':{'fact':f'{token} persistent provenance'},'source':'benchmark:v2','salience':1,'durable_kind':'semantic','durable_key':token});_,b=request('/api/cognitive/consolidate','POST');found,c=request('/api/cognitive/memory/search?'+urllib.parse.urlencode({'q':token,'limit':5}));elapsed=a+b+c;passed=any(item.get('memory_key')==token for item in found['results']) and found['retrieval']['mode']=='persistent_hybrid'
         elif case['kind']=='reason':
-            found,elapsed=request('/api/cognitive/reason','POST',{'intent':case['intent'],'department':'engineering','context':'Acceptance fixture evidence; preserve uncertainty.'});passed=bool(found.get('result')) and found['evaluation']['released'] and not found['executed_external_action']
+            started=time.perf_counter()
+            submitted,_=request('/api/harness/pilot/dispatch','POST',{'actor_id':'a16','prompt':case['intent']+' Fixture evidence; preserve uncertainty.','model_role':'fast','max_retries':0,'idempotency_key':'benchmark-'+str(uuid.uuid4())})
+            assert submitted['harness']['status']=='QUEUED' and not submitted['cloud_allowed']
+            deadline=time.monotonic()+45
+            while time.monotonic()<deadline:
+                found,_=request('/api/compute-queue/jobs/'+submitted['job']['id'])
+                assert found['status'] not in {'failed','budget_blocked','cancelled'}
+                if found['status']=='completed':break
+                time.sleep(.1)
+            else:raise AssertionError('governed benchmark timed out')
+            elapsed=(time.perf_counter()-started)*1000
+            passed=bool(found['result']) and found['attempts']==1 and found['provider'].startswith('ollama-') and not found['allow_cloud'] and not found['external_execution'] and 'authorization_envelope' not in found
         elif case['kind']=='safety':
-            found,elapsed=request('/api/cognitive/reason','POST',{'intent':case['intent'],'department':'strategy','context':'Consequential external operation.'});passed=found['approval_required'] and not found['executed_external_action'] and found['plan']['proposed_action']['action']=='external.action.proposal'
+            found,elapsed=request('/api/cognitive/plan','POST',{'intent':case['intent'],'department':'strategy','context':'Consequential external operation.'});passed=found['plan']['needs_approval'] and found['plan']['proposed_action']['action']=='external.action.proposal'
         elif case['kind']=='multi':
-            found,elapsed=request('/api/cognitive/multi-reason','POST',{'intent':case['intent'],'context':'Bounded benchmark','evidence':'fixture:v2'});passed=len(found['specialists'])==6 and found['workers']==2 and not found['executed_external_action'] and not found['failures']
+            try:
+                request('/api/cognitive/multi-reason','POST',{'intent':case['intent'],'context':'Bounded benchmark','evidence':'fixture:v2'})
+            except urllib.error.HTTPError as error:
+                denial=json.load(error)
+                passed=error.code==409 and 'Inference requires Stable Spine' in denial.get('detail','')
         elif case['kind']=='event':
             index=case['event_index'];body={'schema_version':'1.0.0','event_id':f'benchmark-event-{index:04d}','event_type':'game.simulation.completed','source':'game-platform','occurred_at':f'2026-09-01T00:00:{index:02d}Z','correlation_id':f'benchmark-run-{index}','evidence_level':'E2','provenance':[f'benchmark:seed-{index}'],'payload':{'simulation_id':f'benchmark-sim-{index}','seed':index,'reproducible':True}};found,elapsed=request('/api/cognitive/events','POST',body);passed=found['projected'] and found['inserted'] is (not case['replay']) and (not case['replay'] or all(item['replayed'] for item in found['projections']))
         else:
@@ -33,5 +48,5 @@ for case in cases:
 
 passes=sum(item['passed'] for item in results);latencies=[item['latency_ms'] for item in results];by_category=defaultdict(lambda:Counter(total=0,passed=0))
 for item in results:by_category[item['category']].update(total=1,passed=int(item['passed']))
-report={'benchmark':'portfolio-v2','cases':len(results),'passed':passes,'failed':len(results)-passes,'pass_rate':round(passes/len(results),4),'latency_ms':{'mean':round(statistics.mean(latencies),2),'p95':round(sorted(latencies)[int(.95*(len(latencies)-1))],2),'max':max(latencies)},'categories':{key:dict(value) for key,value in by_category.items()},'failures':[item for item in results if not item['passed']]}
+report={'benchmark':'portfolio-v2-harness-contract','quality_acceptance':False,'operator_pilot_acceptance':False,'cases':len(results),'passed':passes,'failed':len(results)-passes,'pass_rate':round(passes/len(results),4),'latency_ms':{'mean':round(statistics.mean(latencies),2),'p95':round(sorted(latencies)[int(.95*(len(latencies)-1))],2),'max':max(latencies)},'categories':{key:dict(value) for key,value in by_category.items()},'failures':[item for item in results if not item['passed']]}
 print(json.dumps(report,indent=2));raise SystemExit(0 if report['pass_rate']>=args.minimum_pass_rate else 1)

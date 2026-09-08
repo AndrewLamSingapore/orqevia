@@ -35,7 +35,37 @@ not runtime activity and does not imply 29 concurrent model processes.
   is prohibited.
 - Local inference concurrency starts at one. Any increase to two requires
   monitored acceptance evidence and an explicit operator configuration change.
-- Cloud routing remains approval-gated and cost-capped.
+- Cloud overflow is disabled for Harness v0; the worker accepts only local providers.
+
+## Packaged release smoke contract
+
+The production image already includes the authenticated
+`POST /api/harness/pilot/dispatch` route, Stable Spine PDP, issuer, durable Harness
+PEP and startup queue worker. A supported request returns HTTP 202 with QUEUED;
+the client polls the protected job endpoint for completion. There is no new
+smoke executor, signing authority, whitelist or runtime test endpoint.
+
+While Harness mode is enabled, `/api/cognitive/reason` and
+`/api/cognitive/multi-reason` return HTTP 409 before any planning or specialist
+execution. The older synchronous success contract is obsolete in this mode.
+Rejecting only individual pilot starts was insufficient: multi-reason could
+otherwise execute other specialists before a pilot start failed.
+
+`scripts/verify_harness_release_smoke.py` runs inside a disposable CI container
+against the actual packaged HTTP routes and worker. It uses only a16 and a fake
+Ollama provider, checks legacy/direct-route rejection, submits one signed job,
+and verifies the complete envelope, signature, durable PDP reference, nonce,
+single consumption within TTL, ordered execution events and result digest via
+read-only ledger connections. Idempotent redispatch must fail; completion must
+not become verified. The script is supplied over stdin, not added to the image.
+
+The 50-case endpoint fixture retains retrieval, event replay and calibration
+checks. Its execution cases now measure governed queue completion, its safety
+cases measure non-executing proposals, and its former multi-specialist cases
+measure legacy-route denial. Categories and report identity explicitly reflect
+this changed contract; scores are not comparable to old reasoning-quality or
+multi-specialist acceptance scores. Neither the smoke nor this benchmark is the
+three-agent operator pilot, a quality-verification claim, or ABEX commissioning.
 
 ## Acceptance gates
 

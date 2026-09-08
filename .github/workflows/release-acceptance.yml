@@ -90,7 +90,10 @@ jobs:
             -e PRIME_FAST_MODEL=gemma3:1b \
             -e PRIME_DEEP_MODEL=gemma3:1b \
             -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
-            -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
+            -e PRIME_MULTI_SPECIALIST_WORKERS=1 \
+            -e PRIME_HARNESS_PILOT_ENABLED=1 \
+            -e PRIME_QUEUE_CONCURRENCY=1 \
+            -e OLLAMA_NUM_PARALLEL=1 \
             -e PRIME_SPINE_TOKEN=acceptance-secret \
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
@@ -149,24 +152,16 @@ jobs:
           assert plan['plan']['proposed_action']['action']=='external.action.proposal'
           assert plan['plan']['reasoning_route']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
           assert plan['plan']['reasoning_route']['approval_required'] is True
-          status, reason=request('/api/cognitive/reason', method='POST', body={'intent':'Review release acceptance architecture','department':'engineering','context':'Use the saved release acceptance evidence.'})
-          assert status==200 and reason['result'] and reason['evaluation']['released'] is True
-          assert reason['confidence_hold']['held'] is False
-          assert reason['executed_external_action'] is False
-          status, multi=request('/api/cognitive/multi-reason', method='POST', body={'intent':'Evaluate the bounded release design','context':'Container acceptance','evidence':'Deterministic fixture'})
-          assert status==200 and multi['workers']==2 and len(multi['specialists'])==6
-          assert multi['critic']['stage']=='specialist_critique' and multi['synthesis']['stage']=='specialist_synthesis'
           status, event=request('/api/cognitive/events', method='POST', body={'schema_version':'1.0.0','event_id':'acceptance-event-0001','event_type':'game.simulation.completed','source':'game-platform','occurred_at':'2026-09-01T00:00:00Z','correlation_id':'acceptance-run-0001','evidence_level':'E2','provenance':['acceptance:seed-1'],'payload':{'simulation_id':'acceptance-sim','scenario':'bounded'}})
           assert status==200 and event['inserted'] and event['projected']
           status, reviews=request('/api/cognitive/event-reviews')
           assert status==200 and any(item['event_id']=='acceptance-event-0001' and item['status']=='pending' for item in reviews['reviews'])
           status, graph=request('/api/cognitive/semantic-graph')
           assert status==200 and any(item['last_event_id']=='acceptance-event-0001' for item in graph['nodes'])
-          status, compute=request('/api/cognitive/compute')
-          stages={item['stage'] for item in compute['events']}
-          assert {'local_ai','answer_evaluation','specialist_critique','specialist_synthesis'} <= stages
           PY
-      - name: Execute the 50-case endpoint benchmark
+      - name: Verify packaged governed execution and durable audit
+        run: docker exec -i prime-acceptance python - < scripts/verify_harness_release_smoke.py
+      - name: Execute the 50-case governed endpoint contract benchmark
         run: python benchmarks/run_endpoint.py --base-url http://127.0.0.1:18000 --token acceptance-secret --minimum-pass-rate 1.0
       - name: Verify persistence across restart
         run: |
@@ -179,7 +174,10 @@ jobs:
             -e PRIME_FAST_MODEL=gemma3:1b \
             -e PRIME_DEEP_MODEL=gemma3:1b \
             -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
-            -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
+            -e PRIME_MULTI_SPECIALIST_WORKERS=1 \
+            -e PRIME_HARNESS_PILOT_ENABLED=1 \
+            -e PRIME_QUEUE_CONCURRENCY=1 \
+            -e OLLAMA_NUM_PARALLEL=1 \
             -e PRIME_SPINE_TOKEN=acceptance-secret \
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \

@@ -27,6 +27,11 @@ def require_token(authorization:str|None)->None:
     if not expected: raise HTTPException(status_code=503,detail="Cognitive authentication is not configured")
     if not supplied or not hmac.compare_digest(supplied,expected): raise HTTPException(status_code=401,detail="Cognitive authorization required")
 
+def require_legacy_inference_disabled_in_harness_mode()->None:
+    # Reject before planning or partial specialist execution can call a model.
+    if os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower() in {"1", "true", "yes", "on"}:
+        raise HTTPException(status_code=409, detail="Inference requires Stable Spine and /api/harness/pilot/dispatch")
+
 @router.post("/episodes")
 def record_episode(request:EpisodeRequest,authorization:str|None=Header(default=None)):
     require_token(authorization)
@@ -47,12 +52,14 @@ def cognitive_plan(request:PlanRequest,authorization:str|None=Header(default=Non
 @router.post("/reason")
 def cognitive_reason(request:ExecuteRequest,authorization:str|None=Header(default=None)):
     require_token(authorization)
+    require_legacy_inference_disabled_in_harness_mode()
     try:return {"ok":True,**orchestrator.execute(**request.model_dump())}
     except ValueError as e:raise HTTPException(status_code=422,detail=str(e)) from e
     except RuntimeError as e:raise HTTPException(status_code=503,detail=str(e)) from e
 @router.post("/multi-reason")
 def multi_reason(request:MultiRequest,authorization:str|None=Header(default=None)):
     require_token(authorization)
+    require_legacy_inference_disabled_in_harness_mode()
     try:return {"ok":True,**multi.run(**request.model_dump())}
     except RuntimeError as e:raise HTTPException(status_code=503,detail=str(e)) from e
 @router.post("/events")
