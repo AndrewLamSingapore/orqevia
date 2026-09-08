@@ -3,6 +3,33 @@
 Recommendation: **HOLD**. This is branch evidence, not deployed behavior or a
 claim of estate-wide admission. Operational STALE is retained.
 
+## Completed owner provenance supplement after 8bb26a1
+
+The owner supplied the previously requested PRIME digest, revision, settings and
+volume mount. The current record is `evidence/dell-owner-runtime-20260908.json`;
+the earlier sections below remain historical review snapshots.
+
+PRIME is reported as c449dd1c8e22976c97507733201807d4d73bf92e with registry digest
+ghcr.io/andrewlamsingapore/prime@sha256:e655f15a05f40272a46b28a6f7a25e7d6b58d20c6dbd5b96d8683a43a7a130e1.
+The named prime-data volume is mounted read/write at /data. Queue and per-agent
+concurrency are 1; the Harness pilot flag is 1; frontier and cloud GPU URLs are
+reported unconfigured. These facts identify the existing runtime and configuration,
+not deployment of this PR or enforcement of its execution-boundary changes.
+
+Docker Ollama has NUM_PARALLEL=1, MAX_LOADED_MODELS=3 and MAX_QUEUE=256, with no
+host-published port on prime_default. NUM_PARALLEL limits requests per model;
+multiple loaded models are a separate concurrency dimension. Thus these settings
+do not prove an aggregate one-slot provider boundary. See the [official Ollama
+FAQ](https://docs.ollama.com/faq). No simultaneous execution count was measured.
+The independent native listener at 127.0.0.1:11434 and copied-checkpoint replay
+remain hard HOLDs. No process, firewall, deployment or provider was modified.
+
+This closes the missing owner-evidence fields for image/configuration/mounts.
+It does not prove historical data continuity, independent image-content attestation,
+current authority fencing or estate-wide admission. The SSOT authority description
+now explicitly states the required boundary and unmerged deployment state, instead
+of treating a pilot flag as proof of active execution-time enforcement.
+
 ## Completion recovery and owner evidence after 4cb5de4
 
 The owner reports native Ollama PID 13544 listening on 127.0.0.1:11434.

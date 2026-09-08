@@ -1,5 +1,5 @@
 {
-  "source": "owner report of completed pr59-runtime-readonly.ps1; raw full output not supplied",
+  "source": "owner-supplied allowlisted output from successful pr59-runtime-readonly.ps1; not an independent agent attestation",
   "recorded_at_utc": "2026-09-08T03:47:53Z",
   "collection_observed_at_utc": null,
   "script_completed_without_error": true,
@@ -14,17 +14,70 @@
     "host_publication": false,
     "network": "prime_default",
     "image_digest": "ollama/ollama@sha256:075246f72d4109385b4a01c3ac8e9cbd26a0bcb21cd7aa30edbccd24e1b3180c",
-    "isolation_state": "SHARED_DEFAULT_NETWORK_NOT_PROPOSED_INFERENCE_NETWORK"
+    "isolation_state": "SHARED_DEFAULT_NETWORK_NOT_PROPOSED_INFERENCE_NETWORK",
+    "settings": {
+      "OLLAMA_MAX_QUEUE": 256,
+      "OLLAMA_NUM_PARALLEL": 1,
+      "OLLAMA_MAX_LOADED_MODELS": 3
+    }
   },
   "prime_data": {
     "directory": "/data",
-    "nonempty_files": ["prime-spine.db", "action-harness.db", "compute-queue.db", "jarvis-memory.db"],
-    "historical_continuity_proven": false
+    "nonempty_files": [
+      "prime-spine.db",
+      "action-harness.db",
+      "compute-queue.db",
+      "jarvis-memory.db"
+    ],
+    "historical_continuity_proven": false,
+    "mount": {
+      "type": "volume",
+      "name": "prime-data",
+      "source": "/var/lib/docker/volumes/prime-data/_data",
+      "destination": "/data",
+      "driver": "local",
+      "mode": "rw",
+      "read_write": true
+    }
   },
-  "still_unprovided": ["PRIME image digest/current revision", "effective allowlisted concurrency/cloud settings", "current /data mount details"],
+  "still_unprovided": [],
   "checkpoint_replay_state": "HARD_HOLD_UNREPAIRED",
   "operational_status": "STALE",
   "production_modified": false,
   "working_tunnel_modified": false,
-  "pilot_run": false
+  "pilot_run": false,
+  "supplement_recorded_at_utc": "2026-09-08T03:56:21Z",
+  "prime": {
+    "container": "prime-prime-1",
+    "settings": {
+      "PRIME_AGENT_CONCURRENCY": 1,
+      "PRIME_DATA_DIR": "/data",
+      "PRIME_HARNESS_PILOT_ENABLED": 1,
+      "PRIME_FRONTIER_URL_CONFIGURED": false,
+      "PRIME_SPINE_DB": "/data/prime-spine.db",
+      "PRIME_QUEUE_CONCURRENCY": 1,
+      "PRIME_CLOUD_GPU_URL_CONFIGURED": false,
+      "PRIME_HARNESS_DB": "/data/action-harness.db"
+    },
+    "image": {
+      "id": "sha256:e655f15a05f40272a46b28a6f7a25e7d6b58d20c6dbd5b96d8683a43a7a130e1",
+      "repo_digests": [
+        "ghcr.io/andrewlamsingapore/prime@sha256:e655f15a05f40272a46b28a6f7a25e7d6b58d20c6dbd5b96d8683a43a7a130e1"
+      ],
+      "revision": "c449dd1c8e22976c97507733201807d4d73bf92e"
+    }
+  },
+  "remaining_unproved": [
+    "historical data continuity and resistance to restored checkpoints",
+    "single-slot admission across all providers and models",
+    "native Ollama isolation",
+    "current authority epoch/provider fence"
+  ],
+  "concurrency_assessment": {
+    "prime_queue_setting": 1,
+    "ollama_parallel_requests_per_model": 1,
+    "ollama_loaded_models_limit": 3,
+    "estate_one_slot_proven": false,
+    "documentation": "https://docs.ollama.com/faq"
+  }
 }

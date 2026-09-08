@@ -41,7 +41,7 @@
 - Last observed runtime: `c449dd1c8e22976c97507733201807d4d73bf92e`
 - Last status capture: `2026-09-07T07:12:00Z`
 - Post-update status: `false`
-- Result: Read-only status is healthy; last owner-recorded image/revision is c449dd1. PR59 is unmerged and not deployed. Effective ingress, native/Docker concurrency and persistent-data continuity remain unverified.
+- Result: Owner reports c449dd1 image/revision, PRIME queue/agent concurrency 1, both cloud adapter URLs unconfigured, and persistent prime-data mounted at /data. PR59 remains unmerged/not deployed. Native Ollama, shared Docker network and restored-checkpoint replay remain hard HOLDs; aggregate concurrency and data continuity are not proved.
 
 ## Published software and remaining implementation
 
@@ -66,7 +66,7 @@
 - `pr59_unmerged_not_deployed`
 - `estate_inference_admission_unverified`
 - `native_ollama_admission_unverified`
-- `dell_effective_configuration_unverified`
+- `estate_single_slot_unproved`
 - `cloud_inference_ingress_unverified`
 - `sky_runtime_revision_unverified`
 - `operator_pilot_acceptance_pending`
@@ -86,5 +86,5 @@ Re-run the live verifier before relying on this checkpoint. A manifest older tha
 - Owner confirms native Ollama 127.0.0.1:11434 and Docker Ollama on prime_default. Live isolated admission is not established; native isolation is a hard HOLD.
 - PRIME-controlled legacy inference transports are denied; independent cloud ingress/provider effects still lack an estate-wide authority/egress proof.
 - New completion-to-queue reconstruction is implemented; legacy/missing-queue reconciliation and provider-side uncertain outcome fencing remain incomplete.
-- Owner supplied Docker Ollama digest and non-empty /data files. PRIME digest, effective settings, current mount details and historical continuity remain unprovided/unproved.
+- Owner-reported PRIME and Ollama digests, exact PRIME revision, queue/cloud settings and /data mount are now recorded. Historical continuity and estate-wide admission remain unproved; NUM_PARALLEL=1 with MAX_LOADED_MODELS=3 is not an aggregate one-slot fence.
 - Local Dell/Library mirrors, deployment/post-deployment evidence and operator pilot acceptance remain pending. ABEX, AgentScope/Hermes and VELYQUA hardware/predictive ML remain pending.

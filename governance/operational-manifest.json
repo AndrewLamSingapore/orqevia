@@ -17,7 +17,7 @@
       "pr59_unmerged_not_deployed",
       "estate_inference_admission_unverified",
       "native_ollama_admission_unverified",
-      "dell_effective_configuration_unverified",
+      "estate_single_slot_unproved",
       "cloud_inference_ingress_unverified",
       "sky_runtime_revision_unverified",
       "operator_pilot_acceptance_pending",
@@ -147,13 +147,14 @@
       "published_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
       "runtime": "private-dell-docker",
       "state": "OWNER_RECORDED_C449DD1_RUNTIME_PR59_UNMERGED",
-      "authority": "Stable Spine sole PDP; Harness v0 PEP active for a14, a16 and a21; inference-only; external actions remain approval-gated",
+      "authority": "REQUIRED: Stable Spine sole PDP -> Harness PEP -> signed execution admission. Owner reports pilot flag enabled on c449dd1; PR59 enforcement is unmerged/not deployed and estate authority remains unproved.",
       "note": "source_head_sha is live-resolved because a Git-tracked manifest cannot contain the SHA of its own commit.",
       "source_verified_at_utc": "2026-09-07T07:05:23Z",
       "remote_health": "HEALTHY_READ_ONLY_TUNNEL_VERIFIED",
       "remote_checked_at_utc": "2026-09-07T06:11:00Z",
       "publication_workflow_run": 34093768658,
-      "publication_verified_at_utc": "2026-09-07T07:07:00Z"
+      "publication_verified_at_utc": "2026-09-07T07:07:00Z",
+      "prior_authority_description": "Stable Spine sole PDP; Harness v0 PEP active for a14, a16 and a21; inference-only; external actions remain approval-gated"
     },
     "velyqua": {
       "role": "independent hardware-agnostic living-water intelligence",
@@ -210,7 +211,7 @@
     "verified_at_utc": "2026-09-07T07:12:00Z",
     "accepted": false,
     "post_update_status": false,
-    "result": "Read-only status is healthy; last owner-recorded image/revision is c449dd1. PR59 is unmerged and not deployed. Effective ingress, native/Docker concurrency and persistent-data continuity remain unverified.",
+    "result": "Owner reports c449dd1 image/revision, PRIME queue/agent concurrency 1, both cloud adapter URLs unconfigured, and persistent prime-data mounted at /data. PR59 remains unmerged/not deployed. Native Ollama, shared Docker network and restored-checkpoint replay remain hard HOLDs; aggregate concurrency and data continuity are not proved.",
     "evidence": {
       "status_capture_library_file_id": "libfile_309baa13bf38819186c7c9d2209532f0",
       "status_capture_title": "IMG_5603.jpeg",
@@ -250,7 +251,8 @@
           "executed": 0,
           "revoked": 0
         }
-      }
+      },
+      "status_capture_scope": "HISTORICAL_CAPTURE_NOT_PR59_DEPLOYMENT_EVIDENCE"
     },
     "rollback": "Prior Docker image and persistent data are retained; no reinstall, volume deletion, or rollback was performed.",
     "last_benchmarked_acceleration": {
@@ -325,20 +327,41 @@
       "image_ref": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
       "local_image_id": "sha256:e655f15a05f40272a46b28a6f7a25e7d6b58d20c6dbd5b96d8683a43a7a130e1",
       "revision_label": "c449dd1c8e22976c97507733201807d4d73bf92e",
-      "repo_digests": null,
+      "repo_digests": [
+        "ghcr.io/andrewlamsingapore/prime@sha256:e655f15a05f40272a46b28a6f7a25e7d6b58d20c6dbd5b96d8683a43a7a130e1"
+      ],
       "image_created_at": null,
       "started_at": "2026-09-08T00:38:37.718375132Z",
       "mount": {
+        "type": "volume",
         "name": "prime-data",
+        "source": "/var/lib/docker/volumes/prime-data/_data",
         "destination": "/data",
+        "driver": "local",
+        "mode": "rw",
         "read_write": true
       },
       "published_port": "127.0.0.1:8000",
       "limitations": [
+        "Owner-supplied inspect output, not independent image-content attestation.",
+        "Image creation time and collection timestamp not supplied; no value inferred.",
+        "Environment settings do not prove execution-time enforcement, estate-wide concurrency, native isolation or historical continuity."
+      ],
+      "historical_projection_limitations": [
         "Image inspection projection returned null Id/RepoDigests/Created. Earlier container .Image is retained; null is not evidence of no registry digest.",
         "Full revision is owner-reported OCI label, not an independent image-content attestation.",
         "Current effective policy settings, data continuity and proxy ingress remain unverified."
-      ]
+      ],
+      "settings": {
+        "PRIME_AGENT_CONCURRENCY": 1,
+        "PRIME_DATA_DIR": "/data",
+        "PRIME_HARNESS_PILOT_ENABLED": 1,
+        "PRIME_FRONTIER_URL_CONFIGURED": false,
+        "PRIME_SPINE_DB": "/data/prime-spine.db",
+        "PRIME_QUEUE_CONCURRENCY": 1,
+        "PRIME_CLOUD_GPU_URL_CONFIGURED": false,
+        "PRIME_HARNESS_DB": "/data/action-harness.db"
+      }
     },
     "process_observation": {
       "observed_date": "2026-09-08",
@@ -347,7 +370,8 @@
       "native_ollama_pid": 13544,
       "native_ollama_started_local": "2026-09-08T08:39:30.5309571+08:00",
       "limitation": "Presence proves neither active inference nor shared admission. No process was modified."
-    }
+    },
+    "owner_runtime_evidence": "governance/evidence/dell-owner-runtime-20260908.json"
   },
   "github_hygiene": {
     "branch_inventory": {
@@ -683,7 +707,7 @@
     "pull_request": "https://github.com/AndrewLamSingapore/prime/pull/59",
     "branch": "codex/harness-execution-boundary-20260908",
     "head_resolution": "PR59 head; never the runtime revision",
-    "reviewed_prior_head": "4cb5de41666617d4a9fcc1eb0d38afa6db427f53",
+    "reviewed_prior_head": "8bb26a180b0507bcdc334e29e89bc0880575cb31",
     "main_observed_sha": "b999caabbe3371b0e1c333721bf59ea0f669f666",
     "state": "DRAFT_UNMERGED_NOT_DEPLOYED",
     "recommendation": "HOLD",
@@ -693,7 +717,7 @@
       "Owner confirms native Ollama 127.0.0.1:11434 and Docker Ollama on prime_default. Live isolated admission is not established; native isolation is a hard HOLD.",
       "PRIME-controlled legacy inference transports are denied; independent cloud ingress/provider effects still lack an estate-wide authority/egress proof.",
       "New completion-to-queue reconstruction is implemented; legacy/missing-queue reconciliation and provider-side uncertain outcome fencing remain incomplete.",
-      "Owner supplied Docker Ollama digest and non-empty /data files. PRIME digest, effective settings, current mount details and historical continuity remain unprovided/unproved.",
+      "Owner-reported PRIME and Ollama digests, exact PRIME revision, queue/cloud settings and /data mount are now recorded. Historical continuity and estate-wide admission remain unproved; NUM_PARALLEL=1 with MAX_LOADED_MODELS=3 is not an aggregate one-slot fence.",
       "Local Dell/Library mirrors, deployment/post-deployment evidence and operator pilot acceptance remain pending. ABEX, AgentScope/Hermes and VELYQUA hardware/predictive ML remain pending."
     ],
     "remediation_evidence": "governance/evidence/admission-remediation-20260908.json",
