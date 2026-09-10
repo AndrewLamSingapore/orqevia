@@ -37,7 +37,9 @@ jobs:
       - name: Install source test dependencies
         run: python -m pip install -r requirements-witness-dev.txt
       - name: Run the complete source suite
-        run: python -m pytest -q
+        run: python -m pytest -q --junitxml="${{ runner.temp }}/prime-acceptance.xml"
+      - name: Build scoped acceptance evidence without promoting blocked phases
+        run: python scripts/build_acceptance_matrix.py --junit "${{ runner.temp }}/prime-acceptance.xml" --output "${{ runner.temp }}/prime-acceptance-evidence"
       - name: Verify canonical generated contract copies
         run: python scripts/verify_portfolio_contracts.py
       - name: Verify canonical operational manifest and truthful state

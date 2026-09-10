@@ -1,0 +1,389 @@
+{
+  "schema_version": "acceptance-inventory.v1",
+  "scope": "Reporting only; does not modify frozen specifications or grant authority",
+  "items": [
+    {
+      "item": "Authority Plane",
+      "phase": 1,
+      "tests": [
+        "tests.test_development_witness",
+        "tests.test_inference_ingress"
+      ],
+      "remaining_limitation": "Real surviving root, provider isolation and estate-wide single-TAP qualification are unavailable.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Stable Spine",
+      "phase": 1,
+      "tests": [
+        "tests.test_stable_spine"
+      ],
+      "remaining_limitation": "Real-host authority acceptance pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Harness",
+      "phase": 3,
+      "tests": [
+        "tests.test_action_harness",
+        "tests.test_harness_execution"
+      ],
+      "remaining_limitation": "Operator pilot and real provider qualification pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Executor isolation",
+      "phase": 1,
+      "tests": [
+        "tests.test_inference_ingress",
+        "tests.test_development_witness_process"
+      ],
+      "remaining_limitation": "Synthetic isolation does not establish actual OS/provider isolation.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Action Envelopes",
+      "phase": 1,
+      "tests": [
+        "tests.test_action_harness"
+      ],
+      "remaining_limitation": "Real-host signing/time custody acceptance pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Replay protection",
+      "phase": 1,
+      "tests": [
+        "tests.test_harness_process_recovery",
+        "tests.test_development_witness"
+      ],
+      "remaining_limitation": "Physical clone/exclusive-admission qualification pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Execution-time revalidation",
+      "phase": 1,
+      "tests": [
+        "tests.test_harness_execution"
+      ],
+      "remaining_limitation": "Real-host execution boundary not qualified.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Compute Routing",
+      "phase": 2,
+      "tests": [
+        "tests.test_mandate_compute",
+        "tests.test_routing_policy"
+      ],
+      "remaining_limitation": "No registered deterministic contract currently means eligible local inference; this is not a general demonstration of inference need.",
+      "failure_class": "implementation_defect",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Deterministic-feasibility",
+      "phase": 2,
+      "tests": [
+        "tests.test_mandate_compute",
+        "tests.test_operator_health"
+      ],
+      "remaining_limitation": "Four exact contracts tested; broader deterministic-capability corpus and positive inference-need evidence remain incomplete.",
+      "failure_class": "implementation_defect",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Local inference",
+      "phase": 2,
+      "tests": [
+        "tests.test_harness_release_smoke"
+      ],
+      "remaining_limitation": "Real model adequacy and required hardware benchmark protocol/corpus unresolved.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Cloud inference",
+      "phase": 2,
+      "tests": [
+        "tests.test_harness_api",
+        "tests.test_inference_ingress"
+      ],
+      "remaining_limitation": "Execution disabled by frozen Harness v0; authorized cloud enablement is outside this pilot.",
+      "failure_class": "frozen_scope",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "NOT_APPLICABLE"
+    },
+    {
+      "item": "Token/cost accounting",
+      "phase": 2,
+      "tests": [
+        "tests.test_compute_ledger",
+        "tests.test_mandate_compute"
+      ],
+      "remaining_limitation": "Real-provider billing/accounting reconciliation pending; unavailable values remain unknown.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Scheduler",
+      "phase": 3,
+      "tests": [
+        "tests.test_job_queue"
+      ],
+      "remaining_limitation": "Actual estate-wide scheduling and host exclusion remain unqualified.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Concurrency",
+      "phase": 3,
+      "tests": [
+        "tests.test_job_queue",
+        "tests.test_development_witness_process"
+      ],
+      "remaining_limitation": "Single process/fixture limits do not prove one slot across the estate.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Agent orchestration",
+      "phase": 3,
+      "tests": [
+        "tests.test_mandate_compute"
+      ],
+      "remaining_limitation": "Only three pilot roles; general high-level task decomposition and owner outcomes not complete.",
+      "failure_class": "implementation_defect",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Event Bus",
+      "phase": 4,
+      "tests": [
+        "tests.test_observation_integration",
+        "tests.test_portal_integration"
+      ],
+      "remaining_limitation": "Production event durability/retention acceptance pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Decision/Event Ledger",
+      "phase": 4,
+      "tests": [
+        "tests.test_stable_spine",
+        "tests.test_acceptance_health_recovery"
+      ],
+      "remaining_limitation": "Real-host mandatory ledger, retention and recovery verification pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Health model",
+      "phase": 4,
+      "tests": [
+        "tests.test_operator_health",
+        "tests.test_acceptance_health_recovery"
+      ],
+      "remaining_limitation": "Read-only runtime observations are not live production qualification or automated recovery control.",
+      "failure_class": "implementation_defect",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Autonomous recovery",
+      "phase": 5,
+      "tests": [
+        "tests.test_worker_recovery",
+        "tests.test_acceptance_health_recovery"
+      ],
+      "remaining_limitation": "Queue recovery tested; full bounded service crash-loop/rollback/safe-resume implementation and host checks incomplete.",
+      "failure_class": "implementation_defect",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Offline Companion",
+      "phase": 6,
+      "tests": [],
+      "remaining_limitation": "companion-node.v1.yaml and subsequent frozen files are EXTERNAL DESIGN ARTIFACTS / NOT YET MATERIALIZED IN THIS CHECKOUT.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Reconciliation",
+      "phase": 6,
+      "tests": [],
+      "remaining_limitation": "Identity > Export > Reconciliation > Verification; frozen reconciliation and verification contents absent.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Web3",
+      "phase": 7,
+      "tests": [
+        "tests.test_operator_health"
+      ],
+      "remaining_limitation": "Dedicated tier policy NOT YET MATERIALIZED / LOCATION UNRESOLVED. W3-01 remains test-only, zero funds.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "VELYQUA permitted scope",
+      "phase": 8,
+      "tests": [
+        "tests.test_velyqua_api",
+        "tests.test_observation_integration"
+      ],
+      "remaining_limitation": "Gate 1/2/3 and real ESP32 evidence boundary not yet qualified; predictive ML remains parked.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Operator interface",
+      "phase": 9,
+      "tests": [
+        "tests.test_control_surface_contract",
+        "tests.test_operator_health"
+      ],
+      "remaining_limitation": "High-level action interface conflicts with current frozen read-only/approval-recording ceiling; live layperson acceptance pending.",
+      "failure_class": "genuine_specification_conflict",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "CLI/operator commands",
+      "phase": 9,
+      "tests": [
+        "tests.test_runtime_operations_contract"
+      ],
+      "remaining_limitation": "Source checks available; live start/stop/restart/verify operator acceptance pending.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "ABEX deployment automation",
+      "phase": 10,
+      "tests": [
+        "tests.test_runtime_operations_contract"
+      ],
+      "remaining_limitation": "Existing review-only package lacks qualified production bootstrap and bounded supervisor adapters.",
+      "failure_class": "implementation_defect",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "ABEX real deployment",
+      "phase": 12,
+      "tests": [],
+      "remaining_limitation": "ABEX has not arrived; no commissioned host exists.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Reboot recovery",
+      "phase": 12,
+      "tests": [],
+      "remaining_limitation": "Actual ABEX startup/reboot/service recovery has not been exercised.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Security baseline",
+      "phase": 11,
+      "tests": [
+        "tests.test_inference_ingress",
+        "tests.test_no_auto_approval",
+        "tests.test_dependency_audit"
+      ],
+      "remaining_limitation": "Development fixtures and isolated OSV scan do not establish a full live estate security assessment.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Regression suite",
+      "phase": 11,
+      "tests": [
+        "tests.test_harness_release_smoke",
+        "tests.test_operator_health"
+      ],
+      "remaining_limitation": "Companion/Web3/real-host integrated acceptance unavailable; component passes do not override these gates.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    },
+    {
+      "item": "Documentation",
+      "phase": 9,
+      "tests": [
+        "tests.test_runtime_operations_contract"
+      ],
+      "remaining_limitation": "Candidate guides written; final installed-host instructions and owner acceptance depend on commissioning.",
+      "failure_class": "missing_dependency",
+      "lam_action_required": false,
+      "lam_action": "No new request now. Previously identified external dependencies remain pending.",
+      "status": "BLOCKED"
+    }
+  ]
+}
+

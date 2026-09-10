@@ -16,6 +16,17 @@ _lock = threading.Lock()
 _last_success = None
 
 
+def authority_configuration():
+    """Observe the pilot's existing configuration checks without creating it."""
+    token = os.getenv("PRIME_SPINE_TOKEN", "").strip()
+    explicit = os.getenv("PRIME_HARNESS_SIGNING_SECRET", "").strip()
+    return {
+        "configured": bool(token) and (not explicit or len(explicit.encode()) >= 32),
+        "pilot_enabled": os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower()
+        in {"1", "true", "yes", "on"},
+    }
+
+
 def read_store(path, queries):
     try:
         with closing(sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True, timeout=.15)) as db:
@@ -107,8 +118,7 @@ def snapshot():
                               {"usage": "SELECT count(*) AS recorded_events,sum(input_units) AS input_tokens,sum(output_units) AS output_tokens,count(input_units) AS input_samples,count(output_units) AS output_samples,sum(estimated_cost_usd) AS estimated_cost_usd,count(estimated_cost_usd) AS cost_samples FROM compute_events"}),
     }
     evidence = {"stores": stores,
-                "authority": {"configured": bool(os.getenv("PRIME_SPINE_TOKEN", "").strip()),
-                              "pilot_enabled": os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").lower() in {"1", "true", "yes", "on"}},
+                "authority": authority_configuration(),
                 "worker": compute_queue_api.pool.health(),
                 "local_ready": SETTINGS.ollama_readiness(timeout=2).get("ready") is True,
                 "work": {row["status"]: row["count"] for row in stores["queue"].get("counts", [])},
