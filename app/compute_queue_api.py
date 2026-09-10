@@ -74,11 +74,9 @@ def _infer(job: dict, provider: Provider) -> dict:
                 "keep_alive":SETTINGS.keep_alive,"options":{"num_ctx":SETTINGS.context_tokens,
                 "num_predict":SETTINGS.max_output_tokens}})
             r.raise_for_status(); payload=r.json()
+        result = _advisory_output(payload, provider.model)
         usage = {"input_tokens": _token_count(payload.get("prompt_eval_count")),
                  "output_tokens": _token_count(payload.get("eval_count"))}
-        result = payload.get("message", {}).get("content")
-        if not isinstance(result, str) or not result.strip():
-            raise ValueError("provider returned no answer")
         success = True
         return {"result": result, **usage, "actual_cost_usd": 0}
     except Exception as exc:
@@ -96,6 +94,30 @@ def _infer(job: dict, provider: Provider) -> dict:
                       "model_invocations": 1 if success else None, "model_attempts": 1,
                       "agent_invocations": 1, "error_type": error_type},
         )
+
+
+class ProviderToolCallRejected(ValueError):
+    """An advisory provider tried to return an unauthorized tool call."""
+
+
+def _advisory_output(payload, model: str) -> str:
+    # This endpoint requests text, never tools. Optional provider fields, when
+    # present, must agree with that request. Never interpret prose as authority.
+    if not isinstance(payload, dict):
+        raise ValueError("invalid provider response")
+    message = payload.get("message")
+    if (not isinstance(message, dict)
+            or ("done" in payload and payload["done"] is not True)
+            or ("model" in payload and payload["model"] != model)
+            or ("role" in message and message["role"] != "assistant")
+            or payload.get("error") is not None):
+        raise ValueError("invalid provider response")
+    if message.get("tool_calls") not in (None, []):
+        raise ProviderToolCallRejected("provider tool execution is not authorized")
+    result = message.get("content")
+    if not isinstance(result, str) or not result.strip():
+        raise ValueError("provider returned no answer")
+    return result
 
 
 def _token_count(value):
@@ -174,7 +196,12 @@ def metrics(authorization: str|None=Header(None)):
 
 
 def _public_job(job: dict) -> dict:
-    return {key: value for key, value in job.items() if key != "authorization_envelope"}
+    public = {key: value for key, value in job.items() if key != "authorization_envelope"}
+    # Completion records the compute task, never a narrated external action.
+    # Server-owned labels also cover historical results and cannot be supplied
+    # by the provider's text or by stored job fields.
+    public.update(result_kind="advisory", external_action_verified=False)
+    return public
 
 
 def start_compute_queue() -> None: pool.start()

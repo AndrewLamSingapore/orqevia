@@ -108,12 +108,14 @@ function Save-Checkpoint {
     $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMdd_HHmmssZ")
     $script:Checkpoint = Join-Path $base $stamp
     New-Item -ItemType Directory -Force -Path $script:Checkpoint | Out-Null
-    (Invoke-Docker -Arguments @("ps", "-a", "--no-trunc") -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "containers.txt")
+    # Never persist container commands or Config.Env: they may contain secrets.
+    (Invoke-Docker -Arguments @("ps", "-a", "--no-trunc", "--format", '{{.ID}} {{.Image}} {{.Status}} {{.Names}}') -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "containers.txt")
     (Invoke-Docker -Arguments @("volume", "ls") -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "volumes.txt")
     (Invoke-Docker -Arguments @("network", "ls") -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "networks.txt")
     $ids = @(Get-ContainerRows -All | ForEach-Object { $_.Id })
     if ($ids.Count -gt 0) {
-        (Invoke-Docker -Arguments (@("inspect") + $ids) -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "containers.inspect.json")
+        $safeFormat = '{"id":{{json .Id}},"name":{{json .Name}},"image":{{json .Image}},"mounts":{{json .Mounts}}}'
+        (Invoke-Docker -Arguments (@("inspect", "--format", $safeFormat) + $ids) -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "containers.recovery.jsonl")
     }
     Write-Step "Recovery inventory saved to $script:Checkpoint"
     return $script:Checkpoint

@@ -83,3 +83,24 @@ The existing five-attempt/backoff limit applies. Active recovery is DEGRADED;
 exhaustion is ACTION_REQUIRED. A process crash can still lose an unsaved in-memory
 result; this does not create permission to reuse consumed authority. Physical
 crash/reboot qualification remains in the owner-parked hardware track.
+
+## Advisory provider output
+
+The local worker validates the response object, message and nonempty text.
+Supplied completion, model and role fields must match the advisory request.
+Structured tool calls are rejected and recorded as ProviderToolCallRejected in
+the existing compute ledger, without recording provider text or tool arguments.
+Malformed replies fail the job; consumed authority is never automatically reused
+for a retry or cloud fallback. Existing uncertain-outcome handling remains intact.
+Job reads always label results advisory and external_action_verified=false.
+Model prose, including claims of completed actions or bypass suggestions, grants
+no authority and is never parsed into executable commands. This is structural
+validation and evidence labeling, not a claim of semantic truth verification.
+
+Recovery inventory now saves only container identities, images, mounts and
+basic inventory; it excludes container commands and environment configuration.
+Previously written inventories are not silently deleted and may still contain
+secrets. This inventory is not a database backup or an automated rollback
+contract. Updates must not be described as safely reversible across arbitrary
+schema or authority-state changes; qualified backup/restore and migration
+compatibility evidence are still required before enabling automatic rollback.

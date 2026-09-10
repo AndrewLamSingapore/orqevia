@@ -4,7 +4,7 @@ $tokens = $null
 $errors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot "jarvis.ps1"), [ref]$tokens, [ref]$errors)
 if ($errors.Count) { throw "Operator parse failed." }
-foreach ($name in @("Submit-Intent", "Restart-Jarvis")) {
+foreach ($name in @("Submit-Intent", "Restart-Jarvis", "Save-Checkpoint")) {
     $node = $ast.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq $name }, $true)
     . ([scriptblock]::Create($node.Extent.Text))
 }
@@ -62,3 +62,33 @@ Restart-Jarvis
 if ($script:starts -ne 1 -or $script:stops -ne 1) { throw "Idle restart did not use existing operator." }
 Write-Output "PASS: exact result, queued result, authenticated single submission, ambiguous-response no-retry, guarded restart."
 
+# Mock filesystem writes as well as Docker; this fixture creates no checkpoint.
+$script:Checkpoint = $null
+$script:saved = @{}
+function New-Item { param($ItemType, [switch]$Force, $Path) }
+function Write-Step {}
+function Set-Content {
+    param([Parameter(Position=0)]$Path, [Parameter(ValueFromPipeline=$true)]$Value)
+    process { $script:saved[$Path] = @($script:saved[$Path]) + $Value }
+}
+function Get-ContainerRows { param([switch]$All) return [pscustomobject]@{Id="fixture-container"} }
+function Invoke-Docker {
+    param([string[]]$Arguments, [switch]$AllowFailure)
+    if ($Arguments[0] -eq "inspect") {
+        if ($Arguments.Count -ne 4 -or $Arguments[1] -ne "--format" -or
+            $Arguments[2] -ne '{"id":{{json .Id}},"name":{{json .Name}},"image":{{json .Image}},"mounts":{{json .Mounts}}}') {
+            throw "Checkpoint inspection could expose secret configuration."
+        }
+        return '{"id":"fixture","image":"sha256:fixture","mounts":[]}'
+    }
+    if ($Arguments[0] -eq "ps" -and ($Arguments -notcontains "--format" -or
+        $Arguments[-1] -ne '{{.ID}} {{.Image}} {{.Status}} {{.Names}}')) {
+        throw "Checkpoint listing could expose command arguments."
+    }
+    return "fixture inventory"
+}
+Save-Checkpoint | Out-Null
+if ($script:saved.Count -ne 4 -or -not ($script:saved.Keys | Where-Object { $_ -like '*containers.recovery.jsonl' })) {
+    throw "Sanitized recovery inventory was not saved."
+}
+Write-Output "PASS: recovery inventory excludes container environment and command arguments."

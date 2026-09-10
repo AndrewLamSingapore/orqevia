@@ -122,7 +122,8 @@
       "item": "Local inference",
       "phase": 2,
       "tests": [
-        "tests.test_harness_release_smoke"
+        "tests.test_harness_release_smoke",
+        "tests.test_provider_output_boundary"
       ],
       "remaining_limitation": "Real model adequacy and required hardware benchmark protocol/corpus unresolved.",
       "failure_class": "missing_dependency",
