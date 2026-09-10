@@ -1,9 +1,13 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("start", "stop", "restart", "ask", "status", "doctor", "repair", "open", "update", "verify", "contract")]
+    [ValidateSet("start", "stop", "restart", "ask", "status", "doctor", "repair", "open", "update", "verify", "contract", "tunnel-supervise")]
     [string]$Action = "start",
     [string]$Image = "",
     [string]$Intent = "",
+    [string]$TunnelClient = "",
+    [string]$TunnelProfile = "",
+    [string]$TunnelProfileSha256 = "",
+    [string]$PythonExe = "python",
     [switch]$Tunnel,
     [switch]$NoOpen,
     [switch]$Diagnostics,
@@ -404,6 +408,14 @@ function Test-SourceContract {
 
 Set-Location $Root
 switch ($Action) {
+    "tunnel-supervise" {
+        if (-not $TunnelClient -or -not $TunnelProfile -or $TunnelProfileSha256 -notmatch '^[a-fA-F0-9]{64}$') {
+            throw "Tunnel supervision needs the existing client, approved profile and its verified SHA256. No new connection was created."
+        }
+        $evidence = Join-Path $env:LOCALAPPDATA "JARVIS\tunnel-supervision"
+        & $PythonExe (Join-Path $PSScriptRoot "supervise_tunnel.py") --binary $TunnelClient --profile $TunnelProfile --profile-sha256 $TunnelProfileSha256 --evidence-dir $evidence
+        if ($LASTEXITCODE -ne 0) { throw "Tunnel supervision stopped. Review its retained recovery evidence." }
+    }
     "start" { Start-Jarvis }
     "ask" { Submit-Intent }
     "restart" { Restart-Jarvis }

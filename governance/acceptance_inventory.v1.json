@@ -161,7 +161,8 @@
       "item": "Scheduler",
       "phase": 3,
       "tests": [
-        "tests.test_job_queue"
+        "tests.test_job_queue",
+        "tests.test_work_conserving_queue"
       ],
       "remaining_limitation": "Actual estate-wide scheduling and host exclusion remain unqualified.",
       "failure_class": "missing_dependency",
@@ -241,7 +242,8 @@
       "tests": [
         "tests.test_worker_recovery",
         "tests.test_acceptance_health_recovery",
-        "tests.test_completion_persistence_recovery"
+        "tests.test_completion_persistence_recovery",
+        "tests.test_tunnel_supervision"
       ],
       "remaining_limitation": "Result-save retries preserve completed work without repeating inference; conflicting or persistent failures exhaust safely. Full service/physical crash/reboot qualification remains in the owner-parked track.",
       "failure_class": "implementation_defect",

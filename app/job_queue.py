@@ -264,7 +264,9 @@ class JobQueue:
     def claim(self, worker_id: str, providers: list[Provider]) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
-            rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued' LIMIT 1000").fetchall()
+            # Eligibility and age-adjusted priority must see the whole queued
+            # set. A raw-priority prefix can hide runnable or aged work forever.
+            rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued'").fetchall()
             claim_time = time.time()
             rows=sorted(
                 rows,

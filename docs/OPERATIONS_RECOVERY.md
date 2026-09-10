@@ -1,5 +1,9 @@
 # Runtime observation and recovery
 
+Windows tunnel discovery, supervision, installation gates and T1–T6 procedures
+are in [TUNNEL_RECOVERY.md](TUNNEL_RECOVERY.md). Workstream prerequisites are in
+[the discovered-state report](../governance/RELIABILITY_DISCOVERY_20260910.md).
+
 This extends the existing PRIME architecture and operator, not the authority
 plane. Production remains HOLD. The read-only Control Surface boundaries,
 single-slot Harness pilot and consumed-authorization semantics are unchanged.

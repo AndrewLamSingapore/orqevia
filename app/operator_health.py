@@ -6,6 +6,7 @@ repair a ledger, invoke inference, consume a lease, or change a service.
 from __future__ import annotations
 
 import os
+import json
 import sqlite3
 import threading
 from contextlib import closing
@@ -14,6 +15,26 @@ from pathlib import Path
 
 _lock = threading.Lock()
 _last_success = None
+
+
+def tunnel_status(path):
+    if not path:
+        return {"state": "NOT_MONITORED"}
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(value["observed_at"])).total_seconds()
+        if not 0 <= age <= 45:
+            return {"state": "STALE"}
+        state = value["state"]
+        if state not in {"HEALTHY", "START", "STARTING", "WAIT", "WAITING_DEPENDENCY", "PROCESS_EXITED", "RESTART",
+                         "DEGRADED", "EXHAUSTED", "START_FAILED", "SUPERVISOR_FAILED"}:
+            raise ValueError("unknown state")
+        if state == "HEALTHY" and value.get("process_running") is not True:
+            state = "DEGRADED"
+        return {"state": state, "observed_at": value["observed_at"],
+                "process_running": value.get("process_running") is True}
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"state": "UNKNOWN"}
 
 
 def authority_configuration():
@@ -97,7 +118,17 @@ def interpret(evidence):
         items.append({"what_happened": "The checked runtime components are ready.",
                       "handled": "No runtime fault was found in this check.",
                       "affected": "No affected work was identified.", "action": "No action is required for these checks."})
-    return {"state": state, "attention": items, "ready_for_local_work": safe and state == "HEALTHY",
+    local_ready = safe and state == "HEALTHY"
+    tunnel = evidence.get("tunnel", {"state": "NOT_MONITORED"})
+    if tunnel["state"] not in {"NOT_MONITORED", "HEALTHY"}:
+        if state == "HEALTHY":
+            state, items = "DEGRADED", []
+        items.append({"what_happened": "Remote tunnel connectivity is unavailable or unverified.",
+                      "handled": "Transport recovery never restores expired or revoked permission.",
+                      "affected": "Remote access may wait; eligible local work remains independent.",
+                      "action": "Review tunnel recovery evidence if its bounded attempts are exhausted."})
+    return {"state": state, "attention": items, "ready_for_local_work": local_ready,
+            "tunnel": tunnel,
             "production_ready": False, "production_status": "Qualification is still pending.",
             "scope": "runtime_checks_only", "authority_granted": False,
             "priority_order": ["Work", "Web3", "VELYQUA"],
@@ -124,6 +155,7 @@ def snapshot():
                               {"usage": "SELECT count(*) AS recorded_events,sum(input_units) AS input_tokens,sum(output_units) AS output_tokens,count(input_units) AS input_samples,count(output_units) AS output_samples,sum(estimated_cost_usd) AS estimated_cost_usd,count(estimated_cost_usd) AS cost_samples FROM compute_events"}),
     }
     evidence = {"stores": stores,
+                "tunnel": tunnel_status(os.getenv("PRIME_TUNNEL_STATUS_FILE")),
                 "authority": authority_configuration(),
                 "worker": compute_queue_api.pool.health(),
                 "local_ready": SETTINGS.ollama_readiness(timeout=2).get("ready") is True,
