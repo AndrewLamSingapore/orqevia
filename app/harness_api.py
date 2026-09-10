@@ -108,6 +108,8 @@ def status(authorization: str | None = Header(default=None)):
 @router.post("/pilot/dispatch", status_code=202)
 def dispatch(body: PilotDispatch, authorization: str | None = Header(default=None)):
     spine_api.require_token(authorization)
+    if body.actor_id.strip().lower() not in HarnessPolicy().pilot_agents:
+        raise HTTPException(status_code=403, detail="Actor is outside the Harness v0 pilot")
     started = time.monotonic()
     route = assess(body.prompt)
     if route.resolution_path in {"deterministic", "reject"}:

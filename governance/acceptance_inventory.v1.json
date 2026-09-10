@@ -95,10 +95,11 @@
       "phase": 2,
       "tests": [
         "tests.test_mandate_compute",
-        "tests.test_routing_policy"
+        "tests.test_routing_policy",
+        "tests.test_inference_need"
       ],
-      "remaining_limitation": "No registered deterministic contract currently means eligible local inference; this is not a general demonstration of inference need.",
-      "failure_class": "implementation_defect",
+      "remaining_limitation": "Unknown commands now reject; explicit advisory-analysis contracts cover the three pilot domains. Real model adequacy and hardware benchmark qualification remain pending.",
+      "failure_class": "missing_dependency",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
       "status": "BLOCKED"
@@ -108,10 +109,11 @@
       "phase": 2,
       "tests": [
         "tests.test_mandate_compute",
-        "tests.test_operator_health"
+        "tests.test_operator_health",
+        "tests.test_inference_need"
       ],
-      "remaining_limitation": "Four exact contracts tested; broader deterministic-capability corpus and positive inference-need evidence remain incomplete.",
-      "failure_class": "implementation_defect",
+      "remaining_limitation": "Four exact computations and bounded advisory-analysis admission are tested. This is not general natural-language proof of inference necessity; broader capabilities require explicit contracts.",
+      "failure_class": "missing_dependency",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
       "status": "BLOCKED"
@@ -185,8 +187,8 @@
       "tests": [
         "tests.test_mandate_compute"
       ],
-      "remaining_limitation": "Only three pilot roles; general high-level task decomposition and owner outcomes not complete.",
-      "failure_class": "implementation_defect",
+      "remaining_limitation": "Three-role intent selection and the authenticated request menu are implemented. Nonpilot orchestration remains outside the frozen pilot scope.",
+      "failure_class": "frozen_scope",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
       "status": "BLOCKED"
@@ -307,7 +309,7 @@
       "tests": [
         "tests.test_runtime_operations_contract"
       ],
-      "remaining_limitation": "Source checks available; live start/stop/restart/verify operator acceptance pending.",
+      "remaining_limitation": "Request, status, verify and guarded idle restart use the existing operator. Fixture checks pass; real-host startup/restart and layperson acceptance remain pending.",
       "failure_class": "missing_dependency",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
@@ -386,4 +388,3 @@
     }
   ]
 }
-

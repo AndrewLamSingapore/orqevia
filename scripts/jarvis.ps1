@@ -1,8 +1,9 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("start", "stop", "status", "doctor", "repair", "open", "update", "verify", "contract")]
+    [ValidateSet("start", "stop", "restart", "ask", "status", "doctor", "repair", "open", "update", "verify", "contract")]
     [string]$Action = "start",
     [string]$Image = "",
+    [string]$Intent = "",
     [switch]$Tunnel,
     [switch]$NoOpen,
     [switch]$Diagnostics,
@@ -311,6 +312,61 @@ function Show-Status {
     }
 }
 
+function Submit-Intent {
+    if (-not $Intent) { $Intent = Read-Host "What would you like JARVIS to check or review?" }
+    if (-not $Intent.Trim()) { throw "No request was entered." }
+    $ownerToken = Get-EnvValue "PRIME_SPINE_TOKEN"
+    if (-not $ownerToken) { throw "JARVIS owner access is not configured. No request was sent." }
+    $headers = @{ Authorization = "Bearer $ownerToken" }
+    $requestId = [guid]::NewGuid().ToString()
+    $body = @{ intent = $Intent; correlation_id = $requestId; idempotency_key = $requestId } | ConvertTo-Json -Compress
+    try {
+        # Submit once. A lost response is not permission to duplicate work.
+        $reply = Invoke-RestMethod -Method Post -Uri "$LocalBase/api/harness/intent" -Headers $headers -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes($body)) -TimeoutSec 15
+    } catch {
+        throw "JARVIS could not confirm this request. Reference: $requestId. Do not resubmit automatically; check status. Unsupported requests need a bounded check or advisory review."
+    }
+    if ($reply.PSObject.Properties["result"]) { Write-Host $reply.result; return }
+    if ($reply.PSObject.Properties["status"]) {
+        Write-Host "PRIME: $($reply.status.state)"
+        foreach ($item in $reply.status.attention) { Write-Host $item.what_happened; Write-Host $item.action }
+        return
+    }
+    if (-not $reply.PSObject.Properties["job"]) { throw "JARVIS returned no recorded work reference." }
+    $jobId = [string]$reply.job.id
+    if ($jobId -notmatch '^[a-zA-Z0-9_-]+$') { throw "JARVIS returned an invalid work reference." }
+    Write-Host "JARVIS accepted the request. Work reference: $jobId"
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        try {
+            $job = Invoke-RestMethod -Method Get -Uri "$LocalBase/api/compute-queue/jobs/$jobId" -Headers $headers -TimeoutSec 8
+        } catch { throw "The recorded work could not be checked. Keep reference $jobId; do not submit it again." }
+        if ($job.status -eq "completed") { Write-Host $job.result; Write-Host "This is an advisory result, not action approval."; return }
+        if ($job.status -in @("failed", "cancelled", "awaiting_approval", "uncertain")) {
+            Write-Host "Work is $($job.status). Review its recorded evidence in JARVIS. It was not resubmitted."
+            return
+        }
+        Start-Sleep -Seconds 2
+    } while ((Get-Date) -lt $deadline)
+    Write-Host "Work remains recorded as $($job.status). Check JARVIS later using reference $jobId."
+}
+
+function Restart-Jarvis {
+    $summary = Get-Json "$LocalBase/api/control-surface/trusted/operator-status"
+    if ($summary.state -ne "HEALTHY" -or $summary.work_available -ne $true) {
+        throw "Restart held: safe, idle work state could not be verified."
+    }
+    foreach ($entry in $summary.work.PSObject.Properties) {
+        if ($entry.Name -notin @("completed", "failed", "cancelled") -and [int]$entry.Value -gt 0) {
+            throw "Restart held: recorded work is still pending. Let it finish or obtain a recovery review."
+        }
+    }
+    Assert-NativeInferenceIsolated
+    Assert-Docker
+    Invoke-Docker -Arguments (Get-ComposeArgs @("down", "--remove-orphans")) | Out-Null
+    Start-Jarvis
+}
+
 function Invoke-Doctor {
     Assert-Docker
     Write-Step "Validating Compose."
@@ -347,6 +403,8 @@ function Test-SourceContract {
 Set-Location $Root
 switch ($Action) {
     "start" { Start-Jarvis }
+    "ask" { Submit-Intent }
+    "restart" { Restart-Jarvis }
     "stop" { Assert-Docker; Invoke-Docker -Arguments (Get-ComposeArgs @("down", "--remove-orphans")) | Out-Null; Write-Host "JARVIS stopped. Volumes retained." -ForegroundColor Yellow }
     "status" { Show-Status }
     "doctor" { Invoke-Doctor }

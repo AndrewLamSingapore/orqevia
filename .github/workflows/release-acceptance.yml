@@ -40,6 +40,9 @@ jobs:
         run: python -m pytest -q --junitxml="${{ runner.temp }}/prime-acceptance.xml"
       - name: Build scoped acceptance evidence without promoting blocked phases
         run: python scripts/build_acceptance_matrix.py --junit "${{ runner.temp }}/prime-acceptance.xml" --output "${{ runner.temp }}/prime-acceptance-evidence"
+      - name: Verify operator requests with isolated service fixtures
+        shell: pwsh
+        run: ./scripts/test_operator_requests.ps1
       - name: Verify canonical generated contract copies
         run: python scripts/verify_portfolio_contracts.py
       - name: Verify canonical operational manifest and truthful state

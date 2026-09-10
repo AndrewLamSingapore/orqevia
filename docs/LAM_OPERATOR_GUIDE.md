@@ -14,7 +14,18 @@ reports what happened, what was handled, what is affected and whether you need
 to act. “Runtime checks passed” means those checks passed; it does not mean
 the ABEX or action authority has been qualified for production.
 
-**Tell it what to work on:** the current screen preserves its existing read-only
+**Ask JARVIS:** choose option 8 in the existing JARVIS menu. Enter a calculation,
+status question or advisory request such as "Review this architecture". You do
+not need to select an agent or model. Unsupported requests are rejected. JARVIS
+shows an immediate answer or checks recorded work for a result. A lost response
+does not cause another submission. Keep the displayed reference.
+
+Choose V to verify, or 9 for a guarded restart when status is healthy and no work
+is pending. These operations retain the existing startup safety checks. The
+restart check is an observation, not an atomic system-wide drain; real-host
+concurrent submission and restart acceptance remain part of commissioning.
+
+**The Control Surface:** the current screen preserves its existing read-only
 conversation and approval-recording limits. The new governed intent service is
 implemented for an eventual approved client, but the screen does not yet start
 autonomous work. “Check PRIME” and “What needs my attention?” are supported as

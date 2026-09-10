@@ -29,10 +29,11 @@ succeeded, not that production or a phase passed. Evidence labels remain
 IMPLEMENTED/FIXTURE_TESTED where supported. Existing hosted container evidence
 is separately INTEGRATION_TESTED against a synthetic provider, not HARDWARE_TESTED.
 
-Current substantive gaps include positive inference-need evidence beyond the
-four exact contracts, full bounded service supervision/rollback, the autonomous
-owner interface versus the frozen read-only ceiling, and qualified bootstrap
-adapters. These are not hidden behind the unavailable ABEX. The four Companion
+Unknown requests now reject instead of falling through to inference. Explicit
+advisory-analysis contracts cover the three existing pilot domains; these are
+bounded request contracts, not universal semantic understanding. Remaining gaps
+include full bounded service supervision/rollback, the autonomous owner interface
+versus the frozen read-only ceiling, and qualified bootstrap adapters. These are not hidden behind the unavailable ABEX. The four Companion
 specifications and unresolved Web3 tier policy remain external dependencies.
 Cloud execution is NOT_APPLICABLE only within the frozen disabled-cloud pilot.
 The incomplete full mandate must not be labeled IMPLEMENTATION COMPLETE.

@@ -115,4 +115,13 @@ def assess(prompt: str) -> Feasibility:
             return Feasibility("reject", "DETERMINISTIC_INPUT_LIMIT", "sha256.utf8.v1")
         result = hashlib.sha256(prompt[match.end():].encode("utf-8")).hexdigest()
         return Feasibility("deterministic", "DETERMINISTIC_CONTRACT_SATISFIED", "sha256.utf8.v1", result)
-    return Feasibility("local_inference", "NO_REGISTERED_DETERMINISTIC_CONTRACT")
+    # An unknown command is not evidence of inference need. The pilot admits
+    # only explicit advisory-analysis requests in its existing three domains.
+    # These request judgment over unstructured material, never execution.
+    analysis = re.match(r"(?:review|analy[sz]e|assess|inspect|check|explain|compare|estimate)\s+(.+)", text, re.I | re.S)
+    if analysis and re.search(
+        r"\b(?:architecture|design|tradeoffs?|evidence|uncertainty|dataset|identifiers|quality|cost|costs|budget|pricing)\b",
+        analysis.group(1), re.I,
+    ):
+        return Feasibility("local_inference", "EXPLICIT_PILOT_ADVISORY_ANALYSIS", "pilot.advisory.analysis.v1")
+    return Feasibility("reject", "INFERENCE_NEED_NOT_ESTABLISHED")
