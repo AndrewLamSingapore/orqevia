@@ -63,6 +63,12 @@ def interpret(evidence):
                       "handled": "PRIME stopped retrying the failed worker.",
                       "affected": "Some work may be waiting.",
                       "action": "Ask for a recovery review; completed work must not be repeated."})
+    elif worker.get("recovering_workers"):
+        state = "DEGRADED"
+        items.append({"what_happened": "PRIME is recovering from a temporary processing or record-store problem.",
+                      "handled": "Bounded recovery is underway. Reasoning is not repeated to repair a record-store failure.",
+                      "affected": "Some work is waiting while recovery is verified.",
+                      "action": "No action is required from you while these recovery attempts continue."})
     elif stores.get("compute", {}).get("ok") is not True:
         state = "DEGRADED"
         items.append({"what_happened": "PRIME could not verify its compute records.",

@@ -366,16 +366,45 @@ class WorkerPool:
     def health(self) -> dict:
         with self.lifecycle_lock:
             alive = sum(t.is_alive() for t in self.threads)
-            exhausted = sorted(k for k, v in self.recovery_failures.items() if v >= 5)
+            failures = self.recovery_failures.copy()
+            exhausted = sorted(k for k, v in failures.items() if v >= 5)
+            recovering = sorted(k for k, v in failures.items() if 0 < v < 5)
             return {"running_workers": alive, "configured_ceiling": self.queue.policy.global_concurrency,
                     "stopping": self.stop_event.is_set(), "recovery_exhausted": exhausted,
-                    "attention_required": bool(exhausted)}
+                    "attention_required": bool(exhausted), "recovering_workers": recovering}
+
+    def _save_completion(self, job: dict, result: dict) -> None:
+        try:
+            self.queue.finish(job["id"], **result)
+        except Exception:
+            # A commit can succeed before its acknowledgement/read fails. Only
+            # matching durable evidence for this same attempt settles ambiguity.
+            try:
+                saved = self.queue.get(job["id"])
+                expected = {"result": result.get("result", ""), "error": result.get("error", ""),
+                            "input_tokens": result.get("input_tokens"), "output_tokens": result.get("output_tokens"),
+                            "actual_cost_usd": max(0.0, float(result.get("actual_cost_usd", 0.0)))}
+                status = "failed" if expected["error"] else "completed"
+                if (isinstance(saved, dict) and saved.get("status") == status
+                        and saved.get("attempts") == job.get("attempts")
+                        and saved.get("completed_at")
+                        and all(saved.get(key) == value for key, value in expected.items())):
+                    return
+            except Exception:
+                pass
+            raise
 
     def _run(self, worker_id: str) -> None:
         failures = 0
         pending_recovery = []
+        pending_completion = None
         while not self.stop_event.wait(.5):
             try:
+                if pending_completion is not None:
+                    # Flush the already-produced result before expiring leases
+                    # or claiming another job. Never repeat provider execution.
+                    self._save_completion(*pending_completion)
+                    pending_completion = None
                 self.queue.recover_expired()
                 # Persist outage evidence before admitting more work. The list
                 # is bounded by the five-attempt circuit; logs survive DB loss.
@@ -395,7 +424,9 @@ class WorkerPool:
                         result = {"error": type(exc).__name__}
                     # A finish failure is a bookkeeping fault, never permission
                     # to invoke the provider again or replace a completed result.
-                    self.queue.finish(job["id"], **result)
+                    pending_completion = (job, result)
+                    self._save_completion(job, result)
+                    pending_completion = None
                 failures = 0
                 self.recovery_failures[worker_id] = 0
             except Exception as exc:

@@ -71,3 +71,15 @@ its addenda and complete ABEX Workload Corpus were not identified in this checko
 Do not label the endpoint fixture as that frozen hardware protocol. Actual ABEX
 benchmarking, service reboot/rollback, protected-root and provider isolation
 qualification remain pending.
+
+## Result persistence recovery
+
+The worker keeps at most one completed result pending in memory while it retries
+saving it through the existing queue. It flushes that result before expiring
+leases or claiming more work. It never invokes inference to repair a save.
+A lost completion acknowledgement is settled only by matching durable status,
+attempt number, result, usage and cost. Conflicting records are not overwritten.
+The existing five-attempt/backoff limit applies. Active recovery is DEGRADED;
+exhaustion is ACTION_REQUIRED. A process crash can still lose an unsaved in-memory
+result; this does not create permission to reuse consumed authority. Physical
+crash/reboot qualification remains in the owner-parked hardware track.

@@ -225,9 +225,10 @@
       "phase": 4,
       "tests": [
         "tests.test_operator_health",
-        "tests.test_acceptance_health_recovery"
+        "tests.test_acceptance_health_recovery",
+        "tests.test_completion_persistence_recovery"
       ],
-      "remaining_limitation": "Read-only runtime observations are not live production qualification or automated recovery control.",
+      "remaining_limitation": "Active bounded recovery is DEGRADED and exhaustion requires attention. Live production health and host qualification remain in the owner-parked track.",
       "failure_class": "implementation_defect",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
@@ -238,9 +239,10 @@
       "phase": 5,
       "tests": [
         "tests.test_worker_recovery",
-        "tests.test_acceptance_health_recovery"
+        "tests.test_acceptance_health_recovery",
+        "tests.test_completion_persistence_recovery"
       ],
-      "remaining_limitation": "Queue recovery tested; full bounded service crash-loop/rollback/safe-resume implementation and host checks incomplete.",
+      "remaining_limitation": "Result-save retries preserve completed work without repeating inference; conflicting or persistent failures exhaust safely. Full service/physical crash/reboot qualification remains in the owner-parked track.",
       "failure_class": "implementation_defect",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
