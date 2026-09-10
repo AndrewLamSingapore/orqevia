@@ -252,12 +252,33 @@ def submit_intent(body: IntentRequest, authorization: str | None = Header(defaul
     """Select one admitted pilot role; the existing PDP/PEP still govern dispatch."""
     spine_api.require_token(authorization)
     normalized = body.intent.strip().lower().rstrip(".?!")
+    continue_requests = {"continue my highest-priority work", "continue my highest priority work",
+                         "continue the highest-priority work", "continue the highest priority work"}
     if normalized in {"check prime", "what needs my attention", "show me what was completed",
-                      "continue the highest-priority work", "fix the problem"}:
+                      "fix the problem"} | continue_requests:
         from .operator_health import snapshot
         result = snapshot()
         result.pop("diagnostics", None)
+        continuation = {}
+        if normalized in continue_requests:
+            work = result.get("work", {})
+            if not result.get("work_available"):
+                message = "I could not verify the recorded work. Nothing has been resubmitted."
+                next_action = "WAIT_FOR_VERIFIED_WORK_STATE"
+            elif not result.get("ready_for_local_work"):
+                message = "Recorded work remains in place. PRIME must pass its readiness checks before it can continue safely."
+                next_action = "WAIT_FOR_READINESS"
+            elif work.get("running", 0) or work.get("queued", 0):
+                message = "The existing scheduler is handling eligible recorded work in priority order. I have not created duplicate work."
+                next_action = "EXISTING_SCHEDULER"
+            else:
+                message = "There is no eligible recorded work to continue. You can give me a new bounded goal or question."
+                next_action = "NO_ELIGIBLE_WORK"
+            continuation = {"result": message, "next_automatic_action": next_action,
+                            "priority_order": ["Work", "Web3", "VELYQUA"],
+                            "resubmitted": False}
         return JSONResponse(status_code=200, content={"ok": True, "status": result,
+            **continuation,
             "resolution_path": "deterministic", "reason_code": "READ_ONLY_OPERATING_STATUS",
             "model_invocations": 0, "action_authority": False,
             "note": "Existing authorized work is managed by the scheduler. This check does not retry uncertain work or grant new authority."})

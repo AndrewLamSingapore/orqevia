@@ -62,3 +62,15 @@ records or restore an old database merely to make a warning disappear.
 
 **Updates:** an engineer prepares and verifies an exact release before promotion.
 This candidate is still on production HOLD, so there is no update for you to apply.
+
+**Continue your priorities:** in option 8, say "Continue my highest-priority work."
+JARVIS checks the recorded workload and reports whether the existing scheduler
+is handling eligible work, readiness is blocking it, or no eligible work exists.
+It does not invent a task or resubmit work. Priority order remains Work, Web3,
+then VELYQUA. This is tested development behavior; full power-on autonomy is
+not accepted until the real host and its authority boundaries are qualified.
+
+**When ABEX arrives:** tell me it has arrived. No commissioning action is needed
+from you today. The retained ABEX package is review-only and must not be run as
+a production installer. Hardware-specific instructions will be supplied only
+after the actual device and qualified installation package are verified.

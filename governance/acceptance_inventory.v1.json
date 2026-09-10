@@ -185,9 +185,10 @@
       "item": "Agent orchestration",
       "phase": 3,
       "tests": [
-        "tests.test_mandate_compute"
+        "tests.test_mandate_compute",
+        "tests.test_owner_continuation"
       ],
-      "remaining_limitation": "Three-role intent selection and the authenticated request menu are implemented. Nonpilot orchestration remains outside the frozen pilot scope.",
+      "remaining_limitation": "Owner continuation reports existing eligible work without duplicate submission. Three-role pilot scope is retained; full power-on autonomy requires host and authority qualification.",
       "failure_class": "frozen_scope",
       "lam_action_required": false,
       "lam_action": "No new request now. Previously identified external dependencies remain pending.",
