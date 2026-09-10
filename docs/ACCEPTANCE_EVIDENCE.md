@@ -14,10 +14,11 @@ Generate current evidence after the full suite, using disposable test data:
     python -m pytest -q --junitxml=work/acceptance-tests.xml
     python scripts/build_acceptance_matrix.py --junit work/acceptance-tests.xml --output work/acceptance-evidence
 
-On Windows, set PRIME_DATA_DIR, PRIME_SPINE_DB and PRIME_COMPUTE_DB to writable
-disposable paths before importing the application. The application otherwise
-uses its container data paths. Failure to set these is a test-run configuration
-defect; it is not grounds to skip fixtures or request access to the drive root.
+Tests configure disposable storage before collection through conftest.py, so
+they do not depend on import order to avoid container data paths. Explicit
+PRIME_DATA_DIR, PRIME_SPINE_DB and PRIME_COMPUTE_DB test-path overrides remain
+supported. Missing pre-collection setup was a configuration defect exposed by
+hosted testing and repaired without skipping fixtures or changing assertions.
 
 The builder reports all 31 required acceptance items, all 13 phase gates, exact
 JUnit identities, missing/nonpassing fixtures, failure classification, remaining
@@ -52,4 +53,3 @@ No new action is requested from Lam for the already-known unavailable hardware
 and artifacts. Independent work remains permitted; dependent gates remain
 BLOCKED. The final installed-system guide and real operator simplicity review
 remain pending.
-
