@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,6 +14,8 @@ from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id
 from .action_harness import HarnessPolicy
 from .settings import SETTINGS
+from .compute_ledger import ComputeLedger
+from .deterministic_compute import assess
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
@@ -55,17 +58,49 @@ def _infer(job: dict, provider: Provider) -> dict:
         raise InferenceBoundaryError("cloud overflow is disabled")
     if SETTINGS.ollama_base_url != "http://ollama:11434":
         raise InferenceBoundaryError("inference requires the isolated Docker Ollama endpoint")
+    route = assess(job["prompt"])
+    if route.resolution_path != "local_inference":
+        raise InferenceBoundaryError("deterministic feasibility forbids inference for this contract")
     timeout=httpx.Timeout(float(job["timeout_seconds"]))
-    if provider.kind=="local":
+    started = time.monotonic()
+    ledger = ComputeLedger()  # Establish the telemetry store before transport.
+    usage = {"input_tokens": None, "output_tokens": None}
+    success = False
+    error_type = None
+    try:
         with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as client:
             r=client.post(f"{SETTINGS.ollama_base_url}/api/chat",json={"model":provider.model,
                 "messages":[{"role":"user","content":job["prompt"]}],"stream":False,
                 "keep_alive":SETTINGS.keep_alive,"options":{"num_ctx":SETTINGS.context_tokens,
                 "num_predict":SETTINGS.max_output_tokens}})
             r.raise_for_status(); payload=r.json()
-        return {"result":payload.get("message",{}).get("content",""),
-                "input_tokens":int(payload.get("prompt_eval_count",0) or 0),
-                "output_tokens":int(payload.get("eval_count",0) or 0),"actual_cost_usd":0}
+        usage = {"input_tokens": _token_count(payload.get("prompt_eval_count")),
+                 "output_tokens": _token_count(payload.get("eval_count"))}
+        result = payload.get("message", {}).get("content")
+        if not isinstance(result, str) or not result.strip():
+            raise ValueError("provider returned no answer")
+        success = True
+        return {"result": result, **usage, "actual_cost_usd": 0}
+    except Exception as exc:
+        error_type = type(exc).__name__
+        raise
+    finally:
+        ledger.record(
+            task_id=job["id"], stage="harness_inference", provider="ollama", model=provider.model,
+            latency_ms=int((time.monotonic() - started) * 1000), success=success,
+            input_units=usage["input_tokens"], output_units=usage["output_tokens"],
+            metadata={"event_kind": "model_invocation", "agent_id": job["agent"],
+                      "inference_tier": provider.name.removeprefix("ollama-"), "cached_tokens": None,
+                      "resolution_path": "local_inference", "routing_reason": route.reason_code,
+                      "provider_route_reason": job.get("route_reason"),
+                      "model_invocations": 1 if success else None, "model_attempts": 1,
+                      "agent_invocations": 1, "error_type": error_type},
+        )
+
+
+def _token_count(value):
+    # Missing, fractional, negative and malformed usage is unavailable, not 0.
+    return value if type(value) is int and value >= 0 else None
 
 
 
@@ -134,7 +169,8 @@ def decide_job(job_id: str,body: Approval,authorization: str|None=Header(None)):
 
 @router.get("/metrics")
 def metrics(authorization: str|None=Header(None)):
-    authorize(authorization);return {**queue.metrics(),"providers":[p.__dict__ for p in providers()]}
+    authorize(authorization);return {**queue.metrics(),"providers":[p.__dict__ for p in providers()],
+                                   "worker_health": pool.health()}
 
 
 def _public_job(job: dict) -> dict:

@@ -81,6 +81,7 @@ class ComputeLedger:
                 "provider": event["provider"], "model": event["model"], "calls": 0,
                 "successful_calls": 0, "latency_ms": 0, "input_units": 0,
                 "output_units": 0, "output_tokens_per_second_samples": [],
+                "input_usage_samples": 0, "output_usage_samples": 0,
                 "latency_samples": [], "stages": set(), "last_seen_at": "",
             })
             group["calls"] += 1
@@ -91,12 +92,19 @@ class ComputeLedger:
             group["last_seen_at"] = max(group["last_seen_at"], event["created_at"])
             group["input_units"] += int(event["input_units"] or 0)
             group["output_units"] += int(event["output_units"] or 0)
+            group["input_usage_samples"] += int(event["input_units"] is not None)
+            group["output_usage_samples"] += int(event["output_units"] is not None)
             rate = event.get("metadata", {}).get("output_tokens_per_second")
             if isinstance(rate, (int, float)):
                 group["output_tokens_per_second_samples"].append(float(rate))
         output = []
         for group in groups.values():
             calls = group["calls"]
+            for direction in ("input", "output"):
+                known = group[f"{direction}_usage_samples"]
+                group[f"{direction}_usage_complete"] = known == calls
+                if not known:
+                    group[f"{direction}_units"] = None
             samples = group.pop("output_tokens_per_second_samples")
             latency_samples = group.pop("latency_samples")
             group["stages"] = sorted(group["stages"])
@@ -107,7 +115,14 @@ class ComputeLedger:
             group["average_output_tokens_per_second"] = round(sum(samples) / len(samples), 3) if samples else None
             output.append(group)
         output.sort(key=lambda item: (item["provider"], item["model"]))
-        return {"window": len(events), "groups": output}
+        classified = [e["metadata"] for e in events if "event_kind" in e["metadata"]]
+        return {"window": len(events), "groups": output, "accounting": {
+            "classified_events": len(classified), "unclassified_events": len(events) - len(classified),
+            "agent_invocations": sum(m.get("agent_invocations", 0) for m in classified),
+            "confirmed_model_invocations": sum(m.get("model_invocations") or 0 for m in classified),
+            "unknown_model_invocations": sum(m.get("model_invocations") is None for m in classified),
+            "model_attempts": sum(m.get("model_attempts", 0) for m in classified),
+        }}
 
     def scorecard(self, limit: int = 500) -> dict[str, Any]:
         """Rank measured model routes without granting execution authority."""

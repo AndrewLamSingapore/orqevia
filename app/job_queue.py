@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 from collections.abc import Iterator
@@ -294,8 +295,8 @@ class JobQueue:
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
         return None
 
-    def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
-               output_tokens: int = 0, actual_cost_usd: float = 0.0) -> dict:
+    def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int | None = None,
+               output_tokens: int | None = None, actual_cost_usd: float = 0.0) -> dict:
         with self.lock, self.connect() as c:
             row=c.execute("SELECT * FROM compute_jobs WHERE id=?",(job_id,)).fetchone()
             if not row: raise KeyError(job_id)
@@ -308,7 +309,7 @@ class JobQueue:
             else: status="completed"
             c.execute("""UPDATE compute_jobs SET status=?,result=?,error=?,actual_cost_usd=?,input_tokens=?,output_tokens=?,
                          provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
-                      (status,result,error,cost,int(input_tokens),int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
+                      (status,result,error,cost,input_tokens,output_tokens,status,ts,ts if status in TERMINAL else None,job_id))
             self._event(c,job_id,status,{"error":error,"cost_usd":cost,"attempt":row["attempts"]})
         return self.get(job_id)
 
@@ -334,21 +335,58 @@ class WorkerPool:
     def __init__(self, queue: JobQueue, providers: list[Provider], execute: Callable[[dict,Provider],dict]):
         self.queue,self.providers,self.execute=queue,providers,execute
         self.stop_event=threading.Event(); self.threads:list[threading.Thread]=[]
+        self.lifecycle_lock = threading.RLock()
+        self.recovery_failures: dict[str, int] = {}
 
     def start(self) -> None:
-        if self.threads:return
-        for index in range(self.queue.policy.global_concurrency):
-            t=threading.Thread(target=self._run,args=(f"worker-{index+1}",),daemon=True);t.start();self.threads.append(t)
+        with self.lifecycle_lock:
+            self.threads = [t for t in self.threads if t.is_alive()]
+            # A timed-out stop must not create a second worker beside a live
+            # provider call. Wait for that worker to actually exit first.
+            if self.threads:return
+            self.stop_event.clear()
+            for index in range(self.queue.policy.global_concurrency):
+                t=threading.Thread(target=self._run,args=(f"worker-{index+1}",),daemon=True);t.start();self.threads.append(t)
 
     def stop(self) -> None:
-        self.stop_event.set()
-        for t in self.threads:t.join(timeout=3)
-        self.threads=[]
+        with self.lifecycle_lock:
+            self.stop_event.set()
+            for t in self.threads:t.join(timeout=3)
+            self.threads=[t for t in self.threads if t.is_alive()]
+
+    def health(self) -> dict:
+        with self.lifecycle_lock:
+            alive = sum(t.is_alive() for t in self.threads)
+            exhausted = sorted(k for k, v in self.recovery_failures.items() if v >= 5)
+            return {"running_workers": alive, "configured_ceiling": self.queue.policy.global_concurrency,
+                    "stopping": self.stop_event.is_set(), "recovery_exhausted": exhausted,
+                    "attention_required": bool(exhausted)}
 
     def _run(self, worker_id: str) -> None:
+        failures = 0
         while not self.stop_event.wait(.5):
-            self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers)
-            if not job:continue
-            provider=next(p for p in self.providers if p.name==job["provider"])
-            try:self.queue.finish(job["id"],**self.execute(job,provider))
-            except Exception as exc:self.queue.finish(job["id"],error=f"{type(exc).__name__}: {exc}"[:2000])
+            try:
+                self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers)
+                if job:
+                    provider=next(p for p in self.providers if p.name==job["provider"])
+                    try:
+                        result = self.execute(job,provider)
+                    except Exception as exc:
+                        # No prompt, provider response, credential or exception
+                        # text enters recovery logs. Signed jobs never retry.
+                        result = {"error": type(exc).__name__}
+                    # A finish failure is a bookkeeping fault, never permission
+                    # to invoke the provider again or replace a completed result.
+                    self.queue.finish(job["id"], **result)
+                failures = 0
+                self.recovery_failures[worker_id] = 0
+            except Exception as exc:
+                failures += 1
+                self.recovery_failures[worker_id] = failures
+                logging.getLogger(__name__).warning(
+                    "queue_recovery worker=%s attempt=%s error_type=%s", worker_id, failures, type(exc).__name__)
+                if failures >= 5:
+                    logging.getLogger(__name__).error("queue_recovery_exhausted worker=%s", worker_id)
+                    return
+                if self.stop_event.wait(min(2 ** (failures - 1), 8)):
+                    return

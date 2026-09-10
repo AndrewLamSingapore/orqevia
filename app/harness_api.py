@@ -3,13 +3,18 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, Header, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
+from app.compute_ledger import ComputeLedger
+from app.deterministic_compute import assess
 
 from app import compute_queue_api, spine_api
 from app.action_harness import (
@@ -103,6 +108,29 @@ def status(authorization: str | None = Header(default=None)):
 @router.post("/pilot/dispatch", status_code=202)
 def dispatch(body: PilotDispatch, authorization: str | None = Header(default=None)):
     spine_api.require_token(authorization)
+    started = time.monotonic()
+    route = assess(body.prompt)
+    if route.resolution_path in {"deterministic", "reject"}:
+        # Pure computation has no privileged side effect and needs no inference
+        # lease. Record hashes only; do not retain the request/result payload.
+        try:
+            ComputeLedger().record(
+                task_id=body.correlation_id, stage="feasibility", provider="deterministic",
+                model="none", latency_ms=int((time.monotonic() - started) * 1000), success=route.resolution_path == "deterministic",
+                input_units=0, output_units=0, estimated_cost_usd=0,
+                metadata={**route.as_dict(), "result": None, "event_kind": "routing_decision",
+                          "model_invocations": 0, "agent_invocations": 0,
+                          "input_sha256": hashlib.sha256(body.prompt.encode()).hexdigest(),
+                          "result_sha256": hashlib.sha256((route.result or "").encode()).hexdigest()},
+            )
+        except Exception as exc:
+            raise HTTPException(503, "Routing ledger unavailable") from exc
+        return JSONResponse(status_code=200 if route.result is not None else 422, content={
+            "ok": route.result is not None, "routing": route.as_dict(),
+            "result": route.result, "correlation_id": body.correlation_id,
+            "model_invocations": 0, "input_tokens": 0, "output_tokens": 0,
+            "action_authority": False,
+        })
     harness, issuer = _runtime()
     actor = body.actor_id.strip().lower()
     if actor not in harness.policy.pilot_agents:
@@ -207,4 +235,25 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
         },
         "correlation_id": body.correlation_id,
         "cloud_allowed": False,
+        "routing": route.as_dict(),
     }
+
+
+class IntentRequest(BaseModel):
+    intent: str = Field(min_length=1, max_length=120000)
+    correlation_id: str = Field(default_factory=lambda: str(uuid.uuid4()), min_length=1, max_length=200)
+    idempotency_key: str = Field(default_factory=lambda: str(uuid.uuid4()), min_length=1, max_length=200)
+
+
+@router.post("/intent", status_code=202)
+def submit_intent(body: IntentRequest, authorization: str | None = Header(default=None)):
+    """Select one admitted pilot role; the existing PDP/PEP still govern dispatch."""
+    spine_api.require_token(authorization)
+    import re
+    words = set(re.findall(r"[a-z]+", body.intent.lower()))
+    actor = "a21" if words & {"cost", "costs", "budget", "pricing"} else (
+        "a14" if words & {"dataset", "duplicates", "duplicate", "missing", "quality"} else "a16"
+    )
+    return dispatch(PilotDispatch(actor_id=actor, prompt=body.intent,
+                                 correlation_id=body.correlation_id,
+                                 idempotency_key=body.idempotency_key), authorization)
