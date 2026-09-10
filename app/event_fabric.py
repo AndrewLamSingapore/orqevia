@@ -1,6 +1,7 @@
 """Durable, idempotent portfolio inbox plus governed PRIME projectors."""
 from __future__ import annotations
 import json, os, sqlite3, uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
@@ -24,13 +25,19 @@ class EventFabric:
             columns={row["name"] for row in db.execute("pragma table_info(portfolio_events)")}
             if "schema_version" not in columns:
                 db.execute("alter table portfolio_events add column schema_version text not null default 'legacy-1.0'")
-    def connect(self)->sqlite3.Connection:
-        db=sqlite3.connect(self.path);db.row_factory=sqlite3.Row;return db
+    @contextmanager
+    def connect(self):
+        db=sqlite3.connect(self.path);db.row_factory=sqlite3.Row
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
     def _once(self,event_id:str,projector:str,action)->dict[str,Any]:
         with self.connect() as db:existing=db.execute("select * from event_projections where event_id=? and projector=?",(event_id,projector)).fetchone()
         if existing and existing["status"]=="projected":return {"projector":projector,"status":existing["status"],"details":json.loads(existing["details_json"]),"replayed":True}
         try:details=action() or {};status="projected"
-        except Exception as exc:details={"error":type(exc).__name__,"message":str(exc)[:500]};status="failed"
+        except Exception as exc:details={"error":type(exc).__name__};status="failed"
         with self.connect() as db:db.execute("insert into event_projections(event_id,projector,status,details_json,projected_at) values(?,?,?,?,?) on conflict(event_id,projector) do update set status=excluded.status,details_json=excluded.details_json,projected_at=excluded.projected_at",(event_id,projector,status,json.dumps(details,sort_keys=True),now()))
         return {"projector":projector,"status":status,"details":details,"replayed":bool(existing)}
     def _memory(self,event:Mapping[str,Any])->dict[str,Any]:

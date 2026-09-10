@@ -101,6 +101,16 @@ def trusted_episodes(request: Request, limit: int = 25) -> dict:
     return cognitive_api.recent_episodes(limit=limit, authorization=_trusted_authorization(request))
 
 
+@router.get("/api/control-surface/trusted/operator-status")
+def trusted_operator_status(request: Request, diagnostics: bool = False) -> dict:
+    _trusted_authorization(request)
+    from .operator_health import snapshot
+    result = snapshot()
+    if not diagnostics:
+        result.pop("diagnostics", None)
+    return result
+
+
 @router.get("/api/control-surface/trusted/memory/search")
 def trusted_memory_search(request: Request, q: str, limit: int = 10) -> dict:
     return cognitive_api.search_memory(q=q, limit=limit, authorization=_trusted_authorization(request))

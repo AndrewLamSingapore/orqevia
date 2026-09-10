@@ -1,4 +1,4 @@
 -r requirements.txt
 # Synthetic witness tests only; production images do not import this module.
-cryptography==46.0.5
+cryptography==50.0.1
 pytest

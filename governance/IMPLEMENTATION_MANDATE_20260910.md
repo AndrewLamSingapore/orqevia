@@ -25,12 +25,12 @@ Its local import commit has a different history; it is not the remote commit.
 | Harness | Existing signed v2 envelopes, nonce/expiry/revocation checks, durable consumption, execution-time revalidation; baseline tests pass |
 | Scheduling | Existing global single-slot pilot, priority/fairness, queue claims and bounded unsigned retries; signed consumed work never automatically retries |
 | Authority witness | Existing development capsule and clone/replay adversaries; synthetic root/provider only, production qualification absent |
-| Deterministic feasibility | New bounded arithmetic and exact UTF-8 SHA256 contracts; matching requests complete without inference, malformed matching requests reject, provider boundary rechecks |
+| Deterministic feasibility | Bounded arithmetic, exact UTF-8 SHA256, existing schema validation and canonical agent lookup; matching requests complete without inference, malformed matching requests reject, provider boundary rechecks |
 | Intent orchestration | New authenticated `/api/harness/intent` selects one of a14/a16/a21 then uses existing dispatch and signed queue; a bounded pilot interface, not general autonomous planning |
 | Inference routing | Existing local-only pilot preserved; controlled feasibility reason codes added; cloud executor remains disabled |
 | Accounting | Missing provider token usage stays null through queue and summaries; known partial sums labeled incomplete; attempts, confirmed model calls and agent calls distinguished for new worker events; historical events remain explicitly unclassified |
-| Recovery | Queue infrastructure faults back off 1/2/4/8 seconds, exhaust after five consecutive failures and expose attention status; finish failures never repeat inference; stop/start preserves live-worker exclusion |
-| Operator UI | Frozen read-only Control Surface preserved; no orchestration or execution UI added |
+| Recovery | Queue faults back off 1/2/4/8 seconds, exhaust after five consecutive failures and expose attention status; bounded recovery transitions use the existing event ledger; finish failures never repeat inference; stop/start preserves live-worker exclusion |
+| Operator UI | Evidence-based four-state overview and plain-language CLI status; diagnostic details separated; frozen read-only Control Surface preserved with no execution UI |
 | ABEX | Owner confirms device has not arrived; commissioning/deployment cannot run |
 | Deployment package | Existing September 8 Day-0 command pack and commissioning specification found; review planner/tests exist, production root/provider adapters still unavailable; not represented as an executable production bootstrap |
 | Current runtime | Docker backend and native Ollama processes observed; Docker executable denied by Windows account permissions; immutable container provenance not freshly established |
@@ -52,7 +52,8 @@ response and poll endpoint. A completed deterministic request returns 200,
 zero model/token use and `action_authority=false`. Exact-contract failure
 returns 422 with `resolution_path=reject`; ledger failure returns 503.
 
-Examples: `calculate (12 + 4) / 2`, `0.1 + 0.2`, `sha256 text: abc`.
+Examples: `calculate (12 + 4) / 2`, `0.1 + 0.2`, `sha256 text: abc`,
+`validate schema policy-state-v1: "AUTO"`, `lookup agent a14`.
 Arithmetic returns exact rational strings (`3/10`, not rounded `0.3`). Only
 addition, subtraction, multiplication, division, parentheses and unary signs
 are supported. Length, syntax-tree size and integer size are bounded. No eval,
@@ -105,5 +106,11 @@ python scripts/generate_resume_checkpoint.py --check
 
 Baseline: 395 tests passed on this Dell. Candidate results are retained in the
 delivery report alongside machine-readable JUnit evidence. Tests use temporary
-databases, synthetic providers and test credentials only. Docker, Ubuntu,
-real-provider, deployment and physical-host acceptance are not claimed.
+databases, synthetic providers and test credentials only. Hosted Ubuntu and
+container acceptance are development evidence; real-provider, deployment and
+physical-host acceptance are not claimed. See `docs/OPERATIONS_RECOVERY.md` and
+`docs/LAM_OPERATOR_GUIDE.md` for observation/recovery semantics and limitations.
+
+The dedicated Compute Profile Benchmark Protocol, addenda and full ABEX Workload
+Corpus were not identified. Existing benchmark fixtures are not replacements.
+Dependency scans cover only the isolated test environment, not the live estate.

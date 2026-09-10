@@ -249,6 +249,22 @@ class IntentRequest(BaseModel):
 def submit_intent(body: IntentRequest, authorization: str | None = Header(default=None)):
     """Select one admitted pilot role; the existing PDP/PEP still govern dispatch."""
     spine_api.require_token(authorization)
+    normalized = body.intent.strip().lower().rstrip(".?!")
+    if normalized in {"check prime", "what needs my attention", "show me what was completed",
+                      "continue the highest-priority work", "fix the problem"}:
+        from .operator_health import snapshot
+        result = snapshot()
+        result.pop("diagnostics", None)
+        return JSONResponse(status_code=200, content={"ok": True, "status": result,
+            "resolution_path": "deterministic", "reason_code": "READ_ONLY_OPERATING_STATUS",
+            "model_invocations": 0, "action_authority": False,
+            "note": "Existing authorized work is managed by the scheduler. This check does not retry uncertain work or grant new authority."})
+    if normalized in {"work on web3", "continue velyqua"}:
+        return JSONResponse(status_code=409, content={"ok": False, "resolution_path": "reject",
+            "reason_code": "DEPENDENT_PHASE_EVIDENCE_REQUIRED", "model_invocations": 0,
+            "action_authority": False,
+            "required": "Web3 model-tier policy artifact" if "web3" in normalized else "VELYQUA current gate evidence and bounded workload",
+            "note": "This work remains gated; no policy, evidence or authorization has been invented."})
     import re
     words = set(re.findall(r"[a-z]+", body.intent.lower()))
     actor = "a21" if words & {"cost", "costs", "budget", "pricing"} else (

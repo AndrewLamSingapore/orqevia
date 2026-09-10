@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import json
+import math
 import re
 from dataclasses import asdict, dataclass
 from fractions import Fraction
 
 
-CAPABILITIES = ("arithmetic.v1", "sha256.utf8.v1")
+CAPABILITIES = ("arithmetic.v1", "sha256.utf8.v1", "schema.validation.v1", "agent.registry.lookup.v1")
 POLICY_VERSION = "deterministic-feasibility.v1"
 
 
@@ -58,6 +60,43 @@ def _arithmetic(expression: str) -> str:
 
 def assess(prompt: str) -> Feasibility:
     text = prompt.strip()
+    schema = re.fullmatch(r"validate schema ([a-z0-9-]+):\s*(.*)", text, re.I | re.S)
+    if schema:
+        from .generated.portfolio_contracts import validate_contract
+        try:
+            if len(prompt) > 120000:
+                raise ValueError("input limit")
+            def pairs(items):
+                result = {}
+                for key, value in items:
+                    if key in result:
+                        raise ValueError("duplicate JSON key")
+                    result[key] = value
+                return result
+            def invalid_constant(value):
+                raise ValueError("non-finite JSON")
+            def finite_float(value):
+                number = float(value)
+                if not math.isfinite(number):
+                    raise ValueError("non-finite JSON")
+                return number
+            value = json.loads(schema.group(2), object_pairs_hook=pairs,
+                               parse_constant=invalid_constant, parse_float=finite_float)
+            result = validate_contract(schema.group(1).lower(), value)
+        except (ValueError, RecursionError, OverflowError):
+            return Feasibility("reject", "DETERMINISTIC_CONTRACT_INVALID", "schema.validation.v1")
+        return Feasibility("deterministic", "DETERMINISTIC_CONTRACT_SATISFIED", "schema.validation.v1",
+                           json.dumps(result, sort_keys=True))
+    lookup = re.fullmatch(r"lookup agent ([a-z0-9-]+)", text, re.I)
+    if lookup:
+        from .agent_registry import agent_record, RegistryError
+        try:
+            record = agent_record(lookup.group(1))
+            result = {key: record[key] for key in ("agent_id", "name", "role", "status")}
+        except (RegistryError, KeyError, ValueError):
+            return Feasibility("reject", "REGISTRY_ENTRY_UNAVAILABLE", "agent.registry.lookup.v1")
+        return Feasibility("deterministic", "DETERMINISTIC_CONTRACT_SATISFIED", "agent.registry.lookup.v1",
+                           json.dumps(result, sort_keys=True))
     arithmetic = re.fullmatch(r"(?:calculate|compute|what is)\s+(.+?)[?]?", text, re.I | re.S)
     bare = re.fullmatch(r"[0-9.()+*/\s-]+", text)
     # 'Compute a strategy' is not an arithmetic contract. A leading numeric

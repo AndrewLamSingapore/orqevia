@@ -133,6 +133,15 @@ class JobQueue:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
                   (str(uuid.uuid4()), job_id, event, json.dumps(details, separators=(",", ":")), utcnow()))
 
+    def record_recovery(self, worker_id: str, attempt: int, error_type: str, state: str) -> None:
+        if state not in {"retry_wait", "recovered", "exhausted"}:
+            raise ValueError("invalid recovery state")
+        with self.lock, self.connect() as db:
+            self._event(db, None, "queue.recovery", {
+                "schema_version": "1.0.0", "worker": worker_id[:80],
+                "attempt": max(0, min(5, attempt)), "error_type": error_type[:80],
+                "state": state, "authority_expanded": False})
+
     def submit(self, *, agent: str, prompt: str, priority: str | int = "normal",
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
@@ -364,9 +373,18 @@ class WorkerPool:
 
     def _run(self, worker_id: str) -> None:
         failures = 0
+        pending_recovery = []
         while not self.stop_event.wait(.5):
             try:
-                self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers)
+                self.queue.recover_expired()
+                # Persist outage evidence before admitting more work. The list
+                # is bounded by the five-attempt circuit; logs survive DB loss.
+                while pending_recovery:
+                    self.queue.record_recovery(worker_id, *pending_recovery[0])
+                    pending_recovery.pop(0)
+                if failures:
+                    self.queue.record_recovery(worker_id, failures, "", "recovered")
+                job=self.queue.claim(worker_id,self.providers)
                 if job:
                     provider=next(p for p in self.providers if p.name==job["provider"])
                     try:
@@ -384,9 +402,16 @@ class WorkerPool:
                 failures += 1
                 self.recovery_failures[worker_id] = failures
                 logging.getLogger(__name__).warning(
-                    "queue_recovery worker=%s attempt=%s error_type=%s", worker_id, failures, type(exc).__name__)
+                    json.dumps({"event": "queue_recovery", "worker": worker_id,
+                                "attempt": failures, "error_type": type(exc).__name__}))
+                pending_recovery.append((failures, type(exc).__name__, "retry_wait" if failures < 5 else "exhausted"))
                 if failures >= 5:
-                    logging.getLogger(__name__).error("queue_recovery_exhausted worker=%s", worker_id)
+                    logging.getLogger(__name__).error(json.dumps({"event": "queue_recovery_exhausted", "worker": worker_id}))
+                    try:
+                        for event in pending_recovery:
+                            self.queue.record_recovery(worker_id, *event)
+                    except Exception:
+                        pass  # Structured process logs retain unavailable-ledger evidence.
                     return
                 if self.stop_event.wait(min(2 ** (failures - 1), 8)):
                     return

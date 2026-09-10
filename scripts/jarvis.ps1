@@ -1,10 +1,11 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("start", "stop", "status", "doctor", "repair", "open", "update", "contract")]
+    [ValidateSet("start", "stop", "status", "doctor", "repair", "open", "update", "verify", "contract")]
     [string]$Action = "start",
     [string]$Image = "",
     [switch]$Tunnel,
     [switch]$NoOpen,
+    [switch]$Diagnostics,
     [ValidateRange(30, 900)]
     [int]$TimeoutSeconds = 240
 )
@@ -286,9 +287,28 @@ function Start-Jarvis([switch]$RepairOnly) {
 }
 
 function Show-Status {
-    Assert-Docker
-    Invoke-Docker -Arguments (Get-ComposeArgs @("ps", "--all")) | Write-Host
-    try { Test-PrimeContract } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }
+    if ($Diagnostics) {
+        Assert-Docker
+        Invoke-Docker -Arguments (Get-ComposeArgs @("ps", "--all")) | Write-Host
+    }
+    try {
+        $summary = Get-Json "$LocalBase/api/control-surface/trusted/operator-status"
+        Write-Host "PRIME: $($summary.state)"
+        foreach ($item in $summary.attention) {
+            Write-Host $item.what_happened
+            Write-Host $item.handled
+            Write-Host $item.affected
+            Write-Host $item.action
+        }
+        Write-Host "Production qualification is still pending."
+        Write-Host "Open JARVIS to see current and completed work."
+        if ($summary.state -ne "HEALTHY") { exit 1 }
+    } catch {
+        Write-Host "PRIME's current status could not be verified. No successful recovery is claimed." -ForegroundColor Yellow
+        Write-Host "Use JARVIS doctor for read-only checks. Do not repeatedly restart or resubmit work."
+        if ($Diagnostics) { Write-Host $_.Exception.GetType().Name }
+        exit 1
+    }
 }
 
 function Invoke-Doctor {
@@ -333,5 +353,6 @@ switch ($Action) {
     "repair" { Start-Jarvis -RepairOnly; Start-Jarvis }
     "open" { Start-Process "$LocalBase/control" }
     "update" { Update-Jarvis }
+    "verify" { Test-PrimeContract; Show-Status }
     "contract" { Test-SourceContract }
 }
