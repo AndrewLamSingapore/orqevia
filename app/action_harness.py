@@ -13,6 +13,8 @@ import json
 import sqlite3
 import threading
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -158,11 +160,17 @@ class ActionHarness:
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 
-    def connect(self) -> sqlite3.Connection:
+    @contextmanager
+    def connect(self) -> Iterator[sqlite3.Connection]:
+        """Commit or roll back, then release the connection on every exit."""
         db = sqlite3.connect(self.db_path, timeout=20, check_same_thread=False)
-        db.row_factory = sqlite3.Row
-        db.execute("PRAGMA busy_timeout=15000")
-        return db
+        try:
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA busy_timeout=15000")
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def _init(self) -> None:
         with self.connect() as db:
