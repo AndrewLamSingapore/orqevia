@@ -7,6 +7,8 @@ import sqlite3
 import threading
 import time
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -84,11 +86,17 @@ class JobQueue:
         self.lock = threading.RLock()
         self._init()
 
-    def connect(self) -> sqlite3.Connection:
+    @contextmanager
+    def connect(self) -> Iterator[sqlite3.Connection]:
+        """Commit or roll back, then release the connection on every exit."""
         c = sqlite3.connect(self.db_path, timeout=20, check_same_thread=False)
-        c.row_factory = sqlite3.Row
-        c.execute("PRAGMA busy_timeout=15000")
-        return c
+        try:
+            c.row_factory = sqlite3.Row
+            c.execute("PRAGMA busy_timeout=15000")
+            with c:
+                yield c
+        finally:
+            c.close()
 
     def _init(self) -> None:
         with self.connect() as c:
