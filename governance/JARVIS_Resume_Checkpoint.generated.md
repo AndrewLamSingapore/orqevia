@@ -3,7 +3,7 @@
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
 - Effective status: **STALE**
-- Manifest observation: `2026-09-07T07:12:00Z`
+- Manifest observation: `2026-09-12T07:06:43.552309Z`
 - Verification time: `2026-09-07T07:12:00Z`
 - Freshness window: `24 hours`
 
@@ -11,13 +11,13 @@
 
 | System | Source head | Release | Runtime | Verified | State |
 |---|---|---|---|---|---|
-| control | `98a1b745ad21` | `98a1b745ad21` | `—` | `2026-09-07T05:50:06Z` | SOURCE_RELEASE_VERIFIED |
-| authority | `b2bdf9863e26` | `b2bdf9863e26` | `b2bdf9863e26` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
-| game | `85a5ff8dd064` | `85a5ff8dd064` | `85a5ff8dd064` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
-| portal | `d117c918ee42` | `d117c918ee42` | `d117c918ee42` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
+| control | `f3fec388a29c` | `f3fec388a29c` | `—` | `2026-09-12T07:06:43.552309Z` | SOURCE_RELEASE_VERIFIED |
+| authority | `8d647d09fde4` | `8d647d09fde4` | `8d647d09fde4` | `2026-09-12T07:06:43.552309Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| game | `49e7bfab2c32` | `49e7bfab2c32` | `49e7bfab2c32` | `2026-09-12T07:06:43.552309Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| portal | `ddff91c03b9b` | `ddff91c03b9b` | `ddff91c03b9b` | `2026-09-12T07:06:43.552309Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 | prime | `—` | `c449dd1c8e22` | `c449dd1c8e22` | `2026-09-07T07:12:00Z` | ALIGNED_VERIFIED |
-| sky | `006e4a39b785` | `006e4a39b785` | `006e4a39b785` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
-| velyqua | `7a4f32d81f5e` | `7a4f32d81f5e` | `7a4f32d81f5e` | `2026-09-07T05:50:06Z` | ALIGNED_VERIFIED |
+| sky | `990879db1bd9` | `006e4a39b785` | `006e4a39b785` | `2026-09-12T07:06:43.552309Z` | SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT |
+| velyqua | `8177e7d79f1d` | `8177e7d79f1d` | `8177e7d79f1d` | `2026-09-12T07:06:43.552309Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 
 ## Shared contract
 
@@ -53,39 +53,24 @@
 - predictive_ml: awaits sufficient real sensor data
 - velyqua: acquisition integrity implemented; full quality policy enums unrecovered
 - portal_inhabitants: concept recovered; implementation pending
-- sky_tablet: source and current production artifact recovered, deployed and content-hash verified
+- sky_tablet: current source is observed, but the production artifact content hash differs; release reconciliation remains blocked
 - glm_track_1: full wrapper and logging contract not recovered
 - checkpoint_repair: PRIME image sha-c449dd1 deployed on Dell; post-update health and Harness v0 pilot status verified
 - Branch protection: VELYQUA_MAIN_PROTECTED_VERIFIED
 
 ## Current blockers
 
-- `github_head_drift:authority`
-- `github_head_drift:control`
-- `github_head_drift:game`
-- `github_head_drift:portal`
-- `github_head_drift:sky`
-- `github_head_drift:velyqua`
+- `source_release_drift:sky`
 - `vercel_api_not_verified:authority`
 - `vercel_api_not_verified:game`
 - `vercel_api_not_verified:portal`
 - `vercel_api_not_verified:sky`
 - `vercel_api_not_verified:velyqua`
 - `vercel_runtime_content_drift:sky`
-- `vercel_runtime_drift:authority`
-- `vercel_runtime_drift:game`
-- `vercel_runtime_drift:portal`
-- `vercel_runtime_drift:velyqua`
-- `verification_expired:authority`
-- `verification_expired:control`
 - `verification_expired:dell_runtime`
-- `verification_expired:game`
 - `verification_expired:manifest`
-- `verification_expired:portal`
 - `verification_expired:prime`
 - `verification_expired:shared_contract`
-- `verification_expired:sky`
-- `verification_expired:velyqua`
 
 ## Resume rule
 
