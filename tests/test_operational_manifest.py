@@ -167,3 +167,23 @@ def test_refresh_records_sky_drift_without_relabeling_release():
     assert sky["release_sha"] == previous_release
     assert sky["state"] == "SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT"
     assert "production artifact content hash differs" in manifest["implementation_frontier"]["sky_tablet"]
+
+
+def test_refresh_does_not_churn_fresh_unchanged_observations():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    authority = manifest["systems"]["authority"]
+    checked = datetime.fromisoformat(authority["verified_at_utc"].replace("Z", "+00:00"))
+    head = authority["source_head_sha"]
+    evidence = {
+        "github": {"authority": {"source_head_sha": head}},
+        "vercel": {"authority": {
+            "health_ok": True,
+            "runtime_sha": head,
+            "api_verified": False,
+        }},
+    }
+    assert verifier.refresh_from_live(
+        manifest, evidence, now=checked + timedelta(hours=1)
+    ) is False

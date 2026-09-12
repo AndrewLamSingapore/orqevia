@@ -425,13 +425,30 @@ def refresh_from_live(value: dict[str, Any], evidence: dict[str, Any], *, now: d
     vercel = evidence.get("vercel", {})
     systems = value["systems"]
 
+    def refreshed_timestamp(system: dict[str, Any], facts_changed: bool) -> str:
+        current = system.get("verified_at_utc")
+        parsed = None
+        if isinstance(current, str) and current.endswith("Z"):
+            try:
+                parsed = datetime.fromisoformat(current[:-1] + "+00:00")
+            except ValueError:
+                pass
+        if facts_changed or parsed is None or now - parsed >= timedelta(hours=20):
+            return observed_at
+        return current
+
     control_head = github.get("control", {}).get("source_head_sha")
     if valid_sha(control_head):
         control = systems["control"]
+        facts_changed = any([
+            control.get("source_head_sha") != control_head,
+            control.get("release_sha") != control_head,
+            control.get("state") != "SOURCE_RELEASE_VERIFIED",
+        ])
         updates = {
             "source_head_sha": control_head,
             "release_sha": control_head,
-            "verified_at_utc": observed_at,
+            "verified_at_utc": refreshed_timestamp(control, facts_changed),
             "state": "SOURCE_RELEASE_VERIFIED",
         }
         for key, updated in updates.items():
@@ -446,15 +463,22 @@ def refresh_from_live(value: dict[str, Any], evidence: dict[str, Any], *, now: d
         if not (valid_sha(head) and runtime.get("health_ok") is True and runtime_sha == head):
             continue
         system = systems[system_id]
+        state = (
+            "ALIGNED_VERIFIED" if runtime.get("api_verified") is True
+            else "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
+        )
+        facts_changed = any([
+            system.get("source_head_sha") != head,
+            system.get("release_sha") != head,
+            system.get("runtime_sha") != head,
+            system.get("state") != state,
+        ])
         updates = {
             "source_head_sha": head,
             "release_sha": head,
             "runtime_sha": head,
-            "verified_at_utc": observed_at,
-            "state": (
-                "ALIGNED_VERIFIED" if runtime.get("api_verified") is True
-                else "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
-            ),
+            "verified_at_utc": refreshed_timestamp(system, facts_changed),
+            "state": state,
         }
         for key, updated in updates.items():
             if system.get(key) != updated:
@@ -476,10 +500,18 @@ def refresh_from_live(value: dict[str, Any], evidence: dict[str, Any], *, now: d
             and current_hash == runtime_hash
             and re.fullmatch(r"[0-9a-f]{64}", current_hash)
         )
+        state = "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED" if aligned \
+            else "SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT"
+        facts_changed = any([
+            system.get("source_head_sha") != head,
+            system.get("state") != state,
+            aligned and system.get("release_sha") != head,
+            aligned and system.get("runtime_sha") != head,
+            aligned and system.get("runtime_content_sha256") != runtime_hash,
+        ])
         updates = {
-            "verified_at_utc": observed_at,
-            "state": "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED" if aligned
-            else "SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT",
+            "verified_at_utc": refreshed_timestamp(system, facts_changed),
+            "state": state,
         }
         if aligned:
             updates.update({
