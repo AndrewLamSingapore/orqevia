@@ -67,7 +67,7 @@ def test_invalid_contract_commit_is_rejected():
 
 def test_age_does_not_turn_truthful_stale_snapshot_into_schema_error():
     manifest, inventory = fixtures()
-    baseline = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    baseline = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
     result = assess_static(manifest, inventory, now=baseline + timedelta(days=3))
     assert result.errors == []
     assert "verification_expired:manifest" in result.stale_reasons
@@ -104,8 +104,6 @@ def test_sky_static_runtime_is_part_of_the_active_ssot():
     assert "sky" in verifier.EXPECTED_ACTIVE
     assert manifest["systems"]["sky"]["production_state"] == "READY"
     assert result.errors == []
-
-
 def test_premerge_checkpoint_never_promotes_branch_to_runtime():
     from scripts.generate_resume_checkpoint import generate
     manifest, _ = fixtures()
@@ -116,3 +114,87 @@ def test_premerge_checkpoint_never_promotes_branch_to_runtime():
     assert manifest["systems"]["prime"]["runtime_sha"] == manifest["dell_runtime"]["runtime_sha"]
     assert manifest["dell_runtime"]["accepted"] is False
     assert "Pre-merge review (not deployed)" in generate(manifest)
+
+
+def test_refresh_advances_only_corroborated_public_runtime_facts():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    now = datetime(2026, 9, 12, 7, 0, tzinfo=timezone.utc)
+    head = "1" * 40
+    evidence = {
+        "github": {"authority": {"source_head_sha": head}},
+        "vercel": {"authority": {
+            "health_ok": True,
+            "runtime_sha": head,
+            "api_verified": False,
+        }},
+    }
+
+    old_deployment = manifest["systems"]["authority"]["production_deployment_id"]
+    assert verifier.refresh_from_live(manifest, evidence, now=now) is True
+    authority = manifest["systems"]["authority"]
+    assert authority["source_head_sha"] == head
+    assert authority["release_sha"] == head
+    assert authority["runtime_sha"] == head
+    assert authority["production_deployment_id"] == old_deployment
+    assert authority["state"] == "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
+
+
+def test_refresh_does_not_promote_uncorroborated_runtime():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    before = copy.deepcopy(manifest["systems"]["game"])
+    evidence = {
+        "github": {"game": {"source_head_sha": "2" * 40}},
+        "vercel": {"game": {
+            "health_ok": True,
+            "runtime_sha": "3" * 40,
+            "api_verified": False,
+        }},
+    }
+    verifier.refresh_from_live(manifest, evidence, now=datetime.now(timezone.utc))
+    assert manifest["systems"]["game"] == before
+
+
+def test_refresh_records_sky_drift_without_relabeling_release():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    sky = manifest["systems"]["sky"]
+    previous_release = sky["release_sha"]
+    head = "4" * 40
+    evidence = {
+        "github": {"sky": {"source_head_sha": head}},
+        "vercel": {"sky": {
+            "current_source_content_sha256": "5" * 64,
+            "runtime_content_sha256": "6" * 64,
+            "api_verified": False,
+        }},
+    }
+    verifier.refresh_from_live(manifest, evidence, now=datetime.now(timezone.utc))
+    assert sky["source_head_sha"] == head
+    assert sky["release_sha"] == previous_release
+    assert sky["state"] == "SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT"
+    assert "production artifact content hash differs" in manifest["implementation_frontier"]["sky_tablet"]
+
+
+def test_refresh_does_not_churn_fresh_unchanged_observations():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    authority = manifest["systems"]["authority"]
+    checked = datetime.fromisoformat(authority["verified_at_utc"].replace("Z", "+00:00"))
+    head = authority["source_head_sha"]
+    evidence = {
+        "github": {"authority": {"source_head_sha": head}},
+        "vercel": {"authority": {
+            "health_ok": True,
+            "runtime_sha": head,
+            "api_verified": False,
+        }},
+    }
+    assert verifier.refresh_from_live(
+        manifest, evidence, now=checked + timedelta(hours=1)
+    ) is False

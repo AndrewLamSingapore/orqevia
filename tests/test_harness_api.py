@@ -34,6 +34,7 @@ class HarnessApiTests(unittest.TestCase):
         self.headers = {"Authorization": "Bearer test-owner-token"}
 
     def tearDown(self):
+        self.client.close()
         self.case.cleanup()
 
     def test_pilot_dispatch_traverses_spine_harness_and_local_queue(self):

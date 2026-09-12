@@ -3,7 +3,7 @@
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
 - Effective status: **STALE**
-- Manifest observation: `2026-09-08T02:56:00Z`
+- Manifest observation: `2026-09-12T08:51:19.749633Z`
 - Verification time: `2026-09-07T07:12:00Z`
 - Freshness window: `24 hours`
 
@@ -11,13 +11,13 @@
 
 | System | Source head | Release | Runtime | Verified | State |
 |---|---|---|---|---|---|
-| control | `f3fec388a29c` | `98a1b745ad21` | `—` | `2026-09-07T05:50:06Z` | SOURCE_HEAD_OBSERVED_RUNTIME_UNVERIFIED |
-| authority | `eca1b3fea76a` | `eca1b3fea76a` | `eca1b3fea76a` | `2026-09-08T02:56:00Z` | DEPLOYMENT_REVISION_OBSERVED_NOT_INFERENCE_AUTHORITY_ACCEPTED |
-| game | `49e7bfab2c32` | `49e7bfab2c32` | `49e7bfab2c32` | `2026-09-08T02:56:00Z` | DEPLOYMENT_REVISION_OBSERVED_NOT_INFERENCE_AUTHORITY_ACCEPTED |
-| portal | `56a6e22f801e` | `56a6e22f801e` | `56a6e22f801e` | `2026-09-08T02:56:00Z` | DEPLOYMENT_REVISION_OBSERVED_NOT_INFERENCE_AUTHORITY_ACCEPTED |
+| control | `f3fec388a29c` | `f3fec388a29c` | `—` | `2026-09-12T07:06:43.552309Z` | SOURCE_RELEASE_VERIFIED |
+| authority | `90f2a487a8d8` | `90f2a487a8d8` | `90f2a487a8d8` | `2026-09-12T08:51:19.749633Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| game | `49e7bfab2c32` | `49e7bfab2c32` | `49e7bfab2c32` | `2026-09-12T07:06:43.552309Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| portal | `0d6b2bc8089b` | `0d6b2bc8089b` | `0d6b2bc8089b` | `2026-09-12T08:51:19.749633Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 | prime | `—` | `c449dd1c8e22` | `c449dd1c8e22` | `2026-09-07T07:12:00Z` | OWNER_RECORDED_C449DD1_RUNTIME_PR59_UNMERGED |
-| sky | `299f6ef31846` | `006e4a39b785` | `006e4a39b785` | `2026-09-07T05:50:06Z` | DEPLOYMENT_OBSERVED_RUNTIME_REVISION_UNVERIFIED |
-| velyqua | `23eb80bc3fd2` | `23eb80bc3fd2` | `23eb80bc3fd2` | `2026-09-08T02:56:00Z` | DEPLOYMENT_REVISION_OBSERVED_NOT_INFERENCE_AUTHORITY_ACCEPTED |
+| sky | `2de175dc61a0` | `2de175dc61a0` | `2de175dc61a0` | `2026-09-12T08:51:19.749633Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| velyqua | `8177e7d79f1d` | `8177e7d79f1d` | `8177e7d79f1d` | `2026-09-12T07:06:43.552309Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 
 ## Shared contract
 
@@ -53,7 +53,7 @@
 - predictive_ml: awaits sufficient real sensor data
 - velyqua: acquisition integrity implemented; full quality policy enums unrecovered
 - portal_inhabitants: concept recovered; implementation pending
-- sky_tablet: source and current production artifact recovered, deployed and content-hash verified
+- sky_tablet: current source and production artifact content are hash-aligned; exact Vercel deployment identity remains unverified
 - glm_track_1: full wrapper and logging contract not recovered
 - checkpoint_repair: PR59 canonical manifest/checkpoint proposed; main and Library/local Dell mirrors unchanged
 - abex: PENDING_NOT_COMMISSIONED
@@ -68,35 +68,17 @@
 - `native_ollama_admission_unverified`
 - `estate_single_slot_unproved`
 - `cloud_inference_ingress_unverified`
-- `sky_runtime_revision_unverified`
 - `operator_pilot_acceptance_pending`
 - `local_library_mirror_refresh_pending`
-- `github_head_drift:authority`
-- `github_head_drift:control`
-- `github_head_drift:game`
-- `github_head_drift:portal`
-- `github_head_drift:sky`
-- `github_head_drift:velyqua`
 - `vercel_api_not_verified:authority`
 - `vercel_api_not_verified:game`
 - `vercel_api_not_verified:portal`
 - `vercel_api_not_verified:sky`
 - `vercel_api_not_verified:velyqua`
-- `vercel_runtime_content_drift:sky`
-- `vercel_runtime_drift:authority`
-- `vercel_runtime_drift:game`
-- `vercel_runtime_drift:portal`
-- `vercel_runtime_drift:velyqua`
-- `verification_expired:authority`
-- `verification_expired:control`
 - `verification_expired:dell_runtime`
-- `verification_expired:game`
 - `verification_expired:manifest`
-- `verification_expired:portal`
 - `verification_expired:prime`
 - `verification_expired:shared_contract`
-- `verification_expired:sky`
-- `verification_expired:velyqua`
 
 ## Resume rule
 

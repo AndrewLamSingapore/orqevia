@@ -35,12 +35,12 @@ class P1ApiTests(unittest.TestCase):
         spine_api.spine.evaluate(envelope(), {"source": "local_ai", "reasoning_route": ["local_ai", "confidence_gate"]})
 
     def tearDown(self):
+        self.client.close()
         spine_api.spine = self.original
         if self.old_token is None:
             os.environ.pop("PRIME_SPINE_TOKEN", None)
         else:
             os.environ["PRIME_SPINE_TOKEN"] = self.old_token
-        self.client.close()
 
     def test_trusted_approval_card_modify_and_audit_trace(self):
         cards = self.client.get("/api/control-surface/trusted/approvals").json()["approvals"]

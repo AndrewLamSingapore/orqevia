@@ -354,12 +354,24 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
                 token=github_token,
             )
             source_bytes = base64.b64decode(source["content"])
+            observed_head = github_evidence.get(system_id, {}).get("source_head_sha")
+            current_source_hash = None
+            if valid_sha(observed_head):
+                current_source = http_json(
+                    "https://api.github.com/repos/"
+                    f"{system['repository']}/contents/{system['source_path']}?ref={observed_head}",
+                    token=github_token,
+                )
+                current_source_hash = hashlib.sha256(
+                    base64.b64decode(current_source["content"])
+                ).hexdigest()
             runtime_bytes = http_bytes(system["runtime_probe_url"])
             source_hash = hashlib.sha256(source_bytes).hexdigest()
             runtime_hash = hashlib.sha256(runtime_bytes).hexdigest()
             expected_hash = system["runtime_content_sha256"]
             vercel_evidence[system_id] = {
                 "source_content_sha256": source_hash,
+                "current_source_content_sha256": current_source_hash,
                 "runtime_content_sha256": runtime_hash,
                 "deployment_id": system["production_deployment_id"],
             }
@@ -401,6 +413,134 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
     result.evidence["vercel"] = vercel_evidence
 
 
+def refresh_from_live(value: dict[str, Any], evidence: dict[str, Any], *, now: datetime) -> bool:
+    """Apply only live facts that are independently corroborated.
+
+    Deployment identifiers, PRIME runtime facts, and Dell acceptance are never
+    inferred from GitHub heads or public health endpoints.
+    """
+    changed = False
+    observed_at = now.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    github = evidence.get("github", {})
+    vercel = evidence.get("vercel", {})
+    systems = value["systems"]
+
+    def refreshed_timestamp(system: dict[str, Any], facts_changed: bool) -> str:
+        current = system.get("verified_at_utc")
+        parsed = None
+        if isinstance(current, str) and current.endswith("Z"):
+            try:
+                parsed = datetime.fromisoformat(current[:-1] + "+00:00")
+            except ValueError:
+                pass
+        if facts_changed or parsed is None or now - parsed >= timedelta(hours=20):
+            return observed_at
+        return current
+
+    control_head = github.get("control", {}).get("source_head_sha")
+    if valid_sha(control_head):
+        control = systems["control"]
+        facts_changed = any([
+            control.get("source_head_sha") != control_head,
+            control.get("release_sha") != control_head,
+            control.get("state") != "SOURCE_RELEASE_VERIFIED",
+        ])
+        updates = {
+            "source_head_sha": control_head,
+            "release_sha": control_head,
+            "verified_at_utc": refreshed_timestamp(control, facts_changed),
+            "state": "SOURCE_RELEASE_VERIFIED",
+        }
+        for key, updated in updates.items():
+            if control.get(key) != updated:
+                control[key] = updated
+                changed = True
+
+    for system_id in sorted(EXPECTED_PROJECTS):
+        head = github.get(system_id, {}).get("source_head_sha")
+        runtime = vercel.get(system_id, {})
+        runtime_sha = runtime.get("runtime_sha")
+        if not (valid_sha(head) and runtime.get("health_ok") is True and runtime_sha == head):
+            continue
+        system = systems[system_id]
+        state = (
+            "ALIGNED_VERIFIED" if runtime.get("api_verified") is True
+            else "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
+        )
+        facts_changed = any([
+            system.get("source_head_sha") != head,
+            system.get("release_sha") != head,
+            system.get("runtime_sha") != head,
+            system.get("state") != state,
+        ])
+        updates = {
+            "source_head_sha": head,
+            "release_sha": head,
+            "runtime_sha": head,
+            "verified_at_utc": refreshed_timestamp(system, facts_changed),
+            "state": state,
+        }
+        for key, updated in updates.items():
+            if system.get(key) != updated:
+                system[key] = updated
+                changed = True
+    for system_id in sorted(EXPECTED_STATIC_PROJECTS):
+        head = github.get(system_id, {}).get("source_head_sha")
+        runtime = vercel.get(system_id, {})
+        if not valid_sha(head):
+            continue
+        system = systems[system_id]
+        if system.get("source_head_sha") != head:
+            system["source_head_sha"] = head
+            changed = True
+        current_hash = runtime.get("current_source_content_sha256")
+        runtime_hash = runtime.get("runtime_content_sha256")
+        aligned = (
+            isinstance(current_hash, str)
+            and current_hash == runtime_hash
+            and re.fullmatch(r"[0-9a-f]{64}", current_hash)
+        )
+        state = "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED" if aligned \
+            else "SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT"
+        facts_changed = any([
+            system.get("source_head_sha") != head,
+            system.get("state") != state,
+            aligned and system.get("release_sha") != head,
+            aligned and system.get("runtime_sha") != head,
+            aligned and system.get("runtime_content_sha256") != runtime_hash,
+        ])
+        updates = {
+            "verified_at_utc": refreshed_timestamp(system, facts_changed),
+            "state": state,
+        }
+        if aligned:
+            updates.update({
+                "release_sha": head,
+                "runtime_sha": head,
+                "runtime_content_sha256": runtime_hash,
+            })
+        for key, updated in updates.items():
+            if system.get(key) != updated:
+                system[key] = updated
+                changed = True
+        implementation = value.get("implementation_frontier", {})
+        if "sky_tablet" in implementation:
+            sky_note = (
+                "current source and production artifact content are hash-aligned; "
+                "exact Vercel deployment identity remains unverified"
+                if aligned else
+                "current source is observed, but the production artifact content hash differs; "
+                "release reconciliation remains blocked"
+            )
+            if implementation["sky_tablet"] != sky_note:
+                implementation["sky_tablet"] = sky_note
+                changed = True
+
+    if changed and value.get("as_of_utc") != observed_at:
+        value["as_of_utc"] = observed_at
+    return changed
+
+
 def write_stale(path: Path, value: dict[str, Any], reasons: list[str]) -> bool:
     changed = False
     if value.get("status") != "STALE":
@@ -423,9 +563,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--live", action="store_true", help="resolve live GitHub and Vercel boundaries")
     parser.add_argument("--allow-stale", action="store_true", help="accept truthful STALE state, never schema errors")
     parser.add_argument("--mark-stale", action="store_true", help="persist STALE when live or TTL checks fail")
+    parser.add_argument(
+        "--refresh-live",
+        action="store_true",
+        help="persist only corroborated live facts, then recompute effective status",
+    )
     parser.add_argument("--now", help="override current UTC time for deterministic tests")
     parser.add_argument("--report", type=Path, help="write machine-readable verification evidence")
     args = parser.parse_args(argv)
+
+    if args.refresh_live and not args.live:
+        parser.error("--refresh-live requires --live")
 
     try:
         value = load_json(args.manifest)
@@ -437,7 +585,15 @@ def main(argv: list[str] | None = None) -> int:
     result = assess_static(value, inventory, now=now)
     if args.live and not result.errors:
         assess_live(value, result)
-    if args.mark_stale and result.stale_reasons:
+    if args.refresh_live and not result.errors:
+        refresh_from_live(value, result.evidence, now=now)
+        value.setdefault("verification", {})["stale_reasons"] = []
+        value["status"] = "STALE"
+        result = assess_static(value, inventory, now=now)
+        if not result.errors:
+            assess_live(value, result)
+        write_stale(args.manifest, value, result.stale_reasons)
+    elif args.mark_stale and result.stale_reasons:
         write_stale(args.manifest, value, result.stale_reasons)
     if args.report:
         args.report.write_text(json.dumps({
