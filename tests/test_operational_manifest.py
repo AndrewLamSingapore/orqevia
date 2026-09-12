@@ -38,7 +38,7 @@ def test_published_image_can_be_ahead_of_unverified_host():
     manifest, inventory = fixtures()
     manifest["systems"]["prime"]["release_sha"] = "f" * 40
     manifest["systems"]["prime"]["published_image"] = "ghcr.io/andrewlamsingapore/prime:sha-fffffff"
-    now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    now = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
     result = assess_static(manifest, inventory, now=now)
     assert result.errors == []
     assert "release_runtime_drift:prime" in result.stale_reasons
@@ -66,7 +66,7 @@ def test_invalid_contract_commit_is_rejected():
 
 def test_age_does_not_turn_truthful_stale_snapshot_into_schema_error():
     manifest, inventory = fixtures()
-    baseline = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    baseline = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
     result = assess_static(manifest, inventory, now=baseline + timedelta(days=3))
     assert result.errors == []
     assert "verification_expired:manifest" in result.stale_reasons
@@ -98,8 +98,72 @@ def test_missing_deployment_authentication_cannot_prove_current(monkeypatch):
 def test_sky_static_runtime_is_part_of_the_active_ssot():
     from scripts import verify_operational_manifest as verifier
     manifest, inventory = fixtures()
-    now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
+    now = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
     result = assess_static(manifest, inventory, now=now)
     assert "sky" in verifier.EXPECTED_ACTIVE
     assert manifest["systems"]["sky"]["production_state"] == "READY"
     assert result.errors == []
+
+
+def test_refresh_advances_only_corroborated_public_runtime_facts():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    now = datetime(2026, 9, 12, 7, 0, tzinfo=timezone.utc)
+    head = "1" * 40
+    evidence = {
+        "github": {"authority": {"source_head_sha": head}},
+        "vercel": {"authority": {
+            "health_ok": True,
+            "runtime_sha": head,
+            "api_verified": False,
+        }},
+    }
+
+    old_deployment = manifest["systems"]["authority"]["production_deployment_id"]
+    assert verifier.refresh_from_live(manifest, evidence, now=now) is True
+    authority = manifest["systems"]["authority"]
+    assert authority["source_head_sha"] == head
+    assert authority["release_sha"] == head
+    assert authority["runtime_sha"] == head
+    assert authority["production_deployment_id"] == old_deployment
+    assert authority["state"] == "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
+
+
+def test_refresh_does_not_promote_uncorroborated_runtime():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    before = copy.deepcopy(manifest["systems"]["game"])
+    evidence = {
+        "github": {"game": {"source_head_sha": "2" * 40}},
+        "vercel": {"game": {
+            "health_ok": True,
+            "runtime_sha": "3" * 40,
+            "api_verified": False,
+        }},
+    }
+    verifier.refresh_from_live(manifest, evidence, now=datetime.now(timezone.utc))
+    assert manifest["systems"]["game"] == before
+
+
+def test_refresh_records_sky_drift_without_relabeling_release():
+    from scripts import verify_operational_manifest as verifier
+    manifest, _ = fixtures()
+    manifest = copy.deepcopy(manifest)
+    sky = manifest["systems"]["sky"]
+    previous_release = sky["release_sha"]
+    head = "4" * 40
+    evidence = {
+        "github": {"sky": {"source_head_sha": head}},
+        "vercel": {"sky": {
+            "current_source_content_sha256": "5" * 64,
+            "runtime_content_sha256": "6" * 64,
+            "api_verified": False,
+        }},
+    }
+    verifier.refresh_from_live(manifest, evidence, now=datetime.now(timezone.utc))
+    assert sky["source_head_sha"] == head
+    assert sky["release_sha"] == previous_release
+    assert sky["state"] == "SOURCE_HEAD_OBSERVED_RUNTIME_CONTENT_DRIFT"
+    assert "production artifact content hash differs" in manifest["implementation_frontier"]["sky_tablet"]
