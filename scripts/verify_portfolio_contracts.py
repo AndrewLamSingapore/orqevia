@@ -8,6 +8,7 @@ targets=[*((root/'contracts'/name,digest) for name,digest in manifest['schemas']
 for path,expected in targets:
     content=path.read_bytes()
     if path.parent.name=='contracts':content=(json.dumps(json.loads(content),indent=2,separators=(',', ': '))+'\n').encode()
+    else:content=content.replace(b'\r\n',b'\n')
     actual=hashlib.sha256(content).hexdigest()
     if actual!=expected:raise SystemExit(f'Portfolio contract copy drifted: {path.relative_to(root)}')
 print('PRIME portfolio contract integrity: OK')
