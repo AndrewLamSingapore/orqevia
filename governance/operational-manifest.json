@@ -1,7 +1,7 @@
 {
   "schema_version": "4.2.0",
   "status": "STALE",
-  "as_of_utc": "2026-09-14T06:44:44.377682Z",
+  "as_of_utc": "2026-09-14T22:32:43.635566Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -71,7 +71,7 @@
       "source_head_sha": "f3fec388a29cdd65548195d25d0a446d0ee2259a",
       "release_sha": "f3fec388a29cdd65548195d25d0a446d0ee2259a",
       "runtime_sha": null,
-      "verified_at_utc": "2026-09-14T01:10:40.514216Z",
+      "verified_at_utc": "2026-09-14T22:32:43.635566Z",
       "runtime": "github-pages",
       "state": "SOURCE_RELEASE_VERIFIED",
       "note": "No independent runtime revision endpoint is available; runtime_sha is intentionally null."
@@ -176,7 +176,7 @@
       "source_head_sha": "2de175dc61a0ad3acdc9886d5d8e909d0ef94b5e",
       "release_sha": "2de175dc61a0ad3acdc9886d5d8e909d0ef94b5e",
       "runtime_sha": "2de175dc61a0ad3acdc9886d5d8e909d0ef94b5e",
-      "verified_at_utc": "2026-09-14T01:10:40.514216Z",
+      "verified_at_utc": "2026-09-14T22:32:43.635566Z",
       "runtime": "vercel-static",
       "vercel_project_id": "prj_MniyVhjPHLiwQufvuqIjeYErQmEP",
       "vercel_project": "sky-tablet",
