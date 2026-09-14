@@ -5,6 +5,21 @@ from app import interface_server
 
 
 class InterfaceServerTests(unittest.TestCase):
+    def test_public_profile_download_headers_preserve_bytes(self):
+        from fastapi.responses import Response
+        from unittest.mock import AsyncMock
+        static = next(r.app for r in interface_server.app.routes if getattr(r, 'path', '') == '/pwa')
+        body=b'public-profile-fixture'
+        with patch.dict('os.environ', {'PRIME_PWA_ORIGIN':'https://testserver'}), patch.object(static, 'check_config', AsyncMock()), patch.object(static, 'get_response', AsyncMock(return_value=Response(body))), TestClient(interface_server.app, base_url='https://testserver') as client:
+            response=client.get('/pwa/JARVIS-ABEX-HTTPS.mobileconfig')
+            assert response.content==body
+            assert response.headers['content-type']=='application/x-apple-aspen-config'
+            assert response.headers['content-disposition']=='attachment; filename="JARVIS-ABEX-HTTPS.mobileconfig"'
+        with patch.dict('os.environ', {'PRIME_PWA_ORIGIN':'https://testserver'}), TestClient(interface_server.app, base_url='https://testserver') as client:
+            missing=client.get('/pwa/JARVIS-ABEX-HTTPS.mobileconfig')
+            assert missing.status_code==404
+            assert 'content-disposition' not in missing.headers
+
     def test_only_adopted_routes_and_protocol_header(self):
         with TestClient(interface_server.app, base_url='https://testserver') as client:
             response=client.get('/health')
