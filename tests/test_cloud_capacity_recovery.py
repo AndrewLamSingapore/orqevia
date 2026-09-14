@@ -1,9 +1,7 @@
 import asyncio
 from decimal import Decimal
 import json
-from pathlib import Path
 import sqlite3
-import uuid
 import httpx
 import pytest
 from app.provider_runtime import ChatCompletionProvider,ModelSpec,ProviderFailure,complete
@@ -18,10 +16,10 @@ def test_explicit_capacity_is_rejected_admission(stream):
     with pytest.raises(ProviderFailure) as caught:asyncio.run(complete(adapter,MODEL,[],output_tokens=4,max_retries=0))
     assert caught.value.code=='CAPACITY' and caught.value.pre_execution
 
-def fixture(monkeypatch,*,tier='FLAGSHIP',rate='1',qualified=True,partial=False):
+def fixture(monkeypatch,tmp_path,*,tier='FLAGSHIP',rate='1',qualified=True,partial=False):
     from app import cloud_execution as cloud
     from app.job_queue import JobQueue,QueuePolicy,Provider
-    root=Path(__file__).resolve().parents[2]/'work'/('capacity-fixture-'+uuid.uuid4().hex);root.mkdir()
+    root=tmp_path/'capacity-fixture';root.mkdir()
     monkeypatch.setenv('PRIME_DATA_DIR',str(root))
     base={'enabled':True,'qualification_status':'QUALIFIED','location':'cloud','tier':'MINI','context_tokens':4096,
           'output_tokens':64,'input_usd_million':'1','output_usd_million':'1','endpoint':'https://fixture.invalid/chat'}
@@ -55,8 +53,8 @@ def fixture(monkeypatch,*,tier='FLAGSHIP',rate='1',qualified=True,partial=False)
         with sqlite3.connect(root/'compute-ledger.db') as db:return json.loads(db.execute('SELECT details FROM reasoning_attempts').fetchone()[0])
     return run,calls,delays,metrics,queue,job,root
 
-def test_real_queue_dispatch_retry_higher_qualified_fallback_and_durable_metrics(monkeypatch):
-    run,calls,delays,metrics,queue,job,root=fixture(monkeypatch)
+def test_real_queue_dispatch_retry_higher_qualified_fallback_and_durable_metrics(monkeypatch,tmp_path):
+    run,calls,delays,metrics,queue,job,root=fixture(monkeypatch,tmp_path)
     result=run()
     assert calls==['preferred','preferred','alternate'] and delays==[1]
     assert result['input_tokens']==10 and result['output_tokens']==2
@@ -71,8 +69,8 @@ def test_real_queue_dispatch_retry_higher_qualified_fallback_and_durable_metrics
 @pytest.mark.parametrize('kwargs,code',[
     ({'tier':'NANO'},'FALLBACK_POLICY_DENIED'),({'rate':'10000'},'FALLBACK_POLICY_DENIED'),
     ({'qualified':False},'FALLBACK_UNQUALIFIED'),({'partial':True},'CAPACITY')])
-def test_no_downgrade_budget_escape_unqualified_or_partial_replay(monkeypatch,kwargs,code):
-    run,calls,delays,metrics,queue,job,root=fixture(monkeypatch,**kwargs)
+def test_no_downgrade_budget_escape_unqualified_or_partial_replay(monkeypatch,tmp_path,kwargs,code):
+    run,calls,delays,metrics,queue,job,root=fixture(monkeypatch,tmp_path,**kwargs)
     with pytest.raises(ProviderFailure,match=code):run()
     assert 'alternate' not in calls
     if kwargs.get('partial'):assert calls==['preferred'] and delays==[]

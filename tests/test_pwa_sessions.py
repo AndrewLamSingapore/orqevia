@@ -1,9 +1,7 @@
 import hashlib
 import json
-from pathlib import Path
 import secrets
 import time
-import uuid
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -12,8 +10,8 @@ ORIGIN='https://192.168.1.23:8443'
 HEADERS={'Origin':ORIGIN,'X-Jarvis-PWA':'1'}
 
 @pytest.fixture
-def setup(monkeypatch):
-    root=Path(__file__).resolve().parents[2]/'work'/('pwa-fixture-'+uuid.uuid4().hex);root.mkdir()
+def setup(monkeypatch,tmp_path):
+    root=tmp_path/'pwa-fixture';root.mkdir()
     monkeypatch.setenv('PRIME_DATA_DIR',str(root));monkeypatch.setenv('PRIME_PWA_ORIGIN',ORIGIN)
     monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
