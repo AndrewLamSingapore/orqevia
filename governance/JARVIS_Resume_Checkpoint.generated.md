@@ -3,7 +3,7 @@
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
 - Effective status: **STALE**
-- Manifest observation: `2026-09-14T06:44:44.377682Z`
+- Manifest observation: `2026-09-13T04:54:25.216364Z`
 - Verification time: `2026-09-07T07:12:00Z`
 - Freshness window: `24 hours`
 
@@ -11,13 +11,13 @@
 
 | System | Source head | Release | Runtime | Verified | State |
 |---|---|---|---|---|---|
-| control | `f3fec388a29c` | `f3fec388a29c` | `—` | `2026-09-14T01:10:40.514216Z` | SOURCE_RELEASE_VERIFIED |
-| authority | `d1ee61dff52b` | `d1ee61dff52b` | `d1ee61dff52b` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| game | `0edc9c5ba37f` | `0edc9c5ba37f` | `0edc9c5ba37f` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| portal | `0de1288c69f2` | `0de1288c69f2` | `0de1288c69f2` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| control | `f3fec388a29c` | `f3fec388a29c` | `—` | `2026-09-13T04:54:25.216364Z` | SOURCE_RELEASE_VERIFIED |
+| authority | `90f2a487a8d8` | `90f2a487a8d8` | `90f2a487a8d8` | `2026-09-13T04:54:25.216364Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| game | `49e7bfab2c32` | `49e7bfab2c32` | `49e7bfab2c32` | `2026-09-13T04:54:25.216364Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| portal | `0d6b2bc8089b` | `0d6b2bc8089b` | `0d6b2bc8089b` | `2026-09-13T04:54:25.216364Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 | prime | `—` | `c449dd1c8e22` | `c449dd1c8e22` | `2026-09-07T07:12:00Z` | ALIGNED_VERIFIED |
-| sky | `2de175dc61a0` | `2de175dc61a0` | `2de175dc61a0` | `2026-09-14T01:10:40.514216Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| velyqua | `93673544d2c3` | `93673544d2c3` | `93673544d2c3` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| sky | `2de175dc61a0` | `2de175dc61a0` | `2de175dc61a0` | `2026-09-13T04:54:25.216364Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| velyqua | `8177e7d79f1d` | `8177e7d79f1d` | `8177e7d79f1d` | `2026-09-13T04:54:25.216364Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 
 ## Shared contract
 

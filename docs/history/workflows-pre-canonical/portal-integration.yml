@@ -1,0 +1,100 @@
+name: Portal Integration Verify
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - feature/portal-experiment-ingest
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Portal integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+      - name: Compile
+        run: python -m compileall -q app tests scripts
+      - name: Unit and API tests
+        run: python -m unittest discover -s tests -v
+      - name: Verify real Portal candidate
+        run: python -m scripts.verify_portal_integration
+      - name: Import composed runtime
+        env:
+          PRIME_DATA_DIR: /tmp/prime-test
+        run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/api/integrations/portal/experiments' in paths; assert '/api/integrations/velyqua/events' in paths; assert '/api/integrations/portal/results/flush' in paths"
+      - name: Build container
+        run: docker build -t prime:portal-integration .
+      - name: Container health and API smoke
+        run: |
+          docker network create prime-portal-integration
+          docker run -d --name fake-ollama --network prime-portal-integration --network-alias ollama \
+            -v "${{ github.workspace }}/tests:/fixture:ro" \
+            python:3.12-alpine python /fixture/fake_ollama.py
+          docker run -d --name prime-smoke --network prime-portal-integration -p 18000:8000 \
+            -e PRIME_DATA_DIR=/data \
+            -e PRIME_INTEGRATION_TOKEN=smoke-integration-token \
+            -e OLLAMA_BASE_URL=http://ollama:11434 \
+            -e PRIME_FAST_MODEL=gemma3:1b \
+            -e PRIME_DEEP_MODEL=gemma3:1b \
+            -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
+            prime:portal-integration
+          trap 'docker logs prime-smoke || true; docker logs fake-ollama || true; docker rm -f prime-smoke fake-ollama || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18000/health >/tmp/health.json; then break; fi
+            sleep 1
+          done
+          python - <<'PY'
+          import json, urllib.request
+          health=json.load(open('/tmp/health.json'))
+          assert health['ok'] is True, health
+          candidate=json.load(open('contracts/examples/portal-aquarium-candidate.json'))
+          body=json.dumps({'candidate':candidate}).encode()
+          req=urllib.request.Request('http://127.0.0.1:18000/api/integrations/portal/experiments',data=body,headers={'Content-Type':'application/json'},method='POST')
+          with urllib.request.urlopen(req) as r: result=json.load(r)
+          assert result['experiment_spec']['target_system']=='velyqua', result
+          assert result['experiment_spec']['approval_state']!='approved', result
+          cid=candidate['candidate_id']
+          with urllib.request.urlopen(f'http://127.0.0.1:18000/api/integrations/portal/experiments/{cid}') as r: persisted=json.load(r)
+          assert persisted['experiment_spec']['experiment_id']==result['experiment_spec']['experiment_id']
+          spec=result['experiment_spec']
+          execution={
+              'experiment_id':spec['experiment_id'],
+              'candidate_id':spec['candidate_id'],
+              'state':'awaiting_owner_approval',
+              'objective':spec['objective'],
+              'evidence_requirements':spec['evidence_requirements'],
+              'owner_approval':None,
+              'created_at':spec['created_at'],
+          }
+          event={'event':{
+              'schema_version':'1.0',
+              'operation_id':'smoke-awaiting-owner-approval',
+              'account_id':'smoke-owner',
+              'aggregate_type':'experiment_execution',
+              'aggregate_id':spec['experiment_id'],
+              'event_type':'experiment_execution.awaiting_owner_approval',
+              'payload':execution,
+              'occurred_at':spec['created_at'],
+          }}
+          req=urllib.request.Request(
+              'http://127.0.0.1:18000/api/integrations/velyqua/events',
+              data=json.dumps(event).encode(),
+              headers={'Content-Type':'application/json','Authorization':'Bearer smoke-integration-token'},
+              method='POST')
+          with urllib.request.urlopen(req) as r: accepted=json.load(r)
+          assert accepted['accepted'] is True, accepted
+          assert accepted['operation_id']=='smoke-awaiting-owner-approval', accepted
+          assert accepted['evaluation']['safety']['actuation_authorized'] is False, accepted
+          print('container closed-loop smoke passed')
+          PY

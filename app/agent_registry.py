@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -12,7 +14,13 @@ MAX_DELEGATION_DEPTH = 2
 # Backward-compatible role aliases are resolved to canonical registered agent IDs
 # before work reaches the shared compute fabric. Unknown agent identities fail closed.
 MIGRATION_PATH = REGISTRY_PATH.with_name("agent_registry_migration.json")
-LEGACY_IDS = json.loads(MIGRATION_PATH.read_text())["legacy_ids"]
+_migration_bytes = MIGRATION_PATH.read_bytes()
+_expected_migration = os.getenv('PRIME_AGENT_MIGRATION_SHA256','').lower()
+if _expected_migration and hashlib.sha256(_migration_bytes).hexdigest()!=_expected_migration:
+    raise RuntimeError('Frozen Registry migration hash mismatch')
+MIGRATION = json.loads(_migration_bytes)
+LEGACY_IDS = MIGRATION['legacy_ids']
+SUCCESSORS = MIGRATION['compatibility']
 AGENT_ALIASES = {
     "prime": "prime", "strategy": "a01", "planner": "a02", "planning": "a02",
     "roadmap": "a03", "decision": "a04", "portfolio": "a05", "research": "a06",
@@ -32,8 +40,12 @@ class RegistryError(RuntimeError):
 
 @lru_cache(maxsize=1)
 def load_agent_registry() -> dict[str, Any]:
-    data = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-    if data.get("schema_version") != "1.1":
+    raw=REGISTRY_PATH.read_bytes()
+    expected=os.getenv('PRIME_AGENT_REGISTRY_SHA256','').lower()
+    if expected and hashlib.sha256(raw).hexdigest()!=expected:
+        raise RegistryError('Frozen Registry hash mismatch')
+    data = json.loads(raw)
+    if data.get("schema_version") != "2.0" or data.get('registry_version') != '1.0.0':
         raise RegistryError("unsupported registry schema")
     aliases = {lead["id"]: lead["agent_id"] for lead in data.get("leads", [])}
     if len(aliases) != 6 or len(set(aliases.values())) != 6:
@@ -50,17 +62,22 @@ def load_agent_registry() -> dict[str, Any]:
             raise RegistryError("unsupported agent authority")
         if agent.get("authority") == "restricted" and agent.get("human_approval") != "required_for_execution":
             raise RegistryError("restricted execution requires approval")
-        if agent.get("status") != "planned" or agent.get("model") != "unassigned":
+        if agent.get("status") != "registered" or agent.get("model") != "unassigned":
             raise RegistryError("runtime activation requires separately verified configuration")
-    if len(agents) != 29:
-        raise RegistryError(f"agent registry must contain exactly 29 agents; found {len(agents)}")
+        required={'immutable_id','purpose','responsibilities','non_responsibilities','allowed_delegation_targets','escalation_relationships','input_contract','output_contract','capability_requirements','tool_eligibility','model_tier_eligibility','compute_requirements','tap_relationship','failure_fallback','observability','version','lifecycle_status'}
+        if not required.issubset(agent) or agent['immutable_id']!=agent['agent_id']:
+            raise RegistryError('agent contract or immutable identity missing')
+        if agent['tap_relationship'].get('delegation_transfers_authority') is not False:
+            raise RegistryError('delegation cannot transfer authority')
+    if len(agents) != 21:
+        raise RegistryError(f"agent registry must contain exactly 21 agents; found {len(agents)}")
     ids = [a.get("id") for a in agents]
     if len(ids) != len(set(ids)) or any(not x for x in ids):
         raise RegistryError("agent IDs must be present and unique")
     prime = data.get("orchestrator", {}).get("id")
     if not prime:
         raise RegistryError("orchestrator ID is required")
-    if set(ids) != {f"a{i:02}" for i in range(1, 30)} or prime in ids:
+    if set(ids) != set(SUCCESSORS.values()) or prime in ids:
         raise RegistryError("canonical identity set is invalid")
     if not set(domains).issubset(ids):
         raise RegistryError("lead aliases must resolve to registered agents")
@@ -70,6 +87,26 @@ def load_agent_registry() -> dict[str, Any]:
     for agent in agents:
         if agent.get("reports_to") not in known:
             raise RegistryError(f"unknown parent for {agent.get('id')}")
+        children={a['id'] for a in agents if a['reports_to']==agent['id']}
+        if set(agent['allowed_delegation_targets'])!=children or set(agent['escalation_relationships'])!={agent['reports_to']}:
+            raise RegistryError('delegation/escalation contract does not match hierarchy')
+    responsibilities=[r['id'] for a in agents for r in a['responsibilities']]
+    if len(responsibilities)!=29 or set(responsibilities)!={'responsibility.'+key for key in SUCCESSORS}:
+        raise RegistryError('responsibility coverage must be complete and uniquely owned')
+    for agent in agents:
+        if set(agent['capability_requirements'])!={r['id'] for r in agent['responsibilities']}:
+            raise RegistryError('capability ownership does not match responsibilities')
+        if set(agent.get('excluded_capabilities',[])) != set(responsibilities)-set(agent['capability_requirements']):
+            raise RegistryError('explicit responsibility boundaries do not match ownership')
+        if any(SUCCESSORS[r['id'].split('.')[-1]]!=agent['id'] for r in agent['responsibilities']):
+            raise RegistryError('responsibility migration destination mismatch')
+    coverage=data.get('responsibility_coverage',[])
+    if len(coverage)!=29 or {item['responsibility_id'] for item in coverage}!=set(responsibilities):
+        raise RegistryError('coverage matrix is incomplete')
+    if any(SUCCESSORS.get(item['historical_agent'])!=item['owner'] for item in coverage):
+        raise RegistryError('coverage matrix destination mismatch')
+    if {key:value['canonical_id'] for key,value in data.get('named_operating_roles',{}).items()}!={'A12 Builder':'a17','A13 Test Engineer':'a18'}:
+        raise RegistryError('named engineering roles are inconsistent')
     parent = {a["id"]: a["reports_to"] for a in agents}
     for start in ids:
         seen, node = set(), start
@@ -109,6 +146,7 @@ def canonical_agent_id(value: str) -> str:
     # Case distinguishes retired A10 from the new canonical Data Lead a10.
     alias = LEGACY_IDS.get(raw) or AGENT_ALIASES.get(raw.lower())
     alias = alias or next((x["agent_id"] for x in load_agent_registry()["leads"] if x["id"] == raw), None)
+    alias = SUCCESSORS.get(alias or raw, alias)
     if alias and alias in registered_agent_ids():
         return alias
     raise RegistryError(f"unregistered agent identity: {raw}")
@@ -119,6 +157,13 @@ def agent_record(agent_id: str) -> dict[str, Any]:
     if canonical == orchestrator_id():
         return dict(load_agent_registry()["orchestrator"])
     return dict(_index()[canonical])
+
+
+def responsibility_owner(capability: str) -> str:
+    """Unique deterministic responsibility routing; never infer execution authority."""
+    owners=[a['id'] for a in _index().values() if capability in a['capability_requirements']]
+    if len(owners)!=1:raise RegistryError(f'unknown or ambiguous responsibility: {capability}')
+    return owners[0]
 
 
 def domain_lead(division: str) -> str:

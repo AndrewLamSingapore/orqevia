@@ -1,0 +1,34 @@
+{
+  "source_revision": "a3d79ef6e08f748f86558d0388fe6a613ca6124f",
+  "purpose": "Exact historical workflows; current CI supersedes automatic legacy architecture checks",
+  "files": [
+    {
+      "file": "ci.yml",
+      "sha256": "ef3be4b6b0b04e2da273a6273a398d753154954e626fbb38ef17c0d7624ff650"
+    },
+    {
+      "file": "portal-integration.yml",
+      "sha256": "8539ba95642c7b97a28f37c0d394ea9735b85919dedb22df8cca971daaea38f6"
+    },
+    {
+      "file": "publish-image.yml",
+      "sha256": "6bb65583e72c2e8845c3a89229edd7c137ed48c3283a2e1f60e8267dfd822b63"
+    },
+    {
+      "file": "release-acceptance.yml",
+      "sha256": "fb332d421f346a00a1769573d54453e31aa808dec7499f5cad979fe04ad60a51"
+    },
+    {
+      "file": "ssot-live.yml",
+      "sha256": "7c87c99457c07a96d7d97700da74f10439ea967e828b1120d0cfc1cbf9ef826d"
+    },
+    {
+      "file": "stable-spine.yml",
+      "sha256": "a561803ea3af9e3a1e5cda1dab1cdc5e29e7ca5543a371482a02d53397fe6f87"
+    },
+    {
+      "file": "sync-public-agent-registry.yml",
+      "sha256": "8e36eb4699bff04644aa3ed0d8de5e165d9a3c13af16bd66b5e66a7c9faae531"
+    }
+  ]
+}

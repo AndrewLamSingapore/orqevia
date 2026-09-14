@@ -17,7 +17,7 @@ def assert_raises(exc_type, fn):
 def test_deterministic_path_uses_registered_lead_and_specialist(tmp_path):
     rt = runtime(tmp_path)
     assert rt.resolve_path("engineering", "implement code for the service") == ["a15", "a17"]
-    assert rt.resolve_path("research", "compare benchmark options") == ["a06", "a08"]
+    assert rt.resolve_path("research", "compare benchmark options") == ["a01", "a04"]
 
 
 def test_prime_to_lead_and_lead_to_child_handoffs_are_enforced(tmp_path):
@@ -53,11 +53,11 @@ def test_consequential_external_action_requires_owner_approval(tmp_path):
 
 def test_public_snapshot_is_sanitized_and_observable(tmp_path):
     rt = runtime(tmp_path)
-    trace = rt.begin_path(["a25", "a27"])
+    trace = rt.begin_path(["a15", "a18"])
     rt.stage(trace_id=trace, agent_id="a27", stage="verification", status="started")
     rt.stage(trace_id=trace, agent_id="a27", stage="verification", status="completed", latency_ms=12.5)
     snapshot = rt.public_snapshot()
-    assert snapshot["summary"]["registered_agents"] == 29
+    assert snapshot["summary"]["registered_agents"] == 21
     assert snapshot["summary"]["executions_today"] >= 1
     allowed = {"trace_id", "timestamp", "agent_id", "stage", "status", "sequence"}
     assert snapshot["events"]

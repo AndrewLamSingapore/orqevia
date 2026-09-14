@@ -1,0 +1,376 @@
+{
+  "schema_version": "4.2.0",
+  "status": "STALE",
+  "as_of_utc": "2026-09-14T06:44:44.377682Z",
+  "canonical_machine_source": {
+    "repository": "AndrewLamSingapore/prime",
+    "branch": "main",
+    "path": "governance/operational-manifest.json"
+  },
+  "verification": {
+    "mode": "live_github_vercel_with_operator_dell_gate",
+    "verified_at_utc": "2026-09-07T07:12:00Z",
+    "stale_after_hours": 24,
+    "expires_at_utc": "2026-09-08T07:12:00Z",
+    "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
+    "stale_reasons": [
+      "vercel_api_not_verified:authority",
+      "vercel_api_not_verified:game",
+      "vercel_api_not_verified:portal",
+      "vercel_api_not_verified:sky",
+      "vercel_api_not_verified:velyqua",
+      "verification_expired:dell_runtime",
+      "verification_expired:manifest",
+      "verification_expired:prime",
+      "verification_expired:shared_contract"
+    ],
+    "rule": "CURRENT requires all recorded facts to be fresh, live cloud checks to pass, and a post-update Dell JARVIS.cmd status acceptance."
+  },
+  "human_resume_mirror": {
+    "library_file_id": "libfile_79bbf3a6138c8191a69bce305ea6094b",
+    "title": "JARVIS_Resume_Checkpoint_2026-08-30.md",
+    "generator": "scripts/generate_resume_checkpoint.py",
+    "generated_repository_path": "governance/JARVIS_Resume_Checkpoint.generated.md",
+    "rule": "generated from this manifest; never maintained as an independent truth source"
+  },
+  "scope": {
+    "active_systems": [
+      "control",
+      "authority",
+      "game",
+      "portal",
+      "prime",
+      "sky",
+      "velyqua"
+    ],
+    "excluded_systems": [],
+    "resumed_at_utc": "2026-09-07T03:00:32Z",
+    "authorization": "Lam explicitly resumed recovery, alignment, implementation, merge and deployment on 7 September 2026."
+  },
+  "alignment_state": {
+    "source_and_deployments": "ALIGNED_VERIFIED",
+    "portfolio_relay": "CLOUD_CONFIGURED_LOCAL_ACCEPTANCE_VERIFIED",
+    "authority_evidence_review": "READY_DRAFT_ONLY",
+    "dell_runtime": "HARNESS_V0_PILOT_DEPLOYMENT_VERIFIED",
+    "compute_hardening": "HEALTHY_RECHECKED",
+    "queue_hardening": "HARNESS_V0_PILOT_LOCAL_SINGLE_SLOT_VERIFIED",
+    "sanitized_observability": "ALIGNED_VERIFIED",
+    "overall": "CURRENT"
+  },
+  "shared_contract": {
+    "version": "2.0.0",
+    "repository": "AndrewLamSingapore/AndrewLamSingapore",
+    "source_sha": "a05fa2e3df80733af9ed87068b3526768d4a8394",
+    "path": "portfolio-contracts/manifest.json",
+    "verified_at_utc": "2026-09-07T03:00:32Z"
+  },
+  "systems": {
+    "control": {
+      "role": "public control and shared contracts",
+      "repository": "AndrewLamSingapore/AndrewLamSingapore",
+      "source_head_sha": "f3fec388a29cdd65548195d25d0a446d0ee2259a",
+      "release_sha": "f3fec388a29cdd65548195d25d0a446d0ee2259a",
+      "runtime_sha": null,
+      "verified_at_utc": "2026-09-14T01:10:40.514216Z",
+      "runtime": "github-pages",
+      "state": "SOURCE_RELEASE_VERIFIED",
+      "note": "No independent runtime revision endpoint is available; runtime_sha is intentionally null."
+    },
+    "authority": {
+      "role": "governed evidence review and draft projection",
+      "repository": "AndrewLamSingapore/authority-engine",
+      "source_head_sha": "d1ee61dff52ba3047f7a738a726bb071daeff7e0",
+      "release_sha": "d1ee61dff52ba3047f7a738a726bb071daeff7e0",
+      "runtime_sha": "d1ee61dff52ba3047f7a738a726bb071daeff7e0",
+      "verified_at_utc": "2026-09-14T06:44:44.377682Z",
+      "vercel_project_id": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
+      "vercel_project": "authority-engine-app",
+      "production_deployment_id": "dpl_EDDhaf7nGZ4xTc99Dw82oErpoBZT",
+      "production_deployment_url": "https://authority-engine-6j94h2h6d-andrew-lam-singapore.vercel.app",
+      "production_state": "READY",
+      "health_url": "https://authority-engine-app.vercel.app/api/health",
+      "jarvis_status_url": "https://authority-engine-app.vercel.app/api/jarvis-status",
+      "state": "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED",
+      "publication_mode": "explicit_draft_only",
+      "sanitized_observability": true
+    },
+    "game": {
+      "role": "bounded simulation and interactive product",
+      "repository": "AndrewLamSingapore/game-platform",
+      "source_head_sha": "0edc9c5ba37fc9b30088e07c234862ed4909df52",
+      "release_sha": "0edc9c5ba37fc9b30088e07c234862ed4909df52",
+      "runtime_sha": "0edc9c5ba37fc9b30088e07c234862ed4909df52",
+      "verified_at_utc": "2026-09-14T06:44:44.377682Z",
+      "vercel_project_id": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
+      "vercel_project": "game-platform",
+      "production_deployment_id": "dpl_DszZ3CxB3WnZztcAcQXNLzbgRunk",
+      "production_deployment_url": "https://game-platform-hchn3jqzv-andrew-lam-singapore.vercel.app",
+      "production_state": "READY",
+      "health_url": "https://game-platform-wine-nine.vercel.app/api/health",
+      "state": "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED",
+      "ai_degradation": "deterministic-fallback-v1",
+      "portfolio_relay": "configured_ready"
+    },
+    "portal": {
+      "role": "knowledge substrate and durable portfolio relay",
+      "repository": "AndrewLamSingapore/the-portal",
+      "source_head_sha": "0de1288c69f2e1442b815399f21478d937362f79",
+      "release_sha": "0de1288c69f2e1442b815399f21478d937362f79",
+      "runtime_sha": "0de1288c69f2e1442b815399f21478d937362f79",
+      "verified_at_utc": "2026-09-14T06:44:44.377682Z",
+      "vercel_project_id": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
+      "vercel_project": "the-portal",
+      "production_deployment_id": "dpl_2ABTwK2dszWFPH6eXpXAnSjJmswC",
+      "production_deployment_url": "https://the-portal-6q609ijkh-andrew-lam-singapore.vercel.app",
+      "production_state": "READY",
+      "health_url": "https://the-portal-ten.vercel.app/api/health",
+      "state": "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED",
+      "product_version": "6.4.0",
+      "product_version_source": "package.json",
+      "portfolio_relay": true,
+      "portfolio_outbox_schema": true,
+      "outbox_ready": 0,
+      "dead_letter_redrive": "authenticated_bounded"
+    },
+    "prime": {
+      "role": "only cognitive control plane for JARVIS",
+      "repository": "AndrewLamSingapore/prime",
+      "source_head_sha": null,
+      "source_head_resolution": "live",
+      "source_head_observed_before_manifest_commit_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+      "release_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+      "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+      "verified_at_utc": "2026-09-07T07:12:00Z",
+      "published_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
+      "runtime": "private-dell-docker",
+      "state": "ALIGNED_VERIFIED",
+      "authority": "Stable Spine sole PDP; Harness v0 PEP active for a14, a16 and a21; inference-only; external actions remain approval-gated",
+      "note": "source_head_sha is live-resolved because a Git-tracked manifest cannot contain the SHA of its own commit.",
+      "source_verified_at_utc": "2026-09-07T07:05:23Z",
+      "remote_health": "HEALTHY_READ_ONLY_TUNNEL_VERIFIED",
+      "remote_checked_at_utc": "2026-09-07T06:11:00Z",
+      "publication_workflow_run": 34093768658,
+      "publication_verified_at_utc": "2026-09-07T07:07:00Z"
+    },
+    "velyqua": {
+      "role": "independent hardware-agnostic living-water intelligence",
+      "repository": "AndrewLamSingapore/velyqua",
+      "vercel_project_id": "prj_SixsxN06HC8wtBVwGpF4eukIXfY2",
+      "vercel_project": "velyqua",
+      "health_url": "https://velyqua.vercel.app/api/health",
+      "commercial_isolation": true,
+      "observation_gate_1": "PARTIAL_ACQUISITION_INTEGRITY",
+      "physical_actuation": false,
+      "source_head_sha": "93673544d2c3d99b5db4182a10687ed2e4ffc675",
+      "verified_at_utc": "2026-09-14T06:44:44.377682Z",
+      "release_sha": "93673544d2c3d99b5db4182a10687ed2e4ffc675",
+      "runtime_sha": "93673544d2c3d99b5db4182a10687ed2e4ffc675",
+      "production_deployment_id": "dpl_9BjPG2RBUSi13CTqMPaYjbmXN57A",
+      "production_deployment_url": "https://velyqua-6mkrcsr13-andrew-lam-singapore.vercel.app",
+      "production_state": "READY",
+      "state": "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
+    },
+    "sky": {
+      "role": "public educational working prototype with explicit evidence boundaries",
+      "repository": "AndrewLamSingapore/sky-tablet",
+      "source_head_sha": "2de175dc61a0ad3acdc9886d5d8e909d0ef94b5e",
+      "release_sha": "2de175dc61a0ad3acdc9886d5d8e909d0ef94b5e",
+      "runtime_sha": "2de175dc61a0ad3acdc9886d5d8e909d0ef94b5e",
+      "verified_at_utc": "2026-09-14T01:10:40.514216Z",
+      "runtime": "vercel-static",
+      "vercel_project_id": "prj_MniyVhjPHLiwQufvuqIjeYErQmEP",
+      "vercel_project": "sky-tablet",
+      "production_deployment_id": "dpl_HYqKtiWUJW9Bjfqv3RqsoXTqdgxb",
+      "production_deployment_url": "https://sky-tablet-r4ku89p0r-andrew-lam-singapore.vercel.app",
+      "production_state": "READY",
+      "runtime_probe_url": "https://sky-tablet.vercel.app/",
+      "runtime_content_sha256": "13c5f84dfde688b8bba0d484ef201e841bd7ec0705579da1fef6370bdba6fb4e",
+      "source_path": "index.html",
+      "state": "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED",
+      "evidence_boundary": "E2 working software; educational historical claims require scholarly verification"
+    }
+  },
+  "event_alignment": {
+    "flow": "Vercel producers -> Portal durable outbox -> PRIME authenticated pull/ack",
+    "inbound_dell_exposure_required": false,
+    "contract": "portfolio-event-v1",
+    "delivery": "at-least-once with idempotent PRIME ingestion",
+    "state": "CLOUD_AND_READ_ONLY_PRIME_PATH_VERIFIED"
+  },
+  "dell_runtime": {
+    "command": "JARVIS.cmd status",
+    "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
+    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
+    "verified_at_utc": "2026-09-07T07:12:00Z",
+    "accepted": true,
+    "post_update_status": true,
+    "result": "Healthy, local-only, approval-gated and no-actuation. Harness v0 pilot is ready for a14, a16 and a21; cloud overflow is disabled and local inference concurrency is one.",
+    "evidence": {
+      "status_capture_library_file_id": "libfile_309baa13bf38819186c7c9d2209532f0",
+      "status_capture_title": "IMG_5603.jpeg",
+      "later_update_capture_library_file_id": "libfile_4db238ed342c8191966883da4fff7e54",
+      "later_update_capture_title": "IMG_5367.jpeg",
+      "later_update_capture_created_at_utc": "2026-09-04T01:44:53Z",
+      "runtime_tag_prefix_confirmed": "c449dd1",
+      "repository_check": "C:\\\\Users\\\\User\\\\OneDrive\\\\Documents\\\\prime updated from main; JARVIS.cmd update and status verified operational",
+      "limitations": [
+        "The health response identifies the runtime version; the full runtime SHA is grounded in the verified release record, exact image tag, and retained update/status capture."
+      ],
+      "read_only_health_capture_library_file_id": "libfile_b6e1f08c04d4819188fd13e97095e303",
+      "read_only_health_capture_title": "IMG_5587.jpeg",
+      "tunnel_metadata_capture_library_file_id": "libfile_e8e853ed35a08191b90ce61229b4cf9d",
+      "tunnel_metadata_capture_title": "IMG_5582.jpeg",
+      "connector": "JARVIS PRIME \u2013 Read Only",
+      "tunnel_id": "tunnel_6a97806a99e481919b6adb92aa8b7505",
+      "system_health_version": "7.3.1.1-evidence-grounded",
+      "system_health_result": "healthy",
+      "update_capture_library_file_id": "libfile_ad74e3e74ba88191b1baaad6caa83b03",
+      "update_capture_title": "IMG_5604.jpeg",
+      "harness_status_capture_library_file_id": "libfile_589afae0149c819188880c909575e3cf",
+      "harness_status_capture_title": "IMG_5602.jpeg",
+      "harness_status": {
+        "ready": true,
+        "mode": "pilot-local-only",
+        "policy_version": "harness-v0",
+        "pilot_agents": [
+          "a14",
+          "a16",
+          "a21"
+        ],
+        "cloud_overflow": false,
+        "local_concurrency": 1,
+        "counts": {
+          "authorized": 0,
+          "executed": 0,
+          "revoked": 0
+        }
+      }
+    },
+    "rollback": "Prior Docker image and persistent data are retained; no reinstall, volume deletion, or rollback was performed.",
+    "last_benchmarked_acceleration": {
+      "observed_at_utc": "2026-09-02T07:16:00Z",
+      "backend": "native-windows-ollama-vulkan",
+      "device": "Intel Iris Xe Graphics",
+      "processor_observed": "100% GPU",
+      "models": [
+        "gemma3:1b",
+        "embeddinggemma:300m-qat-q4_0"
+      ],
+      "state": "HISTORICAL_RECHECK_REQUIRED"
+    }
+  },
+  "github_hygiene": {
+    "branch_inventory": {
+      "path": "governance/branch-inventory.json",
+      "snapshot_at_utc": "2026-09-04T03:14:47Z",
+      "total_non_main_branches": 112,
+      "classification_counts": {
+        "active": 0,
+        "checkpoint": 11,
+        "merged": 95,
+        "rollback": 6
+      },
+      "scope_note": "Historical fixed 112-branch cohort; not a live repository-wide branch total."
+    },
+    "retention_rule": "Preserve rollback and checkpoint evidence. A merged classification does not authorize deletion.",
+    "branch_protection": "VELYQUA_MAIN_PROTECTED_VERIFIED",
+    "branch_protection_evidence": {
+      "repository": "AndrewLamSingapore/velyqua",
+      "branch": "main",
+      "rule_id": 82824657,
+      "verified_at_utc": "2026-09-07T03:30:20Z",
+      "verification": "saved GitHub settings reread after account reauthentication",
+      "requires_pull_request": true,
+      "required_status_checks": [
+        {
+          "context": "verify",
+          "app": "github-actions"
+        },
+        {
+          "context": "Vercel",
+          "app": "vercel"
+        }
+      ],
+      "requires_up_to_date_branch": true,
+      "required_approving_reviews": 0,
+      "allows_bypass": false,
+      "allows_force_pushes": false,
+      "allows_deletions": false,
+      "authorization": "Lam explicitly approved these exact settings and completed GitHub Mobile verification.",
+      "scope": "VELYQUA only; no claim that all repository branches are protected"
+    }
+  },
+  "release_gate": {
+    "policy": "zero-known-defect",
+    "required": [
+      "source_ci_green",
+      "preview_ready",
+      "production_ready",
+      "health_verified",
+      "rollback_recorded",
+      "dell_post_update_status"
+    ],
+    "current_result": "PASSED",
+    "secret_values_allowed": false
+  },
+  "supersession": {
+    "rule": "This manifest supersedes older architecture, deployment, resume, and branch-status checkpoints. Git and Library version history remain recovery evidence, not competing current truth.",
+    "duplicate_current_checkpoints_allowed": false
+  },
+  "safety_boundaries": {
+    "prime_public_exposure": false,
+    "external_actions": "approval-gated",
+    "physical_actuation": false,
+    "velyqua": "RESUMED_SOFTWARE_NO_PHYSICAL_ACTUATION"
+  },
+  "implementation_frontier": {
+    "registry": "v1.1 source merged and image published; public 29-agent/six-lead projection, read-only runtime health, and latest release activation verified",
+    "harness_v0": "Dell pilot runtime deployed and status verified for a14, a16 and a21; functional dispatch/lease acceptance exercises and ABEX commissioning remain pending",
+    "hermes_agentscope": "cognition-only integrations require Harness v0; not activated",
+    "predictive_ml": "awaits sufficient real sensor data",
+    "velyqua": "acquisition integrity implemented; full quality policy enums unrecovered",
+    "portal_inhabitants": "concept recovered; implementation pending",
+    "sky_tablet": "current source and production artifact content are hash-aligned; exact Vercel deployment identity remains unverified",
+    "glm_track_1": "full wrapper and logging contract not recovered",
+    "checkpoint_repair": "PRIME image sha-c449dd1 deployed on Dell; post-update health and Harness v0 pilot status verified"
+  },
+  "release_results": {
+    "velyqua": {
+      "merged_prs": [
+        45,
+        46
+      ],
+      "verify": "66 unit tests plus 3 relay tests, typecheck and policy gates passed"
+    },
+    "authority": {
+      "merged_prs": [
+        43,
+        44,
+        45
+      ],
+      "public_registry_sync": "success",
+      "hierarchy": "29 specialists and six divisions rendered",
+      "production": "quality, Vercel deployment and production smoke passed at b2bdf9863e26c1bb596837b0c5e05f838f184200"
+    },
+    "game": {
+      "deployment": "current main deployed and health verified"
+    },
+    "prime": {
+      "merged_prs": [
+        51,
+        55,
+        56,
+        57
+      ],
+      "source_tests": 125,
+      "required_ci_checks": "all five passed",
+      "image_publication": "sha-c449dd1 publication workflow passed",
+      "host_installation": "sha-c449dd1 active on Dell; post-update JARVIS.cmd status and Harness v0 status passed"
+    },
+    "sky": {
+      "source_sha": "006e4a39b7853e0198c9b735b4d3943031a204ab",
+      "production_deployment_id": "dpl_HYqKtiWUJW9Bjfqv3RqsoXTqdgxb",
+      "verification": "canonical production URL serves the deployed main artifact"
+    }
+  }
+}

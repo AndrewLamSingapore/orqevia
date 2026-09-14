@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "classification": "PRE_CANONICAL_HISTORICAL",
+  "entries": [
+    {
+      "workspace_relative_path": "outputs/continuation-staging-1789372374303507900/FINAL_REVIEW.json",
+      "sha256": "af494c57e426c71730a2d666dca7eb9d37b6a98d1d5bc96c9fb16d0e8614c5fd"
+    },
+    {
+      "workspace_relative_path": "outputs/continuation-20260914/PWA_SESSION_CONTINUATION.xml",
+      "sha256": "43b4161689292b97262705577c8d81573140f49928ff2850d5e554fa5e4051a0"
+    }
+  ]
+}

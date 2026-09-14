@@ -20,3 +20,18 @@ venv/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Product source only; runtime deployment/evidence remain external.
+outputs/
+prime-local/
+runtime/
+*.log
+*.zip
+*.dmp
+*.etl
+*.evtx
+node_modules/
+.pytest-tmp/
+pytest-cache-files-*/
+*.crt
+*.cer

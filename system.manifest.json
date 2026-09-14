@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "architecture_version": "JARVIS PRIME Architecture v1",
+  "source_revision": {
+    "resolution": "git rev-parse HEAD at build; recorded in external build receipt",
+    "predecessor": "f289ce06dec167fd1028f949134aa2c2bb19b930"
+  },
+  "components": {
+    "registry": {
+      "path": "config/agent_registry.json",
+      "version": "1.0.0",
+      "sha256": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6"
+    },
+    "interface": {
+      "path": "docs/interface-contract.v1.json",
+      "version": "1.0.0-candidate",
+      "sha256": "5e95ca4879d78a0011740f33ed415da306d546cf6e767624a41fde6636bc5791"
+    },
+    "task": {
+      "path": "contracts/task-v1.schema.json",
+      "version": "1.0.0",
+      "sha256": "6df9b2218fc0d6f23bd22fcf3cce27d233dbf12551a3361bee2288967cc80812"
+    },
+    "artifact": {
+      "path": "contracts/artifact-v1.schema.json",
+      "version": "1.0.0",
+      "sha256": "2288c7c9e69069e184a75e5d0be7e8fd28562abe6a9196f8f2503e0c752e0208"
+    }
+  },
+  "routing": [
+    "DETERMINISTIC",
+    "QUALIFIED_LOCAL_NANO",
+    "CLOUD_MINI",
+    "CLOUD_FLAGSHIP"
+  ],
+  "governance": "DIRECT_OBSERVED_WITH_NARROW_CONSEQUENTIAL_CONTROLS",
+  "client_types": [
+    "DELL",
+    "PWA",
+    "PWA_VOICE"
+  ],
+  "mobile_strategy": "PWA",
+  "configuration_schemas": {
+    "registry": "config/agent_registry_v1.schema.json",
+    "deployment": "deploy/product-runtime-v1.json",
+    "provider_template": "config/provider-catalog.unconfigured.json"
+  },
+  "build_identifiers": [
+    "scripts/build_source_release.py",
+    "clients/dell/tools/package_client.py"
+  ],
+  "deployment_identity": "External receipt binds runtime identity and immutable manifest to Git revision; no private material in source",
+  "evidence_manifest_version": "1.0.0",
+  "evidence_index": "docs/evidence-index.v1.json",
+  "historical_dell_readme": "clients/dell/README.md is pinned historical initial-delivery documentation, not current production state"
+}

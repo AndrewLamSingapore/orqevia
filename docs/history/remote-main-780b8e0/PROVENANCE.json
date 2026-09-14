@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/AndrewLamSingapore/prime",
+  "remote_revision": "780b8e04257799ccbb5112d4549781fd436c7f9a",
+  "acquisition": "Authenticated GitHub connector; exact byte-preserved files",
+  "status": "HISTORICAL_REMOTE_SNAPSHOT",
+  "authority": "Current system.manifest.json and Architecture v1 supersede conflicting policy; historical PASS evidence is not invalidated",
+  "files": [
+    {
+      "path": "JARVIS_Resume_Checkpoint.generated.md",
+      "git_blob_sha1": "6242a8abb2ea13c28b4b596ab29cd6844b726aed",
+      "sha256": "f11a68f768e0ad24fb709e557b90b97ec4caa8180ddf96397ac80b7eaa0f8393",
+      "bytes": 3824
+    },
+    {
+      "path": "operational-manifest.json",
+      "git_blob_sha1": "176194ecf5f467ee59db55230f93c45af17ecac9",
+      "sha256": "24b6b326a3628c62d4d4a115b7341d75223dea2e1fcad70b84a0b6a93f680385",
+      "bytes": 17124
+    }
+  ]
+}

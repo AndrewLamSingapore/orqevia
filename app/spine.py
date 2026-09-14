@@ -28,6 +28,8 @@ PLATFORM_POLICY: dict[str, str] = {
     "portal.query": "AUTO",
     "memory.read": "AUTO",
     "memory.propose": "BOUNDED_AUTO",
+    "artifact.create": "BOUNDED_AUTO",
+    "sandbox.wasm.execute": "BOUNDED_AUTO",
     "email.draft": "BOUNDED_AUTO",
     "calendar.create": "GATED",
     "email.send": "GATED",
@@ -59,6 +61,18 @@ def validate_envelope(value: Any) -> str | None:
 def classify_action(envelope: Mapping[str, Any], trust: Mapping[str, Any] | None = None) -> dict[str, Any]:
     action = str(envelope["action"])
     platform = PLATFORM_POLICY.get(action, "GATED")
+    bounded_sinks = {
+        'artifact.create': ('prime-artifact-store', 'artifact-factory', {'a09'}),
+        'sandbox.wasm.execute': ('wasm-no-imports', 'wasm-sandbox', {'a17','a18'}),
+    }
+    if action in bounded_sinks:
+        scope,connector,actors=bounded_sinks[action]
+        parameters=envelope.get('parameters',{})
+        if (envelope.get('actor_id') not in actors or parameters.get('scope')!=scope
+                or parameters.get('connector_id')!=connector or parameters.get('capability')!=action
+                or parameters.get('allow_cloud') is not False or parameters.get('external_execution') is not False
+                or envelope.get('context',{}).get('external_execution') is not False):
+            return {'state':'PROHIBITED','reason':'bounded sink scope mismatch','action':action}
     if platform == "PROHIBITED":
         return {"state": "PROHIBITED", "reason": "platform hard rule", "action": action}
 

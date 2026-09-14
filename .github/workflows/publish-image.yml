@@ -1,21 +1,8 @@
 name: Publish PRIME Image
 
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-    paths:
-      - 'Dockerfile'
-      - 'app/**'
-      - 'requirements.txt'
-      - 'docker-compose.yml'
-      - 'docker-compose.gpu.yml'
-      - '.github/workflows/publish-image.yml'
-      - '.github/workflows/ci.yml'
-      - '.github/workflows/release-acceptance.yml'
-      - '.github/workflows/stable-spine.yml'
-      - '.github/workflows/portal-integration.yml'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

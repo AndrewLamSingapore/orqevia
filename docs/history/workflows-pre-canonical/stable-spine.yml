@@ -1,0 +1,67 @@
+name: Stable Spine
+
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - 'app/spine.py'
+      - 'app/spine_api.py'
+      - 'app/memory.py'
+      - 'app/meta_review.py'
+      - 'app/cognitive_api.py'
+      - 'app/cognitive_orchestrator.py'
+      - 'app/orchestration.py'
+      - 'app/agent_registry.py'
+      - 'app/agent_runtime.py'
+      - 'app/release_gate.py'
+      - 'app/public_agent_api.py'
+      - 'app/public_trace_publisher.py'
+      - 'app/job_queue.py'
+      - 'config/agent_registry.json'
+      - 'scripts/export_agent_registry.py'
+      - 'app/entry.py'
+      - 'contracts/**'
+      - 'tests/test_stable_spine.py'
+      - 'tests/test_memory_meta.py'
+      - 'tests/test_cognitive_orchestrator.py'
+      - 'tests/test_consequential_intent.py'
+      - 'tests/test_agent_registry.py'
+      - 'tests/test_agent_runtime.py'
+      - 'tests/test_release_gate.py'
+      - 'tests/test_public_trace_publisher.py'
+      - 'tests/test_job_queue.py'
+      - 'docker-compose.yml'
+      - '.github/workflows/stable-spine.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Stable Spine contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt pytest
+      - run: pytest -q tests/test_stable_spine.py tests/test_memory_meta.py tests/test_cognitive_orchestrator.py tests/test_consequential_intent.py tests/test_router_registration.py tests/test_agent_registry.py tests/test_agent_runtime.py tests/test_release_gate.py tests/test_public_trace_publisher.py tests/test_job_queue.py
+      - name: Export public registry
+        run: python scripts/export_agent_registry.py /tmp/public-agent-registry.json
+      - name: Reject public disclosure leaks
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public-agent-registry.json', encoding='utf-8'))
+          assert len(p['agents']) == 29
+          forbidden={'receives','produces','system_prompt','credentials','endpoint','filesystem_path','tool_secrets','internal_instructions'}
+          for a in p['agents']:
+              assert not forbidden.intersection(a)
+          assert p['relationship_policy']['network_is_enforced'] is True
+          assert p['relationship_policy']['unknown_agent_policy'] == 'deny'
+          assert p['relationship_policy']['runtime_activation_verified'] is False
+          assert {'source':'prime','target':'a01','type':'may_delegate'} in p['relationships']
+          PY

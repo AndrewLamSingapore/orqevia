@@ -8,11 +8,151 @@
       "model": "unassigned",
       "name": "Strategy Lead",
       "produces": "Strategic framing, priorities, decision criteria and delegated strategy work.",
-      "public_description": "Owns strategic reasoning and coordinates strategy work.",
+      "public_description": "Strategic reasoning owner",
       "receives": "Objectives, constraints, evidence summaries and portfolio context.",
       "reports_to": "prime",
       "role": "Strategic reasoning owner",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a01",
+      "purpose": "Strategic reasoning owner",
+      "responsibilities": [
+        {
+          "id": "responsibility.a01",
+          "description": "Strategic reasoning owner",
+          "input": "Objectives, constraints, evidence summaries and portfolio context.",
+          "output": "Strategic framing, priorities, decision criteria and delegated strategy work."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a01": "Objectives, constraints, evidence summaries and portfolio context."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a01": "Strategic framing, priorities, decision criteria and delegated strategy work."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a01"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a01",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a01"
+      ],
+      "escalation_relationships": [
+        "prime"
+      ],
+      "allowed_delegation_targets": [
+        "a02",
+        "a04",
+        "a05"
+      ],
+      "excluded_capabilities": [
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a02",
@@ -20,27 +160,158 @@
       "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Planning Agent",
+      "name": "Planning and Roadmap Agent",
       "produces": "Sequenced tasks, owners, prerequisites, acceptance criteria and escalation points.",
-      "public_description": "Converts objectives into executable task sequences.",
+      "public_description": "Objective-to-task decomposition; Milestone and dependency planning",
       "receives": "Approved objectives, constraints, dependencies and available capacity.",
       "reports_to": "lead_strategy",
-      "role": "Objective-to-task decomposition",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a03",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Roadmap Agent",
-      "produces": "Milestones, dependency maps, critical paths and roadmap revisions.",
-      "public_description": "Builds milestones, dependencies and longer-term execution paths.",
-      "receives": "Strategic priorities, task plans, dependencies, risks and target dates.",
-      "reports_to": "lead_strategy",
-      "role": "Milestone and dependency planning",
-      "status": "planned"
+      "role": "Objective-to-task decomposition; Milestone and dependency planning",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a02",
+      "purpose": "Objective-to-task decomposition; Milestone and dependency planning",
+      "responsibilities": [
+        {
+          "id": "responsibility.a02",
+          "description": "Objective-to-task decomposition",
+          "input": "Approved objectives, constraints, dependencies and available capacity.",
+          "output": "Sequenced tasks, owners, prerequisites, acceptance criteria and escalation points."
+        },
+        {
+          "id": "responsibility.a03",
+          "description": "Milestone and dependency planning",
+          "input": "Strategic priorities, task plans, dependencies, risks and target dates.",
+          "output": "Milestones, dependency maps, critical paths and roadmap revisions."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a02": "Approved objectives, constraints, dependencies and available capacity.",
+          "a03": "Strategic priorities, task plans, dependencies, risks and target dates."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a02": "Sequenced tasks, owners, prerequisites, acceptance criteria and escalation points.",
+          "a03": "Milestones, dependency maps, critical paths and roadmap revisions."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a02",
+        "responsibility.a03"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a02",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a02",
+        "a03"
+      ],
+      "escalation_relationships": [
+        "a01"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a04",
@@ -48,13 +319,158 @@
       "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Decision Agent",
+      "name": "Decision and Comparison Agent",
       "produces": "Weighted comparison, assumptions, tradeoffs and decision-ready recommendation.",
-      "public_description": "Evaluates alternatives and produces decision-ready recommendations.",
+      "public_description": "Option evaluation; Structured comparison",
       "receives": "Decision question, options, criteria, evidence, uncertainty and constraints.",
       "reports_to": "lead_strategy",
-      "role": "Option evaluation",
-      "status": "planned"
+      "role": "Option evaluation; Structured comparison",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a04",
+      "purpose": "Option evaluation; Structured comparison",
+      "responsibilities": [
+        {
+          "id": "responsibility.a04",
+          "description": "Option evaluation",
+          "input": "Decision question, options, criteria, evidence, uncertainty and constraints.",
+          "output": "Weighted comparison, assumptions, tradeoffs and decision-ready recommendation."
+        },
+        {
+          "id": "responsibility.a08",
+          "description": "Structured comparison",
+          "input": "Alternatives, comparison criteria, evidence and uncertainty.",
+          "output": "Normalized comparison, differentiators, limitations and ranked findings."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a04": "Decision question, options, criteria, evidence, uncertainty and constraints.",
+          "a08": "Alternatives, comparison criteria, evidence and uncertainty."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a04": "Weighted comparison, assumptions, tradeoffs and decision-ready recommendation.",
+          "a08": "Normalized comparison, differentiators, limitations and ranked findings."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a04",
+        "responsibility.a08"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a04",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a04",
+        "a08"
+      ],
+      "escalation_relationships": [
+        "a01"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a05",
@@ -62,13 +478,158 @@
       "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Portfolio Agent",
+      "name": "Portfolio and Capacity Agent",
       "produces": "Portfolio ranking, sequencing recommendations, conflicts, deferrals and rebalancing triggers.",
-      "public_description": "Prioritizes competing initiatives against strategy, capacity, value and risk.",
+      "public_description": "Portfolio prioritization; Resource optimization",
       "receives": "Candidate initiatives, strategic objectives, dependencies, capacity, value estimates and risk findings.",
       "reports_to": "lead_strategy",
-      "role": "Portfolio prioritization",
-      "status": "planned"
+      "role": "Portfolio prioritization; Resource optimization",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a05",
+      "purpose": "Portfolio prioritization; Resource optimization",
+      "responsibilities": [
+        {
+          "id": "responsibility.a05",
+          "description": "Portfolio prioritization",
+          "input": "Candidate initiatives, strategic objectives, dependencies, capacity, value estimates and risk findings.",
+          "output": "Portfolio ranking, sequencing recommendations, conflicts, deferrals and rebalancing triggers."
+        },
+        {
+          "id": "responsibility.a23",
+          "description": "Resource optimization",
+          "input": "Demand, capacity, constraints, service targets, skills and cost information.",
+          "output": "Allocation options, capacity plan, bottlenecks and optimization recommendations."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a05": "Candidate initiatives, strategic objectives, dependencies, capacity, value estimates and risk findings.",
+          "a23": "Demand, capacity, constraints, service targets, skills and cost information."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a05": "Portfolio ranking, sequencing recommendations, conflicts, deferrals and rebalancing triggers.",
+          "a23": "Allocation options, capacity plan, bottlenecks and optimization recommendations."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a05",
+        "responsibility.a23"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a05",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a05",
+        "a23"
+      ],
+      "escalation_relationships": [
+        "a01"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a06",
@@ -78,11 +639,150 @@
       "model": "unassigned",
       "name": "Research Lead",
       "produces": "Research plan, evidence standard, specialist assignments and synthesized findings.",
-      "public_description": "Directs research and determines what evidence is required.",
+      "public_description": "Research direction",
       "receives": "Research questions, decision context, source constraints and evidence gaps.",
       "reports_to": "prime",
       "role": "Research direction",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a06",
+      "purpose": "Research direction",
+      "responsibilities": [
+        {
+          "id": "responsibility.a06",
+          "description": "Research direction",
+          "input": "Research questions, decision context, source constraints and evidence gaps.",
+          "output": "Research plan, evidence standard, specialist assignments and synthesized findings."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a06": "Research questions, decision context, source constraints and evidence gaps."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a06": "Research plan, evidence standard, specialist assignments and synthesized findings."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a06"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a06",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a06"
+      ],
+      "escalation_relationships": [
+        "prime"
+      ],
+      "allowed_delegation_targets": [
+        "a07",
+        "a09"
+      ],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a07",
@@ -92,25 +792,147 @@
       "model": "unassigned",
       "name": "Evidence Agent",
       "produces": "Source set, provenance, claim-to-evidence links, confidence and gaps.",
-      "public_description": "Finds and evaluates supporting evidence.",
+      "public_description": "Evidence discovery",
       "receives": "Research questions, source criteria, date bounds and known claims.",
       "reports_to": "lead_research",
       "role": "Evidence discovery",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a08",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Comparison Agent",
-      "produces": "Normalized comparison, differentiators, limitations and ranked findings.",
-      "public_description": "Performs structured alternative, competitor and option comparisons.",
-      "receives": "Alternatives, comparison criteria, evidence and uncertainty.",
-      "reports_to": "lead_research",
-      "role": "Structured comparison",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a07",
+      "purpose": "Evidence discovery",
+      "responsibilities": [
+        {
+          "id": "responsibility.a07",
+          "description": "Evidence discovery",
+          "input": "Research questions, source criteria, date bounds and known claims.",
+          "output": "Source set, provenance, claim-to-evidence links, confidence and gaps."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a07": "Research questions, source criteria, date bounds and known claims."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a07": "Source set, provenance, claim-to-evidence links, confidence and gaps."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a07"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a07",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a07"
+      ],
+      "escalation_relationships": [
+        "a06"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a09",
@@ -120,11 +942,154 @@
       "model": "unassigned",
       "name": "Knowledge Agent",
       "produces": "Structured knowledge, reusable summaries, links, conflicts and freshness markers.",
-      "public_description": "Organizes accumulated knowledge and makes it reusable.",
+      "public_description": "Knowledge organization",
       "receives": "Verified findings, definitions, decisions, provenance and update signals.",
       "reports_to": "lead_research",
       "role": "Knowledge organization",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a09",
+      "purpose": "Knowledge organization",
+      "responsibilities": [
+        {
+          "id": "responsibility.a09",
+          "description": "Knowledge organization",
+          "input": "Verified findings, definitions, decisions, provenance and update signals.",
+          "output": "Structured knowledge, reusable summaries, links, conflicts and freshness markers."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a09": "Verified findings, definitions, decisions, provenance and update signals."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a09": "Structured knowledge, reusable summaries, links, conflicts and freshness markers."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a09"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose",
+        "artifact.create"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a09",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a09"
+      ],
+      "escalation_relationships": [
+        "a06"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ],
+      "preauthorized_r1_operations": {
+        "artifact.create": {
+          "scope": "prime-artifact-store",
+          "approval": "Owner master directive grants additive application-owned artifacts; signed TAP remains mandatory"
+        }
+      }
     },
     {
       "agent_id": "a10",
@@ -134,25 +1099,151 @@
       "model": "unassigned",
       "name": "Data Lead",
       "produces": "Coordinated data architecture decisions, analytical plans and governed outputs.",
-      "public_description": "Coordinates data work and analytical outputs, including database model, caching, batch/stream and normalization tradeoffs.",
+      "public_description": "Data and analytics coordination",
       "receives": "Data requests, schemas, pipeline questions and architecture tradeoffs.",
       "reports_to": "prime",
       "role": "Data and analytics coordination",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a11",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Metrics Agent",
-      "produces": "Metric definitions, formulas, targets, ownership, cadence and guardrails.",
-      "public_description": "Defines KPIs, measurements and performance indicators.",
-      "receives": "Objectives, processes, data availability, baselines and decision needs.",
-      "reports_to": "lead_data",
-      "role": "KPI definition",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a10",
+      "purpose": "Data and analytics coordination",
+      "responsibilities": [
+        {
+          "id": "responsibility.a10",
+          "description": "Data and analytics coordination",
+          "input": "Data requests, schemas, pipeline questions and architecture tradeoffs.",
+          "output": "Coordinated data architecture decisions, analytical plans and governed outputs."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a10": "Data requests, schemas, pipeline questions and architecture tradeoffs."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a10": "Coordinated data architecture decisions, analytical plans and governed outputs."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a10"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a10",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a10"
+      ],
+      "escalation_relationships": [
+        "prime"
+      ],
+      "allowed_delegation_targets": [
+        "a12",
+        "a13",
+        "a14"
+      ],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a12",
@@ -160,13 +1251,158 @@
       "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Analysis Agent",
+      "name": "Metrics and Analysis Agent",
       "produces": "Descriptive results, diagnostic findings, uncertainty and reproducible analysis notes.",
-      "public_description": "Performs descriptive and diagnostic analysis.",
+      "public_description": "KPI definition; Descriptive/diagnostic analysis",
       "receives": "Validated datasets, metric definitions, analytical question and assumptions.",
       "reports_to": "lead_data",
-      "role": "Descriptive/diagnostic analysis",
-      "status": "planned"
+      "role": "KPI definition; Descriptive/diagnostic analysis",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a12",
+      "purpose": "KPI definition; Descriptive/diagnostic analysis",
+      "responsibilities": [
+        {
+          "id": "responsibility.a11",
+          "description": "KPI definition",
+          "input": "Objectives, processes, data availability, baselines and decision needs.",
+          "output": "Metric definitions, formulas, targets, ownership, cadence and guardrails."
+        },
+        {
+          "id": "responsibility.a12",
+          "description": "Descriptive/diagnostic analysis",
+          "input": "Validated datasets, metric definitions, analytical question and assumptions.",
+          "output": "Descriptive results, diagnostic findings, uncertainty and reproducible analysis notes."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a11": "Objectives, processes, data availability, baselines and decision needs.",
+          "a12": "Validated datasets, metric definitions, analytical question and assumptions."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a11": "Metric definitions, formulas, targets, ownership, cadence and guardrails.",
+          "a12": "Descriptive results, diagnostic findings, uncertainty and reproducible analysis notes."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a11",
+        "responsibility.a12"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a12",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a11",
+        "a12"
+      ],
+      "escalation_relationships": [
+        "a10"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a13",
@@ -176,11 +1412,147 @@
       "model": "unassigned",
       "name": "Forecast Agent",
       "produces": "Forecasts, intervals, scenarios, backtests, limitations and monitoring triggers.",
-      "public_description": "Handles forecasting and forward-looking analytical work.",
+      "public_description": "Forecasting",
       "receives": "Time-indexed validated data, forecast horizon, drivers, constraints and loss criteria.",
       "reports_to": "lead_data",
       "role": "Forecasting",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a13",
+      "purpose": "Forecasting",
+      "responsibilities": [
+        {
+          "id": "responsibility.a13",
+          "description": "Forecasting",
+          "input": "Time-indexed validated data, forecast horizon, drivers, constraints and loss criteria.",
+          "output": "Forecasts, intervals, scenarios, backtests, limitations and monitoring triggers."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a13": "Time-indexed validated data, forecast horizon, drivers, constraints and loss criteria."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a13": "Forecasts, intervals, scenarios, backtests, limitations and monitoring triggers."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a13"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a13",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a13"
+      ],
+      "escalation_relationships": [
+        "a10"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a14",
@@ -190,11 +1562,147 @@
       "model": "unassigned",
       "name": "Data Quality Agent",
       "produces": "Completeness, consistency, validity, timeliness and reliability findings with remediation advice.",
-      "public_description": "Checks completeness, consistency, validity and reliability of data, including schema normalization tradeoffs.",
+      "public_description": "Data quality checks",
       "receives": "Datasets, schemas, lineage, validation rules and intended analytical use.",
       "reports_to": "lead_data",
       "role": "Data quality checks",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a14",
+      "purpose": "Data quality checks",
+      "responsibilities": [
+        {
+          "id": "responsibility.a14",
+          "description": "Data quality checks",
+          "input": "Datasets, schemas, lineage, validation rules and intended analytical use.",
+          "output": "Completeness, consistency, validity, timeliness and reliability findings with remediation advice."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a14": "Datasets, schemas, lineage, validation rules and intended analytical use."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a14": "Completeness, consistency, validity, timeliness and reliability findings with remediation advice."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a14"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a14",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a14"
+      ],
+      "escalation_relationships": [
+        "a10"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a15",
@@ -204,11 +1712,152 @@
       "model": "unassigned",
       "name": "Engineering Lead",
       "produces": "Technical plan, delegated engineering work, integration decisions and readiness evidence.",
-      "public_description": "Owns technical execution and coordinates engineering agents.",
+      "public_description": "Technical execution ownership",
       "receives": "Approved requirements, architecture constraints, risks, telemetry and quality gates.",
       "reports_to": "prime",
       "role": "Technical execution ownership",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a15",
+      "purpose": "Technical execution ownership",
+      "responsibilities": [
+        {
+          "id": "responsibility.a15",
+          "description": "Technical execution ownership",
+          "input": "Approved requirements, architecture constraints, risks, telemetry and quality gates.",
+          "output": "Technical plan, delegated engineering work, integration decisions and readiness evidence."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a15": "Approved requirements, architecture constraints, risks, telemetry and quality gates."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a15": "Technical plan, delegated engineering work, integration decisions and readiness evidence."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a15"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a15",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a15"
+      ],
+      "escalation_relationships": [
+        "prime"
+      ],
+      "allowed_delegation_targets": [
+        "a16",
+        "a17",
+        "a18",
+        "a19"
+      ],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a16",
@@ -218,11 +1867,147 @@
       "model": "unassigned",
       "name": "Architecture Agent",
       "produces": "Architecture recommendations, decision records, interfaces, boundaries and failure assumptions.",
-      "public_description": "Designs system architecture, interfaces and technical boundaries, including API, caching and consistency-versus-availability tradeoffs.",
+      "public_description": "System architecture design",
       "receives": "Requirements, system telemetry and interface, caching, consistency and CAP tradeoffs.",
       "reports_to": "lead_engineering",
       "role": "System architecture design",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a16",
+      "purpose": "System architecture design",
+      "responsibilities": [
+        {
+          "id": "responsibility.a16",
+          "description": "System architecture design",
+          "input": "Requirements, system telemetry and interface, caching, consistency and CAP tradeoffs.",
+          "output": "Architecture recommendations, decision records, interfaces, boundaries and failure assumptions."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a16": "Requirements, system telemetry and interface, caching, consistency and CAP tradeoffs."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a16": "Architecture recommendations, decision records, interfaces, boundaries and failure assumptions."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a16"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a16",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a16"
+      ],
+      "escalation_relationships": [
+        "a15"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a17",
@@ -232,11 +2017,155 @@
       "model": "unassigned",
       "name": "Implementation Agent",
       "produces": "Proposed code changes, migrations, implementation notes and test evidence.",
-      "public_description": "Converts approved designs into working implementation.",
+      "public_description": "Design-to-code conversion",
       "receives": "Approved design, acceptance criteria, repository context, constraints and test requirements.",
       "reports_to": "lead_engineering",
       "role": "Design-to-code conversion",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a17",
+      "purpose": "Design-to-code conversion",
+      "responsibilities": [
+        {
+          "id": "responsibility.a17",
+          "description": "Design-to-code conversion",
+          "input": "Approved design, acceptance criteria, repository context, constraints and test requirements.",
+          "output": "Proposed code changes, migrations, implementation notes and test evidence."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a17": "Approved design, acceptance criteria, repository context, constraints and test requirements."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a17": "Proposed code changes, migrations, implementation notes and test evidence."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a17"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose",
+        "sandbox.wasm.execute"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a17",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a17"
+      ],
+      "escalation_relationships": [
+        "a15"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ],
+      "preauthorized_r1_operations": {
+        "sandbox.wasm.execute": {
+          "scope": "wasm-no-imports",
+          "approval": "Owner master directive grants bounded safe sandbox execution; signed TAP remains mandatory",
+          "native_commands": false
+        }
+      }
     },
     {
       "agent_id": "a18",
@@ -244,13 +2173,166 @@
       "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Test Agent",
+      "name": "Test and Verification Agent",
       "produces": "Test plan, results, defect reports, regression evidence and coverage gaps.",
-      "public_description": "Tests functionality and identifies defects and regressions.",
+      "public_description": "Functional testing; Compliance verification",
       "receives": "Requirements, implementation artifacts, interfaces, fixtures and risk scenarios.",
       "reports_to": "lead_engineering",
-      "role": "Functional testing",
-      "status": "planned"
+      "role": "Functional testing; Compliance verification",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a18",
+      "purpose": "Functional testing; Compliance verification",
+      "responsibilities": [
+        {
+          "id": "responsibility.a18",
+          "description": "Functional testing",
+          "input": "Requirements, implementation artifacts, interfaces, fixtures and risk scenarios.",
+          "output": "Test plan, results, defect reports, regression evidence and coverage gaps."
+        },
+        {
+          "id": "responsibility.a27",
+          "description": "Compliance verification",
+          "input": "Claims, artifacts, acceptance criteria, policies, provenance and test evidence.",
+          "output": "Pass/fail findings, evidence links, exceptions and unresolved verification gaps."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a18": "Requirements, implementation artifacts, interfaces, fixtures and risk scenarios.",
+          "a27": "Claims, artifacts, acceptance criteria, policies, provenance and test evidence."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a18": "Test plan, results, defect reports, regression evidence and coverage gaps.",
+          "a27": "Pass/fail findings, evidence links, exceptions and unresolved verification gaps."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a18",
+        "responsibility.a27"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose",
+        "sandbox.wasm.execute"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a18",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a18",
+        "a27"
+      ],
+      "escalation_relationships": [
+        "a15"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a28",
+        "responsibility.a29"
+      ],
+      "preauthorized_r1_operations": {
+        "sandbox.wasm.execute": {
+          "scope": "wasm-no-imports",
+          "approval": "Owner master directive grants bounded safe sandbox execution; signed TAP remains mandatory",
+          "native_commands": false
+        }
+      }
     },
     {
       "agent_id": "a19",
@@ -260,11 +2342,147 @@
       "model": "unassigned",
       "name": "Reliability Agent",
       "produces": "Failure-mode analysis, resilience recommendations, recovery checks and stability risks.",
-      "public_description": "Evaluates operational resilience, failure modes and system stability, including caching and availability tradeoffs.",
+      "public_description": "Operational resilience evaluation",
       "receives": "Architecture, telemetry, service objectives, dependency map and failure history.",
       "reports_to": "lead_engineering",
       "role": "Operational resilience evaluation",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a19",
+      "purpose": "Operational resilience evaluation",
+      "responsibilities": [
+        {
+          "id": "responsibility.a19",
+          "description": "Operational resilience evaluation",
+          "input": "Architecture, telemetry, service objectives, dependency map and failure history.",
+          "output": "Failure-mode analysis, resilience recommendations, recovery checks and stability risks."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a19": "Architecture, telemetry, service objectives, dependency map and failure history."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a19": "Failure-mode analysis, resilience recommendations, recovery checks and stability risks."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a19"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a19",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a19"
+      ],
+      "escalation_relationships": [
+        "a15"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a20",
@@ -272,13 +2490,160 @@
       "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Economic Lead",
+      "name": "Commercial and Economic Lead",
       "produces": "Economic framing, delegated analyses, integrated commercial case and decision advice.",
-      "public_description": "Oversees economic analysis and commercial outcomes.",
+      "public_description": "Economic analysis ownership; Market and pricing analysis",
       "receives": "Commercial objective, constraints, demand evidence, cost data and resource context.",
       "reports_to": "prime",
-      "role": "Economic analysis ownership",
-      "status": "planned"
+      "role": "Economic analysis ownership; Market and pricing analysis",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a20",
+      "purpose": "Economic analysis ownership; Market and pricing analysis",
+      "responsibilities": [
+        {
+          "id": "responsibility.a20",
+          "description": "Economic analysis ownership",
+          "input": "Commercial objective, constraints, demand evidence, cost data and resource context.",
+          "output": "Economic framing, delegated analyses, integrated commercial case and decision advice."
+        },
+        {
+          "id": "responsibility.a24",
+          "description": "Market and pricing analysis",
+          "input": "Customer problem, market evidence, competitive context, costs and constraints.",
+          "output": "Market assessment, pricing options, revenue model, assumptions and commercial risks."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a20": "Commercial objective, constraints, demand evidence, cost data and resource context.",
+          "a24": "Customer problem, market evidence, competitive context, costs and constraints."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a20": "Economic framing, delegated analyses, integrated commercial case and decision advice.",
+          "a24": "Market assessment, pricing options, revenue model, assumptions and commercial risks."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a20",
+        "responsibility.a24"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a20",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a20",
+        "a24"
+      ],
+      "escalation_relationships": [
+        "prime"
+      ],
+      "allowed_delegation_targets": [
+        "a21"
+      ],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a21",
@@ -286,97 +2651,320 @@
       "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Cost Agent",
+      "name": "Cost and Value Agent",
       "produces": "Cost model, unit economics, sensitivity analysis and major cost drivers.",
-      "public_description": "Analyzes costs, expenses and cost drivers.",
+      "public_description": "Cost analysis; Value/ROI evaluation",
       "receives": "Resource plan, price inputs, usage assumptions, time horizon and uncertainty.",
       "reports_to": "lead_economic",
-      "role": "Cost analysis",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a22",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Value Agent",
-      "produces": "Value model, ROI scenarios, payback assessment and impact narrative.",
-      "public_description": "Evaluates value creation, ROI and impact.",
-      "receives": "Benefits, costs, risks, time horizon, baseline and strategic objectives.",
-      "reports_to": "lead_economic",
-      "role": "Value/ROI evaluation",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a23",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Resource Agent",
-      "produces": "Allocation options, capacity plan, bottlenecks and optimization recommendations.",
-      "public_description": "Optimizes resources, capacity and allocation.",
-      "receives": "Demand, capacity, constraints, service targets, skills and cost information.",
-      "reports_to": "lead_economic",
-      "role": "Resource optimization",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a24",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Commercial Agent",
-      "produces": "Market assessment, pricing options, revenue model, assumptions and commercial risks.",
-      "public_description": "Covers market, pricing, revenue and business models.",
-      "receives": "Customer problem, market evidence, competitive context, costs and constraints.",
-      "reports_to": "lead_economic",
-      "role": "Market and pricing analysis",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a25",
-      "authority": "advisory",
-      "can_delegate": true,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Quality Lead",
-      "produces": "Assurance plan, delegated reviews, consolidated findings and gate recommendation.",
-      "public_description": "Leads quality governance, standards and assurance.",
-      "receives": "Requirements, outputs, evidence, policies, risk assessments and release criteria.",
-      "reports_to": "prime",
-      "role": "Quality governance ownership",
-      "status": "planned"
+      "role": "Cost analysis; Value/ROI evaluation",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a21",
+      "purpose": "Cost analysis; Value/ROI evaluation",
+      "responsibilities": [
+        {
+          "id": "responsibility.a21",
+          "description": "Cost analysis",
+          "input": "Resource plan, price inputs, usage assumptions, time horizon and uncertainty.",
+          "output": "Cost model, unit economics, sensitivity analysis and major cost drivers."
+        },
+        {
+          "id": "responsibility.a22",
+          "description": "Value/ROI evaluation",
+          "input": "Benefits, costs, risks, time horizon, baseline and strategic objectives.",
+          "output": "Value model, ROI scenarios, payback assessment and impact narrative."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a21": "Resource plan, price inputs, usage assumptions, time horizon and uncertainty.",
+          "a22": "Benefits, costs, risks, time horizon, baseline and strategic objectives."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a21": "Cost model, unit economics, sensitivity analysis and major cost drivers.",
+          "a22": "Value model, ROI scenarios, payback assessment and impact narrative."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a21",
+        "responsibility.a22"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a21",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a21",
+        "a22"
+      ],
+      "escalation_relationships": [
+        "a20"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a26",
       "authority": "advisory",
-      "can_delegate": false,
+      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Review Agent",
+      "name": "Independent Quality Lead",
       "produces": "Independent critique, defects, strengths, conflicts and requested corrections.",
-      "public_description": "Performs independent reviews and critical assessments.",
+      "public_description": "Quality governance ownership; Independent review",
       "receives": "Work product, requirements, evidence, assumptions and review rubric.",
-      "reports_to": "lead_quality",
-      "role": "Independent review",
-      "status": "planned"
-    },
-    {
-      "agent_id": "a27",
-      "authority": "advisory",
-      "can_delegate": false,
-      "human_approval": "not_required",
-      "model": "unassigned",
-      "name": "Verification Agent",
-      "produces": "Pass/fail findings, evidence links, exceptions and unresolved verification gaps.",
-      "public_description": "Verifies work, evidence and compliance.",
-      "receives": "Claims, artifacts, acceptance criteria, policies, provenance and test evidence.",
-      "reports_to": "lead_quality",
-      "role": "Compliance verification",
-      "status": "planned"
+      "reports_to": "prime",
+      "role": "Quality governance ownership; Independent review",
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a26",
+      "purpose": "Quality governance ownership; Independent review",
+      "responsibilities": [
+        {
+          "id": "responsibility.a25",
+          "description": "Quality governance ownership",
+          "input": "Requirements, outputs, evidence, policies, risk assessments and release criteria.",
+          "output": "Assurance plan, delegated reviews, consolidated findings and gate recommendation."
+        },
+        {
+          "id": "responsibility.a26",
+          "description": "Independent review",
+          "input": "Work product, requirements, evidence, assumptions and review rubric.",
+          "output": "Independent critique, defects, strengths, conflicts and requested corrections."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a25": "Requirements, outputs, evidence, policies, risk assessments and release criteria.",
+          "a26": "Work product, requirements, evidence, assumptions and review rubric."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a25": "Assurance plan, delegated reviews, consolidated findings and gate recommendation.",
+          "a26": "Independent critique, defects, strengths, conflicts and requested corrections."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a25",
+        "responsibility.a26"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a26",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a25",
+        "a26"
+      ],
+      "escalation_relationships": [
+        "prime"
+      ],
+      "allowed_delegation_targets": [
+        "a28",
+        "a29"
+      ],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a27",
+        "responsibility.a28",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a28",
@@ -386,11 +2974,147 @@
       "model": "unassigned",
       "name": "Risk Agent",
       "produces": "Risk register, likelihood-impact assessment, controls, owners and residual risk.",
-      "public_description": "Identifies risks and ensures mitigations are in place.",
+      "public_description": "Risk identification",
       "receives": "Plans, architecture, dependencies, assumptions, controls and operating context.",
       "reports_to": "lead_quality",
       "role": "Risk identification",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a28",
+      "purpose": "Risk identification",
+      "responsibilities": [
+        {
+          "id": "responsibility.a28",
+          "description": "Risk identification",
+          "input": "Plans, architecture, dependencies, assumptions, controls and operating context.",
+          "output": "Risk register, likelihood-impact assessment, controls, owners and residual risk."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a28": "Plans, architecture, dependencies, assumptions, controls and operating context."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a28": "Risk register, likelihood-impact assessment, controls, owners and residual risk."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a28"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a28",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a28"
+      ],
+      "escalation_relationships": [
+        "a26"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a29"
+      ]
     },
     {
       "agent_id": "a29",
@@ -400,14 +3124,150 @@
       "model": "unassigned",
       "name": "Release Agent",
       "produces": "Release readiness decision, blocking findings, approval request and rollback conditions.",
-      "public_description": "Final quality gate and release readiness control.",
+      "public_description": "Release readiness gate",
       "receives": "Approved change set, test and verification results, risk acceptance, rollback plan and release criteria.",
       "reports_to": "lead_quality",
       "role": "Release readiness gate",
-      "status": "planned"
+      "status": "registered",
+      "version": "1.0.0",
+      "lifecycle_status": "active",
+      "immutable_id": "a29",
+      "purpose": "Release readiness gate",
+      "responsibilities": [
+        {
+          "id": "responsibility.a29",
+          "description": "Release readiness gate",
+          "input": "Approved change set, test and verification results, risk acceptance, rollback plan and release criteria.",
+          "output": "Release readiness decision, blocking findings, approval request and rollback conditions."
+        }
+      ],
+      "non_responsibilities": [
+        "No ownership of responsibilities assigned to other canonical agents.",
+        "No transfer of identity or authority through delegation.",
+        "No tool execution, external disclosure, spending, release or privileged action without an independent TAP decision."
+      ],
+      "input_contract": {
+        "required": [
+          "objective",
+          "context",
+          "data_classification"
+        ],
+        "objective": "Nonempty bounded question matching an owned capability",
+        "context": "Source-labelled evidence and explicit constraints; never credentials",
+        "data_classification": [
+          "LOCAL_ONLY",
+          "CLOUD_PERMITTED",
+          "SENSITIVE",
+          "RESTRICTED"
+        ],
+        "capability_inputs": {
+          "a29": "Approved change set, test and verification results, risk acceptance, rollback plan and release criteria."
+        }
+      },
+      "output_contract": {
+        "required": [
+          "agent_id",
+          "status",
+          "result",
+          "uncertainty",
+          "proposed_actions"
+        ],
+        "status": [
+          "completed",
+          "needs_evidence",
+          "denied",
+          "failed"
+        ],
+        "result": "Advisory result grounded in supplied evidence; no claim of executed action",
+        "capability_outputs": {
+          "a29": "Release readiness decision, blocking findings, approval request and rollback conditions."
+        }
+      },
+      "capability_requirements": [
+        "responsibility.a29"
+      ],
+      "tool_eligibility": [
+        "provided_context.read",
+        "action.propose"
+      ],
+      "model_tier_eligibility": [
+        "NANO",
+        "MINI",
+        "FLAGSHIP"
+      ],
+      "compute_requirements": {
+        "profile": "active hash-verified Compute Profile",
+        "dedicated_model": false,
+        "physical_slot_claim": "scheduler only",
+        "cloud_requires_policy": true
+      },
+      "tap_relationship": {
+        "reasoning_action": "agent.infer",
+        "execution_authority": "none inherited from Registry",
+        "consequential_actions": "independent signed authority and explicit owner approval",
+        "delegation_transfers_authority": false
+      },
+      "failure_fallback": {
+        "insufficient_evidence": "needs_evidence",
+        "model_unavailable": "governed tier fallback or hold",
+        "dependency_failure": "isolate affected task; preserve successful independent results",
+        "authority_denied": "deny affected execution; do not retry authority or self-escalate"
+      },
+      "observability": {
+        "agent_id": "a29",
+        "registry_version": "1.0.0",
+        "required_fields": [
+          "task_id",
+          "correlation_id",
+          "routing_reason",
+          "tier",
+          "backend",
+          "policy_result",
+          "status",
+          "latency_ms"
+        ],
+        "prompt_logging": "disabled by default"
+      },
+      "migration_sources": [
+        "a29"
+      ],
+      "escalation_relationships": [
+        "a26"
+      ],
+      "allowed_delegation_targets": [],
+      "excluded_capabilities": [
+        "responsibility.a01",
+        "responsibility.a02",
+        "responsibility.a03",
+        "responsibility.a04",
+        "responsibility.a05",
+        "responsibility.a06",
+        "responsibility.a07",
+        "responsibility.a08",
+        "responsibility.a09",
+        "responsibility.a10",
+        "responsibility.a11",
+        "responsibility.a12",
+        "responsibility.a13",
+        "responsibility.a14",
+        "responsibility.a15",
+        "responsibility.a16",
+        "responsibility.a17",
+        "responsibility.a18",
+        "responsibility.a19",
+        "responsibility.a20",
+        "responsibility.a21",
+        "responsibility.a22",
+        "responsibility.a23",
+        "responsibility.a24",
+        "responsibility.a25",
+        "responsibility.a26",
+        "responsibility.a27",
+        "responsibility.a28"
+      ]
     }
   ],
-  "last_updated": "2026-09-04",
+  "last_updated": "2026-09-13",
   "leads": [
     {
       "agent_id": "a01",
@@ -460,7 +3320,7 @@
       "status": "planned"
     },
     {
-      "agent_id": "a25",
+      "agent_id": "a26",
       "domain": "quality",
       "id": "lead_quality",
       "model": "unassigned",
@@ -470,7 +3330,7 @@
       "status": "planned"
     }
   ],
-  "numbering_policy": "PRIME is the unnumbered orchestrator; the 29 specialists use contiguous identifiers a01-a29.",
+  "numbering_policy": "Exactly21 logical agents; retain historical immutable IDs without renumbering. PRIME is an unnumbered orchestrator and aliases are not agents.",
   "orchestrator": {
     "authority": "coordinating",
     "can_delegate": true,
@@ -483,7 +3343,15 @@
     "receives": "Human objectives, governed system telemetry, evidence and lead outputs.",
     "reports_to": "human_operator",
     "role": "Cognitive Control Plane / Orchestrator",
-    "status": "registered"
+    "status": "registered",
+    "allowed_delegation_targets": [
+      "a01",
+      "a06",
+      "a10",
+      "a15",
+      "a20",
+      "a26"
+    ]
   },
   "publication_policy": {
     "allowed_fields": [
@@ -517,7 +3385,199 @@
     "consequential_action_requires_human_approval": true,
     "max_delegation_depth": 2,
     "registered_count_is_not_active_count": true,
-    "unknown_agent_policy": "deny"
+    "unknown_agent_policy": "deny",
+    "model_identity_is_not_agent_identity": true,
+    "registry_grants_execution_authority": false,
+    "activation_kind": "advisory reasoning; consequential permissions remain independent"
   },
-  "schema_version": "1.1"
+  "schema_version": "2.0",
+  "registry_version": "1.0.0",
+  "registry_name": "JARVIS Agent Registry v1",
+  "responsibility_coverage": [
+    {
+      "responsibility_id": "responsibility.a01",
+      "historical_agent": "a01",
+      "owner": "a01",
+      "description": "Strategic reasoning owner"
+    },
+    {
+      "responsibility_id": "responsibility.a02",
+      "historical_agent": "a02",
+      "owner": "a02",
+      "description": "Objective-to-task decomposition"
+    },
+    {
+      "responsibility_id": "responsibility.a03",
+      "historical_agent": "a03",
+      "owner": "a02",
+      "description": "Milestone and dependency planning"
+    },
+    {
+      "responsibility_id": "responsibility.a04",
+      "historical_agent": "a04",
+      "owner": "a04",
+      "description": "Option evaluation"
+    },
+    {
+      "responsibility_id": "responsibility.a08",
+      "historical_agent": "a08",
+      "owner": "a04",
+      "description": "Structured comparison"
+    },
+    {
+      "responsibility_id": "responsibility.a05",
+      "historical_agent": "a05",
+      "owner": "a05",
+      "description": "Portfolio prioritization"
+    },
+    {
+      "responsibility_id": "responsibility.a23",
+      "historical_agent": "a23",
+      "owner": "a05",
+      "description": "Resource optimization"
+    },
+    {
+      "responsibility_id": "responsibility.a06",
+      "historical_agent": "a06",
+      "owner": "a06",
+      "description": "Research direction"
+    },
+    {
+      "responsibility_id": "responsibility.a07",
+      "historical_agent": "a07",
+      "owner": "a07",
+      "description": "Evidence discovery"
+    },
+    {
+      "responsibility_id": "responsibility.a09",
+      "historical_agent": "a09",
+      "owner": "a09",
+      "description": "Knowledge organization"
+    },
+    {
+      "responsibility_id": "responsibility.a10",
+      "historical_agent": "a10",
+      "owner": "a10",
+      "description": "Data and analytics coordination"
+    },
+    {
+      "responsibility_id": "responsibility.a11",
+      "historical_agent": "a11",
+      "owner": "a12",
+      "description": "KPI definition"
+    },
+    {
+      "responsibility_id": "responsibility.a12",
+      "historical_agent": "a12",
+      "owner": "a12",
+      "description": "Descriptive/diagnostic analysis"
+    },
+    {
+      "responsibility_id": "responsibility.a13",
+      "historical_agent": "a13",
+      "owner": "a13",
+      "description": "Forecasting"
+    },
+    {
+      "responsibility_id": "responsibility.a14",
+      "historical_agent": "a14",
+      "owner": "a14",
+      "description": "Data quality checks"
+    },
+    {
+      "responsibility_id": "responsibility.a15",
+      "historical_agent": "a15",
+      "owner": "a15",
+      "description": "Technical execution ownership"
+    },
+    {
+      "responsibility_id": "responsibility.a16",
+      "historical_agent": "a16",
+      "owner": "a16",
+      "description": "System architecture design"
+    },
+    {
+      "responsibility_id": "responsibility.a17",
+      "historical_agent": "a17",
+      "owner": "a17",
+      "description": "Design-to-code conversion"
+    },
+    {
+      "responsibility_id": "responsibility.a18",
+      "historical_agent": "a18",
+      "owner": "a18",
+      "description": "Functional testing"
+    },
+    {
+      "responsibility_id": "responsibility.a27",
+      "historical_agent": "a27",
+      "owner": "a18",
+      "description": "Compliance verification"
+    },
+    {
+      "responsibility_id": "responsibility.a19",
+      "historical_agent": "a19",
+      "owner": "a19",
+      "description": "Operational resilience evaluation"
+    },
+    {
+      "responsibility_id": "responsibility.a20",
+      "historical_agent": "a20",
+      "owner": "a20",
+      "description": "Economic analysis ownership"
+    },
+    {
+      "responsibility_id": "responsibility.a24",
+      "historical_agent": "a24",
+      "owner": "a20",
+      "description": "Market and pricing analysis"
+    },
+    {
+      "responsibility_id": "responsibility.a21",
+      "historical_agent": "a21",
+      "owner": "a21",
+      "description": "Cost analysis"
+    },
+    {
+      "responsibility_id": "responsibility.a22",
+      "historical_agent": "a22",
+      "owner": "a21",
+      "description": "Value/ROI evaluation"
+    },
+    {
+      "responsibility_id": "responsibility.a25",
+      "historical_agent": "a25",
+      "owner": "a26",
+      "description": "Quality governance ownership"
+    },
+    {
+      "responsibility_id": "responsibility.a26",
+      "historical_agent": "a26",
+      "owner": "a26",
+      "description": "Independent review"
+    },
+    {
+      "responsibility_id": "responsibility.a28",
+      "historical_agent": "a28",
+      "owner": "a28",
+      "description": "Risk identification"
+    },
+    {
+      "responsibility_id": "responsibility.a29",
+      "historical_agent": "a29",
+      "owner": "a29",
+      "description": "Release readiness gate"
+    }
+  ],
+  "named_operating_roles": {
+    "A12 Builder": {
+      "canonical_id": "a17",
+      "meaning": "Implementation role; historical uppercase A12 alias remains unchanged"
+    },
+    "A13 Test Engineer": {
+      "canonical_id": "a18",
+      "meaning": "Independent testing role; historical uppercase A13 alias remains unchanged"
+    }
+  },
+  "owner_directive_sha256": "0acd2229308eba420a3520a11b09fe1a3a915b5c43a1417c0a83b3a5428fcb79"
 }

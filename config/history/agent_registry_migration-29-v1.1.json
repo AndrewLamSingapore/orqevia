@@ -1,0 +1,38 @@
+{
+  "from_schema": "1.0.0",
+  "to_schema": "1.1",
+  "legacy_ids": {
+    "A01": "a01",
+    "A02": "a02",
+    "A03": "a03",
+    "A04": "a04",
+    "A05": "a05",
+    "A06": "a06",
+    "A07": "a07",
+    "A08": "a08",
+    "A09": "a09",
+    "A11": "a10",
+    "A12": "a11",
+    "A13": "a12",
+    "A14": "a13",
+    "A15": "a14",
+    "A16": "a15",
+    "A17": "a16",
+    "A18": "a17",
+    "A19": "a18",
+    "A20": "a19",
+    "A21": "a20",
+    "A22": "a22",
+    "A23": "a21",
+    "A25": "a25",
+    "A26": "a27",
+    "A27": "a26",
+    "A28": "a28"
+  },
+  "retired_ids": [
+    "A10",
+    "A24",
+    "A29"
+  ],
+  "rule": "Uppercase legacy IDs resolve only by explicit semantic mapping. Retired identities fail closed; lowercase IDs are canonical. Historical ledger events are not rewritten."
+}

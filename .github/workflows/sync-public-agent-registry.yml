@@ -2,14 +2,7 @@ name: Sync Public Agent Registry
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'config/agent_registry.json'
-      - 'config/agent_registry_migration.json'
-      - 'app/agent_registry.py'
-      - 'scripts/export_agent_registry.py'
-      - 'tests/test_agent_registry.py'
+  workflow_call:
 
 permissions:
   contents: read
