@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "node": {
+    "node_id": "dell:DESKTOP-IPV4PH9",
+    "expected_hostname": "DESKTOP-IPV4PH9"
+  },
+  "state_dir": "%LOCALAPPDATA%/JARVIS/DellNodeSync/state",
+  "ssot": {
+    "mode": "proposal_only",
+    "authority": "PRIME",
+    "canonical_path": "governance/operational-manifest.json"
+  },
+  "repositories": [
+    {
+      "repository_id": "prime",
+      "canonical_local_path": null,
+      "canonical_github_remote": "https://github.com/AndrewLamSingapore/prime.git",
+      "default_branch": "main",
+      "allow_auto_ff": true,
+      "allow_auto_push": false,
+      "git_http_ssl_backend": "openssl",
+      "use_askpass_only": true
+    },
+    {
+      "repository_id": "velyqua",
+      "canonical_local_path": null,
+      "canonical_github_remote": "https://github.com/AndrewLamSingapore/velyqua.git",
+      "default_branch": "main",
+      "allow_auto_ff": true,
+      "allow_auto_push": true,
+      "git_http_ssl_backend": "openssl",
+      "use_askpass_only": true
+    }
+  ]
+}
