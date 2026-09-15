@@ -3,7 +3,7 @@
 > Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
 
 - Effective status: **STALE**
-- Manifest observation: `2026-09-14T22:32:43.635566Z`
+- Manifest observation: `2026-09-15T00:59:16.420803Z`
 - Verification time: `2026-09-07T07:12:00Z`
 - Freshness window: `24 hours`
 
@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|
 | control | `f3fec388a29c` | `f3fec388a29c` | `—` | `2026-09-14T22:32:43.635566Z` | SOURCE_RELEASE_VERIFIED |
 | authority | `d1ee61dff52b` | `d1ee61dff52b` | `d1ee61dff52b` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| game | `0edc9c5ba37f` | `0edc9c5ba37f` | `0edc9c5ba37f` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| game | `0bf7930cf6fc` | `0bf7930cf6fc` | `0bf7930cf6fc` | `2026-09-15T00:59:16.420803Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 | portal | `0de1288c69f2` | `0de1288c69f2` | `0de1288c69f2` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 | prime | `—` | `c449dd1c8e22` | `c449dd1c8e22` | `2026-09-07T07:12:00Z` | ALIGNED_VERIFIED |
 | sky | `2de175dc61a0` | `2de175dc61a0` | `2de175dc61a0` | `2026-09-14T22:32:43.635566Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |

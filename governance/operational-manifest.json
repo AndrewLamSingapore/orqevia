@@ -1,7 +1,7 @@
 {
   "schema_version": "4.2.0",
   "status": "STALE",
-  "as_of_utc": "2026-09-14T22:32:43.635566Z",
+  "as_of_utc": "2026-09-15T00:59:16.420803Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -97,10 +97,10 @@
     "game": {
       "role": "bounded simulation and interactive product",
       "repository": "AndrewLamSingapore/game-platform",
-      "source_head_sha": "0edc9c5ba37fc9b30088e07c234862ed4909df52",
-      "release_sha": "0edc9c5ba37fc9b30088e07c234862ed4909df52",
-      "runtime_sha": "0edc9c5ba37fc9b30088e07c234862ed4909df52",
-      "verified_at_utc": "2026-09-14T06:44:44.377682Z",
+      "source_head_sha": "0bf7930cf6fc6ae128a0eb0156a2ddccd4e8b17b",
+      "release_sha": "0bf7930cf6fc6ae128a0eb0156a2ddccd4e8b17b",
+      "runtime_sha": "0bf7930cf6fc6ae128a0eb0156a2ddccd4e8b17b",
+      "verified_at_utc": "2026-09-15T00:59:16.420803Z",
       "vercel_project_id": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
       "vercel_project": "game-platform",
       "production_deployment_id": "dpl_DszZ3CxB3WnZztcAcQXNLzbgRunk",
@@ -333,7 +333,11 @@
       "FAILED",
       "UNKNOWN"
     ],
-    "health_states": ["GREEN", "AMBER", "RED"],
+    "health_states": [
+      "GREEN",
+      "AMBER",
+      "RED"
+    ],
     "pass_rule": "A PASS is VERIFIED only when its provenance and referenced evidence hashes independently verify; missing evidence is never promoted.",
     "provenance_chain": "task -> executor -> repository -> base SHA -> change -> result SHA -> tests -> artifacts -> hashes -> GitHub remote SHA -> SSOT record -> Dell verification"
   },
