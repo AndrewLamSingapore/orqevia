@@ -247,3 +247,11 @@ def test_14_installer_uses_supported_repetition_parameters():
     assert "-RepetitionInterval (New-TimeSpan -Minutes 30)" in script
     assert "-RepetitionDuration (New-TimeSpan -Days 3650)" in script
     assert ".Repetition.Interval" not in script
+
+
+def test_15_installed_runners_bind_pythonpath_to_install_root():
+    root = Path(__file__).parents[1]
+    for name in ("run_dell_node_sync.ps1", "run_dell_truth_reconciler.ps1"):
+        script = (root / "scripts" / name).read_text(encoding="utf-8")
+        assert '"$InstallRoot;$env:PYTHONPATH"' in script
+        assert "else { $InstallRoot }" in script
