@@ -21,6 +21,7 @@ try {
         (Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe')
     ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
     if (-not $pythonCandidates) { throw 'No supported Python runtime is available.' }
+    $env:PYTHONPATH = if ($env:PYTHONPATH) { "$InstallRoot;$env:PYTHONPATH" } else { $InstallRoot }
     $arguments = @('-m', 'tools.dell_node_sync', '--config', $config, '--output', $status)
     if ($NoFetch) { $arguments += '--no-fetch' }
     & @($pythonCandidates)[0] @arguments | Out-Null

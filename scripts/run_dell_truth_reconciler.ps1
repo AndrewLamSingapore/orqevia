@@ -31,6 +31,7 @@ try {
     ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
     if (-not $pythonCandidates) { throw 'No supported Python runtime is available.' }
     $python = @($pythonCandidates)[0]
+    $env:PYTHONPATH = if ($env:PYTHONPATH) { "$InstallRoot;$env:PYTHONPATH" } else { $InstallRoot }
     $arguments = @('-m', 'tools.dell_truth_reconciler', '--config', $configPath, '--output', $statusPath, '--repair')
     if (-not $NoFetch) { $arguments += '--fetch' }
     $started = (Get-Date).ToUniversalTime().ToString('o')
