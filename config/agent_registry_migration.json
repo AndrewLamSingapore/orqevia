@@ -1,6 +1,302 @@
 {
-  "from_schema": "1.0.0",
-  "to_schema": "1.1",
+  "from_schema": "1.1",
+  "to_schema": "2.0",
+  "registry_version": "1.0.0",
+  "historical_sha256": "78bc9379ffab7668e9acc7c1700b8f2a46488c9da909c496b74c71998816d996",
+  "dispositions": [
+    {
+      "old_id": "a01",
+      "disposition": "RETAIN",
+      "target": "a01",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a01"
+      ]
+    },
+    {
+      "old_id": "a02",
+      "disposition": "RETAIN",
+      "target": "a02",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a02"
+      ]
+    },
+    {
+      "old_id": "a03",
+      "disposition": "MERGE INTO",
+      "target": "a02",
+      "reason": "Milestone planning and task dependencies belong with task sequencing.",
+      "responsibilities": [
+        "responsibility.a03"
+      ]
+    },
+    {
+      "old_id": "a04",
+      "disposition": "RETAIN",
+      "target": "a04",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a04"
+      ]
+    },
+    {
+      "old_id": "a05",
+      "disposition": "RETAIN",
+      "target": "a05",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a05"
+      ]
+    },
+    {
+      "old_id": "a06",
+      "disposition": "RETAIN",
+      "target": "a06",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a06"
+      ]
+    },
+    {
+      "old_id": "a07",
+      "disposition": "RETAIN",
+      "target": "a07",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a07"
+      ]
+    },
+    {
+      "old_id": "a08",
+      "disposition": "MERGE INTO",
+      "target": "a04",
+      "reason": "Normalized option comparison supplies the same explicit decision criteria as option evaluation.",
+      "responsibilities": [
+        "responsibility.a08"
+      ]
+    },
+    {
+      "old_id": "a09",
+      "disposition": "RETAIN",
+      "target": "a09",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a09"
+      ]
+    },
+    {
+      "old_id": "a10",
+      "disposition": "RETAIN",
+      "target": "a10",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a10"
+      ]
+    },
+    {
+      "old_id": "a11",
+      "disposition": "MERGE INTO",
+      "target": "a12",
+      "reason": "Metric definitions and diagnostic analysis share one reproducible analytical owner.",
+      "responsibilities": [
+        "responsibility.a11"
+      ]
+    },
+    {
+      "old_id": "a12",
+      "disposition": "RETAIN",
+      "target": "a12",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a12"
+      ]
+    },
+    {
+      "old_id": "a13",
+      "disposition": "RETAIN",
+      "target": "a13",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a13"
+      ]
+    },
+    {
+      "old_id": "a14",
+      "disposition": "RETAIN",
+      "target": "a14",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a14"
+      ]
+    },
+    {
+      "old_id": "a15",
+      "disposition": "RETAIN",
+      "target": "a15",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a15"
+      ]
+    },
+    {
+      "old_id": "a16",
+      "disposition": "RETAIN",
+      "target": "a16",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a16"
+      ]
+    },
+    {
+      "old_id": "a17",
+      "disposition": "RETAIN",
+      "target": "a17",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a17"
+      ]
+    },
+    {
+      "old_id": "a18",
+      "disposition": "RETAIN",
+      "target": "a18",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a18"
+      ]
+    },
+    {
+      "old_id": "a19",
+      "disposition": "RETAIN",
+      "target": "a19",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a19"
+      ]
+    },
+    {
+      "old_id": "a20",
+      "disposition": "RETAIN",
+      "target": "a20",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a20"
+      ]
+    },
+    {
+      "old_id": "a21",
+      "disposition": "RETAIN",
+      "target": "a21",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a21"
+      ]
+    },
+    {
+      "old_id": "a22",
+      "disposition": "MERGE INTO",
+      "target": "a21",
+      "reason": "Cost, benefits and ROI form one transparent economic model.",
+      "responsibilities": [
+        "responsibility.a22"
+      ]
+    },
+    {
+      "old_id": "a23",
+      "disposition": "MERGE INTO",
+      "target": "a05",
+      "reason": "Capacity allocation and initiative prioritization share portfolio constraints.",
+      "responsibilities": [
+        "responsibility.a23"
+      ]
+    },
+    {
+      "old_id": "a24",
+      "disposition": "MERGE INTO",
+      "target": "a20",
+      "reason": "Commercial framing belongs with economic coordination.",
+      "responsibilities": [
+        "responsibility.a24"
+      ]
+    },
+    {
+      "old_id": "a25",
+      "disposition": "MERGE INTO",
+      "target": "a26",
+      "reason": "Quality coordination consolidates with independent review, remaining separate from implementation and release approval.",
+      "responsibilities": [
+        "responsibility.a25"
+      ]
+    },
+    {
+      "old_id": "a26",
+      "disposition": "RETAIN",
+      "target": "a26",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a26"
+      ]
+    },
+    {
+      "old_id": "a27",
+      "disposition": "MERGE INTO",
+      "target": "a18",
+      "reason": "Evidence-based verification consolidates with testing, remaining separate from implementation; independent critique and release gating stay distinct.",
+      "responsibilities": [
+        "responsibility.a27"
+      ]
+    },
+    {
+      "old_id": "a28",
+      "disposition": "RETAIN",
+      "target": "a28",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a28"
+      ]
+    },
+    {
+      "old_id": "a29",
+      "disposition": "RETAIN",
+      "target": "a29",
+      "reason": "Retain immutable identity and required responsibility.",
+      "responsibilities": [
+        "responsibility.a29"
+      ]
+    }
+  ],
+  "compatibility": {
+    "a01": "a01",
+    "a02": "a02",
+    "a03": "a02",
+    "a04": "a04",
+    "a05": "a05",
+    "a06": "a06",
+    "a07": "a07",
+    "a08": "a04",
+    "a09": "a09",
+    "a10": "a10",
+    "a11": "a12",
+    "a12": "a12",
+    "a13": "a13",
+    "a14": "a14",
+    "a15": "a15",
+    "a16": "a16",
+    "a17": "a17",
+    "a18": "a18",
+    "a19": "a19",
+    "a20": "a20",
+    "a21": "a21",
+    "a22": "a21",
+    "a23": "a05",
+    "a24": "a20",
+    "a25": "a26",
+    "a26": "a26",
+    "a27": "a18",
+    "a28": "a28",
+    "a29": "a29"
+  },
   "legacy_ids": {
     "A01": "a01",
     "A02": "a02",
@@ -34,5 +330,5 @@
     "A24",
     "A29"
   ],
-  "rule": "Uppercase legacy IDs resolve only by explicit semantic mapping. Retired identities fail closed; lowercase IDs are canonical. Historical ledger events are not rewritten."
+  "rule": "Resolve uppercase historical IDs through the previous semantic map, then the explicit29to21 map. Retired uppercase identities still fail. Never rewrite historical ledger events or silently reuse a retired ID."
 }

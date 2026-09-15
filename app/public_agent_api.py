@@ -9,6 +9,7 @@ import os
 from fastapi import APIRouter, Response
 
 from .runtime import authority
+from .agent_registry import registered_agent_ids
 
 router = APIRouter(prefix="/api/public/jarvis", tags=["public-agent-runtime"])
 
@@ -26,7 +27,7 @@ def public_agent_trace(response: Response, limit: int = 100):
             "ok": True,
             "state": "disabled",
             "summary": {
-                "registered_agents": 29,
+                "registered_agents": len(registered_agent_ids(include_orchestrator=False)),
                 "active_agents": 0,
                 "executions_today": 0,
                 "denied_handoffs_today": 0,

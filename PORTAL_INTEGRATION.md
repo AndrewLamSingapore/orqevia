@@ -1,3 +1,5 @@
+> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+
 # Portal → PRIME Runtime
 
 `POST /api/integrations/portal/experiments` accepts a version 1.0 Portal `ExperimentCandidate`, validates its identity and evidence boundary, routes it through PRIME's existing specialist selector, emits a bounded `ExperimentSpec`, validates it, and persists the canonical candidate/spec pair in PRIME's local SQLite state.

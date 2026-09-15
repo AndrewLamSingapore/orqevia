@@ -9,9 +9,9 @@ from app.agent_registry import (
 )
 
 
-def test_registry_has_exactly_29_agents_and_one_root():
+def test_registry_has_exactly_21_agents_and_one_root():
     data = load_agent_registry()
-    assert len(data["agents"]) == 29
+    assert len(data["agents"]) == 21
     assert data["orchestrator"]["id"] == "prime"
 
 
@@ -81,7 +81,7 @@ def test_mutated_authority_and_hierarchy_fail_closed(tmp_path, monkeypatch):
         if mutation == 'duplicate': data['agents'][1]['agent_id'] = 'a01'
         if mutation == 'cycle': data['agents'][1]['reports_to'] = 'a02'
         if mutation == 'delegation': data['agents'][1]['can_delegate'] = True
-        if mutation == 'approval': data['agents'][16]['human_approval'] = 'not_required'
+        if mutation == 'approval': next(a for a in data['agents'] if a['agent_id'] == 'a17')['human_approval'] = 'not_required'
         path = tmp_path / 'registry.json'
         path.write_text(json.dumps(data))
         with monkeypatch.context() as patch:

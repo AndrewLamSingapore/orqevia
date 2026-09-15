@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRIME Control</title>
+<style>body{font:16px system-ui;max-width:960px;margin:40px auto;padding:0 20px;background:#101820;color:#e9f0f5}textarea,input,select,button{font:inherit;padding:10px;margin:6px 0;background:#243442;color:inherit;border:1px solid #617483;border-radius:5px}textarea{box-sizing:border-box;width:100%;min-height:90px}button{cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#1b2833;padding:16px}label{display:block}a{color:#9bd9ff}</style>
+<h1>PRIME Control</h1><p>Local control for direct execution. Submissions use the existing objective and compute queue APIs.</p>
+<form id="submit"><label>Objective<textarea id="objective" required maxlength="20000"></textarea></label>
+<label>Context<textarea id="context" maxlength="80000"></textarea></label>
+<label>Mode <select id="mode"><option value="objectives">Objective orchestration</option><option value="dispatch">Single capability dispatch</option></select></label>
+<label>Capability <input id="capability" value="auto" maxlength="100"></label>
+<label>Operation <select id="operation"><option value="">Inference</option><option>sha256</option><option>json_format</option><option>json_validate</option></select></label>
+<p>Data stays local by default. If a sufficient backend is unavailable, the candidate API returns its routing result.</p>
+<button type="submit">Submit</button></form>
+<h2>Inspect work</h2><label>Objective or job ID <input id="work-id"></label>
+<button id="task">Read objective</button> <button id="job">Read job</button> <button id="jobs">Refresh queue</button> <button id="artifact">Create objective artifact</button>
+<label>Artifact ID <input id="artifact-id"></label><button id="download">Download artifact</button>
+<h2>Connect your phone</h2><p>Create a one-use pairing code for your JARVIS PWA. It expires after five minutes.</p>
+<button id="pair-phone" type="button">Create phone pairing code</button>
+<output id="pair-code" aria-live="polite"></output>
+<p id="message" role="status"></p><pre id="result">Ready.</pre><script src="/control/app.js" defer></script></html>

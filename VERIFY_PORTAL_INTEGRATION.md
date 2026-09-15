@@ -1,3 +1,5 @@
+> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+
 # Portal → PRIME Verification Gate
 
 This branch must not be promoted unless `.github/workflows/portal-integration.yml` passes.

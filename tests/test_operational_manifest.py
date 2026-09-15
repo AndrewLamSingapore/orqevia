@@ -15,7 +15,7 @@ def fixtures():
     return manifest, inventory
 
 
-def test_current_requires_fresh_post_update_dell_acceptance():
+def test_fresh_dell_acceptance_still_requires_abex_receipt():
     manifest, inventory = fixtures()
     now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
     manifest = copy.deepcopy(manifest)
@@ -28,10 +28,11 @@ def test_current_requires_fresh_post_update_dell_acceptance():
     manifest["systems"]["prime"]["runtime_sha"] = manifest["systems"]["prime"]["release_sha"]
     manifest["dell_runtime"]["runtime_sha"] = manifest["systems"]["prime"]["release_sha"]
     manifest["status"] = "CURRENT"
+    manifest["alignment_state"]["overall"] = "CURRENT"
     manifest["verification"]["stale_reasons"] = []
     result = assess_static(manifest, inventory, now=now)
     assert result.errors == []
-    assert result.stale_reasons == []
+    assert result.stale_reasons == ["abex_runtime_receipt_missing"]
 
 
 def test_published_image_can_be_ahead_of_unverified_host():

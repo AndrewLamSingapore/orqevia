@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_repository": "AndrewLamSingapore/prime",
+  "canonical_branch": "main",
+  "canonical_path": "governance/operational-manifest.json",
+  "canonical_url": "https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json",
+  "channel_contract": "governance/CHANNEL_CONTRACT.md",
+  "resolution": "Fetch main, pin the returned commit, then read manifest and referenced documents at that same commit.",
+  "copy_policy": "REFERENCE_ONLY; no independently editable status, architecture or agent registry"
+}

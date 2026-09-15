@@ -22,3 +22,8 @@ venv/
 .vscode/
 .DS_Store
 Thumbs.db
+
+node_modules/
+outputs/
+dist/
+*.zip

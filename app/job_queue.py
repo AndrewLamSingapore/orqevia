@@ -74,6 +74,7 @@ class Provider:
     concurrency: int
     input_cost_per_mtok: float = 0.0
     output_cost_per_mtok: float = 0.0
+    max_output_tokens: int = 4096
 
 
 class JobQueue:
@@ -84,6 +85,7 @@ class JobQueue:
         self.policy = policy or QueuePolicy.from_env()
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
+        self.wake = threading.Event()
         self._init()
 
     @contextmanager
@@ -124,6 +126,14 @@ class JobQueue:
               details_json TEXT NOT NULL, created_at TEXT NOT NULL);
             """)
 
+            if 'classification' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
+                c.execute("ALTER TABLE compute_jobs ADD COLUMN classification TEXT DEFAULT 'R0'")
+            if 'harness_envelope' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
+                c.execute('ALTER TABLE compute_jobs ADD COLUMN harness_envelope TEXT')
+            columns={r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}
+            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'")]:
+                if name not in columns:c.execute(f'ALTER TABLE compute_jobs ADD COLUMN {name} {definition}')
+
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
                   (str(uuid.uuid4()), job_id, event, json.dumps(details, separators=(",", ":")), utcnow()))
@@ -132,7 +142,7 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False) -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto') -> dict:
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         try:
             canonical_agent = canonical_agent_id(agent)
@@ -142,9 +152,8 @@ class JobQueue:
         role = model_role.lower()
         if role not in {"auto", "fast", "deep", "embedding", "evaluator"}: raise ValueError("invalid model_role")
         job_cap = min(max(0.0, float(max_cost_usd)), self.policy.max_job_cost_usd)
-        needs_approval = bool(external_execution or allow_cloud)
-        status = "awaiting_approval" if needs_approval else "queued"
-        approval = "pending" if needs_approval else "not_required"
+        status = "queued"
+        approval = "not_required"  # retained database column; never a prerequisite
         jid, ts = str(uuid.uuid4()), utcnow()
         with self.lock, self.connect() as c:
             c.execute("""INSERT INTO compute_jobs
@@ -155,7 +164,23 @@ class JobQueue:
                max(1,min(86400,int(timeout_seconds))),max(0,min(10,int(max_retries))),job_cap,
                int(allow_cloud),int(external_execution),status,approval,ts,ts))
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
+            c.execute('UPDATE compute_jobs SET classification=? WHERE id=?',(classification,jid))
+            c.execute('UPDATE compute_jobs SET preferred_provider=?,data_classification=?,task_class=? WHERE id=?',(preferred_provider,data_classification,task_class,jid))
+            if harness_envelope is not None:
+                c.execute('UPDATE compute_jobs SET harness_envelope=? WHERE id=?',
+                          (json.dumps(harness_envelope,sort_keys=True),jid))
+        self.wake.set()
         return self.get(jid)
+
+    def cancel(self,job_id):
+        with self.lock,self.connect() as c:
+            row=c.execute('SELECT status FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
+            if not row:raise KeyError(job_id)
+            if row['status'] not in TERMINAL:
+                c.execute("UPDATE compute_jobs SET status='cancelled',updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
+                self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
+        self.wake.set()
+        return self.get(job_id)
 
     def approve(self, job_id: str, decision: str, actor: str, reason: str = "") -> dict:
         decision = decision.lower()
@@ -185,23 +210,25 @@ class JobQueue:
         return [dict(r) for r in rows]
 
     def _daily_spend(self, c: sqlite3.Connection) -> float:
-        row=c.execute("SELECT COALESCE(SUM(actual_cost_usd),0) FROM compute_jobs WHERE completed_at>=datetime('now','-1 day')").fetchone()
+        row=c.execute("SELECT COALESCE(SUM(COALESCE(actual_cost_usd,estimated_cost_usd)),0) FROM compute_jobs WHERE julianday(completed_at)>=julianday('now','-1 day')").fetchone()
         return float(row[0] or 0)
 
     @staticmethod
     def estimate_cost(row: sqlite3.Row, provider: Provider) -> float:
-        estimated_input=max(1,len(row["prompt"])//4)
-        estimated_output=max(128,min(4096,estimated_input//2))
+        estimated_input=max(1,len(row["prompt"].encode())+16)
+        estimated_output=provider.max_output_tokens
         return (estimated_input*provider.input_cost_per_mtok + estimated_output*provider.output_cost_per_mtok)/1_000_000
 
     def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider]) -> tuple[Provider | None,str,float]:
+        local_names={p.name for p in providers if p.kind=="local"}
+        if row['preferred_provider']:
+            providers=[p for p in providers if p.name==row['preferred_provider']]
         active=c.execute("SELECT provider,agent,ram_mb,vram_mb FROM compute_jobs WHERE status='running'").fetchall()
         if len(active)>=self.policy.global_concurrency:return None,"global concurrency limit",0
         def identity(value: str) -> str:
             try: return canonical_agent_id(value)
             except RegistryError: return value
         if sum(1 for x in active if identity(x["agent"])==row["agent"])>=self.policy.per_agent_concurrency:return None,"per-agent concurrency limit",0
-        local_names={p.name for p in providers if p.kind=="local"}
         used_ram=sum(int(x["ram_mb"]) for x in active if x["provider"] in local_names)
         used_vram=sum(int(x["vram_mb"]) for x in active if x["provider"] in local_names)
         local=[]
@@ -215,7 +242,8 @@ class JobQueue:
             local.append(p)
         if local:return local[0],"local capacity available",0
         if not row["allow_cloud"]:return None,"local capacity unavailable; cloud not permitted",0
-        if row["approval_status"]!="approved":return None,"cloud approval required",0
+        from .tier_router import classify_for_cloud
+        if not classify_for_cloud(row['data_classification'],row['prompt']):return None,'data locality excludes cloud',0
         waited=max(0,time.time()-datetime.fromisoformat(row["created_at"]).timestamp())
         hard_need=row["vram_mb"]>self.policy.local_vram_mb or bool(row["model"] and not any(p.model==row["model"] for p in providers if p.kind=="local"))
         if not hard_need and waited<self.policy.cloud_wait_seconds:return None,"waiting for local capacity before cloud fallback",0
@@ -226,7 +254,8 @@ class JobQueue:
             if not row["model"] and row["model_role"] not in {"auto","deep"}:continue
             estimate=self.estimate_cost(row,p)
             if estimate>row["max_cost_usd"]:return None,"estimated job cost exceeds job ceiling",estimate
-            if self._daily_spend(c)+estimate>self.policy.daily_cost_ceiling_usd:return None,"daily cloud cost ceiling reached",estimate
+            reserved=c.execute("SELECT COALESCE(SUM(estimated_cost_usd),0) FROM compute_jobs WHERE status='running'").fetchone()[0]
+            if self._daily_spend(c)+reserved+estimate>self.policy.daily_cost_ceiling_usd:return None,"daily cloud cost ceiling reached",estimate
             return p,("local VRAM/model insufficient" if hard_need else "local wait threshold exceeded"),estimate
         return None,"no eligible provider",0
 
@@ -276,6 +305,7 @@ class JobQueue:
                     continue
                 ts=utcnow();lease=time.time()+row["timeout_seconds"]+30
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
+                             actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
                              lease_until=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status='queued'""",
                           (provider.name,reason,estimate,lease,ts,ts,row["id"]))
                 if changed.rowcount:
@@ -284,28 +314,32 @@ class JobQueue:
         return None
 
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
-               output_tokens: int = 0, actual_cost_usd: float = 0.0) -> dict:
+               output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,
+               model_load_ns: int = 0, inference_ns: int = 0) -> dict:
         with self.lock, self.connect() as c:
             row=c.execute("SELECT * FROM compute_jobs WHERE id=?",(job_id,)).fetchone()
             if not row: raise KeyError(job_id)
+            if row["status"]=="cancelled":return dict(row)
             if row["status"]!="running": raise ValueError("job is not running")
-            cost=max(0.0,float(actual_cost_usd)); ts=utcnow()
-            over=cost>row["max_cost_usd"] or self._daily_spend(c)+cost>self.policy.daily_cost_ceiling_usd
+            cost=None if actual_cost_usd is None else max(0.0,float(actual_cost_usd)); ts=utcnow()
+            budget_cost=row['estimated_cost_usd'] if cost is None else cost
+            over=budget_cost>row["max_cost_usd"] or self._daily_spend(c)+budget_cost>self.policy.daily_cost_ceiling_usd
             if over: status="budget_blocked"; error=error or "actual cost ceiling reached"
-            elif error and row["attempts"]<=row["max_retries"]: status="queued"
+            elif error and retryable and row["attempts"]<=row["max_retries"]: status="queued"
             elif error: status="failed"
             else: status="completed"
             c.execute("""UPDATE compute_jobs SET status=?,result=?,error=?,actual_cost_usd=?,input_tokens=?,output_tokens=?,
                          provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
-                      (status,result,error,cost,int(input_tokens),int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
-            self._event(c,job_id,status,{"error":error,"cost_usd":cost,"attempt":row["attempts"]})
+                      (status,result,error,cost,None if input_tokens is None else int(input_tokens),None if output_tokens is None else int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
+            self._event(c,job_id,status,{"error":error,"cost_usd":cost,"attempt":row["attempts"],
+                                       "model_load_ns":model_load_ns,"inference_ns":inference_ns})
         return self.get(job_id)
 
     def recover_expired(self) -> int:
         with self.lock, self.connect() as c:
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='running' AND lease_until<?",(time.time(),)).fetchall()
             for row in rows:
-                status="queued" if row["attempts"]<=row["max_retries"] else "failed"
+                status="queued" if not row['allow_cloud'] and row["attempts"]<=row["max_retries"] else "failed"
                 c.execute("UPDATE compute_jobs SET status=?,provider=NULL,lease_until=NULL,error='worker lease expired',updated_at=?,completed_at=? WHERE id=?",
                           (status,utcnow(),utcnow() if status=="failed" else None,row["id"]))
                 self._event(c,row["id"],"lease_expired",{"next_status":status})
@@ -331,13 +365,26 @@ class WorkerPool:
 
     def stop(self) -> None:
         self.stop_event.set()
+        self.queue.wake.set()
         for t in self.threads:t.join(timeout=3)
         self.threads=[]
 
     def _run(self, worker_id: str) -> None:
-        while not self.stop_event.wait(.5):
+        while not self.stop_event.is_set():
+            self.queue.wake.clear()
             self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers)
-            if not job:continue
+            if not job:
+                self.queue.wake.wait(.5)
+                continue
             provider=next(p for p in self.providers if p.name==job["provider"])
             try:self.queue.finish(job["id"],**self.execute(job,provider))
-            except Exception as exc:self.queue.finish(job["id"],error=f"{type(exc).__name__}: {exc}"[:2000])
+            except Exception as exc:
+                if provider.kind=='cloud':
+                    # Unknown billing remains reserved; no blind replay of an
+                    # ambiguous external request, and no raw upstream error body.
+                    from .provider_runtime import ProviderFailure
+                    code=exc.code if isinstance(exc,ProviderFailure) else 'EXTERNAL_EXECUTION_FAILED'
+                    self.queue.finish(job['id'],error=code,retryable=False,
+                        actual_cost_usd=None,input_tokens=None,output_tokens=None)
+                else:
+                    self.queue.finish(job["id"],error='LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,PermissionError))

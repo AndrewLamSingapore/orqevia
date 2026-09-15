@@ -122,6 +122,16 @@ def assess_static(
     }:
         result.error("canonical_machine_source is not the PRIME main manifest")
 
+    # Source unification must never promote historical Dell identity to ABEX.
+    abex = value.get("abex_runtime", {})
+    if value.get("canonical_release"):
+        if abex.get("state") != "VERIFIED" or not abex.get("receipt"):
+            result.stale("abex_runtime_receipt_missing")
+        if value.get("alignment_state", {}).get("overall") != value.get("status"):
+            result.error("nested overall status conflicts with canonical status")
+        if value.get("status") == "STALE" and value.get("release_gate", {}).get("current_result") == "PASSED":
+            result.error("historical release PASS cannot be current while STALE")
+
     scope = value.get("scope", {})
     active = scope.get("active_systems", [])
     if not isinstance(active, list) or set(active) != EXPECTED_ACTIVE or len(active) != len(set(active)):
@@ -546,6 +556,8 @@ def write_stale(path: Path, value: dict[str, Any], reasons: list[str]) -> bool:
     if value.get("status") != "STALE":
         value["status"] = "STALE"
         changed = True
+    value.setdefault("alignment_state", {})["overall"] = "STALE"
+    value.setdefault("release_gate", {})["current_result"] = "PENDING_RUNTIME_EVIDENCE"
     verification = value.setdefault("verification", {})
     normalized = sorted(reasons)
     if verification.get("stale_reasons") != normalized:

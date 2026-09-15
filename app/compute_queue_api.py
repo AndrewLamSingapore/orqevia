@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import os
+import json
+import hashlib
+import time
 from dataclasses import replace
 from pathlib import Path
 
@@ -10,17 +13,16 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
-from .agent_registry import RegistryError, canonical_agent_id
-from .action_harness import HarnessPolicy
+from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 from .settings import SETTINGS
+from .compute_profile import validate_configuration, require_compute_capacity, generation_options
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
 POLICY = QueuePolicy.from_env()
-if os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower() in {"1", "true", "yes", "on"}:
-    # The pilot is deliberately single-slot even if an older host Compose file
-    # still injects the pre-pilot concurrency value.
-    POLICY = replace(POLICY, global_concurrency=1, per_agent_concurrency=1)
+# Preserve the measured ABEX one-slot compute envelope, independent of authority.
+POLICY = replace(POLICY, global_concurrency=1, per_agent_concurrency=1)
+validate_configuration(SETTINGS,POLICY)
 queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 
 
@@ -37,49 +39,60 @@ def providers() -> list[Provider]:
         if model and not any(p.model==model for p in result):
             result.append(Provider(f"ollama-{role}","local",model,local_ram,local_vram,
                                    _int("OLLAMA_NUM_PARALLEL",2) or 1))
-    url=os.getenv("PRIME_CLOUD_GPU_URL","").strip()
-    key=os.getenv("PRIME_CLOUD_GPU_API_KEY","").strip()
-    model=os.getenv("PRIME_CLOUD_GPU_MODEL","").strip()
-    if url and key and model:
-        result.append(Provider("cloud-gpu","cloud",model,_int("PRIME_CLOUD_GPU_RAM_MB",131072),
-            _int("PRIME_CLOUD_GPU_VRAM_MB",81920),_int("PRIME_CLOUD_GPU_CONCURRENCY",2) or 1,
-            float(os.getenv("PRIME_CLOUD_INPUT_USD_MTOK","0") or 0),
-            float(os.getenv("PRIME_CLOUD_OUTPUT_USD_MTOK","0") or 0)))
+    from .compute_catalog import load_catalog,model_spec
+    for entry in load_catalog():
+        if not entry.get('enabled') or entry['location']!='cloud':continue
+        spec=model_spec(entry)
+        # Unpriced external calls cannot enter automatic budgeted execution.
+        if spec.input_usd_million is None or spec.output_usd_million is None:continue
+        result.append(Provider(entry['id'],'cloud',entry['model'],0,0,int(entry.get('concurrency',1)),float(spec.input_usd_million),float(spec.output_usd_million),spec.output_tokens))
     return result
 
 
+def _validate_job_lease(job: dict) -> None:
+    """Compatibility only; never called by the candidate executor."""
+    from .action_harness import HarnessPolicy
+    guarded = registered_agent_ids() if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') == '1' else HarnessPolicy().pilot_agents
+    if job['agent'] not in guarded:
+        return
+    from .harness_api import _runtime
+    raw=job.get('harness_envelope')
+    if not raw:
+        raise PermissionError('Pilot job is missing its signed lease')
+    envelope=json.loads(raw)
+    signed=envelope.get('parameters',{})
+    if envelope.get('actor_id')!=job['agent'] or signed.get('prompt_sha256')!=hashlib.sha256(job['prompt'].encode()).hexdigest():
+        raise PermissionError('Queued job does not match its signed lease')
+    for field in ('model_role','ram_mb','vram_mb','timeout_seconds','max_retries'):
+        if signed.get(field)!=job[field]:
+            raise PermissionError('Queued execution parameters changed after authorization')
+    if job.get('allow_cloud') or job.get('external_execution'):
+        raise PermissionError('Pilot lease does not permit cloud or external execution')
+    harness,_=_runtime();decision=harness.validate_active_execution(envelope)
+    if not decision.authorized:
+        raise PermissionError(decision.reason)
+
+
 def _execute(job: dict, provider: Provider) -> dict:
-    timeout=httpx.Timeout(float(job["timeout_seconds"]))
-    if provider.kind=="local":
-        with httpx.Client(timeout=timeout) as client:
-            r=client.post(f"{SETTINGS.ollama_base_url}/api/chat",json={"model":provider.model,
-                "messages":[{"role":"user","content":job["prompt"]}],"stream":False,
-                "keep_alive":SETTINGS.keep_alive,"options":{"num_ctx":SETTINGS.context_tokens,
-                "num_predict":SETTINGS.max_output_tokens}})
-            r.raise_for_status(); payload=r.json()
-        return {"result":payload.get("message",{}).get("content",""),
-                "input_tokens":int(payload.get("prompt_eval_count",0) or 0),
-                "output_tokens":int(payload.get("eval_count",0) or 0),"actual_cost_usd":0}
-    # Cloud is OpenAI-chat-compatible and is impossible to reach unless the queue
-    # has already recorded explicit approval and a deterministic fallback reason.
-    base=os.environ["PRIME_CLOUD_GPU_URL"].rstrip("/")
-    with httpx.Client(timeout=timeout) as client:
-        r=client.post(f"{base}/chat/completions",headers={"Authorization":f"Bearer {os.environ['PRIME_CLOUD_GPU_API_KEY']}"},
-                      json={"model":provider.model,"messages":[{"role":"user","content":job["prompt"]}],
-                            "max_tokens":SETTINGS.max_output_tokens})
-        r.raise_for_status();payload=r.json()
-    usage=payload.get("usage",{});inp=int(usage.get("prompt_tokens",0) or 0);out=int(usage.get("completion_tokens",0) or 0)
-    cost=(inp*provider.input_cost_per_mtok+out*provider.output_cost_per_mtok)/1_000_000
-    return {"result":payload.get("choices",[{}])[0].get("message",{}).get("content",""),
-            "input_tokens":inp,"output_tokens":out,"actual_cost_usd":cost}
+    import asyncio
+    from .direct_stream import infer
+    from .action_records import ActionRecord,DirectExecutor,action_ledger
+    if provider.kind!='local':
+        from .cloud_execution import execute_cloud
+        return execute_cloud(job,provider,DATA,lambda:queue.get(job['id'])['status']=='cancelled')
+    record=ActionRecord(job['id'],job['agent'],'inference.run','ollama',
+        classification=job.get('classification','R0'),model_backend=provider.model)
+    return DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
+        settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
+        cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
 
 
 pool=WorkerPool(queue,providers(),_execute)
 
 
 def authorize(authorization: str | None) -> None:
-    expected=os.getenv("PRIME_SPINE_TOKEN","").strip()
-    if not expected or authorization != f"Bearer {expected}": raise HTTPException(401,"Owner token required")
+    from .client_auth import authenticate_owner
+    authenticate_owner(authorization)
 
 
 class SubmitJob(BaseModel):
@@ -95,6 +108,7 @@ class SubmitJob(BaseModel):
     max_cost_usd: float=Field(default=0,ge=0)
     allow_cloud: bool=False
     external_execution: bool=False
+    data_classification: str='LOCAL_ONLY'
 
 
 class Approval(BaseModel):
@@ -105,12 +119,15 @@ class Approval(BaseModel):
 @router.post("/jobs",status_code=202)
 def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
     authorize(authorization)
+    if body.external_execution:raise HTTPException(503,'External native job execution is not configured')
+    if body.allow_cloud:
+        from .tier_router import classify_for_cloud
+        if not classify_for_cloud(body.data_classification,body.prompt):raise HTTPException(422,'Data locality excludes cloud')
+        if not any(p.kind=='cloud' for p in providers()):raise HTTPException(503,'No configured cloud provider')
     try:
         canonical = canonical_agent_id(body.agent)
     except RegistryError:
         canonical = body.agent.strip().lower()
-    if canonical in HarnessPolicy().pilot_agents:
-        raise HTTPException(409,"Pilot agents must dispatch through /api/harness/pilot/dispatch")
     try:return queue.submit(**body.model_dump())
     except ValueError as exc:raise HTTPException(422,str(exc)) from exc
 
@@ -127,7 +144,6 @@ def get_job(job_id: str,authorization: str|None=Header(None)):
     except KeyError:raise HTTPException(404,"Job not found")
 
 
-@router.post("/jobs/{job_id}/approval")
 def decide_job(job_id: str,body: Approval,authorization: str|None=Header(None)):
     authorize(authorization)
     try:return queue.approve(job_id,body.decision,"owner",body.reason)
@@ -138,6 +154,13 @@ def decide_job(job_id: str,body: Approval,authorization: str|None=Header(None)):
 @router.get("/metrics")
 def metrics(authorization: str|None=Header(None)):
     authorize(authorization);return {**queue.metrics(),"providers":[p.__dict__ for p in providers()]}
+
+
+@router.get('/providers/health')
+def provider_health(authorization: str|None=Header(None)):
+    authorize(authorization)
+    from .cloud_execution import configured_provider_health
+    return configured_provider_health()
 
 
 def start_compute_queue() -> None: pool.start()

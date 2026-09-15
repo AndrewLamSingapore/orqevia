@@ -73,6 +73,9 @@ class HarnessPolicy:
         })
     )
     advisory_fail_open_on_ledger_failure: bool = False
+    advisory_agents: frozenset[str] = field(default_factory=frozenset)
+    artifact_agents: frozenset[str] = field(default_factory=frozenset)
+    wasm_agents: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass(frozen=True)
@@ -157,6 +160,7 @@ class ActionHarness:
         self.policy = policy or HarnessPolicy()
         self._current_policy_version = self.policy.policy_version
         self.lock = threading.RLock()
+        self._revocation_listeners: dict[str, set[Callable[[], None]]] = {}
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 
@@ -206,7 +210,25 @@ class ActionHarness:
     def set_policy_version(self, version: str) -> None:
         if not version.strip():
             raise ValueError("policy version cannot be empty")
-        self._current_policy_version = version.strip()
+        with self.lock:
+            self._current_policy_version = version.strip()
+            for callbacks in self._revocation_listeners.values():
+                for callback in tuple(callbacks):
+                    callback()
+
+    @contextmanager
+    def watch_execution(self, lease_id: str, callback: Callable[[], None]):
+        """Subscribe before active validation; callbacks only signal cancellation."""
+        with self.lock:
+            self._revocation_listeners.setdefault(lease_id,set()).add(callback)
+        try:
+            yield
+        finally:
+            with self.lock:
+                listeners = self._revocation_listeners.get(lease_id,set())
+                listeners.discard(callback)
+                if not listeners:
+                    self._revocation_listeners.pop(lease_id,None)
 
     def _privileged(self, envelope: Mapping[str, Any]) -> bool:
         context = envelope.get("context")
@@ -230,7 +252,26 @@ class ActionHarness:
         if envelope.get("schema_version") != "2.0.0":
             return "unsupported envelope schema", privileged
         if envelope.get("actor_id") not in self.policy.pilot_agents:
-            return "actor is outside the Harness v0 pilot", privileged
+            parameters = envelope.get('parameters')
+            advisory = (envelope.get('actor_id') in self.policy.advisory_agents
+                    and envelope.get('action') == 'agent.infer' and not privileged
+                    and isinstance(parameters, Mapping)
+                    and parameters.get('allow_cloud') is False
+                    and parameters.get('external_execution') is False)
+            artifact = (envelope.get('actor_id') in self.policy.artifact_agents
+                        and envelope.get('action') == 'artifact.create' and not privileged
+                        and isinstance(parameters, Mapping)
+                        and parameters.get('scope') == 'prime-artifact-store'
+                        and parameters.get('allow_cloud') is False
+                        and parameters.get('external_execution') is False)
+            wasm = (envelope.get('actor_id') in self.policy.wasm_agents
+                    and envelope.get('action') == 'sandbox.wasm.execute' and not privileged
+                    and isinstance(parameters,Mapping)
+                    and parameters.get('scope') == 'wasm-no-imports'
+                    and parameters.get('allow_cloud') is False
+                    and parameters.get('external_execution') is False)
+            if not (advisory or artifact or wasm):
+                return "actor is outside the Harness v0 pilot", privileged
         authorization = envelope.get("authorization")
         if not isinstance(authorization, Mapping):
             return "authorization must be an object", privileged
@@ -425,6 +466,30 @@ class ActionHarness:
                 raise HarnessUnavailable("privileged ledger unavailable") from exc
             return HarnessDecision(False, "DENIED", "ledger unavailable", authorization["lease_id"])
 
+    def validate_active_execution(self, envelope: Mapping[str, Any]) -> HarnessDecision:
+        """Recheck a consumed lease while its queued/streaming execution continues.
+
+        This never issues or consumes another lease and cannot authorize a replay.
+        The queue binds the original signed envelope to one job.
+        """
+        error, privileged = self._validate(envelope, utcnow())
+        if error:
+            return self._deny(envelope,error,privileged)
+        auth=envelope['authorization'];lease=auth['lease_id']
+        try:
+            with self.lock,self.connect() as db:
+                if db.execute('SELECT 1 FROM harness_revocations WHERE lease_id=?',(lease,)).fetchone():
+                    return self._deny(envelope,'lease revoked',privileged)
+                row=db.execute('SELECT status,policy_version,envelope_digest FROM harness_decisions WHERE lease_id=?',(lease,)).fetchone()
+                consumed=db.execute('SELECT 1 FROM harness_executions WHERE lease_id=?',(lease,)).fetchone()
+                if not row or not consumed or row['status']!='AUTHORIZED':
+                    return self._deny(envelope,'lease was not authorized and consumed',privileged)
+                if row['policy_version']!=self.policy_version or row['envelope_digest']!=self._digest(envelope):
+                    return self._deny(envelope,'active lease policy or envelope mismatch',privileged)
+            return HarnessDecision(True,'EXECUTION_PERMITTED','active lease remains valid',lease)
+        except sqlite3.Error:
+            return HarnessDecision(False,'DENIED','ledger unavailable',lease)
+
     def revoke(self, lease_id: str, *, reason: str, revoked_by: str) -> None:
         if not reason.strip() or not revoked_by.strip():
             raise ValueError("revocation reason and actor are required")
@@ -446,6 +511,9 @@ class ActionHarness:
                 )
         except sqlite3.Error as exc:
             raise HarnessUnavailable("revocation ledger unavailable") from exc
+        with self.lock:
+            for callback in tuple(self._revocation_listeners.get(lease_id,())):
+                callback()
 
     def reconstruct(self, correlation_id: str) -> dict[str, list[dict[str, Any]]]:
         with self.connect() as db:

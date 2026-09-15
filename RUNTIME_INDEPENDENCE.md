@@ -1,3 +1,5 @@
+> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+
 # JARVIS PRIME Runtime Independence Contract
 
 PRIME is a logical control plane, not a laptop process. Compute nodes host PRIME capabilities but do not own PRIME identity, policy or durable history.

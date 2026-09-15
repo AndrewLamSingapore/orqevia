@@ -1,5 +1,4 @@
-name: CI
-
+name: Canonical PRIME v1 CI
 on:
   workflow_call:
   pull_request:
@@ -7,37 +6,43 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: canonical-ci-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   quality:
-    name: PRIME quality
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
-          python-version: "3.12"
-          cache: pip
-      - name: Install dependencies
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies on isolated CI runner
+        run: python -m pip install -r requirements.txt -r requirements-sandbox.txt pytest
+      - name: Validate canonical SSOT and run offline deterministic security and integration tests
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest
-      - name: Compile application and governance tooling
-        run: python -m compileall -q app scripts
-      - name: Run tests
-        env:
-          PRIME_DATA_DIR: ${{ runner.temp }}/prime-data
-          PRIME_COMPUTE_DB: ${{ runner.temp }}/prime-data/compute-ledger.db
-        run: pytest -q
-      - name: Validate truthful governance manifest
-        run: python scripts/verify_operational_manifest.py --allow-stale
-      - name: Reject manually maintained checkpoint drift
-        run: python scripts/generate_resume_checkpoint.py --check
+          export PRIME_DATA_DIR="$RUNNER_TEMP/prime-fixtures"
+          export PRIME_COMPUTE_QUEUE_DB="$PRIME_DATA_DIR/queue.db"
+          python scripts/check_canonical_state.py
+          python scripts/run_canonical_ci.py
+      - name: PWA protocol, voice fallback, idempotency and revision tests
+        run: |
+          node -e "if(Number(process.versions.node.split('.')[0])<20)process.exit(1); console.log(process.versions.node)"
+          node clients/pwa/tests.mjs
+          node clients/pwa/followup-tests.mjs
+          node clients/pwa/revision-tests.mjs
+      - name: Dell canonical-source package and archive regression tests
+        run: python -B -m unittest discover -s clients/dell/tools -p test_package_client.py
+      - name: Reproducible source package
+        run: |
+          python scripts/build_source_release.py --output "$RUNNER_TEMP/prime-build-a"
+          python scripts/build_source_release.py --output "$RUNNER_TEMP/prime-build-b"
+          cmp "$RUNNER_TEMP/prime-build-a/SOURCE_MANIFEST.json" "$RUNNER_TEMP/prime-build-b/SOURCE_MANIFEST.json"
+          git diff --exit-code

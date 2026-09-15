@@ -29,20 +29,19 @@ def test_unknown_agent_is_rejected(tmp_path):
     else:
         raise AssertionError("unregistered compute agent must fail closed")
 
-def test_cloud_is_approval_gated_and_only_fallback(tmp_path):
+def test_cloud_is_direct_and_only_fallback(tmp_path):
     q=queue(tmp_path)
     job=q.submit(agent="analyst",prompt="large",model="large",vram_mb=8000,allow_cloud=True,max_cost_usd=1)
-    assert job["status"]=="awaiting_approval"
-    assert q.claim("w",[LOCAL,CLOUD]) is None
-    q.approve(job["id"],"approved","owner","large model required")
+    assert job["status"]=="queued"
+    assert job["approval_status"]=="not_required"
     claimed=q.claim("w",[LOCAL,CLOUD])
     assert claimed["provider"]=="gpu-cloud"
     assert claimed["route_reason"]=="local VRAM/model insufficient"
 
-def test_rejection_cancels_and_is_audited(tmp_path):
+def test_operational_cancellation_is_audited(tmp_path):
     q=queue(tmp_path)
     job=q.submit(agent="research",prompt="external",external_execution=True)
-    out=q.approve(job["id"],"rejected","owner","not authorized")
+    out=q.cancel(job["id"])
     assert out["status"]=="cancelled"
 
 def test_retry_then_failure(tmp_path):
@@ -55,7 +54,6 @@ def test_job_cost_ceiling_blocks_cloud(tmp_path):
     q=queue(tmp_path)
     expensive=Provider("expensive","cloud","large",131072,81920,2,10000,10000)
     job=q.submit(agent="analyst",prompt="x"*10000,model="large",vram_mb=8000,allow_cloud=True,max_cost_usd=.01)
-    q.approve(job["id"],"approved","owner")
     assert q.claim("w",[LOCAL,expensive]) is None
     assert q.get(job["id"])["status"]=="budget_blocked"
 

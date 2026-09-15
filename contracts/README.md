@@ -1,3 +1,5 @@
+> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+
 # PRIME Cross-Project Contracts
 
 PRIME is the bounded reasoning and verification layer between discovery systems and execution systems.
