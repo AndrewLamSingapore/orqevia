@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PRIME task v1",
+  "type": "object",
+  "required": [
+    "id",
+    "state"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

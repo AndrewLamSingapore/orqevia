@@ -1,0 +1,143 @@
+{
+  "contract": "jarvis.interface.v1",
+  "version": "1.0.0-candidate",
+  "status": "IMPLEMENTED_ASGI_FIXTURE_VALIDATED_NOT_DEPLOYED",
+  "wire_schemas": "interface-contract.schemas.v1.json",
+  "runtime_identity": "runtime_version from PRIME_INTERFACE_RUNTIME_VERSION; candidate_status from PRIME_INTERFACE_CANDIDATE_STATUS. Defaults UNKNOWN; explicit candidate/qualification labeling is required for test listeners. These labels do not themselves establish deployment or qualification.",
+  "error_normalization": "Dedicated app.interface_server returns protocol/error.code/error.message/error.retryable; it never reflects raw request inputs or exception text. X-PRIME-Protocol header identifies protocol. Ambiguous errors never authorize automatic replay.",
+  "host": {
+    "id": "DESKTOP-BGD97NB",
+    "role": "AUTHORITATIVE_PRIME_HOST"
+  },
+  "client": {
+    "role": "THIN_CLIENT",
+    "filesystem_path": null
+  },
+  "transport": {
+    "scheme": "https",
+    "http_status": 426,
+    "pin_algorithm": "SHA-256 of DER SubjectPublicKeyInfo; lowercase hexadecimal",
+    "pin_configuration": "PRIME_INTERFACE_SPKI_SHA256",
+    "pin_trust": "Dell must compare the TLS peer SPKI to an independently adopted pin; the identity body is not a trust anchor.",
+    "deployment": "Requires real certificate/private-key reference and trusted TLS listener. Do not expose legacy /api/interface/v1 or owner routes to thin clients. No TLS or firewall configuration changed by this implementation.",
+    "fixtures": "ASGI TestClient https base_url is a local transport simulation, not a TLS roundtrip."
+  },
+  "authentication": {
+    "headers": {
+      "X-Client-ID": "configured client identifier",
+      "Authorization": "Bearer credential; never log"
+    },
+    "policy_configuration": "PRIME_INTERFACE_CLIENTS_JSON",
+    "policy_fields": {
+      "token_sha256": "SHA-256 verifier, never plaintext credential",
+      "expires_at": "Unix seconds, must be in future",
+      "capabilities": "explicit list of allowed interface operations"
+    },
+    "ownership": "Existing interface requests SQLite store associates each task to its authenticated client; cross-client access returns404."
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/interface/v1/identity",
+      "capability": "identity.read",
+      "response_fields": [
+        "contract",
+        "host_id",
+        "role",
+        "client_role",
+        "tls_spki_sha256",
+        "transport",
+        "pin_verification"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/interface/v1/objectives",
+      "capability": "objective.submit",
+      "request_fields": {
+        "objective": "string 1..20000",
+        "context": "optional string <=80000",
+        "idempotency_key": "string 1..100",
+        "deterministic_operation": "optional sha256, json_format or json_validate; uses existing dispatcher and retained parent task identity"
+      },
+      "response_fields": [
+        "task_id",
+        "state",
+        "idempotent_replay"
+      ],
+      "success": 202,
+      "conflicting_replay": 409
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/tasks/{taskId}",
+      "capability": "task.read",
+      "response": "existing PRIME objective status, steps and source-labelled advisory results"
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/tasks/{taskId}/events",
+      "capability": "task.read",
+      "media_type": "text/event-stream",
+      "event": "task.status",
+      "mode": "single bounded current-state snapshot per connection",
+      "resume": "Last-Event-ID equal to snapshot digest returns no duplicate event; reconnect obtains current state",
+      "limitation": "Not durable full history; intermediate transitions between polls can be missed. No process-wide ledger exposure."
+    },
+    {
+      "method": "POST",
+      "path": "/interface/v1/tasks/{taskId}/cancel",
+      "capability": "task.cancel",
+      "response": "Existing shared queue cancellation request, not independent proof of completed cancellation"
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/tasks/{taskId}/artifacts",
+      "capability": "artifact.read",
+      "query": {
+        "offset": "0..100000",
+        "limit": "1..100, default100"
+      },
+      "response_fields": [
+        "task_id",
+        "artifacts",
+        "next_offset"
+      ],
+      "materialization": "A terminal task snapshot is materialized on demand through existing ArtifactFactory and reused on reconnect. Existing objective-store transaction serializes concurrent requests; no new store. Unfinished tasks generate no placeholder.",
+      "limitation": "Task snapshot is source-labelled results, not an independent correctness claim."
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/artifacts/{artifactId}",
+      "capability": "artifact.read",
+      "media_type": "application/octet-stream",
+      "sha256_header": "X-Artifact-SHA256",
+      "validation": "Factory rehash before serving; Dell must hash received bytes independently"
+    },
+    {
+      "method": "POST",
+      "path": "/interface/v1/tasks/{taskId}/continue",
+      "capability": "objective.submit",
+      "ownership": "Existing task owner or explicitly linked same owner account only",
+      "request_fields": {
+        "objective": "string 1..20000",
+        "context": "optional string <=76000",
+        "expected_revision": "integer >=0, original turn is0",
+        "idempotency_key": "string 1..100; optional matching Idempotency-Key header"
+      },
+      "success": 202,
+      "response_fields": [
+        "task_id",
+        "taskId",
+        "revision",
+        "state",
+        "idempotent_replay"
+      ],
+      "conflicts": 409,
+      "semantics": "Terminal turn only; reserve revision before dispatch. Conflicting or uncertain reserved replay is never executed automatically. Preserved original objective and additive turns share parent task identity."
+    }
+  ],
+  "task_semantics": "Existing single shared objective/queue state. Logical contributions do not imply verified arbitrary tool execution.",
+  "roundtrip_status": "ACTUAL_DELL_TO_ABEX_NOT_PERFORMED",
+  "continuation_artifacts": "Task status and SSE expose revision; steps retain revision labels. Artifact listing exposes latest_result_artifact_id for terminal current snapshot; prior artifacts remain immutable. No upload references or client model/authority selection on continuation."
+}

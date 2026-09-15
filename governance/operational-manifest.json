@@ -1,7 +1,7 @@
 {
   "schema_version": "4.2.0",
   "status": "STALE",
-  "as_of_utc": "2026-09-15T00:59:16.420803Z",
+  "as_of_utc": "2026-09-15T04:49:21.120340Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -14,6 +14,9 @@
     "expires_at_utc": "2026-09-08T07:12:00Z",
     "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
     "stale_reasons": [
+      "abex_runtime_receipt_missing",
+      "channel_adoption_not_observed",
+      "unified_source_deployment_unverified",
       "vercel_api_not_verified:authority",
       "vercel_api_not_verified:game",
       "vercel_api_not_verified:portal",
@@ -24,7 +27,7 @@
       "verification_expired:prime",
       "verification_expired:shared_contract"
     ],
-    "rule": "CURRENT requires all recorded facts to be fresh, live cloud checks to pass, and a post-update Dell JARVIS.cmd status acceptance."
+    "rule": "CURRENT requires fresh source/deployment evidence and an independently verified ABEX receipt for the selected source, registry and product manifest. Historical Dell acceptance cannot satisfy ABEX acceptance."
   },
   "human_resume_mirror": {
     "library_file_id": "libfile_79bbf3a6138c8191a69bce305ea6094b",
@@ -48,14 +51,8 @@
     "authorization": "Lam explicitly resumed recovery, alignment, implementation, merge and deployment on 7 September 2026."
   },
   "alignment_state": {
-    "source_and_deployments": "ALIGNED_VERIFIED",
-    "portfolio_relay": "CLOUD_CONFIGURED_LOCAL_ACCEPTANCE_VERIFIED",
-    "authority_evidence_review": "READY_DRAFT_ONLY",
-    "dell_runtime": "HARNESS_V0_PILOT_DEPLOYMENT_VERIFIED",
-    "compute_hardening": "HEALTHY_RECHECKED",
-    "queue_hardening": "HARNESS_V0_PILOT_LOCAL_SINGLE_SLOT_VERIFIED",
-    "sanitized_observability": "ALIGNED_VERIFIED",
-    "overall": "CURRENT"
+    "source_and_deployments": "UNVERIFIED",
+    "overall": "STALE"
   },
   "shared_contract": {
     "version": "2.0.0",
@@ -143,14 +140,15 @@
       "verified_at_utc": "2026-09-07T07:12:00Z",
       "published_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
       "runtime": "private-dell-docker",
-      "state": "ALIGNED_VERIFIED",
-      "authority": "Stable Spine sole PDP; Harness v0 PEP active for a14, a16 and a21; inference-only; external actions remain approval-gated",
-      "note": "source_head_sha is live-resolved because a Git-tracked manifest cannot contain the SHA of its own commit.",
+      "state": "STALE_HISTORICAL_DELL_OBSERVATION",
+      "authority": "ABEX PRIME is the canonical authority; direct observed ordinary work with narrow consequential controls.",
+      "note": "Compatibility SHA/image fields below are the last historical Dell observation, not an ABEX deployment claim. Resolve current source from main; consult abex_runtime for current host evidence.",
       "source_verified_at_utc": "2026-09-07T07:05:23Z",
-      "remote_health": "HEALTHY_READ_ONLY_TUNNEL_VERIFIED",
+      "remote_health": "UNVERIFIED",
       "remote_checked_at_utc": "2026-09-07T06:11:00Z",
       "publication_workflow_run": 34093768658,
-      "publication_verified_at_utc": "2026-09-07T07:07:00Z"
+      "publication_verified_at_utc": "2026-09-07T07:07:00Z",
+      "current_runtime_host": "ABEX"
     },
     "velyqua": {
       "role": "independent hardware-agnostic living-water intelligence",
@@ -202,9 +200,9 @@
     "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
     "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
     "verified_at_utc": "2026-09-07T07:12:00Z",
-    "accepted": true,
-    "post_update_status": true,
-    "result": "Healthy, local-only, approval-gated and no-actuation. Harness v0 pilot is ready for a14, a16 and a21; cloud overflow is disabled and local inference concurrency is one.",
+    "accepted": false,
+    "post_update_status": false,
+    "result": "Historical September 7 Dell observation retained for compatibility and recovery only; current client/synchronizer state requires fresh evidence.",
     "evidence": {
       "status_capture_library_file_id": "libfile_309baa13bf38819186c7c9d2209532f0",
       "status_capture_title": "IMG_5603.jpeg",
@@ -257,7 +255,8 @@
         "embeddinggemma:300m-qat-q4_0"
       ],
       "state": "HISTORICAL_RECHECK_REQUIRED"
-    }
+    },
+    "observation_scope": "HISTORICAL_DELL_RUNTIME; not the active ABEX receipt"
   },
   "github_hygiene": {
     "branch_inventory": {
@@ -304,18 +303,26 @@
     "policy": "zero-known-defect",
     "required": [
       "source_ci_green",
-      "preview_ready",
-      "production_ready",
-      "health_verified",
-      "rollback_recorded",
-      "dell_post_update_status"
+      "runtime_identity_matches_source",
+      "artifact_hashes_verified",
+      "independent_abex_acceptance",
+      "client_acceptance",
+      "rollback_recorded"
     ],
-    "current_result": "PASSED",
+    "current_result": "PENDING_RUNTIME_EVIDENCE",
     "secret_values_allowed": false
   },
   "supersession": {
-    "rule": "This manifest supersedes older architecture, deployment, resume, and branch-status checkpoints. Git and Library version history remain recovery evidence, not competing current truth.",
-    "duplicate_current_checkpoints_allowed": false
+    "rule": "This one manifest and its referenced architecture supersede conflicting earlier instructions across all channels. Domain documents are subordinate. Historical Git/Library versions are recovery evidence only.",
+    "duplicate_current_checkpoints_allowed": false,
+    "superseded_prime_prs": [
+      59,
+      60,
+      65
+    ],
+    "historical_main": "fd90ea15604473b0ade8cc2278176a36a0b658ab",
+    "integrated_candidate": "bd11e2373894f9d8806d6aaf1e3557cb8823c0f7",
+    "owner_instruction_date": "2026-09-15"
   },
   "truth_reconciliation": {
     "version": "1.0.0",
@@ -343,58 +350,59 @@
   },
   "safety_boundaries": {
     "prime_public_exposure": false,
-    "external_actions": "approval-gated",
+    "external_actions": "narrow consequential controls; ordinary bounded work uses direct observed execution",
     "physical_actuation": false,
     "velyqua": "RESUMED_SOFTWARE_NO_PHYSICAL_ACTUATION"
   },
   "implementation_frontier": {
-    "registry": "v1.1 source merged and image published; public 29-agent/six-lead projection, read-only runtime health, and latest release activation verified",
-    "harness_v0": "Dell pilot runtime deployed and status verified for a14, a16 and a21; functional dispatch/lease acceptance exercises and ABEX commissioning remain pending",
-    "hermes_agentscope": "cognition-only integrations require Harness v0; not activated",
-    "predictive_ml": "awaits sufficient real sensor data",
-    "velyqua": "acquisition integrity implemented; full quality policy enums unrecovered",
-    "portal_inhabitants": "concept recovered; implementation pending",
-    "sky_tablet": "current source and production artifact content are hash-aligned; exact Vercel deployment identity remains unverified",
-    "glm_track_1": "full wrapper and logging contract not recovered",
-    "checkpoint_repair": "PRIME image sha-c449dd1 deployed on Dell; post-update health and Harness v0 pilot status verified"
+    "registry": "21 canonical logical agents in source; runtime activation requires independently observed evidence",
+    "execution": "Direct observed execution; legacy universal TAP/Harness gates superseded for ordinary bounded work",
+    "a12_a13_trials": "Unfamiliar-repository qualification UNVERIFIED; September 15 disputed claims remain preserved",
+    "compute_profile": "PENDING MEASUREMENT; complete the formal six-phase protocol with native ABEX evidence",
+    "clients": "PWA and Dell reconnect have bounded historical verified records; current combined deployment and cross-client acceptance unverified",
+    "channel_sync": "One source contract published; individual session adoption is not remotely observable",
+    "sky_tablet": "Current source is recorded; deployed content and exact deployment identity require refreshed evidence."
   },
   "release_results": {
-    "velyqua": {
-      "merged_prs": [
-        45,
-        46
-      ],
-      "verify": "66 unit tests plus 3 relay tests, typecheck and policy gates passed"
-    },
-    "authority": {
-      "merged_prs": [
-        43,
-        44,
-        45
-      ],
-      "public_registry_sync": "success",
-      "hierarchy": "29 specialists and six divisions rendered",
-      "production": "quality, Vercel deployment and production smoke passed at b2bdf9863e26c1bb596837b0c5e05f838f184200"
-    },
-    "game": {
-      "deployment": "current main deployed and health verified"
-    },
-    "prime": {
-      "merged_prs": [
-        51,
-        55,
-        56,
-        57
-      ],
-      "source_tests": 125,
-      "required_ci_checks": "all five passed",
-      "image_publication": "sha-c449dd1 publication workflow passed",
-      "host_installation": "sha-c449dd1 active on Dell; post-update JARVIS.cmd status and Harness v0 status passed"
-    },
-    "sky": {
-      "source_sha": "006e4a39b7853e0198c9b735b4d3943031a204ab",
-      "production_deployment_id": "dpl_HYqKtiWUJW9Bjfqv3RqsoXTqdgxb",
-      "verification": "canonical production URL serves the deployed main artifact"
-    }
-  }
+    "historical_records": "Previous release results are preserved in Git history; no historical PASSED value is a current acceptance claim."
+  },
+  "canonical_release": {
+    "id": "jarvis-prime-unified-2026-09-15",
+    "architecture": "docs/ARCHITECTURE_V1.md",
+    "product_manifest": "system.manifest.json",
+    "channel_contract": "governance/CHANNEL_CONTRACT.md",
+    "intended_agent_count": 21,
+    "source_state": "CANONICAL_SOURCE_SELECTED",
+    "runtime_state": "UNVERIFIED",
+    "scope": "One intended source version; deployment is not asserted by publication."
+  },
+  "abex_runtime": {
+    "authority": "canonical PRIME runtime host",
+    "state": "UNVERIFIED",
+    "receipt": null,
+    "source_sha": null,
+    "verified_at_utc": null,
+    "rule": "Only independent native-host evidence can establish the deployed revision; preserve sealed baseline."
+  },
+  "channel_policy": {
+    "contract": "governance/CHANNEL_CONTRACT.md",
+    "consumers": [
+      "ChatGPT",
+      "Codex",
+      "Sol",
+      "Astra",
+      "ABEX",
+      "Dell",
+      "PWA",
+      "PWA voice"
+    ],
+    "historical_conversation_policy": "Read current canonical source; do not treat model memory as current truth.",
+    "adoption_state": "NOT_OBSERVED_ALL_CHANNELS"
+  },
+  "next_actions": [
+    "Bind published combined source to fresh ABEX/Dell deployment receipts without changing the sealed baseline.",
+    "Complete independent A12/A13 unfamiliar-repository trials and retain terminal evidence.",
+    "Complete six-phase ABEX Compute Profile.",
+    "Refresh cloud deployment identities and client acceptance evidence; regenerate this same mirror."
+  ]
 }

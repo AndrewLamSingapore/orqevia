@@ -195,7 +195,13 @@ class AgentAuthorityRuntime:
             score = sum(1 for keyword in keywords if keyword in text)
             if score > best_score:
                 best_agent, best_score = agent_id, score
-        return [lead, best_agent]
+        best_agent=canonical_agent_id(best_agent)
+        record=agent_record(best_agent)
+        # A consolidated responsibility can move domains. Follow its canonical
+        # parent rather than delegating across an unauthorized historical edge.
+        if record.get('can_delegate'):
+            return [best_agent]
+        return [record['reports_to'],best_agent]
 
     def authorize(
         self,
@@ -262,12 +268,13 @@ class AgentAuthorityRuntime:
         trace_id: str | None = None,
         consequential: bool = False,
     ) -> str:
-        if len(path) != 2:
-            raise AgentAuthorityError("agent path must contain exactly one lead and one specialist")
+        if len(path) not in {1, 2}:
+            raise AgentAuthorityError("agent path must contain one lead and at most one specialist")
         trace = trace_id or str(uuid.uuid4())
         prime = orchestrator_id()
         self.handoff(source=prime, target=path[0], relation="delegate", trace_id=trace, consequential=consequential)
-        self.handoff(source=path[0], target=path[1], relation="delegate", trace_id=trace, consequential=consequential)
+        if len(path) == 2:
+            self.handoff(source=path[0], target=path[1], relation="delegate", depth=2, trace_id=trace, consequential=consequential)
         return trace
 
     def stage(

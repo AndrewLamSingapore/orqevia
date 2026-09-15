@@ -11,6 +11,7 @@ from typing import Any
 
 from .compute_ledger import ComputeLedger
 from .settings import SETTINGS, PrimeSettings
+from .compute_profile import require_compute_capacity, generation_options
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,7 @@ class ModelGateway:
               task_id: str | None = None, stage: str = "local_ai", timeout: float = 120.0) -> ModelResult:
         task_id = task_id or str(uuid.uuid4())
         model = self.local_evaluator if role == "evaluator" else (self.local_deep if deep else self.local_fast)
+        require_compute_capacity(model)
         started = time.monotonic()
         try:
             data = self._post(
@@ -99,7 +101,7 @@ class ModelGateway:
                 {
                     "model": model, "prompt": prompt, "stream": False,
                     "keep_alive": self.settings.keep_alive,
-                    "options": {"num_ctx": self.settings.context_tokens, "num_predict": self.settings.max_output_tokens},
+                    "options": {"num_ctx": self.settings.context_tokens, "num_predict": self.settings.max_output_tokens,**generation_options()},
                 }, {}, timeout,
             )
             latency = int((time.monotonic() - started) * 1000)

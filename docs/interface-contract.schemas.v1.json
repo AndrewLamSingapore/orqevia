@@ -1,0 +1,393 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JARVIS Interface v1 wire schemas",
+  "protocol": "jarvis.interface.v1",
+  "$defs": {
+    "ObjectiveRequest": {
+      "properties": {
+        "objective": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Objective",
+          "type": "string"
+        },
+        "context": {
+          "default": "",
+          "maxLength": 80000,
+          "title": "Context",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Idempotency Key",
+          "type": "string"
+        },
+        "deterministic_operation": {
+          "anyOf": [
+            {
+              "enum": [
+                "sha256",
+                "json_format",
+                "json_validate"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deterministic Operation"
+        }
+      },
+      "required": [
+        "objective",
+        "idempotency_key"
+      ],
+      "title": "Objective",
+      "type": "object"
+    },
+    "IdentityResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "jarvis.interface.v1"
+        },
+        "host_id": {
+          "const": "DESKTOP-BGD97NB"
+        },
+        "role": {
+          "const": "AUTHORITATIVE_PRIME_HOST"
+        },
+        "client_role": {
+          "const": "THIN_CLIENT"
+        },
+        "tls_spki_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "transport": {
+          "const": "HTTPS"
+        },
+        "pin_verification": {
+          "type": "string"
+        },
+        "runtime_version": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+-]{1,96}$"
+        },
+        "candidate_status": {
+          "enum": [
+            "UNKNOWN",
+            "ISOLATED_CANDIDATE",
+            "QUALIFICATION_RUNTIME",
+            "PRODUCTION"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "host_id",
+        "role",
+        "client_role",
+        "tls_spki_sha256",
+        "transport",
+        "pin_verification",
+        "runtime_version",
+        "candidate_status"
+      ],
+      "additionalProperties": false
+    },
+    "SubmissionResponse": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "idempotent_replay": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "task_id",
+        "state",
+        "idempotent_replay"
+      ],
+      "additionalProperties": false
+    },
+    "TaskResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "state"
+      ],
+      "additionalProperties": true
+    },
+    "TaskEvent": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "task_id",
+        "state",
+        "jobs"
+      ],
+      "additionalProperties": false
+    },
+    "CancellationResponse": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "state": {
+          "const": "CANCELLATION_REQUESTED"
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "task_id",
+        "state",
+        "jobs"
+      ],
+      "additionalProperties": false
+    },
+    "ArtifactMetadata": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "validation_state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "task_id",
+        "type",
+        "sha256",
+        "bytes",
+        "validation_state"
+      ],
+      "additionalProperties": false
+    },
+    "ArtifactListResponse": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ArtifactMetadata"
+          }
+        },
+        "next_offset": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "task_id",
+        "artifacts",
+        "next_offset"
+      ],
+      "additionalProperties": false
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "jarvis.interface.v1"
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "retryable": {
+              "const": false
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "protocol",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "ContinuationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objective",
+        "expected_revision",
+        "idempotency_key"
+      ],
+      "properties": {
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "context": {
+          "type": "string",
+          "maxLength": 76000,
+          "default": ""
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      }
+    }
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/interface/v1/identity",
+      "response": "IdentityResponse"
+    },
+    {
+      "method": "POST",
+      "path": "/interface/v1/objectives",
+      "request": "ObjectiveRequest",
+      "response": "SubmissionResponse"
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/tasks/{taskId}",
+      "response": "TaskResponse"
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/tasks/{taskId}/events",
+      "response": "TaskEvent",
+      "framing": "SSE task.status; id SHA256 compact sorted JSON; one reconnectable snapshot"
+    },
+    {
+      "method": "POST",
+      "path": "/interface/v1/tasks/{taskId}/cancel",
+      "response": "CancellationResponse"
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/tasks/{taskId}/artifacts",
+      "response": "ArtifactListResponse"
+    },
+    {
+      "method": "GET",
+      "path": "/interface/v1/artifacts/{artifactId}",
+      "response": "binary bytes; X-Artifact-SHA256 lowercase SHA256"
+    }
+  ],
+  "error_schema": "ErrorResponse",
+  "error_codes": {
+    "401": "AUTHENTICATION_REQUIRED",
+    "403": "CLIENT_SCOPE_DENIED",
+    "404": "NOT_FOUND",
+    "405": "METHOD_NOT_ALLOWED",
+    "409": "STATE_CONFLICT",
+    "422": "INVALID_REQUEST",
+    "426": "HTTPS_REQUIRED",
+    "429": "RATE_LIMITED",
+    "503": "SERVICE_UNAVAILABLE"
+  },
+  "unexpected_error": {
+    "status": 500,
+    "code": "INTERNAL_ERROR"
+  },
+  "notes": [
+    "Task steps intentionally remain additive existing PRIME records; no duplicate task-state schema imposed.",
+    "retryable false prevents automatic replay of ambiguous requests. Client may reconnect/query state using idempotency key.",
+    "No real TLS peer or Dell transaction is asserted by this schema export."
+  ]
+}

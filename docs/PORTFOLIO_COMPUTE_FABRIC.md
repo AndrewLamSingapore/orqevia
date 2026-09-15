@@ -1,3 +1,5 @@
+> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+
 # PRIME Portfolio Compute Fabric
 
 PRIME is the cognitive consumer/coordinator for the shared Portfolio Event v1 contract. Its durable event inbox is idempotent by `event_id`; event receipt never grants execution authority.

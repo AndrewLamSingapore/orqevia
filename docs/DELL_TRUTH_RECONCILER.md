@@ -1,3 +1,5 @@
+> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+
 # Dell Truth Reconciler
 
 The Truth Reconciler is an independent, deterministic Dell observer. It does not replace PRIME, ABEX, GitHub, or `governance/operational-manifest.json`.

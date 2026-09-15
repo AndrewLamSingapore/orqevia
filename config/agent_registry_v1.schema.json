@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "registry_version",
+    "agents",
+    "leads",
+    "responsibility_coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "registry_version": {
+      "const": "1.0.0"
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "items": {
+        "type": "object",
+        "required": [
+          "immutable_id",
+          "agent_id",
+          "name",
+          "purpose",
+          "responsibilities",
+          "non_responsibilities",
+          "allowed_delegation_targets",
+          "escalation_relationships",
+          "input_contract",
+          "output_contract",
+          "capability_requirements",
+          "tool_eligibility",
+          "model_tier_eligibility",
+          "compute_requirements",
+          "tap_relationship",
+          "failure_fallback",
+          "observability",
+          "version",
+          "lifecycle_status"
+        ]
+      }
+    }
+  }
+}

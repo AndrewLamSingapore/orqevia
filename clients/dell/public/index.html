@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JARVIS · Dell</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <header><div><span class="eyebrow">DELL THIN CLIENT</span><h1>JARVIS</h1></div><div id="connection" class="badge">CHECKING</div></header>
+    <section class="composer">
+      <label for="objective">What should JARVIS do?</label>
+      <textarea id="objective" maxlength="20000" placeholder="Enter one objective for the authoritative ABEX PRIME…"></textarea>
+      <div class="actions"><button id="send">Send objective</button><button id="cancel" class="secondary" disabled>Cancel task</button></div>
+    </section>
+    <section class="grid">
+      <article><span class="eyebrow">TASK</span><h2 id="taskId">No active task</h2><div id="state" class="state">READY</div><p id="message">The client is checking its locked ABEX connection.</p></article>
+      <article><span class="eyebrow">AUTHORITY</span><h2>ABEX only</h2><p id="identity">Dell never schedules workers or claims canonical completion.</p></article>
+    </section>
+    <section><div class="section-title"><span class="eyebrow">ARTIFACT INBOX</span><button id="refresh" class="text" disabled>Refresh</button></div><div id="artifacts" class="empty">Artifacts from a completed task will appear here with their validation status and hash.</div></section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

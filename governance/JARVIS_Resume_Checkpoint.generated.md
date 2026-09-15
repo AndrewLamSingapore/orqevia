@@ -1,75 +1,51 @@
-# JARVIS / PRIME Resume Checkpoint
+# JARVIS / PRIME — Current Resume Checkpoint
 
-> Generated from `governance/operational-manifest.json`. Do not maintain this file manually.
+> Generated mirror of the sole operational SSOT. Read current PRIME main before resuming.
 
-- Effective status: **STALE**
-- Manifest observation: `2026-09-15T00:59:16.420803Z`
-- Verification time: `2026-09-07T07:12:00Z`
-- Freshness window: `24 hours`
+- Canonical source: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
+- Selected architecture release: `jarvis-prime-unified-2026-09-15`
+- Operational status: **STALE**
+- Source observation: `2026-09-15T04:49:21.120340Z`
+- Architecture: ABEX PRIME; Dell/PWA/voice clients; 21 agents; direct observed bounded work.
+- This applies to ChatGPT, Codex, Sol and Astra. Model memory and old chats are not current authority.
+- Source publication does not prove deployment. Historical Dell observations do not prove ABEX identity.
 
-## System facts
+## Source observations and deployment evidence
 
-| System | Source head | Release | Runtime | Verified | State |
-|---|---|---|---|---|---|
-| control | `f3fec388a29c` | `f3fec388a29c` | `—` | `2026-09-14T22:32:43.635566Z` | SOURCE_RELEASE_VERIFIED |
-| authority | `d1ee61dff52b` | `d1ee61dff52b` | `d1ee61dff52b` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| game | `0bf7930cf6fc` | `0bf7930cf6fc` | `0bf7930cf6fc` | `2026-09-15T00:59:16.420803Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| portal | `0de1288c69f2` | `0de1288c69f2` | `0de1288c69f2` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| prime | `—` | `c449dd1c8e22` | `c449dd1c8e22` | `2026-09-07T07:12:00Z` | ALIGNED_VERIFIED |
-| sky | `2de175dc61a0` | `2de175dc61a0` | `2de175dc61a0` | `2026-09-14T22:32:43.635566Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
-| velyqua | `93673544d2c3` | `93673544d2c3` | `93673544d2c3` | `2026-09-14T06:44:44.377682Z` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| System | Recorded source | Last recorded release | Last recorded runtime | Evidence state |
+|---|---|---|---|---|
+| control | `f3fec388a29c` | `f3fec388a29c` | `—` | SOURCE_RELEASE_VERIFIED |
+| authority | `d1ee61dff52b` | `d1ee61dff52b` | `d1ee61dff52b` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| game | `0bf7930cf6fc` | `0bf7930cf6fc` | `0bf7930cf6fc` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| portal | `0de1288c69f2` | `0de1288c69f2` | `0de1288c69f2` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| prime | `—` | `c449dd1c8e22` | `c449dd1c8e22` | STALE_HISTORICAL_DELL_OBSERVATION |
+| sky | `2de175dc61a0` | `2de175dc61a0` | `2de175dc61a0` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
+| velyqua | `93673544d2c3` | `93673544d2c3` | `93673544d2c3` | SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED |
 
-## Shared contract
+PRIME SHA/image compatibility fields above describe historical Dell evidence only. Current ABEX runtime: UNVERIFIED.
 
-- Version: `2.0.0`
-- Publication commit: `a05fa2e3df80733af9ed87068b3526768d4a8394`
-- Canonical file: `AndrewLamSingapore/AndrewLamSingapore/portfolio-contracts/manifest.json`
+## Current priorities
 
-## Branch classification
+- Bind published combined source to fresh ABEX/Dell deployment receipts without changing the sealed baseline.
+- Complete independent A12/A13 unfamiliar-repository trials and retain terminal evidence.
+- Complete six-phase ABEX Compute Profile.
+- Refresh cloud deployment identities and client acceptance evidence; regenerate this same mirror.
 
-- Snapshot: `2026-09-04T03:14:47Z`
-- Historical branch cohort (not live total): `112`
-- active: `0`
-- checkpoint: `11`
-- merged: `95`
-- rollback: `6`
+## Unresolved evidence
 
-## Dell acceptance gate
+- abex_runtime_receipt_missing
+- channel_adoption_not_observed
+- unified_source_deployment_unverified
+- vercel_api_not_verified:authority
+- vercel_api_not_verified:game
+- vercel_api_not_verified:portal
+- vercel_api_not_verified:sky
+- vercel_api_not_verified:velyqua
+- verification_expired:dell_runtime
+- verification_expired:manifest
+- verification_expired:prime
+- verification_expired:shared_contract
 
-- Command: `JARVIS.cmd status`
-- Accepted: `true`
-- Last observed runtime: `c449dd1c8e22976c97507733201807d4d73bf92e`
-- Last status capture: `2026-09-07T07:12:00Z`
-- Post-update status: `true`
-- Result: Healthy, local-only, approval-gated and no-actuation. Harness v0 pilot is ready for a14, a16 and a21; cloud overflow is disabled and local inference concurrency is one.
+## Resume contract
 
-## Published software and remaining implementation
-
-- PRIME published image: `ghcr.io/andrewlamsingapore/prime:sha-c449dd1`
-- A published image does not establish Dell installation or active agents.
-- registry: v1.1 source merged and image published; public 29-agent/six-lead projection, read-only runtime health, and latest release activation verified
-- harness_v0: Dell pilot runtime deployed and status verified for a14, a16 and a21; functional dispatch/lease acceptance exercises and ABEX commissioning remain pending
-- hermes_agentscope: cognition-only integrations require Harness v0; not activated
-- predictive_ml: awaits sufficient real sensor data
-- velyqua: acquisition integrity implemented; full quality policy enums unrecovered
-- portal_inhabitants: concept recovered; implementation pending
-- sky_tablet: current source and production artifact content are hash-aligned; exact Vercel deployment identity remains unverified
-- glm_track_1: full wrapper and logging contract not recovered
-- checkpoint_repair: PRIME image sha-c449dd1 deployed on Dell; post-update health and Harness v0 pilot status verified
-- Branch protection: VELYQUA_MAIN_PROTECTED_VERIFIED
-
-## Current blockers
-
-- `vercel_api_not_verified:authority`
-- `vercel_api_not_verified:game`
-- `vercel_api_not_verified:portal`
-- `vercel_api_not_verified:sky`
-- `vercel_api_not_verified:velyqua`
-- `verification_expired:dell_runtime`
-- `verification_expired:manifest`
-- `verification_expired:prime`
-- `verification_expired:shared_contract`
-
-## Resume rule
-
-Re-run the live verifier before relying on this checkpoint. A manifest older than 24 hours is STALE. PRIME may be declared aligned only after a post-update Dell `JARVIS.cmd status` acceptance check.
+Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. Only governance/operational-manifest.json selects current architecture and operational state. system.manifest.json is a subordinate product manifest. Repository SSOT.json files are references. This is the only current human resume mirror; earlier exports and installer bundles are superseded.

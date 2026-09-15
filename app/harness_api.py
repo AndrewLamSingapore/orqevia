@@ -12,6 +12,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from app import compute_queue_api, spine_api
+from app.agent_registry import registered_agent_ids
 from app.action_harness import (
     ActionEnvelopeIssuer,
     ActionHarness,
@@ -49,9 +50,13 @@ def _runtime() -> tuple[ActionHarness, ActionEnvelopeIssuer]:
         str(Path(os.getenv("PRIME_DATA_DIR", "/data")) / "action-harness.db"),
     )
     version = os.getenv("PRIME_HARNESS_POLICY_VERSION", "harness-v0").strip() or "harness-v0"
-    fingerprint = (db_path, version, hashlib.sha256(secret).hexdigest())
+    agents_enabled = os.getenv('PRIME_REGISTRY_V1_ENABLED','0') == '1'
+    fingerprint = (db_path, version, hashlib.sha256(secret).hexdigest(), agents_enabled)
     if _runtime_cache is None or _runtime_fingerprint != fingerprint:
-        policy = HarnessPolicy(policy_version=version)
+        policy = HarnessPolicy(policy_version=version, advisory_agents=frozenset(
+            registered_agent_ids(include_orchestrator=False) if agents_enabled else ()),
+            artifact_agents=frozenset({'a09'} if agents_enabled else ()),
+            wasm_agents=frozenset({'a17','a18'} if agents_enabled else ()))
         issuer = ActionEnvelopeIssuer(secret, key_id="prime-authority-v0")
         harness = ActionHarness(db_path, {issuer.key_id: secret}, policy)
         _runtime_cache, _runtime_fingerprint = (harness, issuer), fingerprint
@@ -83,9 +88,12 @@ def status(authorization: str | None = Header(default=None)):
         }
     return {
         "ready": True,
-        "mode": "pilot-local-only",
+        "mode": "registry-v1-local" if harness.policy.advisory_agents else "pilot-local-only",
         "policy_version": harness.policy_version,
         "pilot_agents": sorted(harness.policy.pilot_agents),
+        "advisory_agents": sorted(harness.policy.advisory_agents),
+        "artifact_agents": sorted(harness.policy.artifact_agents),
+        "bounded_wasm_agents": sorted(harness.policy.wasm_agents),
         "cloud_overflow": False,
         "local_concurrency": compute_queue_api.queue.policy.global_concurrency,
         "counts": counts,
@@ -94,10 +102,15 @@ def status(authorization: str | None = Header(default=None)):
 
 @router.post("/pilot/dispatch", status_code=202)
 def dispatch(body: PilotDispatch, authorization: str | None = Header(default=None)):
+    return _dispatch(body, authorization)
+
+
+def _dispatch(body: PilotDispatch, authorization: str | None, registry_context: dict | None = None):
     spine_api.require_token(authorization)
     harness, issuer = _runtime()
     actor = body.actor_id.strip().lower()
-    if actor not in harness.policy.pilot_agents:
+    allowed = harness.policy.advisory_agents if registry_context is not None else harness.policy.pilot_agents
+    if actor not in allowed:
         raise HTTPException(status_code=403, detail="Actor is outside the Harness v0 pilot")
 
     now = datetime.now(timezone.utc)
@@ -130,6 +143,8 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
         "schema_version": "1.0.0",
         "timestamp": now.isoformat(),
     }
+    if registry_context is not None:
+        proposal['context']['registry'] = registry_context
     spine_result = spine_api.spine.evaluate(
         proposal,
         {"source": "harness_v0_pilot", "decision_id": decision_id},
@@ -175,6 +190,7 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
             max_cost_usd=0,
             allow_cloud=False,
             external_execution=False,
+            harness_envelope=signed_envelope,
         )
 
     try:
@@ -197,3 +213,15 @@ def dispatch(body: PilotDispatch, authorization: str | None = Header(default=Non
         "correlation_id": body.correlation_id,
         "cloud_allowed": False,
     }
+
+
+class RevokeLease(BaseModel):
+    reason: str = Field(min_length=1,max_length=1000)
+
+
+@router.post('/leases/{lease_id}/revoke')
+def revoke_lease(lease_id: str, body: RevokeLease, authorization: str | None = Header(default=None)):
+    spine_api.require_token(authorization)
+    harness,_ = _runtime()
+    harness.revoke(lease_id,reason=body.reason,revoked_by='owner')
+    return {'ok':True,'lease_id':lease_id,'state':'revoked'}

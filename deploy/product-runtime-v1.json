@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "owner_entrypoint": "app.production_entry:app",
+  "interface_entrypoint": "app.interface_server:app",
+  "owner_binding": "loopback only",
+  "interface_transport": "HTTPS adopted identity",
+  "assets": "clients/pwa -> app/pwa_static at build",
+  "external_inputs": [
+    "runtime data paths",
+    "protected owner credential reference",
+    "bounded client policy",
+    "TLS certificate and key references",
+    "qualified provider catalog",
+    "platform startup adapter"
+  ],
+  "deployment_rule": "commit, package, isolated canary, source pin, owned process cutover, data preservation, bounded rollback"
+}
