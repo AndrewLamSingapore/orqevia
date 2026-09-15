@@ -317,6 +317,26 @@
     "rule": "This manifest supersedes older architecture, deployment, resume, and branch-status checkpoints. Git and Library version history remain recovery evidence, not competing current truth.",
     "duplicate_current_checkpoints_allowed": false
   },
+  "truth_reconciliation": {
+    "version": "1.0.0",
+    "authority_boundary": "Dell independently verifies; this manifest remains the sole operational SSOT and ABEX remains the sole PRIME authority.",
+    "result_contract": "contracts/truth-reconciliation-v1.schema.json",
+    "execution_record_contract": "contracts/prime-execution-record-v1.schema.json",
+    "repository_registry": "governance/repository-registry.json",
+    "historical_reconciliation": "governance/reconciliations/2026-09-15-contradictory-history.json",
+    "supported_verification_states": [
+      "VERIFIED",
+      "UNVERIFIED",
+      "DISPUTED",
+      "STALE",
+      "DIVERGED",
+      "FAILED",
+      "UNKNOWN"
+    ],
+    "health_states": ["GREEN", "AMBER", "RED"],
+    "pass_rule": "A PASS is VERIFIED only when its provenance and referenced evidence hashes independently verify; missing evidence is never promoted.",
+    "provenance_chain": "task -> executor -> repository -> base SHA -> change -> result SHA -> tests -> artifacts -> hashes -> GitHub remote SHA -> SSOT record -> Dell verification"
+  },
   "safety_boundaries": {
     "prime_public_exposure": false,
     "external_actions": "approval-gated",
