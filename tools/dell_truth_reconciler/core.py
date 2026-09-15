@@ -193,7 +193,11 @@ class Reconciler:
         ssot_sha = system.get("source_head_sha")
         result["ssot_sha"] = ssot_sha
         if ssot_sha and result.get("head_sha") != ssot_sha:
-            self._find("ssot_result_sha_mismatch", TruthState.DISPUTED, f"SSOT={ssot_sha}, local={result.get('head_sha')}", repository_id)
+            code, _, _ = _run_git(path, "merge-base", "--is-ancestor", str(ssot_sha), str(result.get("head_sha")))
+            if code == 0:
+                self._find("ssot_behind", TruthState.STALE, f"SSOT={ssot_sha}, local={result.get('head_sha')}", repository_id)
+            else:
+                self._find("ssot_result_sha_mismatch", TruthState.DISPUTED, f"SSOT={ssot_sha}, local={result.get('head_sha')}", repository_id)
 
         red_codes = {"wrong_remote", "branch_diverged", "ssot_result_sha_mismatch"}
         repo_findings = [finding for finding in self.findings if finding.repository_id == repository_id]
