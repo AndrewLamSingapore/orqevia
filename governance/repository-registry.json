@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "authority": "governance/operational-manifest.json remains the sole operational SSOT; this registry resolves software identities and Dell observation paths only",
+  "path_resolution": "canonical_local_path may be null until Dell selects an objectively verified working tree; null means UNRESOLVED, never absent software",
+  "repositories": [
+    {"repository_id": "control", "component_name": "portfolio control and shared contracts", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/AndrewLamSingapore.git", "remote_repository_identity": "AndrewLamSingapore/AndrewLamSingapore", "default_branch": "main", "ssot_system_id": "control", "classification": "UNRESOLVED"},
+    {"repository_id": "authority", "component_name": "authority engine", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/authority-engine.git", "remote_repository_identity": "AndrewLamSingapore/authority-engine", "default_branch": "main", "ssot_system_id": "authority", "classification": "UNRESOLVED"},
+    {"repository_id": "game", "component_name": "game platform", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/game-platform.git", "remote_repository_identity": "AndrewLamSingapore/game-platform", "default_branch": "main", "ssot_system_id": "game", "classification": "UNRESOLVED"},
+    {"repository_id": "portal", "component_name": "portal", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/the-portal.git", "remote_repository_identity": "AndrewLamSingapore/the-portal", "default_branch": "main", "ssot_system_id": "portal", "classification": "UNRESOLVED"},
+    {"repository_id": "prime", "component_name": "PRIME cognitive control plane", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/prime.git", "remote_repository_identity": "AndrewLamSingapore/prime", "default_branch": "main", "ssot_system_id": "prime", "classification": "UNRESOLVED"},
+    {"repository_id": "sky", "component_name": "Sky tablet", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/sky-tablet.git", "remote_repository_identity": "AndrewLamSingapore/sky-tablet", "default_branch": "main", "ssot_system_id": "sky", "classification": "UNRESOLVED"},
+    {"repository_id": "velyqua", "component_name": "Velyqua", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/velyqua.git", "remote_repository_identity": "AndrewLamSingapore/velyqua", "default_branch": "main", "ssot_system_id": "velyqua", "classification": "UNRESOLVED"}
+  ]
+}

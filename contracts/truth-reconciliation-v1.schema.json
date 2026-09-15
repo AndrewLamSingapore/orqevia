@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jarvis-prime.local/contracts/truth-reconciliation-v1.schema.json",
+  "title": "JARVIS PRIME Truth Reconciliation Result v1",
+  "type": "object",
+  "required": ["schema_version", "reconciler_version", "reconciliation_id", "timestamp", "host", "repositories_checked", "abex", "github_reachability", "ssot_reachability", "evidence_store_reachability", "contradictions", "automatic_repairs_performed", "unresolved_findings", "overall_health"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "reconciler_version": {"type": "string"},
+    "reconciliation_id": {"type": "string", "format": "uuid"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "host": {"type": "string", "minLength": 1},
+    "repositories_checked": {"type": "array", "items": {"type": "object"}},
+    "abex": {"type": "object"},
+    "github_reachability": {"type": "boolean"},
+    "ssot_reachability": {"type": "boolean"},
+    "evidence_store_reachability": {"type": "boolean"},
+    "evidence_findings": {"type": "array", "items": {"type": "object"}},
+    "claims": {"type": "array", "items": {"type": "object"}},
+    "contradictions": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "automatic_repairs_performed": {"type": "array", "items": {"type": "object"}},
+    "unresolved_findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "overall_health": {"enum": ["GREEN", "AMBER", "RED"]}
+  },
+  "$defs": {
+    "truth_state": {"enum": ["VERIFIED", "UNVERIFIED", "DISPUTED", "STALE", "DIVERGED", "FAILED", "UNKNOWN"]},
+    "finding": {
+      "type": "object",
+      "required": ["code", "state", "detail"],
+      "properties": {
+        "code": {"type": "string"},
+        "state": {"$ref": "#/$defs/truth_state"},
+        "detail": {"type": "string"},
+        "repository_id": {"type": "string"}
+      }
+    }
+  },
+  "additionalProperties": true
+}

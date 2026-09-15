@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "recorded_at_utc": "2026-09-15T00:00:00Z",
+  "method": "Dell independent durable-evidence review; prose alone was not accepted",
+  "claims": [
+    {"claim_id": "sealed-a12-a13-unfamiliar-repository-trials-passed", "classification": "DISPUTED", "basis": "The durable file is a dispatch/provisional report and explicitly describes future trials; no terminal A12/A13 completion package was found."},
+    {"claim_id": "a12-a13-results-15-of-15-or-14-of-14", "classification": "UNVERIFIED", "basis": "No matching terminal trial artifact or test log was found; unrelated test counts do not prove this claim."},
+    {"claim_id": "a12-a13-zero-repair-zero-human-intervention", "classification": "UNKNOWN", "basis": "No terminal execution package exists from which repair and intervention counts can be established."},
+    {"claim_id": "working-pwa", "classification": "VERIFIED", "basis": "Remote-PWA and physical-iPhone acceptance records preserve successful authenticated task/result retrieval."},
+    {"claim_id": "dell-pwa-prime-end-to-end-adversarial-authentication", "classification": "DISPUTED", "basis": "Ten isolated client contract/security tests are durable; the broader concurrent-client ownership/no-crossover trial remained pending."},
+    {"claim_id": "dell-reconnect-regression", "classification": "VERIFIED", "basis": "The corrected package, authenticated reconnect task/artifact and independent artifact hash receipt are durable."},
+    {"claim_id": "github-ssot-remediation", "classification": "VERIFIED", "scope": "bounded", "basis": "Four portfolio fixes were merged and independently checked; PRIME PRs 59/60 remained draft/HOLD and the manifest truthfully remained STALE."},
+    {"claim_id": "a12-a13-general-model-driven-coding-qualified", "classification": "UNVERIFIED", "basis": "No sealed completion evidence supports general unfamiliar-repository qualification."}
+  ],
+  "preservation_rule": "Original reports and artifacts remain intact; this record classifies rather than rewrites history."
+}
