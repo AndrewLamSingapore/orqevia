@@ -23,13 +23,13 @@ if ($RegisterTask) {
     $taskName = 'JARVIS PRIME Dell Node Synchronizer'
     $runner = Join-Path $InstallRoot 'scripts\run_dell_node_sync.ps1'
     $argument = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$runner`" -InstallRoot `"$InstallRoot`""
-    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argument -WorkingDirectory $InstallRoot
-    $logon = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-    $periodic = New-ScheduledTaskTrigger -Daily -At '00:11'
-    $periodic.Repetition.Interval = 'PT30M'
-    $periodic.Repetition.Duration = 'P1D'
-    $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
-    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($logon, $periodic) -Settings $settings -Description 'Bounded validated Dell-to-GitHub synchronization under PRIME SSOT authority' -Force | Out-Null
+    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argument -WorkingDirectory $InstallRoot -ErrorAction Stop
+    $logon = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME -ErrorAction Stop
+    $periodic = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) `
+        -RepetitionInterval (New-TimeSpan -Minutes 30) `
+        -RepetitionDuration (New-TimeSpan -Days 3650) -ErrorAction Stop
+    $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 10) -ErrorAction Stop
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($logon, $periodic) -Settings $settings -Description 'Bounded validated Dell-to-GitHub synchronization under PRIME SSOT authority' -Force -ErrorAction Stop | Out-Null
 }
 
 [pscustomobject]@{

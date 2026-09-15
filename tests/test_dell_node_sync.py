@@ -240,3 +240,10 @@ def test_13_wrong_node_identity_fails_closed(tmp_path):
     write(config_path, json.dumps(config))
     with pytest.raises(RuntimeError, match="hostname mismatch"):
         core.synchronize(config_path)
+
+
+def test_14_installer_uses_supported_repetition_parameters():
+    script = (Path(__file__).parents[1] / "scripts" / "install_dell_node_sync.ps1").read_text(encoding="utf-8")
+    assert "-RepetitionInterval (New-TimeSpan -Minutes 30)" in script
+    assert "-RepetitionDuration (New-TimeSpan -Days 3650)" in script
+    assert ".Repetition.Interval" not in script
