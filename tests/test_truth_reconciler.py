@@ -191,8 +191,11 @@ def test_15_stale_ssot(tmp_path):
     ssot = Path(config["ssot_path"])
     value = json.loads(ssot.read_text())
     value["as_of_utc"] = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    value["status"] = "STALE"
+    value["verification"] = {"stale_reasons": ["verification_expired:manifest"]}
     write(ssot, json.dumps(value))
-    assert "stale_ssot" in codes(run(config_path))
+    result_codes = codes(run(config_path))
+    assert {"stale_ssot", "ssot_declared_stale"}.issubset(result_codes)
 
 
 def test_16_interrupted_reconciliation_preserves_source(tmp_path, monkeypatch):

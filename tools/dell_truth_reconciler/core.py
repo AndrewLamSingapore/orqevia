@@ -278,6 +278,10 @@ class Reconciler:
         try:
             ssot = _read_json(ssot_path) if ssot_path else {}
             ssot_reachable = bool(ssot_path)
+            if ssot.get("status") == "STALE":
+                reasons = ssot.get("verification", {}).get("stale_reasons", [])
+                detail = f"SSOT declares STALE with {len(reasons)} recorded reason(s)"
+                self._find("ssot_declared_stale", TruthState.STALE, detail)
             as_of = ssot.get("as_of_utc")
             if as_of:
                 observed = datetime.fromisoformat(str(as_of).replace("Z", "+00:00"))
