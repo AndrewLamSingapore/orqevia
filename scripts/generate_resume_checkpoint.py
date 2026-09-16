@@ -34,7 +34,7 @@ def generate(value: dict[str, Any]) -> str:
     for name in value['scope']['active_systems']:
         system=value['systems'][name]
         lines.append(f"| {name} | `{short(system.get('source_head_sha'))}` | `{short(system.get('release_sha'))}` | `{short(system.get('runtime_sha'))}` | {system['state']} |")
-    lines += ['', 'PRIME SHA/image compatibility fields above describe historical Dell evidence only. Current ABEX runtime: '+value['abex_runtime']['state']+'.',
+    lines += ['', 'Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: '+value['abex_runtime']['state']+'.',
         '', '## Current priorities', '']
     lines += [f'- {item}' for item in value['next_actions']]
     lines += ['', '## Unresolved evidence', '']
@@ -67,3 +67,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -1,0 +1,81 @@
+{
+  "observed_at_utc": "2026-09-16T12:39:34.111Z",
+  "canonical_basis": "1bd2be98adf91df3bc4df22d7a2348848181b8b8",
+  "scope": "Seven repository public experience, documentation and SSOT reconciliation; no ABEX runtime mutation",
+  "systems": {
+    "authority": {
+      "host": "authority-engine-app.vercel.app",
+      "id": "dpl_3429gtuoD1EqVz3Nm7HvA1qFQr6r",
+      "repo": "authority-engine",
+      "sha": "44c30568574f6ee98141b6abd22b92a9ddcf583a",
+      "state": "READY",
+      "url": "authority-engine-88fsf5x68-andrew-lam-singapore.vercel.app",
+      "health": {
+        "http": 200,
+        "ok": true,
+        "revision": "44c30568574f6ee98141b6abd22b92a9ddcf583a"
+      }
+    },
+    "portal": {
+      "host": "the-portal-ten.vercel.app",
+      "id": "dpl_5M6o9xCvwGjjr3K2EnBhmvSYj6QN",
+      "repo": "the-portal",
+      "sha": "694df7d8f78d994197ad5a82caca531038747a44",
+      "state": "READY",
+      "url": "the-portal-cdghwlyks-andrew-lam-singapore.vercel.app",
+      "health": {
+        "http": 200,
+        "ok": true,
+        "revision": "694df7d8f78d994197ad5a82caca531038747a44"
+      }
+    },
+    "game": {
+      "host": "game-platform-wine-nine.vercel.app",
+      "id": "dpl_FqvkmyrTmk8aDqQUa36gcVCNzMxW",
+      "repo": "game-platform",
+      "sha": "b90a8fd815ce87ab624dba0498e436ef3820bf1f",
+      "state": "READY",
+      "url": "game-platform-35jh5zdxp-andrew-lam-singapore.vercel.app",
+      "health": {
+        "http": 200,
+        "ok": true,
+        "revision": "b90a8fd815ce87ab624dba0498e436ef3820bf1f"
+      }
+    },
+    "velyqua": {
+      "host": "velyqua.vercel.app",
+      "id": "dpl_9hHRVoR4XdnjSrUEXYrRSFAw4pD2",
+      "repo": "velyqua",
+      "sha": "4ecf65eec8dca0926fe01c3e9c34488e80764470",
+      "state": "READY",
+      "url": "velyqua-lwptq5ohf-andrew-lam-singapore.vercel.app",
+      "health": {
+        "http": 200,
+        "ok": true,
+        "revision": "4ecf65eec8dca0926fe01c3e9c34488e80764470"
+      }
+    },
+    "sky": {
+      "host": "sky-tablet.vercel.app",
+      "id": "dpl_3dXxzxt4dd7PhR4A6DRV5ffvw6qA",
+      "repo": "sky-tablet",
+      "sha": "c0498e77e38de6fd6c31b1e4a85dfc5bd24bbb4d",
+      "state": "READY",
+      "url": "sky-tablet-dqpbkwq6w-andrew-lam-singapore.vercel.app",
+      "http": 200,
+      "content_match": "exact source match",
+      "runtime_content_sha256": "ee50ae6fe837ed2a051c347cda49015a360bfdc1cba50c4f20880e18f5f35e4b"
+    },
+    "control": {
+      "repo": "AndrewLamSingapore",
+      "sha": "314c56aa3bc48048a61f71a145765b89bfa64559",
+      "scope": "GitHub profile and shared-contract source; no separate runtime revision endpoint"
+    }
+  },
+  "limits": [
+    "Current ABEX runtime receipt absent",
+    "Physical iPhone client and Sky Tablet WebGL appearance/performance unverified",
+    "Contact form delivery was not test-submitted",
+    "No conversion outcomes measured"
+  ]
+}

@@ -175,6 +175,7 @@ def test_refresh_does_not_churn_fresh_unchanged_observations():
     manifest, _ = fixtures()
     manifest = copy.deepcopy(manifest)
     authority = manifest["systems"]["authority"]
+    authority["state"] = "SOURCE_RUNTIME_ALIGNED_DEPLOYMENT_ID_UNVERIFIED"
     checked = datetime.fromisoformat(authority["verified_at_utc"].replace("Z", "+00:00"))
     head = authority["source_head_sha"]
     evidence = {
@@ -188,3 +189,18 @@ def test_refresh_does_not_churn_fresh_unchanged_observations():
     assert verifier.refresh_from_live(
         manifest, evidence, now=checked + timedelta(hours=1)
     ) is False
+
+
+def test_current_prime_identity_cannot_reuse_historical_dell_receipt():
+    manifest, inventory = fixtures()
+    manifest['systems']['prime']['runtime_sha'] = manifest['dell_runtime']['runtime_sha']
+    result = assess_static(manifest, inventory, now=datetime.now(timezone.utc))
+    assert 'unverified current PRIME runtime_sha must be null; retain historical identity separately' in result.errors
+
+
+def test_unknown_current_prime_identity_is_valid_but_not_accepted():
+    manifest, inventory = fixtures()
+    result = assess_static(manifest, inventory, now=datetime.now(timezone.utc))
+    assert result.errors == []
+    assert manifest['systems']['prime']['runtime_sha'] is None
+    assert 'abex_runtime_receipt_missing' in result.stale_reasons

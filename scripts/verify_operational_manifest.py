@@ -22,7 +22,7 @@ DEFAULT_MANIFEST = ROOT / "governance" / "operational-manifest.json"
 DEFAULT_BRANCH_INVENTORY = ROOT / "governance" / "branch-inventory.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 DEPLOYMENT_ID = re.compile(r"^dpl_[A-Za-z0-9]+$")
-EXPECTED_SCHEMA_VERSION = "4.2.0"
+EXPECTED_SCHEMA_VERSION = "4.3.0"
 EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime", "sky", "velyqua"}
 EXPECTED_CONTRACT_SHA = "a05fa2e3df80733af9ed87068b3526768d4a8394"
 EXPECTED_PROJECTS = {
@@ -173,14 +173,15 @@ def assess_static(
             result.error(f"systems.{system_id}.source_head_sha must be a full SHA")
         release_sha = system.get("release_sha")
         runtime_sha = system.get("runtime_sha")
-        if not valid_sha(release_sha):
+        pending_prime = system_id == "prime" and abex.get("state") != "VERIFIED"
+        if not valid_sha(release_sha) and not (pending_prime and release_sha is None):
             result.error(f"systems.{system_id}.release_sha must be a full SHA")
         if system_id == "control":
             if runtime_sha is not None:
                 result.error("control runtime_sha must be null because no runtime revision endpoint exists")
-        elif not valid_sha(runtime_sha):
+        elif not valid_sha(runtime_sha) and not (pending_prime and runtime_sha is None):
             result.error(f"systems.{system_id}.runtime_sha must be a full SHA")
-        verified = parse_utc(system.get("verified_at_utc"), f"systems.{system_id}.verified_at_utc", result)
+        verified = None if pending_prime and system.get("verified_at_utc") is None else parse_utc(system.get("verified_at_utc"), f"systems.{system_id}.verified_at_utc", result)
         if verified:
             age = now - verified
             if age > timedelta(hours=stale_after):
@@ -233,8 +234,10 @@ def assess_static(
     dell = value.get("dell_runtime", {})
     if dell.get("command") != "JARVIS.cmd status":
         result.error("Dell acceptance command must be JARVIS.cmd status")
-    if dell.get("runtime_sha") != prime.get("runtime_sha"):
-        result.error("Dell runtime_sha must match systems.prime.runtime_sha")
+    if prime.get("state") == "UNVERIFIED" and prime.get("runtime_sha") is not None:
+        result.error("unverified current PRIME runtime_sha must be null; retain historical identity separately")
+    if abex.get("state") == "VERIFIED" and prime.get("runtime_sha") != abex.get("source_sha"):
+        result.error("current PRIME runtime_sha must match the independently accepted ABEX receipt")
     if dell.get("accepted") is not True:
         result.stale("dell_status_post_update_required")
     if dell.get("post_update_status") is not True:
@@ -314,6 +317,8 @@ def assess_live(value: dict[str, Any], result: Assessment) -> None:
             github_evidence[system_id] = {"source_head_sha": observed}
             if system_id != "prime" and observed != system.get("source_head_sha"):
                 result.stale(f"github_head_drift:{system_id}")
+            if system_id == "prime" and system.get("release_sha") is None:
+                continue
             release = http_json(
                 f"https://api.github.com/repos/{repository}/commits/{system['release_sha']}",
                 token=github_token,
@@ -631,3 +636,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

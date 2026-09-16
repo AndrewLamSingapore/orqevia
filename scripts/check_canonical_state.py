@@ -24,6 +24,9 @@ def validate_state(manifest, product, registry):
     assert product['ecosystem_release_id'] == release['id']
     assert manifest['alignment_state']['overall'] == manifest['status']
     assert manifest['systems']['prime']['current_runtime_host'] == 'ABEX'
+    if manifest['systems']['prime']['state'] == 'UNVERIFIED':
+        assert manifest['systems']['prime']['runtime_sha'] is None
+        assert manifest['systems']['prime']['verified_at_utc'] is None
     if manifest['status'] != 'CURRENT':
         assert manifest['release_gate']['current_result'] != 'PASSED'
     else:
@@ -48,3 +51,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
