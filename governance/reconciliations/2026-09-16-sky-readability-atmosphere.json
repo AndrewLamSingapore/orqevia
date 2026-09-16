@@ -1,0 +1,31 @@
+{
+  "observed_at_utc": "2026-09-16T15:08:23.947425Z",
+  "canonical_basis": "2ae413cca11d2dfc43be7af1ece223415c3103c5",
+  "source": {
+    "sha": "e0c4f4847a9e72c1884c56850e1e04f3759819d6",
+    "id": "dpl_AeNTaYxm1hW4V6hRGvud8jUC4VnR",
+    "url": "https://sky-tablet-3rn9d4s08-andrew-lam-singapore.vercel.app",
+    "state": "READY",
+    "experience_sha256": "99ce3badcb2e427f2efa47c24661cf10bc31a2afbfc712600770a9cf0cd2bda7"
+  },
+  "user_evidence": [
+    "IMG_7219.jpeg",
+    "IMG_7220.jpeg"
+  ],
+  "changes": [
+    "18px screen-space planet names with 12px descriptions, collision avoidance and anchored leaders",
+    "MUL word meaning at fixed 16px screen size",
+    "22 CSS pixel Venus glow and 13 CSS pixel other planet points, pixel ratio aware",
+    "Brighter star distribution, subdued sky glow, matching distant fog/horizon and cooler night illumination"
+  ],
+  "validation": [
+    "15 real Three.js tests with stub GPU/DOM; portrait and landscape label placement",
+    "Production HTTP 200 and exact experience.html byte match",
+    "Vercel READY production alias and source SHA match"
+  ],
+  "limitations": [
+    "WebGL disabled in cloud browser; GPU appearance not observed",
+    "Physical iPhone performance and audio unchanged and unverified",
+    "Planet placement remains illustrative"
+  ]
+}
