@@ -1,0 +1,57 @@
+{
+  "observed_at_utc": "2026-09-16T14:31:08.509466Z",
+  "canonical_basis": "2b78f879c537df6151241b32b2b815cf7a8e31ae",
+  "scope": "Sky Tablet realism and framing, public sound controls across Sky Tablet/Authority Engine/Game Platform, GitHub profile and repository invitation",
+  "deployments": {
+    "sky": {
+      "sha": "b5383c9c5009fa1ed3aee1bb4cd628bc0de767b8",
+      "id": "dpl_AmsTe1DMMPZDDSsRbt5DyZxW5UiX",
+      "url": "https://sky-tablet-oaob716jz-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "sky-tablet.vercel.app",
+        "sky-tablet-git-main-andrew-lam-singapore.vercel.app"
+      ]
+    },
+    "authority": {
+      "sha": "9a9efaa14b8059f5224c7bd926a5c1ebdb3e02fa",
+      "id": "dpl_E6sFEhQLpV6o7FnSuNX7EsDJyE9C",
+      "url": "https://authority-engine-imn1d105c-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "authority-engine.vercel.app",
+        "authority-engine-app.vercel.app",
+        "authority-engine-app-andrew-lam-singapore.vercel.app",
+        "authority-engine-app-git-main-andrew-lam-singapore.vercel.app"
+      ]
+    },
+    "game": {
+      "sha": "78c639c166ca0dd6f20d37172830e47299066c02",
+      "id": "dpl_2wCSLf2CaXJozRCcxLB1JG2ckzeH",
+      "url": "https://game-platform-ky86ngg43-andrew-lam-singapore.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "game-platform-wine-nine.vercel.app",
+        "game-platform-andrew-lam-singapore.vercel.app",
+        "game-platform-git-main-andrew-lam-singapore.vercel.app"
+      ]
+    }
+  },
+  "profile_sha": "adfd3e43b31fb14e16b12a5a7e176c98448ba041",
+  "validation": {
+    "sky_camera_scene_tests": "12 passed using real Three.js math and geometry; stubbed renderer",
+    "authority_build": "passed",
+    "authority_audio": "Public media readyState 4, paused false and advancing playback time observed after first-click lifecycle repair; stop/replay exercised",
+    "sky_audio": "Public sound control transitions to playing and stops; generated score source matched production",
+    "game_audio": "Public guest sound starts/stops/replays; corrected stopped status observed; source matched production",
+    "conversion": "Published stronger README/profile invitations and contextual links; no conversion outcome measured"
+  },
+  "limits": [
+    "Browser WebGL is disabled: no rendered visual acceptance",
+    "No physical iPhone speaker or performance acceptance",
+    "No date-accurate astronomical model; planet placement is illustrative",
+    "Procedural adult characters are not photogrammetric humans",
+    "No contact form test submission or conversion measurement",
+    "Private runtime evidence is unchanged"
+  ]
+}
