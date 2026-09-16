@@ -1,7 +1,7 @@
 {
   "schema_version": "4.3.0",
   "status": "STALE",
-  "as_of_utc": "2026-09-16T12:39:34.111Z",
+  "as_of_utc": "2026-09-16T14:31:08.509466Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -59,10 +59,10 @@
     "control": {
       "role": "public control and shared contracts",
       "repository": "AndrewLamSingapore/AndrewLamSingapore",
-      "source_head_sha": "314c56aa3bc48048a61f71a145765b89bfa64559",
-      "release_sha": "314c56aa3bc48048a61f71a145765b89bfa64559",
+      "source_head_sha": "adfd3e43b31fb14e16b12a5a7e176c98448ba041",
+      "release_sha": "adfd3e43b31fb14e16b12a5a7e176c98448ba041",
       "runtime_sha": null,
-      "verified_at_utc": "2026-09-16T12:39:34.111Z",
+      "verified_at_utc": "2026-09-16T14:31:08.509466Z",
       "runtime": "github-profile-and-contract-source",
       "state": "SOURCE_RELEASE_VERIFIED",
       "note": "GitHub profile and shared-contract source observed. No separate runtime revision endpoint is available."
@@ -70,39 +70,39 @@
     "authority": {
       "role": "governed evidence review and draft projection",
       "repository": "AndrewLamSingapore/authority-engine",
-      "source_head_sha": "44c30568574f6ee98141b6abd22b92a9ddcf583a",
-      "release_sha": "44c30568574f6ee98141b6abd22b92a9ddcf583a",
-      "runtime_sha": "44c30568574f6ee98141b6abd22b92a9ddcf583a",
-      "verified_at_utc": "2026-09-16T12:39:34.111Z",
+      "source_head_sha": "9a9efaa14b8059f5224c7bd926a5c1ebdb3e02fa",
+      "release_sha": "9a9efaa14b8059f5224c7bd926a5c1ebdb3e02fa",
+      "runtime_sha": "9a9efaa14b8059f5224c7bd926a5c1ebdb3e02fa",
+      "verified_at_utc": "2026-09-16T14:31:08.509466Z",
       "vercel_project_id": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
       "vercel_project": "authority-engine-app",
-      "production_deployment_id": "dpl_3429gtuoD1EqVz3Nm7HvA1qFQr6r",
-      "production_deployment_url": "https://authority-engine-88fsf5x68-andrew-lam-singapore.vercel.app",
+      "production_deployment_id": "dpl_E6sFEhQLpV6o7FnSuNX7EsDJyE9C",
+      "production_deployment_url": "https://authority-engine-imn1d105c-andrew-lam-singapore.vercel.app",
       "production_state": "READY",
       "health_url": "https://authority-engine-app.vercel.app/api/health",
       "jarvis_status_url": "https://authority-engine-app.vercel.app/api/jarvis-status",
       "state": "ALIGNED_VERIFIED",
       "publication_mode": "explicit_draft_only",
       "sanitized_observability": true,
-      "verification_scope": "Vercel production alias, Git source revision and public health/content; not general product or physical acceptance"
+      "verification_scope": "Vercel READY production deployment and source identity; scoped browser audio controls. Physical-device audio/performance unverified."
     },
     "game": {
       "role": "bounded simulation and interactive product",
       "repository": "AndrewLamSingapore/game-platform",
-      "source_head_sha": "b90a8fd815ce87ab624dba0498e436ef3820bf1f",
-      "release_sha": "b90a8fd815ce87ab624dba0498e436ef3820bf1f",
-      "runtime_sha": "b90a8fd815ce87ab624dba0498e436ef3820bf1f",
-      "verified_at_utc": "2026-09-16T12:39:34.111Z",
+      "source_head_sha": "78c639c166ca0dd6f20d37172830e47299066c02",
+      "release_sha": "78c639c166ca0dd6f20d37172830e47299066c02",
+      "runtime_sha": "78c639c166ca0dd6f20d37172830e47299066c02",
+      "verified_at_utc": "2026-09-16T14:31:08.509466Z",
       "vercel_project_id": "prj_qChRa1e7NSvFYbaovNgHk8NxxKpn",
       "vercel_project": "game-platform",
-      "production_deployment_id": "dpl_FqvkmyrTmk8aDqQUa36gcVCNzMxW",
-      "production_deployment_url": "https://game-platform-35jh5zdxp-andrew-lam-singapore.vercel.app",
+      "production_deployment_id": "dpl_2wCSLf2CaXJozRCcxLB1JG2ckzeH",
+      "production_deployment_url": "https://game-platform-ky86ngg43-andrew-lam-singapore.vercel.app",
       "production_state": "READY",
       "health_url": "https://game-platform-wine-nine.vercel.app/api/health",
       "state": "ALIGNED_VERIFIED",
       "ai_degradation": "deterministic-fallback-v1",
       "portfolio_relay": "configured_ready",
-      "verification_scope": "Vercel production alias, Git source revision and public health/content; not general product or physical acceptance"
+      "verification_scope": "Vercel READY production deployment and source identity; scoped browser audio controls. Physical-device audio/performance unverified."
     },
     "portal": {
       "role": "knowledge substrate and durable portfolio relay",
@@ -177,22 +177,23 @@
     "sky": {
       "role": "public educational working prototype with explicit evidence boundaries",
       "repository": "AndrewLamSingapore/sky-tablet",
-      "source_head_sha": "c0498e77e38de6fd6c31b1e4a85dfc5bd24bbb4d",
-      "release_sha": "c0498e77e38de6fd6c31b1e4a85dfc5bd24bbb4d",
-      "runtime_sha": "c0498e77e38de6fd6c31b1e4a85dfc5bd24bbb4d",
-      "verified_at_utc": "2026-09-16T12:39:34.111Z",
+      "source_head_sha": "b5383c9c5009fa1ed3aee1bb4cd628bc0de767b8",
+      "release_sha": "b5383c9c5009fa1ed3aee1bb4cd628bc0de767b8",
+      "runtime_sha": "b5383c9c5009fa1ed3aee1bb4cd628bc0de767b8",
+      "verified_at_utc": "2026-09-16T14:31:08.509466Z",
       "runtime": "vercel-static",
       "vercel_project_id": "prj_MniyVhjPHLiwQufvuqIjeYErQmEP",
       "vercel_project": "sky-tablet",
-      "production_deployment_id": "dpl_3dXxzxt4dd7PhR4A6DRV5ffvw6qA",
-      "production_deployment_url": "https://sky-tablet-dqpbkwq6w-andrew-lam-singapore.vercel.app",
+      "production_deployment_id": "dpl_AmsTe1DMMPZDDSsRbt5DyZxW5UiX",
+      "production_deployment_url": "https://sky-tablet-oaob716jz-andrew-lam-singapore.vercel.app",
       "production_state": "READY",
       "runtime_probe_url": "https://sky-tablet.vercel.app/",
       "runtime_content_sha256": "ee50ae6fe837ed2a051c347cda49015a360bfdc1cba50c4f20880e18f5f35e4b",
       "source_path": "index.html",
       "state": "ALIGNED_VERIFIED",
       "evidence_boundary": "E2 working software; educational historical claims require scholarly verification",
-      "verification_scope": "Vercel production alias, Git source revision and public health/content; not general product or physical acceptance"
+      "verification_scope": "Vercel READY production alias, source identity and exact served experience content; 12 camera/scene math tests. Browser WebGL unavailable; visual realism and physical iPhone performance unverified.",
+      "experience_content_sha256": "c9eeed193754642d46f2dfda609b8f0d9496d23a7bb74a31a53a3cfdc76dc9e7"
     }
   },
   "event_alignment": {
@@ -384,7 +385,7 @@
     "compute_profile": "PENDING MEASUREMENT; complete the formal six-phase protocol with native ABEX evidence",
     "clients": "PWA and Dell reconnect have bounded historical verified records; current combined deployment and cross-client acceptance unverified",
     "channel_sync": "One source contract published; individual session adoption is not remotely observable",
-    "sky_tablet": "Production source and Vercel deployment identity verified. Cinematic regression tests pass; WebGL visual quality and physical iPhone performance remain unverified.",
+    "sky_tablet": "Published wide distant sky, labeled illustrative planets, detailed temple/tablet, varied adult crowd, palms and local flickering illumination. 12 scene/camera tests pass. GPU visual quality and physical iPhone performance remain unverified.",
     "public_experience": "JARVIS PRIME showcase, contextual enquiries and cross-app navigation published; illustrative demos do not imply private runtime execution."
   },
   "release_results": {
@@ -392,7 +393,7 @@
     "public_experience": {
       "path": "governance/reconciliations/2026-09-16-public-experience.json",
       "observed_at_utc": "2026-09-16T12:39:34.111Z",
-      "scope": "Five public apps and GitHub profile; source/deployment alignment only",
+      "scope": "Historical earlier public-experience release; latest Sky/Authority/Game/profile identities are in sky_realism_public_audio.",
       "result": "SCOPED_PASS",
       "limitations": [
         "Current ABEX runtime receipt absent",
@@ -400,6 +401,13 @@
         "Contact form delivery was not test-submitted",
         "No conversion outcomes measured"
       ]
+    },
+    "sky_realism_public_audio": {
+      "path": "governance/reconciliations/2026-09-16-sky-realism-public-audio.json",
+      "observed_at_utc": "2026-09-16T14:31:08.509466Z",
+      "result": "SCOPED_SOURCE_DEPLOYMENT_AND_AUDIO_CONTROLS_PASS",
+      "visual_acceptance": "UNVERIFIED",
+      "physical_device_acceptance": "UNVERIFIED"
     }
   },
   "canonical_release": {

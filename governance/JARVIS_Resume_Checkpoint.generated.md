@@ -5,7 +5,7 @@
 - Canonical source: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
 - Selected architecture release: `jarvis-prime-unified-2026-09-15`
 - Operational status: **STALE**
-- Source observation: `2026-09-16T12:39:34.111Z`
+- Source observation: `2026-09-16T14:31:08.509466Z`
 - Architecture: ABEX PRIME; Dell/PWA/voice clients; 21 agents; direct observed bounded work.
 - This applies to ChatGPT, Codex, Sol and Astra. Model memory and old chats are not current authority.
 - Source publication does not prove deployment. Historical Dell observations do not prove ABEX identity.
@@ -14,12 +14,12 @@
 
 | System | Recorded source | Last recorded release | Last recorded runtime | Evidence state |
 |---|---|---|---|---|
-| control | `314c56aa3bc4` | `314c56aa3bc4` | `—` | SOURCE_RELEASE_VERIFIED |
-| authority | `44c30568574f` | `44c30568574f` | `44c30568574f` | ALIGNED_VERIFIED |
-| game | `b90a8fd815ce` | `b90a8fd815ce` | `b90a8fd815ce` | ALIGNED_VERIFIED |
+| control | `adfd3e43b31f` | `adfd3e43b31f` | `—` | SOURCE_RELEASE_VERIFIED |
+| authority | `9a9efaa14b80` | `9a9efaa14b80` | `9a9efaa14b80` | ALIGNED_VERIFIED |
+| game | `78c639c166ca` | `78c639c166ca` | `78c639c166ca` | ALIGNED_VERIFIED |
 | portal | `694df7d8f78d` | `694df7d8f78d` | `694df7d8f78d` | ALIGNED_VERIFIED |
 | prime | `—` | `—` | `—` | UNVERIFIED |
-| sky | `c0498e77e38d` | `c0498e77e38d` | `c0498e77e38d` | ALIGNED_VERIFIED |
+| sky | `b5383c9c5009` | `b5383c9c5009` | `b5383c9c5009` | ALIGNED_VERIFIED |
 | velyqua | `4ecf65eec8dc` | `4ecf65eec8dc` | `4ecf65eec8dc` | ALIGNED_VERIFIED |
 
 Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: UNVERIFIED.
