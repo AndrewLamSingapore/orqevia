@@ -7,6 +7,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def component_hash_matches(path: Path, expected: str) -> bool:
+    """Compare text content without treating checkout EOL policy as a mutation."""
+    raw = path.read_bytes()
+    lf = raw.replace(b'\r\n', b'\n')
+    crlf = lf.replace(b'\n', b'\r\n')
+    return any(hashlib.sha256(value).hexdigest() == expected for value in (raw, lf, crlf))
+
 def validate_state(manifest, product, registry):
     release = manifest['canonical_release']
     assert release['intended_agent_count'] == len(registry['agents']) == 21
@@ -36,7 +43,7 @@ def main():
     sys.path.insert(0, str(ROOT/'scripts'))
     from generate_resume_checkpoint import generate
     assert (ROOT/'governance/JARVIS_Resume_Checkpoint.generated.md').read_text() == generate(manifest)
-    assert hashlib.sha256((ROOT/'config/agent_registry.json').read_bytes()).hexdigest() == product['components']['registry']['sha256']
+    assert component_hash_matches(ROOT/'config/agent_registry.json', product['components']['registry']['sha256'])
     print('Canonical source and generated mirror: CONSISTENT; operational state: '+manifest['status'])
 
 if __name__ == '__main__':
