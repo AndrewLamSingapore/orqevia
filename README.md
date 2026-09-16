@@ -19,3 +19,12 @@ and independent reconciliation tools remain under tools/ and docs/DELL_*.md.
 
 Credentials, production data and provider qualification remain external. Retain
 the sealed ABEX baseline. Historical source and migration evidence remain in Git.
+
+
+## Public experience and connected projects
+
+[Explore JARVIS PRIME](https://authority-engine-app.vercel.app/jarvis) presents curated decision examples and the public agent registry. [Discuss a use case with Andrew](https://authority-engine-app.vercel.app/contact?source=jarvis&intent=collaboration).
+
+The public contract is `governance/public-experience.json`. Authority Engine, The Portal, Living Worlds, Sky Tablet and VELYQUA link to that experience. Navigation and enquiry context do not grant private runtime access or merge product databases.
+
+The operational manifest is the only current status record. Its generated resume checkpoint is a mirror, not a second authority. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.

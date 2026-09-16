@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "owner": "Andrew Lam",
+  "name": "JARVIS PRIME",
+  "public_entrypoint": "https://authority-engine-app.vercel.app/jarvis",
+  "conversation_entrypoint": "https://authority-engine-app.vercel.app/contact?source=jarvis&intent=collaboration",
+  "architecture": "docs/ARCHITECTURE_V1.md",
+  "operational_source": "governance/operational-manifest.json",
+  "experience": {
+    "purpose": "Help visitors understand the work, inspect an illustrative decision and begin a relevant conversation with Andrew.",
+    "demo": "Curated illustrative scenarios; no model inference, live task execution or private memory.",
+    "projects": [
+      "authority",
+      "portal",
+      "game",
+      "velyqua",
+      "sky"
+    ],
+    "integration": "Public navigation and project-specific enquiry context. Domain data remains in its owning system."
+  },
+  "truth_rules": [
+    "ABEX is the intended PRIME runtime host; deployment requires an independently verified native-host receipt.",
+    "Dell, PWA and voice are authenticated clients. Historical Dell evidence is not current ABEX evidence.",
+    "21 registered logical agents does not imply 21 simultaneous inference workers.",
+    "Public demonstrations cannot imply live runtime verification, measured business outcomes or automated physical control.",
+    "No public links to loopback controls or owner-only enquiry records."
+  ]
+}
