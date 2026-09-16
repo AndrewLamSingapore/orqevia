@@ -1,8 +1,9 @@
 import copy
+import hashlib
 import json
 from pathlib import Path
 import pytest
-from scripts.check_canonical_state import validate_state
+from scripts.check_canonical_state import component_hash_matches, validate_state
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -29,3 +30,15 @@ def test_dell_acceptance_does_not_prove_abex_deployment():
 def test_component_manifest_cannot_select_another_release():
     m,p,r=records();p['ecosystem_release_id']='another-current-version'
     with pytest.raises(AssertionError):validate_state(m,p,r)
+
+def test_component_hash_accepts_checkout_eol_conversion(tmp_path):
+    component=tmp_path/'component.json'
+    component.write_bytes(b'{\r\n  "ok": true\r\n}\r\n')
+    canonical=b'{\n  "ok": true\n}\n'
+    assert component_hash_matches(component,hashlib.sha256(canonical).hexdigest())
+
+def test_component_hash_rejects_content_change(tmp_path):
+    component=tmp_path/'component.json'
+    component.write_bytes(b'{\r\n  "ok": false\r\n}\r\n')
+    canonical=b'{\n  "ok": true\n}\n'
+    assert not component_hash_matches(component,hashlib.sha256(canonical).hexdigest())

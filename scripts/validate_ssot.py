@@ -3,6 +3,12 @@ import hashlib,json,re,subprocess
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+def component_hash_matches(path, expected):
+    raw=path.read_bytes()
+    lf=raw.replace(b'\r\n',b'\n')
+    crlf=lf.replace(b'\n',b'\r\n')
+    return any(hashlib.sha256(value).hexdigest()==expected for value in (raw,lf,crlf))
+
 def validate():
     from check_canonical_state import main as check_current
     check_current()
@@ -10,7 +16,7 @@ def validate():
     for item in manifest['components'].values():
         path=(ROOT/item['path']).resolve()
         assert path.is_relative_to(ROOT)
-        assert hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256']
+        assert component_hash_matches(path,item['sha256'])
     registry=json.loads((ROOT/'config/agent_registry.json').read_text())
     assert len(registry['agents'])==21
     assert len({a['agent_id'] for a in registry['agents']})==21

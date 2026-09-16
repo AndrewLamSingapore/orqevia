@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "recorded_at_utc": "2026-09-16T00:57:33Z",
+  "scope": "GitHub source and PRIME SSOT reconciliation from the physical Dell; no ABEX mutation",
+  "method": "Authenticated GitHub API inspection, green pull-request checks, post-merge main-branch checks, public runtime health corroboration, and canonical manifest verification",
+  "account_boundary": {
+    "owner": "AndrewLamSingapore",
+    "registered_repositories": 7,
+    "observed_repositories": 7,
+    "orphan_repositories": 0
+  },
+  "repositories": {
+    "AndrewLamSingapore/AndrewLamSingapore": {"main_sha": "7ed416de606af493cf7cd443d88ff49344765daa", "branches": 11, "open_pull_requests": 0, "main_protected": true},
+    "AndrewLamSingapore/authority-engine": {"main_sha": "f44d97e4ff5c5ccb8fbeddc4d9e5e365d805f78c", "branches": 39, "open_pull_requests": 0, "main_protected": false},
+    "AndrewLamSingapore/game-platform": {"main_sha": "a362693acddcb89b6de0c8f66cc266d5f122dd45", "branches": 24, "open_pull_requests": 0, "main_protected": false},
+    "AndrewLamSingapore/the-portal": {"main_sha": "73b86a699df2e445f75955d8570dfd15911b3f58", "branches": 20, "open_pull_requests": 0, "main_protected": false},
+    "AndrewLamSingapore/prime": {"main_sha": "94c19de5c746b58d11b7fa2bf8d03fb6fa99837e", "branches": 64, "open_pull_requests": 0, "main_protected": false},
+    "AndrewLamSingapore/sky-tablet": {"main_sha": "5abf9156d4e033be19b7ad98996c8c4398a2c808", "branches": 4, "open_pull_requests": 0, "main_protected": false},
+    "AndrewLamSingapore/velyqua": {"main_sha": "0cd1c86b7bd87100bd94df212ffbf50d8035a3e2", "branches": 15, "open_pull_requests": 1, "main_protected": true}
+  },
+  "integrated_updates": [
+    "authority-engine#56 react and React type maintenance",
+    "authority-engine#57 Sanity client maintenance",
+    "authority-engine#58 ESLint maintenance",
+    "authority-engine#60 globals maintenance",
+    "authority-engine#62 current-main lucide-react replacement",
+    "the-portal#53 relay authorization hardening",
+    "velyqua#54 Node type maintenance",
+    "velyqua#61 Expo SDK maintenance"
+  ],
+  "superseded_updates": [
+    "authority-engine#59 closed after lockfile conflict; replaced by validated #62"
+  ],
+  "preserved_current_work": [
+    "velyqua#64 remains a green draft because its own contract says production admission prerequisites are incomplete"
+  ],
+  "cleanup": {
+    "removed_branches": "Only the eight integrated pull-request branches and the one conclusively superseded pull-request branch were deleted.",
+    "retained_branches": "Historical checkpoint, rollback, and other unclassified branches were preserved under the canonical retention rule; age alone was not treated as deletion authority.",
+    "historical_inventory": "governance/branch-inventory.json remains the immutable 112-branch historical cohort and is not misrepresented as the live branch total."
+  },
+  "runtime_boundary": "Public health endpoints corroborated source/runtime revision alignment where supported. Exact Vercel deployment identity, current ABEX runtime evidence, and Dell post-update acceptance remain unverified and are not promoted by this record.",
+  "result": "SOURCE_RECONCILED_RUNTIME_GATES_REMAIN_STALE"
+}
