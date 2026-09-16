@@ -1,0 +1,31 @@
+{
+  "observed_at_utc": "2026-09-16T14:56:21.094828Z",
+  "canonical_basis": "e59ef11142b45d70eba6a8dcbfc5732a1c4c0f2a",
+  "source": {
+    "id": "dpl_FzqgmPbiWSYQrDE3xxEeNubNZLeT",
+    "url": "https://sky-tablet-e78ri5q1i-andrew-lam-singapore.vercel.app",
+    "sha": "448c7c5c9dae95c2f6a8af0a310b844ecb80dca1",
+    "state": "READY"
+  },
+  "user_evidence": [
+    "IMG_7216.jpeg: tablet lost behind foreground masonry",
+    "IMG_7217.jpeg: aerial city visibly ends on a rectangular platform"
+  ],
+  "changes": [
+    "Restore 4.3 by 6.8 scene-unit monumental tablet with recessed wedge geometry",
+    "Open western court and reframe tablet encounter",
+    "Add courtyard housing, cross streets, roof details and horizon-scale terrain",
+    "End on downward aerial city shot with eight-second hold; preserve preceding wide sky"
+  ],
+  "validation": [
+    "14 real Three.js scene/camera tests pass with stubbed renderer",
+    "Tablet center and corner rays have no masonry blockers during encounter in portrait/desktop checks",
+    "Production experience.html HTTP 200 and exact source-byte match",
+    "Vercel production READY with matching Git SHA"
+  ],
+  "limits": [
+    "Browser WebGL unavailable; new rendered appearance unverified",
+    "Physical iPhone performance unverified",
+    "Architecture, monumental tablet scale and city plan are interpretive"
+  ]
+}
