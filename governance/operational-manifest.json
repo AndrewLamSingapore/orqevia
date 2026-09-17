@@ -1,7 +1,7 @@
 {
   "schema_version": "4.3.0",
   "status": "STALE",
-  "as_of_utc": "2026-09-16T15:08:23.947425Z",
+  "as_of_utc": "2026-09-17T06:02:28Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -107,24 +107,24 @@
     "portal": {
       "role": "knowledge substrate and durable portfolio relay",
       "repository": "AndrewLamSingapore/the-portal",
-      "source_head_sha": "694df7d8f78d994197ad5a82caca531038747a44",
-      "release_sha": "694df7d8f78d994197ad5a82caca531038747a44",
-      "runtime_sha": "694df7d8f78d994197ad5a82caca531038747a44",
-      "verified_at_utc": "2026-09-16T12:39:34.111Z",
+      "source_head_sha": "f7659a3cdd72c4ac522e0a8a4c0c5ca73c30e426",
+      "release_sha": "f7659a3cdd72c4ac522e0a8a4c0c5ca73c30e426",
+      "runtime_sha": "f7659a3cdd72c4ac522e0a8a4c0c5ca73c30e426",
+      "verified_at_utc": "2026-09-17T06:02:28Z",
       "vercel_project_id": "prj_ygtCDVg4RyuHE4caN9t6nhFC8Xui",
       "vercel_project": "the-portal",
-      "production_deployment_id": "dpl_5M6o9xCvwGjjr3K2EnBhmvSYj6QN",
-      "production_deployment_url": "https://the-portal-cdghwlyks-andrew-lam-singapore.vercel.app",
+      "production_deployment_id": "dpl_8oWv2CVUbW2dDnB4uJVypQQBGUVr",
+      "production_deployment_url": "https://the-portal-og7o5a4zs-andrew-lam-singapore.vercel.app",
       "production_state": "READY",
       "health_url": "https://the-portal-ten.vercel.app/api/health",
       "state": "ALIGNED_VERIFIED",
-      "product_version": "6.4.0",
+      "product_version": "6.5.0",
       "product_version_source": "package.json",
       "portfolio_relay": true,
       "portfolio_outbox_schema": true,
       "outbox_ready": 0,
       "dead_letter_redrive": "authenticated_bounded",
-      "verification_scope": "Vercel production alias, Git source revision and public health/content; not general product or physical acceptance"
+      "verification_scope": "Vercel production alias, Git source revision, public health/content and read-only Ethereum Sepolia Evidence Lab journey; no wallet, signing, transaction submission, deployment, token, escrow or real-fund capability. Physical-device acceptance unverified."
     },
     "prime": {
       "role": "only cognitive control plane for JARVIS",
@@ -421,6 +421,13 @@
       "result": "SCOPED_SOURCE_DEPLOYMENT_LAYOUT_PASS",
       "visual_acceptance": "UNVERIFIED",
       "physical_device_acceptance": "UNVERIFIED"
+    },
+    "portal_web3_evidence_lab": {
+      "path": "governance/reconciliations/2026-09-17-portal-web3-evidence-lab.json",
+      "observed_at_utc": "2026-09-17T06:02:28Z",
+      "result": "SCOPED_SOURCE_DEPLOYMENT_AND_READ_ONLY_TRANSACTION_EVIDENCE_PASS",
+      "physical_device_acceptance": "UNVERIFIED",
+      "transaction_submission": "NOT_PRESENT"
     }
   },
   "canonical_release": {

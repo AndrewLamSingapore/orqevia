@@ -1,0 +1,48 @@
+{
+  "observed_at_utc": "2026-09-17T06:02:28Z",
+  "canonical_basis": "7ed7d9d60b44db9a1bc291cc0e709dc8ee60a65d",
+  "source": {
+    "repository": "AndrewLamSingapore/the-portal",
+    "sha": "f7659a3cdd72c4ac522e0a8a4c0c5ca73c30e426",
+    "pull_request": 56,
+    "product_version": "6.5.0",
+    "deployment_id": "dpl_8oWv2CVUbW2dDnB4uJVypQQBGUVr",
+    "deployment_url": "https://the-portal-og7o5a4zs-andrew-lam-singapore.vercel.app",
+    "production_alias": "https://the-portal-ten.vercel.app",
+    "state": "READY"
+  },
+  "experience": {
+    "url": "https://the-portal-ten.vercel.app/evidence-lab",
+    "network": "ethereum-sepolia",
+    "chain_id": "11155111",
+    "mode": "read-only",
+    "transaction_hash": "0x2780f91022d1364efc63b94161ad0bc80b93e315414be33f58054de3632903ab",
+    "requested_checks": 9,
+    "check_results": { "MATCH": 9, "MISMATCH": 0, "UNKNOWN": 0, "UNSUPPORTED": 0 },
+    "finality": "FINALIZED_UNDER_RPC_SOURCE",
+    "preserved_source_report_sha256": "4b2213325a78963faf2b6c1b3811eb68c766f367f0aea45de9a1ac8c7afdc288"
+  },
+  "validation": [
+    "Portal repository npm run verify passed, including 18 Evidence Lab, endpoint and export tests",
+    "Desktop and 390x844 iPhone viewport browser-to-API-to-checker-to-report journey passed",
+    "Main GitHub Quality, production-smoke and SSOT consistency workflows passed",
+    "Production health returned source revision f7659a3cdd72c4ac522e0a8a4c0c5ca73c30e426 and product version 6.5.0",
+    "Production Evidence Lab returned nine MATCH results with explicit RPC-source finality evidence",
+    "Preserved live report digest independently recalculated exactly",
+    "Artifact export tampering changed its locally recalculated digest and was rejected"
+  ],
+  "security_boundaries": [
+    "Operator-configured RPC origins are allowlisted; arbitrary request-provided RPC URLs are rejected by construction",
+    "Requests and provider responses are bounded and timed out; rate limiting is applied without storing raw client addresses",
+    "No wallet, signing, transaction submission, contract deployment, escrow, token or real-fund path exists",
+    "No AI model call is used in transaction verification",
+    "W3-01 remains PRIME-only and on hold"
+  ],
+  "limitations": [
+    "Results depend on the configured RPC source and are not an independent consensus audit",
+    "A matching recipient does not identify a proxy implementation",
+    "A successful receipt does not prove the intended business outcome",
+    "Browser validation used an iPhone-sized viewport; physical-device acceptance was not performed",
+    "This scoped public release does not establish current ABEX PRIME runtime acceptance"
+  ]
+}
