@@ -2,10 +2,29 @@
 import json
 import os
 import math
+import re
 from pathlib import Path
 from decimal import Decimal
 from .provider_runtime import ModelSpec
 from .tier_router import Tier, classify_for_cloud, CLASSIFICATIONS
+
+
+_BOUNDED_LIST_EN = re.compile(
+    r"\b(?:create|write|produce|make)\b.{0,120}\b(?:[1-9]|10|one|two|three|four|five|six|seven|eight|nine|ten)\b"
+    r".{0,40}\b(?:item|point|step)s?\b.{0,80}\b(?:list|checklist)\b",
+    re.I | re.S,
+)
+_BOUNDED_LIST_ZH = re.compile(
+    r"(?:创建|写|生成|制作).{0,120}(?:[一二三四五六七八九十]|[1-9]|10)\s*(?:项|条).{0,80}(?:清单|列表)",
+    re.S,
+)
+
+
+def bounded_list_task(objective):
+    """Admit only an explicitly size-bounded short list to the measured Nano tier."""
+    if not isinstance(objective, str) or not 1 <= len(objective) <= 1000:
+        return False
+    return bool(_BOUNDED_LIST_EN.search(objective) or _BOUNDED_LIST_ZH.search(objective))
 
 
 def task_tier(objective, task_class='auto'):
@@ -15,7 +34,7 @@ def task_tier(objective, task_class='auto'):
     text=objective.lower()
     if any(x in text for x in ('repository','implement','debug','refactor','architecture','formal proof','cryptographic')):return Tier.FLAGSHIP
     # Only tightly bounded tasks enter Nano without verified success data.
-    if text.startswith(('classify ','extract labels ','reply exactly:')):return Tier.NANO
+    if text.startswith(('classify ','extract labels ','reply exactly:')) or bounded_list_task(objective):return Tier.NANO
     return Tier.MINI
 
 
