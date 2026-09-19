@@ -12,6 +12,21 @@ from .artifact_factory import ArtifactFactory
 from .connector_sdk import ConnectorRegistry,Sink
 
 router=APIRouter(prefix='/api/artifacts',tags=['artifact-factory'])
+MODEL_RESULT_PROVENANCE='Source-labelled governed model result'
+
+
+def markdown_result(task):
+    """Return current-turn successful model text without inventing missing output."""
+    revision=task.get('revision',0)
+    results=[]
+    for step in task.get('steps',[]):
+        job=step.get('job',{})
+        text=job.get('result')
+        if step.get('revision',0)==revision and job.get('status')=='completed' and isinstance(text,str) and text.strip():
+            results.append((step.get('capability','result'),text.strip()))
+    if len(results)==1:return results[0][1]+'\n'
+    if results:return '\n\n'.join('## '+capability+'\n\n'+text for capability,text in results)+'\n'
+    return None
 
 
 def create_task_artifact(task_id,authorization):
@@ -27,17 +42,19 @@ def create_task_artifact(task_id,authorization):
                 for step in task.get('steps',[])):
             raise HTTPException(409,'Task still has unfinished work')
         factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+        rendered=markdown_result(task)
+        kind='markdown' if rendered else 'json'
+        content=rendered or json.dumps(task,indent=2,sort_keys=True)
+        provenance=MODEL_RESULT_PROVENANCE if rendered else 'Source-labelled governed objective results'
         for folder in factory.root.iterdir():
             try:
                 metadata,raw=factory.retrieve(folder.name)
             except (ValueError,KeyError,FileNotFoundError,OSError):
                 continue
-            if metadata.get('task_id')==task_id and metadata.get('type')=='json':
-                try:existing=json.loads(raw)
-                except (ValueError,UnicodeError):continue
-                if existing==task:return metadata
-        payload={'kind':'json','content':json.dumps(task,indent=2,sort_keys=True),'task_id':task_id,
-                 'creator':'a09','provenance':'Source-labelled governed objective results'}
+            if (metadata.get('task_id')==task_id and metadata.get('type')==kind
+                    and metadata.get('provenance')==provenance and raw==content.encode()):return metadata
+        payload={'kind':kind,'content':content,'task_id':task_id,
+                 'creator':'a09','provenance':provenance}
         registry=ConnectorRegistry()
         registry.register(Sink('artifact-factory','artifact.create','R1','Create a new immutable application-owned artifact',
                                True,'LOCAL_ONLY','artifact.create'),lambda value:factory.create(**value))

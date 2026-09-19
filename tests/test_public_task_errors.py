@@ -26,6 +26,39 @@ def test_historical_artifact_hidden_without_rewriting_bytes():
 def test_unrelated_artifact_content_not_scrubbed():
     assert publishable_task_artifact({'provenance':'User document'},json.dumps({'error':'legitimate discussion'}).encode())
 
+def test_successful_model_result_materializes_as_markdown(tmp_path,monkeypatch):
+    from app import artifact_delivery
+    task={'id':'task','revision':0,'state':'COMPLETED','steps':[{'revision':0,'capability':'responsibility.a02',
+        'job':{'status':'completed','result':'# 中文结果\n\n- 第一项'}}]}
+    class DB:
+        def execute(self,*args):return self
+        def rollback(self):pass
+        def close(self):pass
+    monkeypatch.setattr(artifact_delivery,'authenticate_owner',lambda *_:None)
+    monkeypatch.setattr(artifact_delivery.objective_api,'connect',DB)
+    monkeypatch.setattr(artifact_delivery.objective_api,'get',lambda *_:task)
+    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    first=artifact_delivery.create_task_artifact('task','fixture')
+    again=artifact_delivery.create_task_artifact('task','fixture')
+    metadata,raw=artifact_delivery.ArtifactFactory(tmp_path/'artifacts').retrieve(first['artifact_id'])
+    assert first['artifact_id']==again['artifact_id']
+    assert metadata['type']=='markdown' and raw.decode()=='# 中文结果\n\n- 第一项\n'
+    assert publishable_task_artifact(metadata,raw)
+
+def test_failed_turn_without_text_remains_truthful_json_snapshot(tmp_path,monkeypatch):
+    from app import artifact_delivery
+    task={'id':'task','revision':0,'state':'COMPLETED_WITH_FAILURES','steps':[{'revision':0,'state':'blocked'}]}
+    class DB:
+        def execute(self,*args):return self
+        def rollback(self):pass
+        def close(self):pass
+    monkeypatch.setattr(artifact_delivery,'authenticate_owner',lambda *_:None)
+    monkeypatch.setattr(artifact_delivery.objective_api,'connect',DB)
+    monkeypatch.setattr(artifact_delivery.objective_api,'get',lambda *_:task)
+    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    item=artifact_delivery.create_task_artifact('task','fixture')
+    assert item['type']=='json'
+
 @pytest.mark.parametrize('surface',['interface','owner'])
 def test_download_denies_historical_unsafe_snapshot(monkeypatch,surface):
     from app import interface_node,artifact_delivery
