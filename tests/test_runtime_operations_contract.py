@@ -85,6 +85,8 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         self.assertIn('${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}', compose)
         self.assertNotIn('app.production_entry:app", "--host", "0.0.0.0", "--port", "8443"', compose)
         self.assertIn('COPY clients/pwa/index.html', dockerfile)
+        self.assertIn('PRIME_INTERFACE_RUNTIME_VERSION: ${PRIME_INTERFACE_RUNTIME_VERSION:-UNKNOWN}', compose)
+        self.assertIn('PRIME_INTERFACE_CANDIDATE_STATUS: ${PRIME_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}', compose)
 
 
 if __name__ == "__main__":
