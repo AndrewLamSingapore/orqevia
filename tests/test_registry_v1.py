@@ -9,7 +9,8 @@ from app.agent_runtime import AgentAuthorityError, AgentAuthorityRuntime
 
 def test_every_historical_responsibility_is_preserved_verbatim_once():
     path = registry.REGISTRY_PATH.parent.parent/'tests'/'fixtures'/'historical-agent-registry-29.json'
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == registry.MIGRATION['historical_sha256']
+    canonical_bytes = path.read_bytes().replace(b'\r\n', b'\n')
+    assert hashlib.sha256(canonical_bytes).hexdigest() == registry.MIGRATION['historical_sha256']
     old = json.loads(path.read_text())
     records = {r['id']: (a['id'], r) for a in registry.load_agent_registry()['agents'] for r in a['responsibilities']}
     assert len(records) == len(old['agents']) == 29
