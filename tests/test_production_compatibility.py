@@ -66,6 +66,16 @@ def test_remote_peer_cannot_use_spoofed_host_or_forwarding(shell):
         assert client.get(path, headers={'X-Forwarded-For': '127.0.0.1'}).status_code == 403
 
 
+def test_exact_configured_docker_gateway_can_reach_loopback_owner_binding(shell, monkeypatch):
+    entry, _ = shell
+    monkeypatch.setenv('PRIME_OWNER_TRUSTED_PEERS', '172.30.9.1')
+    client = TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('172.30.9.1', 50000))
+    assert client.get('/health').json() == {'ok': True}
+    assert client.get('/control').status_code == 200
+    other = TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('172.30.9.2', 50001))
+    assert other.get('/health').status_code == 403
+
+
 def test_mutations_require_exact_origin_before_dispatch(shell, monkeypatch):
     entry, client = shell
     def forbidden(*args, **kwargs):

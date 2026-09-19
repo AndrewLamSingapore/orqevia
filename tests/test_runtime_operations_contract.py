@@ -71,6 +71,10 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         self.assertIn('"app.production_entry:app"', dockerfile)
         self.assertIn('"--no-proxy-headers"', dockerfile)
 
+    def test_container_owner_peer_is_explicit_not_a_network_wildcard(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        self.assertIn("PRIME_OWNER_TRUSTED_PEERS: ${PRIME_OWNER_TRUSTED_PEERS:-}", compose)
+
 
 if __name__ == "__main__":
     unittest.main()
