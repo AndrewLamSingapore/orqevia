@@ -3,7 +3,7 @@ from decimal import Decimal
 import httpx
 import pytest
 from app.provider_runtime import ModelSpec,Usage,ChatCompletionProvider,complete,ProviderFailure
-from app.compute_catalog import task_tier,choose
+from app.compute_catalog import task_tier,choose,bounded_list_task
 from app.tier_router import Tier
 from app.secret_refs import resolve_secret,SecretUnavailable
 from app.outcome_metrics import OutcomeMetrics
@@ -57,6 +57,13 @@ def test_failed_nano_classes_require_sufficient_tier():
     assert task_tier('classify these labels')==Tier.NANO
     cloud={'id':'x','tier':'FLAGSHIP','enabled':True,'location':'cloud'}
     assert choose([cloud],Tier.MINI,'LOCAL_ONLY','hello')==[]
+def test_explicitly_bounded_short_lists_are_nano_without_lowering_complex_work():
+    chinese='请用中文创建一份包含五项的家庭出行准备清单，并将结果保存为 Markdown 文件。'
+    assert bounded_list_task(chinese)
+    assert task_tier(chinese)==Tier.NANO
+    assert task_tier('Create a five item release checklist')==Tier.NANO
+    assert task_tier('Create a threat model with five items')==Tier.MINI
+    assert not bounded_list_task('Create a general travel checklist')
 def test_verified_outcome_economics(tmp_path):
     metrics=OutcomeMetrics(tmp_path/'compute-ledger.db')
     metrics.record(attempt_id='1',task_id='t',task_class='coding',tier='NANO',seconds=3,input_tokens=10,output_tokens=2,cost=.1,success=False)
