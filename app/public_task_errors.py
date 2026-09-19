@@ -5,6 +5,7 @@ fields are projected; successful model result content is left untouched.
 """
 from copy import deepcopy
 import json
+from .tier_router import SECRET
 
 
 def public_task(task):
@@ -18,6 +19,10 @@ def public_task(task):
 
 
 def publishable_task_artifact(metadata,raw):
+    if metadata.get('provenance')=='Source-labelled governed model result':
+        try:text=raw.decode('utf-8')
+        except UnicodeError:return False
+        return metadata.get('type')=='markdown' and bool(text.strip()) and not SECRET.search(text)
     if metadata.get('provenance')!='Source-labelled governed objective results':return True
     try:value=json.loads(raw)
     except (ValueError,UnicodeError):return False
