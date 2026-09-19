@@ -10,6 +10,13 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
         self.assertIn("wasmtime==48.0.0", requirements)
 
+    def test_prime_healthcheck_authenticates_without_embedding_a_secret(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        healthcheck = next(line for line in compose.splitlines() if "urllib.request.Request" in line)
+        self.assertIn("os.environ['PRIME_SPINE_TOKEN']", healthcheck)
+        self.assertIn("'Authorization': 'Bearer ' +", healthcheck)
+        self.assertNotIn("${PRIME_SPINE_TOKEN}", healthcheck)
+
     def test_compose_is_one_stable_local_project(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         self.assertIn("name: ${COMPOSE_PROJECT_NAME:-prime}", compose)
