@@ -144,45 +144,35 @@ function Adopt-PersistentVolumes {
     }
 }
 
-function Ensure-PersistentVolumes {
+function Assert-PersistentVolumes {
     $primeVolume = Get-EnvValue "PRIME_DATA_VOLUME"
     $ollamaVolume = Get-EnvValue "OLLAMA_DATA_VOLUME"
-    if (-not $primeVolume) { $primeVolume = "prime-data" }
-    if (-not $ollamaVolume) { $ollamaVolume = "prime-ollama-data" }
+    if (-not $primeVolume -or -not $ollamaVolume) {
+        throw "PRIME_DATA_VOLUME and OLLAMA_DATA_VOLUME must identify recovered, independently verified volumes. JARVIS will not invent recovery state."
+    }
     $required = @($primeVolume, $ollamaVolume)
     $existing = @(Invoke-Docker -Arguments @("volume", "ls", "--format", "{{.Name}}"))
     foreach ($volume in $required) {
         if ($volume -notin $existing) {
-            Write-Step "Creating protected persistent volume $volume."
-            Invoke-Docker -Arguments @("volume", "create", $volume) | Out-Null
+            throw "Required recovered volume '$volume' does not exist. JARVIS will not create a blank replacement."
         }
     }
 }
 
-function Stop-LegacyCoreContainers {
+function Assert-NoConflictingCoreContainers {
     $legacy = @(Get-ContainerRows | Where-Object {
         $_.Project -ne $Project -and $_.Service -in @("prime", "ollama", "model-init")
     })
     if ($legacy.Count -eq 0) { return }
-    Save-Checkpoint | Out-Null
-    foreach ($container in $legacy) {
-        Write-Step "Superseding legacy container $($container.Name) (volume data is retained)."
-        Invoke-Docker -Arguments @("stop", "--time", "30", $container.Id) | Out-Null
-        Invoke-Docker -Arguments @("rm", $container.Id) | Out-Null
-    }
+    throw "Conflicting containers require explicit owner review; nothing was stopped or removed: $($legacy.Name -join ', ')"
 }
 
-function Remove-LegacyEdgeContainers {
+function Assert-NoConflictingEdgeContainers {
     $legacy = @(Get-ContainerRows | Where-Object {
         $_.Project -ne $Project -and $_.Service -in @("integration-gateway", "cloudflared")
     })
     if ($legacy.Count -eq 0) { return }
-    Save-Checkpoint | Out-Null
-    foreach ($container in $legacy) {
-        Write-Step "Superseding legacy edge container $($container.Name)."
-        Invoke-Docker -Arguments @("stop", "--time", "15", $container.Id) | Out-Null
-        Invoke-Docker -Arguments @("rm", $container.Id) | Out-Null
-    }
+    throw "Conflicting edge containers require explicit owner review; nothing was stopped or removed: $($legacy.Name -join ', ')"
 }
 
 function Assert-PortAvailable {
@@ -259,9 +249,9 @@ function Start-Jarvis([switch]$RepairOnly) {
     Assert-Docker
     Invoke-Docker -Arguments (Get-ComposeArgs @("config", "--quiet")) | Out-Null
     Adopt-PersistentVolumes
-    Ensure-PersistentVolumes
+    Assert-PersistentVolumes
     Assert-PortAvailable
-    Stop-LegacyCoreContainers
+    Assert-NoConflictingCoreContainers
     if ($RepairOnly) { return }
 
     $useTunnel = [bool](Resolve-TunnelMode)
@@ -278,7 +268,7 @@ function Start-Jarvis([switch]$RepairOnly) {
     Invoke-Docker -Arguments (Get-ComposeArgs $up $useTunnel) | Out-Null
     Wait-ForPrime | Out-Null
     Test-PrimeContract -Quiet
-    if ($useTunnel) { Remove-LegacyEdgeContainers }
+    if ($useTunnel) { Assert-NoConflictingEdgeContainers }
     Write-Host "JARVIS READY - $LocalBase/control" -ForegroundColor Green
     if (-not $NoOpen) { Start-Process "$LocalBase/control" }
 }
@@ -327,7 +317,7 @@ switch ($Action) {
     "stop" { Assert-Docker; Invoke-Docker -Arguments (Get-ComposeArgs @("down", "--remove-orphans")) | Out-Null; Write-Host "JARVIS stopped. Volumes retained." -ForegroundColor Yellow }
     "status" { Show-Status }
     "doctor" { Invoke-Doctor }
-    "repair" { Start-Jarvis -RepairOnly; Start-Jarvis }
+    "repair" { Assert-Docker; Save-Checkpoint | Out-Null; Invoke-Doctor; Write-Host "Repair is inventory-only until recovered state is independently accepted." -ForegroundColor Yellow }
     "open" { Start-Process "$LocalBase/control" }
     "update" { Update-Jarvis }
     "contract" { Test-SourceContract }

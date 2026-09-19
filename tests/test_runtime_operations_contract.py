@@ -19,10 +19,11 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         script = (ROOT / "scripts" / "jarvis.ps1").read_text(encoding="utf-8")
         self.assertIn("Save-Checkpoint", script)
         self.assertIn("Adopt-PersistentVolumes", script)
-        self.assertIn("Ensure-PersistentVolumes", script)
-        self.assertIn("Stop-LegacyCoreContainers", script)
-        self.assertIn("volume data is retained", script)
+        self.assertIn("Assert-PersistentVolumes", script)
+        self.assertIn("Assert-NoConflictingCoreContainers", script)
+        self.assertIn("will not create a blank replacement", script)
         self.assertNotIn('volume", "rm"', script)
+        self.assertNotIn('Invoke-Docker -Arguments @("rm"', script)
         for path in ("/health", "/control", "/api/control-surface/manifest", "/api/status"):
             self.assertIn(path, script)
 
@@ -35,6 +36,18 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         menu = (ROOT / "JARVIS.cmd").read_text(encoding="utf-8")
         for action in ("start", "status", "doctor", "repair", "open", "stop"):
             self.assertIn(f"-Action {action}", menu)
+
+    def test_recovery_sensitive_helpers_fail_closed(self):
+        bootstrap = (ROOT / "scripts" / "bootstrap_connected_loop.ps1").read_text(encoding="utf-8")
+        trace = (ROOT / "scripts" / "enable-public-trace.ps1").read_text(encoding="utf-8")
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        self.assertIn("InitializeNewTrustEpoch", bootstrap)
+        self.assertIn("will not create replacement state", bootstrap)
+        self.assertNotIn("RotateTokens", bootstrap)
+        self.assertIn("ApplyRestart", trace)
+        self.assertIn("source secret file was preserved", trace)
+        self.assertNotIn("Remove-Item", trace)
+        self.assertNotIn(":latest", compose)
 
 
 if __name__ == "__main__":

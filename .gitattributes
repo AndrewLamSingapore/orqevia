@@ -1,0 +1,4 @@
+# Byte-pinned evidence and portable client sources must not change hashes on Windows.
+clients/dell/** text eol=lf
+tests/fixtures/historical-agent-registry-29.json text eol=lf
+governance/JARVIS_Resume_Checkpoint.generated.md text eol=lf

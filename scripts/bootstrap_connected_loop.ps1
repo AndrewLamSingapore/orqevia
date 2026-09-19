@@ -11,7 +11,7 @@ param(
     [ValidatePattern('^https://')]
     [string]$PortalResultUrl = 'https://the-portal-ten.vercel.app/api/experiment-result',
 
-    [switch]$RotateTokens
+    [switch]$InitializeNewTrustEpoch
 )
 
 Set-StrictMode -Version Latest
@@ -88,21 +88,19 @@ $envPath = Join-Path $projectRoot '.env'
 $examplePath = Join-Path $projectRoot '.env.example'
 
 if (-not (Test-Path -LiteralPath $envPath)) {
-    Copy-Item -LiteralPath $examplePath -Destination $envPath
+    throw '.env is missing. Recover the authentic configuration first; this script will not create replacement state.'
 }
 
 $integrationToken = Get-DotEnvValue -EnvPath $envPath -Key 'PRIME_INTEGRATION_TOKEN'
 $portalToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_RESULT_TOKEN'
 $portalPrimeToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_PRIME_TOKEN'
 
-if ($RotateTokens -or [string]::IsNullOrWhiteSpace($integrationToken)) {
+if ($InitializeNewTrustEpoch) {
     $integrationToken = New-SecureToken
-}
-if ($RotateTokens -or [string]::IsNullOrWhiteSpace($portalToken)) {
     $portalToken = New-SecureToken
-}
-if ($RotateTokens -or [string]::IsNullOrWhiteSpace($portalPrimeToken)) {
     $portalPrimeToken = New-SecureToken
+} elseif ([string]::IsNullOrWhiteSpace($integrationToken) -or [string]::IsNullOrWhiteSpace($portalToken) -or [string]::IsNullOrWhiteSpace($portalPrimeToken)) {
+    throw 'Authentic application credentials are missing. Recover them, or explicitly authorize -InitializeNewTrustEpoch as a new trust relationship.'
 }
 
 Set-DotEnvValue -EnvPath $envPath -Key 'PRIME_INTEGRATION_TOKEN' -Value $integrationToken
@@ -123,8 +121,8 @@ finally {
 Write-Host ''
 Write-Host 'Connected-loop configuration is valid and stored in .env.'
 Write-Host 'The populated .env is intentionally excluded from Git.'
-if ($RotateTokens) {
-    Write-Host 'Application tokens were rotated; update both remote server environments before testing.'
+if ($InitializeNewTrustEpoch) {
+    Write-Host 'A NEW trust epoch was explicitly initialized; this is not recovered historical state.'
 }
 else {
     Write-Host 'Existing non-empty application tokens were preserved.'

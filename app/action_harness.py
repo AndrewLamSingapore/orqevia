@@ -549,4 +549,6 @@ class HarnessedExecutor:
         decision = self._harness.revalidate_for_execution(envelope, now=now)
         if not decision.authorized:
             raise PermissionError(decision.reason)
+        from .host_guard import enforce_at_execution
+        enforce_at_execution(envelope)
         return self._executor(envelope)

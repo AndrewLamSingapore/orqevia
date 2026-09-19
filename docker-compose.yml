@@ -41,7 +41,7 @@ services:
       PORTFOLIO_RELAY_INTERVAL_SECONDS: ${PORTFOLIO_RELAY_INTERVAL_SECONDS:-15}
       PRIME_PUBLIC_AGENT_TRACE: ${PRIME_PUBLIC_AGENT_TRACE:-0}
       PRIME_PUBLIC_TRACE_RELAY_URL: ${PRIME_PUBLIC_TRACE_RELAY_URL:-https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/jarvis-trace-relay}
-      PRIME_PUBLIC_TRACE_PUBLISHER_ID: ${PRIME_PUBLIC_TRACE_PUBLISHER_ID:-prime-dell-1}
+      PRIME_PUBLIC_TRACE_PUBLISHER_ID: ${PRIME_PUBLIC_TRACE_PUBLISHER_ID:-}
       PRIME_PUBLIC_TRACE_SECRET: ${PRIME_PUBLIC_TRACE_SECRET:-}
       PRIME_PUBLIC_TRACE_INTERVAL_SECONDS: ${PRIME_PUBLIC_TRACE_INTERVAL_SECONDS:-15}
       PRIME_FRONTIER_URL: ${PRIME_FRONTIER_URL:-}
@@ -83,7 +83,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   ollama:
-    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    image: ${OLLAMA_IMAGE:?Set OLLAMA_IMAGE to a reviewed immutable tag or digest}
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "model-runtime"
@@ -111,7 +111,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   model-init:
-    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    image: ${OLLAMA_IMAGE:?Set OLLAMA_IMAGE to a reviewed immutable tag or digest}
     labels:
       com.lamjarvis.managed: "true"
       com.lamjarvis.role: "model-init"
@@ -137,7 +137,7 @@ services:
     restart: "no"
 
   integration-gateway:
-    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    image: ${CADDY_IMAGE:?Set CADDY_IMAGE to a reviewed immutable tag or digest}
     profiles: ["tunnel"]
     labels:
       com.lamjarvis.managed: "true"
@@ -158,7 +158,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   cloudflared:
-    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
+    image: ${CLOUDFLARED_IMAGE:?Set CLOUDFLARED_IMAGE to a reviewed immutable tag or digest}
     profiles: ["tunnel"]
     labels:
       com.lamjarvis.managed: "true"

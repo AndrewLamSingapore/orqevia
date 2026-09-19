@@ -1,7 +1,13 @@
 param(
-    [Parameter(Mandatory = $false)]
-    [string]$SecretFile = (Join-Path $HOME "Downloads\JARVIS_PRIME_PUBLIC_TRACE_PRIVATE.env"),
-    [switch]$NoRestart
+    [Parameter(Mandatory = $true)]
+    [string]$SecretFile,
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^ghcr\.io/andrewlamsingapore/prime:sha-[0-9a-f]{7,40}$')]
+    [string]$PrimeImage,
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$PublisherId,
+    [switch]$ApplyRestart
 )
 
 Set-StrictMode -Version Latest
@@ -11,8 +17,6 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $EnvPath = Join-Path $RepoRoot ".env"
 $ComposePath = Join-Path $RepoRoot "docker-compose.yml"
 $RelayUrl = "https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/jarvis-trace-relay"
-$PublisherId = "prime-dell-1"
-$PrimeImage = "ghcr.io/andrewlamsingapore/prime:latest"
 
 function Read-EnvMap([string]$Path) {
     $map = [ordered]@{}
@@ -45,18 +49,13 @@ function Set-EnvValues([string]$Path, [hashtable]$Values) {
     Move-Item -Force -LiteralPath $tmp -Destination $Path
 }
 
-function Ensure-DockerVolume([string]$Name) {
+function Assert-DockerVolume([string]$Name) {
     if ($Name -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]+$') {
         throw "Unsafe Docker volume name: $Name"
     }
-    Write-Host "Ensuring required persistent Docker volume: $Name"
-    # `docker volume create` is deliberately used without an inspect probe.
-    # It is idempotent: a missing volume is created, while an existing one is
-    # returned unchanged. This also avoids Windows PowerShell treating the
-    # stderr from `docker volume inspect <missing>` as a terminating error.
-    $created = docker volume create $Name
-    if ($LASTEXITCODE -ne 0 -or -not $created) {
-        throw "Unable to ensure required Docker volume: $Name"
+    $found = docker volume inspect $Name 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $found) {
+        throw "Recovered Docker volume does not exist: $Name. Refusing to create a blank replacement."
     }
 }
 
@@ -89,15 +88,10 @@ $values = @{
     PRIME_QUEUE_CONCURRENCY = "2"
 }
 Set-EnvValues -Path $EnvPath -Values $values
-if (Test-Path $SecretFile) {
-    Remove-Item -Force -LiteralPath $SecretFile
-    Write-Host "JARVIS public-safe trace configuration written to .env; the one-time private bootstrap file was removed."
-} else {
-    Write-Host "JARVIS public-safe trace configuration verified from the existing private .env."
-}
+Write-Host "JARVIS public-safe trace configuration written to .env. The source secret file was preserved."
 
-if ($NoRestart) {
-    Write-Host "Configuration complete. Restart skipped by request."
+if (-not $ApplyRestart) {
+    Write-Host "Configuration complete. Restart requires the explicit -ApplyRestart switch."
     exit 0
 }
 
@@ -107,8 +101,8 @@ $ollamaDataVolume = if ($effective.Contains('OLLAMA_DATA_VOLUME') -and $effectiv
 
 Push-Location $RepoRoot
 try {
-    Ensure-DockerVolume $primeDataVolume
-    Ensure-DockerVolume $ollamaDataVolume
+    Assert-DockerVolume $primeDataVolume
+    Assert-DockerVolume $ollamaDataVolume
 
     docker compose -f $ComposePath config --quiet
     if ($LASTEXITCODE -ne 0) { throw "Docker Compose validation failed." }
