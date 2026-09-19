@@ -1,7 +1,9 @@
 import hashlib
 import hmac
 import json
+import os
 import unittest
+from unittest.mock import patch
 
 from app.public_trace_publisher import PublicTracePublisher
 
@@ -63,6 +65,12 @@ def all_keys(value):
 class PublicTracePublisherTests(unittest.TestCase):
     def test_disabled_without_secret(self):
         publisher = PublicTracePublisher(DummyAuthority(), url="https://relay.example", secret="")
+        self.assertFalse(publisher.enabled)
+        self.assertEqual(publisher.publish_once()["state"], "disabled")
+
+    def test_disabled_without_explicit_publisher_identity(self):
+        with patch.dict(os.environ, {"PRIME_PUBLIC_TRACE_PUBLISHER_ID": ""}):
+            publisher = PublicTracePublisher(DummyAuthority(), url="https://relay.example", secret="s" * 48)
         self.assertFalse(publisher.enabled)
         self.assertEqual(publisher.publish_once()["state"], "disabled")
 
