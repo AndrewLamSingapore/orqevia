@@ -44,6 +44,9 @@ def authorize(request: Request, capability: str):
 @router.get('/identity')
 def identity(request: Request):
     authorize(request, 'identity.read')
+    host_id = os.getenv('PRIME_INTERFACE_HOST_ID', '').strip()
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', host_id):
+        raise HTTPException(503, 'Host identity is not configured')
     pin = os.getenv('PRIME_INTERFACE_SPKI_SHA256', '')
     if not re.fullmatch(r'[0-9a-fA-F]{64}', pin):
         raise HTTPException(503, 'Host certificate pin is not configured')
@@ -53,7 +56,7 @@ def identity(request: Request):
     candidate_status = os.getenv('PRIME_INTERFACE_CANDIDATE_STATUS', 'UNKNOWN')
     if candidate_status not in {'UNKNOWN', 'ISOLATED_CANDIDATE', 'QUALIFICATION_RUNTIME', 'PRODUCTION'}:
         candidate_status = 'UNKNOWN'
-    result = {'contract': 'jarvis.interface.v1', 'host_id': 'DESKTOP-BGD97NB',
+    result = {'contract': 'jarvis.interface.v1', 'host_id': host_id,
             'role': 'AUTHORITATIVE_PRIME_HOST', 'client_role': 'THIN_CLIENT',
             'runtime_version': version, 'candidate_status': candidate_status,
             'tls_spki_sha256': pin.lower(), 'transport': 'HTTPS',

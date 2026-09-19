@@ -15,6 +15,7 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       PRIME_NODE_ID: ${PRIME_NODE_ID:-prime-node-01}
       PRIME_NODE_ROLE: ${PRIME_NODE_ROLE:-control-compute}
+      PRIME_INTERFACE_HOST_ID: ${PRIME_INTERFACE_HOST_ID:-}
       PRIME_COMPUTE_PROFILE: ${PRIME_COMPUTE_PROFILE:-balanced}
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}

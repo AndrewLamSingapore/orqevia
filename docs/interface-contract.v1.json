@@ -3,10 +3,10 @@
   "version": "1.0.0-candidate",
   "status": "IMPLEMENTED_ASGI_FIXTURE_VALIDATED_NOT_DEPLOYED",
   "wire_schemas": "interface-contract.schemas.v1.json",
-  "runtime_identity": "runtime_version from PRIME_INTERFACE_RUNTIME_VERSION; candidate_status from PRIME_INTERFACE_CANDIDATE_STATUS. Defaults UNKNOWN; explicit candidate/qualification labeling is required for test listeners. These labels do not themselves establish deployment or qualification.",
+  "runtime_identity": "host.id from required PRIME_INTERFACE_HOST_ID; runtime_version from PRIME_INTERFACE_RUNTIME_VERSION; candidate_status from PRIME_INTERFACE_CANDIDATE_STATUS. Version/status default UNKNOWN; explicit host and candidate/qualification labeling is required for test listeners. These labels do not themselves establish deployment or qualification.",
   "error_normalization": "Dedicated app.interface_server returns protocol/error.code/error.message/error.retryable; it never reflects raw request inputs or exception text. X-PRIME-Protocol header identifies protocol. Ambiguous errors never authorize automatic replay.",
   "host": {
-    "id": "DESKTOP-BGD97NB",
+    "id": "configured by PRIME_INTERFACE_HOST_ID",
     "role": "AUTHORITATIVE_PRIME_HOST"
   },
   "client": {

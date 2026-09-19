@@ -25,6 +25,7 @@ class ContractTests(unittest.TestCase):
                 'task.read', 'task.cancel', 'artifact.read']} for name in ('dell', 'other')}
         self.env = patch.dict(os.environ, {'PRIME_DATA_DIR': self.tmp.name,
             'PRIME_SPINE_TOKEN': 'fixture-only', 'PRIME_INTERFACE_SPKI_SHA256': 'a' * 64,
+            'PRIME_INTERFACE_HOST_ID': 'ABEX-TEST',
             'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)})
         self.env.start()
         app = FastAPI()
@@ -135,13 +136,15 @@ class ContractTests(unittest.TestCase):
             assert response.status_code == 200
             body = response.json()
             canonical = {key: body[key] for key in ('hostname', 'role', 'protocolVersion', 'publicKey')}
-            assert canonical == {'hostname': 'DESKTOP-BGD97NB', 'role': 'AUTHORITATIVE_PRIME',
+            assert canonical == {'hostname': 'ABEX-TEST', 'role': 'AUTHORITATIVE_PRIME',
                 'protocolVersion': '1', 'publicKey': 'fixture-public-SPKI'}
             assert body['identity_sha256'] == hashlib.sha256(json.dumps(canonical,
                 separators=(',', ':')).encode()).hexdigest().upper()
             assert self.client.get('/interface/v1/identity', headers={**headers, 'X-Client-ID': 'other'}).status_code == 400
             assert self.client.get('/interface/v1/identity', headers={**headers, 'Authorization': 'Bearer wrong'}).status_code == 401
         with patch.dict(os.environ, {'PRIME_INTERFACE_PUBLIC_KEY': ''}):
+            assert self.client.get('/interface/v1/identity', headers=headers).status_code == 503
+        with patch.dict(os.environ, {'PRIME_INTERFACE_HOST_ID': ''}):
             assert self.client.get('/interface/v1/identity', headers=headers).status_code == 503
 
     def test_canonical_dell_objective_task_events_and_artifact(self):
