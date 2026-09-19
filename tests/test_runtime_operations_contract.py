@@ -60,6 +60,12 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         self.assertNotIn("Remove-Item", trace)
         self.assertNotIn(":latest", compose)
 
+    def test_direct_runtime_enables_registry_dispatch(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        self.assertIn("PRIME_REGISTRY_V1_ENABLED: ${PRIME_REGISTRY_V1_ENABLED:-1}", compose)
+        example = (ROOT / ".env.example").read_text(encoding="utf-8")
+        self.assertIn("PRIME_REGISTRY_V1_ENABLED=1", example)
+
 
 if __name__ == "__main__":
     unittest.main()
