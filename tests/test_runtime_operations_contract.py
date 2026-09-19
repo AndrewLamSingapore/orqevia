@@ -6,6 +6,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class RuntimeOperationsContractTests(unittest.TestCase):
+    def test_production_dependencies_include_wasm_sandbox_runtime(self):
+        requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
+        self.assertIn("wasmtime==48.0.0", requirements)
+
     def test_compose_is_one_stable_local_project(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         self.assertIn("name: ${COMPOSE_PROJECT_NAME:-prime}", compose)
