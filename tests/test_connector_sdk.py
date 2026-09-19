@@ -1,6 +1,7 @@
 import pytest
 from app.action_harness import ActionEnvelopeIssuer,ActionHarness,utcnow
 from app.connector_sdk import LegacyConnectorRegistry as ConnectorRegistry,Sink,payload_digest
+from app.host_guard import effect_digest
 
 
 def test_registered_sink_uses_existing_authority_and_denies_bypasses(tmp_path):
@@ -19,6 +20,9 @@ def test_registered_sink_uses_existing_authority_and_denies_bypasses(tmp_path):
                       parameters={'connector_id':'test','payload_sha256':payload_digest(payload),'capability':capability},
                       context={'risk':'advisory'},correlation_id='test',idempotency_key=str(utcnow()),
                       schema_version='1.0.0',timestamp=utcnow().isoformat())
+        if approval:
+            proposal['context']['effect_class']='HOST_HIGH_RISK'
+            proposal['context']['approved_effect_digest']=effect_digest(proposal)
         result=issuer.issue(proposal,decision_id='test',policy_version='harness-v0',owner_approval_id=approval)
         harness.authorize(result)
         return result
