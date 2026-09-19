@@ -75,6 +75,17 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         self.assertIn("PRIME_OWNER_TRUSTED_PEERS: ${PRIME_OWNER_TRUSTED_PEERS:-}", compose)
 
+    def test_physical_client_runtime_is_https_narrow_and_profile_gated(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn('profiles: ["clients"]', compose)
+        self.assertIn('app.interface_server:app', compose)
+        self.assertIn('"--no-proxy-headers"', compose)
+        self.assertIn('"--ssl-keyfile"', compose)
+        self.assertIn('${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}', compose)
+        self.assertNotIn('app.production_entry:app", "--host", "0.0.0.0", "--port", "8443"', compose)
+        self.assertIn('COPY clients/pwa/index.html', dockerfile)
+
 
 if __name__ == "__main__":
     unittest.main()

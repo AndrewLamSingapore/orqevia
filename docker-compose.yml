@@ -85,6 +85,51 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
+  interface:
+    profiles: ["clients"]
+    image: ${PRIME_IMAGE:-prime:local}
+    labels:
+      com.lamjarvis.managed: "true"
+      com.lamjarvis.role: "thin-client-interface"
+      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+    command: ["uvicorn", "app.interface_server:app", "--host", "0.0.0.0", "--port", "8443", "--no-proxy-headers", "--ssl-keyfile", "/run/prime-tls/server.key", "--ssl-certfile", "/run/prime-tls/server.crt"]
+    ports:
+      - "${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}:${PRIME_INTERFACE_PORT:-8443}:8443"
+    environment:
+      PRIME_DATA_DIR: /data
+      PRIME_SPINE_TOKEN: ${PRIME_SPINE_TOKEN:-}
+      PRIME_INTERFACE_HOST_ID: ${PRIME_INTERFACE_HOST_ID:-}
+      PRIME_INTERFACE_SPKI_SHA256: ${PRIME_INTERFACE_SPKI_SHA256:-}
+      PRIME_INTERFACE_PUBLIC_KEY: ${PRIME_INTERFACE_PUBLIC_KEY:-}
+      PRIME_PWA_ORIGIN: ${PRIME_PWA_ORIGIN:-}
+      PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}
+      PRIME_PWA_DATA_CLASSIFICATION: ${PRIME_PWA_DATA_CLASSIFICATION:-LOCAL_ONLY}
+      PRIME_PWA_MAX_COST_USD: ${PRIME_PWA_MAX_COST_USD:-0}
+      PRIME_REGISTRY_V1_ENABLED: ${PRIME_REGISTRY_V1_ENABLED:-1}
+      PRIME_COMPUTE_PROFILE: ${PRIME_COMPUTE_PROFILE:-balanced}
+      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
+      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
+      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
+      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+    volumes:
+      - prime-data:/data
+      - "${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}:/run/prime-tls:ro"
+      - "${PRIME_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/JARVIS-ABEX-HTTPS.mobileconfig:ro"
+    depends_on:
+      prime:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import ssl, urllib.request; context=ssl.create_default_context(cafile='/run/prime-tls/ca.crt'); urllib.request.urlopen('${PRIME_PWA_ORIGIN:-https://invalid}/pwa/', context=context, timeout=5).read()"]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
   ollama:
     image: ${OLLAMA_IMAGE:?Set OLLAMA_IMAGE to a reviewed immutable tag or digest}
     labels:
