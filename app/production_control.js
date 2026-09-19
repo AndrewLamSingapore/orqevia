@@ -32,10 +32,10 @@ el('pair-phone').onclick=async()=>{
   clearTimeout(pairingTimer);
   el('pair-code').textContent='Preparing…';
   try {
-    const response=await fetch('/control/api/pwa-pairing',{method:'POST',headers:{'X-Jarvis-PWA':'1'}});
+    const response=await fetch('/control/api/pwa-pairing',{method:'POST',headers:{'X-Jarvis-PWA':'1','Content-Type':'application/json'},body:JSON.stringify({role:el('pair-role').value})});
     if(!response.ok) throw new Error('Unavailable');
     const value=await response.json();
-    el('pair-code').textContent=value.code;
+    el('pair-code').textContent=value.role+' · '+value.code;
     pairingTimer=setTimeout(()=>{el('pair-code').textContent='Pairing code expired.';},Math.max(0,value.expiresAt*1000-Date.now()));
   } catch {el('pair-code').textContent='Pairing unavailable. Try again from the ABEX local control page.';}
 };
