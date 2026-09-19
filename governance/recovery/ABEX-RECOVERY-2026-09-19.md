@@ -2,6 +2,16 @@
 
 This is a non-secret, off-machine recovery record. It does not override `governance/operational-manifest.json`, which remains the sole operational SSOT and remains `STALE` until runtime evidence is independently accepted.
 
+## Quick index
+
+- **What was proven:** Proven facts and Test evidence.
+- **What was lost:** Recovery semantics.
+- **What is authoritative:** Canonical source and safety baseline.
+- **What may never be automated:** Permanent host boundary.
+- **What to install:** Reconstruction dependencies.
+- **How to commission:** Database and trust commissioning, then Incremental activation order.
+- **How to replace this PC again:** Disaster recovery target.
+
 ## Proven facts
 
 - The original Kingsand SSD is permanently unavailable.
@@ -55,16 +65,19 @@ PRIME application authority does not include destructive host authority. Disk in
 - Node.js: `22.23.2` was used during recovery validation; project engine requirement is Node 22.x where declared.
 - Python: 3.12 with `requirements.txt`.
 - Wasmtime: `48.0.0` from `requirements-sandbox.txt`.
-- Docker/Compose: required by current runtime topology but version/image selection must be recorded before activation.
+- Docker Desktop: `4.91.0`; official installer SHA-256 `ac405b09942701770d581b173747fc1024cf0e6047cbe60f13d1df85437311ac`.
+- Docker/Compose: supplied by the Docker Desktop installation and must be validated after installation, before activation.
 - Critical images must use reviewed immutable tags or digests. `latest` is prohibited by the recovered Compose contract.
 - PRIME must initially bind only to `127.0.0.1:8000`; tunnel services remain opt-in.
 
 Required image variables before Compose validation:
 
-- `OLLAMA_IMAGE`
-- `CADDY_IMAGE`
-- `CLOUDFLARED_IMAGE`
+- `OLLAMA_IMAGE=ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532` (qualified tag `0.34.2`)
+- `CADDY_IMAGE=caddy@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e` (qualified tag `2.11.4-alpine`)
+- `CLOUDFLARED_IMAGE=cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4` (qualified tag `2026.9.1`)
 - optionally commit-addressed `PRIME_IMAGE`, or a recorded local build from the selected commit
+
+These digests are registry manifests, not mutable tag references. Requalification is required before changing them.
 
 ## Database and trust commissioning
 
