@@ -39,13 +39,13 @@ def validate_state(manifest, product, registry):
     return True
 
 def main():
-    manifest = json.loads((ROOT/'governance/operational-manifest.json').read_text())
-    product = json.loads((ROOT/'system.manifest.json').read_text())
-    registry = json.loads((ROOT/'config/agent_registry.json').read_text())
+    manifest = json.loads((ROOT/'governance/operational-manifest.json').read_text(encoding='utf-8'))
+    product = json.loads((ROOT/'system.manifest.json').read_text(encoding='utf-8'))
+    registry = json.loads((ROOT/'config/agent_registry.json').read_text(encoding='utf-8'))
     validate_state(manifest, product, registry)
     sys.path.insert(0, str(ROOT/'scripts'))
     from generate_resume_checkpoint import generate
-    assert (ROOT/'governance/JARVIS_Resume_Checkpoint.generated.md').read_text() == generate(manifest)
+    assert (ROOT/'governance/JARVIS_Resume_Checkpoint.generated.md').read_text(encoding='utf-8') == generate(manifest)
     assert component_hash_matches(ROOT/'config/agent_registry.json', product['components']['registry']['sha256'])
     print('Canonical source and generated mirror: CONSISTENT; operational state: '+manifest['status'])
 
