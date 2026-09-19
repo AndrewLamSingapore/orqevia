@@ -14,6 +14,7 @@
 <button id="task">Read objective</button> <button id="job">Read job</button> <button id="jobs">Refresh queue</button> <button id="artifact">Create objective artifact</button>
 <label>Artifact ID <input id="artifact-id"></label><button id="download">Download artifact</button>
 <h2>Connect your phone</h2><p>Create a one-use pairing code for your JARVIS PWA. It expires after five minutes.</p>
+<label>Phone role <select id="pair-role"><option value="OWNER">Owner</option><option value="MEMBER">Member</option></select></label>
 <button id="pair-phone" type="button">Create phone pairing code</button>
 <output id="pair-code" aria-live="polite"></output>
 <p id="message" role="status"></p><pre id="result">Ready.</pre><script src="/control/app.js" defer></script></html>

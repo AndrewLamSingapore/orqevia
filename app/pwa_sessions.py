@@ -33,6 +33,8 @@ def database():
     for table in ('pairing','sessions'):
         if 'owner_account_id' not in {r[1] for r in db.execute('PRAGMA table_info('+table+')')}:
             db.execute('ALTER TABLE '+table+' ADD COLUMN owner_account_id TEXT')
+        if 'role' not in {r[1] for r in db.execute('PRAGMA table_info('+table+')')}:
+            db.execute("ALTER TABLE "+table+" ADD COLUMN role TEXT NOT NULL DEFAULT 'MEMBER'")
     db.commit();return db
 
 def internal_token(client):
@@ -56,9 +58,9 @@ def client_policy(client):
 def session(request):
     cookie=request.cookies.get(COOKIE,'')
     if not re.fullmatch(r'[A-Za-z0-9_-]{43}',cookie):return None
-    with database() as db:row=db.execute('SELECT client_id,expires,revoked FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
+    with database() as db:row=db.execute('SELECT client_id,expires,revoked,role FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
     if not row or row[2] or row[1]<=time.time():return None
-    return {'clientId':row[0],'expiresAt':row[1]}
+    return {'clientId':row[0],'expiresAt':row[1],'role':row[3]}
 
 def require_session(request):
     value=session(request)
@@ -93,10 +95,16 @@ async def pairing(request:Request):
     if str(request.base_url).rstrip('/')!=expected or request.headers.get('origin')!=expected or request.headers.get('x-jarvis-pwa')!='1':raise HTTPException(403,'Origin rejected')
     account=os.getenv('PRIME_PWA_OWNER_ACCOUNT_ID') or None
     if account is not None and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,63}',account):raise HTTPException(503,'Owner account unavailable')
+    raw_body=await bounded_body(request,256)
+    try:body=json.loads(raw_body) if raw_body else {}
+    except (ValueError,UnicodeError):raise HTTPException(422,'Invalid pairing request') from None
+    if not isinstance(body,dict) or set(body)-{'role'} or body.get('role','MEMBER') not in {'OWNER','MEMBER'}:
+        raise HTTPException(422,'Invalid pairing request')
+    role=body.get('role','MEMBER')
     code=secrets.token_urlsafe(16);expires=time.time()+300
-    with database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used,owner_account_id) VALUES(?,?,0,?)',(digest(code),expires,account))
+    with database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used,owner_account_id,role) VALUES(?,?,0,?,?)',(digest(code),expires,account,role))
     # Intentionally returned only to authenticated local interactive owner UI.
-    return JSONResponse({'code':code,'expiresAt':expires},headers={'Cache-Control':'no-store'})
+    return JSONResponse({'code':code,'expiresAt':expires,'role':role},headers={'Cache-Control':'no-store'})
 
 @router.get('/session')
 def get_session(request:Request):
@@ -117,13 +125,13 @@ async def enroll(request:Request):
         db.commit()
         if count>10:raise HTTPException(429,'Enrollment rate limited')
         db.execute('BEGIN IMMEDIATE')
-        row=db.execute('SELECT expires,used,owner_account_id FROM pairing WHERE code_hash=?',(digest(body['code']),)).fetchone()
+        row=db.execute('SELECT expires,used,owner_account_id,role FROM pairing WHERE code_hash=?',(digest(body['code']),)).fetchone()
         if not row or row[1] or row[0]<=now:raise HTTPException(401,'Enrollment unavailable')
         raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex;expires=now+SESSION_SECONDS
         internal_token(client)
         db.execute('UPDATE pairing SET used=1 WHERE code_hash=?',(digest(body['code']),))
-        db.execute('INSERT INTO sessions(session_hash,client_id,expires,revoked,owner_account_id) VALUES(?,?,?,0,?)',(digest(raw),client,expires,row[2]))
-    response=JSONResponse({'authenticated':True,'clientId':client,'expiresAt':expires})
+        db.execute('INSERT INTO sessions(session_hash,client_id,expires,revoked,owner_account_id,role) VALUES(?,?,?,0,?,?)',(digest(raw),client,expires,row[2],row[3]))
+    response=JSONResponse({'authenticated':True,'clientId':client,'expiresAt':expires,'role':row[3]})
     response.set_cookie(COOKIE,raw,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
     return response
 

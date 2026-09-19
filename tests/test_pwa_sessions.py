@@ -96,10 +96,28 @@ def test_interactive_loopback_pairing_and_expired_code(setup):
         headers={'Origin':'http://127.0.0.1:8000','X-Jarvis-PWA':'1','Authorization':'Bearer fixture-owner-credential-never-production'}
         response=local.post('/pwa/owner/pairing',headers=headers)
         assert response.status_code==200 and response.headers['cache-control']=='no-store'
+        assert response.json()['role']=='MEMBER'
         code=response.json()['code']
         with pwa.database() as db:db.execute('UPDATE pairing SET expires=? WHERE code_hash=?',(time.time()-1,pwa.digest(code)))
     with TestClient(app,base_url=ORIGIN) as client:
         assert client.post('/pwa/api/enroll',headers=HEADERS,json={'code':code}).status_code==401
+
+def test_owner_and_member_roles_are_server_issued_and_persisted(setup):
+    root,pwa,app,node=setup
+    owner=FastAPI();owner.include_router(pwa.owner_router)
+    headers={'Origin':'http://127.0.0.1:8000','X-Jarvis-PWA':'1','Authorization':'Bearer fixture-owner-credential-never-production'}
+    with TestClient(owner,base_url='http://127.0.0.1:8000',client=('127.0.0.1',45000)) as local:
+        owner_code=local.post('/pwa/owner/pairing',headers=headers,json={'role':'OWNER'}).json()['code']
+        member_code=local.post('/pwa/owner/pairing',headers=headers,json={'role':'MEMBER'}).json()['code']
+        assert local.post('/pwa/owner/pairing',headers=headers,json={'role':'ADMIN'}).status_code==422
+    with TestClient(app,base_url=ORIGIN) as owner_client,TestClient(app,base_url=ORIGIN) as member_client:
+        owner_session=owner_client.post('/pwa/api/enroll',headers=HEADERS,json={'code':owner_code}).json()
+        member_session=member_client.post('/pwa/api/enroll',headers=HEADERS,json={'code':member_code}).json()
+        assert owner_session['role']=='OWNER'
+        assert member_session['role']=='MEMBER'
+        assert owner_client.get('/pwa/api/session').json()['role']=='OWNER'
+        assert member_client.get('/pwa/api/session').json()['role']=='MEMBER'
+        assert pwa.client_policy(owner_session['clientId'])['capabilities']==pwa.client_policy(member_session['clientId'])['capabilities']
 
 def test_missing_policy_config_stays_local_only_and_bounded(setup,monkeypatch):
     root,pwa,app,node=setup

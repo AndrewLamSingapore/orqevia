@@ -66,6 +66,11 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         example = (ROOT / ".env.example").read_text(encoding="utf-8")
         self.assertIn("PRIME_REGISTRY_V1_ENABLED=1", example)
 
+    def test_image_starts_canonical_owner_entrypoint_without_proxy_trust(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        self.assertIn('"app.production_entry:app"', dockerfile)
+        self.assertIn('"--no-proxy-headers"', dockerfile)
+
 
 if __name__ == "__main__":
     unittest.main()

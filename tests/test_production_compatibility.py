@@ -41,7 +41,8 @@ def test_phone_pairing_only_local_same_origin(shell):
     headers = {'Origin': 'http://127.0.0.1:8000', 'X-Jarvis-PWA': '1'}
     result = client.post('/control/api/pwa-pairing', headers=headers)
     assert result.status_code == 200
-    assert set(result.json()) == {'code', 'expiresAt'}
+    assert set(result.json()) == {'code', 'expiresAt', 'role'}
+    assert result.json()['role'] == 'MEMBER'
     assert result.headers['cache-control'] == 'no-store'
     assert 'fixture-owner-secret' not in result.text
 
