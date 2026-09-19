@@ -19,8 +19,10 @@ from .pwa_sessions import owner_router as pwa_owner_router
 def local_request(request: Request):
     try:
         peer = ipaddress.ip_address(request.client.host)
+        configured_peers = {ipaddress.ip_address(value.strip()) for value in
+                            os.getenv('PRIME_OWNER_TRUSTED_PEERS', '').split(',') if value.strip()}
         hosts = request.headers.getlist('host')
-        if not peer.is_loopback or len(hosts) != 1:
+        if not (peer.is_loopback or peer in configured_peers) or len(hosts) != 1:
             raise ValueError()
         host = urlsplit('//' + hosts[0])
         if host.hostname not in {'localhost', '127.0.0.1', '::1'} or host.username or host.password or host.path or host.query or host.fragment:
