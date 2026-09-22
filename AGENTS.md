@@ -1,10 +1,17 @@
 # Shared JARVIS source of truth
 
-For JARVIS/PRIME and portfolio work, begin with SSOT.json. Resolve the latest
-canonical PRIME main commit and read governance/operational-manifest.json and
-governance/CHANNEL_CONTRACT.md at that same commit. Follow its architecture and
-component references. On PRIME itself, a clean checkout of current main provides
-the same files. A working branch is a candidate, never a second current version.
+For JARVIS/PRIME and portfolio work, status begins with
+[STATUS.md](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md) in the
+private PRIME repository. STATUS.md is the only current status source of truth.
+Only Lam may move an item into its "Verified" sections.
+
+Then begin with SSOT.json for the machine-readable component references. Resolve
+the latest canonical PRIME main commit and read governance/operational-manifest.json
+and governance/CHANNEL_CONTRACT.md at that same commit as component and
+observation references: they describe recorded architecture and observed
+revisions, and cannot establish current status. On PRIME itself, a clean checkout
+of current main provides the same files. A working branch is a candidate, never a
+second current version.
 
 Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
 
@@ -25,3 +32,22 @@ repository rules, then regenerate consumers and the existing resume mirror.
 Preserve Git history and commissioning evidence. Superseded files are references
 or historical evidence, not executable instructions. Do not reinstall, reset or
 mutate the sealed ABEX baseline to make a status record look current.
+
+## Normal coding task (operating convention)
+
+Lam states the task; Codex then works through it without routine approval prompts:
+
+1. inspect the relevant repository and current main;
+2. create or choose a task branch (substantive change does not go straight to main);
+3. implement the smallest robust change;
+4. run the most relevant existing checks and add a focused regression test when fixing a reproducible bug;
+5. inspect the diff and status, confirming no unrelated files, credentials or secrets were touched;
+6. hunt for related regressions, dead configuration, inconsistent identities and stale assumptions in the changed area;
+7. fix what is found and re-run the checks;
+8. commit with evidence in the message;
+9. push the branch and open a pull request; never force-push and never rewrite published history;
+10. update STATUS.md only for a real status event, and never write in its Verified sections;
+11. report concisely: what changed, branches, commit hashes, push status, checks, and blockers.
+
+Do not merge risky work into main automatically. Human confirmation is not required
+after every edit or test.

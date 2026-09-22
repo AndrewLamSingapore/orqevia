@@ -1,5 +1,7 @@
 {
   "schema_version": "4.3.0",
+  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
+  "superseded_note": "Status claims in this file are superseded by STATUS.md as of 2026-09-22. This file is retained as a machine-readable component, release and observation reference only: it cannot select current status or promote anything to verified.",
   "status": "STALE",
   "as_of_utc": "2026-09-17T06:02:28Z",
   "canonical_machine_source": {

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "authority": "governance/operational-manifest.json remains the sole operational SSOT; this registry resolves software identities and Dell observation paths only",
+  "authority": "STATUS.md is the sole current status authority; governance/operational-manifest.json is a machine-readable component reference. This registry resolves software identities and Dell observation paths only",
   "path_resolution": "canonical_local_path may be null until Dell selects an objectively verified working tree; null means UNRESOLVED, never absent software",
   "repositories": [
     {"repository_id": "control", "component_name": "portfolio control and shared contracts", "canonical_local_path": null, "canonical_github_remote": "https://github.com/AndrewLamSingapore/AndrewLamSingapore.git", "remote_repository_identity": "AndrewLamSingapore/AndrewLamSingapore", "default_branch": "main", "ssot_system_id": "control", "classification": "UNRESOLVED"},
