@@ -10,4 +10,10 @@ assert p['canonical_url']=='https://github.com/AndrewLamSingapore/prime/blob/mai
 assert p['copy_policy'].startswith('REFERENCE_ONLY')
 assert p['canonical_url'] in (root/'AGENTS.md').read_text()
 assert p['canonical_url'] in (root/'README.md').read_text()
+# STATUS.md is the single status authority; this file is a component pointer only.
+assert p.get('status_authority', '').endswith('prime/blob/main/STATUS.md'), \
+    'SSOT.json must point at the canonical STATUS.md'
+for banned in ('status', 'current_status', 'verification', 'verified'):
+    assert banned not in p, f'{banned} belongs in STATUS.md, not in a component pointer'
+
 print('SSOT pointer: PASS; runtime freshness is independently assessed')
