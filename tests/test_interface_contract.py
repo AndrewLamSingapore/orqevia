@@ -71,13 +71,14 @@ class ContractTests(unittest.TestCase):
     def test_explicit_runtime_identity_has_honest_unknown_defaults(self):
         with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'UNKNOWN', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'UNKNOWN'}):
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
-            assert value['runtime_version']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
+            assert value['runtime_version']=='UNKNOWN' and value['runtime_revision']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
         with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'prime-next.20260914', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'QUALIFICATION_RUNTIME'}):
+            monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_REVISION','e88f6eb653c3e7c7628b31ad909143a2aebd05df')
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
-            assert value['runtime_version']=='prime-next.20260914' and value['candidate_status']=='QUALIFICATION_RUNTIME'
+            assert value['runtime_version']=='prime-next.20260914' and value['runtime_revision']=='e88f6eb653c3e7c7628b31ad909143a2aebd05df' and value['candidate_status']=='QUALIFICATION_RUNTIME'
         with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'https://private.invalid/fixture', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'invented'}):
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
-            assert value['runtime_version']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
+            assert value['runtime_version']=='UNKNOWN' and value['runtime_revision']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
 
     def test_shared_idempotency_ownership_snapshot_cancel(self):
         assert self.submit().status_code == 202
