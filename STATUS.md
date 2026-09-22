@@ -123,3 +123,26 @@ If you are an AI agent updating this file:
 Move items here from "Known broken / open" only after the underlying fix exists.
 
 Do not convert an item to Verified yourself.
+
+---
+
+## Portfolio products — production deployment (22 September 2026)
+
+### Verified (only Lam may promote an item here)
+
+- (nothing promoted by an agent; each item below still needs Lam's own spot-check)
+
+### Claimed, not independently checked
+
+- **Authority Engine V2 is in production** at https://authority-engine-app.vercel.app from `main` `71fcc69ab0d75ccd7a52f47fb2bbc458a606f424` (PR #75). Reported by Codex from the Dell, 22 Sep 2026 — acceptance run 56/56 (routes, 320–1440 px overflow, theme switching, Talk tablist keyboard navigation, evidence filters with no scroll jump, reduced motion, self-hosted fonts) with axe-core reporting no serious or critical violations in light and dark, plus a passing `/api/health` smoke. Not yet spot-checked by Lam.
+- **Living Worlds is in production** at https://game-platform-wine-nine.vercel.app from `main` `3450bf88a4805025a0be47cf23860c28129688fb` (PRs #28, #29). Reported by Codex from the Dell, 22 Sep 2026 — the production smoke reported that exact revision and a live guest journey (The Ashen Gate) resolved exactly one authoritative turn in about eight seconds with fresh choices, an advanced world clock, no stranded choice buttons, the outcome announced through a live region, no console errors and no horizontal overflow at 390 px (17/17 checks). The turn reported `reasoner: adaptive-gm`, so the live model path executed rather than the deterministic fallback. Not yet spot-checked by Lam.
+- **The Portal is in production** at https://the-portal-ten.vercel.app from `main` `15db1e359b76814959e6533076449792963577c6` (PRs #60, #61 and the card-check tooling PR). Reported by Codex from the Dell, 22 Sep 2026 — production smoke reported that exact revision and the card journey passed 14/14 against the live site (front door explanation, `/card/<id>` link, canonical metadata, copy link, close, shared-link reload, browser back, unknown card id, no console errors). Not yet spot-checked by Lam.
+- **Canonical STATUS.md pointer is live** in the SSOT of authority-engine, the-portal, sky-tablet and velyqua (PRs #74, #59, #7, #71). Reported by Codex, 22 Sep 2026.
+
+### Known broken / open
+
+- **Living Worlds server-side hardening is committed but NOT deployed.** Migration `20260922090000_turn_integrity_hardening.sql` is unapplied and the `gm-turn`, `game-action` and `join-campaign` functions still run pre-hardening code in production, so production still serves wildcard CORS on those functions and the old check-then-act idempotency ordering against a concurrent duplicate. Deploying needs Supabase credentials and CLI access that are not present on the Dell (no `supabase`/`vercel` CLI, no access token, no environment file). Recorded 22 Sep 2026.
+- **Portal private PRIME surface does not exist yet** — `/prime`, `/api/prime` and `/reports` all return 404 in production (checked 22 Sep 2026), so nothing private can leak, and nothing private can be read either. Authentication decision required; see `the-portal/docs/PRIME_PRIVATE_DOMAIN_DECISION.md`.
+- **ABEX runtime remains unverified from the Dell** — `/api/jarvis-status` reports `prime.state = unverified`, `runtime_revision = null`, `runtime_host = ABEX`, `verified_at = null` (22 Sep 2026). Independent host evidence is still required.
+- **The profile repository pointer PR is blocked** — andrewlamsingapore PR #18 cannot merge: the base branch policy prohibits it and auto-merge is disabled for that repository. Bypassing protection with administrator privileges was not used. Recorded 22 Sep 2026.
+- **Stale dependency PRs remain open and unreviewed** — authority-engine #65/#66/#71/#72/#73 and velyqua #67/#68/#69/#70 (Dependabot bumps). Deliberately not merged: none is required for current work and unreviewed upgrades are the risk the operating rules warn about. velyqua #64 ("bounded PRIME session transport adapter") is a draft whose own body states the authenticated relay and production authority admission are still prerequisites. Recorded 22 Sep 2026.
