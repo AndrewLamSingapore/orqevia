@@ -56,9 +56,13 @@ def identity(request: Request):
     candidate_status = os.getenv('PRIME_INTERFACE_CANDIDATE_STATUS', 'UNKNOWN')
     if candidate_status not in {'UNKNOWN', 'ISOLATED_CANDIDATE', 'QUALIFICATION_RUNTIME', 'PRODUCTION'}:
         candidate_status = 'UNKNOWN'
+    revision = os.getenv('PRIME_INTERFACE_RUNTIME_REVISION', 'UNKNOWN').strip().lower()
+    if revision != 'UNKNOWN' and not re.fullmatch(r'[0-9a-f]{40}', revision):
+        revision = 'UNKNOWN'
     result = {'contract': 'jarvis.interface.v1', 'host_id': host_id,
             'role': 'AUTHORITATIVE_PRIME_HOST', 'client_role': 'THIN_CLIENT',
-            'runtime_version': version, 'candidate_status': candidate_status,
+            'runtime_version': version, 'runtime_revision': revision,
+            'candidate_status': candidate_status,
             'tls_spki_sha256': pin.lower(), 'transport': 'HTTPS',
             'pin_verification': 'Client must independently verify the TLS peer against its adopted pin'}
     if request.headers.get('x-jarvis-client-id') is not None:
