@@ -130,11 +130,13 @@ def test_missing_policy_config_stays_local_only_and_bounded(setup,monkeypatch):
         monkeypatch.setenv('PRIME_PWA_MAX_COST_USD','1000')
         with pytest.raises(Exception):pwa.client_policy(identity)
 
-def test_enrollment_attempt_bound_and_unauthenticated_upload(setup):
+def test_enrollment_attempt_bound_and_unauthenticated_upload(setup,monkeypatch):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:
         assert client.post('/pwa/api/uploads',headers={**HEADERS,'X-Filename':'note.txt'},content=b'text').status_code==401
         code=secrets.token_urlsafe(16)
+        moments=iter([59.9]*10+[60.1])
+        monkeypatch.setattr(pwa,'clock',lambda:next(moments))
         for _ in range(10):assert client.post('/pwa/api/enroll',headers=HEADERS,json={'code':code}).status_code==401
         assert client.post('/pwa/api/enroll',headers=HEADERS,json={'code':code}).status_code==429
 
