@@ -43,6 +43,7 @@ If you are an AI agent updating this file:
 ### Claimed, not independently checked
 
 - New ABEX trust epoch: PRIME commissioning reported passing (Docker, identity, registry, Ollama gates) — reported by Codex, 19 Sep 2026 — not yet spot-checked by Lam
+- Authenticated PRIME evidence bridge repaired and deployed from `main` `5b962fcab2c770e0c31fb80094939317b81791d4` (PRs #102 and #103) — reported by Codex from ABEX, 22 Sep 2026 — deployed image label and interface environment both reported that exact revision; PRIME, interface and Ollama containers were healthy; all five active SQLite stores returned `quick_check = ok`; an authenticated aggregate-only contract probe returned READY, 21 canonical agent identities, 29 separately labelled historical responsibilities, 10 objectives, 3 completed compute jobs, 3 stored/non-revoked PWA sessions (0 currently active because all were expired), 9 artifacts and 26 action records, with `read_only=true`, `physical_actuation=false`, and no record contents or credentials. Not yet spot-checked by Lam.
 - Wife Member physical acceptance: last known result COMPLETED_WITH_FAILURES / stale UUID reuse — root cause fix reported in progress — not yet retested physically
 - "JARVIS Codex" desktop launcher created on the Dell — shortcut `C:\Users\User\OneDrive\Desktop\JARVIS Codex.lnk` targeting `C:\Users\User\AppData\Roaming\npm\codex.cmd` with working directory `C:\Users\User\Documents\JARVIS`, no administrator flag, no embedded credentials — launch observed by Codex starting `codex.exe`, 22 Sep 2026 — not yet launched by Lam
 
@@ -123,6 +124,9 @@ If you are an AI agent updating this file:
 Move items here from "Known broken / open" only after the underlying fix exists.
 
 Do not convert an item to Verified yourself.
+
+- **Ambiguous PRIME external agent count and legacy zero counters resolved in the authenticated bridge** — deployed `main` `5b962fcab2c770e0c31fb80094939317b81791d4`, 22 Sep 2026. `/interface/v1/health` now exposes `canonical_agent_count=21`, labels the 29 migrated items as `historical_responsibility_count`, queries aggregate-only evidence from `objectives.db`, `compute-queue.db`, `pwa-sessions.db`, the artifact store and action ledger, and classifies retired `app.main` metrics as `REPLACED` or `NOT_APPLICABLE` rather than fabricated zeroes. Reported by Codex; not yet independently checked by Lam.
+- **PWA session-count ambiguity found during deployment verification and repaired** — the first bridge revision could truthfully report zero active sessions while hiding three preserved expired session records. PR #103 split the metric into `stored_count`, `non_revoked_count`, and `active_count`; deployed evidence reported 3, 3, and 0 respectively. Reported by Codex, 22 Sep 2026; not yet independently checked by Lam.
 
 ---
 
