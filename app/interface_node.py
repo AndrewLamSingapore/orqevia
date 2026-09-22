@@ -38,8 +38,20 @@ def evidence_aggregates():
     registry=load_agent_registry()
     objectives=_observed_count(root/'objectives.db','SELECT COUNT(*) FROM objectives')
     jobs=_observed_count(root/'compute-queue.db','SELECT COUNT(*) FROM compute_jobs')
-    sessions=_observed_count(root/'pwa-sessions.db',
-        'SELECT COUNT(*) FROM sessions WHERE revoked=0 AND expires>?',(time.time(),))
+    sessions={'status':'UNAVAILABLE','stored_count':None,'non_revoked_count':None,'active_count':None}
+    try:
+        path=root/'pwa-sessions.db'
+        if path.is_file():
+            with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as db:
+                stored,non_revoked,active=db.execute(
+                    'SELECT COUNT(*),SUM(CASE WHEN revoked=0 THEN 1 ELSE 0 END),'
+                    'SUM(CASE WHEN revoked=0 AND expires>? THEN 1 ELSE 0 END) FROM sessions',
+                    (time.time(),)).fetchone()
+            sessions={'status':'OBSERVED','stored_count':stored,
+                'non_revoked_count':non_revoked or 0,'active_count':active or 0,
+                'active_scope':'Non-revoked sessions whose expiry is in the future'}
+    except (OSError,sqlite3.Error,TypeError,ValueError):
+        pass
 
     job_states={'status':'UNAVAILABLE','counts':{}}
     try:
@@ -87,7 +99,7 @@ def evidence_aggregates():
             'historical_responsibility_scope':'Migrated responsibility identifiers; not runtime agent identities'},
         'current_stores':{'objectives':objectives,
             'compute_jobs':{**jobs,'status_counts':job_states['counts'] if job_states['status']=='OBSERVED' else None},
-            'active_pwa_sessions':sessions,'artifacts':artifacts,'action_records':actions},
+            'pwa_sessions':sessions,'artifacts':artifacts,'action_records':actions},
         'legacy_metrics':{
             'agent_count':{'status':'RETIRED_AMBIGUOUS','replacement':'agents.canonical_agent_count'},
             'objectives':{'status':'REPLACED','replacement':'current_stores.objectives.count'},

@@ -110,7 +110,9 @@ class ContractTests(unittest.TestCase):
         assert evidence['current_stores']['objectives']['count']==2
         assert evidence['current_stores']['compute_jobs']['count']==2
         assert evidence['current_stores']['compute_jobs']['status_counts']=={'completed':1,'queued':1}
-        assert evidence['current_stores']['active_pwa_sessions']['count']==1
+        assert evidence['current_stores']['pwa_sessions']['stored_count']==3
+        assert evidence['current_stores']['pwa_sessions']['non_revoked_count']==2
+        assert evidence['current_stores']['pwa_sessions']['active_count']==1
         assert evidence['current_stores']['artifacts']['count']==1
         assert evidence['current_stores']['action_records']['count']==1
         assert evidence['legacy_metrics']['facts']['status']=='NOT_APPLICABLE'
