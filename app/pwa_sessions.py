@@ -22,6 +22,8 @@ SESSION_SECONDS=8*3600
 router=APIRouter(prefix='/pwa/api',tags=['pwa-session'])
 owner_router=APIRouter(prefix='/pwa/owner',tags=['local-pairing'])
 
+def clock():return time.time()
+
 def digest(value):return hashlib.sha256(value.encode()).hexdigest()
 def database():
     root=Path(os.getenv('PRIME_DATA_DIR','/data'));root.mkdir(parents=True,exist_ok=True)
@@ -116,12 +118,16 @@ async def enroll(request:Request):
     try:body=json.loads(await bounded_body(request,2048))
     except (ValueError,UnicodeError):raise HTTPException(422,'Invalid enrollment') from None
     if not isinstance(body,dict) or set(body)!={'code'} or not isinstance(body['code'],str) or not re.fullmatch(r'[A-Za-z0-9_-]{22}',body['code']):raise HTTPException(422,'Invalid enrollment')
-    now=time.time();peer=digest(request.client.host if request.client else 'unknown');bucket=int(now//60)
+    now=clock();peer=digest(request.client.host if request.client else 'unknown');bucket=int(now//60)
     with database() as db:
         db.execute('BEGIN IMMEDIATE')
         db.execute('DELETE FROM admission WHERE bucket<?',(bucket-2,))
         db.execute('INSERT INTO admission VALUES(?,?,1) ON CONFLICT(peer_hash,bucket) DO UPDATE SET count=count+1',(peer,bucket))
-        count=db.execute('SELECT count FROM admission WHERE peer_hash=? AND bucket=?',(peer,bucket)).fetchone()[0]
+        # Count the adjacent bucket as well so a client cannot double its
+        # allowance by placing attempts on both sides of a minute boundary.
+        # This intentionally fails closed for up to one additional bucket.
+        count=db.execute('SELECT COALESCE(SUM(count),0) FROM admission WHERE peer_hash=? AND bucket>=?',
+                         (peer,bucket-1)).fetchone()[0]
         db.commit()
         if count>10:raise HTTPException(429,'Enrollment rate limited')
         db.execute('BEGIN IMMEDIATE')
