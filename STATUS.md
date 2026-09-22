@@ -58,7 +58,10 @@ If you are an AI agent updating this file:
 - W3-01 (Web3 governance design) preserved independently at authority-engine repo, commit 4681521e74b9a1d45161889a49fa57eb612c6d45 — design reference, not deployed capability.
 - VELYQUA source preserved independently at commit 4ecf65eec8dca0926fe01c3e9c34488e80764470 (full hash confirmed on the Dell clone, 22 Sep 2026).
 - This file is the only current status authority. The former machine SSOT `governance/operational-manifest.json` and the generated `governance/JARVIS_Resume_Checkpoint.generated.md` remain as machine component references only; status claims in them are superseded here as of 22 Sep 2026.
-- Read-only DeepSeek handoff for code review/inspection questions: `scripts/read-only-deepseek.ps1` (documented in `docs/READ_ONLY_DEEPSEEK.md`).
+- Read-only DeepSeek handoff for code review/inspection questions: `scripts/read-only-deepseek.ps1` (documented in `docs/READ_ONLY_DEEPSEEK.md`). Exercised 22 Sep 2026 against `https://api.deepseek.com` with model `deepseek-flash`, which returned an answer from the repository content. Provider-side usage evidence is still Lam's to confirm.
+- Agent registry identity mapping evidence (22 Sep 2026, source only): `config/agent_registry.json` declares `named_operating_roles` as `{"A12 Builder":"a17","A13 Test Engineer":"a18"}`, `app/agent_registry.py` refuses to load a registry that changes that mapping, and `app/engineering_api.py` accepts only those two design role labels and maps them to a17/a18. This shows the A12/A13-versus-A17/A18 relationship is an intentional, code-enforced bridge in the current source; it does not verify the deployed ABEX runtime.
+- Stale result/revision evidence (22 Sep 2026, source only): `clients/pwa/revision-tests.mjs` pins revision-scoped presentation — current-only results, no previous-answer leakage on completion, and previous results labelled and shown only for the same task and revision.
+- Spoken agent-label leakage fixed in source (22 Sep 2026): the PWA "read result" button spoke the raw internal agent id (for example "a13"). Read-aloud now uses a label-free `spokenText()` while the screen keeps the label, with a regression test in `clients/pwa/revision-tests.mjs`. Source-level fix only; not yet deployed to ABEX.
 
 ---
 
