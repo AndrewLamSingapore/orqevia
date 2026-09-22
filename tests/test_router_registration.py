@@ -5,11 +5,11 @@ from app.entry import app
 class RouterTests(unittest.TestCase):
     def test_routes_registered(self):
         paths={r.path for r in app.routes}
-        self.assertIn("/api/integrations/portal/experiments",paths)
-        self.assertIn("/api/integrations/portal/experiments/{candidate_id}",paths)
-        self.assertIn("/api/public/jarvis/agent-trace",paths)
-        self.assertIn("/api/cognitive/agent-runtime",paths)
-        self.assertIn("/api/harness/status",paths)
-        self.assertIn("/api/harness/pilot/dispatch",paths)
+        self.assertIn("/api/agents/dispatch",paths)
+        self.assertIn("/api/agents/objectives",paths)
+        self.assertIn("/api/agents/engineering/wasm",paths)
+        self.assertIn("/api/compute-queue/jobs",paths)
+        self.assertNotIn("/api/harness/pilot/dispatch",paths)
+        self.assertNotIn("/api/integrations/portal/experiments",paths)
 
 if __name__=="__main__": unittest.main()

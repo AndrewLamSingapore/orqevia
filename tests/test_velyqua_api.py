@@ -8,8 +8,10 @@ os.environ["PRIME_INTEGRATION_TOKEN"] = "test-integration-token"
 os.environ.pop("PORTAL_RESULT_URL", None)
 os.environ.pop("PORTAL_RESULT_TOKEN", None)
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from app.entry import app
+from app import portal_api, velyqua_api
+app = FastAPI(); app.include_router(portal_api.router); app.include_router(velyqua_api.router)
 
 
 AUTH = {"Authorization": "Bearer test-integration-token"}

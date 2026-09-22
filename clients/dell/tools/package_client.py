@@ -10,18 +10,24 @@ import zipfile
 SOURCE=Path(__file__).resolve().parents[1]
 PIN='3358598e7fa267a9412f4c6a50482e6dd12db305d2405d1a1eafa21251be4caf'
 def sha(data):return hashlib.sha256(data).hexdigest()
+def canonical_source_bytes(path):
+    # Git may materialize text files with CRLF on Windows even though the
+    # reviewed release manifest pins canonical LF bytes.  Package and verify
+    # the canonical representation so a clean Windows checkout remains
+    # reproducible without weakening the content lock.
+    return path.read_bytes().replace(b'\r\n',b'\n')
 
 def package(source,archive,evidence,node='node',build=False):
     source=Path(source).resolve();archive=Path(archive).resolve()
-    if sha((source/'lib/upstream.mjs').read_bytes())!=PIN:raise ValueError('UNAPPROVED_TRANSPORT')
+    if sha(canonical_source_bytes(source/'lib/upstream.mjs'))!=PIN:raise ValueError('UNAPPROVED_TRANSPORT')
     lock=json.loads((source/'SOURCE-SHA256.json').read_text())
     for name,digest in lock.items():
         p=PurePosixPath(name)
         if p.is_absolute() or '..' in p.parts or '\\' in name or ':' in name:raise ValueError('UNSAFE_PATH')
-        if sha((source/name).read_bytes())!=digest:raise ValueError('SOURCE_HASH_MISMATCH')
+        if sha(canonical_source_bytes(source/name))!=digest:raise ValueError('SOURCE_HASH_MISMATCH')
     if not {'test/url-transport.test.mjs','test/client.test.mjs','lib/upstream.mjs'}<=lock.keys():raise ValueError('INCOMPLETE_LOCK')
-    content={name:(source/name).read_bytes() for name in lock}
-    content['SOURCE-SHA256.json']=(source/'SOURCE-SHA256.json').read_bytes()
+    content={name:canonical_source_bytes(source/name) for name in lock}
+    content['SOURCE-SHA256.json']=canonical_source_bytes(source/'SOURCE-SHA256.json')
     if build:
         # Stored ZIP avoids compressor-version variability. Fixed timestamp,
         # permissions, order and platform remove filesystem metadata variability.
