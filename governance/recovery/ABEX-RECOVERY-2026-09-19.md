@@ -1,6 +1,6 @@
 # ABEX Recovery and Reconstruction Record — 2026-09-19
 
-This is a non-secret, off-machine recovery record. It does not override `governance/operational-manifest.json`, which remains the sole operational SSOT and remains `STALE` until runtime evidence is independently accepted.
+This is a non-secret, off-machine recovery record. It does not override `STATUS.md`, which is the sole current status authority. The machine-readable `governance/operational-manifest.json` is retained as a component reference and still records `STALE` until runtime evidence is independently accepted.
 
 ## Quick index
 

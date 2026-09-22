@@ -3,8 +3,17 @@ param(
     [string]$SourceRoot = (Split-Path -Parent $PSScriptRoot),
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'JARVIS\DellNodeSync'),
     [Parameter(Mandatory = $true)][string]$ConfigPath,
-    [switch]$RegisterTask
+    [switch]$RegisterTask,
+    [switch]$AllowRetiredApparatus
 )
+
+# The SSOT synchronizer apparatus is retired: STATUS.md is the only current status
+# authority. Installation is refused by default so a dormant authority mechanism
+# cannot be silently reactivated. Historical code is kept, not deleted.
+if (-not $AllowRetiredApparatus) {
+    Write-Error 'The Dell Node Synchronizer apparatus is retired (superseded by STATUS.md on 22 September 2026). Nothing was installed or scheduled. Re-run with -AllowRetiredApparatus only if Lam explicitly revives this historical tool.'
+    exit 64
+}
 
 $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $ConfigPath -PathType Leaf)) { throw "Configuration not found: $ConfigPath" }

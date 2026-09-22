@@ -1,12 +1,14 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> Portfolio authority: [one current JARVIS status source](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md). This document describes this repository only; it cannot override STATUS.md, the canonical architecture, or establish live deployment status.
 
 # Dell Node Synchronization
+
+> **Superseded for activation (22 September 2026).** This synchronizer belongs to the retired SSOT/reconciler apparatus. Do not install or schedule it; `scripts/install_dell_node_sync.ps1` now refuses to install or schedule anything unless an operator explicitly overrides the retirement. It is retained as historical evidence.
 
 The Dell Node Synchronizer is the bounded writer companion to the independent Dell Truth Reconciler. The two roles stay separate:
 
 - the Truth Reconciler observes and reports contradictions;
 - the Node Synchronizer moves already-validated Dell work through Git and emits proposals for PRIME reconciliation;
-- `governance/operational-manifest.json` remains the sole SSOT;
+- `STATUS.md` is the sole current status authority; `governance/operational-manifest.json` is a machine-readable component reference only;
 - ABEX/PRIME remains the canonical authority.
 
 ## Safe automatic behavior

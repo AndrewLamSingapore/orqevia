@@ -1,10 +1,17 @@
 # Shared JARVIS source of truth
 
-For JARVIS/PRIME and portfolio work, begin with SSOT.json. Resolve the latest
-canonical PRIME main commit and read governance/operational-manifest.json and
-governance/CHANNEL_CONTRACT.md at that same commit. Follow its architecture and
-component references. On PRIME itself, a clean checkout of current main provides
-the same files. A working branch is a candidate, never a second current version.
+For JARVIS/PRIME and portfolio work, status begins with
+[STATUS.md](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md) in the
+private PRIME repository. STATUS.md is the only current status source of truth.
+Only Lam may move an item into its "Verified" sections.
+
+Then begin with SSOT.json for the machine-readable component references. Resolve
+the latest canonical PRIME main commit and read governance/operational-manifest.json
+and governance/CHANNEL_CONTRACT.md at that same commit as component and
+observation references: they describe recorded architecture and observed
+revisions, and cannot establish current status. On PRIME itself, a clean checkout
+of current main provides the same files. A working branch is a candidate, never a
+second current version.
 
 Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
 

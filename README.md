@@ -1,15 +1,21 @@
 # JARVIS PRIME
 
-Start with [the canonical operational SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) and
+Start with [STATUS.md](STATUS.md) for current status, then the
+[machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) and
 [the shared channel contract](governance/CHANNEL_CONTRACT.md).
+
+STATUS.md is the only current status source of truth. The operational reference
+records architecture, component revisions and observations; it cannot establish
+current status.
 
 Architecture v1 is the sole intended architecture: ABEX PRIME, authenticated
 Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and direct
 observed execution with narrow consequential controls. Runtime acceptance is
 recorded separately and must not be inferred from this README or passing CI.
 
-`system.manifest.json` binds product components; it is subordinate to the operational
-manifest. `deploy/product-runtime-v1.json` defines entrypoints and external inputs.
+`system.manifest.json` binds product components; it is subordinate to STATUS.md for
+status and to the operational reference for component identity. `deploy/product-runtime-v1.json`
+defines entrypoints and external inputs.
 
 Validate with `python scripts/validate_ssot.py` and
 `python scripts/check_canonical_state.py`. Run `scripts/run_canonical_ci.py` with

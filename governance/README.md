@@ -1,5 +1,7 @@
 # Operational single source of truth
 
-[operational-manifest.json](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) is the only current operational cursor for all seven repositories. It selects Architecture v1 and the subordinate product manifest. Read [CHANNEL_CONTRACT.md](CHANNEL_CONTRACT.md) before interpreting status.
+Current status authority is [STATUS.md](../STATUS.md), which superseded every earlier SSOT document on 22 September 2026.
 
-Only one generated human resume mirror is current. Local documents, historical branches and model memories do not override it. Source publication never proves ABEX/Dell deployment.
+[operational-manifest.json](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) is retained as a machine-readable component, release and observation reference only. It no longer selects current status, and it cannot promote anything to current or verified. Read [CHANNEL_CONTRACT.md](CHANNEL_CONTRACT.md) before interpreting it.
+
+Only one generated human resume mirror is current, and it too is a machine-derived reference: it describes recorded observations, not current status. Local documents, historical branches and model memories do not override STATUS.md. Source publication never proves ABEX/Dell deployment.

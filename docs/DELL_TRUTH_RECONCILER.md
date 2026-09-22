@@ -1,15 +1,17 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> Portfolio authority: [one current JARVIS status source](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md). This document describes this repository only; it cannot override STATUS.md, the canonical architecture, or establish live deployment status.
 
 # Dell Truth Reconciler
 
-The Truth Reconciler is an independent, deterministic Dell observer. It does not replace PRIME, ABEX, GitHub, or `governance/operational-manifest.json`.
+> **SUPERSEDED for status purposes (22 September 2026).** The SSOT reconciler apparatus is retired. Do not install, schedule or run this reconciler; `STATUS.md` is the only current status authority. This document and the accompanying tools are retained as historical evidence, and `scripts/install_dell_truth_reconciler.ps1` now refuses to install or schedule anything unless an operator explicitly overrides the retirement.
+
+The Truth Reconciler is an independent, deterministic Dell observer. It does not replace PRIME, ABEX, GitHub, or `STATUS.md`.
 
 Its boundary is deliberately narrow:
 
 - ABEX acts and remains the sole PRIME authority.
 - Dell verifies local Git, remote refs, SSOT claims, preserved ABEX observations, and evidence hashes.
 - GitHub is the durable software/version ledger.
-- The operational manifest remains the sole SSOT.
+- `STATUS.md` is the sole current status authority; the operational manifest is a machine-readable component reference only.
 - Evidence supports or disputes claims; the reconciler never manufactures agreement.
 
 ## Run
