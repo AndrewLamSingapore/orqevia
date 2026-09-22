@@ -5,6 +5,7 @@ import tempfile
 import time
 import unittest
 import uuid
+import sqlite3
 from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
@@ -78,6 +79,45 @@ class ContractTests(unittest.TestCase):
         with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'https://private.invalid/fixture', 'PRIME_INTERFACE_RUNTIME_REVISION': 'not-a-revision', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'invented'}):
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
             assert value['runtime_version']=='UNKNOWN' and value['runtime_revision']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
+
+    def test_health_exposes_current_aggregate_evidence_without_legacy_zeros_or_contents(self):
+        root=Path(self.tmp.name)
+        with sqlite3.connect(root/'objectives.db') as db:
+            db.execute('CREATE TABLE objectives(id TEXT, objective TEXT)')
+            db.executemany('INSERT INTO objectives VALUES (?,?)', [('o1','private objective'),('o2','another private objective')])
+        with sqlite3.connect(root/'compute-queue.db') as db:
+            db.execute('CREATE TABLE compute_jobs(id TEXT,status TEXT,prompt TEXT)')
+            db.executemany('INSERT INTO compute_jobs VALUES (?,?,?)', [('j1','completed','secret prompt'),('j2','queued','private prompt')])
+        with sqlite3.connect(root/'pwa-sessions.db') as db:
+            db.execute('CREATE TABLE sessions(session_hash TEXT,expires REAL,revoked INTEGER)')
+            db.executemany('INSERT INTO sessions VALUES (?,?,?)', [('secret-token',time.time()+60,0),('old-token',time.time()-60,0),('revoked-token',time.time()+60,1)])
+        ArtifactFactory(root/'artifacts').create(kind='json',content='{"private":"artifact"}',
+            task_id='private-task',creator='a18',provenance='fixture')
+        (root/'action-records.jsonl').write_text('{"sequence":1,"private":"action"}\n',encoding='utf-8')
+        revision='1'*40
+        self.policies['dell']['capabilities'].append('health.read')
+        with patch.dict(os.environ,{'PRIME_INTERFACE_RUNTIME_REVISION':revision,
+                'PRIME_INTERFACE_CLIENTS_JSON':json.dumps(self.policies)}):
+            response=self.client.get('/interface/v1/health',headers=self.headers)
+        assert response.status_code==200
+        value=response.json()
+        assert value['canonical_agent_count']==21 and 'logical_agents' not in value and 'agent_count' not in value
+        evidence=value['evidence']
+        assert evidence['runtime_revision']==revision
+        assert evidence['read_only'] is True and evidence['physical_actuation'] is False
+        assert evidence['agents']['canonical_agent_count']==21
+        assert evidence['agents']['historical_responsibility_count']==29
+        assert evidence['current_stores']['objectives']['count']==2
+        assert evidence['current_stores']['compute_jobs']['count']==2
+        assert evidence['current_stores']['compute_jobs']['status_counts']=={'completed':1,'queued':1}
+        assert evidence['current_stores']['active_pwa_sessions']['count']==1
+        assert evidence['current_stores']['artifacts']['count']==1
+        assert evidence['current_stores']['action_records']['count']==1
+        assert evidence['legacy_metrics']['facts']['status']=='NOT_APPLICABLE'
+        assert evidence['legacy_metrics']['objectives']['status']=='REPLACED'
+        encoded=json.dumps(value)
+        for private in ('private objective','secret prompt','secret-token','private-task','"private": "artifact"','"private": "action"'):
+            assert private not in encoded
 
     def test_shared_idempotency_ownership_snapshot_cancel(self):
         assert self.submit().status_code == 202

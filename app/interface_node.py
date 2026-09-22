@@ -17,9 +17,89 @@ from . import objective_api,compute_queue_api
 from .action_records import action_ledger
 from .artifact_factory import ArtifactFactory
 from .artifact_delivery import create_task_artifact
-from .agent_registry import registered_agent_ids
+from .agent_registry import load_agent_registry, registered_agent_ids
 
 router=APIRouter(prefix='/api/interface/v1',tags=['interface-node'])
+
+
+def _observed_count(path: Path, query: str, parameters=()):
+    if not path.is_file():
+        return {'status':'UNAVAILABLE','count':None}
+    try:
+        with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as db:
+            return {'status':'OBSERVED','count':db.execute(query,parameters).fetchone()[0]}
+    except (OSError,sqlite3.Error,TypeError,ValueError):
+        return {'status':'UNAVAILABLE','count':None}
+
+
+def evidence_aggregates():
+    """Safe aggregate evidence from the active direct-execution stores only."""
+    root=Path(os.getenv('PRIME_DATA_DIR','/data')).resolve()
+    registry=load_agent_registry()
+    objectives=_observed_count(root/'objectives.db','SELECT COUNT(*) FROM objectives')
+    jobs=_observed_count(root/'compute-queue.db','SELECT COUNT(*) FROM compute_jobs')
+    sessions=_observed_count(root/'pwa-sessions.db',
+        'SELECT COUNT(*) FROM sessions WHERE revoked=0 AND expires>?',(time.time(),))
+
+    job_states={'status':'UNAVAILABLE','counts':{}}
+    try:
+        path=root/'compute-queue.db'
+        if path.is_file():
+            with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as db:
+                rows=db.execute('SELECT status,COUNT(*) FROM compute_jobs GROUP BY status').fetchall()
+            job_states={'status':'OBSERVED','counts':{str(state):count for state,count in rows}}
+    except (OSError,sqlite3.Error,TypeError,ValueError):
+        pass
+
+    artifacts={'status':'UNAVAILABLE','count':None}
+    try:
+        store=root/'artifacts'
+        if store.is_dir():
+            count=0
+            for folder in store.iterdir():
+                if not folder.is_dir() or not re.fullmatch(r'[0-9a-f]{32}',folder.name):continue
+                metadata=json.loads((folder/'metadata.json').read_text(encoding='utf-8'))
+                if metadata.get('artifact_id')==folder.name:count+=1
+            artifacts={'status':'OBSERVED','count':count}
+    except (OSError,ValueError,TypeError,json.JSONDecodeError):
+        artifacts={'status':'UNAVAILABLE','count':None}
+
+    actions={'status':'UNAVAILABLE','count':None}
+    try:
+        path=root/'action-records.jsonl'
+        if path.is_file():
+            count=0
+            with path.open(encoding='utf-8') as stream:
+                for line in stream:
+                    value=json.loads(line)
+                    if isinstance(value,dict) and isinstance(value.get('sequence'),int):count+=1
+            actions={'status':'OBSERVED','count':count}
+    except (OSError,ValueError,TypeError,json.JSONDecodeError):
+        actions={'status':'UNAVAILABLE','count':None}
+
+    revision=os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN').strip().lower()
+    if revision!='UNKNOWN' and not re.fullmatch(r'[0-9a-f]{40}',revision):revision='UNKNOWN'
+    return {
+        'schema_version':'jarvis.evidence-summary.v1','runtime_revision':revision,
+        'read_only':True,'physical_actuation':False,
+        'agents':{'status':'OBSERVED','canonical_agent_count':len(registry['agents']),
+            'historical_responsibility_count':sum(len(agent['responsibilities']) for agent in registry['agents']),
+            'historical_responsibility_scope':'Migrated responsibility identifiers; not runtime agent identities'},
+        'current_stores':{'objectives':objectives,
+            'compute_jobs':{**jobs,'status_counts':job_states['counts'] if job_states['status']=='OBSERVED' else None},
+            'active_pwa_sessions':sessions,'artifacts':artifacts,'action_records':actions},
+        'legacy_metrics':{
+            'agent_count':{'status':'RETIRED_AMBIGUOUS','replacement':'agents.canonical_agent_count'},
+            'objectives':{'status':'REPLACED','replacement':'current_stores.objectives.count'},
+            'artifacts':{'status':'REPLACED','replacement':'current_stores.artifacts.count'},
+            'agent_jobs':{'status':'REPLACED','replacement':'current_stores.compute_jobs.count'},
+            'facts':{'status':'NOT_APPLICABLE','reason':'retired app.main store is not the production authority'},
+            'memories':{'status':'NOT_APPLICABLE','reason':'retired app.main store is not the production authority'},
+            'projects':{'status':'NOT_APPLICABLE','reason':'no equivalent authoritative direct-execution metric'},
+            'orchestration_runs':{'status':'NOT_APPLICABLE','reason':'no equivalent authoritative direct-execution metric'}},
+        'privacy':{'aggregate_only':True,'record_contents_exposed':False,
+            'objective_contents_exposed':False,'artifact_contents_exposed':False,
+            'session_credentials_exposed':False}}
 
 
 def client_policy(client_id):
@@ -85,11 +165,11 @@ def health(x_client_id: str | None=Header(None),authorization: str | None=Header
     except Exception:
         cloud_ready=False
     ledger=action_ledger()
-    return {'state':'READY','logical_agents':len(registered_agent_ids(include_orchestrator=False)),
+    return {'state':'READY','canonical_agent_count':len(registered_agent_ids(include_orchestrator=False)),
             'execution_model':'DIRECT_OBSERVED','cloud_enabled':cloud_permitted and cloud_ready,
             'cloud_client_permitted':cloud_permitted,'cloud_configuration_ready':cloud_ready,
             'cloud_provider_health':'UNMEASURED','cloud_network_probe_performed':False,'logging':ledger.status(),
-            'client_identity_grants_tool_authority':False}
+            'client_identity_grants_tool_authority':False,'evidence':evidence_aggregates()}
 
 
 def db_connect():
