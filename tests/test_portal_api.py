@@ -5,8 +5,10 @@ import unittest
 _TMP = tempfile.TemporaryDirectory()
 os.environ["PRIME_DATA_DIR"] = _TMP.name
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from app.entry import app
+from app import portal_api
+app = FastAPI(); app.include_router(portal_api.router)
 
 
 PAYLOAD = {

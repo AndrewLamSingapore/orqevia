@@ -11,4 +11,5 @@ class EngineeringTests(AgentDispatchTests):
         assert self.client.post('/api/agents/engineering/wasm',json={**body,'role':'A12 Builder'}).status_code==401
         response=self.client.post('/api/agents/engineering/wasm',headers=self.headers,json={**body,
             'role':'A12 Builder','source':'(module (import "host" "filesystem" (func)))'})
-        assert response.status_code==403
+        assert response.status_code==422
+        assert response.json()['detail']['state']=='GUEST_FAILED'

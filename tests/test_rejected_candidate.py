@@ -1,7 +1,9 @@
 import os, tempfile, unittest
 _TMP=tempfile.TemporaryDirectory(); os.environ["PRIME_DATA_DIR"]=_TMP.name
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from app.entry import app
+from app import portal_api
+app = FastAPI(); app.include_router(portal_api.router)
 
 class CandidateStateTests(unittest.TestCase):
     def test_rejected_candidate_cannot_enter_runtime(self):
