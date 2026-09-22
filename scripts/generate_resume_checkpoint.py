@@ -20,7 +20,7 @@ def short(value: Any) -> str:
 def generate(value: dict[str, Any]) -> str:
     release=value['canonical_release']
     lines=['# JARVIS / PRIME — Current Resume Checkpoint','',
-        '> Generated mirror of the sole operational SSOT. Read current PRIME main before resuming.', '',
+        '> Generated machine mirror of recorded observations â€” not a status authority. Read STATUS.md and current PRIME main before resuming.', '',
         '- Canonical source: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json',
         f"- Selected architecture release: `{release['id']}`",
         f"- Operational status: **{value['status']}**",
@@ -40,7 +40,7 @@ def generate(value: dict[str, Any]) -> str:
     lines += ['', '## Unresolved evidence', '']
     lines += ['- '+reason for reason in value['verification']['stale_reasons']]
     lines += ['', '## Resume contract', '',
-        'Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. Only governance/operational-manifest.json selects current architecture and operational state. system.manifest.json is a subordinate product manifest. Repository SSOT.json files are references. This is the only current human resume mirror; earlier exports and installer bundles are superseded.', '']
+        'Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. STATUS.md is the only current status authority; this mirror and the operational manifest it derives from are machine-readable component and observation references. system.manifest.json is a subordinate product manifest. Repository SSOT.json files are references. This is the only current generated mirror; earlier exports and installer bundles are superseded.', '']
     return "\n".join(lines)
 
 

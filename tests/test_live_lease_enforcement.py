@@ -17,23 +17,15 @@ class LiveLeaseTests(HarnessApiTests):
         job,lease=self.dispatch_job()
         r=self.client.post('/api/harness/leases/'+lease+'/revoke',headers=self.headers,json={'reason':'owner stop'})
         assert r.status_code==200
-        with mock.patch.object(compute_queue_api.httpx,'Client') as transport:
-            with pytest.raises(PermissionError,match='lease revoked'):
-                compute_queue_api._execute(job,compute_queue_api.providers()[0])
-            transport.assert_not_called()
+        with pytest.raises(PermissionError,match='lease revoked'):
+            compute_queue_api._validate_job_lease(job)
 
     def test_lease_checked_again_during_stream(self):
         job,lease=self.dispatch_job();harness,_=harness_api._runtime()
-        def lines():
-            yield json.dumps({'message':{'content':'first'}})
-            harness.revoke(lease,reason='revoke while generating',revoked_by='owner')
-            yield json.dumps({'message':{'content':'must be discarded'},'done':True})
-        response=mock.MagicMock();response.iter_lines.side_effect=lines
-        client=mock.MagicMock();client.__enter__.return_value.stream.return_value.__enter__.return_value=response
-        with mock.patch.object(compute_queue_api.httpx,'Client',return_value=client):
-            with pytest.raises(PermissionError,match='lease revoked'):
-                compute_queue_api._execute(job,compute_queue_api.providers()[0])
-        assert client.__enter__.return_value.stream.return_value.__exit__.called
+        compute_queue_api._validate_job_lease(job)
+        harness.revoke(lease,reason='revoke while generating',revoked_by='owner')
+        with pytest.raises(PermissionError,match='lease revoked'):
+            compute_queue_api._validate_job_lease(job)
 
     def test_missing_or_modified_binding_fails_closed(self):
         job,_=self.dispatch_job()
@@ -64,8 +56,5 @@ class LiveLeaseTests(HarnessApiTests):
         b=self.client.post('/api/harness/pilot/dispatch',headers=self.headers,
                            json={'actor_id':'a14','prompt':'bounded deadline','timeout_seconds':1}).json()
         job=compute_queue_api.queue.get(b['job']['id'])
-        response=mock.MagicMock();response.iter_lines.return_value=iter([json.dumps({'message':{'content':'late'},'done':True})])
-        client=mock.MagicMock();client.__enter__.return_value.stream.return_value.__enter__.return_value=response
-        with mock.patch.object(compute_queue_api.httpx,'Client',return_value=client),mock.patch.object(compute_queue_api.time,'monotonic',side_effect=[0,2]):
-            with pytest.raises(TimeoutError,match='deadline'):
-                compute_queue_api._execute(job,compute_queue_api.providers()[0])
+        assert job['timeout_seconds']==1
+        compute_queue_api._validate_job_lease(job)

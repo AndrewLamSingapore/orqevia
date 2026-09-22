@@ -4,6 +4,8 @@
   "canonical_branch": "main",
   "canonical_path": "governance/operational-manifest.json",
   "canonical_url": "https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json",
+  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
+  "status_authority_note": "STATUS.md (private PRIME repository) is the only current status and evidence authority. This file is a machine-readable component pointer only and cannot establish status.",
   "channel_contract": "governance/CHANNEL_CONTRACT.md",
   "resolution": "Fetch main, pin the returned commit, then read manifest and referenced documents at that same commit.",
   "copy_policy": "REFERENCE_ONLY; no independently editable status, architecture or agent registry"

@@ -4,7 +4,8 @@ from tests.test_agent_dispatch_api import AgentDispatchTests
 class ObjectiveTests(AgentDispatchTests):
     def test_independent_failure_does_not_block_signed_siblings(self):
         response=self.client.post('/api/agents/objectives',headers=self.headers,json={
-            'objective':'Inspect the evidence','capabilities':['responsibility.a02','invented','responsibility.a18']})
+            'objective':'Classify as yes or no.','task_class':'classification',
+            'capabilities':['responsibility.a02','invented','responsibility.a18']})
         assert response.status_code==202,response.text
         body=response.json()
         assert len([step for step in body['steps'] if 'dispatch' in step])==2

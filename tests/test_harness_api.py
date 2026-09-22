@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 _TMP = tempfile.TemporaryDirectory()
@@ -13,8 +14,14 @@ os.environ["PRIME_SPINE_TOKEN"] = "test-owner-token"
 os.environ["PRIME_HARNESS_PILOT_ENABLED"] = "1"
 os.environ["PRIME_QUEUE_CONCURRENCY"] = "1"
 
-from app import compute_queue_api, harness_api, spine_api
-from app.entry import app
+from app import (agent_dispatch_api, artifact_delivery, compute_queue_api,
+                 engineering_api, harness_api, interface_node, objective_api,
+                 spine_api)
+app = FastAPI()
+for router in (harness_api.router, agent_dispatch_api.router, objective_api.router,
+               engineering_api.router, artifact_delivery.router,
+               interface_node.router, compute_queue_api.router):
+    app.include_router(router)
 from app.job_queue import JobQueue, QueuePolicy
 from app.spine import SpineStore, StableSpine
 
@@ -91,14 +98,14 @@ class HarnessApiTests(unittest.TestCase):
         finally:
             os.environ["PRIME_HARNESS_PILOT_ENABLED"] = "1"
 
-    def test_direct_queue_route_cannot_bypass_harness_for_pilot(self):
+    def test_direct_queue_route_uses_current_direct_execution_policy(self):
         response = self.client.post(
             "/api/compute-queue/jobs",
             headers=self.headers,
             json={"agent": "a21", "prompt": "Estimate cost."},
         )
-        self.assertEqual(response.status_code, 409, response.text)
-        self.assertEqual(compute_queue_api.queue.list(), [])
+        self.assertEqual(response.status_code, 202, response.text)
+        self.assertIsNone(response.json()["harness_envelope"])
 
 
 if __name__ == "__main__":

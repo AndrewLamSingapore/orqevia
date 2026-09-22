@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # The composed runtime initializes its SQLite paths at import time. CI runners
@@ -9,8 +10,8 @@ from fastapi.testclient import TestClient
 _IMPORT_DATA = tempfile.TemporaryDirectory()
 os.environ.setdefault("PRIME_DATA_DIR", _IMPORT_DATA.name)
 
-from app import spine_api
-from app.entry import app
+from app import control_surface, spine_api
+app = FastAPI(); app.include_router(control_surface.router)
 from app.spine import SpineStore, StableSpine
 
 

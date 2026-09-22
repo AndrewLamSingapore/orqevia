@@ -1,6 +1,6 @@
 # PRIME runtime identity and continuity
 
-Current authority is selected by `governance/operational-manifest.json` and `docs/ARCHITECTURE_V1.md`. This replaces the former Dell-hosted, local-only and universal approval-gate description.
+Current status authority is [STATUS.md](STATUS.md). Architecture is described by `docs/ARCHITECTURE_V1.md` and the machine-readable component references in `governance/operational-manifest.json`, which cannot establish current status. This replaces the former Dell-hosted, local-only and universal approval-gate description.
 
 - ABEX is the intended PRIME runtime host. Dell, PWA and voice are authenticated clients; a client cannot increase authority.
 - Persistent task, artifact and evidence stores survive application lifecycle changes. Never delete durable state to make an acceptance check pass.
