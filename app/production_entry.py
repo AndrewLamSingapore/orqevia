@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from . import direct_entry, objective_api, agent_dispatch_api, compute_queue_api, artifact_delivery
 from .operational_workflows import router as operational_workflows
 from .pwa_sessions import owner_router as pwa_owner_router
+from .production_survival import build_router as build_survival_router
 
 
 def local_request(request: Request):
@@ -138,4 +139,5 @@ def artifact(artifact_id: str, authorization=Depends(local_authorization)):
 # Original endpoints retain their original authentication and implementation.
 app.include_router(operational_workflows)
 app.include_router(pwa_owner_router)
+app.include_router(build_survival_router(local_authorization))
 app.mount('/', direct_entry.app)

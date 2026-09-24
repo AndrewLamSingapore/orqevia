@@ -1,5 +1,6 @@
 """Local shell security and actual deterministic API roundtrip; no providers run."""
 import hashlib
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
@@ -123,3 +124,51 @@ def test_same_candidate_lifespan(shell, monkeypatch):
     with TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('127.0.0.1', 40000)) as client:
         assert client.get('/health').status_code == 200
     assert calls == ['start', 'stop', 'close']
+
+
+def test_survival_queue_is_real_durable_and_fail_closed(shell):
+    _, client = shell
+    headers = {'Origin': 'http://127.0.0.1:8000'}
+    status = client.get('/control/api/survival/status')
+    assert status.status_code == 200
+    assert status.json()['queue_durable'] is True
+    assert status.json()['internet'] == 'UNKNOWN'
+    assert status.json()['cloud_model'] == 'UNKNOWN'
+    assert status.json()['mode'] == 'CAPABILITY_UNVERIFIED'
+    assert status.json()['remote_execution'].startswith('DISABLED_')
+
+    body = {
+        'objective_id': 'offline-fixture',
+        'operation_type': 'github.push',
+        'payload_ref': 'refs/heads/fixture',
+        'idempotency_key': 'fixture-idempotency-0001',
+        'authorization_ref': 'owner-lease-fixture',
+        'payload': {'repository': 'fixture/repository'},
+    }
+    queued = client.post('/control/api/survival/queue', json=body, headers=headers)
+    assert queued.status_code == 202, queued.text
+    assert queued.json()['operation_type'] == 'github.push'
+    assert queued.json()['state'] in {'PENDING', 'DEFERRED_OFFLINE'}
+    duplicate = client.post('/control/api/survival/queue', json=body, headers=headers)
+    assert duplicate.status_code == 202
+    assert duplicate.json()['id'] == queued.json()['id']
+
+    listed = client.get('/control/api/survival/queue').json()['operations']
+    assert [item['id'] for item in listed] == [queued.json()['id']]
+
+    unknown = {**body, 'operation_type': 'danger.unknown', 'idempotency_key': 'fixture-idempotency-0002'}
+    assert client.post('/control/api/survival/queue', json=unknown, headers=headers).status_code == 422
+    nested_secret = {**body, 'idempotency_key': 'fixture-idempotency-0003',
+                     'payload': {'items': [{'api_token': 'must-not-persist'}]}}
+    assert client.post('/control/api/survival/queue', json=nested_secret, headers=headers).status_code == 422
+    assert 'must-not-persist' not in Path(status.json()['queue_path']).read_bytes().decode('latin1')
+
+
+def test_survival_mutation_requires_local_same_origin(shell):
+    _, client = shell
+    body = {
+        'objective_id': 'offline-fixture', 'operation_type': 'github.push',
+        'payload_ref': 'refs/heads/fixture', 'idempotency_key': 'fixture-idempotency-0004',
+        'authorization_ref': 'owner-lease-fixture',
+    }
+    assert client.post('/control/api/survival/queue', json=body).status_code == 403
