@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import hashlib
+import time
 from dataclasses import asdict
 from pathlib import Path
 from threading import Lock
@@ -92,6 +94,36 @@ def _probe(url: str) -> bool | None:
         return False
 
 
+def _allowlist() -> set[str]:
+    return {item.strip() for item in os.getenv("PRIME_SURVIVAL_FETCH_ALLOWLIST", "").split(",") if item.strip()}
+
+
+def _fetch_receipt(operation) -> dict[str, Any]:
+    """Perform one bounded, allowlisted read and return a machine-verifiable receipt."""
+    if operation.operation_type != "web.research" or operation.payload_ref not in _allowlist():
+        return {"accepted": False, "detail": "network target is not explicitly allowlisted"}
+    digest = hashlib.sha256()
+    size = 0
+    try:
+        with httpx.stream("GET", operation.payload_ref, timeout=10.0, follow_redirects=False) as response:
+            if not 200 <= response.status_code < 300:
+                return {"accepted": False, "detail": f"remote status {response.status_code}"}
+            for chunk in response.iter_bytes():
+                size += len(chunk)
+                if size > 1_048_576:
+                    return {"accepted": False, "detail": "remote response exceeded 1 MiB limit"}
+                digest.update(chunk)
+            return {
+                "accepted": True,
+                "status_code": response.status_code,
+                "content_sha256": digest.hexdigest(),
+                "content_bytes": size,
+                "etag": response.headers.get("etag", "")[:200],
+            }
+    except httpx.HTTPError as exc:
+        raise RuntimeError(f"network fetch failed: {type(exc).__name__}") from None
+
+
 def capability_status() -> dict[str, Any]:
     survival = runtime()
     network = _probe(os.getenv("PRIME_SURVIVAL_NETWORK_PROBE_URL", "").strip())
@@ -131,7 +163,7 @@ def capability_status() -> dict[str, Any]:
         "queue_path": str(_db_path()),
         "queue_durable": _db_path().is_file(),
         "pending_count": len(survival.pending()),
-        "remote_execution": "DISABLED_UNTIL_AUTHORITY_AWARE_EXECUTOR_CONFIGURED",
+        "remote_execution": "ALLOWLISTED_READ_ONLY" if _allowlist() else "DISABLED_UNTIL_AUTHORITY_AWARE_EXECUTOR_CONFIGURED",
     })
     return status
 
@@ -161,6 +193,34 @@ def build_router(authorize) -> APIRouter:
         except OperationRejected as exc:
             raise HTTPException(422, str(exc)) from None
         return _operation(item)
+
+    @router.post("/reconcile")
+    def reconcile():
+        survival = runtime()
+        network = _probe(os.getenv("PRIME_SURVIVAL_NETWORK_PROBE_URL", "").strip())
+        cloud = _probe(os.getenv("PRIME_SURVIVAL_CLOUD_PROBE_URL", "").strip())
+        if network is None or cloud is None:
+            raise HTTPException(503, "capability probes are not fully configured")
+        survival.observe(network=network, provider=cloud)
+        expected_authority = os.getenv(
+            "PRIME_SURVIVAL_AUTHORITY_REF", "prime-epoch-20260919:owner"
+        ).strip()
+        results = survival.reconcile(
+            executors={"web.research": _fetch_receipt},
+            authority_valid=lambda operation: operation.authorization_ref == expected_authority,
+            still_relevant=lambda operation: operation.expires_at is None or operation.expires_at > time.time(),
+            dependency_available=lambda operation: network is True and operation.dependency is DependencyClass.NETWORK_REQUIRED,
+        )
+        if survival.state.value == "RECONNECTING" and not survival.pending():
+            survival.confirm_online()
+        return {
+            "state": survival.state.value,
+            "results": [
+                {**asdict(item), "state": item.state.value}
+                for item in results
+            ],
+            "pending_count": len(survival.pending()),
+        }
 
     @router.post("/memory", status_code=201)
     def put_memory(body: MemoryWrite):

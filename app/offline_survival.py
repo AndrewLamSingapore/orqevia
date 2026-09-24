@@ -428,6 +428,7 @@ class OfflineSurvival:
         authority_valid: Callable[[DeferredOperation], bool],
         still_relevant: Callable[[DeferredOperation], bool] | None = None,
         remote_applied: Callable[[DeferredOperation], bool] | None = None,
+        dependency_available: Callable[[DeferredOperation], bool] | None = None,
         now: float | None = None,
         limit: int = 25,
     ) -> list[ReconcileResult]:
@@ -442,7 +443,12 @@ class OfflineSurvival:
         silently completed.
         """
         moment = time.time() if now is None else float(now)
-        if self._state is not CapabilityState.ONLINE:
+        if self._state is CapabilityState.OFFLINE:
+            return []
+        # DEGRADED means some dependencies may be usable (for example Internet
+        # works while a model provider does not). Never guess: a caller must
+        # explicitly revalidate each operation's dependency in that state.
+        if self._state is not CapabilityState.ONLINE and dependency_available is None:
             return []
         self.expire(now=moment)
         due = [
@@ -462,6 +468,15 @@ class OfflineSurvival:
                     reason="authority changed while offline; not executed",
                 )
                 results.append(ReconcileResult(operation.id, QueueState.SUPERSEDED, False, "authority_invalid"))
+                continue
+            if dependency_available is not None and not dependency_available(operation):
+                self._update(
+                    operation.id,
+                    state=QueueState.DEFERRED_OFFLINE.value,
+                    reason="required dependency is not currently verified",
+                    next_retry_at=moment,
+                )
+                results.append(ReconcileResult(operation.id, QueueState.DEFERRED_OFFLINE, False, "dependency_unavailable"))
                 continue
             executor = executors.get(operation.operation_type)
             if executor is None:

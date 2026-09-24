@@ -193,3 +193,47 @@ def test_governed_memory_is_on_production_path_and_durable(shell):
     found = client.get('/control/api/survival/memory', params={'q': 'production memory fixture'})
     assert [item['memory_key'] for item in found.json()['records']] == ['acceptance.production-memory']
     assert client.post('/control/api/survival/memory', json=body).status_code == 403
+
+
+def test_reconcile_requires_configured_probes_and_origin(shell):
+    _, client = shell
+    assert client.post('/control/api/survival/reconcile').status_code == 403
+    assert client.post('/control/api/survival/reconcile',
+                       headers={'Origin': 'http://127.0.0.1:8000'}).status_code == 503
+
+
+def test_allowlisted_network_reconciliation_executes_once(shell, monkeypatch):
+    entry, client = shell
+    from app import production_survival as survival
+    target = 'https://fixture.invalid/immutable-evidence'
+    monkeypatch.setenv('PRIME_SURVIVAL_NETWORK_PROBE_URL', target)
+    monkeypatch.setenv('PRIME_SURVIVAL_CLOUD_PROBE_URL', target)
+    monkeypatch.setenv('PRIME_SURVIVAL_FETCH_ALLOWLIST', target)
+    monkeypatch.setenv('PRIME_SURVIVAL_AUTHORITY_REF', 'prime-epoch-20260919:owner')
+    monkeypatch.setattr(survival, '_probe', lambda url: True)
+    calls = []
+
+    class Response:
+        status_code = 200
+        headers = {'etag': 'fixture-etag'}
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def iter_bytes(self):
+            calls.append(target)
+            yield b'immutable remote evidence'
+
+    monkeypatch.setattr(survival.httpx, 'stream', lambda *args, **kwargs: Response())
+    headers = {'Origin': 'http://127.0.0.1:8000'}
+    queued = client.post('/control/api/survival/queue', headers=headers, json={
+        'objective_id': 'network-acceptance', 'operation_type': 'web.research',
+        'payload_ref': target, 'idempotency_key': 'network-acceptance-idempotency',
+        'authorization_ref': 'prime-epoch-20260919:owner',
+    })
+    assert queued.status_code == 202, queued.text
+    first = client.post('/control/api/survival/reconcile', headers=headers)
+    assert first.status_code == 200
+    assert first.json()['results'][0]['state'] == 'RECONCILED'
+    assert first.json()['results'][0]['receipt']['content_bytes'] == 25
+    second = client.post('/control/api/survival/reconcile', headers=headers)
+    assert second.json()['results'] == []
+    assert calls == [target]
