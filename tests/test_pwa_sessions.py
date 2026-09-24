@@ -117,7 +117,17 @@ def test_owner_and_member_roles_are_server_issued_and_persisted(setup):
         assert member_session['role']=='MEMBER'
         assert owner_client.get('/pwa/api/session').json()['role']=='OWNER'
         assert member_client.get('/pwa/api/session').json()['role']=='MEMBER'
-        assert pwa.client_policy(owner_session['clientId'])['capabilities']==pwa.client_policy(member_session['clientId'])['capabilities']
+        owner_policy=pwa.client_policy(owner_session['clientId']);member_policy=pwa.client_policy(member_session['clientId'])
+        assert owner_policy['role']=='OWNER' and member_policy['role']=='MEMBER'
+        assert 'authority.owner.verify' in owner_policy['capabilities']
+        assert 'authority.owner.verify' not in member_policy['capabilities']
+        assert owner_client.post('/pwa/api/owner-authority-check',headers=HEADERS).json()=={
+            'authorized':True,'role':'OWNER','capability':'authority.owner.verify'}
+        denied=member_client.post('/pwa/api/owner-authority-check',headers=HEADERS)
+        assert denied.status_code==403 and denied.json()=={'detail':'Owner authority required'}
+        assert member_client.post('/pwa/api/owner-authority-check',headers={**HEADERS,'X-Role':'OWNER'}).status_code==403
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,owner_session['clientId']))
+        assert owner_client.post('/pwa/api/owner-authority-check',headers=HEADERS).status_code==401
 
 def test_missing_policy_config_stays_local_only_and_bounded(setup,monkeypatch):
     root,pwa,app,node=setup

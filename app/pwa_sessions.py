@@ -18,6 +18,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 COOKIE='__Host-JARVIS-PWA'
 SCOPES=['identity.read','health.read','objective.submit','task.read','task.cancel','artifact.read']
+OWNER_SCOPES=[*SCOPES,'authority.owner.verify']
 SESSION_SECONDS=8*3600
 router=APIRouter(prefix='/pwa/api',tags=['pwa-session'])
 owner_router=APIRouter(prefix='/pwa/owner',tags=['local-pairing'])
@@ -46,14 +47,16 @@ def internal_token(client):
 
 def client_policy(client):
     if not re.fullmatch(r'pwa:[a-f0-9]{32}',client or ''):return {}
-    with database() as db:row=db.execute('SELECT expires,revoked,owner_account_id FROM sessions WHERE client_id=?',(client,)).fetchone()
+    with database() as db:row=db.execute('SELECT expires,revoked,owner_account_id,role FROM sessions WHERE client_id=?',(client,)).fetchone()
     if not row or row[1] or row[0]<=time.time():return {}
     # Browser identity grants only the existing bounded server-owned client policy.
     classification=os.getenv('PRIME_PWA_DATA_CLASSIFICATION','LOCAL_ONLY')
     try:ceiling=float(os.getenv('PRIME_PWA_MAX_COST_USD','0'))
     except ValueError:raise HTTPException(503,'PWA policy unavailable') from None
     if classification not in {'LOCAL_ONLY','CLOUD_PERMITTED'} or not math.isfinite(ceiling) or not 0<=ceiling<=1:raise HTTPException(503,'PWA policy unavailable')
-    return {'token_sha256':digest(internal_token(client)),'expires_at':row[0],'capabilities':SCOPES,
+    if row[3] not in {'OWNER','MEMBER'}:raise HTTPException(503,'PWA role unavailable')
+    capabilities=OWNER_SCOPES if row[3]=='OWNER' else SCOPES
+    return {'token_sha256':digest(internal_token(client)),'expires_at':row[0],'capabilities':capabilities,'role':row[3],
             'data_classification':classification,'max_cost_usd':ceiling,
             **({'owner_account_id':row[2]} if row[2] else {})}
 
@@ -147,6 +150,13 @@ def logout(request:Request):
     with database() as db:db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
     response=JSONResponse({'authenticated':False});response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
     return response
+
+@router.post('/owner-authority-check')
+def owner_authority_check(request:Request):
+    """Side-effect-free proof that current authority is enforced by PRIME."""
+    current=require_session(request)
+    if current['role']!='OWNER':raise HTTPException(403,'Owner authority required')
+    return {'authorized':True,'role':'OWNER','capability':'authority.owner.verify'}
 
 @router.post('/uploads')
 async def upload(request:Request):

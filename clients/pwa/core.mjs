@@ -125,6 +125,7 @@ export class InterfaceAPI {
   session() { return this.request('/pwa/api/session'); }
   enroll(code) { return this.request('/pwa/api/enroll',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})}); }
   logout() { return this.request('/pwa/api/logout',{method:'POST'}); }
+  ownerAuthorityCheck() { return this.request('/pwa/api/owner-authority-check',{method:'POST'}); }
   submit(objective,key,uploads,signal) { return this.request('/interface/v1/objectives',{method:'POST',headers:{'content-type':'application/json','idempotency-key':key},body:JSON.stringify({objective,uploaded_artifact_ids:uploads}),retry:true,signal}); }
   continueTask(action,objective,key,signal) {
     const payload=submissionPayload(objective,[],action);
