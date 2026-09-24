@@ -133,6 +133,9 @@ class TestReconciliation:
     def test_degraded_reconciles_only_explicitly_revalidated_dependency(self, tmp_path):
         survival = build(tmp_path)
         survival.observe(network=True, provider=False)
+        actions = survival.offline_actions(local_model_ready=True, memory_ready=True, local_tools_ready=True)
+        assert actions["actions"]["web.research"] == "AVAILABLE"
+        assert actions["actions"]["model.frontier"] == "DEGRADED"
         operation = queue_one(survival, operation_type="web.research")
         calls = []
         results = survival.reconcile(

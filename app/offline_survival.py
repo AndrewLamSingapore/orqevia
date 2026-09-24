@@ -295,7 +295,14 @@ class OfflineSurvival:
         else:
             disposition = {}
             for name, dependency in self.classification.items():
-                disposition[name] = "AVAILABLE" if dependency is DependencyClass.LOCAL_AVAILABLE else "DEGRADED"
+                if dependency is DependencyClass.LOCAL_AVAILABLE:
+                    disposition[name] = "AVAILABLE"
+                elif dependency is DependencyClass.NETWORK_REQUIRED and self._network_available is True:
+                    disposition[name] = "AVAILABLE"
+                elif dependency is DependencyClass.PROVIDER_REQUIRED and self._provider_available is True:
+                    disposition[name] = "AVAILABLE"
+                else:
+                    disposition[name] = "DEGRADED"
         return {
             "mode": f"OFFLINE — LOCAL INTELLIGENCE" if self._state is CapabilityState.OFFLINE else self._state.value,
             "internet": "AVAILABLE" if self._network_available is True else "UNAVAILABLE" if self._network_available is False else "UNKNOWN",
