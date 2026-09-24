@@ -13,12 +13,15 @@ from dataclasses import asdict
 from pathlib import Path
 from threading import Lock
 from typing import Any
+from typing import Literal
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from .offline_survival import OfflineSurvival, OperationRejected
+from .offline_survival import DependencyClass
+from .memory import MemoryStore
 
 
 class DeferredRequest(BaseModel):
@@ -33,9 +36,20 @@ class DeferredRequest(BaseModel):
     expires_at: float | None = None
 
 
+class MemoryWrite(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    memory_class: Literal["semantic", "procedural", "protected"]
+    key: str = Field(min_length=1, max_length=200)
+    value: dict[str, Any]
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+
+
 _lock = Lock()
 _runtime: OfflineSurvival | None = None
 _runtime_path: Path | None = None
+_memory: MemoryStore | None = None
+_memory_path: Path | None = None
 
 
 def _db_path() -> Path:
@@ -52,6 +66,17 @@ def runtime() -> OfflineSurvival:
             _runtime = OfflineSurvival(path)
             _runtime_path = path
         return _runtime
+
+
+def memory() -> MemoryStore:
+    """Return governed memory on the same durable external data volume."""
+    global _memory, _memory_path
+    path = Path(os.getenv("PRIME_MEMORY_DB", str(_db_path().parent / "jarvis-memory.db")))
+    with _lock:
+        if _memory is None or _memory_path != path:
+            _memory = MemoryStore(str(path))
+            _memory_path = path
+        return _memory
 
 
 def _probe(url: str) -> bool | None:
@@ -99,6 +124,9 @@ def capability_status() -> dict[str, Any]:
         status["cloud_model"] = "UNKNOWN"
     if network is None or cloud is None:
         status["mode"] = "CAPABILITY_UNVERIFIED"
+        for operation, dependency in survival.classification.items():
+            if dependency is not DependencyClass.LOCAL_AVAILABLE:
+                status["actions"][operation] = "UNVERIFIED"
     status.update({
         "queue_path": str(_db_path()),
         "queue_durable": _db_path().is_file(),
@@ -133,5 +161,29 @@ def build_router(authorize) -> APIRouter:
         except OperationRejected as exc:
             raise HTTPException(422, str(exc)) from None
         return _operation(item)
+
+    @router.post("/memory", status_code=201)
+    def put_memory(body: MemoryWrite):
+        try:
+            return memory().put_governed(
+                memory_class=body.memory_class,
+                key=body.key,
+                value=body.value,
+                authority="owner",
+                confidence=body.confidence,
+            )
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+
+    @router.get("/memory/{memory_class}/{key}")
+    def get_memory(memory_class: str, key: str):
+        found = memory().get(memory_class, key)
+        if found is None:
+            raise HTTPException(404, "memory record not found")
+        return found
+
+    @router.get("/memory")
+    def search_memory(q: str = Query(min_length=1, max_length=300)):
+        return {"records": memory().search(q)}
 
     return router

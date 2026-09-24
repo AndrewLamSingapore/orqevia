@@ -135,6 +135,8 @@ def test_survival_queue_is_real_durable_and_fail_closed(shell):
     assert status.json()['internet'] == 'UNKNOWN'
     assert status.json()['cloud_model'] == 'UNKNOWN'
     assert status.json()['mode'] == 'CAPABILITY_UNVERIFIED'
+    assert status.json()['actions']['github.push'] == 'UNVERIFIED'
+    assert status.json()['actions']['memory.index'] == 'AVAILABLE'
     assert status.json()['remote_execution'].startswith('DISABLED_')
 
     body = {
@@ -172,3 +174,22 @@ def test_survival_mutation_requires_local_same_origin(shell):
         'authorization_ref': 'owner-lease-fixture',
     }
     assert client.post('/control/api/survival/queue', json=body).status_code == 403
+
+
+def test_governed_memory_is_on_production_path_and_durable(shell):
+    _, client = shell
+    headers = {'Origin': 'http://127.0.0.1:8000'}
+    body = {
+        'memory_class': 'semantic',
+        'key': 'acceptance.production-memory',
+        'value': {'statement': 'Production memory fixture'},
+        'confidence': 0.99,
+    }
+    written = client.post('/control/api/survival/memory', json=body, headers=headers)
+    assert written.status_code == 201, written.text
+    read = client.get('/control/api/survival/memory/semantic/acceptance.production-memory')
+    assert read.status_code == 200
+    assert read.json()['value']['record'] == body['value']
+    found = client.get('/control/api/survival/memory', params={'q': 'production memory fixture'})
+    assert [item['memory_key'] for item in found.json()['records']] == ['acceptance.production-memory']
+    assert client.post('/control/api/survival/memory', json=body).status_code == 403
