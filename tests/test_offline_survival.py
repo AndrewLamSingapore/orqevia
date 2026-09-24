@@ -1,4 +1,6 @@
 """Offline survival acceptance: capability state, classification, store-and-forward, reconciliation."""
+from concurrent.futures import ThreadPoolExecutor
+import threading
 import time
 
 import pytest
@@ -45,7 +47,7 @@ class TestCapabilityState:
     def test_offline_never_reports_whole_system_failure(self, tmp_path):
         survival = build(tmp_path)
         survival.observe(network=False, provider=False)
-        view = survival.offline_actions()
+        view = survival.offline_actions(local_model_ready=True, memory_ready=True, local_tools_ready=True)
         assert view["mode"].startswith("OFFLINE")
         assert view["local_model"] == "READY"
         assert view["memory"] == "READY"
@@ -59,6 +61,16 @@ class TestCapabilityState:
         assert survival.classify("github.push") is DependencyClass.DEFERABLE
         assert survival.classify("web.research") is DependencyClass.NETWORK_REQUIRED
         assert survival.classify("model.frontier") is DependencyClass.PROVIDER_REQUIRED
+        assert survival.classify("unknown.side.effect") is DependencyClass.NON_DEFERABLE
+
+    def test_degraded_status_does_not_claim_cloud_or_local_readiness(self, tmp_path):
+        survival = build(tmp_path)
+        survival.observe(network=True, provider=False)
+        view = survival.offline_actions()
+        assert view["internet"] == "AVAILABLE"
+        assert view["cloud_model"] == "UNAVAILABLE"
+        assert view["local_model"] == "UNVERIFIED"
+        assert view["memory"] == "UNVERIFIED"
 
 
 class TestStoreAndForward:
@@ -91,6 +103,23 @@ class TestStoreAndForward:
                 authorization_ref="owner:lam",
                 payload={"portal_result_token": "not-stored"},
             )
+
+    def test_credentials_nested_inside_lists_are_refused(self, tmp_path):
+        survival = build(tmp_path)
+        with pytest.raises(OperationRejected):
+            survival.enqueue(
+                objective_id="obj-1",
+                operation_type="portal.publish",
+                payload_ref="artifact://report/1",
+                idempotency_key="op-nested-secret",
+                authorization_ref="owner:lam",
+                payload={"items": [{"api_key": "not-stored"}]},
+            )
+
+    def test_unknown_operation_is_rejected_before_queueing(self, tmp_path):
+        survival = build(tmp_path)
+        with pytest.raises(OperationRejected):
+            queue_one(survival, operation_type="mystery.side.effect")
 
     def test_duplicate_enqueue_is_idempotent(self, tmp_path):
         survival = build(tmp_path)
@@ -144,6 +173,31 @@ class TestReconciliation:
         # a second sweep must not re-execute a reconciled operation
         survival.reconcile(executors={"portal.publish": executor}, authority_valid=lambda op: True)
         assert calls == [operation.id]
+
+    def test_concurrent_reconcilers_claim_an_operation_once(self, tmp_path):
+        first = build(tmp_path)
+        second = OfflineSurvival(tmp_path / "offline-queue.db")
+        operation = queue_one(first)
+        start = threading.Barrier(2)
+        calls = []
+
+        def executor(op):
+            calls.append(op.id)
+            time.sleep(0.1)
+            return {"accepted": True, "remote_id": "portal-once"}
+
+        def reconcile(instance):
+            start.wait()
+            return instance.reconcile(
+                executors={"portal.publish": executor},
+                authority_valid=lambda op: True,
+            )
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(reconcile, (first, second)))
+
+        assert calls == [operation.id]
+        assert first.get(operation.id).state is QueueState.RECONCILED
 
     def test_remote_already_applied_is_not_duplicated(self, tmp_path):
         survival = build(tmp_path)
@@ -219,14 +273,14 @@ class TestReconciliation:
         assert results[0].state is QueueState.FAILED
         assert "403 no mapping" in survival.get(operation.id).last_error
 
-    def test_unknown_operation_type_fails_loudly_and_is_not_retried(self, tmp_path):
+    def test_receipt_credentials_are_redacted_after_remote_acceptance(self, tmp_path):
         survival = build(tmp_path)
-        operation = queue_one(survival, operation_type="mystery.side.effect")
-        results = survival.reconcile(executors={}, authority_valid=lambda op: True)
-        assert results[0].state is QueueState.FAILED
-        stored = survival.get(operation.id)
-        assert stored.next_retry_at == float("inf")
-        assert "NON_DEFERABLE" in stored.last_error
+        operation = queue_one(survival)
+        survival.reconcile(
+            executors={"portal.publish": lambda op: {"accepted": True, "result": {"access_token": "never-store"}}},
+            authority_valid=lambda op: True,
+        )
+        assert survival.get(operation.id).receipt["result"]["access_token"] == "<redacted>"
 
     def test_expired_operation_is_never_executed(self, tmp_path):
         survival = build(tmp_path)

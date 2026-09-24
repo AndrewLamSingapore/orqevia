@@ -126,13 +126,33 @@ def _digest(payload: dict[str, Any]) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
-def _assert_no_secrets(payload: dict[str, Any]) -> None:
-    for key, value in payload.items():
-        lowered = str(key).lower()
-        if any(marker in lowered for marker in SECRET_KEY_MARKERS):
-            raise OperationRejected(f"refusing to queue payload field {key!r}: credentials must not be stored in the queue")
-        if isinstance(value, dict):
-            _assert_no_secrets(value)
+def _assert_no_secrets(value: Any) -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            lowered = str(key).lower()
+            if any(marker in lowered for marker in SECRET_KEY_MARKERS):
+                raise OperationRejected(
+                    f"refusing to queue payload field {key!r}: credentials must not be stored in the queue"
+                )
+            _assert_no_secrets(child)
+    elif isinstance(value, (list, tuple, set)):
+        for child in value:
+            _assert_no_secrets(child)
+
+
+def _redact_secrets(value: Any) -> Any:
+    """Return a receipt-safe copy without retaining credential-shaped fields."""
+    if isinstance(value, dict):
+        return {
+            key: "<redacted>" if any(marker in str(key).lower() for marker in SECRET_KEY_MARKERS)
+            else _redact_secrets(child)
+            for key, child in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_secrets(child) for child in value]
+    if isinstance(value, tuple):
+        return tuple(_redact_secrets(child) for child in value)
+    return value
 
 
 class OfflineSurvival:
@@ -158,6 +178,8 @@ class OfflineSurvival:
         self.backoff_base_seconds = float(backoff_base_seconds)
         self.backoff_max_seconds = float(backoff_max_seconds)
         self._state = CapabilityState.ONLINE
+        self._network_available: bool | None = None
+        self._provider_available: bool | None = None
         self._init()
 
     # ------------------------------------------------------------------ storage
@@ -228,6 +250,8 @@ class OfflineSurvival:
 
         Local capability is never in question: a host with no internet is OFFLINE, not broken.
         """
+        self._network_available = network
+        self._provider_available = provider
         if network and provider:
             if self._state in (CapabilityState.OFFLINE, CapabilityState.DEGRADED, CapabilityState.RECONNECTING):
                 self._state = CapabilityState.RECONNECTING
@@ -247,9 +271,15 @@ class OfflineSurvival:
         return self._state
 
     def classify(self, operation_type: str) -> DependencyClass:
-        return self.classification.get(operation_type, DependencyClass.DEFERABLE)
+        return self.classification.get(operation_type, DependencyClass.NON_DEFERABLE)
 
-    def offline_actions(self) -> dict[str, str]:
+    def offline_actions(
+        self,
+        *,
+        local_model_ready: bool = False,
+        memory_ready: bool = False,
+        local_tools_ready: bool = False,
+    ) -> dict[str, str]:
         """What the operator-facing surface should say while this state is active."""
         if self._state is CapabilityState.ONLINE:
             disposition = {name: "AVAILABLE" for name in self.classification}
@@ -268,10 +298,11 @@ class OfflineSurvival:
                 disposition[name] = "AVAILABLE" if dependency is DependencyClass.LOCAL_AVAILABLE else "DEGRADED"
         return {
             "mode": f"OFFLINE — LOCAL INTELLIGENCE" if self._state is CapabilityState.OFFLINE else self._state.value,
-            "cloud_model": "UNAVAILABLE" if self._state is CapabilityState.OFFLINE else "AVAILABLE",
-            "local_model": "READY",
-            "memory": "READY",
-            "local_tools": "READY",
+            "internet": "AVAILABLE" if self._network_available is True else "UNAVAILABLE" if self._network_available is False else "UNKNOWN",
+            "cloud_model": "AVAILABLE" if self._provider_available is True else "UNAVAILABLE" if self._provider_available is False else "UNKNOWN",
+            "local_model": "READY" if local_model_ready else "UNVERIFIED",
+            "memory": "READY" if memory_ready else "UNVERIFIED",
+            "local_tools": "READY" if local_tools_ready else "UNVERIFIED",
             "portal_sync": f"{len(self.pending())} ITEMS QUEUED",
             "actions": disposition,
         }
@@ -297,6 +328,8 @@ class OfflineSurvival:
         resolved_dependency = dependency or self.classify(operation_type)
         if resolved_dependency is DependencyClass.LOCAL_AVAILABLE:
             raise OperationRejected(f"{operation_type} is local; it must not be deferred")
+        if resolved_dependency is DependencyClass.NON_DEFERABLE:
+            raise OperationRejected(f"{operation_type} is unknown or non-deferable; refusing to queue it")
         with self.connect() as db:
             existing = db.execute(
                 "SELECT * FROM deferred_operations WHERE idempotency_key=?", (idempotency_key,)
@@ -353,6 +386,27 @@ class OfflineSurvival:
         with self.connect() as db:
             db.execute(f"UPDATE deferred_operations SET {columns} WHERE id=?", (*fields.values(), operation_id))
 
+    def _claim(self, operation: DeferredOperation, *, now: float) -> bool:
+        """Atomically grant one reconciler a bounded lease for an operation."""
+        lease_until = now + 300.0
+        with self.connect() as db:
+            cursor = db.execute(
+                "UPDATE deferred_operations SET state=?, next_retry_at=?, reason=? "
+                "WHERE id=? AND state IN (?,?,?,?) AND next_retry_at<=?",
+                (
+                    QueueState.RECONCILING.value,
+                    lease_until,
+                    "claimed for reconciliation",
+                    operation.id,
+                    QueueState.PENDING.value,
+                    QueueState.DEFERRED_OFFLINE.value,
+                    QueueState.FAILED.value,
+                    QueueState.RECONCILING.value,
+                    now,
+                ),
+            )
+            return cursor.rowcount == 1
+
     def expire(self, *, now: float | None = None) -> list[str]:
         """Mark expired operations explicitly; they are never executed afterwards."""
         moment = time.time() if now is None else float(now)
@@ -394,11 +448,13 @@ class OfflineSurvival:
         due = [
             operation
             for operation in self.pending()
-            if operation.state in (QueueState.PENDING, QueueState.DEFERRED_OFFLINE, QueueState.FAILED)
+            if operation.state in (QueueState.PENDING, QueueState.DEFERRED_OFFLINE, QueueState.FAILED, QueueState.RECONCILING)
             and operation.next_retry_at <= moment
         ][:limit]
         results: list[ReconcileResult] = []
         for operation in due:
+            if not self._claim(operation, now=moment):
+                continue
             if not authority_valid(operation):
                 self._update(
                     operation.id,
@@ -436,7 +492,6 @@ class OfflineSurvival:
                 )
                 results.append(ReconcileResult(operation.id, QueueState.RECONCILED, False, "already_applied", receipt))
                 continue
-            self._update(operation.id, state=QueueState.RECONCILING.value, reason="")
             try:
                 response = executor(operation) or {}
             except Exception as exc:  # noqa: BLE001 - retained, never swallowed silently
@@ -447,7 +502,7 @@ class OfflineSurvival:
                 self._fail(operation, moment, f"remote did not accept: {response.get('detail', 'no detail')}")
                 results.append(ReconcileResult(operation.id, QueueState.FAILED, False, "not_accepted"))
                 continue
-            receipt = {key: value for key, value in response.items() if key != "accepted"}
+            receipt = _redact_secrets({key: value for key, value in response.items() if key != "accepted"})
             self._update(
                 operation.id,
                 state=QueueState.RECONCILED.value,
