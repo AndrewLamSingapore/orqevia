@@ -52,12 +52,10 @@ export function resultText(task) {
   if (direct) return direct.slice(0,40000);
   return currentSteps(task).map(step => {
     const text = textOf(step.job?.result);
-    return text ? `${safeID(step.job?.agent) ? step.job.agent : 'PRIME'}\n${text}` : '';
+    return text || '';
   }).filter(Boolean).join('\n\n').slice(0,40000);
 }
-// Read-aloud text deliberately excludes the internal agent label. The label is
-// presentation metadata for the screen; speaking "a13" or "a02" at a person is a
-// defect, not information.
+// Read-aloud and visible result text both exclude internal agent identities.
 export function spokenText(task) {
   if (!task) return '';
   const textOf = value => typeof value === 'string' ? value : value && [value.text,value.summary,value.message].find(x => typeof x === 'string');

@@ -32,9 +32,8 @@ async function renderTask(task){
   show('previous-result',Boolean(presentation.previous));
   const agents=$('agent-list');agents.replaceChildren();
   for(const step of currentSteps(task)){
-    const agent=step.job?.agent||step.dispatch?.agent_path?.at(-1)||step.capability||'PRIME';
     const state=step.job?.status||step.state||step.dispatch?.state||'Working';
-    agents.append(element('span',`${String(agent).slice(0,60)} · ${String(state).slice(0,60)}`,'agent'));
+    agents.append(element('span',`JARVIS · ${String(state).slice(0,60)}`,'agent'));
   }
   if(terminal(task.state)&&!currentResult)message(task.state==='COMPLETED'?'This turn completed without a text result. Review its files below.':'This turn did not finish successfully. Review its available files.',task.state!=='COMPLETED');
   await store.remember(session.clientId,id,task.state);await renderHistory();controls();
