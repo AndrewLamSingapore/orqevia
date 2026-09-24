@@ -16,6 +16,9 @@ export function errorMessage(error) {
   if (error?.code === 'timeout' || error instanceof TypeError) return 'Connection interrupted. Retry the same objective or refresh your task when online.';
   return 'PRIME could not complete this request. Try again when the connection is available.';
 }
+export function sessionActive(session, nowSeconds = Date.now() / 1000) {
+  return Boolean(session?.authenticated && Number.isFinite(session.expiresAt) && session.expiresAt > nowSeconds);
+}
 export async function sha256(bytes) { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2,'0')).join(''); }
 export function nextSubmission(prior, digest, key) {
   if (prior?.digest === digest) return prior;
