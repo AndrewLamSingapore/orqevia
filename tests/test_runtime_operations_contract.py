@@ -66,6 +66,12 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         example = (ROOT / ".env.example").read_text(encoding="utf-8")
         self.assertIn("PRIME_REGISTRY_V1_ENABLED=1", example)
 
+    def test_survival_probes_and_executor_are_explicitly_wired(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        for name in ("PRIME_SURVIVAL_NETWORK_PROBE_URL", "PRIME_SURVIVAL_CLOUD_PROBE_URL",
+                     "PRIME_SURVIVAL_FETCH_ALLOWLIST", "PRIME_SURVIVAL_AUTHORITY_REF"):
+            self.assertIn(name + ": ${" + name, compose)
+
     def test_image_starts_canonical_owner_entrypoint_without_proxy_trust(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn('"app.production_entry:app"', dockerfile)
