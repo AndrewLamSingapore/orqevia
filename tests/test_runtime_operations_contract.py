@@ -70,6 +70,8 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn('"app.production_entry:app"', dockerfile)
         self.assertIn('"--no-proxy-headers"', dockerfile)
+        self.assertGreater(dockerfile.index("ARG PRIME_RUNTIME_REVISION"),
+                           dockerfile.index("RUN pip install"))
 
     def test_container_owner_peer_is_explicit_not_a_network_wildcard(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
