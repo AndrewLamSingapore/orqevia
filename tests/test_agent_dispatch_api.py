@@ -2,6 +2,8 @@ import os
 from tests.test_harness_api import HarnessApiTests
 from app.agent_registry import registered_agent_ids
 from app import compute_queue_api
+from app.agent_dispatch_api import local_model_backends
+from app.settings import PrimeSettings
 
 
 class AgentDispatchTests(HarnessApiTests):
@@ -28,6 +30,16 @@ class AgentDispatchTests(HarnessApiTests):
                                     json={'agent':actor,'prompt':'bypass'})
             assert bypass.status_code==202
         assert compute_queue_api.queue.policy.global_concurrency==1
+
+    def test_distinct_deep_local_model_is_routable_as_mini_not_flagship(self):
+        settings=PrimeSettings(ollama_base_url='http://fixture',fast_model='small:1b',deep_model='deep:4b',
+                               embedding_model='embed',multi_specialist_workers=1)
+        backends=local_model_backends(settings)
+        assert [(item.name,item.model,item.tier.name) for item in backends]==[
+            ('ollama-fast','small:1b','NANO'),('ollama-deep','deep:4b','MINI')]
+        same=PrimeSettings(ollama_base_url='http://fixture',fast_model='same',deep_model='same',
+                           embedding_model='embed',multi_specialist_workers=1)
+        assert len(local_model_backends(same))==1
 
     def test_scope_and_unavailable_tier_fail_only_the_affected_request(self):
         for capability,tier,expected in [('invented','NANO',422),('responsibility.a02','FLAGSHIP',409)]:

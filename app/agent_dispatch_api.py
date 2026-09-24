@@ -19,6 +19,18 @@ router = APIRouter(prefix='/api/agents', tags=['registry-v1'])
 deterministic_ops = DeterministicOps(source_version='next-v1')
 
 
+def local_model_backends(settings=SETTINGS) -> tuple[Backend, ...]:
+    """Expose configured local roles without requiring an external cloud catalog.
+
+    Fast is the measured small-task path. A distinct deep model supplies the
+    bounded local MINI tier; no local model is promoted to FLAGSHIP by name.
+    """
+    backends = [Backend('ollama-fast', settings.fast_model, Tier.NANO, 'local')]
+    if settings.deep_model != settings.fast_model:
+        backends.append(Backend('ollama-deep', settings.deep_model, Tier.MINI, 'local'))
+    return tuple(backends)
+
+
 class AgentRequest(BaseModel):
     classification: Literal["R0","R1","R2","R3"] = "R0"
     capability: str = Field(min_length=1,max_length=100)
@@ -97,7 +109,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     from .compute_queue_api import providers
     configured=load_catalog();available={p.name for p in providers()}
     tier=max(Tier[body.minimum_tier],task_tier(body.objective,body.task_class),required_tier(body.objective,body.context))
-    backends=(Backend('ollama-fast',SETTINGS.fast_model,Tier.NANO,'local'),)+tuple(Backend(x['id'],x['model'],Tier[x['tier']],x['location']) for x in configured if x.get('enabled') and x['id'] in available)
+    backends=local_model_backends()+tuple(Backend(x['id'],x['model'],Tier[x['tier']],x['location']) for x in configured if x.get('enabled') and x['id'] in available)
     route = select_direct_route(backends,
                          minimum_tier=tier,classification=body.data_classification,
                          text=body.objective+'\n'+body.context)
