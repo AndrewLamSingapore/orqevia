@@ -73,3 +73,18 @@ and durable provenance. Level 5 is not claimed because program-wide production
 promotion and physical gates remain governed external events. Level 6 is not
 claimed because self-improvement cannot self-promote and has not been proven
 across a sustained independent program lifecycle.
+
+## Final closure evidence
+
+- Source SHA: `f8790a8cd9feda2bf9f63ad2f24ae9a289926efa`.
+- Stable remote candidate ref: `candidate/aef-high-assurance-20260925` at the
+  exact source SHA.
+- Immutable source archive SHA-256:
+  `9acfa789abda8f7fc23890a4289f1a45ed343d47c4457522d428d44c9a24fdc2`.
+- Risk-selected domain regression: 215 passed, 0 failed, 0 skipped.
+- Canonical regression: 422 passed, 0 failed, 0 skipped, 1 warning.
+- Full regression: 796 passed, 0 failed, 0 skipped, 5 warnings.
+- Strict package provenance verifier: `ACCEPT`, zero violations, three test
+  receipts verified.
+- Secret-pattern findings: zero. Dependency changes: zero.
+- Production deployment: not performed.

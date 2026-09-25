@@ -1,7 +1,9 @@
 {
   "schema_version": "1.0",
   "as_of": "2026-09-25T10:15:00+08:00",
-  "candidate_base_sha": "2d0a3482a56e5345463dd74f1c5ebab480b6fb16",
+  "candidate_base_sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa",
+  "candidate_remote_ref": "candidate/aef-high-assurance-20260925",
+  "candidate_artifact_digest": "sha256:9acfa789abda8f7fc23890a4289f1a45ed343d47c4457522d428d44c9a24fdc2",
   "production_source_sha": "0ecb5803470bef2a941da31332d87702268648d6",
   "fields": ["domain", "status", "source_sha", "executed_tests", "independent_verification", "known_defects", "known_limitations", "deferred_gates", "production_impact", "recovery_method", "next_condition"],
   "rows": [

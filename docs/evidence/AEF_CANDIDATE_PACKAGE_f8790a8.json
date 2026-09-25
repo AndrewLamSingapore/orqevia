@@ -1,0 +1,30 @@
+{
+  "artifact_digest": "sha256:9acfa789abda8f7fc23890a4289f1a45ed343d47c4457522d428d44c9a24fdc2",
+  "branch": "candidate/aef-high-assurance-20260925",
+  "manifest_sha256": "fdacc12da34752e8c97191a83cb5504ec75a14212c84f180177405a48ba19d7e",
+  "remote_sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa",
+  "schema_version": "2.0",
+  "security_receipt": {
+    "path": "aef-closure-security-f8790a8.json",
+    "sha256": "73b9bcfe21bc209ff90b1e65a4557b58c0ecd34df1fa671dec919e4580c9af99"
+  },
+  "source_sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa",
+  "test_receipts": [
+    {
+      "path": "aef-closure-domain-tests-f8790a8.json",
+      "sha256": "9852746267aea6d80804925b61d15a3c0921d8792f10a37f9db8f5df4ca8b3e3"
+    },
+    {
+      "path": "aef-closure-canonical-tests-f8790a8.json",
+      "sha256": "4e252e003ea16dda7275952e54c88a4634862794344ef28a1b73e98a3eb831c5"
+    },
+    {
+      "path": "aef-closure-full-tests-f8790a8.json",
+      "sha256": "affa4b7e79f10873646121610acd8d41954ed91a17a2f791e59b868debba3931"
+    }
+  ],
+  "verifier_receipt": {
+    "path": "aef-closure-verifier-f8790a8.json",
+    "sha256": "bd5e1615125e54dc18d291fba66f3b20bc207a8b1c2e54082134a6815d5c5a02"
+  }
+}

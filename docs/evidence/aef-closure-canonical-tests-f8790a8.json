@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "source_sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa",
+  "suite": "canonical deterministic CI",
+  "command_class": "canonical",
+  "exit_code": 0,
+  "passed": 422,
+  "failed": 0,
+  "skipped": 0,
+  "warnings": 1,
+  "operational_manifest_state": "STALE",
+  "production_touched": false
+}

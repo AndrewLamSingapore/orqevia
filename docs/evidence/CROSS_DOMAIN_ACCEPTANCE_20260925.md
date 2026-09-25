@@ -1,7 +1,7 @@
 # Cross-domain acceptance — 2026-09-25
 
-Production remains healthy and untouched. Candidate closure passed **404
-canonical** and **778 full** tests. The source-of-truth JSON beside this file
+Production remains healthy and untouched. The latest candidate closure passed
+**422 canonical** and **796 full** tests. The source-of-truth JSON beside this file
 contains the required per-domain evidence, limitations, recovery, and next
 conditions.
 
