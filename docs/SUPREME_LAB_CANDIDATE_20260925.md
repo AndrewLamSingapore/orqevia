@@ -23,6 +23,19 @@ Result: **6/8 (75%)**, median latency **1.885 seconds**.
 
 Machine-readable evidence: `docs/evidence/supreme-intelligence-gemma3-1b-20260925.json`.
 
+A second bounded run used the installed `gemma3:4b` model against the identical corpus. Result: **7/8 (87.5%)**, median latency **6.429 seconds**. It passed exact tool selection but still failed strict JSON. This proves that selecting a larger model alone does not satisfy the schema contract. Machine-readable evidence: `docs/evidence/supreme-intelligence-gemma3-4b-20260925.json`.
+
+The capability-router candidate uses only measured claims:
+
+- routine reasoning, coding, Chinese, English, retrieval and verification select the faster verified `gemma3:1b`;
+- tool selection selects `gemma3:4b`, the only measured model that passed it;
+- strict structured output returns `VERIFY_REQUIRED` because neither model passed;
+- preferred-model loss falls back only to another model that passed the requested capability;
+- local pressure queues local work rather than silently sending it to cloud;
+- v1 capability profiles reject cloud entries and model selection never grants execution authority.
+
+Router-focused security/fallback regression: **80 passed / 0 failed**.
+
 ## Supreme Independence LAB result
 
 The first bounded Independence contract simulates Internet, GitHub, OpenAI, ChatGPT, Codex and frontier-provider unavailability without changing host networking. It verifies that:
