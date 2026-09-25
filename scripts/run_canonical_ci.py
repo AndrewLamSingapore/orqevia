@@ -21,6 +21,8 @@ def main():
            'interface_server','consequential_intent','stable_spine','sink_guard',
            'provider_failure_boundaries','interface_cloud_policy',
            'direct_execution','connector_sdk']
+    names.append('supreme_intelligence_benchmark')
+    names.append('supreme_independence_candidate')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]
