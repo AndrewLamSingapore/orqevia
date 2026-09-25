@@ -37,6 +37,8 @@ def main():
     names.append('candidate_manifest')
     names.append('independence_phase_verifier')
     names.append('vision_evidence')
+    names.append('vision_adversarial')
+    names.append('vision_candidate_verifier')
     names.append('jarvis_response_contract')
     names.append('jarvis_candidate_verifier')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
