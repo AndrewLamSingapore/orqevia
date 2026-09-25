@@ -26,6 +26,8 @@ def main():
     names.append('capability_router')
     names.append('model_capability_verifier')
     names.append('governed_knowledge')
+    names.append('governed_knowledge_durability')
+    names.append('memory_durability_verifier')
     names.append('structured_output')
     names.append('structured_output_verifier')
     names.append('supreme_integration')

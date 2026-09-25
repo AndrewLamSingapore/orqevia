@@ -61,8 +61,9 @@ class GovernedKnowledgeStore:
         self._init()
 
     def connect(self) -> sqlite3.Connection:
-        db = sqlite3.connect(self.path)
+        db = sqlite3.connect(self.path, timeout=10)
         db.row_factory = sqlite3.Row
+        db.execute("pragma busy_timeout=10000")
         return db
 
     def _init(self) -> None:
@@ -82,7 +83,9 @@ class GovernedKnowledgeStore:
                   source_authority text not null,
                   verification_ref text,
                   created_at real not null,
-                  supersedes_id text
+                  supersedes_id text,
+                  record_sha256 text,
+                  write_request_id text unique
                 );
                 create unique index if not exists governed_memory_current
                   on governed_memory(memory_key,memory_class,scope,scope_id)
@@ -100,6 +103,37 @@ class GovernedKnowledgeStore:
                 );
                 """
             )
+            columns = {row[1] for row in db.execute("pragma table_info(governed_memory)")}
+            if "record_sha256" not in columns:
+                db.execute("alter table governed_memory add column record_sha256 text")
+            if "write_request_id" not in columns:
+                db.execute("alter table governed_memory add column write_request_id text")
+                db.execute("create unique index if not exists governed_memory_write_request on governed_memory(write_request_id) where write_request_id is not null")
+
+    @staticmethod
+    def _memory_digest(fields: dict[str, Any]) -> str:
+        protected = {
+            key: fields.get(key) for key in (
+                "record_id", "memory_key", "memory_class", "scope", "scope_id", "temporal_state",
+                "value_json", "source", "source_version", "source_authority", "verification_ref",
+                "created_at", "supersedes_id",
+                "write_request_id",
+            )
+        }
+        return hashlib.sha256(json.dumps(protected, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _verify_memory_row(cls, row: sqlite3.Row) -> None:
+        data = dict(row)
+        try:
+            Scope(data["scope"])
+            MemoryClass(data["memory_class"])
+            TemporalState(data["temporal_state"])
+            json.loads(data["value_json"])
+        except (ValueError, TypeError, json.JSONDecodeError) as error:
+            raise ValueError("corrupted governed memory record") from error
+        if not data.get("record_sha256") or data["record_sha256"] != cls._memory_digest(data):
+            raise ValueError("governed memory integrity mismatch")
 
     @staticmethod
     def _can_access(context: AccessContext, scope: Scope, scope_id: str) -> bool:
@@ -154,6 +188,8 @@ class GovernedKnowledgeStore:
         source_version: str,
         source_authority: str,
         verification_ref: str | None = None,
+        expected_current_id: str | None = None,
+        write_request_id: str | None = None,
     ) -> dict[str, Any]:
         if not isinstance(memory_class, MemoryClass) or not isinstance(scope, Scope):
             raise ValueError("known memory class and scope are required")
@@ -171,21 +207,44 @@ class GovernedKnowledgeStore:
             raise PermissionError("model output may be stored only as INFERENCE")
         record_id, created = str(uuid.uuid4()), time.time()
         payload = json.dumps(value, sort_keys=True, ensure_ascii=False)
-        with closing(self.connect()) as db, db:
+        with closing(self.connect()) as db:
+            db.execute("begin immediate")
+            if write_request_id:
+                duplicate = db.execute("select * from governed_memory where write_request_id=?", (write_request_id,)).fetchone()
+                if duplicate:
+                    self._verify_memory_row(duplicate)
+                    db.rollback()
+                    self._require_access(context, Scope(duplicate["scope"]), duplicate["scope_id"])
+                    return self.get(duplicate["record_id"], context=context)
             previous = db.execute(
-                "select record_id from governed_memory where memory_key=? and memory_class=? and scope=? and scope_id=? and temporal_state='CURRENT'",
+                "select * from governed_memory where memory_key=? and memory_class=? and scope=? and scope_id=? and temporal_state='CURRENT'",
                 (memory_key.strip(), memory_class.value, scope.value, scope_id),
             ).fetchone()
+            if expected_current_id is not None and (previous is None or previous["record_id"] != expected_current_id):
+                db.rollback()
+                raise RuntimeError("stale write rejected")
+            if previous:
+                self._verify_memory_row(previous)
             if previous:
                 db.execute("update governed_memory set temporal_state='SUPERSEDED' where record_id=?", (previous["record_id"],))
+                changed = dict(previous)
+                changed["temporal_state"] = TemporalState.SUPERSEDED.value
+                changed["record_sha256"] = self._memory_digest(changed)
+                db.execute("update governed_memory set record_sha256=? where record_id=?", (changed["record_sha256"], previous["record_id"]))
+            fields = {
+                "record_id": record_id, "memory_key": memory_key.strip(), "memory_class": memory_class.value,
+                "scope": scope.value, "scope_id": scope_id, "temporal_state": TemporalState.CURRENT.value,
+                "value_json": payload, "source": source.strip(), "source_version": source_version.strip(),
+                "source_authority": authority, "verification_ref": verification_ref, "created_at": created,
+                "supersedes_id": previous["record_id"] if previous else None,
+                "write_request_id": write_request_id,
+            }
+            fields["record_sha256"] = self._memory_digest(fields)
             db.execute(
-                "insert into governed_memory(record_id,memory_key,memory_class,scope,scope_id,temporal_state,value_json,source,source_version,source_authority,verification_ref,created_at,supersedes_id) values(?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (
-                    record_id, memory_key.strip(), memory_class.value, scope.value, scope_id,
-                    TemporalState.CURRENT.value, payload, source.strip(), source_version.strip(), authority,
-                    verification_ref, created, previous["record_id"] if previous else None,
-                ),
+                "insert into governed_memory(record_id,memory_key,memory_class,scope,scope_id,temporal_state,value_json,source,source_version,source_authority,verification_ref,created_at,supersedes_id,record_sha256,write_request_id) values(:record_id,:memory_key,:memory_class,:scope,:scope_id,:temporal_state,:value_json,:source,:source_version,:source_authority,:verification_ref,:created_at,:supersedes_id,:record_sha256,:write_request_id)",
+                fields,
             )
+            db.commit()
         return self.get(record_id, context=context)
 
     def mark_historical(self, record_id: str, *, context: AccessContext) -> dict[str, Any]:
@@ -194,10 +253,15 @@ class GovernedKnowledgeStore:
         self._require_write(context, scope, row["scope_id"])
         if row["temporal_state"] != TemporalState.CURRENT.value:
             raise ValueError("only CURRENT memory can become HISTORICAL")
+        updated = dict(row)
+        updated["value_json"] = json.dumps(updated.pop("value"), sort_keys=True, ensure_ascii=False)
+        updated.pop("content_is_authority", None)
+        updated["temporal_state"] = TemporalState.HISTORICAL.value
+        updated["record_sha256"] = self._memory_digest(updated)
         with closing(self.connect()) as db, db:
             db.execute(
-                "update governed_memory set temporal_state=? where record_id=? and temporal_state=?",
-                (TemporalState.HISTORICAL.value, record_id, TemporalState.CURRENT.value),
+                "update governed_memory set temporal_state=?,record_sha256=? where record_id=? and temporal_state=?",
+                (TemporalState.HISTORICAL.value, updated["record_sha256"], record_id, TemporalState.CURRENT.value),
             )
         return self.get(record_id, context=context)
 
@@ -206,6 +270,7 @@ class GovernedKnowledgeStore:
             row = db.execute("select * from governed_memory where record_id=?", (record_id,)).fetchone()
         if not row:
             raise KeyError(record_id)
+        self._verify_memory_row(row)
         self._require_access(context, Scope(row["scope"]), row["scope_id"])
         result = dict(row)
         result["value"] = json.loads(result.pop("value_json"))
@@ -220,6 +285,7 @@ class GovernedKnowledgeStore:
             rows = db.execute("select * from governed_memory order by created_at desc limit 2000").fetchall()
         ranked = []
         for row in rows:
+            self._verify_memory_row(row)
             scope = Scope(row["scope"])
             if not self._can_access(context, scope, row["scope_id"]):
                 continue
@@ -268,7 +334,7 @@ class GovernedKnowledgeStore:
             )
         return document_id
 
-    def retrieve_documents(self, query: str, *, context: AccessContext, limit: int = 10) -> list[dict[str, Any]]:
+    def retrieve_documents(self, query: str, *, context: AccessContext, limit: int = 10, max_age_seconds: float | None = None) -> list[dict[str, Any]]:
         wanted = _tokens(query)
         if not wanted:
             return []
@@ -276,7 +342,16 @@ class GovernedKnowledgeStore:
             rows = db.execute("select * from rag_documents order by created_at desc limit 2000").fetchall()
         ranked = []
         for row in rows:
-            if not self._can_access(context, Scope(row["scope"]), row["scope_id"]):
+            try:
+                scope = Scope(row["scope"])
+            except ValueError as error:
+                raise ValueError("corrupted RAG scope") from error
+            actual_digest = hashlib.sha256(row["content"].encode("utf-8")).hexdigest()
+            if actual_digest != row["content_sha256"]:
+                raise ValueError("RAG content integrity mismatch")
+            if max_age_seconds is not None and time.time() - float(row["created_at"]) > max_age_seconds:
+                continue
+            if not self._can_access(context, scope, row["scope_id"]):
                 continue
             overlap = len(wanted & _tokens(row["content"]))
             if not overlap:
