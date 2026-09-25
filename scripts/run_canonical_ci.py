@@ -36,6 +36,7 @@ def main():
     names.append('supreme_integration_verifier')
     names.append('candidate_manifest')
     names.append('independence_phase_verifier')
+    names.append('vision_evidence')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

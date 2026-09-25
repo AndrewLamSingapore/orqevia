@@ -1,0 +1,56 @@
+{
+  "acceptance_gates": [
+    "focused:59-passed",
+    "independent-verifier:7-of-7",
+    "canonical:368-passed",
+    "full:738-passed",
+    "secret-pattern-findings:0",
+    "remote-sha:exact"
+  ],
+  "artifact": {
+    "format": "git-archive-tar",
+    "sha256": "815a29dadc94671a2c280d9f551ea0960e9fd8b46d722f8281a76d0c37ada1b6",
+    "size_bytes": 2201600
+  },
+  "branch": "feat/supreme-integration-20260925",
+  "change_risk_fingerprint": [
+    "AUTHORITY",
+    "INTEGRATION",
+    "MEMORY",
+    "MODEL",
+    "QUEUE",
+    "ROUTER",
+    "SECURITY"
+  ],
+  "deployment": "NOT_DEPLOYED",
+  "independent_verification": {
+    "passed": 7,
+    "production_touched": false,
+    "status": "PASS",
+    "total": 7
+  },
+  "migration_requirements": [
+    "Candidate governed-memory schema adds integrity and idempotency fields",
+    "No production migration is authorized or performed"
+  ],
+  "recovery_method": [
+    "Retain commissioned production source, image and data volumes",
+    "Do not roll candidate schema into production without governed promotion",
+    "Forward-repair only after acceptance failure evidence"
+  ],
+  "remote_source_verified": true,
+  "schema_version": "1.0",
+  "security": {
+    "secret_pattern_findings": 0,
+    "status": "PASS"
+  },
+  "source_sha": "020f9754114f8af7facb2961c23bbc44fa68d5c7",
+  "status": "CANDIDATE_ONLY_NOT_DEPLOYED",
+  "tests": {
+    "canonical_passed": 368,
+    "failed": 0,
+    "focused_passed": 59,
+    "full_passed": 738,
+    "warnings": 5
+  }
+}
