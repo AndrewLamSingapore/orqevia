@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "as_of": "2026-09-25T10:15:00+08:00",
-  "candidate_base_sha": "5bca97ae401d34fb4a4b521f87407e13df1ece2a",
+  "candidate_base_sha": "2d0a3482a56e5345463dd74f1c5ebab480b6fb16",
   "production_source_sha": "0ecb5803470bef2a941da31332d87702268648d6",
   "fields": ["domain", "status", "source_sha", "executed_tests", "independent_verification", "known_defects", "known_limitations", "deferred_gates", "production_impact", "recovery_method", "next_condition"],
   "rows": [
@@ -32,7 +32,7 @@
     ["FORWARD DEPLOYMENT", "CANDIDATE", "f241d454d87f4715c3cd6aa955348de4302631ee", "immutable candidate manifest regression", "manifest verifier", [], ["latest closure receipt pending"], [], "none", "immutable archive", "build latest receipt"],
     ["VISION", "TESTED_LAB", "5bca97ae401d34fb4a4b521f87407e13df1ece2a", "25 focused; verifier 5/5", "static Vision verifier", [], ["no production OCR accuracy corpus"], ["production OCR corpus"], "none", "retain source digests", "representative corpus"],
     ["JARVIS", "CANDIDATE", "566e56a79456febf17111b7ced6cfd55a8dfc07c", "42 focused; verifier 7/7; PWA 33/33", "JARVIS verifier", [], ["not deployed; wife phone deferred"], ["post-deployment physical UX"], "none", "deterministic PWA recovery", "promotion authority"],
-    ["VELYQUA BOUNDARY", "CANDIDATE", "5bca97ae401d34fb4a4b521f87407e13df1ece2a", "8 focused; verifier 6/6", "application-boundary verifier", [], ["no physical telemetry tested"], ["future physical sensor program"], "none", "fail-closed evidence classes", "physical hardware available"],
+    ["VELYQUA BOUNDARY", "CANDIDATE", "2d0a3482a56e5345463dd74f1c5ebab480b6fb16", "8 focused; verifier 6/6", "application-boundary verifier", [], ["no physical telemetry tested"], ["future physical sensor program"], "none", "fail-closed evidence classes", "physical hardware available"],
     ["BLACK START", "NOT_TESTED", "020f9754114f8af7facb2961c23bbc44fa68d5c7", "procedure only", "truthful-state verifier", [], ["prepared, not executed"], ["physical host test"], "none", "documented procedure", "post-Golden authority/physical gate"],
     ["GOLDEN", "WITHHELD", "d6ada2f57d09135bda529f77a54d907cf25ceb20", "active passive observation", "event-log monitoring", ["historical unattributed 0xA remains observational blocker"], ["powered-on observation incomplete"], ["automatic Golden evaluation"], "none", "current production retained", "required window matures without relevant regression"]
   ]

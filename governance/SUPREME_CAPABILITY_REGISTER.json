@@ -39,7 +39,7 @@
       "name": "supreme_vision",
       "status": "TESTED_LAB",
       "claim": "Static visual evidence is bounded against crop, OCR ambiguity, contradiction, and authority escalation.",
-      "source_sha": "5bca97ae401d34fb4a4b521f87407e13df1ece2a",
+      "source_sha": "2d0a3482a56e5345463dd74f1c5ebab480b6fb16",
       "evidence": ["SUPREME_VISION_LAB_20260925.md", "independent verifier 5/5"],
       "limitations": ["no production OCR accuracy corpus", "no physical VELYQUA telemetry claim"]
     },
@@ -49,7 +49,7 @@
       "claim": "JARVIS and VELYQUA remain separate scopes; application evidence cannot grant authority or cross-mutate data.",
       "source_sha": "5bca97ae401d34fb4a4b521f87407e13df1ece2a",
       "evidence": ["application boundary focused tests", "independent boundary verifier"],
-      "limitations": ["source_sha identifies the pre-closure base until closure commit is recorded"]
+      "limitations": ["candidate is tested but not deployed to protected production"]
     },
     {
       "name": "production_ocr_accuracy",
