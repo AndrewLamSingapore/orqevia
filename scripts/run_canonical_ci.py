@@ -23,6 +23,7 @@ def main():
            'direct_execution','connector_sdk']
     names.append('supreme_intelligence_benchmark')
     names.append('supreme_independence_candidate')
+    names.append('independence_dependency_matrix')
     names.append('capability_router')
     names.append('model_capability_verifier')
     names.append('governed_knowledge')
@@ -30,8 +31,11 @@ def main():
     names.append('memory_durability_verifier')
     names.append('structured_output')
     names.append('structured_output_verifier')
+    names.append('semantic_evidence_adversarial')
     names.append('supreme_integration')
     names.append('supreme_integration_verifier')
+    names.append('candidate_manifest')
+    names.append('independence_phase_verifier')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]
