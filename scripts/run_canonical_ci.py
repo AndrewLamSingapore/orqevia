@@ -41,6 +41,9 @@ def main():
     names.append('vision_candidate_verifier')
     names.append('jarvis_response_contract')
     names.append('jarvis_candidate_verifier')
+    names.append('application_boundaries')
+    names.append('capability_register')
+    names.append('cross_domain_security_closure')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "canonical": true,
+  "as_of": "2026-09-25",
+  "capabilities": [
+    {
+      "name": "commissioned_prime_runtime",
+      "status": "PRODUCTION_PROVEN",
+      "claim": "The protected PRIME runtime is commissioned independently of this candidate branch.",
+      "source_sha": "0ecb21755a5cc4244a8764b317fc196e55b15906",
+      "evidence": ["runtime health receipts retained outside this candidate"],
+      "limitations": ["candidate changes are not deployed", "Golden observation is incomplete"]
+    },
+    {
+      "name": "governed_memory_and_rag",
+      "status": "CANDIDATE",
+      "claim": "Scoped durable memory preserves provenance, temporal state, integrity, and idempotent writes.",
+      "source_sha": "8b7dbe997c85bb21135d536b585867283c661ceb",
+      "evidence": ["MEMORY_DURABILITY_ADVERSARIAL_20260925.md", "canonical deterministic tests"],
+      "limitations": ["not deployed to protected production"]
+    },
+    {
+      "name": "supreme_independence",
+      "status": "SIMULATED",
+      "claim": "Isolated dependency-loss and restoration scenarios pass bounded queue reconciliation.",
+      "source_sha": "020f9754114f8af7facb2961c23bbc44fa68d5c7",
+      "evidence": ["SUPREME_INDEPENDENCE_PHASE_20260925.md", "independent deterministic verifier 7/7"],
+      "limitations": ["physical sovereign Black Start is prepared but not executed"]
+    },
+    {
+      "name": "jarvis_candidate_hardening",
+      "status": "CANDIDATE",
+      "claim": "JARVIS identity, language, authoritative session, Read Aloud, recovery, and branding contracts are regression tested.",
+      "source_sha": "566e56a79456febf17111b7ced6cfd55a8dfc07c",
+      "evidence": ["JARVIS_CANDIDATE_HARDENING_20260925.md", "independent verifier 7/7"],
+      "limitations": ["not deployed", "wife phone and installed iOS icon confirmation remain deferred"]
+    },
+    {
+      "name": "supreme_vision",
+      "status": "TESTED_LAB",
+      "claim": "Static visual evidence is bounded against crop, OCR ambiguity, contradiction, and authority escalation.",
+      "source_sha": "5bca97ae401d34fb4a4b521f87407e13df1ece2a",
+      "evidence": ["SUPREME_VISION_LAB_20260925.md", "independent verifier 5/5"],
+      "limitations": ["no production OCR accuracy corpus", "no physical VELYQUA telemetry claim"]
+    },
+    {
+      "name": "portfolio_application_boundaries",
+      "status": "CANDIDATE",
+      "claim": "JARVIS and VELYQUA remain separate scopes; application evidence cannot grant authority or cross-mutate data.",
+      "source_sha": "5bca97ae401d34fb4a4b521f87407e13df1ece2a",
+      "evidence": ["application boundary focused tests", "independent boundary verifier"],
+      "limitations": ["source_sha identifies the pre-closure base until closure commit is recorded"]
+    },
+    {
+      "name": "production_ocr_accuracy",
+      "status": "DEFERRED",
+      "claim": "No production OCR accuracy claim is made.",
+      "source_sha": "5bca97ae401d34fb4a4b521f87407e13df1ece2a",
+      "evidence": ["absence of a representative ground-truth corpus recorded in Vision evidence"],
+      "limitations": ["requires representative bilingual corpus and measured accuracy"]
+    },
+    {
+      "name": "physical_black_start",
+      "status": "NOT_TESTED",
+      "claim": "The sovereign Black Start procedure is prepared but has not been physically executed.",
+      "source_sha": "020f9754114f8af7facb2961c23bbc44fa68d5c7",
+      "evidence": ["prepared procedure in SUPREME_INDEPENDENCE_PHASE_20260925.md"],
+      "limitations": ["deferred to protect the active Windows stability observation"]
+    }
+  ]
+}
