@@ -114,7 +114,7 @@ async def pairing(request:Request):
 @router.get('/session')
 def get_session(request:Request):
     current=session(request)
-    return {'authenticated':bool(current),**(current or {})}
+    return {'protocol':'jarvis.interface.v1','authenticated':bool(current),**(current or {})}
 
 @router.post('/enroll')
 async def enroll(request:Request):

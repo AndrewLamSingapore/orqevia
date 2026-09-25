@@ -17,7 +17,7 @@ export function errorMessage(error) {
   return 'PRIME could not complete this request. Try again when the connection is available.';
 }
 export function sessionActive(session, nowSeconds = Date.now() / 1000) {
-  return Boolean(session?.authenticated && Number.isFinite(session.expiresAt) && session.expiresAt > nowSeconds);
+  return Boolean(session?.authenticated && session.protocol === PROTOCOL && Number.isFinite(session.expiresAt) && session.expiresAt > nowSeconds && Number.isFinite(session.verifiedAt) && nowSeconds-session.verifiedAt <= 90);
 }
 export async function sha256(bytes) { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2,'0')).join(''); }
 export function nextSubmission(prior, digest, key) {

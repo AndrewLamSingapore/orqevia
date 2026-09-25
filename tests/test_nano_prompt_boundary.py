@@ -1,6 +1,6 @@
 import pytest
 
-from app.agent_dispatch_api import AgentRequest,JARVIS_IDENTITY_CONTRACT,inference_prompt,user_facing_contract
+from app.agent_dispatch_api import AgentRequest,JARVIS_IDENTITY_CONTRACT,inference_prompt,user_facing_contract,requested_response_language
 from app.tier_router import Tier
 
 
@@ -33,6 +33,13 @@ def test_identity_and_language_contract_is_provider_and_tier_independent(tier,ob
     assert 'Always identify yourself as JARVIS' in prompt
     assert 'Reply in the language used by the user' in prompt
     assert objective in prompt
+
+
+def test_explicit_language_request_overrides_input_language_default():
+    assert requested_response_language('请用英文回答：你叫什么名字？') == 'ENGLISH'
+    assert 'Respond entirely in English' in user_facing_contract('请用英文回答：你叫什么名字？')
+    assert requested_response_language('Please answer in Chinese: what is your name?') == 'SIMPLIFIED_CHINESE'
+    assert 'Respond entirely in Simplified Chinese' in user_facing_contract('Please answer in Chinese: what is your name?')
 
 
 def test_chinese_objective_gets_explicit_all_chinese_contract():

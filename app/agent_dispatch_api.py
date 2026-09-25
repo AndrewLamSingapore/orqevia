@@ -28,8 +28,29 @@ JARVIS_IDENTITY_CONTRACT = (
 )
 
 
+def requested_response_language(objective: str) -> str:
+    """Honor an explicit language request before applying input-language defaulting."""
+    lowered = objective.lower()
+    english = (
+        r'\b(?:reply|respond|answer|write|output)\s+(?:only\s+)?in\s+english\b',
+        r'(?:请|請)(?:用|以)英文(?:回答|回复|回覆|作答|输出|輸出)',
+    )
+    chinese = (
+        r'\b(?:reply|respond|answer|write|output)\s+(?:only\s+)?in\s+(?:simplified\s+)?chinese\b',
+        r'(?:请|請)(?:用|以)(?:简体|簡體)?中文(?:回答|回复|回覆|作答|输出|輸出)',
+    )
+    if any(re.search(pattern, lowered, re.I) for pattern in english):
+        return 'ENGLISH'
+    if any(re.search(pattern, lowered, re.I) for pattern in chinese):
+        return 'SIMPLIFIED_CHINESE'
+    return 'SIMPLIFIED_CHINESE' if re.search(r'[\u3400-\u4dbf\u4e00-\u9fff]', objective) else 'INPUT_LANGUAGE'
+
+
 def user_facing_contract(objective: str) -> str:
-    if re.search(r'[\u3400-\u4dbf\u4e00-\u9fff]',objective):
+    language_request = requested_response_language(objective)
+    if language_request == 'ENGLISH':
+        language='The user explicitly requested English. Respond entirely in English, keeping the fixed proper name JARVIS.'
+    elif language_request == 'SIMPLIFIED_CHINESE':
         language=('The objective is written in Chinese. Respond entirely in Simplified Chinese, except for the '
                   'fixed proper name JARVIS. Do not translate or discuss the question; answer it directly.')
     else:

@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PROTOCOL,sessionActive,spokenText,resultText} from './core.mjs';
+
+test('authoritative connection requires current protocol expiry and recent server verification',()=>{const base={protocol:PROTOCOL,authenticated:true,expiresAt:200,verifiedAt:100};assert.equal(sessionActive(base,100),true);assert.equal(sessionActive({...base,protocol:'old'},100),false);assert.equal(sessionActive({...base,expiresAt:100},100),false);assert.equal(sessionActive({...base,verifiedAt:9},100),false);});
+test('visible and spoken output share only the governed current answer',()=>{const task={taskId:'t',revision:2,state:'COMPLETED',result:{text:'我是 JARVIS，很高兴为你服务。'},steps:[{revision:1,job:{agent:'a02',result:'discarded draft'}}]};assert.equal(resultText(task),spokenText(task));assert.ok(!spokenText(task).includes('a02'));assert.ok(!spokenText(task).includes('discarded'))});
+test('speech language follows governed final text rather than hidden metadata',()=>{const voice=readFileSync(new URL('./voice.mjs',import.meta.url),'utf8');assert.ok(voice.includes("?'zh-CN':navigator.language"));assert.ok(!voice.includes('job.agent'));assert.ok(!voice.includes('diagnostic'));});
+test('startup failure has deterministic recovery UI and shell asset',()=>{const html=readFileSync(new URL('./index.html',import.meta.url),'utf8'),recovery=readFileSync(new URL('./recovery.js',import.meta.url),'utf8'),sw=readFileSync(new URL('./sw.js',import.meta.url),'utf8');assert.ok(html.includes('startup-recovery'));assert.ok(recovery.includes('jarvisReady'));assert.ok(sw.includes("'/pwa/recovery.js'"));});
+test('one canonical role-independent brand remains active',()=>{const manifest=JSON.parse(readFileSync(new URL('./manifest.webmanifest',import.meta.url),'utf8'));assert.equal(manifest.name,'JARVIS PRIME');assert.ok(manifest.icons.every(icon=>icon.src.includes('jarvis-prime-v1-')));assert.ok(manifest.icons.every(icon=>!icon.src.toLowerCase().includes('member')&&!icon.src.toLowerCase().includes('owner')));});
