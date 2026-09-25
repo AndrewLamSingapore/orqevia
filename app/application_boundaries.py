@@ -7,7 +7,9 @@ receipt; simulated, replayed, and lab evidence remain useful but bounded.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+import re
 from typing import Any
 
 
@@ -58,9 +60,26 @@ def evaluate_application_evidence(envelope: Any) -> BoundaryDecision:
     verification_ref = envelope.get("verification_ref")
     physical = evidence_class is EvidenceClass.PHYSICAL_VERIFIED
     reasons: list[str] = []
-    if physical and (not isinstance(verification_ref, str) or not verification_ref.strip()):
-        physical = False
-        reasons.append("physical_evidence_missing_independent_verification")
+    if physical:
+        required={"receipt_sha256","device_id","firmware_sha256","sensor_id","observed_at",
+                  "transport_provenance","independent_verifier"}
+        if not isinstance(verification_ref,dict) or set(verification_ref)!=required:
+            physical=False;reasons.append("physical_evidence_receipt_invalid")
+        else:
+            for field in ("device_id","sensor_id","independent_verifier"):
+                if not isinstance(verification_ref.get(field),str) or not verification_ref[field].strip():
+                    physical=False;reasons.append(f"physical_{field}_missing")
+            for field in ("receipt_sha256","firmware_sha256"):
+                if not isinstance(verification_ref.get(field),str) or not re.fullmatch(r"[0-9a-f]{64}",verification_ref[field]):
+                    physical=False;reasons.append(f"physical_{field}_invalid")
+            transport=verification_ref.get("transport_provenance")
+            if not isinstance(transport,list) or not transport or not all(isinstance(x,str) and x.strip() for x in transport):
+                physical=False;reasons.append("physical_transport_provenance_missing")
+            try:datetime.fromisoformat(str(verification_ref.get("observed_at")).replace("Z","+00:00"))
+            except (TypeError,ValueError):physical=False;reasons.append("physical_observed_at_invalid")
+            verifier=str(verification_ref.get("independent_verifier","")).lower()
+            if any(label in verifier for label in ("model","inference","generated","self-attested")):
+                physical=False;reasons.append("physical_verifier_not_independent")
     if evidence_class is not EvidenceClass.PHYSICAL_VERIFIED:
         reasons.append("evidence_class_does_not_prove_physical_reality")
     disposition = "ACCEPTED_BOUNDED" if physical or evidence_class in {

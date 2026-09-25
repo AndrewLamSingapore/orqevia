@@ -71,10 +71,16 @@ def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkey
     def builder(objective,feedback):
         calls.append(feedback)
         return 'fixed' if feedback else 'broken'
+    def verifier(path):
+        passed=path.read_text()=='fixed'
+        return {'passed':passed,'verdict':'ACCEPT' if passed else 'REJECT','verifier':'a18',
+            'independent':True,'candidate_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+            'checks':[{'name':'fixture-content','status':'PASS' if passed else 'FAIL',
+                'evidence_ref':'fixture:test_next_integration'}]}
     result=build_verify(root=tmp_path/'fixture-trial',objective='fixture only',builder=builder,
-        verifier=lambda path:{'passed':path.read_text()=='fixed'},model='fixture-model',backend='fixture-backend')
+        verifier=verifier,model='fixture-model',backend='fixture-backend')
     assert result['state']=='VERIFIED_CANDIDATE' and len(result['attempts'])==2
     obs=result['attempts'][1]['observation']
     assert obs['repair_cycles']==1 and obs['artifact_sha256_verified'] and obs['final_artifact_validation']
     assert obs['input_tokens'] is None and obs['cost_usd'] is None and obs['handoff_accuracy'] is None
-    assert calls==[None,{'passed':False}]
+    assert calls[0] is None and calls[1]['passed'] is False and calls[1]['verdict']=='REJECT'

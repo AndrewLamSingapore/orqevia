@@ -44,6 +44,9 @@ def main():
     names.append('application_boundaries')
     names.append('capability_register')
     names.append('cross_domain_security_closure')
+    names.append('engineering_verification_gate')
+    names.append('candidate_provenance')
+    names.append('aef_controls_verifier')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

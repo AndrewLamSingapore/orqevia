@@ -15,7 +15,11 @@ def main() -> int:
     verified = evaluate_application_evidence({
         "application": "VELYQUA", "evidence_class": "PHYSICAL_VERIFIED",
         "claim": "bounded claim", "provenance": ["physical:fixture"],
-        "verification_ref": "receipt:fixture",
+        "verification_ref": {"receipt_sha256":"a"*64,"device_id":"esp32-fixture",
+            "firmware_sha256":"b"*64,"sensor_id":"sensor-fixture",
+            "observed_at":"2026-09-25T00:00:00Z",
+            "transport_provenance":["signed-lan-envelope:fixture"],
+            "independent_verifier":"hardware-receipt-verifier-v1"},
     })
     assert verified.may_claim_physical and not verified.grants_authority
     checks += 1
