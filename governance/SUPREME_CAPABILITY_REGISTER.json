@@ -109,6 +109,21 @@
       "commercial_reuse_potential": "High for governed CI and autonomous engineering systems."
     },
     {
+      "capability": "bounded_metacognitive_controls",
+      "purpose": "Classify epistemic state, preserve unknowns and contradictions, switch failed strategies and measure calibration without creating authority.",
+      "component": "metacognition",
+      "maturity": "CANDIDATE",
+      "source_sha": "3c67f04b2d1035c89d6549c94b58fb9436eade12",
+      "test_evidence": ["METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md", "821 full tests", "6/6 mutations detected", "8 held-out cases"],
+      "independent_verification": ["deterministic metacognitive verifier 5/5"],
+      "known_limitations": ["synthetic small calibration set", "not deployed", "open-ended model reasoning not production-proven"],
+      "security_boundary": "Reasoning, memory, retrieval and conclusions cannot grant authority or directly trigger consequential tools.",
+      "offline_behavior": "Deterministic epistemic, contradiction, strategy and calibration controls require no cloud service.",
+      "recovery_method": ["rebuild from source SHA", "verify artifact digest", "rerun focused, mutation, canonical and full gates"],
+      "portability": "Portable Python control primitive with no runtime service dependency.",
+      "commercial_reuse_potential": "High after larger domain-specific calibration and governed promotion."
+    },
+    {
       "capability": "physical_black_start",
       "purpose": "Prove sovereign recovery without Internet, cloud AI, Codex or GitHub.",
       "component": "physical host recovery procedure",
