@@ -1,0 +1,83 @@
+{
+  "baseline": {
+    "accuracy": 0.375,
+    "correct": 3
+  },
+  "candidate": {
+    "accuracy": 1.0,
+    "brier_score": 0.030937,
+    "correct": 8,
+    "expected_calibration_error": 0.10625,
+    "latency_ms": 0.1569,
+    "peak_memory_bytes": 1144
+  },
+  "contradiction_detection": true,
+  "evaluation_class": "HELD_OUT_DETERMINISTIC",
+  "limitations": [
+    "synthetic deterministic cases",
+    "not production-proven",
+    "small calibration sample"
+  ],
+  "passed": true,
+  "rows": [
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "VERIFIED_FACT",
+      "case": "verified tool fact",
+      "expected": "VERIFIED_FACT",
+      "pass": true
+    },
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "SUPPORTED_FACT",
+      "case": "primary support",
+      "expected": "SUPPORTED_FACT",
+      "pass": true
+    },
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "UNKNOWN",
+      "case": "unsupported assertion",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "INFERENCE",
+      "case": "model inference",
+      "expected": "INFERENCE",
+      "pass": true
+    },
+    {
+      "baseline": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "case": "missing evidence",
+      "expected": "UNKNOWN",
+      "pass": true
+    },
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "CONTRADICTED",
+      "case": "equal contradiction",
+      "expected": "CONTRADICTED",
+      "pass": true
+    },
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "CONTRADICTED",
+      "case": "counterevidence",
+      "expected": "CONTRADICTED",
+      "pass": true
+    },
+    {
+      "baseline": "SUPPORTED_FACT",
+      "candidate": "SUPPORTED_FACT",
+      "case": "secondary support",
+      "expected": "SUPPORTED_FACT",
+      "pass": true
+    }
+  ],
+  "sample_count": 8,
+  "schema_version": "1.0",
+  "unknown_detection": true
+}
