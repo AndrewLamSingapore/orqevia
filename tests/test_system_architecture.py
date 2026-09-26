@@ -4,7 +4,8 @@ from app import system_architecture as facts
 @pytest.mark.parametrize('question',["How many agents do you have?","List your agents.","Which agent answered this?",
     "What does agent a02 do?","Which tools can agent a02 use?","Can an agent change its own role?",
     "What PRIME generation are you running?","What is your source/runtime identity?"])
-def test_architecture_questions_use_canonical_system_facts(question):
+def test_architecture_questions_use_canonical_system_facts(question,monkeypatch):
+    monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_REVISION','f'*40);monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST','sha256:'+'a'*64)
     assert facts.is_architecture_question(question)
     answer=facts.architecture_answer(question)
     assert answer['provenance']=='CANONICAL_REGISTRY_AND_RUNTIME' and answer['status']=='VERIFIED'
@@ -36,6 +37,15 @@ def test_missing_governance_ssot_abstains(monkeypatch,tmp_path):
     monkeypatch.setattr(facts,'ROOT',tmp_path)
     answer=facts.architecture_answer('Is Phase 2 verified?')
     assert answer['status']=='UNVERIFIED' and 'canonical evidence is unavailable' in answer['text']
+
+def test_golden_governance_uses_nested_canonical_manifest_fields():
+    answer=facts.architecture_answer('Is JARVIS PRIME Golden and accepted?')
+    assert answer['status']=='VERIFIED' and '17fad78d410dca5d9101483cb777a2b9b619bac3' in answer['text']
+
+def test_runtime_identity_abstains_when_environment_is_unavailable(monkeypatch):
+    monkeypatch.delenv('PRIME_INTERFACE_RUNTIME_REVISION',raising=False);monkeypatch.delenv('PRIME_RUNTIME_REVISION',raising=False);monkeypatch.delenv('PRIME_RUNTIME_IMAGE_DIGEST',raising=False)
+    answer=facts.architecture_answer('What is your source/runtime identity?')
+    assert answer['status']=='UNAVAILABLE' and 'will not guess' in answer['text']
 
 def test_architecture_objective_bypasses_model_and_returns_system_fact(monkeypatch,tmp_path):
     from app import objective_api

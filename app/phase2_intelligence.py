@@ -81,6 +81,16 @@ def hard_numeric_constraint_violations(constraints: Iterable[str], result_texts:
     return violations
 
 
+def hard_numeric_constraint_assessment(constraints: Iterable[str], payload: Any) -> dict[str, Any]:
+    text=canonical(payload); maxima=[]
+    for constraint in constraints:
+        match=HARD_MAXIMUM.search(str(constraint))
+        if match:maxima.append({"constraint":str(constraint),"maximum":float(match.group(1) or match.group(2))})
+    amounts=[float(high or low) for low,high in CURRENCY_AMOUNT.findall(text)]
+    return {"maxima":maxima,"observed_max":max(amounts) if amounts else None,
+            "violations":hard_numeric_constraint_violations(constraints,[text]) if maxima else []}
+
+
 @dataclass(frozen=True)
 class AuthorityEnvelope:
     actor_id: str
@@ -164,6 +174,11 @@ class Phase2Kernel:
                 );
                 create table if not exists phase2_evidence_effect_uses(
                   evidence_id text primary key, operation_id text unique not null
+                );
+                create table if not exists phase2_constraint_checks(
+                  evidence_id text primary key references phase2_evidence(evidence_id),
+                  objective_id text not null, assessment_json text not null,
+                  record_sha256 text not null
                 );
                 create table if not exists phase2_context(
                   context_id text primary key, context_key text not null, scope text not null, scope_id text not null,
@@ -384,6 +399,18 @@ class Phase2Kernel:
                 if digest(value)==expected:valid_ids.add(row["evidence_id"])
             if valid_ids != set(refs.values()):
                 raise ValueError("completion evidence is unverified or belongs to another objective")
+            hard=hard_numeric_constraint_assessment(current["constraints"],{})["maxima"]
+            if hard:
+                with closing(self.connect()) as db:
+                    checks=db.execute(f"select * from phase2_constraint_checks where objective_id=? and evidence_id in ({','.join('?' for _ in refs)})",(objective_id,*refs.values())).fetchall()
+                observed=False;violations=[]
+                for check in checks:
+                    value=dict(check);expected=value.pop("record_sha256")
+                    if digest(value)!=expected:raise ValueError("constraint check integrity mismatch")
+                    assessment=json.loads(check["assessment_json"])
+                    observed=observed or assessment.get("observed_max") is not None
+                    violations.extend(assessment.get("violations",[]))
+                if not observed or violations:raise ValueError(f"hard numeric constraint violation: {canonical(violations or [{'reason':'numeric outcome not evidenced'}])}")
             current["checkpoint"]["verification"] = [
                 {"criterion": criterion, "evidence_id": refs[criterion]} for criterion in criteria
             ]
@@ -408,6 +435,14 @@ class Phase2Kernel:
                         item=dict(evidence_by_id[evidence_id]); expected=item.pop("record_sha256")
                         if not item["verified"] or digest(item)!=expected:
                             raise ValueError("completion evidence is unverified or belongs to another objective")
+                    if hard:
+                        checks=db.execute(f"select * from phase2_constraint_checks where objective_id=? and evidence_id in ({','.join('?' for _ in refs)})",(objective_id,*refs.values())).fetchall()
+                        atomic_observed=False;atomic_violations=[]
+                        for check in checks:
+                            value=dict(check);expected=value.pop("record_sha256")
+                            if digest(value)!=expected:raise ValueError("constraint check integrity mismatch")
+                            assessment=json.loads(check["assessment_json"]);atomic_observed=atomic_observed or assessment.get("observed_max") is not None;atomic_violations.extend(assessment.get("violations",[]))
+                        if not atomic_observed or atomic_violations:raise ValueError("hard numeric constraint violation during atomic completion")
                 changed=db.execute("update phase2_objectives set state=?,checkpoint_json=?,next_action=?,updated_at=?,completed_at=?,record_sha256=? where objective_id=? and state=? and objective_version=?",
                            (raw["state"], raw["checkpoint_json"], raw["next_action"], moment,
                             raw["completed_at"], raw["record_sha256"], objective_id,current["state"],current["objective_version"])).rowcount
@@ -518,6 +553,9 @@ class Phase2Kernel:
              "provenance":require_text(provenance,"evidence provenance",1000),
              "verified":int(verified),"payload_digest":digest(payload),"attestation_id":attestation_id if verified else None,"created_at":moment}
         row["record_sha256"]=digest(row)
+        assessment=hard_numeric_constraint_assessment(current["constraints"],payload)
+        check={"evidence_id":eid,"objective_id":objective_id,"assessment_json":canonical(assessment)}
+        check["record_sha256"]=digest(check)
         with closing(self.connect()) as db, db:
             if verified:
                 try:
@@ -525,6 +563,7 @@ class Phase2Kernel:
                 except sqlite3.IntegrityError as error:
                     raise ValueError("evidence attestation replay denied") from error
             db.execute("insert into phase2_evidence(evidence_id,objective_id,evidence_type,source,provenance,verified,payload_digest,attestation_id,created_at,record_sha256) values(:evidence_id,:objective_id,:evidence_type,:source,:provenance,:verified,:payload_digest,:attestation_id,:created_at,:record_sha256)",row)
+            db.execute("insert into phase2_constraint_checks values(:evidence_id,:objective_id,:assessment_json,:record_sha256)",check)
             self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified),
                         "attestation_id":attestation_id if verified else None}, moment)
         return {"evidence_id":eid,"verified":bool(verified),"payload_digest":row["payload_digest"],"record_sha256":row["record_sha256"]}

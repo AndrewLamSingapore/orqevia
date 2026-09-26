@@ -6,8 +6,14 @@
   "independent_verification": "PENDING_NEW_CANDIDATE_FREEZE",
   "latest_full_regression": {
     "result": "PASS",
-    "tests_passed": 972,
+    "tests_passed": 976,
     "warnings": 5
+  },
+  "latest_independent_verification": {
+    "candidate": "1b8bd47c24a62ec0f86c11803db49134c269e5ec",
+    "result": "FAIL",
+    "material_severity": "P1",
+    "superseded": true
   },
   "golden_gen1_modified": false,
   "owner_assertion_is_system_verification": false,

@@ -80,6 +80,14 @@ def test_hard_numeric_budget_cap_cannot_be_overridden_by_plausible_range(tmp_pat
     assert hard_numeric_constraint_violations(["Maximum total local budget RMB 500"],["Estimated total RMB 480–500"])==[]
 
 
+def test_hard_numeric_budget_is_enforced_at_objective_completion(tmp_path):
+    store=kernel(tmp_path);item=store.create_objective(objective="Plan trip",success_criteria=["plan","delivered"],constraints=["Maximum total local budget RMB 500"],authority=auth());refs={}
+    for criterion,payload,index in [("plan",{"result":"Estimated total RMB 480–520"},1),("delivered",{"delivery":True},2)]:
+        evidence=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OUTCOME",source="runtime",provenance=f"budget:{index}",payload=payload,verification=attest(store,item["objective_id"],"runtime",f"budget:{index}",payload,f"budget:{index}"));refs[criterion]=evidence["evidence_id"]
+    with pytest.raises(ValueError,match="hard numeric constraint violation"):
+        store.control(item["objective_id"],"complete",authority=auth(),verification_refs=refs)
+
+
 def test_member_cannot_read_owner_objective_or_inherit_owner(tmp_path):
     store=kernel(tmp_path); item=objective(store)
     member=auth("member-1","MEMBER")

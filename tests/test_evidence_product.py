@@ -94,6 +94,8 @@ def test_partial_cannot_masquerade_as_verified(tmp_path):
 def test_malformed_envelope_fails_closed_without_exception():
     result=validate_envelope({'schema_version':'bad'})
     assert result['verdict']=='INVALID' and 'INVALID_SCHEMA:missing_fields' in result['errors']
+    for malformed in [None,[],{'schema_version':'bad','actor':None}, {'schema_version':'bad','actor':{},'authority':{},'verification':{},'claims':[None],'observations':[],'effects':[],'artifacts':[],'provenance':[],'relations':[]}]:
+        assert validate_envelope(malformed)['verdict']=='INVALID'
 
 
 def test_sdk_rejects_nonexistent_verification_reference(tmp_path):

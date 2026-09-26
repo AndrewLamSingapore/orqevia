@@ -25,8 +25,9 @@ def _governance_answer(question: str)->dict[str,Any]:
         status=value.get('production_status','UNVERIFIED'); verification=value.get('independent_verification','UNVERIFIED')
         text=f"PHASE 2 PRODUCTION STATUS: {status}\nINDEPENDENT VERIFICATION: {verification}\nOwner statements are evidence of the Owner statement only; historical verification does not establish the current candidate."
     else:
-        status=value.get('runtime_acceptance',value.get('status','UNVERIFIED'))
-        text=f"PRIME GOLDEN GOVERNANCE STATUS: {status}\nSOURCE: {value.get('source_revision','UNAVAILABLE')}"
+        status=value.get('acceptance',{}).get('state','UNVERIFIED')
+        source=value.get('source',{}).get('accepted_commit','UNAVAILABLE')
+        text=f"PRIME GOLDEN GOVERNANCE STATUS: {status}\nSOURCE: {source}"
     return {'status':status,'provenance':'CANONICAL_GOVERNANCE_SSOT','text':text}
 
 def _runtime()->dict[str,Any]:
@@ -51,7 +52,10 @@ def architecture_answer(question: str)->dict[str,Any]:
     elif 'can an agent change its own role' in lower:
         lines=['NO. Agent roles and authority come from the canonical registry and cannot be self-modified by an agent or model.']
     elif 'generation' in lower or 'source' in lower or 'runtime identity' in lower:
-        runtime=_runtime();lines=[f"SOURCE REVISION: {runtime['source_revision']}",f"IMAGE IDENTITY: {runtime['image_digest']}"]
+        runtime=_runtime()
+        if 'UNAVAILABLE' in runtime.values():
+            return {'status':'UNAVAILABLE','provenance':'CANONICAL_RUNTIME','text':'Runtime identity is currently UNAVAILABLE. JARVIS will not guess.'}
+        lines=[f"SOURCE REVISION: {runtime['source_revision']}",f"IMAGE IDENTITY: {runtime['image_digest']}"]
     else:
         match=re.search(r'agent\s+([a-z]\d{2}|prime)\b',lower)
         try:item=agent_record(match.group(1) if match else '')

@@ -47,10 +47,20 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
     """Validate structure and internal integrity, never unverifiable external facts."""
     errors: list[str] = []
     unresolved: list[str] = []
+    if not isinstance(envelope,dict):
+        return {"verdict":"INVALID","errors":["INVALID_SCHEMA:envelope_type"],"unresolved":[]}
     required = {"schema_version", "action_id", "objective", "actor", "authority", "started_at",
                 "status", "inputs", "claims", "observations", "effects", "artifacts",
                 "verification", "provenance", "relations"}
     if set(envelope) < required: errors.append("INVALID_SCHEMA:missing_fields")
+    mapping_fields=("actor","authority","verification","provenance")
+    list_fields=("inputs","claims","observations","effects","artifacts","relations")
+    if any(not isinstance(envelope.get(field),dict) for field in mapping_fields):errors.append("INVALID_SCHEMA:mapping_field")
+    if any(not isinstance(envelope.get(field),list) for field in list_fields):errors.append("INVALID_SCHEMA:list_field")
+    if errors:
+        return {"verdict":"INVALID","errors":sorted(set(errors)),"unresolved":[]}
+    if any(not isinstance(item,dict) for field in list_fields for item in envelope[field]):
+        return {"verdict":"INVALID","errors":["INVALID_SCHEMA:list_item"],"unresolved":[]}
     if envelope.get("schema_version") != SCHEMA: errors.append("INVALID_SCHEMA:version")
     if envelope.get("status") not in ACTION_STATES: errors.append("INVALID_SCHEMA:action_status")
     actor = envelope.get("actor", {})
@@ -131,6 +141,7 @@ def make_receipt(envelope: dict[str, Any], *, observation_verifier=None) -> dict
 
 def validate_receipt(receipt: dict[str, Any], *, artifact_bytes: dict[str, bytes] | None = None,
                      observation_verifier=None) -> dict[str, Any]:
+    if not isinstance(receipt,dict):return {"verdict":"INVALID","errors":["INVALID_SCHEMA:receipt_type"],"unresolved":[]}
     body = {key: receipt.get(key) for key in ("schema_version", "envelope", "validation", "signature")}
     errors = []
     if receipt.get("schema_version") != "evidence-receipt.v0.1": errors.append("INVALID_SCHEMA:receipt")
