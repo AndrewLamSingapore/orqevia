@@ -21,3 +21,5 @@ test('Read Aloud errors are visible and never silently treated as success',()=>{
   const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.speak('Result');spoken[0].onerror({error:'not-allowed'});
   assert.equal(voice.speaking,false);assert.equal(states.at(-1)[1],'error');assert.match(states.at(-1)[0],/not-allowed/);
 });
+
+test('lifecycle cleanup is silent when no audio is active',()=>{const states=[];globalThis.speechSynthesis={speaking:false,pending:false,paused:false,cancel:()=>{}};const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.stop({announce:false});assert.deepEqual(states,[]);voice.stop();assert.deepEqual(states,[]);});
