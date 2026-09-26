@@ -225,7 +225,7 @@ class ContractTests(unittest.TestCase):
         from concurrent.futures import ThreadPoolExecutor
         self.submit()
         db = contract.node.objective_api.connect()
-        db.execute('INSERT INTO objectives (id,objective_hash,state,steps_json) VALUES(?,?,?,?)', ('task-fixture', 'fixture', 'submitted', '[]'))
+        db.execute('INSERT INTO objectives VALUES(?,?,?,?)', ('task-fixture', 'fixture', 'submitted', '[]'))
         db.commit()
         db.close()
         self.get.stop()

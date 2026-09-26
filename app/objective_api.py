@@ -112,12 +112,11 @@ def connect():
     path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'objectives.db'
     path.parent.mkdir(parents=True,exist_ok=True)
     db=sqlite3.connect(path,timeout=15)
-    db.execute('CREATE TABLE IF NOT EXISTS objectives (id TEXT PRIMARY KEY, objective_hash TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL, created_at TEXT, updated_at TEXT)')
-    db.execute('CREATE TABLE IF NOT EXISTS objective_turns (task TEXT NOT NULL, revision INTEGER NOT NULL, idempotency_key TEXT NOT NULL, digest TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL, created_at TEXT, updated_at TEXT, PRIMARY KEY(task,revision), UNIQUE(task,idempotency_key))')
-    for table in ('objectives','objective_turns'):
-        columns={row[1] for row in db.execute(f'PRAGMA table_info({table})')}
-        for name in ('created_at','updated_at'):
-            if name not in columns:db.execute(f'ALTER TABLE {table} ADD COLUMN {name} TEXT')
+    # Keep the original tables byte-for-byte compatible with the rollback image.
+    # New system timestamps live in an additive side table old runtimes ignore.
+    db.execute('CREATE TABLE IF NOT EXISTS objectives (id TEXT PRIMARY KEY, objective_hash TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL)')
+    db.execute('CREATE TABLE IF NOT EXISTS objective_turns (task TEXT NOT NULL, revision INTEGER NOT NULL, idempotency_key TEXT NOT NULL, digest TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL, PRIMARY KEY(task,revision), UNIQUE(task,idempotency_key))')
+    db.execute('CREATE TABLE IF NOT EXISTS objective_metadata (task TEXT NOT NULL, revision INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(task,revision))')
     db.commit()
     return db
 
@@ -137,7 +136,8 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
     db=connect()
     try:
         created=utcnow()
-        db.execute('INSERT INTO objectives (id,objective_hash,state,steps_json,created_at,updated_at) VALUES(?,?,?,?,?,?)',(task_id,hashlib.sha256(body.objective.encode()).hexdigest(),'dispatching',json.dumps(capabilities),created,created))
+        db.execute('INSERT INTO objectives VALUES(?,?,?,?)',(task_id,hashlib.sha256(body.objective.encode()).hexdigest(),'dispatching',json.dumps(capabilities)))
+        db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,0,created,created))
         db.commit()
         if workflow_body is not None:
             try:
@@ -151,7 +151,8 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                             'reason':'WORKFLOW_EXECUTION_FAILED','workflow':outcome}]
             except Exception as exc:
                 steps=[{'capability':'workflow.operational','state':'failed','reason':type(exc).__name__}]
-            db.execute('UPDATE objectives SET state=?,steps_json=?,updated_at=? WHERE id=?',('submitted',json.dumps(steps),utcnow(),task_id))
+            db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
+            db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id))
             db.commit()
             from .public_task_errors import public_task
             return public_task({'id':task_id,'steps':steps,'physical_inference_limit':compute_queue_api.queue.policy.global_concurrency,
@@ -168,7 +169,8 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                 return {'capability':capability,'state':'indeterminate','reason':type(exc).__name__}
         with ThreadPoolExecutor(max_workers=min(3,len(capabilities))) as workers:
             steps=list(workers.map(run,capabilities))
-        db.execute('UPDATE objectives SET state=?,steps_json=?,updated_at=? WHERE id=?',('submitted',json.dumps(steps),utcnow(),task_id))
+        db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
+        db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id))
         db.commit()
         from .public_task_errors import public_task
         return public_task({'id':task_id,'steps':steps,'physical_inference_limit':compute_queue_api.queue.policy.global_concurrency,
@@ -182,8 +184,10 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     authenticate_owner(authorization)
     db=connect()
     try:
-        row=db.execute('SELECT state,steps_json,created_at,updated_at FROM objectives WHERE id=?',(task_id,)).fetchone()
-        turns=db.execute('SELECT revision,state,steps_json,created_at,updated_at FROM objective_turns WHERE task=? ORDER BY revision',(task_id,)).fetchall()
+        row=db.execute('SELECT state,steps_json FROM objectives WHERE id=?',(task_id,)).fetchone()
+        turns=db.execute('SELECT revision,state,steps_json FROM objective_turns WHERE task=? ORDER BY revision',(task_id,)).fetchall()
+        timing={item[0]:(item[1],item[2]) for item in db.execute(
+            'SELECT revision,created_at,updated_at FROM objective_metadata WHERE task=?',(task_id,)).fetchall()}
     finally:
         db.close()
     if row is None:
@@ -193,7 +197,7 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     revision=turns[-1][0] if turns else 0
     steps=json.loads(row[1])
     for step in steps:step['revision']=0
-    for turn_revision,turn_state,turn_steps,_,_ in turns:
+    for turn_revision,turn_state,turn_steps in turns:
         for step in json.loads(turn_steps):
             step['revision']=turn_revision
             steps.append(step)
@@ -208,8 +212,9 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     if turns and turns[-1][1]=='dispatching':state='reconciliation_required'
     current_steps=[step for step in steps if step.get('revision',0)==revision]
     jobs=[step.get('job',{}) for step in current_steps if step.get('job')]
-    created_at=(turns[-1][3] if turns else row[2]) or min((job.get('created_at') for job in jobs if job.get('created_at')),default=None)
-    updated_at=(turns[-1][4] if turns else row[3]) or max((job.get('completed_at') or job.get('started_at') or job.get('created_at') for job in jobs if job.get('completed_at') or job.get('started_at') or job.get('created_at')),default=None)
+    recorded=timing.get(revision,(None,None))
+    created_at=recorded[0] or min((job.get('created_at') for job in jobs if job.get('created_at')),default=None)
+    updated_at=recorded[1] or max((job.get('completed_at') or job.get('started_at') or job.get('created_at') for job in jobs if job.get('completed_at') or job.get('started_at') or job.get('created_at')),default=None)
     started_at=min((job.get('started_at') for job in jobs if job.get('started_at')),default=None)
     completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
     revision_identity=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN')).strip().lower()
@@ -260,7 +265,8 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
         if current['state'] not in {'COMPLETED','COMPLETED_WITH_FAILURES'}:raise HTTPException(409,'Current task turn is not terminal')
         revision=expected_revision+1
         created=utcnow()
-        db.execute('INSERT INTO objective_turns (task,revision,idempotency_key,digest,state,steps_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',(task_id,revision,idempotency_key,digest,'dispatching','[]',created,created))
+        db.execute('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',(task_id,revision,idempotency_key,digest,'dispatching','[]'))
+        db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,revision,created,created))
         db.commit()
         from .operational_workflows import from_objective, execute_workflow
         workflow=from_objective(body.objective,body.context)
@@ -290,7 +296,8 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
                 except Exception:return {'capability':capability,'state':'indeterminate','reason':'STEP_DISPATCH_FAILED'}
             capabilities=select_capabilities(body.objective)
             with ThreadPoolExecutor(max_workers=min(3,len(capabilities))) as pool:steps=list(pool.map(run,capabilities))
-        db.execute('UPDATE objective_turns SET state=?,steps_json=?,updated_at=? WHERE task=? AND revision=?',('submitted',json.dumps(steps),utcnow(),task_id,revision))
+        db.execute('UPDATE objective_turns SET state=?,steps_json=? WHERE task=? AND revision=?',('submitted',json.dumps(steps),task_id,revision))
+        db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=?',(utcnow(),task_id,revision))
         db.commit()
         return {'task_id':task_id,'taskId':task_id,'revision':revision,'state':'ROUTED','idempotent_replay':False}
     finally:db.close()
