@@ -89,7 +89,7 @@ def test_objective_status_projects_stored_job_error(monkeypatch):
     from app import objective_api
     monkeypatch.setattr(objective_api,'authenticate_owner',lambda *args:None)
     class Cursor:
-        def fetchone(self):return ('submitted',json.dumps([{'dispatch':{'job':{'id':'job'}}}]),None,None)
+        def fetchone(self):return ('submitted',json.dumps([{'dispatch':{'job':{'id':'job'}}}]))
         def fetchall(self):return []  # Original task has no continuation turns.
     class DB:
         def execute(self,*args):return Cursor()

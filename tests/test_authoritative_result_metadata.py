@@ -84,6 +84,16 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
             {'EXECUTION_STATE_CONTRADICTION','UNSUPPORTED_ARTIFACT_DIGEST_CLAIM'})
         self.assertEqual(self.metadata()['state'],'COMPLETED')
 
+    def test_additive_timestamp_store_preserves_rollback_table_shape(self):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root}):
+            db=objective_api.connect()
+            self.assertEqual(len(db.execute('PRAGMA table_info(objectives)').fetchall()),4)
+            self.assertEqual(len(db.execute('PRAGMA table_info(objective_turns)').fetchall()),6)
+            # Exact positional inserts used by the rollback image must remain valid.
+            db.execute('INSERT INTO objectives VALUES(?,?,?,?)',('legacy','digest','submitted','[]'))
+            db.execute('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',('legacy',1,'key','digest','submitted','[]'))
+            db.commit();db.close()
+
 
 if __name__=='__main__':
     unittest.main()
