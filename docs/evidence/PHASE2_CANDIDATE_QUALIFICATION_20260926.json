@@ -39,6 +39,17 @@
       "elapsed_seconds": 1.5515,
       "mean_milliseconds": 15.515,
       "production_load": false
+    },
+    "evidence_lens_owner_physical_acceptance": {
+      "verdict": "PASS",
+      "observed_at_local": "2026-09-26",
+      "scope": [
+        "Answer and Evidence switching",
+        "Claims Evidence and Receipt disclosure",
+        "narrow phone-width usability",
+        "visible FAILED warning"
+      ],
+      "evidence_source": "OWNER_PHYSICAL_CONFIRMATION"
     }
   },
   "defects_found_and_repaired": 5,

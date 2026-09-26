@@ -1,7 +1,7 @@
 {
   "schema_version": "evidence-product-baseline.v0.1",
   "baseline_id": "evidence-product-technical-v0.1-20260926",
-  "state": "CANDIDATE_QUALIFICATION",
+  "state": "TECHNICAL_BASELINE_CANDIDATE",
   "commercial_validation": "NOT_YET_PERFORMED",
   "level_1": "READY_CANDIDATE",
   "level_2": "READY_CANDIDATE",
@@ -24,7 +24,7 @@
     "namespace_isolation": "PASS",
     "supersession": "PASS",
     "prime_adapter": "PASS",
-    "rendered_browser_acceptance": "PENDING_BROWSER_POLICY_BOUNDARY"
+    "rendered_browser_acceptance": "PASS_OWNER_PHYSICAL_20260926"
   },
   "limitations": [
     "validator cannot prove external facts it cannot observe",
