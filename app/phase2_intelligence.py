@@ -114,7 +114,8 @@ class Phase2Kernel:
                 );
                 create table if not exists phase2_events(
                   event_id text primary key, objective_id text not null references phase2_objectives(objective_id),
-                  event_type text not null, details_json text not null, created_at real not null
+                  event_type text not null, details_json text not null, created_at real not null,
+                  previous_digest text, event_digest text not null
                 );
                 create table if not exists phase2_attempts(
                   attempt_id text primary key, objective_id text not null references phase2_objectives(objective_id),
@@ -129,7 +130,8 @@ class Phase2Kernel:
                 create table if not exists phase2_evidence(
                   evidence_id text primary key, objective_id text not null references phase2_objectives(objective_id),
                   evidence_type text not null, source text not null, provenance text not null,
-                  verified integer not null, payload_digest text not null, created_at real not null
+                  verified integer not null, payload_digest text not null, created_at real not null,
+                  record_sha256 text not null
                 );
                 create table if not exists phase2_context(
                   context_id text primary key, context_key text not null, scope text not null, scope_id text not null,
@@ -171,8 +173,13 @@ class Phase2Kernel:
         return digest(protected)
 
     def _event(self, db: sqlite3.Connection, objective_id: str, event_type: str, details: Any, now: float) -> None:
-        db.execute("insert into phase2_events values(?,?,?,?,?)", (str(uuid.uuid4()), objective_id,
-                   event_type, canonical(details), now))
+        prior = db.execute("select event_digest from phase2_events where objective_id=? order by rowid desc limit 1", (objective_id,)).fetchone()
+        previous_digest = prior[0] if prior else None
+        event_id, details_json = str(uuid.uuid4()), canonical(details)
+        protected = {"event_id": event_id, "objective_id": objective_id, "event_type": event_type,
+                     "details_json": details_json, "created_at": now, "previous_digest": previous_digest}
+        db.execute("insert into phase2_events values(?,?,?,?,?,?,?)", (event_id, objective_id,
+                   event_type, details_json, now, previous_digest, digest(protected)))
 
     def create_objective(self, *, objective: str, success_criteria: list[str], constraints: list[str],
                          authority: AuthorityEnvelope, now: float | None = None) -> dict[str, Any]:
@@ -182,6 +189,8 @@ class Phase2Kernel:
         criteria = [require_text(item, "success criterion", 1000) for item in success_criteria]
         if not criteria:
             raise ValueError("at least one success criterion is required")
+        if len(set(criteria)) != len(criteria):
+            raise ValueError("success criteria must be unique")
         oid = str(uuid.uuid4())
         checkpoint = {"facts": [], "unknowns": [], "problem_graph": {}, "plan": [],
                       "completed_work": [], "failed_approaches": [], "artifacts": [],
@@ -210,10 +219,10 @@ class Phase2Kernel:
         if row is None:
             raise KeyError(objective_id)
         value = dict(row)
-        if authority.role != "SYSTEM" and value["owner_id"] != authority.actor_id:
-            raise PermissionError("cross-user objective access denied")
         if value["record_sha256"] != self._objective_hash(value):
             raise ValueError("objective integrity mismatch")
+        if authority.role != "SYSTEM" and (value["owner_id"] != authority.actor_id or value["owner_role"] != authority.role):
+            raise PermissionError("cross-user objective access denied")
         for key in ("success_criteria_json", "constraints_json", "authority_json", "checkpoint_json"):
             value[key[:-5]] = json.loads(value.pop(key))
         return value
@@ -273,12 +282,18 @@ class Phase2Kernel:
             criteria = current["success_criteria"]
             if set(refs) != set(criteria):
                 raise ValueError("completion requires evidence for every success criterion")
+            if len(set(refs.values())) != len(criteria):
+                raise ValueError("each success criterion requires distinct evidence")
             with closing(self.connect()) as db:
                 rows = db.execute(
-                    f"select evidence_id from phase2_evidence where objective_id=? and verified=1 and evidence_id in ({','.join('?' for _ in refs)})",
+                    f"select * from phase2_evidence where objective_id=? and verified=1 and evidence_id in ({','.join('?' for _ in refs)})",
                     (objective_id, *refs.values()),
                 ).fetchall() if refs else []
-            if {row[0] for row in rows} != set(refs.values()):
+            valid_ids=set()
+            for row in rows:
+                value=dict(row); expected=value.pop("record_sha256")
+                if digest(value)==expected: valid_ids.add(row["evidence_id"])
+            if valid_ids != set(refs.values()):
                 raise ValueError("completion evidence is unverified or belongs to another objective")
             current["checkpoint"]["verification"] = [
                 {"criterion": criterion, "evidence_id": refs[criterion]} for criterion in criteria
@@ -341,7 +356,7 @@ class Phase2Kernel:
         return {"operation_id": operation_id, "verified": bool(verified), "duplicate": False}
 
     def record_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, evidence_type: str,
-                        source: str, provenance: str, payload: Any, verified: bool,
+                        source: str, provenance: str, payload: Any, verification: dict[str, Any] | None,
                         evidence_id: str | None = None, now: float | None = None) -> dict[str, Any]:
         moment = self.clock() if now is None else float(now)
         authority.validate("objective.update", now=moment)
@@ -349,13 +364,23 @@ class Phase2Kernel:
         if current["state"] != ObjectiveState.ACTIVE.value:
             raise ValueError("evidence denied for non-active objective")
         eid = evidence_id or str(uuid.uuid4())
+        verification = dict(verification or {})
+        verifier = verification.get("verifier_type")
+        verified = verifier in {"SYSTEM", "RUNTIME", "INDEPENDENT"} and bool(verification.get("verification_ref"))
+        if verification and not verified:
+            raise ValueError("evidence verification is not governed")
+        if verified and ("MODEL" in provenance.upper() or "MODEL" in source.upper()):
+            raise ValueError("model assertion cannot verify evidence")
+        row={"evidence_id":eid,"objective_id":objective_id,
+             "evidence_type":require_text(evidence_type,"evidence type",100),
+             "source":require_text(source,"evidence source",500),
+             "provenance":require_text(provenance,"evidence provenance",1000),
+             "verified":int(verified),"payload_digest":digest(payload),"created_at":moment}
+        row["record_sha256"]=digest(row)
         with closing(self.connect()) as db, db:
-            db.execute("insert into phase2_evidence values(?,?,?,?,?,?,?,?)",
-                       (eid, objective_id, require_text(evidence_type,"evidence type",100),
-                        require_text(source,"evidence source",500), require_text(provenance,"evidence provenance",1000),
-                        int(bool(verified)), digest(payload), moment))
+            db.execute("insert into phase2_evidence values(:evidence_id,:objective_id,:evidence_type,:source,:provenance,:verified,:payload_digest,:created_at,:record_sha256)",row)
             self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified)}, moment)
-        return {"evidence_id":eid,"verified":bool(verified),"payload_digest":digest(payload)}
+        return {"evidence_id":eid,"verified":bool(verified),"payload_digest":row["payload_digest"],"record_sha256":row["record_sha256"]}
 
     def ingest_context(self, *, authority: AuthorityEnvelope, context_key: str, scope: str, scope_id: str, epistemic_class: str,
                        temporal_state: str, value: Any, source: str, source_version: str,
@@ -404,7 +429,15 @@ class Phase2Kernel:
         words = set(TOKEN.findall(objective["objective"].casefold()))
         with closing(self.connect()) as db:
             rows = db.execute("select * from phase2_context order by ingested_at desc").fetchall()
-        eligible = [row for row in rows if self._scope_allowed(row, authority)]
+        eligible = []
+        for row in rows:
+            expected = digest({"key": row["context_key"], "value": json.loads(row["value_json"]),
+                               "source": row["source"], "version": row["source_version"],
+                               "authority": row["source_authority"]})
+            if expected != row["content_sha256"]:
+                raise ValueError("context integrity mismatch")
+            if self._scope_allowed(row, authority):
+                eligible.append(row)
         superseded = {row["supersedes_id"] for row in eligible if row["supersedes_id"]}
         eligible = [row for row in eligible if row["context_id"] not in superseded and row["temporal_state"] not in {"SUPERSEDED", "RETIRED"}]
         def rank(row: sqlite3.Row) -> tuple[int, int, float]:
@@ -544,10 +577,16 @@ class Phase2Kernel:
         moment = self.clock() if now is None else float(now)
         objective = self.get_objective(objective_id, authority=authority, now=moment)
         with closing(self.connect()) as db:
-            events = [dict(row) for row in db.execute("select * from phase2_events where objective_id=? order by created_at,event_id", (objective_id,))]
+            events = [dict(row) for row in db.execute("select * from phase2_events where objective_id=? order by rowid", (objective_id,))]
             effects = [dict(row) for row in db.execute("select * from phase2_effects where objective_id=? order by created_at,operation_id", (objective_id,))]
             evidence = [dict(row) for row in db.execute("select * from phase2_evidence where objective_id=? order by created_at,evidence_id", (objective_id,))]
             predictions = [dict(row) for row in db.execute("select prediction_id,status,record_sha256 from phase2_predictions where objective_id=? order by created_at,prediction_id", (objective_id,))]
+        previous = None
+        for event in events:
+            protected = {key: event[key] for key in ("event_id", "objective_id", "event_type", "details_json", "created_at", "previous_digest")}
+            if event["previous_digest"] != previous or event["event_digest"] != digest(protected):
+                raise ValueError("objective event integrity mismatch")
+            previous = event["event_digest"]
         value = {"schema_version": "jarvis.phase2.objective-snapshot.v1", "objective": objective,
                  "events": events, "effects": effects, "evidence": evidence, "predictions": predictions,
                  "snapshot_at": utc(moment), "authority": "SYSTEM_RECORD"}

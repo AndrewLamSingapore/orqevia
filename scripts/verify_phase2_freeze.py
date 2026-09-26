@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify Phase 2 freeze receipt against immutable Git bytes."""
 from __future__ import annotations
-import hashlib,json,subprocess
+import hashlib,json,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 RECEIPT=ROOT/'docs/evidence/PHASE2_CANDIDATE_FREEZE_RECEIPT_20260926.json'
@@ -13,7 +13,7 @@ def validate(value):
     errors=[]; source=value['source']; commit=source['commit']
     def need(ok,msg):
         if not ok: errors.append(msg)
-    need(value['state']=='FROZEN_CANDIDATE_NOT_PRODUCTION','state')
+    need(value['state'] in {'FROZEN_CANDIDATE_NOT_PRODUCTION','FROZEN_CANDIDATE_PENDING_INDEPENDENT_VERIFICATION'},'state')
     need(subprocess.run(['git','rev-parse',source['tag']+'^{}'],cwd=ROOT,check=True,text=True,stdout=subprocess.PIPE).stdout.strip()==commit,'tag_commit')
     need(subprocess.run(['git','rev-parse',commit+'^{tree}'],cwd=ROOT,check=True,text=True,stdout=subprocess.PIPE).stdout.strip()==source['tree'],'tree')
     for path,expected in value['bindings'].items():
@@ -27,6 +27,7 @@ def validate(value):
     return sorted(set(errors))
 
 if __name__=='__main__':
-    value=json.loads(RECEIPT.read_text(encoding='utf-8')); errors=validate(value)
+    receipt=Path(sys.argv[1]) if len(sys.argv)>1 else RECEIPT
+    value=json.loads(receipt.read_text(encoding='utf-8')); errors=validate(value)
     print(json.dumps({'freeze_id':value['freeze_id'],'verdict':'PASS' if not errors else 'FAIL','violations':errors},sort_keys=True))
     raise SystemExit(bool(errors))

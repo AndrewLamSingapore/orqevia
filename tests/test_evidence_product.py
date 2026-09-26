@@ -68,6 +68,15 @@ def test_append_history_idempotency_namespace_and_chain_tamper(tmp_path):
     assert ledger.verify_chain(item.action_id,namespace='demo')['verdict']=='INVALID'
 
 
+def test_direct_current_envelope_tamper_breaks_chain_binding(tmp_path):
+    ledger,item,_=build(tmp_path)
+    with sqlite3.connect(ledger.path) as db:
+        raw=json.loads(db.execute('select envelope_json from evidence_actions where action_id=?',(item.action_id,)).fetchone()[0])
+        raw['actor']['id']='attacker'
+        db.execute('update evidence_actions set envelope_json=? where action_id=?',(json.dumps(raw),item.action_id))
+    assert ledger.verify_chain(item.action_id,namespace='demo')['verdict']=='INVALID'
+
+
 def test_partial_cannot_masquerade_as_verified(tmp_path):
     _,item,_=build(tmp_path)
     changed=json.loads(json.dumps(item.envelope)); changed['verification']={'state':'VERIFIED','evidence':[]}

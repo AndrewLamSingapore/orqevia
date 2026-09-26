@@ -127,7 +127,7 @@ class EvidenceLedger:
             db.executescript("""
             create table if not exists evidence_actions(
               action_id text primary key, namespace text not null, envelope_json text not null,
-              revision integer not null, created_at text not null, updated_at text not null);
+              envelope_digest text not null, revision integer not null, created_at text not null, updated_at text not null);
             create table if not exists evidence_events(
               sequence integer primary key autoincrement, event_id text unique not null,
               idempotency_key text unique not null, action_id text not null,
@@ -158,9 +158,10 @@ class EvidenceLedger:
             existing = db.execute("select action_id from evidence_events where idempotency_key=?",
                                   (idempotency_key or f"create:{action_id}",)).fetchone()
             if existing: return self.get(existing["action_id"], namespace=namespace)
-            db.execute("insert into evidence_actions values(?,?,?,?,?,?)",
-                       (action_id, namespace, canonical_bytes(envelope).decode(), 1, envelope["started_at"], envelope["started_at"]))
-            self._append(db, action_id, idempotency_key or f"create:{action_id}", "ACTION_CREATED", envelope["started_at"], {"objective": objective})
+            envelope_digest=content_digest(canonical_bytes(envelope))["value"]
+            db.execute("insert into evidence_actions values(?,?,?,?,?,?,?)",
+                       (action_id, namespace, canonical_bytes(envelope).decode(), envelope_digest, 1, envelope["started_at"], envelope["started_at"]))
+            self._append(db, action_id, idempotency_key or f"create:{action_id}", "ACTION_CREATED", envelope["started_at"], {"objective": objective,"envelope_digest":envelope_digest,"revision":1})
         return envelope
 
     def _append(self, db: sqlite3.Connection, action_id: str, key: str, event_type: str,
@@ -193,9 +194,10 @@ class EvidenceLedger:
             envelope = json.loads(row["envelope_json"])
             apply(envelope)
             now = _now(); revision = row["revision"] + 1
-            db.execute("update evidence_actions set envelope_json=?,revision=?,updated_at=? where action_id=?",
-                       (canonical_bytes(envelope).decode(), revision, now, action_id))
-            self._append(db, action_id, idempotency_key, event_type, now, {"revision": revision})
+            envelope_digest=content_digest(canonical_bytes(envelope))["value"]
+            db.execute("update evidence_actions set envelope_json=?,envelope_digest=?,revision=?,updated_at=? where action_id=?",
+                       (canonical_bytes(envelope).decode(), envelope_digest, revision, now, action_id))
+            self._append(db, action_id, idempotency_key, event_type, now, {"revision": revision,"envelope_digest":envelope_digest})
         return envelope
 
     def events(self, action_id: str, *, namespace: str) -> list[dict[str, Any]]:
@@ -213,6 +215,14 @@ class EvidenceLedger:
             if event["previous_digest"] != previous or event["event_digest"] != content_digest(canonical_bytes(protected))["value"]:
                 errors.append("LEDGER_INTEGRITY:" + event["event_id"])
             previous = event["event_digest"]
+        with self._connect() as db:
+            action_row=db.execute("select envelope_json,envelope_digest,revision from evidence_actions where action_id=? and namespace=?",(action_id,namespace)).fetchone()
+        actual=content_digest(action_row["envelope_json"].encode())["value"]
+        if actual!=action_row["envelope_digest"]: errors.append("LEDGER_INTEGRITY:envelope_digest")
+        if events:
+            final_payload=json.loads(events[-1]["payload_json"])
+            if final_payload.get("envelope_digest")!=action_row["envelope_digest"] or final_payload.get("revision")!=action_row["revision"]:
+                errors.append("LEDGER_INTEGRITY:envelope_head_binding")
         return {"verdict": "VALID" if not errors else "INVALID", "errors": errors, "events": len(events), "head": previous}
 
     def query(self, *, namespace: str, actor_id: str | None = None,
