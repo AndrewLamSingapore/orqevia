@@ -63,12 +63,21 @@ def client_policy(client):
             'data_classification':classification,'max_cost_usd':ceiling,
             **({'owner_account_id':row[2]} if row[2] else {})}
 
-def session(request):
+def session_state(request):
     cookie=request.cookies.get(COOKIE,'')
-    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',cookie):return None
+    if not cookie:return 'MISSING',None
+    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',cookie):return 'INVALID',None
     with database() as db:row=db.execute('SELECT client_id,expires,revoked,role,owner_account_id FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
-    if not row or row[2] or row[1]<=time.time():return None
-    return {'clientId':row[0],'expiresAt':row[1],'role':row[3],'ownerAccountId':row[4]}
+    if not row:return 'INVALID',None
+    value={'clientId':row[0],'expiresAt':row[1],'role':row[3],'ownerAccountId':row[4]}
+    if row[2]:return 'REVOKED',value
+    if row[1]<=time.time():return 'EXPIRED',value
+    if row[3] not in {'OWNER','MEMBER'}:return 'INVALID',None
+    return 'VALID',value
+
+def session(request):
+    state,value=session_state(request)
+    return value if state=='VALID' else None
 
 def device_state(request):
     raw=request.cookies.get(DEVICE_COOKIE,'')
@@ -100,7 +109,7 @@ def _issue_device(current):
 def _refresh_session(bound):
     raw=secrets.token_urlsafe(32);expires=clock()+SESSION_SECONDS;internal_token(bound['clientId'])
     with database() as db:
-        changed=db.execute('UPDATE sessions SET session_hash=?,expires=?,revoked=0,owner_account_id=?,role=? WHERE client_id=?',
+        changed=db.execute('UPDATE sessions SET session_hash=?,expires=?,owner_account_id=?,role=? WHERE client_id=? AND revoked=0',
             (digest(raw),expires,bound['ownerAccountId'],bound['role'],bound['clientId'])).rowcount
         if changed!=1:return None
     return raw,{'clientId':bound['clientId'],'expiresAt':expires,'role':bound['role']}
@@ -160,16 +169,23 @@ async def pairing(request:Request):
 
 @router.get('/session')
 def get_session(request:Request):
-    current=session(request)
+    session_status,current=session_state(request)
     device_status,bound=device_state(request)
     device_token=None;session_token=None;clear_credentials=False
-    if current and bound and any(current[key]!=bound[key] for key in ('clientId','role','ownerAccountId')):
+    if session_status in {'INVALID','REVOKED'}:
         current=None;clear_credentials=True
-    elif current and device_status=='MISSING':device_token=_issue_device(current)
-    elif current and device_status!='VALID':current=None;clear_credentials=True
-    elif not current and bound:
-        refreshed=_refresh_session(bound)
-        if refreshed:session_token,current=refreshed
+    elif current and bound and any(current[key]!=bound[key] for key in ('clientId','role','ownerAccountId')):
+        current=None;clear_credentials=True
+    elif session_status=='VALID' and device_status=='MISSING':device_token=_issue_device(current)
+    elif session_status=='VALID' and device_status!='VALID':current=None;clear_credentials=True
+    elif session_status in {'MISSING','EXPIRED'} and bound:
+        if current and any(current[key]!=bound[key] for key in ('clientId','role','ownerAccountId')):
+            current=None;clear_credentials=True
+        else:
+            refreshed=_refresh_session(bound)
+            if refreshed:session_token,current=refreshed
+    elif session_status!='VALID':
+        current=None
     response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),**(current or {})})
     if clear_credentials:
         response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')

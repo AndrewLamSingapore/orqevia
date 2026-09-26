@@ -238,6 +238,21 @@ def test_revoked_device_cannot_be_reissued_while_short_session_is_active(setup):
         assert old and client.cookies.get(pwa.DEVICE_COOKIE) is None
         with pwa.database() as db:assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(identity,)).fetchone()==(1,)
 
+def test_revoked_session_cannot_be_resurrected_by_valid_device(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        with pwa.database() as db:db.execute('UPDATE sessions SET revoked=1 WHERE client_id=?',(identity,))
+        assert client.get('/pwa/api/session').json()['authenticated'] is False
+        with pwa.database() as db:assert db.execute('SELECT revoked FROM sessions WHERE client_id=?',(identity,)).fetchone()==(1,)
+
+def test_invalid_session_token_cannot_use_valid_device_for_silent_recovery(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enroll(pwa,client);client.cookies.set(pwa.COOKIE,secrets.token_urlsafe(32),domain='192.168.1.23',path='/')
+        assert client.get('/pwa/api/session').json()['authenticated'] is False
+        assert client.cookies.get(pwa.COOKIE) is None and client.cookies.get(pwa.DEVICE_COOKIE) is None
+
 def test_mismatched_session_and_device_fail_closed_without_authority_switch(setup):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as member,TestClient(app,base_url=ORIGIN) as owner:
