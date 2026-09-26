@@ -1,12 +1,15 @@
 {
   "schema_version": "1.0.0",
   "canonical_repository": "AndrewLamSingapore/prime",
-  "canonical_branch": "main",
+  "canonical_branch": "feat/supreme-integration-20260925",
   "canonical_path": "governance/operational-manifest.json",
-  "canonical_url": "https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json",
-  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
+  "canonical_url": "https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/governance/operational-manifest.json",
+  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/STATUS.md",
   "status_authority_note": "STATUS.md (private PRIME repository) is the only current status and evidence authority. This file is a machine-readable component pointer only and cannot establish status.",
   "channel_contract": "governance/CHANNEL_CONTRACT.md",
-  "resolution": "Fetch main, pin the returned commit, then read manifest and referenced documents at that same commit.",
+  "resolution": "Fetch feat/supreme-integration-20260925, pin the returned commit, then read manifest and referenced documents at that same commit. Golden Gen 1 architecture is additionally frozen by its immutable tag.",
+  "golden_architecture": "docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md",
+  "golden_manifest": "governance/golden-gen1-manifest.json",
+  "active_golden_generation": 1,
   "copy_policy": "REFERENCE_ONLY; no independently editable status, architecture or agent registry"
 }

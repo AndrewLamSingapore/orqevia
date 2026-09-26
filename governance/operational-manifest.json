@@ -1,12 +1,12 @@
 {
   "schema_version": "4.3.0",
-  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
+  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/STATUS.md",
   "superseded_note": "Status claims in this file are superseded by STATUS.md as of 2026-09-22. This file is retained as a machine-readable component, release and observation reference only: it cannot select current status or promote anything to verified.",
   "status": "STALE",
   "as_of_utc": "2026-09-26T07:48:05Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
-    "branch": "main",
+    "branch": "feat/supreme-integration-20260925",
     "path": "governance/operational-manifest.json"
   },
   "verification": {
@@ -522,5 +522,16 @@
     "unresolved_p0": 0,
     "unresolved_p1": 0,
     "unresolved_p2": 0
+  },
+  "golden_architecture": {
+    "active_generation": 1,
+    "architecture_state": "FROZEN",
+    "architecture": "docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md",
+    "manifest": "governance/golden-gen1-manifest.json",
+    "immutable_reference": "jarvis-prime-golden-gen1-20260926",
+    "runtime_source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "runtime_image": "prime:sha-17fad78",
+    "long_duration_stability": "PENDING",
+    "phase2": "CANDIDATE_NOT_PART_OF_GOLDEN_GEN1"
   }
 }
