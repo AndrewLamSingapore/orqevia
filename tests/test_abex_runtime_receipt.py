@@ -6,7 +6,7 @@ from scripts.verify_abex_runtime_receipt import validate
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RECEIPT = json.loads((ROOT / "docs/evidence/ABEX_RUNTIME_RECEIPT_D0970FC_20260926.json").read_text())
+RECEIPT = json.loads((ROOT / "docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json").read_text())
 
 
 def test_current_abex_observation_is_valid_but_not_independent_acceptance():
@@ -32,6 +32,9 @@ def test_self_attestation_and_runtime_identity_mutations_fail_closed():
     false_state = copy.deepcopy(RECEIPT)
     false_state["acceptance"]["prime_runtime_acceptance"] = "VERIFIED"
     mutations.append(false_state)
+    duplicate_owner = copy.deepcopy(RECEIPT)
+    duplicate_owner["physical_owner_iphone_acceptance"]["duplicate_owner_identity_created"] = True
+    mutations.append(duplicate_owner)
     for value in mutations:
         assert validate(value), value
 

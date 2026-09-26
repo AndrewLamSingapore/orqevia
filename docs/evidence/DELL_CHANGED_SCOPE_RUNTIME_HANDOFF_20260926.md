@@ -9,10 +9,10 @@ acceptance from model prose.
 
 ## Candidate receipt
 
-- ABEX observation: `docs/evidence/ABEX_RUNTIME_RECEIPT_D0970FC_20260926.json`
-- Production source: `d0970fcf497f6f36baad90cf160e490f7e4745bb`
-- Immutable image: `prime:sha-d0970fc`
-- Image ID: `sha256:daf36b01db786ab5dd63149348d7dc532b3695e8a13ac9bbf2bf0a210eecdcfe`
+- ABEX observation: `docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json`
+- Production source: `17fad78d410dca5d9101483cb777a2b9b619bac3`
+- Immutable image: `prime:sha-17fad78`
+- Image ID: `sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681`
 - Registry: schema `2.0`, version `1.0.0`, 21 logical agents,
   SHA-256 `fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff`
 - Physical task: `0fbc896f-5fb6-4808-9eab-93031cf55873`

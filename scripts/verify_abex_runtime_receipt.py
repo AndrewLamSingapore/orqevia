@@ -94,6 +94,17 @@ def validate(receipt: dict[str, Any], root: Path = ROOT) -> list[str]:
     require(physical.get("chinese_result_visible") is True, "physical_result_unverified")
     require(physical.get("application_warning_or_error_banner") is False, "physical_application_warning_present")
 
+    iphone = receipt.get("physical_owner_iphone_acceptance", {})
+    require(iphone.get("evidence_authority") == "OWNER_PHYSICAL_ATTESTATION_PLUS_SERVER_CORRELATION", "iphone_evidence_authority_invalid")
+    require(iphone.get("owner_account_id") == "owner:lam:prime-epoch-20260919", "iphone_owner_identity_invalid")
+    require(iphone.get("role") == "OWNER", "iphone_role_invalid")
+    require(iphone.get("session_persisted_after_reopen") is True, "iphone_session_persistence_unverified")
+    require(iphone.get("owner_authority_endpoint") == "HTTP_200", "iphone_owner_authority_unverified")
+    require(iphone.get("state") == "COMPLETED", "iphone_task_not_completed")
+    require(iphone.get("result_language") == "zh-CN", "iphone_result_language_invalid")
+    require(iphone.get("jarvis_identity_visible") is True, "iphone_jarvis_identity_unverified")
+    require(iphone.get("duplicate_owner_identity_created") is False, "iphone_duplicate_owner_identity")
+
     acceptance = receipt.get("acceptance", {})
     require(acceptance.get("dell_independent_runtime_verification") == "PENDING", "independent_state_invalid")
     require(acceptance.get("prime_state_transition_authorized") is False, "prime_state_transition_must_be_denied")

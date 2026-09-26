@@ -2,16 +2,16 @@
   "schema_version": "abex.runtime-observation.v1",
   "receipt_state": "ABEX_OBSERVED_PENDING_INDEPENDENT_DELL_VERIFICATION",
   "independent_verification": false,
-  "observed_at_utc": "2026-09-26T06:15:36.859143Z",
+  "observed_at_utc": "2026-09-26T06:54:07.634115Z",
   "authority_boundary": "This receipt records ABEX observations. It cannot promote PRIME.RUNTIME acceptance or prime.state without independent Dell verification.",
   "runtime": {
     "host_id": "ABEX",
     "deployment_epoch": "prime-epoch-20260919",
-    "source_sha": "d0970fcf497f6f36baad90cf160e490f7e4745bb",
+    "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
     "remote_branch": "feat/supreme-integration-20260925",
-    "remote_sha": "d0970fcf497f6f36baad90cf160e490f7e4745bb",
-    "image_tag": "prime:sha-d0970fc",
-    "image_id": "sha256:daf36b01db786ab5dd63149348d7dc532b3695e8a13ac9bbf2bf0a210eecdcfe",
+    "remote_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "image_tag": "prime:sha-17fad78",
+    "image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
     "prime": {"health": "healthy", "restart_count": 0, "oom_killed": false},
     "interface": {"health": "healthy", "restart_count": 0, "oom_killed": false, "listener": "192.168.1.23:8443"},
     "ollama": {"health": "healthy", "restart_count": 0, "oom_killed": false, "image_id": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532"},
@@ -26,13 +26,13 @@
   },
   "pwa": {
     "https_scope": "LAN_ONLY",
-    "cache_generation": "jarvis-shell-v9",
+    "cache_generation": "jarvis-shell-v11",
     "source_served_hash_match": true,
     "assets": {
-      "index.html": "f4db27664df28b9a03dec42ccc8a514493f9c4e5215c7c961300d29ef08e8e89",
-      "app.mjs": "143640694aa5012f223bf3eccd801763b98097fa95d38fdac2edc062fc81b6b6",
-      "sw.js": "9ce57dff45ac79b894bb05e8e4aeb20173be82e7dc191365f0fb15343489f995",
-      "release.mjs": "63ecaef33942d8010413d0b4cdad9d60580140cc4dc8ae8703bb96c86c3ab4c7",
+      "index.html": "69d5915533dc878a686264f04eb8eca913c1acd1ae8ddd73ac98084b794a18f0",
+      "app.mjs": "1b45e4dc6fbe39bd271a4ce9c10dd7b98e84b969388bd2cbc15197ac9a432443",
+      "sw.js": "80c68269938fce7540935e8ae2849e93d76857d4501984c8db1f82b9e12faa21",
+      "release.mjs": "9717dde0b48eda4a71f5041e02f295f6c0ff1b00833f5ad87f81f32f0fd5cc8d",
       "recovery.js": "dc9f204e4945dac0aa964364d3428ddaa25dbfec159b7bf0e6ba740f891ceba5"
     }
   },
@@ -47,7 +47,7 @@
       "pwa-sessions.db": "ok"
     },
     "compatibility_database_integrity": {"prime-spine.db": "ok", "prime.db": "ok"},
-    "compute_jobs": {"completed": 14, "active": 0, "failed": 0},
+    "compute_jobs": {"completed": 15, "active": 0, "failed": 0},
     "offline_queue": {"reconciled": 1, "unreconciled": 0}
   },
   "physical_owner_acceptance": {
@@ -59,6 +59,21 @@
     "authoritative_metadata_separate_from_model_content": true,
     "chinese_result_visible": true,
     "application_warning_or_error_banner": false
+  },
+  "physical_owner_iphone_acceptance": {
+    "evidence_authority": "OWNER_PHYSICAL_ATTESTATION_PLUS_SERVER_CORRELATION",
+    "client_id": "pwa:d14c4622aafe45af92562db4865e998c",
+    "owner_account_id": "owner:lam:prime-epoch-20260919",
+    "role": "OWNER",
+    "session_persisted_after_reopen": true,
+    "owner_authority_endpoint": "HTTP_200",
+    "task_id": "3c235145-0fbd-4fcb-9983-1074dd3c87f7",
+    "job_id": "4dedf6e0-c899-4926-a3bf-6a684d4f7413",
+    "state": "COMPLETED",
+    "provider": "ollama-deep",
+    "result_language": "zh-CN",
+    "jarvis_identity_visible": true,
+    "duplicate_owner_identity_created": false
   },
   "task_evidence": {
     "task_id": "0fbc896f-5fb6-4808-9eab-93031cf55873",
@@ -75,9 +90,9 @@
   },
   "host_observation": {"relevant_bugcheck_storage_ntfs_nvme_whea_events_24h": 0},
   "rollback": {
-    "immediate_image_tag": "prime:sha-9690065",
-    "immediate_image_id": "sha256:e9c0f48ec80ad464f5342b83b7779dd523d894cf80998c13c9f4ec5cef3ec82d",
-    "checkpoint": "/data/recovery/pwa-task-open-predeploy-20260926"
+    "immediate_image_tag": "prime:sha-2ca9b4a",
+    "immediate_image_id": "sha256:77024fd32de246fe61ed5043f82482f44cb78c5e94a2600fb43e85318fdf7539",
+    "checkpoint": "/data/recovery/pwa-mobile-control-predeploy-20260926"
   },
   "acceptance": {
     "abex_observation": "PASS",
