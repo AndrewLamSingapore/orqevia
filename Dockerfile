@@ -16,6 +16,7 @@ COPY clients/pwa/icons ./app/pwa_static/icons
 # Keep revision metadata after dependency installation so a new source commit
 # does not invalidate the expensive, reproducible requirements layer.
 ARG PRIME_RUNTIME_REVISION=UNKNOWN
+ENV PRIME_RUNTIME_REVISION=$PRIME_RUNTIME_REVISION
 LABEL org.opencontainers.image.revision=$PRIME_RUNTIME_REVISION
 
 EXPOSE 8000

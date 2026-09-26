@@ -38,7 +38,10 @@ class ContractTests(unittest.TestCase):
         self.sub = patch.object(contract.node.objective_api, 'submit', return_value={'id': 'task-fixture'})
         self.dispatch = self.sub.start()
         self.get = patch.object(contract.node.objective_api, 'get', return_value={
-            'id': 'task-fixture', 'state': 'COMPLETED', 'steps': []})
+            'id': 'task-fixture', 'revision':0, 'state': 'COMPLETED', 'steps': [],
+            'execution_metadata':{'authoritative':True,'task_id':'task-fixture','revision':0,
+                'state':'COMPLETED','created_at':None,'started_at':None,'completed_at':None,
+                'runtime':{'host_id':'ABEX-TEST','source_revision':'UNKNOWN'}}})
         self.get.start()
 
     def tearDown(self):
@@ -222,7 +225,7 @@ class ContractTests(unittest.TestCase):
         from concurrent.futures import ThreadPoolExecutor
         self.submit()
         db = contract.node.objective_api.connect()
-        db.execute('INSERT INTO objectives VALUES(?,?,?,?)', ('task-fixture', 'fixture', 'submitted', '[]'))
+        db.execute('INSERT INTO objectives (id,objective_hash,state,steps_json) VALUES(?,?,?,?)', ('task-fixture', 'fixture', 'submitted', '[]'))
         db.commit()
         db.close()
         self.get.stop()
