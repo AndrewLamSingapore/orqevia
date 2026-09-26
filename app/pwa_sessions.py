@@ -17,9 +17,11 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 COOKIE='__Host-JARVIS-PWA'
+DEVICE_COOKIE='__Host-JARVIS-Device'
 SCOPES=['identity.read','health.read','objective.submit','task.read','task.cancel','artifact.read']
 OWNER_SCOPES=[*SCOPES,'authority.owner.verify']
 SESSION_SECONDS=8*3600
+DEVICE_SECONDS=90*24*3600
 router=APIRouter(prefix='/pwa/api',tags=['pwa-session'])
 owner_router=APIRouter(prefix='/pwa/owner',tags=['local-pairing'])
 
@@ -32,6 +34,7 @@ def database():
     db.execute('BEGIN IMMEDIATE')
     db.execute('CREATE TABLE IF NOT EXISTS pairing(code_hash TEXT PRIMARY KEY,expires REAL NOT NULL,used INTEGER NOT NULL DEFAULT 0)')
     db.execute('CREATE TABLE IF NOT EXISTS sessions(session_hash TEXT PRIMARY KEY,client_id TEXT UNIQUE NOT NULL,expires REAL NOT NULL,revoked INTEGER NOT NULL DEFAULT 0)')
+    db.execute('CREATE TABLE IF NOT EXISTS devices(device_hash TEXT PRIMARY KEY,client_id TEXT UNIQUE NOT NULL,expires REAL NOT NULL,revoked INTEGER NOT NULL DEFAULT 0,owner_account_id TEXT,role TEXT NOT NULL DEFAULT \'MEMBER\')')
     db.execute('CREATE TABLE IF NOT EXISTS admission(peer_hash TEXT,bucket INTEGER,count INTEGER,PRIMARY KEY(peer_hash,bucket))')
     for table in ('pairing','sessions'):
         if 'owner_account_id' not in {r[1] for r in db.execute('PRAGMA table_info('+table+')')}:
@@ -66,6 +69,34 @@ def session(request):
     with database() as db:row=db.execute('SELECT client_id,expires,revoked,role FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
     if not row or row[2] or row[1]<=time.time():return None
     return {'clientId':row[0],'expiresAt':row[1],'role':row[3]}
+
+def device(request):
+    raw=request.cookies.get(DEVICE_COOKIE,'')
+    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',raw):return None
+    with database() as db:row=db.execute('SELECT client_id,expires,revoked,owner_account_id,role FROM devices WHERE device_hash=?',(digest(raw),)).fetchone()
+    if not row or row[2] or row[1]<=time.time() or row[4] not in {'OWNER','MEMBER'}:return None
+    return {'clientId':row[0],'deviceExpiresAt':row[1],'ownerAccountId':row[3],'role':row[4]}
+
+def _cookies(response,session_token,device_token=None):
+    if session_token:response.set_cookie(COOKIE,session_token,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    if device_token:response.set_cookie(DEVICE_COOKIE,device_token,max_age=DEVICE_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    return response
+
+def _issue_device(current):
+    raw=secrets.token_urlsafe(32);expires=clock()+DEVICE_SECONDS
+    with database() as db:
+        row=db.execute('SELECT owner_account_id,role FROM sessions WHERE client_id=?',(current['clientId'],)).fetchone()
+        if not row:return None
+        db.execute('INSERT OR REPLACE INTO devices VALUES(?,?,?,0,?,?)',(digest(raw),current['clientId'],expires,row[0],row[1]))
+    return raw
+
+def _refresh_session(bound):
+    raw=secrets.token_urlsafe(32);expires=clock()+SESSION_SECONDS;internal_token(bound['clientId'])
+    with database() as db:
+        changed=db.execute('UPDATE sessions SET session_hash=?,expires=?,revoked=0,owner_account_id=?,role=? WHERE client_id=?',
+            (digest(raw),expires,bound['ownerAccountId'],bound['role'],bound['clientId'])).rowcount
+        if changed!=1:return None
+    return raw,{'clientId':bound['clientId'],'expiresAt':expires,'role':bound['role']}
 
 def require_session(request):
     value=session(request)
@@ -123,7 +154,14 @@ async def pairing(request:Request):
 @router.get('/session')
 def get_session(request:Request):
     current=session(request)
-    return {'protocol':'jarvis.interface.v1','authenticated':bool(current),**(current or {})}
+    bound=device(request)
+    device_token=None;session_token=None
+    if current and not bound:device_token=_issue_device(current)
+    elif not current and bound:
+        refreshed=_refresh_session(bound)
+        if refreshed:session_token,current=refreshed
+    response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),**(current or {})})
+    return _cookies(response,session_token,device_token) if session_token or device_token else response
 
 @router.post('/enroll')
 async def enroll(request:Request):
@@ -145,19 +183,23 @@ async def enroll(request:Request):
         db.execute('BEGIN IMMEDIATE')
         row=db.execute('SELECT expires,used,owner_account_id,role FROM pairing WHERE code_hash=?',(digest(body['code']),)).fetchone()
         if not row or row[1] or row[0]<=now:raise HTTPException(401,'Enrollment unavailable')
-        raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex;expires=now+SESSION_SECONDS
+        raw=secrets.token_urlsafe(32);device_raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex;expires=now+SESSION_SECONDS
         internal_token(client)
         db.execute('UPDATE pairing SET used=1 WHERE code_hash=?',(digest(body['code']),))
         db.execute('INSERT INTO sessions(session_hash,client_id,expires,revoked,owner_account_id,role) VALUES(?,?,?,0,?,?)',(digest(raw),client,expires,row[2],row[3]))
+        db.execute('INSERT INTO devices VALUES(?,?,?,0,?,?)',(digest(device_raw),client,now+DEVICE_SECONDS,row[2],row[3]))
     response=JSONResponse({'authenticated':True,'clientId':client,'expiresAt':expires,'role':row[3]})
-    response.set_cookie(COOKIE,raw,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
-    return response
+    return _cookies(response,raw,device_raw)
 
 @router.post('/logout')
 def logout(request:Request):
     raw=request.cookies.get(COOKIE,'')
-    with database() as db:db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
+    device_raw=request.cookies.get(DEVICE_COOKIE,'')
+    with database() as db:
+        db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
+        db.execute('UPDATE devices SET revoked=1 WHERE device_hash=?',(digest(device_raw),))
     response=JSONResponse({'authenticated':False});response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
+    response.delete_cookie(DEVICE_COOKIE,path='/',secure=True,httponly=True,samesite='strict')
     return response
 
 @router.post('/owner-authority-check')

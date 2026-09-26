@@ -61,6 +61,13 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
         return {"verdict":"INVALID","errors":sorted(set(errors)),"unresolved":[]}
     if any(not isinstance(item,dict) for field in list_fields for item in envelope[field]):
         return {"verdict":"INVALID","errors":["INVALID_SCHEMA:list_item"],"unresolved":[]}
+    nested_lists=[*(claim.get("evidence_refs") for claim in envelope["claims"]),
+                  *(effect.get("observation_refs") for effect in envelope["effects"]),
+                  envelope["verification"].get("evidence")]
+    if any(not isinstance(value,list) for value in nested_lists):
+        return {"verdict":"INVALID","errors":["INVALID_SCHEMA:nested_list"],"unresolved":[]}
+    if any(not isinstance(artifact.get("digest"),dict) for artifact in envelope["artifacts"]):
+        return {"verdict":"INVALID","errors":["INVALID_SCHEMA:artifact_digest_type"],"unresolved":[]}
     if envelope.get("schema_version") != SCHEMA: errors.append("INVALID_SCHEMA:version")
     if envelope.get("status") not in ACTION_STATES: errors.append("INVALID_SCHEMA:action_status")
     actor = envelope.get("actor", {})

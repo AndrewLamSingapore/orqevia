@@ -47,6 +47,12 @@ def test_runtime_identity_abstains_when_environment_is_unavailable(monkeypatch):
     answer=facts.architecture_answer('What is your source/runtime identity?')
     assert answer['status']=='UNAVAILABLE' and 'will not guess' in answer['text']
 
+def test_platform_architecture_uses_golden_ssot_registry_and_exact_dell_scope():
+    answer=facts.architecture_answer('Explain the ABEX, Dell, and PRIME architecture relationship')
+    assert answer['status']=='VERIFIED' and answer['provenance']=='CANONICAL_GOVERNANCE_SSOT_AND_REGISTRY'
+    assert 'PRODUCTION AUTHORITY/HOST: ABEX' in answer['text'] and 'REGISTERED AGENTS: 21' in answer['text']
+    assert 'DELL INDEPENDENT VERIFICATION: PASS' in answer['text']
+
 def test_architecture_objective_bypasses_model_and_returns_system_fact(monkeypatch,tmp_path):
     from app import objective_api
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))

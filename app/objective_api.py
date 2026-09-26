@@ -239,6 +239,11 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
     deterministic=system_content(steps,revision)
     if state=='COMPLETED' and deterministic and completed_at is None:completed_at=updated_at
+    lifecycle={}
+    if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and started_at is None:
+        lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'
+    if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and completed_at is None:
+        completed_at=updated_at;lifecycle['completed_at_source']='TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE'
     revision_identity=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN')).strip().lower()
     if not re.fullmatch(r'[0-9a-f]{40}',revision_identity):revision_identity='UNKNOWN'
     host_id=os.getenv('PRIME_INTERFACE_HOST_ID','').strip()
@@ -258,6 +263,7 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
             'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER'},
         'closed_world_policy':'UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE',
         'model_content_is_authoritative_metadata':False,
+        'lifecycle':lifecycle,
     }
     content=model_content(steps,revision)
     contradictions=metadata_contradictions(content,metadata)

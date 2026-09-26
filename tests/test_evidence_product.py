@@ -98,6 +98,15 @@ def test_malformed_envelope_fails_closed_without_exception():
         assert validate_envelope(malformed)['verdict']=='INVALID'
 
 
+def test_nested_malformed_envelope_and_receipt_fail_closed(tmp_path):
+    _,item,_=build(tmp_path);bad=json.loads(json.dumps(item.envelope));bad['claims'][0]['evidence_refs']=None
+    assert validate_envelope(bad)['verdict']=='INVALID'
+    receipt=make_receipt(item.envelope);receipt['envelope']=bad
+    assert validate_receipt(receipt)['verdict']=='INVALID'
+    bad=json.loads(json.dumps(item.envelope));bad['artifacts'][0]['digest']=None
+    assert validate_envelope(bad)['verdict']=='INVALID'
+
+
 def test_sdk_rejects_nonexistent_verification_reference(tmp_path):
     ledger=EvidenceLedger(tmp_path/'evidence.db')
     with action(ledger,namespace='demo',objective='x',actor={'type':'SERVICE','id':'x'},authority={'scope':'x','source':'iam'},idempotency_key='x') as item:

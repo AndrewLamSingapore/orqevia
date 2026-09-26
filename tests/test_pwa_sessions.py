@@ -206,3 +206,48 @@ def test_existing_unlinked_session_not_broadened_by_environment(setup,monkeypatc
         response,_=enroll(pwa,client)
         monkeypatch.setenv('PRIME_PWA_OWNER_ACCOUNT_ID','owner:fixture')
         assert 'owner_account_id' not in pwa.client_policy(response.json()['clientId'])
+
+def test_durable_device_refresh_preserves_identity_role_and_running_task(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];device_cookie=client.cookies.get(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
+        refreshed=client.get('/pwa/api/session')
+        assert refreshed.status_code==200 and refreshed.json()['authenticated'] is True
+        assert refreshed.json()['clientId']==identity and refreshed.json()['role']=='MEMBER'
+        assert client.cookies.get(pwa.DEVICE_COOKIE)==device_cookie
+
+def test_invalid_or_revoked_device_fails_closed_without_changing_identity(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        with pwa.database() as db:
+            db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity));db.execute('UPDATE devices SET revoked=1 WHERE client_id=?',(identity,))
+        assert client.get('/pwa/api/session').json()['authenticated'] is False
+        with pwa.database() as db:
+            row=db.execute('SELECT client_id,role,revoked FROM devices WHERE client_id=?',(identity,)).fetchone()
+        assert row==(identity,'MEMBER',1)
+
+def test_active_legacy_session_bootstraps_durable_device_without_reenrollment(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        client.cookies.delete(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('DELETE FROM devices WHERE client_id=?',(identity,))
+        current=client.get('/pwa/api/session')
+        assert current.json()['authenticated'] is True and current.json()['clientId']==identity
+        assert client.cookies.get(pwa.DEVICE_COOKIE)
+
+def test_pwa_close_reopen_and_service_restart_refresh_same_durable_identity(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as first:
+        enrolled,_=enroll(pwa,first);identity=enrolled.json()['clientId'];device_token=first.cookies.get(pwa.DEVICE_COOKIE)
+    # A new browser process/app instance represents close/reopen and server restart;
+    # only the durable HttpOnly device credential is carried forward.
+    with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
+    restarted=FastAPI();restarted.include_router(pwa.router);restarted.add_middleware(pwa.PWASessionMiddleware)
+    with TestClient(restarted,base_url=ORIGIN) as reopened:
+        reopened.cookies.set(pwa.DEVICE_COOKIE,device_token)
+        current=reopened.get('/pwa/api/session')
+        assert current.status_code==200 and current.json()['authenticated'] is True
+        assert current.json()['clientId']==identity

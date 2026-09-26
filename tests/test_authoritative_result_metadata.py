@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -99,6 +100,18 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
         completed='2026-09-26T05:44:16.499915+00:00'
         observed=[value for value in [recorded,completed] if value]
         self.assertEqual(max(observed,default=None),completed)
+
+    def test_dispatch_blocked_terminal_has_completion_time_and_explicit_no_start_reason(self):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root,'PRIME_INTERFACE_HOST_ID':'ABEX'}), patch.object(objective_api,'authenticate_owner',lambda _:None):
+            db=objective_api.connect();created='2026-09-26T14:16:29+00:00';updated='2026-09-26T14:16:30+00:00'
+            steps=[{'capability':'responsibility.a16','state':'blocked','reason':{'state':'UNAVAILABLE','reason':'No available backend satisfies tier and data residency'}}]
+            db.execute('insert into objectives values(?,?,?,?)',('blocked-task','digest','submitted',json.dumps(steps)))
+            db.execute('insert into objective_metadata values(?,?,?,?)',('blocked-task',0,created,updated));db.commit();db.close()
+            task=objective_api.get('blocked-task',authorization='fixture');metadata=task['execution_metadata']
+            self.assertEqual(task['state'],'COMPLETED_WITH_FAILURES');self.assertIsNone(metadata['started_at'])
+            self.assertEqual(metadata['completed_at'],updated)
+            self.assertEqual(metadata['lifecycle']['started_at_reason'],'NO_EXECUTION_STARTED_DISPATCH_BLOCKED')
+            self.assertEqual(metadata['lifecycle']['completed_at_source'],'TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE')
 
 
 if __name__=='__main__':

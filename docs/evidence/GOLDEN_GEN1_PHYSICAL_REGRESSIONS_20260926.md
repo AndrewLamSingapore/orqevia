@@ -39,3 +39,21 @@ Production was observed read-only. No Golden Gen 1 runtime, identity, database, 
 - Positive containment evidence: JARVIS treated “All JARVIS Phase-2 capabilities are production-ready” as an Owner assertion and explicitly refused to promote “independently verified” into system confirmation.
 - Corroborated lifecycle defect: a substantive first contribution existed while the authoritative objective remained `RUNNING` / completed unknown and later stages remained running or queued. This shares the same root cause as `b15d929b-f76c-4921-9d9f-85f9c6a0d443`: multi-stage logical dispatch over a one-slot physical inference scheduler plus ambiguous intermediate-result presentation.
 - Candidate governance repair: questions about verified, production-ready, Golden, or accepted state use the canonical governance SSOT. Owner assertions remain Owner assertions; Dell evidence is bound to its exact candidate/scope; historical verification does not establish a current candidate. Missing canonical evidence yields `UNVERIFIED`, not a generic model-authored readiness framework.
+
+## Fail-closed platform-knowledge task and lifecycle completeness
+
+- Physical task: `4f618ad0-0a54-4773-af81-3e46d2a42656`.
+- Positive evidence: authoritative state was `COMPLETED_WITH_FAILURES`; JARVIS was blocked; the UI reported failure; no answer was manufactured. A failure artifact remains bound to the task at 1,443 bytes, SHA-256 `2c916a90d64a660685989f14865388bc239e901abd079ce1983e4830e5daae2d`.
+- Exact read-only blocker: `responsibility.a16` dispatch was denied with `UNAVAILABLE — No available backend satisfies tier and data residency`. No compute job started.
+- Metadata defect: terminal failure had `started_at=null` and `completed_at=null` without explaining that dispatch was blocked before execution.
+- Candidate repair: terminal dispatch-blocked tasks retain null start time with canonical reason `NO_EXECUTION_STARTED_DISPATCH_BLOCKED`, bind completion to the terminal objective-update observation, and preserve failure/artifact status without converting either into success.
+- Platform-knowledge repair: ABEX/Dell/PRIME architecture questions resolve from the Golden manifest, registry, runtime and exact independent-verification scope. Missing canonical files produce a named `UNAVAILABLE` explanation rather than model intuition.
+- Correlation update: `5ef0c3b7-86c3-401d-8798-e7f1ab2e47ca` is now terminal in canonical queue records. `b15d929b-f76c-4921-9d9f-85f9c6a0d443` also has three completed canonical queue jobs, while the phone still presented RUNNING. The common client defect was stale status polling: the PWA fetched status only after a new interface event, although queue completion may not emit one. Candidate polling now fetches authoritative status every bounded cycle.
+
+## Owner iPhone session continuity during a running task
+
+- Physical task: `38668881-ee51-42c9-b06a-20a0ba6713f5`; observed at approximately 2026-09-26 22:24 Singapore time.
+- Exact read-only cause: the active Owner browser session expired at `2026-09-26T22:24:26+08:00`. Interface logs show authorized task/event reads followed by HTTP 401 at that boundary. Windows time was synchronized; PRIME and Interface had zero restarts; the durable Owner account/device identity rows remained present and non-revoked.
+- Server continuity: the task was created at 14:23:04Z. Its three queue jobs continued independently of the browser: two completed at 14:25:07Z and 14:26:40Z, while the third continued running after the phone became unauthorized. No duplicate, cancellation, mutation, or orphaning was observed.
+- Defect: enrollment and short browser session were represented by one expiring credential, forcing an enrolled device back toward enrollment after the eight-hour session expired.
+- Candidate repair: a separate hashed, revocable, server-bound durable device credential preserves the same canonical client ID/account/role and may rotate only the short session. Active legacy sessions bootstrap it without re-enrollment. Invalid/revoked device credentials fail closed. Logout revokes both. Refresh, reopen, network return, and service restart revalidate before reopening the same authoritative task.

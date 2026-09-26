@@ -44,7 +44,7 @@ TERMINAL = frozenset({ObjectiveState.COMPLETED, ObjectiveState.CANCELLED})
 ROLES = frozenset({"OWNER", "MEMBER", "APPLICATION", "SYSTEM"})
 TOKEN = re.compile(r"[a-z0-9_\-\u3400-\u9fff]{2,}", re.I)
 HARD_MAXIMUM = re.compile(r"(?i)(?:maximum|at\s+most|no\s+more\s+than|not\s+exceed(?:ing)?|不超过|最高)[^\d]{0,40}(?:RMB|CNY|¥|￥)?\s*([0-9]+(?:\.[0-9]+)?)|(?:RMB|CNY|¥|￥)\s*([0-9]+(?:\.[0-9]+)?)[^\n]{0,30}(?:maximum|max|cap|上限)")
-CURRENCY_AMOUNT = re.compile(r"(?i)(?:RMB|CNY|¥|￥)\s*([0-9]+(?:\.[0-9]+)?)(?:\s*[–—-]\s*(?:RMB|CNY|¥|￥)?\s*([0-9]+(?:\.[0-9]+)?))?")
+CURRENCY_AMOUNT = re.compile(r"(?i)(?:RMB|CNY|¥|￥)\s*([0-9]+(?:\.[0-9]+)?)(?:\s*(?:[–—-]|to|至|到)\s*(?:RMB|CNY|¥|￥)?\s*([0-9]+(?:\.[0-9]+)?))?")
 
 
 def canonical(value: Any) -> str:
@@ -403,10 +403,13 @@ class Phase2Kernel:
             if hard:
                 with closing(self.connect()) as db:
                     checks=db.execute(f"select * from phase2_constraint_checks where objective_id=? and evidence_id in ({','.join('?' for _ in refs)})",(objective_id,*refs.values())).fetchall()
+                    check_events={json.loads(row[0])["evidence_id"]:json.loads(row[0]).get("constraint_check_sha256") for row in db.execute("select details_json from phase2_events where objective_id=? and event_type='EVIDENCE_RECORDED'",(objective_id,))}
+                if {row["evidence_id"] for row in checks}!=set(refs.values()):raise ValueError("constraint check reconciliation mismatch")
                 observed=False;violations=[]
                 for check in checks:
                     value=dict(check);expected=value.pop("record_sha256")
                     if digest(value)!=expected:raise ValueError("constraint check integrity mismatch")
+                    if check_events.get(check["evidence_id"])!=expected:raise ValueError("constraint check event binding mismatch")
                     assessment=json.loads(check["assessment_json"])
                     observed=observed or assessment.get("observed_max") is not None
                     violations.extend(assessment.get("violations",[]))
@@ -437,10 +440,13 @@ class Phase2Kernel:
                             raise ValueError("completion evidence is unverified or belongs to another objective")
                     if hard:
                         checks=db.execute(f"select * from phase2_constraint_checks where objective_id=? and evidence_id in ({','.join('?' for _ in refs)})",(objective_id,*refs.values())).fetchall()
+                        check_events={json.loads(row[0])["evidence_id"]:json.loads(row[0]).get("constraint_check_sha256") for row in db.execute("select details_json from phase2_events where objective_id=? and event_type='EVIDENCE_RECORDED'",(objective_id,))}
+                        if {row["evidence_id"] for row in checks}!=set(refs.values()):raise ValueError("constraint check reconciliation mismatch")
                         atomic_observed=False;atomic_violations=[]
                         for check in checks:
                             value=dict(check);expected=value.pop("record_sha256")
                             if digest(value)!=expected:raise ValueError("constraint check integrity mismatch")
+                            if check_events.get(check["evidence_id"])!=expected:raise ValueError("constraint check event binding mismatch")
                             assessment=json.loads(check["assessment_json"]);atomic_observed=atomic_observed or assessment.get("observed_max") is not None;atomic_violations.extend(assessment.get("violations",[]))
                         if not atomic_observed or atomic_violations:raise ValueError("hard numeric constraint violation during atomic completion")
                 changed=db.execute("update phase2_objectives set state=?,checkpoint_json=?,next_action=?,updated_at=?,completed_at=?,record_sha256=? where objective_id=? and state=? and objective_version=?",
@@ -565,7 +571,7 @@ class Phase2Kernel:
             db.execute("insert into phase2_evidence(evidence_id,objective_id,evidence_type,source,provenance,verified,payload_digest,attestation_id,created_at,record_sha256) values(:evidence_id,:objective_id,:evidence_type,:source,:provenance,:verified,:payload_digest,:attestation_id,:created_at,:record_sha256)",row)
             db.execute("insert into phase2_constraint_checks values(:evidence_id,:objective_id,:assessment_json,:record_sha256)",check)
             self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified),
-                        "attestation_id":attestation_id if verified else None}, moment)
+                        "attestation_id":attestation_id if verified else None,"constraint_check_sha256":check["record_sha256"]}, moment)
         return {"evidence_id":eid,"verified":bool(verified),"payload_digest":row["payload_digest"],"record_sha256":row["record_sha256"]}
 
     def ingest_context(self, *, authority: AuthorityEnvelope, context_key: str, scope: str, scope_id: str, epistemic_class: str,

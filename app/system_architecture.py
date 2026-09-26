@@ -10,10 +10,12 @@ PATTERNS=(r'how many agents',r'list (?:your|the) agents',r'which agent (?:answer
           r'what (?:prime )?generation',r'(?:source|runtime) identity')
 GOVERNANCE_PATTERNS=(r'phase.?2.*(?:verified|production.ready|golden|accepted)',r'(?:verified|production.ready|golden|accepted).*phase.?2',
                      r'(?:is|are).*(?:prime|jarvis).*(?:verified|production.ready|golden|accepted)')
+PLATFORM_PATTERNS=(r'(?:abex|dell|prime|jarvis).*(?:architecture|system|host|computer|relationship|role)',
+                   r'(?:architecture|system|host|computer|relationship|role).*(?:abex|dell|prime|jarvis)')
 ROOT=Path(__file__).resolve().parent.parent
 
 def is_architecture_question(text: str)->bool:
-    return any(re.search(pattern,text or '',re.I) for pattern in (*PATTERNS,*GOVERNANCE_PATTERNS))
+    return any(re.search(pattern,text or '',re.I) for pattern in (*PATTERNS,*GOVERNANCE_PATTERNS,*PLATFORM_PATTERNS))
 
 def _governance_answer(question: str)->dict[str,Any]:
     phase2=bool(re.search(r'phase.?2',question,re.I))
@@ -36,9 +38,24 @@ def _runtime()->dict[str,Any]:
     if not re.fullmatch(r'[0-9a-f]{40}',source):source='UNAVAILABLE'
     return {'source_revision':source,'image_digest':image}
 
+def _platform_answer()->dict[str,Any]:
+    path=ROOT/'governance'/'golden-gen1-manifest.json'
+    try:value=json.loads(path.read_text(encoding='utf-8'));registry=load_agent_registry()
+    except (OSError,ValueError,TypeError,RegistryError):
+        return {'status':'UNAVAILABLE','provenance':'CANONICAL_GOVERNANCE_SSOT','text':f'Platform architecture is UNAVAILABLE because canonical evidence {path.name} or the agent registry could not be read. JARVIS will not infer it from model memory.'}
+    verification=value.get('independent_verification',{})
+    lines=[f"PRODUCTION AUTHORITY/HOST: {value.get('authority',{}).get('production_authority','UNAVAILABLE')}",
+           f"GOLDEN GENERATION: {value.get('generation','UNAVAILABLE')}",
+           f"ACCEPTED SOURCE: {value.get('source',{}).get('accepted_commit','UNAVAILABLE')}",
+           f"REGISTERED AGENTS: {len(registry.get('agents',[]))}",
+           f"INTERFACE EXPOSURE: {value.get('interface',{}).get('exposure','UNAVAILABLE')}",
+           f"DELL INDEPENDENT VERIFICATION: {verification.get('verdict','UNAVAILABLE')} ({verification.get('verification_id','UNAVAILABLE')})"]
+    return {'status':'VERIFIED','provenance':'CANONICAL_GOVERNANCE_SSOT_AND_REGISTRY','text':'\n'.join(lines)}
+
 def architecture_answer(question: str)->dict[str,Any]:
     """Fail closed: registry/runtime absence becomes UNAVAILABLE, never model intuition."""
     if any(re.search(pattern,question or '',re.I) for pattern in GOVERNANCE_PATTERNS):return _governance_answer(question)
+    if any(re.search(pattern,question or '',re.I) for pattern in PLATFORM_PATTERNS):return _platform_answer()
     try:registry=load_agent_registry()
     except (OSError,ValueError,RegistryError):
         return {'status':'UNAVAILABLE','provenance':'CANONICAL_REGISTRY','text':'PRIME architecture information is currently UNAVAILABLE. JARVIS will not guess.'}
