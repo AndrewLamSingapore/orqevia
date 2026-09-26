@@ -6,7 +6,11 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLOWED = {"LAB", "TESTED", "CANDIDATE", "DEGRADED", "VERIFIED", "PRODUCTION_PROVEN", "DEFERRED", "BLOCKED"}
+ALLOWED = {
+    "LAB", "TESTED", "CANDIDATE", "DEGRADED", "VERIFIED",
+    "PRODUCTION_PARTIAL", "PRODUCTION", "PRODUCTION_PROVEN",
+    "DEFERRED", "BLOCKED",
+}
 SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
