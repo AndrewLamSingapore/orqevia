@@ -1,0 +1,35 @@
+{
+  "schema_version": "evidence-product-baseline.v0.1",
+  "baseline_id": "evidence-product-technical-v0.1-20260926",
+  "state": "CANDIDATE_QUALIFICATION",
+  "commercial_validation": "NOT_YET_PERFORMED",
+  "level_1": "READY_CANDIDATE",
+  "level_2": "READY_CANDIDATE",
+  "level_3": "HOLD",
+  "components": {
+    "standard": "docs/ACTION-ENVELOPE-STANDARD-v0.1.md",
+    "schema": "governance/action-envelope-v0.1.schema.json",
+    "implementation_sdk_ledger_validator": "app/evidence_product.py",
+    "prime_adapter": "app/prime_evidence_adapter.py",
+    "lens": "examples/evidence-lens/index.html",
+    "checklist": "docs/EVIDENCE-PRODUCT-CHECKLIST-v0.1.md",
+    "worksheet": "docs/EVIDENCE-AUDIT-WORKSHEET-v0.1.md",
+    "threat_model": "docs/EVIDENCE-PRODUCT-THREAT-MODEL-v0.1.md"
+  },
+  "dependencies": {"prime": false, "model_provider": false, "blockchain": false, "python_standard_library_only": true},
+  "qualification": {
+    "portable_core_tests": "PASS",
+    "false_success": "PASS",
+    "tamper": "PASS",
+    "namespace_isolation": "PASS",
+    "supersession": "PASS",
+    "prime_adapter": "PASS",
+    "rendered_browser_acceptance": "PENDING_BROWSER_POLICY_BOUNDARY"
+  },
+  "limitations": [
+    "validator cannot prove external facts it cannot observe",
+    "digest integrity is not cryptographic signer identity",
+    "local administrator tamper resistance is bounded",
+    "no hosted service, IAM replacement, compliance certification or market validation"
+  ]
+}

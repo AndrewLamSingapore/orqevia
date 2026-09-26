@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jarvis:evidence:action-envelope:v0.1",
+  "title": "Portable Action Envelope v0.1",
+  "type": "object",
+  "required": ["schema_version", "action_id", "objective", "actor", "authority", "started_at", "status", "inputs", "claims", "observations", "effects", "artifacts", "verification", "provenance", "relations"],
+  "properties": {
+    "schema_version": {"const": "action-envelope.v0.1"},
+    "action_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "actor": {"type": "object", "required": ["type", "id"]},
+    "authority": {"type": "object", "required": ["scope", "source"]},
+    "started_at": {"type": "string"},
+    "completed_at": {"type": ["string", "null"]},
+    "status": {"enum": ["REQUESTED", "INVOKED", "COMPLETED", "FAILED", "CANCELLED"]},
+    "inputs": {"type": "array"}, "claims": {"type": "array"}, "observations": {"type": "array"},
+    "effects": {"type": "array"}, "artifacts": {"type": "array"}, "relations": {"type": "array"},
+    "verification": {"type": "object", "required": ["state", "evidence"]},
+    "provenance": {"type": "object"}
+  },
+  "additionalProperties": false
+}
