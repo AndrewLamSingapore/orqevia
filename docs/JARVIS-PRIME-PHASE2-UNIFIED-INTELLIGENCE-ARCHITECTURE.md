@@ -20,12 +20,16 @@ Phase 2 adds one durable control plane to PRIME Architecture v1. It does not add
 - Repeated equivalent attempts without new evidence force replanning.
 - Predictions are immutable, time-bounded shadow records with a baseline and explicit uncertainty.
 - No candidate record may be represented as production evidence.
+- External evidence becomes verified only through a stable, host-supplied verifier bound to canonical issuer policy. The kernel default is deny; model or caller assertions cannot substitute for host verification.
+- Verified attestations are body-bound, expiring and one-time. Consequential effects bind the exact verified payload digest and cannot reuse evidence across different effects.
 
 ## Unified state model
 
 `phase2_objectives` stores the original objective, criteria, constraints, authority envelope, durable checkpoint, next admissible action, version and integrity digest. Events, attempts, effects, context, hypotheses, lessons and predictions are separate append-oriented records.
 
 The checkpoint carries facts, unknowns, a problem graph, plan, completed work, failed approaches, artifacts, dependencies, verification references and the next admissible action. Optimistic version checks reject stale writers. A restart reopens the same SQLite state without reconstructing intent from model prose.
+
+The host owns verifier configuration and durable key/issuer identity. Phase 2 stores only the validated attestation identity and its use record; it does not generate an ephemeral trust root or expose a public self-attestation path. A host that supplies no verifier fails closed.
 
 ## Context Fabric
 

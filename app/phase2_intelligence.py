@@ -7,7 +7,6 @@ executes a tool, changes a role, deploys code or mutates Golden production.
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import math
 import re
@@ -88,10 +87,10 @@ class CompiledContext:
 class Phase2Kernel:
     """One candidate state machine; callers own actual execution authority."""
 
-    def __init__(self, path: str | Path, *, clock=time.time, attestation_key: bytes | None = None):
+    def __init__(self, path: str | Path, *, clock=time.time, evidence_verifier=None):
         self.path = str(path)
         self.clock = clock
-        self._attestation_key = attestation_key or uuid.uuid4().bytes + uuid.uuid4().bytes
+        self._evidence_verifier = evidence_verifier or (lambda attestation, expected: False)
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 
@@ -138,6 +137,13 @@ class Phase2Kernel:
                   evidence_type text not null, source text not null, provenance text not null,
                   verified integer not null, payload_digest text not null, created_at real not null,
                   record_sha256 text not null
+                );
+                create table if not exists phase2_attestation_uses(
+                  attestation_id text primary key, evidence_id text unique not null,
+                  objective_id text not null, used_at real not null
+                );
+                create table if not exists phase2_evidence_effect_uses(
+                  evidence_id text primary key, operation_id text unique not null
                 );
                 create table if not exists phase2_context(
                   context_id text primary key, context_key text not null, scope text not null, scope_id text not null,
@@ -357,7 +363,7 @@ class Phase2Kernel:
                                          (evidence_id, objective_id)).fetchone()
             evidence_value=dict(evidence) if evidence else None
             evidence_hash=evidence_value.pop("record_sha256",None) if evidence_value else None
-            if evidence is None or digest(evidence_value)!=evidence_hash:
+            if evidence is None or digest(evidence_value)!=evidence_hash or evidence["payload_digest"] != digest(effect):
                 raise ValueError("verified effect requires bound verified evidence")
         with closing(self.connect()) as db, db:
             existing = db.execute("select * from phase2_effects where operation_id=?", (operation_id,)).fetchone()
@@ -365,20 +371,14 @@ class Phase2Kernel:
                 if existing["objective_id"] != objective_id or existing["effect_digest"] != digest(effect):
                     raise ValueError("idempotency key collision")
                 return {**dict(existing), "duplicate": True}
+            if verified:
+                try:
+                    db.execute("insert into phase2_evidence_effect_uses values(?,?)",(evidence_id,operation_id))
+                except sqlite3.IntegrityError as error:
+                    raise ValueError("verified effect evidence replay denied") from error
             db.execute("insert into phase2_effects values(?,?,?,?,?,?)", (operation_id, objective_id,
                        digest(effect), int(bool(verified)), canonical(receipt), moment))
         return {"operation_id": operation_id, "verified": bool(verified), "duplicate": False}
-
-    def attest_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, source: str,
-                        provenance: str, payload: Any, verification_ref: str,
-                        now: float | None = None) -> dict[str, Any]:
-        moment=self.clock() if now is None else float(now)
-        authority.validate("evidence.attest",now=moment)
-        if authority.role!="SYSTEM": raise PermissionError("only canonical system verifier may attest evidence")
-        body={"objective_id":objective_id,"source":source,"provenance":provenance,
-              "payload_digest":digest(payload),"verification_ref":verification_ref}
-        signature=hmac.new(self._attestation_key,canonical(body).encode(),hashlib.sha256).hexdigest()
-        return {**body,"verifier_type":"SYSTEM","signature":signature}
 
     def record_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, evidence_type: str,
                         source: str, provenance: str, payload: Any, verification: dict[str, Any] | None,
@@ -390,10 +390,8 @@ class Phase2Kernel:
             raise ValueError("evidence denied for non-active objective")
         eid = evidence_id or str(uuid.uuid4())
         verification = dict(verification or {})
-        body={"objective_id":objective_id,"source":source,"provenance":provenance,"payload_digest":digest(payload),
-              "verification_ref":verification.get("verification_ref")}
-        expected=hmac.new(self._attestation_key,canonical(body).encode(),hashlib.sha256).hexdigest()
-        verified=bool(verification) and verification.get("verifier_type")=="SYSTEM" and hmac.compare_digest(str(verification.get("signature","")),expected)
+        body={"objective_id":objective_id,"source":source,"provenance":provenance,"payload_digest":digest(payload)}
+        verified=bool(verification) and verification.get("attestation_id") and verification.get("expires_at",0)>=moment and self._evidence_verifier(verification,body) is True
         if verification and not verified: raise ValueError("evidence verification is not governed")
         row={"evidence_id":eid,"objective_id":objective_id,
              "evidence_type":require_text(evidence_type,"evidence type",100),
@@ -402,6 +400,11 @@ class Phase2Kernel:
              "verified":int(verified),"payload_digest":digest(payload),"created_at":moment}
         row["record_sha256"]=digest(row)
         with closing(self.connect()) as db, db:
+            if verified:
+                try:
+                    db.execute("insert into phase2_attestation_uses values(?,?,?,?)",(verification["attestation_id"],eid,objective_id,moment))
+                except sqlite3.IntegrityError as error:
+                    raise ValueError("evidence attestation replay denied") from error
             db.execute("insert into phase2_evidence values(:evidence_id,:objective_id,:evidence_type,:source,:provenance,:verified,:payload_digest,:created_at,:record_sha256)",row)
             self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified)}, moment)
         return {"evidence_id":eid,"verified":bool(verified),"payload_digest":row["payload_digest"],"record_sha256":row["record_sha256"]}

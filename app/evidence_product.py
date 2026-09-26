@@ -96,7 +96,10 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
         errors.append("INVALID_REFERENCE:verified_with_unresolved_evidence")
     if verification.get("state") == "VERIFIED":
         for ref in verification_refs:
-            if ref in observations and not observations[ref].get("verification_ref"):
+            proof=observations[ref].get("verification_ref") if ref in observations else None
+            if ref in observations and not (isinstance(proof,dict) and proof.get("state")=="SYSTEM_VERIFIED" and
+                                              proof.get("digest",{}).get("algorithm")=="sha256" and
+                                              len(proof.get("digest",{}).get("value",""))==64):
                 errors.append("INVALID_REFERENCE:unverified_observation")
     verdict = "INVALID" if errors else "UNVERIFIED" if unresolved else "VALID"
     return {"verdict": verdict, "errors": sorted(set(errors)), "unresolved": sorted(set(unresolved))}

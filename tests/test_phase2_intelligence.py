@@ -17,7 +17,8 @@ def auth(actor="owner-1", role="OWNER", permissions=None):
 
 
 def kernel(tmp_path):
-    return Phase2Kernel(tmp_path / "phase2.db", clock=lambda: NOW)
+    return Phase2Kernel(tmp_path / "phase2.db", clock=lambda: NOW,
+                        evidence_verifier=lambda att,expected: att.get("issuer_token")=="trusted-host" and att.get("body")==expected)
 
 
 def objective(store, actor=None):
@@ -25,7 +26,9 @@ def objective(store, actor=None):
     return store.create_objective(objective="Diagnose storage trend safely", success_criteria=["cause verified", "result delivered"], constraints=["no production mutation"], authority=actor)
 
 def attest(store,oid,source,provenance,payload,ref):
-    return store.attest_evidence(oid,authority=auth("phase2-system","SYSTEM"),source=source,provenance=provenance,payload=payload,verification_ref=ref)
+    from app.phase2_intelligence import digest
+    body={"objective_id":oid,"source":source,"provenance":provenance,"payload_digest":digest(payload)}
+    return {"attestation_id":str(__import__('uuid').uuid4()),"expires_at":NOW+100,"issuer_token":"trusted-host","body":body,"verification_ref":ref}
 
 
 def test_objective_checkpoint_survives_reopen_and_rejects_stale_update(tmp_path):
@@ -215,6 +218,22 @@ def test_direct_evidence_verified_flip_cannot_complete_objective(tmp_path):
         db.execute("update phase2_evidence set verified=1 where evidence_id in (?,?)",(one["evidence_id"],two["evidence_id"]))
     with pytest.raises(ValueError,match="unverified"):
         store.control(oid,"complete",authority=auth(),verification_refs={"cause verified":one["evidence_id"],"result delivered":two["evidence_id"]})
+
+
+def test_attestation_and_effect_replay_mismatch_and_forgery_are_denied(tmp_path):
+    store=kernel(tmp_path); oid=objective(store)["objective_id"]
+    payload={"service":"healthy"}; proof=attest(store,oid,"runtime","health:1",payload,"health:1")
+    evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="health:1",payload=payload,verification=proof)
+    with pytest.raises(ValueError,match="replay"):
+        store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="health:1",payload=payload,verification=proof)
+    with pytest.raises(ValueError,match="bound verified evidence"):
+        store.record_effect(oid,authority=auth(),operation_id="wire",effect={"wire_money":1000000},verified=True,receipt={"evidence_id":evidence["evidence_id"]})
+    store.record_effect(oid,authority=auth(),operation_id="health",effect=payload,verified=True,receipt={"evidence_id":evidence["evidence_id"]})
+    with pytest.raises(ValueError,match="replay"):
+        store.record_effect(oid,authority=auth(),operation_id="health2",effect=payload,verified=True,receipt={"evidence_id":evidence["evidence_id"]})
+    forged={**proof,"attestation_id":"forged","issuer_token":"not-trusted"}
+    with pytest.raises(ValueError,match="not governed"):
+        store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:1",payload=payload,verification=forged)
 
 
 def test_member_cannot_write_owner_or_global_context(tmp_path):

@@ -12,8 +12,10 @@ def build(tmp_path, *, health=True):
     with action(ledger,namespace='demo',objective='Deploy build 17',actor={'type':'SERVICE','id':'deploy-bot'},
                 authority={'scope':'staging.deploy','source':'iam:role/deployer'},idempotency_key='create:17') as item:
         item.invoke(tool_ref='deployment-cli:v1',idempotency_key='invoke:17')
-        invocation=item.observe('deployment-cli',{'exit_code':0},verification_ref='proc:17',idempotency_key='observe:invoke:17')
-        health_obs=item.observe('health-endpoint',{'status':200 if health else 503},verification_ref='http:17',idempotency_key='observe:health:17')
+        proof=lambda value:{'state':'SYSTEM_VERIFIED','digest':{'algorithm':'sha256','value':__import__('hashlib').sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()}}
+        iv={'exit_code':0}; hv={'status':200 if health else 503}
+        invocation=item.observe('deployment-cli',iv,verification_ref=proof(iv),idempotency_key='observe:invoke:17')
+        health_obs=item.observe('health-endpoint',hv,verification_ref=proof(hv),idempotency_key='observe:health:17')
         art=item.attach(artifact,idempotency_key='artifact:17')
         item.claim('Deployment command completed',state='OBSERVED',evidence_refs=[invocation],idempotency_key='claim:invoke:17')
         item.effect('Service healthy',state='VERIFIED' if health else 'FAILED',observation_refs=[health_obs],idempotency_key='effect:health:17')

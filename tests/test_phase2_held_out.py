@@ -21,7 +21,8 @@ def envelope(actor="owner-heldout", role="OWNER", *, expiry=T0 + 10000):
 
 
 def make(tmp_path, text="Reconcile a bilingual invoice without duplicate payment"):
-    store = Phase2Kernel(tmp_path / "heldout.db", clock=lambda: T0)
+    store = Phase2Kernel(tmp_path / "heldout.db", clock=lambda: T0,
+                         evidence_verifier=lambda att,expected: att.get('issuer_token')=='trusted-host' and att.get('body')==expected)
     item = store.create_objective(objective=text, success_criteria=["identity confirmed", "effect verified"],
                                   constraints=["do not pay twice", "retain Chinese text"], authority=envelope())
     return store, item
@@ -47,7 +48,9 @@ def test_tool_failure_is_not_completion_and_duplicate_retry_has_no_second_effect
                          evidence={"error": "timeout"}, outcome="tool unavailable")
     with pytest.raises(ValueError):
         store.control(oid, "complete", authority=envelope(), verification_refs=[])
-    payload={"amount":42}; proof=store.attest_evidence(oid,authority=envelope("phase2-system","SYSTEM"),source="ledger",provenance="ledger:L17",payload=payload,verification_ref="ledger:L17")
+    from app.phase2_intelligence import digest
+    payload={"amount":42,"currency":"SGD"}; proof={"attestation_id":"heldout-L17","expires_at":T0+100,"issuer_token":"trusted-host",
+        "body":{"objective_id":oid,"source":"ledger","provenance":"ledger:L17","payload_digest":digest(payload)}}
     evidence=store.record_evidence(oid,authority=envelope(),evidence_type="EFFECT",source="ledger",provenance="ledger:L17",payload=payload,verification=proof)
     receipt={"ledger_id":"L17","evidence_id":evidence["evidence_id"]}
     first = store.record_effect(oid, authority=envelope(), operation_id="pay:invoice-17",
