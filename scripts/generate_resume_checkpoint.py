@@ -21,7 +21,7 @@ def generate(value: dict[str, Any]) -> str:
     release=value['canonical_release']
     lines=['# JARVIS / PRIME — Current Resume Checkpoint','',
         '> Generated machine mirror of recorded observations â€” not a status authority. Read STATUS.md and current PRIME main before resuming.', '',
-        '- Canonical source: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json',
+        '- Canonical source: https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/governance/operational-manifest.json',
         f"- Selected architecture release: `{release['id']}`",
         f"- Operational status: **{value['status']}**",
         f"- Source observation: `{value['as_of_utc']}`",
@@ -45,7 +45,7 @@ def generate(value: dict[str, Any]) -> str:
     lines += ['', '## Unresolved evidence', '']
     lines += ['- '+reason for reason in value['verification']['stale_reasons']]
     lines += ['', '## Resume contract', '',
-        'Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. STATUS.md is the only current status authority; this mirror and the operational manifest it derives from are machine-readable component and observation references. system.manifest.json is a subordinate product manifest. Repository SSOT.json files are references. This is the only current generated mirror; earlier exports and installer bundles are superseded.', '']
+        'Resolve the PRIME production lineage feat/supreme-integration-20260925 and read governance/CHANNEL_CONTRACT.md at that same commit. STATUS.md is the only current status authority; the immutable Golden manifest owns generation architecture identity. This mirror and the operational manifest it derives from are machine-readable component and observation references. system.manifest.json is a subordinate product manifest. Repository SSOT.json files are references. This is the only current generated mirror; earlier exports and installer bundles are superseded.', '']
     return "\n".join(lines)
 
 
