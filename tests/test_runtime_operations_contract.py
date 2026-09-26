@@ -83,6 +83,14 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         self.assertIn("PRIME_OWNER_TRUSTED_PEERS: ${PRIME_OWNER_TRUSTED_PEERS:-}", compose)
 
+    def test_owner_account_reaches_pairing_authority_and_client_interface(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        prime, interface = compose.split("  interface:", 1)
+        setting = "PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}"
+        self.assertIn(setting, prime)
+        self.assertIn(setting, interface)
+        self.assertEqual(compose.count(setting), 2)
+
     def test_physical_client_runtime_is_https_narrow_and_profile_gated(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
