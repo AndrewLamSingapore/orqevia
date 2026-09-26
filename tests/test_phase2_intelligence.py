@@ -132,8 +132,25 @@ def test_wrong_hypothesis_is_rejected_not_preserved_by_sunk_cost(tmp_path):
 def test_learning_requires_verified_repetition_provenance_and_counterexamples(tmp_path):
     store=kernel(tmp_path)
     weak=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="always retry",outcomes=[{"verified":True,"provenance":"a"}],applicability=[],counterexamples_checked=False)
-    strong=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="reproduce before repair",outcomes=[{"verified":True,"provenance":x} for x in "abc"],applicability=["software defects"],counterexamples_checked=True)
+    item=objective(store); outcomes=[]
+    for index in range(3):
+        payload={"outcome":index}
+        evidence=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OUTCOME",source="runtime",provenance=f"outcome:{index}",payload=payload,
+            verification=attest(store,item["objective_id"],"runtime",f"outcome:{index}",payload,f"outcome:{index}"))
+        outcomes.append({"evidence_id":evidence["evidence_id"]})
+    strong=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="reproduce before repair",outcomes=outcomes,applicability=["software defects"],counterexamples_checked=True)
     assert weak["status"]=="HYPOTHESIS" and strong["status"]=="QUALIFIED" and not strong["grants_authority"]
+
+
+def test_caller_flags_cannot_self_qualify_durable_learning(tmp_path):
+    store=kernel(tmp_path)
+    result=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="trust unsupported output",
+        outcomes=[{"verified":True,"provenance":"model:self"} for _ in range(3)],applicability=["all"],counterexamples_checked=True)
+    assert result["status"]=="HYPOTHESIS" and "unverified_outcome" in result["reasons"]
+    reopened=Phase2Kernel(store.path,clock=lambda:NOW)
+    with sqlite3.connect(reopened.path) as db:
+        row=db.execute("select * from phase2_lessons").fetchone()
+    assert row[2]=="HYPOTHESIS"
 
 
 def test_prediction_rejects_future_leakage_and_requires_baseline(tmp_path):

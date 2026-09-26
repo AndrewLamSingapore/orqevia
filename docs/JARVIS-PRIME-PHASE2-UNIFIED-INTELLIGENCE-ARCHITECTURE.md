@@ -45,7 +45,7 @@ Context is classified by scope (`OWNER_PRIVATE`, `MEMBER_PRIVATE`, `APPLICATION`
 
 ## Problem solving and learning
 
-Hypotheses remain `OPEN`, `SUPPORTED`, `REJECTED`, or `UNKNOWN` based on recorded support and contradiction. Sunk cost cannot preserve a contradicted hypothesis. Lessons remain hypotheses unless they have repeated verified outcomes, provenance, applicability limits and counterexample checks. Qualified lessons still grant no authority.
+Hypotheses remain `OPEN`, `SUPPORTED`, `REJECTED`, or `UNKNOWN` based on recorded support and contradiction. Sunk cost cannot preserve a contradicted hypothesis. Lessons remain hypotheses unless they reference at least three distinct host-verified evidence records whose hashes and anchored evidence events validate, with applicability limits and counterexample checks. Caller-supplied booleans or provenance strings are not verification. Qualified lessons still grant no authority.
 
 ## Predictive core
 

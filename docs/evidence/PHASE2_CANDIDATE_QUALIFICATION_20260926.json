@@ -7,12 +7,12 @@
   "results": {
     "focused_and_held_out": {
       "command": "python -m pytest tests/test_phase2_intelligence.py tests/test_phase2_held_out.py tests/test_phase2_candidate_manifest.py -q",
-      "passed": 42,
+      "passed": 43,
       "failed": 0
     },
     "canonical_regression": {
       "command": "python -m pytest -q",
-      "passed": 952,
+      "passed": 953,
       "failed": 0,
       "warnings": 5,
       "warning_class": "existing_framework_deprecations"

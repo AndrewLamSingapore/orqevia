@@ -162,7 +162,8 @@ class Phase2Kernel:
                 create table if not exists phase2_lessons(
                   lesson_id text primary key, lesson text not null, status text not null,
                   source_experience_json text not null, applicability_json text not null,
-                  verification_json text not null, supersedes_id text, created_at real not null
+                  verification_json text not null, supersedes_id text, created_at real not null,
+                  record_sha256 text not null
                 );
                 create table if not exists phase2_predictions(
                   prediction_id text primary key, objective_id text not null references phase2_objectives(objective_id),
@@ -182,6 +183,9 @@ class Phase2Kernel:
             if "attestation_id" not in evidence_columns:
                 db.execute("alter table phase2_evidence add column attestation_id text")
             db.execute("create unique index if not exists phase2_evidence_attestation on phase2_evidence(attestation_id) where attestation_id is not null")
+            lesson_columns={row[1] for row in db.execute("pragma table_info(phase2_lessons)")}
+            if "record_sha256" not in lesson_columns:
+                db.execute("alter table phase2_lessons add column record_sha256 text")
 
     @staticmethod
     def _objective_hash(row: dict[str, Any]) -> str:
@@ -632,15 +636,36 @@ class Phase2Kernel:
         authority.validate("lesson.qualify", now=moment)
         reasons = []
         if len(outcomes) < 3: reasons.append("insufficient_repetition")
-        if not outcomes or not all(item.get("verified") and item.get("provenance") for item in outcomes): reasons.append("unverified_outcome")
+        evidence_ids=[item.get("evidence_id") for item in outcomes]
+        if not outcomes or any(not isinstance(item,str) or not item for item in evidence_ids) or len(set(evidence_ids))!=len(evidence_ids):
+            reasons.append("unverified_outcome")
+        governed=[]
+        if evidence_ids and "unverified_outcome" not in reasons:
+            with closing(self.connect()) as db:
+                rows=db.execute(f"select * from phase2_evidence where evidence_id in ({','.join('?' for _ in evidence_ids)})",evidence_ids).fetchall()
+                events={json.loads(row[0])["evidence_id"] for row in db.execute(
+                    f"select details_json from phase2_events where event_type='EVIDENCE_RECORDED' and json_extract(details_json,'$.evidence_id') in ({','.join('?' for _ in evidence_ids)})",evidence_ids)}
+            by_id={row["evidence_id"]:row for row in rows}
+            for evidence_id in evidence_ids:
+                row=by_id.get(evidence_id); value=dict(row) if row else None
+                expected=value.pop("record_sha256",None) if value else None
+                if not row or not row["verified"] or digest(value)!=expected or evidence_id not in events:
+                    reasons.append("unverified_outcome"); governed=[]; break
+                governed.append({"evidence_id":evidence_id,"objective_id":row["objective_id"],
+                                 "source":row["source"],"provenance":row["provenance"],
+                                 "payload_digest":row["payload_digest"],"record_sha256":expected})
         if not applicability: reasons.append("missing_applicability")
         if not counterexamples_checked: reasons.append("counterexamples_not_checked")
+        reasons=sorted(set(reasons))
         status = "QUALIFIED" if not reasons else "HYPOTHESIS"
         lid = str(uuid.uuid4())
+        row={"lesson_id":lid,"lesson":require_text(lesson,"lesson",4000),"status":status,
+             "source_experience_json":canonical(governed),"applicability_json":canonical(applicability),
+             "verification_json":canonical({"reasons":reasons,"evidence_ids":evidence_ids}),
+             "supersedes_id":supersedes_id,"created_at":moment}
+        row["record_sha256"]=digest(row)
         with closing(self.connect()) as db, db:
-            db.execute("insert into phase2_lessons values(?,?,?,?,?,?,?,?)", (lid, require_text(lesson, "lesson", 4000),
-                       status, canonical(outcomes), canonical(applicability), canonical({"reasons": reasons}),
-                       supersedes_id, moment))
+            db.execute("insert into phase2_lessons(lesson_id,lesson,status,source_experience_json,applicability_json,verification_json,supersedes_id,created_at,record_sha256) values(:lesson_id,:lesson,:status,:source_experience_json,:applicability_json,:verification_json,:supersedes_id,:created_at,:record_sha256)",row)
         return {"lesson_id": lid, "status": status, "reasons": reasons, "grants_authority": False}
 
     def create_prediction(self, objective_id: str, *, authority: AuthorityEnvelope, as_of: float,
