@@ -181,6 +181,36 @@ def test_lesson_semantics_require_bound_single_use_host_receipt(tmp_path):
         counterexamples_checked=True,qualification_receipt=receipt)["status"]=="HYPOTHESIS"
 
 
+def test_lesson_receipt_claim_is_atomic_under_concurrency(tmp_path):
+    barrier=threading.Barrier(2)
+    def verify_lesson(receipt,expected):
+        valid=receipt.get("issuer_token")=="trusted-host" and receipt.get("body")==expected
+        if valid: barrier.wait(timeout=5)
+        return valid
+    store=Phase2Kernel(tmp_path/'phase2.db',clock=lambda:NOW,
+        evidence_verifier=lambda att,expected: att.get("issuer_token")=="trusted-host" and att.get("body")==expected,
+        lesson_verifier=verify_lesson)
+    outcomes=[]
+    for index in range(3):
+        item=objective(store); payload={"outcome":index}
+        evidence=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OUTCOME",source="runtime",provenance=f"concurrent:{index}",payload=payload,
+            verification=attest(store,item["objective_id"],"runtime",f"concurrent:{index}",payload,f"concurrent:{index}"))
+        outcomes.append({"evidence_id":evidence["evidence_id"]})
+    lesson="One bounded lesson"; applicability=["bounded-domain"]; ids=[outcome["evidence_id"] for outcome in outcomes]
+    receipt=lesson_receipt(lesson,applicability,ids); results=[]; errors=[]
+    def qualify():
+        try: results.append(store.qualify_lesson(authority=auth("system","SYSTEM"),lesson=lesson,outcomes=outcomes,
+            applicability=applicability,counterexamples_checked=True,qualification_receipt=receipt))
+        except Exception as error: errors.append(error)
+    threads=[threading.Thread(target=qualify) for _ in range(2)]
+    for thread in threads: thread.start()
+    for thread in threads: thread.join(5)
+    assert len(results)==1 and results[0]["status"]=="QUALIFIED"
+    assert len(errors)==1 and "replay" in str(errors[0])
+    with sqlite3.connect(store.path) as db:
+        assert db.execute("select count(*) from phase2_lessons where status='QUALIFIED'").fetchone()[0]==1
+
+
 def test_prediction_rejects_future_leakage_and_requires_baseline(tmp_path):
     store=kernel(tmp_path); oid=objective(store)["objective_id"]
     kwargs=dict(authority=auth(),as_of=NOW,target="disk free",horizon_end=NOW+3600,method="linear",feature_snapshot={},forecast={"gb":790},uncertainty={"gb":5},assumptions=[],scenario="BASE",calibration_version="v1")

@@ -166,6 +166,9 @@ class Phase2Kernel:
                   verification_json text not null, supersedes_id text, created_at real not null,
                   record_sha256 text not null
                 );
+                create table if not exists phase2_lesson_receipt_uses(
+                  receipt_id text primary key, lesson_id text unique not null, used_at real not null
+                );
                 create table if not exists phase2_predictions(
                   prediction_id text primary key, objective_id text not null references phase2_objectives(objective_id),
                   as_of real not null, target text not null, horizon_end real not null, method text not null,
@@ -187,6 +190,7 @@ class Phase2Kernel:
             lesson_columns={row[1] for row in db.execute("pragma table_info(phase2_lessons)")}
             if "record_sha256" not in lesson_columns:
                 db.execute("alter table phase2_lessons add column record_sha256 text")
+            db.execute("create unique index if not exists phase2_qualified_lesson_receipt on phase2_lessons(json_extract(verification_json,'$.receipt_id')) where status='QUALIFIED' and json_extract(verification_json,'$.receipt_id') is not null")
 
     @staticmethod
     def _objective_hash(row: dict[str, Any]) -> str:
@@ -666,10 +670,6 @@ class Phase2Kernel:
         governed_receipt=(isinstance(receipt_id,str) and bool(receipt_id.strip()) and isinstance(expires_at,(int,float)) and
                           expires_at>=moment and self._lesson_verifier(receipt,receipt_body) is True)
         if not governed_receipt: reasons.append("unverified_semantic_support")
-        if governed_receipt:
-            with closing(self.connect()) as db:
-                if db.execute("select lesson_id from phase2_lessons where json_extract(verification_json,'$.receipt_id')=?",(receipt_id,)).fetchone():
-                    reasons.append("qualification_receipt_replay")
         reasons=sorted(set(reasons))
         status = "QUALIFIED" if not reasons else "HYPOTHESIS"
         lid = str(uuid.uuid4())
@@ -680,8 +680,18 @@ class Phase2Kernel:
                                              "receipt_body":receipt_body if governed_receipt else None}),
              "supersedes_id":supersedes_id,"created_at":moment}
         row["record_sha256"]=digest(row)
-        with closing(self.connect()) as db, db:
-            db.execute("insert into phase2_lessons(lesson_id,lesson,status,source_experience_json,applicability_json,verification_json,supersedes_id,created_at,record_sha256) values(:lesson_id,:lesson,:status,:source_experience_json,:applicability_json,:verification_json,:supersedes_id,:created_at,:record_sha256)",row)
+        with closing(self.connect()) as db:
+            db.execute("begin immediate")
+            try:
+                if status=="QUALIFIED":
+                    db.execute("insert into phase2_lesson_receipt_uses(receipt_id,lesson_id,used_at) values(?,?,?)",(receipt_id,lid,moment))
+                db.execute("insert into phase2_lessons(lesson_id,lesson,status,source_experience_json,applicability_json,verification_json,supersedes_id,created_at,record_sha256) values(:lesson_id,:lesson,:status,:source_experience_json,:applicability_json,:verification_json,:supersedes_id,:created_at,:record_sha256)",row)
+                db.commit()
+            except sqlite3.IntegrityError as error:
+                db.rollback()
+                raise ValueError("qualification receipt replay denied") from error
+            except Exception:
+                db.rollback(); raise
         return {"lesson_id": lid, "status": status, "reasons": reasons, "grants_authority": False}
 
     def create_prediction(self, objective_id: str, *, authority: AuthorityEnvelope, as_of: float,
