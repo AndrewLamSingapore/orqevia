@@ -251,6 +251,17 @@ def test_attestation_identity_and_expiry_are_host_bound(tmp_path):
         store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:bound",payload=payload,verification=forged)
 
 
+def test_attestation_replay_stays_denied_if_primary_and_auxiliary_rows_are_deleted(tmp_path):
+    store=kernel(tmp_path); oid=objective(store)["objective_id"]; payload={"healthy":True}
+    proof=attest(store,oid,"runtime","health:anchored",payload,"anchored")
+    evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:anchored",payload=payload,verification=proof)
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_attestation_uses where attestation_id=?",(proof["attestation_id"],))
+        db.execute("delete from phase2_evidence where evidence_id=?",(evidence["evidence_id"],))
+    with pytest.raises(ValueError,match="replay"):
+        store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:anchored",payload=payload,verification=proof)
+
+
 def test_effect_reuse_stays_denied_if_auxiliary_use_row_is_deleted(tmp_path):
     store=kernel(tmp_path); oid=objective(store)["objective_id"]; payload={"sent":1}
     evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="send:1",payload=payload,
@@ -259,6 +270,10 @@ def test_effect_reuse_stays_denied_if_auxiliary_use_row_is_deleted(tmp_path):
     store.record_effect(oid,authority=auth(),operation_id="op-one",effect=payload,verified=True,receipt=receipt)
     with sqlite3.connect(store.path) as db:
         db.execute("delete from phase2_evidence_effect_uses where evidence_id=?",(evidence["evidence_id"],))
+    with pytest.raises(ValueError,match="replay"):
+        store.record_effect(oid,authority=auth(),operation_id="op-two",effect=payload,verified=True,receipt=receipt)
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_effects where operation_id='op-one'")
     with pytest.raises(ValueError,match="replay"):
         store.record_effect(oid,authority=auth(),operation_id="op-two",effect=payload,verified=True,receipt=receipt)
 
@@ -271,6 +286,23 @@ def test_effect_record_tamper_is_detected_by_snapshot(tmp_path):
     with sqlite3.connect(store.path) as db:
         db.execute("update phase2_effects set verified=0,receipt_json='{}' where operation_id='op-tamper'")
     with pytest.raises(ValueError,match="effect integrity"):
+        store.snapshot(oid,authority=auth())
+
+
+def test_evidence_record_tamper_and_deletion_are_anchored_by_events(tmp_path):
+    store=kernel(tmp_path); oid=objective(store)["objective_id"]; payload={"ok":True}
+    evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="check:1",payload=payload,
+        verification=attest(store,oid,"runtime","check:1",payload,"check:1"))
+    with sqlite3.connect(store.path) as db:
+        db.execute("update phase2_evidence set attestation_id='altered' where evidence_id=?",(evidence["evidence_id"],))
+    with pytest.raises(ValueError,match="evidence integrity"):
+        store.snapshot(oid,authority=auth())
+    store=kernel(tmp_path/'fresh'); oid=objective(store)["objective_id"]
+    evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="check:2",payload=payload,
+        verification=attest(store,oid,"runtime","check:2",payload,"check:2"))
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_evidence where evidence_id=?",(evidence["evidence_id"],))
+    with pytest.raises(ValueError,match="reconciliation"):
         store.snapshot(oid,authority=auth())
 
 

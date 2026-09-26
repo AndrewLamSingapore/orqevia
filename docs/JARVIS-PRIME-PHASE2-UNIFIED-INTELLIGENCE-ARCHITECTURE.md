@@ -29,7 +29,7 @@ Phase 2 adds one durable control plane to PRIME Architecture v1. It does not add
 
 The checkpoint carries facts, unknowns, a problem graph, plan, completed work, failed approaches, artifacts, dependencies, verification references and the next admissible action. Optimistic version checks reject stale writers. A restart reopens the same SQLite state without reconstructing intent from model prose.
 
-The host owns verifier configuration and durable key/issuer identity. Phase 2 stores the validated attestation identity in the hashed primary evidence record as well as its use index; losing the auxiliary index therefore cannot permit replay. Effect records are wholly integrity-bound, and a verified effect requires a host-verified observation. Phase 2 does not generate an ephemeral trust root or expose a public self-attestation path. A host that supplies no verifier fails closed.
+The host owns verifier configuration and durable key/issuer identity. Phase 2 stores the validated attestation identity in the hashed primary evidence record and in the hash-chained objective event history as well as its use index. Evidence and effect rows reconcile to that anchored event history, so mutation or coordinated row/index deletion is detected and cannot permit replay. Effect records are wholly integrity-bound, and a verified effect requires a host-verified observation. Phase 2 does not generate an ephemeral trust root or expose a public self-attestation path. A host that supplies no verifier fails closed.
 
 ## Context Fabric
 

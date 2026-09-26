@@ -372,6 +372,9 @@ class Phase2Kernel:
                 prior_effect = probe.execute(
                     "select * from phase2_effects where json_extract(receipt_json,'$.evidence_id')=?",
                     (evidence_id,)).fetchone()
+                anchored_effect = probe.execute(
+                    "select json_extract(details_json,'$.operation_id') as operation_id from phase2_events where event_type='EFFECT_RECORDED' and json_extract(details_json,'$.evidence_id')=?",
+                    (evidence_id,)).fetchone()
             evidence_value=dict(evidence) if evidence else None
             evidence_hash=evidence_value.pop("record_sha256",None) if evidence_value else None
             if evidence is None or digest(evidence_value)!=evidence_hash or evidence["payload_digest"] != digest(effect):
@@ -381,6 +384,8 @@ class Phase2Kernel:
                 if digest(prior_value)!=prior_hash:
                     raise ValueError("effect integrity mismatch")
             if prior_effect and prior_effect["operation_id"] != operation_id:
+                raise ValueError("verified effect evidence replay denied")
+            if anchored_effect and anchored_effect["operation_id"] != operation_id:
                 raise ValueError("verified effect evidence replay denied")
         with closing(self.connect()) as db, db:
             existing = db.execute("select * from phase2_effects where operation_id=?", (operation_id,)).fetchone()
@@ -400,6 +405,7 @@ class Phase2Kernel:
                  "verified":int(bool(verified)),"receipt_json":canonical(receipt),"created_at":moment}
             row["record_sha256"]=digest(row)
             db.execute("insert into phase2_effects(operation_id,objective_id,effect_digest,verified,receipt_json,created_at,record_sha256) values(:operation_id,:objective_id,:effect_digest,:verified,:receipt_json,:created_at,:record_sha256)",row)
+            self._event(db,objective_id,"EFFECT_RECORDED",{"operation_id":operation_id,"evidence_id":evidence_id if verified else None,"verified":bool(verified)},moment)
         return {"operation_id": operation_id, "verified": bool(verified), "duplicate": False}
 
     def record_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, evidence_type: str,
@@ -424,6 +430,8 @@ class Phase2Kernel:
             with closing(self.connect()) as probe:
                 if probe.execute("select evidence_id from phase2_evidence where attestation_id=?",(attestation_id,)).fetchone():
                     raise ValueError("evidence attestation replay denied")
+                if probe.execute("select event_id from phase2_events where event_type='EVIDENCE_RECORDED' and json_extract(details_json,'$.attestation_id')=?",(attestation_id,)).fetchone():
+                    raise ValueError("evidence attestation replay denied")
         row={"evidence_id":eid,"objective_id":objective_id,
              "evidence_type":require_text(evidence_type,"evidence type",100),
              "source":require_text(source,"evidence source",500),
@@ -437,7 +445,8 @@ class Phase2Kernel:
                 except sqlite3.IntegrityError as error:
                     raise ValueError("evidence attestation replay denied") from error
             db.execute("insert into phase2_evidence(evidence_id,objective_id,evidence_type,source,provenance,verified,payload_digest,attestation_id,created_at,record_sha256) values(:evidence_id,:objective_id,:evidence_type,:source,:provenance,:verified,:payload_digest,:attestation_id,:created_at,:record_sha256)",row)
-            self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified)}, moment)
+            self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified),
+                        "attestation_id":attestation_id if verified else None}, moment)
         return {"evidence_id":eid,"verified":bool(verified),"payload_digest":row["payload_digest"],"record_sha256":row["record_sha256"]}
 
     def ingest_context(self, *, authority: AuthorityEnvelope, context_key: str, scope: str, scope_id: str, epistemic_class: str,
@@ -655,6 +664,16 @@ class Phase2Kernel:
             protected=dict(effect); expected=protected.pop("record_sha256",None)
             if digest(protected)!=expected:
                 raise ValueError("effect integrity mismatch")
+        for item in evidence:
+            protected=dict(item); expected=protected.pop("record_sha256",None)
+            if digest(protected)!=expected:
+                raise ValueError("evidence integrity mismatch")
+        evidence_events={json.loads(event["details_json"])["evidence_id"] for event in events if event["event_type"]=="EVIDENCE_RECORDED"}
+        effect_events={json.loads(event["details_json"])["operation_id"] for event in events if event["event_type"]=="EFFECT_RECORDED"}
+        if evidence_events!={item["evidence_id"] for item in evidence}:
+            raise ValueError("evidence event reconciliation mismatch")
+        if effect_events!={item["operation_id"] for item in effects}:
+            raise ValueError("effect event reconciliation mismatch")
         anchor=dict(anchor_row) if anchor_row else None
         expected_anchor=digest({"objective_id":objective_id,"event_count":len(events),"head_digest":previous})
         if not anchor or anchor["event_count"]!=len(events) or anchor["head_digest"]!=previous or anchor["anchor_sha256"]!=expected_anchor:
