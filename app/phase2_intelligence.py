@@ -87,10 +87,11 @@ class CompiledContext:
 class Phase2Kernel:
     """One candidate state machine; callers own actual execution authority."""
 
-    def __init__(self, path: str | Path, *, clock=time.time, evidence_verifier=None):
+    def __init__(self, path: str | Path, *, clock=time.time, evidence_verifier=None, lesson_verifier=None):
         self.path = str(path)
         self.clock = clock
         self._evidence_verifier = evidence_verifier or (lambda attestation, expected: False)
+        self._lesson_verifier = lesson_verifier or (lambda receipt, expected: False)
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 
@@ -630,11 +631,12 @@ class Phase2Kernel:
         return {"hypothesis_id": hypothesis_id, "status": status, "support": support, "contradictions": contradictions}
 
     def qualify_lesson(self, *, authority: AuthorityEnvelope, lesson: str, outcomes: list[dict[str, Any]], applicability: list[str],
-                       counterexamples_checked: bool, supersedes_id: str | None = None,
+                       counterexamples_checked: bool, qualification_receipt: dict[str,Any] | None = None,
+                       supersedes_id: str | None = None,
                        now: float | None = None) -> dict[str, Any]:
         moment = self.clock() if now is None else float(now)
         authority.validate("lesson.qualify", now=moment)
-        reasons = []
+        lesson_text=require_text(lesson,"lesson",4000); reasons = []
         if len(outcomes) < 3: reasons.append("insufficient_repetition")
         evidence_ids=[item.get("evidence_id") for item in outcomes]
         if not outcomes or any(not isinstance(item,str) or not item for item in evidence_ids) or len(set(evidence_ids))!=len(evidence_ids):
@@ -649,19 +651,33 @@ class Phase2Kernel:
             for evidence_id in evidence_ids:
                 row=by_id.get(evidence_id); value=dict(row) if row else None
                 expected=value.pop("record_sha256",None) if value else None
-                if not row or not row["verified"] or digest(value)!=expected or evidence_id not in events:
+                if not row or not row["verified"] or row["evidence_type"]!="OUTCOME" or digest(value)!=expected or evidence_id not in events:
                     reasons.append("unverified_outcome"); governed=[]; break
                 governed.append({"evidence_id":evidence_id,"objective_id":row["objective_id"],
                                  "source":row["source"],"provenance":row["provenance"],
                                  "payload_digest":row["payload_digest"],"record_sha256":expected})
+        if governed and len({item["objective_id"] for item in governed})!=len(governed): reasons.append("nonindependent_outcomes")
         if not applicability: reasons.append("missing_applicability")
         if not counterexamples_checked: reasons.append("counterexamples_not_checked")
+        receipt=dict(qualification_receipt or {}); receipt_id=receipt.get("receipt_id"); expires_at=receipt.get("expires_at")
+        receipt_body={"receipt_id":receipt_id,"expires_at":expires_at,"lesson_digest":digest(lesson_text),
+                      "applicability":list(applicability),"counterexamples_checked":bool(counterexamples_checked),
+                      "evidence_ids":evidence_ids}
+        governed_receipt=(isinstance(receipt_id,str) and bool(receipt_id.strip()) and isinstance(expires_at,(int,float)) and
+                          expires_at>=moment and self._lesson_verifier(receipt,receipt_body) is True)
+        if not governed_receipt: reasons.append("unverified_semantic_support")
+        if governed_receipt:
+            with closing(self.connect()) as db:
+                if db.execute("select lesson_id from phase2_lessons where json_extract(verification_json,'$.receipt_id')=?",(receipt_id,)).fetchone():
+                    reasons.append("qualification_receipt_replay")
         reasons=sorted(set(reasons))
         status = "QUALIFIED" if not reasons else "HYPOTHESIS"
         lid = str(uuid.uuid4())
-        row={"lesson_id":lid,"lesson":require_text(lesson,"lesson",4000),"status":status,
+        row={"lesson_id":lid,"lesson":lesson_text,"status":status,
              "source_experience_json":canonical(governed),"applicability_json":canonical(applicability),
-             "verification_json":canonical({"reasons":reasons,"evidence_ids":evidence_ids}),
+             "verification_json":canonical({"reasons":reasons,"evidence_ids":evidence_ids,
+                                             "receipt_id":receipt_id if governed_receipt else None,
+                                             "receipt_body":receipt_body if governed_receipt else None}),
              "supersedes_id":supersedes_id,"created_at":moment}
         row["record_sha256"]=digest(row)
         with closing(self.connect()) as db, db:

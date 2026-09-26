@@ -19,7 +19,8 @@ def auth(actor="owner-1", role="OWNER", permissions=None):
 
 def kernel(tmp_path):
     return Phase2Kernel(tmp_path / "phase2.db", clock=lambda: NOW,
-                        evidence_verifier=lambda att,expected: att.get("issuer_token")=="trusted-host" and att.get("body")==expected)
+                        evidence_verifier=lambda att,expected: att.get("issuer_token")=="trusted-host" and att.get("body")==expected,
+                        lesson_verifier=lambda receipt,expected: receipt.get("issuer_token")=="trusted-host" and receipt.get("body")==expected)
 
 
 def objective(store, actor=None):
@@ -32,6 +33,14 @@ def attest(store,oid,source,provenance,payload,ref):
     body={"attestation_id":attestation_id,"expires_at":expires_at,"objective_id":oid,"source":source,
           "provenance":provenance,"payload_digest":digest(payload)}
     return {"attestation_id":attestation_id,"expires_at":expires_at,"issuer_token":"trusted-host","body":body,"verification_ref":ref}
+
+def lesson_receipt(lesson,applicability,evidence_ids,counterexamples_checked=True):
+    from app.phase2_intelligence import digest
+    receipt_id=str(__import__('uuid').uuid4()); expires_at=NOW+100
+    body={"receipt_id":receipt_id,"expires_at":expires_at,"lesson_digest":digest(lesson),
+          "applicability":list(applicability),"counterexamples_checked":bool(counterexamples_checked),
+          "evidence_ids":evidence_ids}
+    return {"receipt_id":receipt_id,"expires_at":expires_at,"issuer_token":"trusted-host","body":body}
 
 
 def test_objective_checkpoint_survives_reopen_and_rejects_stale_update(tmp_path):
@@ -132,13 +141,16 @@ def test_wrong_hypothesis_is_rejected_not_preserved_by_sunk_cost(tmp_path):
 def test_learning_requires_verified_repetition_provenance_and_counterexamples(tmp_path):
     store=kernel(tmp_path)
     weak=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="always retry",outcomes=[{"verified":True,"provenance":"a"}],applicability=[],counterexamples_checked=False)
-    item=objective(store); outcomes=[]
+    outcomes=[]
     for index in range(3):
+        item=objective(store)
         payload={"outcome":index}
         evidence=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OUTCOME",source="runtime",provenance=f"outcome:{index}",payload=payload,
             verification=attest(store,item["objective_id"],"runtime",f"outcome:{index}",payload,f"outcome:{index}"))
         outcomes.append({"evidence_id":evidence["evidence_id"]})
-    strong=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="reproduce before repair",outcomes=outcomes,applicability=["software defects"],counterexamples_checked=True)
+    lesson="reproduce before repair"; applicability=["software defects"]
+    receipt=lesson_receipt(lesson,applicability,[outcome["evidence_id"] for outcome in outcomes])
+    strong=store.qualify_lesson(authority=auth("system","SYSTEM"),lesson=lesson,outcomes=outcomes,applicability=applicability,counterexamples_checked=True,qualification_receipt=receipt)
     assert weak["status"]=="HYPOTHESIS" and strong["status"]=="QUALIFIED" and not strong["grants_authority"]
 
 
@@ -151,6 +163,22 @@ def test_caller_flags_cannot_self_qualify_durable_learning(tmp_path):
     with sqlite3.connect(reopened.path) as db:
         row=db.execute("select * from phase2_lessons").fetchone()
     assert row[2]=="HYPOTHESIS"
+
+
+def test_lesson_semantics_require_bound_single_use_host_receipt(tmp_path):
+    store=kernel(tmp_path); outcomes=[]
+    for index in range(3):
+        item=objective(store); payload={"outcome":index}
+        evidence=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OUTCOME",source="runtime",provenance=f"lesson:{index}",payload=payload,
+            verification=attest(store,item["objective_id"],"runtime",f"lesson:{index}",payload,f"lesson:{index}"))
+        outcomes.append({"evidence_id":evidence["evidence_id"]})
+    ids=[outcome["evidence_id"] for outcome in outcomes]; applicability=["bounded-domain"]
+    first="Evidence supports bounded lesson"
+    receipt=lesson_receipt(first,applicability,ids)
+    assert store.qualify_lesson(authority=auth("system","SYSTEM"),lesson=first,outcomes=outcomes,applicability=applicability,
+        counterexamples_checked=True,qualification_receipt=receipt)["status"]=="QUALIFIED"
+    assert store.qualify_lesson(authority=auth("system","SYSTEM"),lesson="Contradictory lesson",outcomes=outcomes,applicability=applicability,
+        counterexamples_checked=True,qualification_receipt=receipt)["status"]=="HYPOTHESIS"
 
 
 def test_prediction_rejects_future_leakage_and_requires_baseline(tmp_path):
