@@ -72,6 +72,14 @@ def require_session(request):
     if not value:raise HTTPException(401,'Session unavailable')
     return value
 
+def safe_shell_navigation(request):
+    """Allow only an unauthenticated top-level browser handoff to the PWA shell."""
+    return (request.method=='GET'
+            and request.url.path in {'/pwa/','/pwa/index.html'}
+            and request.headers.get('origin') is None
+            and request.headers.get('sec-fetch-mode')=='navigate'
+            and request.headers.get('sec-fetch-dest')=='document')
+
 def origin_valid(request,write=False):
     expected=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')
     parsed=urlsplit(expected)
@@ -79,7 +87,8 @@ def origin_valid(request,write=False):
     if request.url.scheme!='https' or str(request.base_url).rstrip('/')!=expected:return False
     origin=request.headers.get('origin')
     if origin is not None and origin!=expected:return False
-    if request.headers.get('sec-fetch-site') in {'cross-site','same-site'}:return False
+    site=request.headers.get('sec-fetch-site')
+    if site in {'cross-site','same-site'} and not (not write and safe_shell_navigation(request)):return False
     return not write or (origin==expected and request.headers.get('x-jarvis-pwa')=='1')
 
 async def bounded_body(request,limit):

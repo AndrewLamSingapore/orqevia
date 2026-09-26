@@ -4,6 +4,7 @@ import secrets
 import time
 import pytest
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 ORIGIN='https://192.168.1.23:8443'
@@ -16,6 +17,9 @@ def setup(monkeypatch,tmp_path):
     monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
     app=FastAPI();app.include_router(pwa.router);app.include_router(pwa.owner_router);app.include_router(interface_contract.router)
+    @app.get('/pwa/',response_class=HTMLResponse)
+    @app.get('/pwa/index.html',response_class=HTMLResponse)
+    def pwa_shell():return '<!doctype html><title>JARVIS</title>'
     app.add_middleware(pwa.PWASessionMiddleware)
     return root,pwa,app,interface_node
 
@@ -51,6 +55,28 @@ def test_csrf_host_spoof_and_caller_identity_rejected(setup):
         assert client.get('/pwa/api/session',headers={'Host':'evil.invalid'}).status_code==403
         assert client.get('/interface/v1/health',headers={'Authorization':'Bearer spoof'}).status_code==400
         assert client.get('/interface/v1/health',headers={'X-Jarvis-Client-Id':'dell:spoof'}).status_code==400
+
+def test_cross_site_top_level_navigation_can_load_only_the_unauthenticated_shell(setup):
+    root,pwa,app,node=setup
+    navigation={
+        'Sec-Fetch-Site':'cross-site',
+        'Sec-Fetch-Mode':'navigate',
+        'Sec-Fetch-Dest':'document',
+        'Referer':'https://authority-engine-app.vercel.app/jarvis',
+        'User-Agent':'Mozilla/5.0 (iPhone) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1',
+    }
+    with TestClient(app,base_url=ORIGIN) as client:
+        shell=client.get('/pwa/',headers=navigation)
+        assert shell.status_code==200 and '<title>JARVIS</title>' in shell.text
+        assert client.get('/pwa/index.html',headers=navigation).status_code==200
+        # Cross-site navigation is never an authenticated API bypass.
+        assert client.get('/pwa/api/session',headers=navigation).status_code==403
+        assert client.get('/interface/v1/health',headers=navigation).status_code==401
+        # Missing navigation metadata, an Origin, a write, or another PWA path stays rejected.
+        assert client.get('/pwa/',headers={'Sec-Fetch-Site':'cross-site'}).status_code==403
+        assert client.get('/pwa/',headers={**navigation,'Origin':'https://authority-engine-app.vercel.app'}).status_code==403
+        assert client.post('/pwa/',headers=navigation).status_code==403
+        assert client.get('/pwa/app.mjs',headers=navigation).status_code==403
 
 def test_two_clients_upload_ownership_and_expiry(setup):
     root,pwa,app,node=setup
