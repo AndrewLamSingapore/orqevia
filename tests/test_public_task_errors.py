@@ -28,7 +28,10 @@ def test_unrelated_artifact_content_not_scrubbed():
 
 def test_successful_model_result_materializes_as_markdown(tmp_path,monkeypatch):
     from app import artifact_delivery
-    task={'id':'task','revision':0,'state':'COMPLETED','steps':[{'revision':0,'capability':'responsibility.a02',
+    task={'id':'task','revision':0,'state':'COMPLETED',
+        'execution_metadata':{'task_id':'task','revision':0,'state':'COMPLETED','created_at':None,
+            'started_at':None,'completed_at':None,'runtime':{'host_id':'UNKNOWN','source_revision':'UNKNOWN'}},
+        'steps':[{'revision':0,'capability':'responsibility.a02',
         'job':{'status':'completed','result':'# 中文结果\n\n- 第一项'}}]}
     class DB:
         def execute(self,*args):return self
@@ -42,7 +45,11 @@ def test_successful_model_result_materializes_as_markdown(tmp_path,monkeypatch):
     again=artifact_delivery.create_task_artifact('task','fixture')
     metadata,raw=artifact_delivery.ArtifactFactory(tmp_path/'artifacts').retrieve(first['artifact_id'])
     assert first['artifact_id']==again['artifact_id']
-    assert metadata['type']=='markdown' and raw.decode()=='# 中文结果\n\n- 第一项\n'
+    rendered=raw.decode()
+    assert metadata['type']=='markdown'
+    assert '## Authoritative execution metadata' in rendered
+    assert '- Task UUID: `task`' in rendered
+    assert '## Model-generated content\n# 中文结果\n\n- 第一项\n' in rendered
     assert publishable_task_artifact(metadata,raw)
 
 def test_failed_turn_without_text_remains_truthful_json_snapshot(tmp_path,monkeypatch):
@@ -82,7 +89,7 @@ def test_objective_status_projects_stored_job_error(monkeypatch):
     from app import objective_api
     monkeypatch.setattr(objective_api,'authenticate_owner',lambda *args:None)
     class Cursor:
-        def fetchone(self):return ('submitted',json.dumps([{'dispatch':{'job':{'id':'job'}}}]))
+        def fetchone(self):return ('submitted',json.dumps([{'dispatch':{'job':{'id':'job'}}}]),None,None)
         def fetchall(self):return []  # Original task has no continuation turns.
     class DB:
         def execute(self,*args):return Cursor()

@@ -1,4 +1,4 @@
-import {InterfaceAPI,ClientError,errorMessage,sha256,taskID,resultText,terminal,safeID,retryable,continuationAction,submissionPayload,currentSteps,taskRevision,resultPresentation,artifactLabel,spokenText,sessionActive} from './core.mjs';
+import {InterfaceAPI,ClientError,errorMessage,sha256,taskID,resultText,terminal,safeID,retryable,continuationAction,submissionPayload,currentSteps,taskRevision,resultPresentation,artifactLabel,spokenText,sessionActive,authoritativeMetadataText} from './core.mjs';
 import {TaskStore} from './storage.mjs';
 import {Voice} from './voice.mjs';
 const $=id=>document.getElementById(id), api=new InterfaceAPI(), store=new TaskStore();
@@ -23,6 +23,7 @@ async function renderTask(task){
   currentTask=task;currentResult=presentation.current;
   if(currentResult)resultMemory={taskId:id,revision,text:currentResult};
   show('active-section',true);$('task-id').textContent=id;
+  const executionMetadata=authoritativeMetadataText(task);$('execution-metadata').textContent=executionMetadata;show('execution-metadata',Boolean(executionMetadata));
   $('task-state').textContent=`${task.internal_state||task.state} · revision ${revision}`;
   $('active-title').textContent=terminal(task.state)?(currentResult?'Your result':'Turn finished without a text result'):'Working on your objective';
   $('active-section').querySelector('.eyebrow').textContent=terminal(task.state)?'RETURNED BY PRIME':'LIVE WORK';

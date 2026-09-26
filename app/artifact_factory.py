@@ -18,7 +18,8 @@ class ArtifactFactory:
         self.root=Path(root).resolve()
         self.root.mkdir(parents=True,exist_ok=True)
 
-    def create(self, *, kind: str, content: str, task_id: str, creator: str, provenance: str) -> dict:
+    def create(self, *, kind: str, content: str, task_id: str, creator: str, provenance: str,
+               runtime_revision: str = 'UNKNOWN') -> dict:
         if kind not in self.EXTENSIONS or not content.strip() or len(content.encode())>2_000_000:
             raise ValueError('Unsupported, empty, or oversized artifact')
         if SECRET.search(content):
@@ -37,6 +38,7 @@ class ArtifactFactory:
         with path.open('xb') as stream:stream.write(raw)
         metadata=dict(artifact_id=artifact_id,task_id=task_id,type=kind,creator_agents=[creator],
             timestamp=datetime.now(timezone.utc).isoformat(),version='1.0.0',provenance=provenance,
+            runtime_revision=runtime_revision,
             validation_state='STRUCTURE_VALIDATED',content_validation='Not independently established by structural validation',
             location=path.name,sha256=hashlib.sha256(raw).hexdigest(),bytes=len(raw),delivery_state='AVAILABLE')
         with (folder/'metadata.json').open('x',encoding='utf-8') as stream:json.dump(metadata,stream,indent=2)

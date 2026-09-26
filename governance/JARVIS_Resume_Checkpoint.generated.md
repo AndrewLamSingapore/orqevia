@@ -18,11 +18,11 @@
 | authority | `9a9efaa14b80` | `9a9efaa14b80` | `9a9efaa14b80` | ALIGNED_VERIFIED |
 | game | `78c639c166ca` | `78c639c166ca` | `78c639c166ca` | ALIGNED_VERIFIED |
 | portal | `f7659a3cdd72` | `f7659a3cdd72` | `f7659a3cdd72` | ALIGNED_VERIFIED |
-| prime | `—` | `a1ea9ad0a253` | `a1ea9ad0a253` | SOURCE_RUNTIME_ALIGNED_NATIVE_HOST_VERIFIED |
+| prime | `—` | `f874eab4f69c` | `f874eab4f69c` | SOURCE_RUNTIME_OBSERVED_INDEPENDENT_ACCEPTANCE_PENDING |
 | sky | `e0c4f4847a9e` | `e0c4f4847a9e` | `e0c4f4847a9e` | ALIGNED_VERIFIED |
 | velyqua | `4ecf65eec8dc` | `4ecf65eec8dc` | `4ecf65eec8dc` | ALIGNED_VERIFIED |
 
-Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: VERIFIED.
+Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: UNVERIFIED.
 
 ## Current priorities
 

@@ -45,6 +45,13 @@ export function submissionPayload(objective,uploads=[],action={kind:'new'}) {
 }
 export function taskID(task) { const id = task.taskId ?? task.task_id ?? task.id; if (!safeID(id)) throw new ClientError('protocol'); return id; }
 export function taskRevision(task) { const revision=task.revision??0;if(!Number.isSafeInteger(revision)||revision<0)throw new ClientError('protocol');return revision; }
+export function authoritativeMetadataText(task) {
+  const value=task.executionMetadata??task.execution_metadata;if(!value)return '';
+  if(value.authoritative!==true||value.task_id!==taskID(task)||value.revision!==taskRevision(task))throw new ClientError('protocol');
+  const shown=item=>item===null||item===undefined||item===''?'UNKNOWN':String(item);
+  const contradictions=Array.isArray(task.result?.contradictions)?task.result.contradictions.length:0;
+  return `PRIME SYSTEM RECORD\nTask UUID: ${shown(value.task_id)}\nState: ${shown(value.state)}\nCreated: ${shown(value.created_at)}\nStarted: ${shown(value.started_at)}\nCompleted: ${shown(value.completed_at)}\nRuntime: ${shown(value.runtime?.host_id)} · ${shown(value.runtime?.source_revision)}\n${contradictions?`Warning: ${contradictions} model metadata claim(s) conflict with or are unsupported by the system record.\n`:''}\nThe response below is model-generated content. Any UUID, timestamp, digest, runtime identity, or authority claim inside it is not system metadata.`;
+}
 export function currentSteps(task) { const revision=taskRevision(task);return (task.steps||[]).filter(step=>(step.revision??0)===revision).slice(0,21); }
 export function resultText(task) {
   const textOf = value => typeof value === 'string' ? value : value && [value.text,value.summary,value.message].find(x => typeof x === 'string');
