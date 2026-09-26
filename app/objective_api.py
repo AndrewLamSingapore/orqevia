@@ -214,7 +214,8 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     jobs=[step.get('job',{}) for step in current_steps if step.get('job')]
     recorded=timing.get(revision,(None,None))
     created_at=recorded[0] or min((job.get('created_at') for job in jobs if job.get('created_at')),default=None)
-    updated_at=recorded[1] or max((job.get('completed_at') or job.get('started_at') or job.get('created_at') for job in jobs if job.get('completed_at') or job.get('started_at') or job.get('created_at')),default=None)
+    observed_updates=[value for value in [recorded[1],*(job.get('completed_at') or job.get('started_at') or job.get('created_at') for job in jobs)] if value]
+    updated_at=max(observed_updates,default=None)
     started_at=min((job.get('started_at') for job in jobs if job.get('started_at')),default=None)
     completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
     revision_identity=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN')).strip().lower()

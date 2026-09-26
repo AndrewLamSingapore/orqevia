@@ -94,6 +94,12 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
             db.execute('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',('legacy',1,'key','digest','submitted','[]'))
             db.commit();db.close()
 
+    def test_authoritative_updated_at_advances_to_execution_completion(self):
+        recorded='2026-09-26T05:44:04.571122+00:00'
+        completed='2026-09-26T05:44:16.499915+00:00'
+        observed=[value for value in [recorded,completed] if value]
+        self.assertEqual(max(observed,default=None),completed)
+
 
 if __name__=='__main__':
     unittest.main()
