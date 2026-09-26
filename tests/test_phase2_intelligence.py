@@ -340,6 +340,29 @@ def test_owner_stop_cannot_be_overwritten_by_delayed_completion(tmp_path):
     assert store.get_objective(oid,authority=auth())["state"]=="CANCELLED"
 
 
+def test_completion_revalidates_integrity_inside_atomic_transition(tmp_path):
+    store=kernel(tmp_path); item=objective(store); oid=item["objective_id"]; refs={}
+    for criterion,index in zip(item["success_criteria"],(1,2)):
+        payload={"check":index}
+        evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance=f"atomic:{index}",payload=payload,
+            verification=attest(store,oid,"runtime",f"atomic:{index}",payload,f"atomic:{index}"))
+        refs[criterion]=evidence["evidence_id"]
+    checked=threading.Event(); release=threading.Event(); original_snapshot=store.snapshot
+    def delayed_after_check(*args,**kwargs):
+        value=original_snapshot(*args,**kwargs); checked.set(); release.wait(5); return value
+    store.snapshot=delayed_after_check
+    errors=[]
+    def complete():
+        try: store.control(oid,"complete",authority=auth(),verification_refs=refs)
+        except Exception as error: errors.append(error)
+    worker=threading.Thread(target=complete); worker.start(); assert checked.wait(5)
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_events where event_type='EVIDENCE_RECORDED' and objective_id=?",(oid,))
+    release.set(); worker.join(5); assert not worker.is_alive()
+    assert errors and "event" in str(errors[0])
+    assert store.get_objective(oid,authority=auth())["state"]=="ACTIVE"
+
+
 def test_member_cannot_write_owner_or_global_context(tmp_path):
     store=kernel(tmp_path); member=auth("member-1", "MEMBER")
     base=dict(authority=member,context_key="x",epistemic_class="INFERRED",temporal_state="CURRENT",

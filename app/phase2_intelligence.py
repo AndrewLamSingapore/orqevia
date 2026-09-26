@@ -207,6 +207,34 @@ class Phase2Kernel:
         db.execute("insert into phase2_event_anchors values(?,?,?,?) on conflict(objective_id) do update set event_count=excluded.event_count,head_digest=excluded.head_digest,anchor_sha256=excluded.anchor_sha256",
                    (objective_id,count,head,anchor))
 
+    def _validated_records(self, db: sqlite3.Connection, objective_id: str):
+        events=[dict(row) for row in db.execute("select * from phase2_events where objective_id=? order by rowid",(objective_id,))]
+        effects=[dict(row) for row in db.execute("select * from phase2_effects where objective_id=? order by created_at,operation_id",(objective_id,))]
+        evidence=[dict(row) for row in db.execute("select * from phase2_evidence where objective_id=? order by created_at,evidence_id",(objective_id,))]
+        predictions=[dict(row) for row in db.execute("select prediction_id,status,record_sha256 from phase2_predictions where objective_id=? order by created_at,prediction_id",(objective_id,))]
+        anchor_row=db.execute("select * from phase2_event_anchors where objective_id=?",(objective_id,)).fetchone()
+        previous=None
+        for event in events:
+            protected={key:event[key] for key in ("event_id","objective_id","event_type","details_json","created_at","previous_digest")}
+            if event["previous_digest"]!=previous or event["event_digest"]!=digest(protected):
+                raise ValueError("objective event integrity mismatch")
+            previous=event["event_digest"]
+        for effect in effects:
+            protected=dict(effect); expected=protected.pop("record_sha256",None)
+            if digest(protected)!=expected: raise ValueError("effect integrity mismatch")
+        for item in evidence:
+            protected=dict(item); expected=protected.pop("record_sha256",None)
+            if digest(protected)!=expected: raise ValueError("evidence integrity mismatch")
+        evidence_events={json.loads(event["details_json"])["evidence_id"] for event in events if event["event_type"]=="EVIDENCE_RECORDED"}
+        effect_events={json.loads(event["details_json"])["operation_id"] for event in events if event["event_type"]=="EFFECT_RECORDED"}
+        if evidence_events!={item["evidence_id"] for item in evidence}: raise ValueError("evidence event reconciliation mismatch")
+        if effect_events!={item["operation_id"] for item in effects}: raise ValueError("effect event reconciliation mismatch")
+        anchor=dict(anchor_row) if anchor_row else None
+        expected_anchor=digest({"objective_id":objective_id,"event_count":len(events),"head_digest":previous})
+        if not anchor or anchor["event_count"]!=len(events) or anchor["head_digest"]!=previous or anchor["anchor_sha256"]!=expected_anchor:
+            raise ValueError("objective event anchor mismatch")
+        return events,effects,evidence,predictions
+
     def create_objective(self, *, objective: str, success_criteria: list[str], constraints: list[str],
                          authority: AuthorityEnvelope, now: float | None = None) -> dict[str, Any]:
         moment = self.clock() if now is None else float(now)
@@ -334,13 +362,28 @@ class Phase2Kernel:
             "updated_at": moment, "completed_at": moment if target in TERMINAL else None,
         }
         raw["record_sha256"] = self._objective_hash(raw)
-        with closing(self.connect()) as db, db:
-            changed=db.execute("update phase2_objectives set state=?,checkpoint_json=?,next_action=?,updated_at=?,completed_at=?,record_sha256=? where objective_id=? and state=? and objective_version=?",
-                       (raw["state"], raw["checkpoint_json"], raw["next_action"], moment,
-                        raw["completed_at"], raw["record_sha256"], objective_id,current["state"],current["objective_version"])).rowcount
-            if changed!=1:
-                raise ValueError("concurrent objective control denied")
-            self._event(db, objective_id, action, {"verification_refs": refs}, moment)
+        with closing(self.connect()) as db:
+            db.execute("begin immediate")
+            try:
+                if target is ObjectiveState.COMPLETED:
+                    _,_,atomic_evidence,_=self._validated_records(db,objective_id)
+                    evidence_by_id={item["evidence_id"]:item for item in atomic_evidence}
+                    if set(refs.values())-set(evidence_by_id):
+                        raise ValueError("completion evidence is unverified or belongs to another objective")
+                    for evidence_id in refs.values():
+                        item=dict(evidence_by_id[evidence_id]); expected=item.pop("record_sha256")
+                        if not item["verified"] or digest(item)!=expected:
+                            raise ValueError("completion evidence is unverified or belongs to another objective")
+                changed=db.execute("update phase2_objectives set state=?,checkpoint_json=?,next_action=?,updated_at=?,completed_at=?,record_sha256=? where objective_id=? and state=? and objective_version=?",
+                           (raw["state"], raw["checkpoint_json"], raw["next_action"], moment,
+                            raw["completed_at"], raw["record_sha256"], objective_id,current["state"],current["objective_version"])).rowcount
+                if changed!=1:
+                    raise ValueError("concurrent objective control denied")
+                self._event(db, objective_id, action, {"verification_refs": refs}, moment)
+                db.commit()
+            except Exception:
+                db.rollback()
+                raise
         return self.get_objective(objective_id, authority=authority, now=moment)
 
     def record_attempt(self, objective_id: str, *, authority: AuthorityEnvelope, strategy: Any,
@@ -652,35 +695,7 @@ class Phase2Kernel:
         moment = self.clock() if now is None else float(now)
         objective = self.get_objective(objective_id, authority=authority, now=moment)
         with closing(self.connect()) as db:
-            events = [dict(row) for row in db.execute("select * from phase2_events where objective_id=? order by rowid", (objective_id,))]
-            effects = [dict(row) for row in db.execute("select * from phase2_effects where objective_id=? order by created_at,operation_id", (objective_id,))]
-            evidence = [dict(row) for row in db.execute("select * from phase2_evidence where objective_id=? order by created_at,evidence_id", (objective_id,))]
-            predictions = [dict(row) for row in db.execute("select prediction_id,status,record_sha256 from phase2_predictions where objective_id=? order by created_at,prediction_id", (objective_id,))]
-            anchor_row = db.execute("select * from phase2_event_anchors where objective_id=?",(objective_id,)).fetchone()
-        previous = None
-        for event in events:
-            protected = {key: event[key] for key in ("event_id", "objective_id", "event_type", "details_json", "created_at", "previous_digest")}
-            if event["previous_digest"] != previous or event["event_digest"] != digest(protected):
-                raise ValueError("objective event integrity mismatch")
-            previous = event["event_digest"]
-        for effect in effects:
-            protected=dict(effect); expected=protected.pop("record_sha256",None)
-            if digest(protected)!=expected:
-                raise ValueError("effect integrity mismatch")
-        for item in evidence:
-            protected=dict(item); expected=protected.pop("record_sha256",None)
-            if digest(protected)!=expected:
-                raise ValueError("evidence integrity mismatch")
-        evidence_events={json.loads(event["details_json"])["evidence_id"] for event in events if event["event_type"]=="EVIDENCE_RECORDED"}
-        effect_events={json.loads(event["details_json"])["operation_id"] for event in events if event["event_type"]=="EFFECT_RECORDED"}
-        if evidence_events!={item["evidence_id"] for item in evidence}:
-            raise ValueError("evidence event reconciliation mismatch")
-        if effect_events!={item["operation_id"] for item in effects}:
-            raise ValueError("effect event reconciliation mismatch")
-        anchor=dict(anchor_row) if anchor_row else None
-        expected_anchor=digest({"objective_id":objective_id,"event_count":len(events),"head_digest":previous})
-        if not anchor or anchor["event_count"]!=len(events) or anchor["head_digest"]!=previous or anchor["anchor_sha256"]!=expected_anchor:
-            raise ValueError("objective event anchor mismatch")
+            events,effects,evidence,predictions=self._validated_records(db,objective_id)
         value = {"schema_version": "jarvis.phase2.objective-snapshot.v1", "objective": objective,
                  "events": events, "effects": effects, "evidence": evidence, "predictions": predictions,
                  "snapshot_at": utc(moment), "authority": "SYSTEM_RECORD"}
