@@ -84,3 +84,20 @@ def test_abstraction_compression_preserves_material_conditions():
 def test_meta_learning_selects_verified_transfer_efficiency():
     rows=[LearningStrategyResult("docs",.8,2,5),LearningStrategyResult("guess",.9,10,0),LearningStrategyResult("experiment",.7,1,4)]
     assert select_learning_strategy(rows)=="experiment"
+
+def test_pareto_selection_rejects_regressions_and_dominated_complexity():
+    rows=[EvolutionVariant("baseline",.8,.5,.9,2,2),EvolutionVariant("better",.9,.7,.95,1,2),
+          EvolutionVariant("bloated",.9,.7,.95,1,5),EvolutionVariant("unsafe",1,1,1,.5,1,security_regression=True)]
+    assert pareto_variants(rows)==("better",)
+
+def test_evolvability_requires_different_future_task_and_all_round_improvement():
+    old=EvolvabilityEpisode("g1","tool-a",10,3,5,3,1)
+    new=EvolvabilityEpisode("g2","tool-b",7,2,4,4,0)
+    assert compare_evolvability(old,new)=="SUPPORTED_IMPROVEMENT"
+    assert compare_evolvability(old,replace(new,capability="tool-a"))=="INCONCLUSIVE_SAME_TASK"
+    assert compare_evolvability(old,replace(new,attempts=4))=="NOT_DEMONSTRATED"
+
+def test_anti_goodhart_requires_real_independent_outcome_without_regression():
+    assert verify_metric_claim(metric_improved=True,outcome_improved=True,independent_evidence=True,adverse_regression=False)=="ACCEPT"
+    assert verify_metric_claim(metric_improved=True,outcome_improved=False,independent_evidence=True,adverse_regression=False)=="REJECT"
+    assert verify_metric_claim(metric_improved=True,outcome_improved=True,independent_evidence=False,adverse_regression=False)=="REJECT"

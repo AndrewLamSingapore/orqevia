@@ -25,6 +25,10 @@ def evaluate():
  lessons=[Lesson("a","check effect",("external",),("e1",)),Lesson("b","check effect",("external",),("e2",)),Lesson("c","check effect",("physical",),("e3",))]
  add("safe abstraction compression","finance",compress_lessons(lessons),(('check effect',('a','b')),),(('check effect',('a','b','c')),))
  add("meta-learning strategy","education",select_learning_strategy([LearningStrategyResult("examples",.6,2,2),LearningStrategyResult("experiment",.7,1,5)]),"experiment","examples")
+ add("Pareto rejects unsafe aggregate winner","public-safety",pareto_variants([EvolutionVariant("safe",.8,.7,.9,2,2),EvolutionVariant("unsafe",1,1,1,1,1,security_regression=True)]),("safe",),("unsafe",))
+ old=EvolvabilityEpisode("g1","instrument-a",10,3,5,2,1);new=EvolvabilityEpisode("g2","instrument-b",7,2,4,3,0)
+ add("future learning improves on unseen capability","music",compare_evolvability(old,new),"SUPPORTED_IMPROVEMENT","NOT_DEMONSTRATED")
+ add("metric gain without outcome rejected","measurement",verify_metric_claim(metric_improved=True,outcome_improved=False,independent_evidence=True,adverse_regression=False),"REJECT","ACCEPT")
  _,peak=tracemalloc.get_traced_memory();tracemalloc.stop();elapsed=time.perf_counter()-start
  passed=sum(r['pass'] for r in rows)
  return {"schema_version":"1.0","evaluation_class":"HELD_OUT_FRONTIER_STRUCTURAL","sample_count":len(rows),"rows":rows,

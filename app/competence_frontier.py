@@ -237,3 +237,63 @@ def select_learning_strategy(results: Iterable[LearningStrategyResult]) -> str|N
     valid=[r for r in results if r.cost>0 and math.isfinite(r.cost) and math.isfinite(r.verified_gain)
            and r.verified_gain>=0 and 0<=r.transfer_level<=7]
     return max(valid,key=lambda r:(r.verified_gain*(1+r.transfer_level)/r.cost,-r.cost),default=None).strategy if valid else None
+
+
+@dataclass(frozen=True)
+class EvolutionVariant:
+    variant_id: str
+    correctness: float
+    transfer: float
+    reliability: float
+    latency: float
+    complexity: float
+    security_regression: bool=False
+    objective_drift: bool=False
+
+    def __post_init__(self):
+        values=(self.correctness,self.transfer,self.reliability,self.latency,self.complexity)
+        if any(not math.isfinite(x) or x<0 for x in values):raise ValueError("evolution metrics must be finite and nonnegative")
+
+
+def pareto_variants(variants: Iterable[EvolutionVariant]) -> tuple[str,...]:
+    """Retain nondominated safe variants; never hide critical regressions in a score."""
+    rows=[v for v in variants if not v.security_regression and not v.objective_drift]
+    frontier=[]
+    for candidate in rows:
+        dominated=any(other.variant_id!=candidate.variant_id and
+          other.correctness>=candidate.correctness and other.transfer>=candidate.transfer and
+          other.reliability>=candidate.reliability and other.latency<=candidate.latency and
+          other.complexity<=candidate.complexity and
+          (other.correctness>candidate.correctness or other.transfer>candidate.transfer or
+           other.reliability>candidate.reliability or other.latency<candidate.latency or
+           other.complexity<candidate.complexity) for other in rows)
+        if not dominated:frontier.append(candidate.variant_id)
+    return tuple(sorted(frontier))
+
+
+@dataclass(frozen=True)
+class EvolvabilityEpisode:
+    generation: str
+    capability: str
+    seconds_to_verified: float
+    attempts: int
+    evidence_count: int
+    transfer_level: int
+    human_interventions: int
+
+
+def compare_evolvability(baseline: EvolvabilityEpisode, candidate: EvolvabilityEpisode) -> str:
+    if baseline.capability==candidate.capability: return "INCONCLUSIVE_SAME_TASK"
+    values=(baseline.seconds_to_verified,candidate.seconds_to_verified,baseline.attempts,candidate.attempts,
+            baseline.evidence_count,candidate.evidence_count,baseline.human_interventions,candidate.human_interventions)
+    if any(not math.isfinite(float(x)) or x<0 for x in values) or not 0<=candidate.transfer_level<=7:return "INVALID"
+    improved=(candidate.seconds_to_verified<baseline.seconds_to_verified and candidate.attempts<=baseline.attempts and
+              candidate.evidence_count<=baseline.evidence_count and candidate.human_interventions<=baseline.human_interventions and
+              candidate.transfer_level>=baseline.transfer_level)
+    return "SUPPORTED_IMPROVEMENT" if improved else "NOT_DEMONSTRATED"
+
+
+def verify_metric_claim(*, metric_improved: bool, outcome_improved: bool,
+                        independent_evidence: bool, adverse_regression: bool) -> str:
+    """Reject Goodharted improvements whose metric is detached from outcomes."""
+    return "ACCEPT" if metric_improved and outcome_improved and independent_evidence and not adverse_regression else "REJECT"

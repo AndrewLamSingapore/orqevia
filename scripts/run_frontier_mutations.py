@@ -11,6 +11,8 @@ M={
  "allow_evidence_weakening":('if candidate.weakens_evidence:reasons.append("evidence_weakened")','if False:reasons.append("evidence_weakened")'),
  "allow_missing_acquisition_evidence":('if not episode.evidence_ids:reasons.append("evidence_missing")','if False:reasons.append("evidence_missing")'),
  "compress_different_conditions":('groups.setdefault((lesson.invariant,lesson.conditions),[]).append(lesson.lesson_id)','groups.setdefault((lesson.invariant,()),[]).append(lesson.lesson_id)'),
+ "allow_unsafe_evolution":('rows=[v for v in variants if not v.security_regression and not v.objective_drift]','rows=list(variants)'),
+ "goodhart_metric_only":('return "ACCEPT" if metric_improved and outcome_improved and independent_evidence and not adverse_regression else "REJECT"','return "ACCEPT" if metric_improved else "REJECT"'),
 }
 def exposed(m,n):
  s='3'*40
@@ -23,6 +25,8 @@ def exposed(m,n):
  if n=='allow_evidence_weakening':return m.evaluate_instruction_rewrite(cur,m.replace(cur,version='2',weakens_evidence=True)).disposition!='REJECT'
  if n=='allow_missing_acquisition_evidence':return m.verify_acquisition(m.AcquisitionEpisode('x',m.ACQUISITION_SEQUENCE,(),0,1))[0]
  if n=='compress_different_conditions':return bool(m.compress_lessons([m.Lesson('a','x',('a',),('e',)),m.Lesson('b','x',('b',),('e',))]))
+ if n=='allow_unsafe_evolution':return 'unsafe' in m.pareto_variants([m.EvolutionVariant('safe',.5,.5,.5,2,2),m.EvolutionVariant('unsafe',1,1,1,1,1,security_regression=True)])
+ if n=='goodhart_metric_only':return m.verify_metric_claim(metric_improved=True,outcome_improved=False,independent_evidence=True,adverse_regression=False)=='ACCEPT'
 def run(root):
  src=(root/'app/competence_frontier.py').read_text(encoding='utf-8');rows=[]
  with tempfile.TemporaryDirectory(prefix='frontier-mut-') as d:
