@@ -5,7 +5,7 @@
 - Canonical source: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
 - Selected architecture release: `jarvis-prime-unified-2026-09-15`
 - Operational status: **STALE**
-- Source observation: `2026-09-17T06:02:28Z`
+- Source observation: `2026-09-26T01:14:44Z`
 - Architecture: ABEX PRIME; Dell/PWA/voice clients; 21 agents; direct observed bounded work.
 - This applies to ChatGPT, Codex, Sol and Astra. Model memory and old chats are not current authority.
 - Source publication does not prove deployment. Historical Dell observations do not prove ABEX identity.
@@ -18,11 +18,11 @@
 | authority | `9a9efaa14b80` | `9a9efaa14b80` | `9a9efaa14b80` | ALIGNED_VERIFIED |
 | game | `78c639c166ca` | `78c639c166ca` | `78c639c166ca` | ALIGNED_VERIFIED |
 | portal | `f7659a3cdd72` | `f7659a3cdd72` | `f7659a3cdd72` | ALIGNED_VERIFIED |
-| prime | `—` | `—` | `—` | UNVERIFIED |
+| prime | `—` | `a1ea9ad0a253` | `a1ea9ad0a253` | SOURCE_RUNTIME_ALIGNED_NATIVE_HOST_VERIFIED |
 | sky | `e0c4f4847a9e` | `e0c4f4847a9e` | `e0c4f4847a9e` | ALIGNED_VERIFIED |
 | velyqua | `4ecf65eec8dc` | `4ecf65eec8dc` | `4ecf65eec8dc` | ALIGNED_VERIFIED |
 
-Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: UNVERIFIED.
+Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: VERIFIED.
 
 ## Current priorities
 
@@ -33,7 +33,6 @@ Current PRIME runtime fields remain empty until independently accepted. Historic
 
 ## Unresolved evidence
 
-- abex_runtime_receipt_missing
 - dell_status_post_update_required
 - dell_status_predates_latest_update
 - physical_client_acceptance_unverified
