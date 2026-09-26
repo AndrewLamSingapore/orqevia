@@ -380,3 +380,27 @@ def test_prediction_tamper_is_detected_before_resolution(tmp_path):
         db.execute("update phase2_predictions set forecast_json='{}' where prediction_id=?",(item["prediction_id"],))
     with pytest.raises(ValueError):
         store.resolve_prediction(item["prediction_id"],outcome={"gb":790},observed_at=NOW+10,score={"mae":0},authority=auth())
+
+
+def test_prediction_tamper_or_deletion_blocks_snapshot_and_completion(tmp_path):
+    def prepared(path):
+        store=kernel(path); item=objective(store); oid=item["objective_id"]
+        prediction=store.create_prediction(oid,authority=auth(),as_of=NOW,target="disk",horizon_end=NOW+10,
+            method="linear",evidence=[{"evidence_id":"source","observed_at":NOW}],feature_snapshot={"gb":800},
+            forecast={"gb":790},uncertainty={"gb":5},assumptions=[],scenario="BASE",baseline={"last":800},calibration_version="v1")
+        refs={}
+        for criterion,index in zip(item["success_criteria"],(1,2)):
+            payload={"check":index}
+            evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance=f"prediction:{index}",payload=payload,
+                verification=attest(store,oid,"runtime",f"prediction:{index}",payload,f"prediction:{index}"))
+            refs[criterion]=evidence["evidence_id"]
+        return store,oid,prediction["prediction_id"],refs
+    store,oid,pid,refs=prepared(tmp_path/'tamper')
+    with sqlite3.connect(store.path) as db: db.execute("update phase2_predictions set forecast_json='{}' where prediction_id=?",(pid,))
+    with pytest.raises(ValueError,match="prediction integrity"): store.snapshot(oid,authority=auth())
+    with pytest.raises(ValueError,match="prediction integrity"): store.control(oid,"complete",authority=auth(),verification_refs=refs)
+    store,oid,pid,refs=prepared(tmp_path/'delete')
+    with sqlite3.connect(store.path) as db: db.execute("delete from phase2_predictions where prediction_id=?",(pid,))
+    with pytest.raises(ValueError,match="prediction event reconciliation"): store.snapshot(oid,authority=auth())
+    reopened=Phase2Kernel(store.path,clock=lambda:NOW,evidence_verifier=store._evidence_verifier)
+    with pytest.raises(ValueError,match="prediction event reconciliation"): reopened.control(oid,"complete",authority=auth(),verification_refs=refs)

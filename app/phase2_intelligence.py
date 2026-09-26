@@ -211,7 +211,7 @@ class Phase2Kernel:
         events=[dict(row) for row in db.execute("select * from phase2_events where objective_id=? order by rowid",(objective_id,))]
         effects=[dict(row) for row in db.execute("select * from phase2_effects where objective_id=? order by created_at,operation_id",(objective_id,))]
         evidence=[dict(row) for row in db.execute("select * from phase2_evidence where objective_id=? order by created_at,evidence_id",(objective_id,))]
-        predictions=[dict(row) for row in db.execute("select prediction_id,status,record_sha256 from phase2_predictions where objective_id=? order by created_at,prediction_id",(objective_id,))]
+        predictions=[dict(row) for row in db.execute("select * from phase2_predictions where objective_id=? order by created_at,prediction_id",(objective_id,))]
         anchor_row=db.execute("select * from phase2_event_anchors where objective_id=?",(objective_id,)).fetchone()
         previous=None
         for event in events:
@@ -225,10 +225,17 @@ class Phase2Kernel:
         for item in evidence:
             protected=dict(item); expected=protected.pop("record_sha256",None)
             if digest(protected)!=expected: raise ValueError("evidence integrity mismatch")
+        for prediction in predictions:
+            protected=dict(prediction); expected=protected.pop("record_sha256",None)
+            if digest(protected)!=expected: raise ValueError("prediction integrity mismatch")
         evidence_events={json.loads(event["details_json"])["evidence_id"] for event in events if event["event_type"]=="EVIDENCE_RECORDED"}
         effect_events={json.loads(event["details_json"])["operation_id"] for event in events if event["event_type"]=="EFFECT_RECORDED"}
+        prediction_events={json.loads(event["details_json"])["prediction_id"] for event in events if event["event_type"]=="PREDICTION_CREATED"}
+        resolved_events={json.loads(event["details_json"])["prediction_id"] for event in events if event["event_type"]=="PREDICTION_RESOLVED"}
         if evidence_events!={item["evidence_id"] for item in evidence}: raise ValueError("evidence event reconciliation mismatch")
         if effect_events!={item["operation_id"] for item in effects}: raise ValueError("effect event reconciliation mismatch")
+        if prediction_events!={item["prediction_id"] for item in predictions}: raise ValueError("prediction event reconciliation mismatch")
+        if resolved_events!={item["prediction_id"] for item in predictions if item["status"]=="SHADOW_RESOLVED"}: raise ValueError("prediction resolution reconciliation mismatch")
         anchor=dict(anchor_row) if anchor_row else None
         expected_anchor=digest({"objective_id":objective_id,"event_count":len(events),"head_digest":previous})
         if not anchor or anchor["event_count"]!=len(events) or anchor["head_digest"]!=previous or anchor["anchor_sha256"]!=expected_anchor:
@@ -658,7 +665,8 @@ class Phase2Kernel:
                "uncertainty_json": canonical(uncertainty), "assumptions_json": canonical(assumptions),
                "scenario": require_text(scenario, "scenario", 100), "baseline_json": canonical(baseline),
                "calibration_version": require_text(calibration_version, "calibration version", 100),
-               "status": "SHADOW_OPEN", "generation": generation, "created_at": moment}
+               "status": "SHADOW_OPEN", "generation": generation, "created_at": moment,
+               "outcome_json":None,"outcome_observed_at":None,"score_json":None}
         row["record_sha256"] = digest(row)
         with closing(self.connect()) as db, db:
             db.execute("""insert into phase2_predictions(prediction_id,objective_id,as_of,target,horizon_end,method,evidence_json,
@@ -666,6 +674,7 @@ class Phase2Kernel:
                 calibration_version,status,generation,created_at,record_sha256) values(:prediction_id,:objective_id,:as_of,
                 :target,:horizon_end,:method,:evidence_json,:feature_snapshot_json,:forecast_json,:uncertainty_json,
                 :assumptions_json,:scenario,:baseline_json,:calibration_version,:status,:generation,:created_at,:record_sha256)""", row)
+            self._event(db,objective_id,"PREDICTION_CREATED",{"prediction_id":pid},moment)
         return {"prediction_id": pid, "status": "SHADOW_OPEN", "record_sha256": row["record_sha256"],
                 "grants_authority": False}
 
@@ -677,18 +686,17 @@ class Phase2Kernel:
             row = db.execute("select * from phase2_predictions where prediction_id=?", (prediction_id,)).fetchone()
             if row is None: raise KeyError(prediction_id)
             self.get_objective(row["objective_id"], authority=authority, now=moment)
-            protected = {key: row[key] for key in (
-                "prediction_id", "objective_id", "as_of", "target", "horizon_end", "method",
-                "evidence_json", "feature_snapshot_json", "forecast_json", "uncertainty_json",
-                "assumptions_json", "scenario", "baseline_json", "calibration_version", "status",
-                "generation", "created_at",
-            )}
-            if digest(protected) != row["record_sha256"]:
+            protected=dict(row); expected=protected.pop("record_sha256")
+            if digest(protected) != expected:
                 raise ValueError("prediction integrity mismatch")
             if row["status"] != "SHADOW_OPEN" or observed_at < row["horizon_end"]:
                 raise ValueError("prediction is immutable or horizon has not resolved")
-            db.execute("update phase2_predictions set status='SHADOW_RESOLVED',outcome_json=?,outcome_observed_at=?,score_json=? where prediction_id=?",
-                       (canonical(outcome), observed_at, canonical(score), prediction_id))
+            updated={**dict(row),"status":"SHADOW_RESOLVED","outcome_json":canonical(outcome),
+                     "outcome_observed_at":observed_at,"score_json":canonical(score)}
+            updated.pop("record_sha256",None); updated_hash=digest(updated)
+            db.execute("update phase2_predictions set status='SHADOW_RESOLVED',outcome_json=?,outcome_observed_at=?,score_json=?,record_sha256=? where prediction_id=?",
+                       (updated["outcome_json"],observed_at,updated["score_json"],updated_hash,prediction_id))
+            self._event(db,row["objective_id"],"PREDICTION_RESOLVED",{"prediction_id":prediction_id},moment)
         return {"prediction_id": prediction_id, "status": "SHADOW_RESOLVED", "outcome": outcome, "score": score}
 
     def snapshot(self, objective_id: str, *, authority: AuthorityEnvelope, now: float | None = None) -> dict[str, Any]:

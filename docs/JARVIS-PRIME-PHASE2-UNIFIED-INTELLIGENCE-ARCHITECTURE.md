@@ -51,6 +51,8 @@ Hypotheses remain `OPEN`, `SUPPORTED`, `REJECTED`, or `UNKNOWN` based on recorde
 
 Predictions are shadow-only in Phase 2. Each binds an as-of time, target, horizon, method, evidence IDs/times, feature snapshot, forecast, uncertainty, assumptions, scenario, simple baseline, calibration version and integrity digest. Future-data leakage, absent baselines, premature resolution and post-hoc mutation fail closed. Predictions cannot trigger production actions.
 
+Prediction creation and resolution are full-record integrity-bound and anchored to the objective event chain. Snapshot and completion reconcile prediction rows to creation/resolution events, so alteration or deletion fails closed, including after restart.
+
 ## Reused Golden capabilities
 
 Phase 2 reuses canonical identity/authority, 21-agent registry, governed memory/RAG, offline queues, workflow engine, provenance separation, local inference, PWA and recovery topology. It introduces no new agent role and no database migration to the commissioned production volume.
