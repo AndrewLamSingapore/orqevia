@@ -12,7 +12,7 @@
     },
     "canonical_regression": {
       "command": "python -m pytest -q",
-      "passed": 937,
+      "passed": 940,
       "failed": 0,
       "warnings": 5,
       "warning_class": "existing_framework_deprecations"

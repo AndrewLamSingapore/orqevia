@@ -12,7 +12,7 @@ NOW = 2_000_000_000.0
 def auth(actor="owner-1", role="OWNER", permissions=None):
     return AuthorityEnvelope(actor, role, frozenset(permissions or {
         "objective.create", "objective.read", "objective.update", "objective.control",
-        "effect.record", "prediction.create", "prediction.resolve", "context.write", "lesson.qualify",
+        "effect.record", "prediction.create", "prediction.resolve", "context.write", "lesson.qualify", "evidence.attest",
     }), NOW + 10_000)
 
 
@@ -23,6 +23,9 @@ def kernel(tmp_path):
 def objective(store, actor=None):
     actor = actor or auth()
     return store.create_objective(objective="Diagnose storage trend safely", success_criteria=["cause verified", "result delivered"], constraints=["no production mutation"], authority=actor)
+
+def attest(store,oid,source,provenance,payload,ref):
+    return store.attest_evidence(oid,authority=auth("phase2-system","SYSTEM"),source=source,provenance=provenance,payload=payload,verification_ref=ref)
 
 
 def test_objective_checkpoint_survives_reopen_and_rejects_stale_update(tmp_path):
@@ -45,8 +48,9 @@ def test_owner_pause_resume_stop_is_absolute(tmp_path):
 
 def test_completion_requires_verification_for_each_criterion(tmp_path):
     store=kernel(tmp_path); item=objective(store)
-    e1=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OBSERVATION",source="test",provenance="probe:1",payload={"ok":1},verification={"verifier_type":"SYSTEM","verification_ref":"probe:1"})
-    e2=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OBSERVATION",source="test",provenance="probe:2",payload={"ok":2},verification={"verifier_type":"SYSTEM","verification_ref":"probe:2"})
+    p1={"ok":1}; p2={"ok":2}
+    e1=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OBSERVATION",source="test",provenance="probe:1",payload=p1,verification=attest(store,item["objective_id"],"test","probe:1",p1,"probe:1"))
+    e2=store.record_evidence(item["objective_id"],authority=auth(),evidence_type="OBSERVATION",source="test",provenance="probe:2",payload=p2,verification=attest(store,item["objective_id"],"test","probe:2",p2,"probe:2"))
     with pytest.raises(ValueError): store.control(item["objective_id"],"complete",authority=auth(),verification_refs={"cause verified":e1["evidence_id"]})
     refs={"cause verified":e1["evidence_id"],"result delivered":e2["evidence_id"]}
     assert store.control(item["objective_id"],"complete",authority=auth(),verification_refs=refs)["state"]=="COMPLETED"
@@ -72,7 +76,7 @@ def test_anti_stuck_requires_new_evidence_before_equivalent_retry(tmp_path):
 
 def test_effect_receipt_prevents_duplicate_consequential_action(tmp_path):
     store=kernel(tmp_path); oid=objective(store)["objective_id"]
-    evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="remote",provenance="remote:r1",payload={"sent":1},verification={"verifier_type":"INDEPENDENT","verification_ref":"remote:r1"})
+    payload={"sent":1}; evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="remote",provenance="remote:r1",payload=payload,verification=attest(store,oid,"remote","remote:r1",payload,"remote:r1"))
     receipt={"remote":"r1","evidence_id":evidence["evidence_id"]}
     first=store.record_effect(oid,authority=auth(),operation_id="op-1",effect={"sent":1},verified=True,receipt=receipt)
     assert not first["duplicate"]
@@ -172,7 +176,7 @@ def test_duplicate_criteria_reused_evidence_and_model_verification_are_denied(tm
         store.create_objective(objective="x",success_criteria=["same","same"],constraints=[],authority=auth())
     item=objective(store); oid=item["objective_id"]
     evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="runtime:r",
-        payload={},verification={"verifier_type":"RUNTIME","verification_ref":"r"})
+        payload={},verification=attest(store,oid,"runtime","runtime:r",{},"r"))
     with pytest.raises(ValueError):
         store.control(oid,"complete",authority=auth(),verification_refs={"cause verified":evidence["evidence_id"],"result delivered":evidence["evidence_id"]})
     with pytest.raises(ValueError):
@@ -189,6 +193,16 @@ def test_role_context_evidence_and_event_tamper_are_detected(tmp_path):
     with pytest.raises(ValueError,match="context integrity"): store.compile_context(oid,authority=auth())
     with sqlite3.connect(store.path) as db: db.execute("update phase2_events set details_json='{}' where objective_id=?",(oid,))
     with pytest.raises(ValueError,match="event integrity"): store.snapshot(oid,authority=auth())
+
+
+def test_scope_tamper_and_event_truncation_are_detected(tmp_path):
+    store=kernel(tmp_path); item=objective(store); oid=item["objective_id"]
+    store.ingest_context(authority=auth(),context_key="secret",scope="OWNER_PRIVATE",scope_id="owner-1",
+        epistemic_class="INFERRED",temporal_state="CURRENT",value="OWNER-SECRET",source="owner",source_version="1",source_authority="OWNER",observed_at=NOW)
+    with sqlite3.connect(store.path) as db: db.execute("update phase2_context set scope='GLOBAL',scope_id='global'")
+    with pytest.raises(ValueError,match="context integrity"): store.compile_context(oid,authority=auth())
+    with sqlite3.connect(store.path) as db: db.execute("delete from phase2_events where objective_id=?",(oid,))
+    with pytest.raises(ValueError,match="anchor"): store.snapshot(oid,authority=auth())
 
 
 def test_direct_evidence_verified_flip_cannot_complete_objective(tmp_path):

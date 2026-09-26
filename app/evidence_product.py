@@ -94,6 +94,10 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
         errors.append("INVALID_REFERENCE:verification_evidence")
     if verification.get("state") == "VERIFIED" and (unresolved or not verification_refs):
         errors.append("INVALID_REFERENCE:verified_with_unresolved_evidence")
+    if verification.get("state") == "VERIFIED":
+        for ref in verification_refs:
+            if ref in observations and not observations[ref].get("verification_ref"):
+                errors.append("INVALID_REFERENCE:unverified_observation")
     verdict = "INVALID" if errors else "UNVERIFIED" if unresolved else "VALID"
     return {"verdict": verdict, "errors": sorted(set(errors)), "unresolved": sorted(set(unresolved))}
 
@@ -184,6 +188,8 @@ class EvidenceLedger:
 
     def mutate(self, action_id: str, *, namespace: str, event_type: str, idempotency_key: str,
                apply: Any) -> dict[str, Any]:
+        if self.verify_chain(action_id, namespace=namespace)["verdict"] != "VALID":
+            raise ValueError("LEDGER_INTEGRITY:mutation_denied")
         with self._lock, self._connect() as db:
             duplicate = db.execute("select action_id from evidence_events where idempotency_key=?", (idempotency_key,)).fetchone()
             if duplicate:

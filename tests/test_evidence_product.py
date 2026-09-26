@@ -91,6 +91,23 @@ def test_sdk_rejects_nonexistent_verification_reference(tmp_path):
             item.verify('VERIFIED',['nonexistent'],idempotency_key='verify:x')
 
 
+def test_verified_state_rejects_unverified_observation(tmp_path):
+    ledger=EvidenceLedger(tmp_path/'evidence.db')
+    with action(ledger,namespace='demo',objective='x',actor={'type':'SERVICE','id':'x'},authority={'scope':'x','source':'iam'},idempotency_key='x') as item:
+        obs=item.observe('model-output',{'claim':'done'},verification_ref=None,idempotency_key='obs:x')
+        item.verify('VERIFIED',[obs],idempotency_key='verify:x')
+        assert validate_receipt(item.receipt())['verdict']=='INVALID'
+
+
+def test_tampered_envelope_cannot_be_laundered_by_later_mutation(tmp_path):
+    ledger,item,_=build(tmp_path)
+    with sqlite3.connect(ledger.path) as db:
+        raw=json.loads(db.execute('select envelope_json from evidence_actions where action_id=?',(item.action_id,)).fetchone()[0])
+        raw['actor']['id']='attacker'; db.execute('update evidence_actions set envelope_json=? where action_id=?',(json.dumps(raw),item.action_id))
+    with pytest.raises(ValueError,match='mutation_denied'):
+        item.claim('later',idempotency_key='later')
+
+
 def test_supersession_appends_and_keeps_original(tmp_path):
     ledger,first,_=build(tmp_path,health=False)
     second=ledger.create(namespace='demo',objective='Correct verification context',actor={'type':'AUDITOR','id':'auditor-2'},

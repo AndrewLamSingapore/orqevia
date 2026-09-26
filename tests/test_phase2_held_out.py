@@ -13,7 +13,7 @@ from app.phase2_intelligence import AuthorityEnvelope, Phase2Kernel
 T0 = 2_100_000_000.0
 PERMS = frozenset({"objective.create", "objective.read", "objective.update", "objective.control",
                    "effect.record", "prediction.create", "prediction.resolve", "context.write",
-                   "lesson.qualify"})
+                   "lesson.qualify", "evidence.attest"})
 
 
 def envelope(actor="owner-heldout", role="OWNER", *, expiry=T0 + 10000):
@@ -47,7 +47,8 @@ def test_tool_failure_is_not_completion_and_duplicate_retry_has_no_second_effect
                          evidence={"error": "timeout"}, outcome="tool unavailable")
     with pytest.raises(ValueError):
         store.control(oid, "complete", authority=envelope(), verification_refs=[])
-    evidence=store.record_evidence(oid,authority=envelope(),evidence_type="EFFECT",source="ledger",provenance="ledger:L17",payload={"amount":42},verification={"verifier_type":"INDEPENDENT","verification_ref":"ledger:L17"})
+    payload={"amount":42}; proof=store.attest_evidence(oid,authority=envelope("phase2-system","SYSTEM"),source="ledger",provenance="ledger:L17",payload=payload,verification_ref="ledger:L17")
+    evidence=store.record_evidence(oid,authority=envelope(),evidence_type="EFFECT",source="ledger",provenance="ledger:L17",payload=payload,verification=proof)
     receipt={"ledger_id":"L17","evidence_id":evidence["evidence_id"]}
     first = store.record_effect(oid, authority=envelope(), operation_id="pay:invoice-17",
                                 effect={"amount": 42, "currency": "SGD"}, verified=True,

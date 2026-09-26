@@ -7,6 +7,7 @@ executes a tool, changes a role, deploys code or mutates Golden production.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import math
 import re
@@ -87,9 +88,10 @@ class CompiledContext:
 class Phase2Kernel:
     """One candidate state machine; callers own actual execution authority."""
 
-    def __init__(self, path: str | Path, *, clock=time.time):
+    def __init__(self, path: str | Path, *, clock=time.time, attestation_key: bytes | None = None):
         self.path = str(path)
         self.clock = clock
+        self._attestation_key = attestation_key or uuid.uuid4().bytes + uuid.uuid4().bytes
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 
@@ -116,6 +118,10 @@ class Phase2Kernel:
                   event_id text primary key, objective_id text not null references phase2_objectives(objective_id),
                   event_type text not null, details_json text not null, created_at real not null,
                   previous_digest text, event_digest text not null
+                );
+                create table if not exists phase2_event_anchors(
+                  objective_id text primary key references phase2_objectives(objective_id),
+                  event_count integer not null, head_digest text not null, anchor_sha256 text not null
                 );
                 create table if not exists phase2_attempts(
                   attempt_id text primary key, objective_id text not null references phase2_objectives(objective_id),
@@ -180,6 +186,12 @@ class Phase2Kernel:
                      "details_json": details_json, "created_at": now, "previous_digest": previous_digest}
         db.execute("insert into phase2_events values(?,?,?,?,?,?,?)", (event_id, objective_id,
                    event_type, details_json, now, previous_digest, digest(protected)))
+        head=digest(protected)
+        prior_anchor=db.execute("select event_count from phase2_event_anchors where objective_id=?",(objective_id,)).fetchone()
+        count=(prior_anchor[0] if prior_anchor else 0)+1
+        anchor=digest({"objective_id":objective_id,"event_count":count,"head_digest":head})
+        db.execute("insert into phase2_event_anchors values(?,?,?,?) on conflict(objective_id) do update set event_count=excluded.event_count,head_digest=excluded.head_digest,anchor_sha256=excluded.anchor_sha256",
+                   (objective_id,count,head,anchor))
 
     def create_objective(self, *, objective: str, success_criteria: list[str], constraints: list[str],
                          authority: AuthorityEnvelope, now: float | None = None) -> dict[str, Any]:
@@ -341,9 +353,11 @@ class Phase2Kernel:
         if verified:
             evidence_id = receipt.get("evidence_id") if isinstance(receipt, dict) else None
             with closing(self.connect()) as probe:
-                evidence = probe.execute("select evidence_id from phase2_evidence where evidence_id=? and objective_id=? and verified=1",
+                evidence = probe.execute("select * from phase2_evidence where evidence_id=? and objective_id=? and verified=1",
                                          (evidence_id, objective_id)).fetchone()
-            if evidence is None:
+            evidence_value=dict(evidence) if evidence else None
+            evidence_hash=evidence_value.pop("record_sha256",None) if evidence_value else None
+            if evidence is None or digest(evidence_value)!=evidence_hash:
                 raise ValueError("verified effect requires bound verified evidence")
         with closing(self.connect()) as db, db:
             existing = db.execute("select * from phase2_effects where operation_id=?", (operation_id,)).fetchone()
@@ -355,6 +369,17 @@ class Phase2Kernel:
                        digest(effect), int(bool(verified)), canonical(receipt), moment))
         return {"operation_id": operation_id, "verified": bool(verified), "duplicate": False}
 
+    def attest_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, source: str,
+                        provenance: str, payload: Any, verification_ref: str,
+                        now: float | None = None) -> dict[str, Any]:
+        moment=self.clock() if now is None else float(now)
+        authority.validate("evidence.attest",now=moment)
+        if authority.role!="SYSTEM": raise PermissionError("only canonical system verifier may attest evidence")
+        body={"objective_id":objective_id,"source":source,"provenance":provenance,
+              "payload_digest":digest(payload),"verification_ref":verification_ref}
+        signature=hmac.new(self._attestation_key,canonical(body).encode(),hashlib.sha256).hexdigest()
+        return {**body,"verifier_type":"SYSTEM","signature":signature}
+
     def record_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, evidence_type: str,
                         source: str, provenance: str, payload: Any, verification: dict[str, Any] | None,
                         evidence_id: str | None = None, now: float | None = None) -> dict[str, Any]:
@@ -365,12 +390,11 @@ class Phase2Kernel:
             raise ValueError("evidence denied for non-active objective")
         eid = evidence_id or str(uuid.uuid4())
         verification = dict(verification or {})
-        verifier = verification.get("verifier_type")
-        verified = verifier in {"SYSTEM", "RUNTIME", "INDEPENDENT"} and bool(verification.get("verification_ref"))
-        if verification and not verified:
-            raise ValueError("evidence verification is not governed")
-        if verified and ("MODEL" in provenance.upper() or "MODEL" in source.upper()):
-            raise ValueError("model assertion cannot verify evidence")
+        body={"objective_id":objective_id,"source":source,"provenance":provenance,"payload_digest":digest(payload),
+              "verification_ref":verification.get("verification_ref")}
+        expected=hmac.new(self._attestation_key,canonical(body).encode(),hashlib.sha256).hexdigest()
+        verified=bool(verification) and verification.get("verifier_type")=="SYSTEM" and hmac.compare_digest(str(verification.get("signature","")),expected)
+        if verification and not verified: raise ValueError("evidence verification is not governed")
         row={"evidence_id":eid,"objective_id":objective_id,
              "evidence_type":require_text(evidence_type,"evidence type",100),
              "source":require_text(source,"evidence source",500),
@@ -403,8 +427,11 @@ class Phase2Kernel:
         if source_authority in {"MODEL", "MODEL_OUTPUT"} and epistemic_class in {"OBSERVED", "MEASURED", "RETRIEVED", "CALCULATED"}:
             raise ValueError("model content cannot become authoritative context")
         cid = str(uuid.uuid4())
-        content_hash = digest({"key": context_key, "value": value, "source": source,
-                               "version": source_version, "authority": source_authority})
+        content_hash = digest({"key": context_key, "scope":scope, "scope_id":scope_id,
+                               "epistemic_class":epistemic_class,"temporal_state":temporal_state,
+                               "value": value, "source": source, "version": source_version,
+                               "authority": source_authority,"verification_ref":verification_ref,
+                               "observed_at":observed_at})
         with closing(self.connect()) as db, db:
             if supersedes_id:
                 previous = db.execute("select context_id,scope,scope_id from phase2_context where context_id=?", (supersedes_id,)).fetchone()
@@ -431,9 +458,11 @@ class Phase2Kernel:
             rows = db.execute("select * from phase2_context order by ingested_at desc").fetchall()
         eligible = []
         for row in rows:
-            expected = digest({"key": row["context_key"], "value": json.loads(row["value_json"]),
-                               "source": row["source"], "version": row["source_version"],
-                               "authority": row["source_authority"]})
+            expected = digest({"key": row["context_key"], "scope":row["scope"], "scope_id":row["scope_id"],
+                               "epistemic_class":row["epistemic_class"],"temporal_state":row["temporal_state"],
+                               "value": json.loads(row["value_json"]), "source": row["source"],
+                               "version": row["source_version"], "authority": row["source_authority"],
+                               "verification_ref":row["verification_ref"],"observed_at":row["observed_at"]})
             if expected != row["content_sha256"]:
                 raise ValueError("context integrity mismatch")
             if self._scope_allowed(row, authority):
@@ -581,12 +610,17 @@ class Phase2Kernel:
             effects = [dict(row) for row in db.execute("select * from phase2_effects where objective_id=? order by created_at,operation_id", (objective_id,))]
             evidence = [dict(row) for row in db.execute("select * from phase2_evidence where objective_id=? order by created_at,evidence_id", (objective_id,))]
             predictions = [dict(row) for row in db.execute("select prediction_id,status,record_sha256 from phase2_predictions where objective_id=? order by created_at,prediction_id", (objective_id,))]
+            anchor_row = db.execute("select * from phase2_event_anchors where objective_id=?",(objective_id,)).fetchone()
         previous = None
         for event in events:
             protected = {key: event[key] for key in ("event_id", "objective_id", "event_type", "details_json", "created_at", "previous_digest")}
             if event["previous_digest"] != previous or event["event_digest"] != digest(protected):
                 raise ValueError("objective event integrity mismatch")
             previous = event["event_digest"]
+        anchor=dict(anchor_row) if anchor_row else None
+        expected_anchor=digest({"objective_id":objective_id,"event_count":len(events),"head_digest":previous})
+        if not anchor or anchor["event_count"]!=len(events) or anchor["head_digest"]!=previous or anchor["anchor_sha256"]!=expected_anchor:
+            raise ValueError("objective event anchor mismatch")
         value = {"schema_version": "jarvis.phase2.objective-snapshot.v1", "objective": objective,
                  "events": events, "effects": effects, "evidence": evidence, "predictions": predictions,
                  "snapshot_at": utc(moment), "authority": "SYSTEM_RECORD"}
