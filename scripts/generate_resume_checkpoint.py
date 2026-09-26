@@ -34,7 +34,12 @@ def generate(value: dict[str, Any]) -> str:
     for name in value['scope']['active_systems']:
         system=value['systems'][name]
         lines.append(f"| {name} | `{short(system.get('source_head_sha'))}` | `{short(system.get('release_sha'))}` | `{short(system.get('runtime_sha'))}` | {system['state']} |")
-    lines += ['', 'Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: '+value['abex_runtime']['state']+'.',
+    runtime = value['abex_runtime']
+    if runtime['state'] == 'VERIFIED':
+        runtime_summary = f"Current PRIME runtime was independently accepted at source `{runtime['source_sha']}` and image `{runtime['observed_image']}`. Historical Dell evidence is retained separately."
+    else:
+        runtime_summary = 'Current PRIME runtime fields remain empty until independently accepted. Historical Dell evidence is retained separately. Current ABEX runtime: '+runtime['state']+'.'
+    lines += ['', runtime_summary,
         '', '## Current priorities', '']
     lines += [f'- {item}' for item in value['next_actions']]
     lines += ['', '## Unresolved evidence', '']
