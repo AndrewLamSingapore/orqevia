@@ -1,4 +1,4 @@
-const RELEASE='jarvis-shell-v6';
+const RELEASE='jarvis-shell-v7';
 
 if(location.protocol==='https:'&&'serviceWorker'in navigator){
   const reloadKey=`${RELEASE}:controller-reload`;
