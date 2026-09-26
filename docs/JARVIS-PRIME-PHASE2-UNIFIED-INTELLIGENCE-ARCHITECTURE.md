@@ -21,7 +21,7 @@ Phase 2 adds one durable control plane to PRIME Architecture v1. It does not add
 - Predictions are immutable, time-bounded shadow records with a baseline and explicit uncertainty.
 - No candidate record may be represented as production evidence.
 - External evidence becomes verified only through a stable, host-supplied verifier bound to canonical issuer policy. The kernel default is deny; model or caller assertions cannot substitute for host verification.
-- Verified attestations are body-bound, expiring and one-time. Consequential effects bind the exact verified payload digest and cannot reuse evidence across different effects.
+- Verified attestations bind their identity and expiry inside the host-verified body, are expiring and one-time. Consequential effects bind the exact verified payload digest and cannot reuse evidence across different effects; the primary effect ledger independently preserves this invariant if an auxiliary use index is lost or altered.
 
 ## Unified state model
 

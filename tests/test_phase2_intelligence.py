@@ -27,8 +27,10 @@ def objective(store, actor=None):
 
 def attest(store,oid,source,provenance,payload,ref):
     from app.phase2_intelligence import digest
-    body={"objective_id":oid,"source":source,"provenance":provenance,"payload_digest":digest(payload)}
-    return {"attestation_id":str(__import__('uuid').uuid4()),"expires_at":NOW+100,"issuer_token":"trusted-host","body":body,"verification_ref":ref}
+    attestation_id=str(__import__('uuid').uuid4()); expires_at=NOW+100
+    body={"attestation_id":attestation_id,"expires_at":expires_at,"objective_id":oid,"source":source,
+          "provenance":provenance,"payload_digest":digest(payload)}
+    return {"attestation_id":attestation_id,"expires_at":expires_at,"issuer_token":"trusted-host","body":body,"verification_ref":ref}
 
 
 def test_objective_checkpoint_survives_reopen_and_rejects_stale_update(tmp_path):
@@ -234,6 +236,27 @@ def test_attestation_and_effect_replay_mismatch_and_forgery_are_denied(tmp_path)
     forged={**proof,"attestation_id":"forged","issuer_token":"not-trusted"}
     with pytest.raises(ValueError,match="not governed"):
         store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:1",payload=payload,verification=forged)
+
+
+def test_attestation_identity_and_expiry_are_host_bound(tmp_path):
+    store=kernel(tmp_path); oid=objective(store)["objective_id"]; payload={"healthy":True}
+    proof=attest(store,oid,"runtime","health:bound",payload,"bound")
+    store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:bound",payload=payload,verification=proof)
+    forged=dict(proof); forged["attestation_id"]=str(__import__('uuid').uuid4()); forged["expires_at"]=NOW+1000
+    with pytest.raises(ValueError,match="governed"):
+        store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance="health:bound",payload=payload,verification=forged)
+
+
+def test_effect_reuse_stays_denied_if_auxiliary_use_row_is_deleted(tmp_path):
+    store=kernel(tmp_path); oid=objective(store)["objective_id"]; payload={"sent":1}
+    evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="send:1",payload=payload,
+        verification=attest(store,oid,"runtime","send:1",payload,"send:1"))
+    receipt={"evidence_id":evidence["evidence_id"]}
+    store.record_effect(oid,authority=auth(),operation_id="op-one",effect=payload,verified=True,receipt=receipt)
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_evidence_effect_uses where evidence_id=?",(evidence["evidence_id"],))
+    with pytest.raises(ValueError,match="replay"):
+        store.record_effect(oid,authority=auth(),operation_id="op-two",effect=payload,verified=True,receipt=receipt)
 
 
 def test_member_cannot_write_owner_or_global_context(tmp_path):

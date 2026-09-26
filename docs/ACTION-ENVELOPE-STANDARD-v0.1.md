@@ -37,7 +37,7 @@ Serialize UTF-8 JSON with keys sorted, no insignificant whitespace, and non-ASCI
 
 `VALID` means structure, references and supplied bytes are internally consistent. `UNVERIFIED` means structurally sound but external/byte evidence is unavailable. `INVALID` means a detectable structural, reference, chain or digest failure. Missing evidence is not automatically failure; explicit negative evidence may be.
 
-`SYSTEM_VERIFIED` observations require a structured verification object with a cryptographic digest produced or validated by the host system. An arbitrary string, model statement, caller-selected issuer, or syntactically plausible receipt is not verification. Consequential effects must bind the exact verified payload and reject replay or reuse for a different effect.
+`SYSTEM_VERIFIED` observations require a structured verification object whose digest matches the canonical observation bytes and whose issuer is accepted by a host-supplied verifier. Without that verifier the observation remains unresolved and cannot support a system-verified claim or verified envelope. An arbitrary string, model statement, caller-selected issuer, matching self-computed digest, or syntactically plausible receipt is not verification. Consequential effects must bind the exact verified payload and reject replay or reuse for a different effect.
 
 ## Security and privacy
 

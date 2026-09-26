@@ -361,10 +361,15 @@ class Phase2Kernel:
             with closing(self.connect()) as probe:
                 evidence = probe.execute("select * from phase2_evidence where evidence_id=? and objective_id=? and verified=1",
                                          (evidence_id, objective_id)).fetchone()
+                prior_effect = probe.execute(
+                    "select operation_id from phase2_effects where verified=1 and json_extract(receipt_json,'$.evidence_id')=?",
+                    (evidence_id,)).fetchone()
             evidence_value=dict(evidence) if evidence else None
             evidence_hash=evidence_value.pop("record_sha256",None) if evidence_value else None
             if evidence is None or digest(evidence_value)!=evidence_hash or evidence["payload_digest"] != digest(effect):
                 raise ValueError("verified effect requires bound verified evidence")
+            if prior_effect and prior_effect["operation_id"] != operation_id:
+                raise ValueError("verified effect evidence replay denied")
         with closing(self.connect()) as db, db:
             existing = db.execute("select * from phase2_effects where operation_id=?", (operation_id,)).fetchone()
             if existing:
@@ -390,8 +395,13 @@ class Phase2Kernel:
             raise ValueError("evidence denied for non-active objective")
         eid = evidence_id or str(uuid.uuid4())
         verification = dict(verification or {})
-        body={"objective_id":objective_id,"source":source,"provenance":provenance,"payload_digest":digest(payload)}
-        verified=bool(verification) and verification.get("attestation_id") and verification.get("expires_at",0)>=moment and self._evidence_verifier(verification,body) is True
+        attestation_id=verification.get("attestation_id")
+        expires_at=verification.get("expires_at")
+        body={"attestation_id":attestation_id,"expires_at":expires_at,"objective_id":objective_id,
+              "source":source,"provenance":provenance,"payload_digest":digest(payload)}
+        verified=(bool(verification) and isinstance(attestation_id,str) and bool(attestation_id.strip()) and
+                  isinstance(expires_at,(int,float)) and expires_at>=moment and
+                  self._evidence_verifier(verification,body) is True)
         if verification and not verified: raise ValueError("evidence verification is not governed")
         row={"evidence_id":eid,"objective_id":objective_id,
              "evidence_type":require_text(evidence_type,"evidence type",100),

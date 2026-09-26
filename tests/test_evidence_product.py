@@ -6,13 +6,18 @@ import pytest
 from app.evidence_product import EvidenceLedger, action, canonical_bytes, make_receipt, validate_envelope, validate_receipt
 
 
+def host_verifier(proof, observation):
+    return proof.get('issuer_token') == 'trusted-host'
+
+
 def build(tmp_path, *, health=True):
     ledger=EvidenceLedger(tmp_path/'evidence.db')
     artifact=tmp_path/'deploy.log'; artifact.write_bytes(b'deploy command exit=0\n')
     with action(ledger,namespace='demo',objective='Deploy build 17',actor={'type':'SERVICE','id':'deploy-bot'},
                 authority={'scope':'staging.deploy','source':'iam:role/deployer'},idempotency_key='create:17') as item:
         item.invoke(tool_ref='deployment-cli:v1',idempotency_key='invoke:17')
-        proof=lambda value:{'state':'SYSTEM_VERIFIED','digest':{'algorithm':'sha256','value':__import__('hashlib').sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()}}
+        proof=lambda value:{'state':'SYSTEM_VERIFIED','issuer_token':'trusted-host',
+                            'digest':{'algorithm':'sha256','value':__import__('hashlib').sha256(canonical_bytes(value)).hexdigest()}}
         iv={'exit_code':0}; hv={'status':200 if health else 503}
         invocation=item.observe('deployment-cli',iv,verification_ref=proof(iv),idempotency_key='observe:invoke:17')
         health_obs=item.observe('health-endpoint',hv,verification_ref=proof(hv),idempotency_key='observe:health:17')
@@ -26,9 +31,9 @@ def build(tmp_path, *, health=True):
 
 def test_standalone_happy_path_receipt_is_deterministic_and_prime_free(tmp_path):
     ledger,item,artifact=build(tmp_path)
-    receipt=item.receipt()
-    assert receipt==make_receipt(item.envelope)
-    result=validate_receipt(receipt,artifact_bytes={item.envelope['artifacts'][0]['artifact_id']:artifact.read_bytes()})
+    receipt=item.receipt(observation_verifier=host_verifier)
+    assert receipt==make_receipt(item.envelope,observation_verifier=host_verifier)
+    result=validate_receipt(receipt,artifact_bytes={item.envelope['artifacts'][0]['artifact_id']:artifact.read_bytes()},observation_verifier=host_verifier)
     assert result=={'verdict':'VALID','errors':[],'unresolved':[]}
     assert 'prime' not in canonical_bytes(receipt).decode().lower()
     assert ledger.verify_chain(item.action_id,namespace='demo')['verdict']=='VALID'
@@ -36,17 +41,17 @@ def test_standalone_happy_path_receipt_is_deterministic_and_prime_free(tmp_path)
 
 def test_false_tool_success_is_not_verified_effect(tmp_path):
     _,item,artifact=build(tmp_path,health=False)
-    result=validate_receipt(item.receipt(),artifact_bytes={item.envelope['artifacts'][0]['artifact_id']:artifact.read_bytes()})
+    result=validate_receipt(item.receipt(observation_verifier=host_verifier),artifact_bytes={item.envelope['artifacts'][0]['artifact_id']:artifact.read_bytes()},observation_verifier=host_verifier)
     assert result['verdict']=='VALID'
     assert item.envelope['verification']['state']=='FAILED'
     assert item.envelope['effects'][0]['state']=='FAILED'
 
 
 def test_artifact_tamper_and_receipt_tamper_are_detected(tmp_path):
-    _,item,artifact=build(tmp_path); receipt=item.receipt(); aid=item.envelope['artifacts'][0]['artifact_id']
-    assert validate_receipt(receipt,artifact_bytes={aid:b'tampered'})['verdict']=='INVALID'
+    _,item,artifact=build(tmp_path); receipt=item.receipt(observation_verifier=host_verifier); aid=item.envelope['artifacts'][0]['artifact_id']
+    assert validate_receipt(receipt,artifact_bytes={aid:b'tampered'},observation_verifier=host_verifier)['verdict']=='INVALID'
     changed=json.loads(json.dumps(receipt)); changed['envelope']['actor']['id']='attacker'
-    assert validate_receipt(changed,artifact_bytes={aid:artifact.read_bytes()})['verdict']=='INVALID'
+    assert validate_receipt(changed,artifact_bytes={aid:artifact.read_bytes()},observation_verifier=host_verifier)['verdict']=='INVALID'
 
 
 def test_claim_reference_and_verified_effect_require_real_binding(tmp_path):
@@ -99,6 +104,22 @@ def test_verified_state_rejects_unverified_observation(tmp_path):
         obs=item.observe('model-output',{'claim':'done'},verification_ref=None,idempotency_key='obs:x')
         item.verify('VERIFIED',[obs],idempotency_key='verify:x')
         assert validate_receipt(item.receipt())['verdict']=='INVALID'
+
+
+def test_system_verified_observation_requires_matching_digest_and_host_verifier(tmp_path):
+    ledger=EvidenceLedger(tmp_path/'evidence.db')
+    with action(ledger,namespace='demo',objective='x',actor={'type':'MODEL','id':'model'},authority={'scope':'none','source':'model'},idempotency_key='x') as item:
+        fake={'state':'SYSTEM_VERIFIED','issuer_token':'trusted-host','digest':{'algorithm':'sha256','value':'0'*64}}
+        obs=item.observe('model-output',{'claim':'done'},verification_ref=fake,idempotency_key='obs:x')
+        item.claim('done',state='SYSTEM_VERIFIED',evidence_refs=[obs],idempotency_key='claim:x')
+        item.verify('VERIFIED',[obs],idempotency_key='verify:x')
+        assert validate_receipt(item.receipt())['verdict']=='INVALID'
+        matching=json.loads(json.dumps(item.envelope))
+        matching['observations'][0]['verification_ref']['digest']={
+            'algorithm':'sha256','value':__import__('hashlib').sha256(canonical_bytes({'claim':'done'})).hexdigest()}
+        assert validate_envelope(matching)['verdict']=='INVALID'
+        assert validate_envelope(matching,observation_verifier=lambda proof,observation: False)['verdict']=='INVALID'
+        assert validate_envelope(matching,observation_verifier=host_verifier)['verdict']=='VALID'
 
 
 def test_tampered_envelope_cannot_be_laundered_by_later_mutation(tmp_path):

@@ -42,7 +42,8 @@ def _id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4()}"
 
 
-def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, bytes] | None = None) -> dict[str, Any]:
+def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, bytes] | None = None,
+                      observation_verifier=None) -> dict[str, Any]:
     """Validate structure and internal integrity, never unverifiable external facts."""
     errors: list[str] = []
     unresolved: list[str] = []
@@ -59,12 +60,28 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
     observations = {item.get("observation_id"): item for item in envelope.get("observations", [])}
     artifacts = {item.get("artifact_id"): item for item in envelope.get("artifacts", [])}
     evidence_ids = set(observations) | set(artifacts)
+    governed_observations: set[str] = set()
+    for observation_id, observation in observations.items():
+        proof = observation.get("verification_ref")
+        if not isinstance(proof, dict) or proof.get("state") != "SYSTEM_VERIFIED":
+            continue
+        expected = content_digest(canonical_bytes(observation.get("value")))
+        if proof.get("digest") != expected:
+            errors.append("DIGEST_MISMATCH:observation:" + str(observation_id))
+        elif observation_verifier is None:
+            unresolved.append("host_verification_not_supplied:" + str(observation_id))
+        elif observation_verifier(proof, observation) is True:
+            governed_observations.add(observation_id)
+        else:
+            errors.append("INVALID_REFERENCE:unverified_observation:" + str(observation_id))
     for claim in envelope.get("claims", []):
         if claim.get("state") not in CLAIM_STATES: errors.append("INVALID_SCHEMA:claim_state")
         refs = claim.get("evidence_refs", [])
         if any(ref not in evidence_ids for ref in refs): errors.append("INVALID_REFERENCE:claim_evidence")
         if not refs and claim.get("state") in {"SYSTEM_VERIFIED", "OBSERVED", "SOURCE_SUPPORTED", "CALCULATED"}:
             errors.append("INVALID_REFERENCE:verified_claim_without_evidence")
+        if claim.get("state") == "SYSTEM_VERIFIED" and any(ref in observations and ref not in governed_observations for ref in refs):
+            errors.append("INVALID_REFERENCE:system_claim_without_host_verified_evidence")
         if not refs: unresolved.append("claim_without_evidence:" + str(claim.get("claim_id")))
     for effect in envelope.get("effects", []):
         effect_refs = effect.get("observation_refs", [])
@@ -97,27 +114,27 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
     if verification.get("state") == "VERIFIED":
         for ref in verification_refs:
             proof=observations[ref].get("verification_ref") if ref in observations else None
-            if ref in observations and not (isinstance(proof,dict) and proof.get("state")=="SYSTEM_VERIFIED" and
-                                              proof.get("digest",{}).get("algorithm")=="sha256" and
-                                              len(proof.get("digest",{}).get("value",""))==64):
+            if ref in observations and ref not in governed_observations:
                 errors.append("INVALID_REFERENCE:unverified_observation")
     verdict = "INVALID" if errors else "UNVERIFIED" if unresolved else "VALID"
     return {"verdict": verdict, "errors": sorted(set(errors)), "unresolved": sorted(set(unresolved))}
 
 
-def make_receipt(envelope: dict[str, Any]) -> dict[str, Any]:
-    validation = validate_envelope(envelope)
+def make_receipt(envelope: dict[str, Any], *, observation_verifier=None) -> dict[str, Any]:
+    validation = validate_envelope(envelope, observation_verifier=observation_verifier)
     body = {"schema_version": "evidence-receipt.v0.1", "envelope": envelope,
             "validation": validation, "signature": None}
     return {**body, "digest": content_digest(canonical_bytes(body))}
 
 
-def validate_receipt(receipt: dict[str, Any], *, artifact_bytes: dict[str, bytes] | None = None) -> dict[str, Any]:
+def validate_receipt(receipt: dict[str, Any], *, artifact_bytes: dict[str, bytes] | None = None,
+                     observation_verifier=None) -> dict[str, Any]:
     body = {key: receipt.get(key) for key in ("schema_version", "envelope", "validation", "signature")}
     errors = []
     if receipt.get("schema_version") != "evidence-receipt.v0.1": errors.append("INVALID_SCHEMA:receipt")
     if receipt.get("digest") != content_digest(canonical_bytes(body)): errors.append("DIGEST_MISMATCH:receipt")
-    current = validate_envelope(receipt.get("envelope", {}), artifact_bytes=artifact_bytes)
+    current = validate_envelope(receipt.get("envelope", {}), artifact_bytes=artifact_bytes,
+                                observation_verifier=observation_verifier)
     if current["errors"]: errors.extend(current["errors"])
     verdict = "INVALID" if errors else current["verdict"]
     return {"verdict": verdict, "errors": sorted(set(errors)), "unresolved": current["unresolved"]}
@@ -270,7 +287,7 @@ class EvidenceAction:
                                                    "evidence_refs": evidence_refs or [], "created_at": _now()}))
         return claim_id
 
-    def observe(self, source: str, value: Any, *, verification_ref: str | None = None,
+    def observe(self, source: str, value: Any, *, verification_ref: dict[str, Any] | None = None,
                 observation_id: str | None = None, idempotency_key: str) -> str:
         observation_id = observation_id or _id("obs")
         item = {"observation_id": observation_id, "source": source, "value": value,
@@ -312,7 +329,8 @@ class EvidenceAction:
                             lambda e: e["relations"].append({"type": relation, "record_id": record_id,
                                                              "reason": reason, "created_at": _now()}))
 
-    def receipt(self) -> dict[str, Any]: return make_receipt(self.envelope)
+    def receipt(self, *, observation_verifier=None) -> dict[str, Any]:
+        return make_receipt(self.envelope, observation_verifier=observation_verifier)
 
 
 @contextmanager

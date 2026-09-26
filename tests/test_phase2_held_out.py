@@ -50,7 +50,7 @@ def test_tool_failure_is_not_completion_and_duplicate_retry_has_no_second_effect
         store.control(oid, "complete", authority=envelope(), verification_refs=[])
     from app.phase2_intelligence import digest
     payload={"amount":42,"currency":"SGD"}; proof={"attestation_id":"heldout-L17","expires_at":T0+100,"issuer_token":"trusted-host",
-        "body":{"objective_id":oid,"source":"ledger","provenance":"ledger:L17","payload_digest":digest(payload)}}
+        "body":{"attestation_id":"heldout-L17","expires_at":T0+100,"objective_id":oid,"source":"ledger","provenance":"ledger:L17","payload_digest":digest(payload)}}
     evidence=store.record_evidence(oid,authority=envelope(),evidence_type="EFFECT",source="ledger",provenance="ledger:L17",payload=payload,verification=proof)
     receipt={"ledger_id":"L17","evidence_id":evidence["evidence_id"]}
     first = store.record_effect(oid, authority=envelope(), operation_id="pay:invoice-17",
