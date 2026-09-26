@@ -1,0 +1,88 @@
+{
+  "schema_version": "abex.runtime-observation.v1",
+  "receipt_state": "ABEX_OBSERVED_PENDING_INDEPENDENT_DELL_VERIFICATION",
+  "independent_verification": false,
+  "observed_at_utc": "2026-09-26T06:15:36.859143Z",
+  "authority_boundary": "This receipt records ABEX observations. It cannot promote PRIME.RUNTIME acceptance or prime.state without independent Dell verification.",
+  "runtime": {
+    "host_id": "ABEX",
+    "deployment_epoch": "prime-epoch-20260919",
+    "source_sha": "d0970fcf497f6f36baad90cf160e490f7e4745bb",
+    "remote_branch": "feat/supreme-integration-20260925",
+    "remote_sha": "d0970fcf497f6f36baad90cf160e490f7e4745bb",
+    "image_tag": "prime:sha-d0970fc",
+    "image_id": "sha256:daf36b01db786ab5dd63149348d7dc532b3695e8a13ac9bbf2bf0a210eecdcfe",
+    "prime": {"health": "healthy", "restart_count": 0, "oom_killed": false},
+    "interface": {"health": "healthy", "restart_count": 0, "oom_killed": false, "listener": "192.168.1.23:8443"},
+    "ollama": {"health": "healthy", "restart_count": 0, "oom_killed": false, "image_id": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532"},
+    "docker_engine": "29.8.0"
+  },
+  "canonical_components": {
+    "product_manifest_sha256": "4e5533c39c95ee3cd4b735f81ce35c587f4785b1d7b2c7e3ebecadfc62e94ccd",
+    "registry_schema": "2.0",
+    "registry_version": "1.0.0",
+    "logical_agent_count": 21,
+    "registry_sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+  },
+  "pwa": {
+    "https_scope": "LAN_ONLY",
+    "cache_generation": "jarvis-shell-v9",
+    "source_served_hash_match": true,
+    "assets": {
+      "index.html": "f4db27664df28b9a03dec42ccc8a514493f9c4e5215c7c961300d29ef08e8e89",
+      "app.mjs": "143640694aa5012f223bf3eccd801763b98097fa95d38fdac2edc062fc81b6b6",
+      "sw.js": "9ce57dff45ac79b894bb05e8e4aeb20173be82e7dc191365f0fb15343489f995",
+      "release.mjs": "63ecaef33942d8010413d0b4cdad9d60580140cc4dc8ae8703bb96c86c3ab4c7",
+      "recovery.js": "dc9f204e4945dac0aa964364d3428ddaa25dbfec159b7bf0e6ba740f891ceba5"
+    }
+  },
+  "data": {
+    "canonical_database_integrity": {
+      "interface.db": "ok",
+      "jarvis-memory.db": "ok",
+      "compute-queue.db": "ok",
+      "compute-ledger.db": "ok",
+      "offline-queue.db": "ok",
+      "objectives.db": "ok",
+      "pwa-sessions.db": "ok"
+    },
+    "compatibility_database_integrity": {"prime-spine.db": "ok", "prime.db": "ok"},
+    "compute_jobs": {"completed": 14, "active": 0, "failed": 0},
+    "offline_queue": {"reconciled": 1, "unreconciled": 0}
+  },
+  "physical_owner_acceptance": {
+    "evidence_authority": "OWNER_PHYSICAL_ATTESTATION",
+    "client": "Dell normal JARVIS browser",
+    "task_id": "0fbc896f-5fb6-4808-9eab-93031cf55873",
+    "task_open_from_recent_work": "PASS",
+    "state_visible": "COMPLETED",
+    "authoritative_metadata_separate_from_model_content": true,
+    "chinese_result_visible": true,
+    "application_warning_or_error_banner": false
+  },
+  "task_evidence": {
+    "task_id": "0fbc896f-5fb6-4808-9eab-93031cf55873",
+    "created_at": "2026-09-26T05:44:04.517212+00:00",
+    "started_at": "2026-09-26T05:44:04.585104+00:00",
+    "completed_at": "2026-09-26T05:44:16.499915+00:00",
+    "updated_at": "2026-09-26T05:44:16.499915+00:00",
+    "state": "COMPLETED",
+    "model_content_authoritative": false,
+    "model_system_contradictions": [],
+    "artifact_id": "aa85a93e1b7e4757805896500c070b9c",
+    "artifact_sha256": "2a0f32c1a4022e24d7d32b8e2d50e969f441fa8e062cfab1edbb76aa3ec2e2bf",
+    "artifact_bytes": 628
+  },
+  "host_observation": {"relevant_bugcheck_storage_ntfs_nvme_whea_events_24h": 0},
+  "rollback": {
+    "immediate_image_tag": "prime:sha-9690065",
+    "immediate_image_id": "sha256:e9c0f48ec80ad464f5342b83b7779dd523d894cf80998c13c9f4ec5cef3ec82d",
+    "checkpoint": "/data/recovery/pwa-task-open-predeploy-20260926"
+  },
+  "acceptance": {
+    "abex_observation": "PASS",
+    "dell_independent_runtime_verification": "PENDING",
+    "prime_state_transition_authorized": false,
+    "prime_runtime_acceptance": "UNVERIFIED"
+  }
+}
