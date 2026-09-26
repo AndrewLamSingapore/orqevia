@@ -1,4 +1,4 @@
-const CACHE='jarvis-shell-v9';
+const CACHE='jarvis-shell-v10';
 const SHELL=['/pwa/','/pwa/index.html','/pwa/style.css','/pwa/recovery.js','/pwa/release.mjs','/pwa/app.mjs','/pwa/core.mjs','/pwa/storage.mjs','/pwa/voice.mjs','/pwa/manifest.webmanifest','/pwa/icons/icon.svg','/pwa/icons/jarvis-prime-v1-192.png','/pwa/icons/jarvis-prime-v1-512.png','/pwa/icons/jarvis-prime-v1-apple-touch.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('jarvis-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
