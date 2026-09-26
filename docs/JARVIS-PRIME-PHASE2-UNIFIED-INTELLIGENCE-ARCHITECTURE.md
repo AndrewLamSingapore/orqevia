@@ -13,6 +13,7 @@ Phase 2 adds one durable control plane to PRIME Architecture v1. It does not add
 
 - Golden Gen 1 remains the rollback and production baseline until a governed promotion completes.
 - Owner pause, stop, cancel, and scope decisions are enforced before work continues.
+- Objective controls use state/version compare-and-set; a delayed completion cannot overwrite an Owner stop, and completion validates anchored event/evidence integrity before changing state.
 - Member context and objectives never inherit Owner authority.
 - Model output, retrieved text, lessons, hypotheses, and forecasts grant no authority.
 - Consequential effects require externally verified receipts and stable operation IDs.

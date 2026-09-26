@@ -1,4 +1,5 @@
 import sqlite3
+import threading
 from pathlib import Path
 
 import pytest
@@ -218,7 +219,7 @@ def test_direct_evidence_verified_flip_cannot_complete_objective(tmp_path):
         payload={"b":2},verification=None)
     with sqlite3.connect(store.path) as db:
         db.execute("update phase2_evidence set verified=1 where evidence_id in (?,?)",(one["evidence_id"],two["evidence_id"]))
-    with pytest.raises(ValueError,match="unverified"):
+    with pytest.raises(ValueError,match="unverified|integrity"):
         store.control(oid,"complete",authority=auth(),verification_refs={"cause verified":one["evidence_id"],"result delivered":two["evidence_id"]})
 
 
@@ -304,6 +305,39 @@ def test_evidence_record_tamper_and_deletion_are_anchored_by_events(tmp_path):
         db.execute("delete from phase2_evidence where evidence_id=?",(evidence["evidence_id"],))
     with pytest.raises(ValueError,match="reconciliation"):
         store.snapshot(oid,authority=auth())
+
+
+def test_completion_rejects_corrupt_evidence_event_history(tmp_path):
+    store=kernel(tmp_path); item=objective(store); oid=item["objective_id"]
+    refs={}
+    for criterion,index in zip(item["success_criteria"],(1,2)):
+        payload={"check":index}
+        evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance=f"check:{index}",payload=payload,
+            verification=attest(store,oid,"runtime",f"check:{index}",payload,f"check:{index}"))
+        refs[criterion]=evidence["evidence_id"]
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_events where event_type='EVIDENCE_RECORDED' and objective_id=?",(oid,))
+    with pytest.raises(ValueError,match="event"):
+        store.control(oid,"complete",authority=auth(),verification_refs=refs)
+
+
+def test_owner_stop_cannot_be_overwritten_by_delayed_completion(tmp_path):
+    store=kernel(tmp_path); item=objective(store); oid=item["objective_id"]; refs={}
+    for criterion,index in zip(item["success_criteria"],(1,2)):
+        payload={"check":index}
+        evidence=store.record_evidence(oid,authority=auth(),evidence_type="OBS",source="runtime",provenance=f"race:{index}",payload=payload,
+            verification=attest(store,oid,"runtime",f"race:{index}",payload,f"race:{index}"))
+        refs[criterion]=evidence["evidence_id"]
+    entered=threading.Event(); release=threading.Event(); original_snapshot=store.snapshot
+    def delayed_snapshot(*args,**kwargs):
+        entered.set(); release.wait(5); return original_snapshot(*args,**kwargs)
+    store.snapshot=delayed_snapshot
+    outcome=[]
+    worker=threading.Thread(target=lambda: outcome.append(pytest.raises(ValueError,store.control,oid,"complete",authority=auth(),verification_refs=refs)))
+    worker.start(); assert entered.wait(5)
+    assert store.control(oid,"stop",authority=auth())["state"]=="CANCELLED"
+    release.set(); worker.join(5); assert not worker.is_alive()
+    assert store.get_objective(oid,authority=auth())["state"]=="CANCELLED"
 
 
 def test_member_cannot_write_owner_or_global_context(tmp_path):

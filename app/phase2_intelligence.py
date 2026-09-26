@@ -305,6 +305,7 @@ class Phase2Kernel:
             raise ValueError("invalid objective transition")
         refs = dict(verification_refs or {})
         if target is ObjectiveState.COMPLETED:
+            self.snapshot(objective_id,authority=authority,now=moment)
             criteria = current["success_criteria"]
             if set(refs) != set(criteria):
                 raise ValueError("completion requires evidence for every success criterion")
@@ -334,9 +335,11 @@ class Phase2Kernel:
         }
         raw["record_sha256"] = self._objective_hash(raw)
         with closing(self.connect()) as db, db:
-            db.execute("update phase2_objectives set state=?,checkpoint_json=?,next_action=?,updated_at=?,completed_at=?,record_sha256=? where objective_id=?",
+            changed=db.execute("update phase2_objectives set state=?,checkpoint_json=?,next_action=?,updated_at=?,completed_at=?,record_sha256=? where objective_id=? and state=? and objective_version=?",
                        (raw["state"], raw["checkpoint_json"], raw["next_action"], moment,
-                        raw["completed_at"], raw["record_sha256"], objective_id))
+                        raw["completed_at"], raw["record_sha256"], objective_id,current["state"],current["objective_version"])).rowcount
+            if changed!=1:
+                raise ValueError("concurrent objective control denied")
             self._event(db, objective_id, action, {"verification_refs": refs}, moment)
         return self.get_objective(objective_id, authority=authority, now=moment)
 
