@@ -47,12 +47,14 @@ def test_tool_failure_is_not_completion_and_duplicate_retry_has_no_second_effect
                          evidence={"error": "timeout"}, outcome="tool unavailable")
     with pytest.raises(ValueError):
         store.control(oid, "complete", authority=envelope(), verification_refs=[])
+    evidence=store.record_evidence(oid,authority=envelope(),evidence_type="EFFECT",source="ledger",provenance="ledger:L17",payload={"amount":42},verified=True)
+    receipt={"ledger_id":"L17","evidence_id":evidence["evidence_id"]}
     first = store.record_effect(oid, authority=envelope(), operation_id="pay:invoice-17",
                                 effect={"amount": 42, "currency": "SGD"}, verified=True,
-                                receipt={"ledger_id": "L17"})
+                                receipt=receipt)
     replay = store.record_effect(oid, authority=envelope(), operation_id="pay:invoice-17",
                                  effect={"amount": 42, "currency": "SGD"}, verified=True,
-                                 receipt={"ledger_id": "L17"})
+                                 receipt=receipt)
     assert not first["duplicate"] and replay["duplicate"]
 
 

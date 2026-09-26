@@ -46,10 +46,10 @@
     "held_out_suite": "tests/test_phase2_held_out.py",
     "verifier": "scripts/verify_phase2_candidate.py",
     "focused_and_held_out": "39_PASSED",
-    "full_regression": "928_PASSED_5_KNOWN_DEPRECATION_WARNINGS",
+    "full_regression": "932_PASSED_5_KNOWN_DEPRECATION_WARNINGS",
     "machine_verifier": "PASS",
     "external_independent_verification": "PENDING_NOT_DEPLOYED",
-    "mutation": "PASS_DIRECT_DATABASE_TAMPER_REJECTED",
+    "mutation": "PASS_DIRECT_DATABASE_AND_FALSE_SUCCESS_MUTATIONS_REJECTED",
     "performance": "100_OBJECTIVE_CREATES_MEAN_15.515_MS"
   },
   "external_boundaries": {

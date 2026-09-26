@@ -67,7 +67,10 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
             errors.append("INVALID_REFERENCE:verified_claim_without_evidence")
         if not refs: unresolved.append("claim_without_evidence:" + str(claim.get("claim_id")))
     for effect in envelope.get("effects", []):
-        if effect.get("state") == "VERIFIED" and not effect.get("observation_refs"):
+        effect_refs = effect.get("observation_refs", [])
+        if any(ref not in observations for ref in effect_refs):
+            errors.append("INVALID_REFERENCE:effect_observation")
+        if effect.get("state") == "VERIFIED" and not effect_refs:
             errors.append("INVALID_REFERENCE:verified_effect_without_observation")
         if effect.get("state") not in {"REQUESTED", "INVOKED", "OBSERVED", "VERIFIED", "FAILED"}:
             errors.append("INVALID_SCHEMA:effect_state")
@@ -86,7 +89,10 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
         if relation.get("type") not in RELATIONS: errors.append("INVALID_SUPERSESSION:relation")
     verification = envelope.get("verification", {})
     if verification.get("state") not in VERIFICATION_STATES: errors.append("INVALID_SCHEMA:verification_state")
-    if verification.get("state") == "VERIFIED" and unresolved:
+    verification_refs = verification.get("evidence", [])
+    if any(ref not in evidence_ids for ref in verification_refs):
+        errors.append("INVALID_REFERENCE:verification_evidence")
+    if verification.get("state") == "VERIFIED" and (unresolved or not verification_refs):
         errors.append("INVALID_REFERENCE:verified_with_unresolved_evidence")
     verdict = "INVALID" if errors else "UNVERIFIED" if unresolved else "VALID"
     return {"verdict": verdict, "errors": sorted(set(errors)), "unresolved": sorted(set(unresolved))}
@@ -272,6 +278,9 @@ class EvidenceAction:
 
     def verify(self, state: str, evidence_refs: list[str], *, idempotency_key: str) -> dict[str, Any]:
         if state not in VERIFICATION_STATES: raise ValueError("INVALID_SCHEMA:verification_state")
+        available={item["observation_id"] for item in self.envelope["observations"]}|{item["artifact_id"] for item in self.envelope["artifacts"]}
+        if any(ref not in available for ref in evidence_refs): raise ValueError("INVALID_REFERENCE:verification_evidence")
+        if state=="VERIFIED" and not evidence_refs: raise ValueError("INVALID_REFERENCE:verified_without_evidence")
         def apply(e):
             e["verification"] = {"state": state, "evidence": list(evidence_refs)}
             e["status"] = "COMPLETED" if state in {"VERIFIED", "PARTIAL", "UNVERIFIED", "CONTRADICTED"} else "FAILED"

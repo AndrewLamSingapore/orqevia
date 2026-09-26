@@ -12,7 +12,7 @@
     },
     "canonical_regression": {
       "command": "python -m pytest -q",
-      "passed": 928,
+      "passed": 932,
       "failed": 0,
       "warnings": 5,
       "warning_class": "existing_framework_deprecations"
@@ -30,7 +30,12 @@
         "prediction_assumptions_database_tamper",
         "manifest_authority_escalation",
         "manifest_production_enablement",
-        "manifest_self_promotion"
+        "manifest_self_promotion",
+        "fabricated_completion_reference",
+        "fabricated_verified_effect_receipt",
+        "nonexistent_portable_verification_reference",
+        "nonexistent_effect_observation_reference",
+        "terminal_objective_attempt"
       ],
       "survivors": 0
     },

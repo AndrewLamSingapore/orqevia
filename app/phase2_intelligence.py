@@ -126,6 +126,11 @@ class Phase2Kernel:
                   effect_digest text not null, verified integer not null, receipt_json text not null,
                   created_at real not null
                 );
+                create table if not exists phase2_evidence(
+                  evidence_id text primary key, objective_id text not null references phase2_objectives(objective_id),
+                  evidence_type text not null, source text not null, provenance text not null,
+                  verified integer not null, payload_digest text not null, created_at real not null
+                );
                 create table if not exists phase2_context(
                   context_id text primary key, context_key text not null, scope text not null, scope_id text not null,
                   epistemic_class text not null, temporal_state text not null, value_json text not null,
@@ -246,7 +251,7 @@ class Phase2Kernel:
         return self.get_objective(objective_id, authority=authority, now=moment)
 
     def control(self, objective_id: str, action: str, *, authority: AuthorityEnvelope,
-                now: float | None = None, verification_refs: Iterable[str] = ()) -> dict[str, Any]:
+                now: float | None = None, verification_refs: dict[str, str] | None = None) -> dict[str, Any]:
         moment = self.clock() if now is None else float(now)
         authority.validate("objective.control", now=moment)
         current = self.get_objective(objective_id, authority=authority, now=moment)
@@ -263,13 +268,21 @@ class Phase2Kernel:
         allowed, target = transitions[action]
         if ObjectiveState(current["state"]) not in allowed:
             raise ValueError("invalid objective transition")
-        refs = tuple(verification_refs)
+        refs = dict(verification_refs or {})
         if target is ObjectiveState.COMPLETED:
             criteria = current["success_criteria"]
-            verified = set(current["checkpoint"]["verification"]) | set(refs)
-            if not criteria or len(verified) < len(criteria):
+            if set(refs) != set(criteria):
                 raise ValueError("completion requires evidence for every success criterion")
-            current["checkpoint"]["verification"] = sorted(verified)
+            with closing(self.connect()) as db:
+                rows = db.execute(
+                    f"select evidence_id from phase2_evidence where objective_id=? and verified=1 and evidence_id in ({','.join('?' for _ in refs)})",
+                    (objective_id, *refs.values()),
+                ).fetchall() if refs else []
+            if {row[0] for row in rows} != set(refs.values()):
+                raise ValueError("completion evidence is unverified or belongs to another objective")
+            current["checkpoint"]["verification"] = [
+                {"criterion": criterion, "evidence_id": refs[criterion]} for criterion in criteria
+            ]
         raw = {
             **{key: current[key] for key in ("objective_id", "owner_id", "owner_role", "objective_version", "objective", "created_at")},
             "success_criteria_json": canonical(current["success_criteria"]), "constraints_json": canonical(current["constraints"]),
@@ -290,7 +303,9 @@ class Phase2Kernel:
                        evidence: Any, outcome: str, now: float | None = None) -> dict[str, Any]:
         moment = self.clock() if now is None else float(now)
         authority.validate("objective.update", now=moment)
-        self.get_objective(objective_id, authority=authority, now=moment)
+        current = self.get_objective(objective_id, authority=authority, now=moment)
+        if current["state"] != ObjectiveState.ACTIVE.value:
+            raise ValueError("attempt denied for non-active objective")
         fingerprint, evidence_digest = digest(strategy), digest(evidence)
         with closing(self.connect()) as db, db:
             repeats = db.execute("select count(*) from phase2_attempts where objective_id=? and fingerprint=? and evidence_digest=?",
@@ -305,7 +320,16 @@ class Phase2Kernel:
                       effect: Any, verified: bool, receipt: Any, now: float | None = None) -> dict[str, Any]:
         moment = self.clock() if now is None else float(now)
         authority.validate("effect.record", now=moment)
-        self.get_objective(objective_id, authority=authority, now=moment)
+        current = self.get_objective(objective_id, authority=authority, now=moment)
+        if current["state"] != ObjectiveState.ACTIVE.value:
+            raise ValueError("effect denied for non-active objective")
+        if verified:
+            evidence_id = receipt.get("evidence_id") if isinstance(receipt, dict) else None
+            with closing(self.connect()) as probe:
+                evidence = probe.execute("select evidence_id from phase2_evidence where evidence_id=? and objective_id=? and verified=1",
+                                         (evidence_id, objective_id)).fetchone()
+            if evidence is None:
+                raise ValueError("verified effect requires bound verified evidence")
         with closing(self.connect()) as db, db:
             existing = db.execute("select * from phase2_effects where operation_id=?", (operation_id,)).fetchone()
             if existing:
@@ -315,6 +339,23 @@ class Phase2Kernel:
             db.execute("insert into phase2_effects values(?,?,?,?,?,?)", (operation_id, objective_id,
                        digest(effect), int(bool(verified)), canonical(receipt), moment))
         return {"operation_id": operation_id, "verified": bool(verified), "duplicate": False}
+
+    def record_evidence(self, objective_id: str, *, authority: AuthorityEnvelope, evidence_type: str,
+                        source: str, provenance: str, payload: Any, verified: bool,
+                        evidence_id: str | None = None, now: float | None = None) -> dict[str, Any]:
+        moment = self.clock() if now is None else float(now)
+        authority.validate("objective.update", now=moment)
+        current = self.get_objective(objective_id, authority=authority, now=moment)
+        if current["state"] != ObjectiveState.ACTIVE.value:
+            raise ValueError("evidence denied for non-active objective")
+        eid = evidence_id or str(uuid.uuid4())
+        with closing(self.connect()) as db, db:
+            db.execute("insert into phase2_evidence values(?,?,?,?,?,?,?,?)",
+                       (eid, objective_id, require_text(evidence_type,"evidence type",100),
+                        require_text(source,"evidence source",500), require_text(provenance,"evidence provenance",1000),
+                        int(bool(verified)), digest(payload), moment))
+            self._event(db, objective_id, "EVIDENCE_RECORDED", {"evidence_id":eid,"verified":bool(verified)}, moment)
+        return {"evidence_id":eid,"verified":bool(verified),"payload_digest":digest(payload)}
 
     def ingest_context(self, *, authority: AuthorityEnvelope, context_key: str, scope: str, scope_id: str, epistemic_class: str,
                        temporal_state: str, value: Any, source: str, source_version: str,
@@ -505,9 +546,10 @@ class Phase2Kernel:
         with closing(self.connect()) as db:
             events = [dict(row) for row in db.execute("select * from phase2_events where objective_id=? order by created_at,event_id", (objective_id,))]
             effects = [dict(row) for row in db.execute("select * from phase2_effects where objective_id=? order by created_at,operation_id", (objective_id,))]
+            evidence = [dict(row) for row in db.execute("select * from phase2_evidence where objective_id=? order by created_at,evidence_id", (objective_id,))]
             predictions = [dict(row) for row in db.execute("select prediction_id,status,record_sha256 from phase2_predictions where objective_id=? order by created_at,prediction_id", (objective_id,))]
         value = {"schema_version": "jarvis.phase2.objective-snapshot.v1", "objective": objective,
-                 "events": events, "effects": effects, "predictions": predictions,
+                 "events": events, "effects": effects, "evidence": evidence, "predictions": predictions,
                  "snapshot_at": utc(moment), "authority": "SYSTEM_RECORD"}
         value["snapshot_sha256"] = digest(value)
         return value

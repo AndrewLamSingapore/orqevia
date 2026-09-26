@@ -53,6 +53,10 @@ def test_claim_reference_and_verified_effect_require_real_binding(tmp_path):
     assert 'INVALID_REFERENCE:claim_evidence' in validate_envelope(broken)['errors']
     broken=json.loads(json.dumps(item.envelope)); broken['effects'][0]['observation_refs']=[]
     assert 'INVALID_REFERENCE:verified_effect_without_observation' in validate_envelope(broken)['errors']
+    broken=json.loads(json.dumps(item.envelope)); broken['effects'][0]['observation_refs']=['missing']
+    assert 'INVALID_REFERENCE:effect_observation' in validate_envelope(broken)['errors']
+    broken=json.loads(json.dumps(item.envelope)); broken['verification']['evidence']=['missing']
+    assert 'INVALID_REFERENCE:verification_evidence' in validate_envelope(broken)['errors']
 
 
 def test_append_history_idempotency_namespace_and_chain_tamper(tmp_path):
@@ -69,6 +73,13 @@ def test_partial_cannot_masquerade_as_verified(tmp_path):
     changed=json.loads(json.dumps(item.envelope)); changed['verification']={'state':'VERIFIED','evidence':[]}
     changed['claims'].append({'claim_id':'unbound','text':'user accepted','state':'SYSTEM_VERIFIED','evidence_refs':[]})
     assert validate_envelope(changed)['verdict']=='INVALID'
+
+
+def test_sdk_rejects_nonexistent_verification_reference(tmp_path):
+    ledger=EvidenceLedger(tmp_path/'evidence.db')
+    with action(ledger,namespace='demo',objective='x',actor={'type':'SERVICE','id':'x'},authority={'scope':'x','source':'iam'},idempotency_key='x') as item:
+        with pytest.raises(ValueError,match='verification_evidence'):
+            item.verify('VERIFIED',['nonexistent'],idempotency_key='verify:x')
 
 
 def test_supersession_appends_and_keeps_original(tmp_path):

@@ -18,10 +18,18 @@ def adapt_objective_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
         claims.append({"claim_id":f"{objective['objective_id']}:claim:{index}","text":str(fact),
                        "state":"OBSERVED" if isinstance(fact,dict) and fact.get("evidence") else "INFERRED",
                        "evidence_refs":[oid] if isinstance(fact,dict) and fact.get("evidence") else []})
-    effects=[{"effect_id":effect["operation_id"],"description":"Phase 2 recorded effect",
-              "state":"VERIFIED" if effect["verified"] else "OBSERVED", "observation_refs":[]}
-             for effect in snapshot.get("effects",[])]
-    verification_refs=checkpoint.get("verification",[])
+    for evidence in snapshot.get("evidence",[]):
+        observations.append({"observation_id":evidence["evidence_id"],"source":evidence["source"],
+                             "value":{"payload_digest":evidence["payload_digest"],"evidence_type":evidence["evidence_type"]},
+                             "observed_at":str(evidence["created_at"]),"verification_ref":evidence["provenance"]})
+    effects=[]
+    for effect in snapshot.get("effects",[]):
+        receipt=__import__('json').loads(effect["receipt_json"])
+        evidence_id=receipt.get("evidence_id")
+        effects.append({"effect_id":effect["operation_id"],"description":"Phase 2 recorded effect",
+                        "state":"VERIFIED" if effect["verified"] else "OBSERVED",
+                        "observation_refs":[evidence_id] if evidence_id else []})
+    verification_refs=[item["evidence_id"] for item in checkpoint.get("verification",[]) if isinstance(item,dict) and item.get("evidence_id")]
     terminal=objective["state"]=="COMPLETED"
     return {"schema_version":SCHEMA,"action_id":objective["objective_id"],"objective":objective["objective"],
             "actor":{"type":objective["owner_role"],"id":objective["owner_id"]},
