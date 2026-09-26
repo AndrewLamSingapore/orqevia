@@ -228,6 +228,10 @@ def test_attestation_and_effect_replay_mismatch_and_forgery_are_denied(tmp_path)
     evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="health:1",payload=payload,verification=proof)
     with pytest.raises(ValueError,match="replay"):
         store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="health:1",payload=payload,verification=proof)
+    with sqlite3.connect(store.path) as db:
+        db.execute("delete from phase2_attestation_uses where attestation_id=?",(proof["attestation_id"],))
+    with pytest.raises(ValueError,match="replay"):
+        store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="health:1",payload=payload,verification=proof)
     with pytest.raises(ValueError,match="bound verified evidence"):
         store.record_effect(oid,authority=auth(),operation_id="wire",effect={"wire_money":1000000},verified=True,receipt={"evidence_id":evidence["evidence_id"]})
     store.record_effect(oid,authority=auth(),operation_id="health",effect=payload,verified=True,receipt={"evidence_id":evidence["evidence_id"]})
@@ -257,6 +261,17 @@ def test_effect_reuse_stays_denied_if_auxiliary_use_row_is_deleted(tmp_path):
         db.execute("delete from phase2_evidence_effect_uses where evidence_id=?",(evidence["evidence_id"],))
     with pytest.raises(ValueError,match="replay"):
         store.record_effect(oid,authority=auth(),operation_id="op-two",effect=payload,verified=True,receipt=receipt)
+
+
+def test_effect_record_tamper_is_detected_by_snapshot(tmp_path):
+    store=kernel(tmp_path); oid=objective(store)["objective_id"]; payload={"sent":1}
+    evidence=store.record_evidence(oid,authority=auth(),evidence_type="EFFECT",source="runtime",provenance="send:2",payload=payload,
+        verification=attest(store,oid,"runtime","send:2",payload,"send:2"))
+    store.record_effect(oid,authority=auth(),operation_id="op-tamper",effect=payload,verified=True,receipt={"evidence_id":evidence["evidence_id"]})
+    with sqlite3.connect(store.path) as db:
+        db.execute("update phase2_effects set verified=0,receipt_json='{}' where operation_id='op-tamper'")
+    with pytest.raises(ValueError,match="effect integrity"):
+        store.snapshot(oid,authority=auth())
 
 
 def test_member_cannot_write_owner_or_global_context(tmp_path):

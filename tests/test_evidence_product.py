@@ -122,6 +122,15 @@ def test_system_verified_observation_requires_matching_digest_and_host_verifier(
         assert validate_envelope(matching,observation_verifier=host_verifier)['verdict']=='VALID'
 
 
+def test_verified_effect_requires_host_verified_observation(tmp_path):
+    ledger=EvidenceLedger(tmp_path/'evidence.db')
+    with action(ledger,namespace='demo',objective='x',actor={'type':'MODEL','id':'model'},authority={'scope':'none','source':'model'},idempotency_key='x') as item:
+        obs=item.observe('model-output',{'claim':'done'},verification_ref=None,idempotency_key='obs:x')
+        item.effect('external change happened',state='VERIFIED',observation_refs=[obs],idempotency_key='effect:x')
+        item.verify('FAILED',[obs],idempotency_key='verify:x')
+        assert validate_receipt(item.receipt())['verdict']=='INVALID'
+
+
 def test_tampered_envelope_cannot_be_laundered_by_later_mutation(tmp_path):
     ledger,item,_=build(tmp_path)
     with sqlite3.connect(ledger.path) as db:

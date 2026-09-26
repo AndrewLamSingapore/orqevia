@@ -89,6 +89,8 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
             errors.append("INVALID_REFERENCE:effect_observation")
         if effect.get("state") == "VERIFIED" and not effect_refs:
             errors.append("INVALID_REFERENCE:verified_effect_without_observation")
+        if effect.get("state") == "VERIFIED" and any(ref not in governed_observations for ref in effect_refs):
+            errors.append("INVALID_REFERENCE:verified_effect_without_host_verified_observation")
         if effect.get("state") not in {"REQUESTED", "INVOKED", "OBSERVED", "VERIFIED", "FAILED"}:
             errors.append("INVALID_SCHEMA:effect_state")
     for artifact_id, artifact in artifacts.items():
