@@ -43,12 +43,20 @@ def _platform_answer()->dict[str,Any]:
     try:value=json.loads(path.read_text(encoding='utf-8'));registry=load_agent_registry()
     except (OSError,ValueError,TypeError,RegistryError):
         return {'status':'UNAVAILABLE','provenance':'CANONICAL_GOVERNANCE_SSOT','text':f'Platform architecture is UNAVAILABLE because canonical evidence {path.name} or the agent registry could not be read. JARVIS will not infer it from model memory.'}
-    verification=value.get('independent_verification',{})
-    lines=[f"PRODUCTION AUTHORITY/HOST: {value.get('authority',{}).get('production_authority','UNAVAILABLE')}",
+    authority=value.get('authority',{});source=value.get('source',{});interface=value.get('interface',{});verification=value.get('independent_verification',{})
+    required=(authority.get('production_authority'),source.get('accepted_commit'),interface.get('exposure'),
+              verification.get('verdict'),verification.get('verification_id'))
+    if (not all(isinstance(item,str) and item.strip() for item in required)
+            or not isinstance(value.get('generation'),int) or value.get('generation')<1
+            or not re.fullmatch(r'[0-9a-f]{40}',source.get('accepted_commit',''))
+            or verification.get('verdict')!='PASS'
+            or not registry.get('agents')):
+        return {'status':'UNVERIFIED','provenance':'CANONICAL_GOVERNANCE_SSOT_AND_REGISTRY','text':'Platform architecture is UNVERIFIED because mandatory canonical host, generation, source, exposure, registry, or accepted independent-verification bindings are incomplete. JARVIS will not infer them from model memory.'}
+    lines=[f"PRODUCTION AUTHORITY/HOST: {authority.get('production_authority','UNAVAILABLE')}",
            f"GOLDEN GENERATION: {value.get('generation','UNAVAILABLE')}",
-           f"ACCEPTED SOURCE: {value.get('source',{}).get('accepted_commit','UNAVAILABLE')}",
+           f"ACCEPTED SOURCE: {source.get('accepted_commit','UNAVAILABLE')}",
            f"REGISTERED AGENTS: {len(registry.get('agents',[]))}",
-           f"INTERFACE EXPOSURE: {value.get('interface',{}).get('exposure','UNAVAILABLE')}",
+           f"INTERFACE EXPOSURE: {interface.get('exposure','UNAVAILABLE')}",
            f"DELL INDEPENDENT VERIFICATION: {verification.get('verdict','UNAVAILABLE')} ({verification.get('verification_id','UNAVAILABLE')})"]
     return {'status':'VERIFIED','provenance':'CANONICAL_GOVERNANCE_SSOT_AND_REGISTRY','text':'\n'.join(lines)}
 

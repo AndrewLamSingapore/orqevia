@@ -228,6 +228,31 @@ def test_invalid_or_revoked_device_fails_closed_without_changing_identity(setup)
             row=db.execute('SELECT client_id,role,revoked FROM devices WHERE client_id=?',(identity,)).fetchone()
         assert row==(identity,'MEMBER',1)
 
+def test_revoked_device_cannot_be_reissued_while_short_session_is_active(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];old=client.cookies.get(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('UPDATE devices SET revoked=1 WHERE client_id=?',(identity,))
+        current=client.get('/pwa/api/session')
+        assert current.json()['authenticated'] is False
+        assert old and client.cookies.get(pwa.DEVICE_COOKIE) is None
+        with pwa.database() as db:assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(identity,)).fetchone()==(1,)
+
+def test_mismatched_session_and_device_fail_closed_without_authority_switch(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as member,TestClient(app,base_url=ORIGIN) as owner:
+        member_result,_=enroll(pwa,member)
+        code=secrets.token_urlsafe(16)
+        with pwa.database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used,owner_account_id,role) VALUES(?,?,0,?,?)',(pwa.digest(code),time.time()+300,'owner:fixture','OWNER'))
+        owner_result=owner.post('/pwa/api/enroll',headers=HEADERS,json={'code':code});assert owner_result.status_code==200
+        member.cookies.set(pwa.DEVICE_COOKIE,owner.cookies.get(pwa.DEVICE_COOKIE),domain='192.168.1.23',path='/')
+        assert member.get('/pwa/api/session').json()['authenticated'] is False
+        assert member.cookies.get(pwa.COOKIE) is None and member.cookies.get(pwa.DEVICE_COOKIE) is None
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,member_result.json()['clientId']))
+        refreshed=member.get('/pwa/api/session').json()
+        assert refreshed['authenticated'] is False
+        assert owner.get('/pwa/api/session').json()['clientId']==owner_result.json()['clientId']
+
 def test_active_legacy_session_bootstraps_durable_device_without_reenrollment(setup):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:

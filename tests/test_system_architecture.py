@@ -53,6 +53,12 @@ def test_platform_architecture_uses_golden_ssot_registry_and_exact_dell_scope():
     assert 'PRODUCTION AUTHORITY/HOST: ABEX' in answer['text'] and 'REGISTERED AGENTS: 21' in answer['text']
     assert 'DELL INDEPENDENT VERIFICATION: PASS' in answer['text']
 
+def test_incomplete_platform_manifest_abstains(monkeypatch,tmp_path):
+    (tmp_path/'governance').mkdir();(tmp_path/'governance'/'golden-gen1-manifest.json').write_text('{}')
+    monkeypatch.setattr(facts,'ROOT',tmp_path)
+    answer=facts.architecture_answer('Explain the ABEX, Dell, and PRIME architecture relationship')
+    assert answer['status']=='UNVERIFIED' and 'mandatory canonical' in answer['text']
+
 def test_architecture_objective_bypasses_model_and_returns_system_fact(monkeypatch,tmp_path):
     from app import objective_api
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
