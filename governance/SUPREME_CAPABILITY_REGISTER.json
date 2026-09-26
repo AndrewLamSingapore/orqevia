@@ -109,6 +109,21 @@
       "commercial_reuse_potential": "High for governed CI and autonomous engineering systems."
     },
     {
+      "capability": "bounded_general_reasoning",
+      "purpose": "Preserve contextual, inductive, deductive, causal, temporal, planning and learning boundaries across domains.",
+      "component": "general_intelligence",
+      "maturity": "CANDIDATE",
+      "source_sha": "0ab7a2307383144d1590d2d7ea1a1b6b7693c727",
+      "test_evidence": ["GENERAL_INTELLIGENCE_CANDIDATE_CLOSURE_20260926.md", "14 cross-domain held-out cases", "842 full tests", "8/8 mutations detected"],
+      "independent_verification": ["deterministic GI verifier 7/7"],
+      "known_limitations": ["small synthetic held-out set", "not an AGI claim", "not deployed", "real-world continual learning requires future evidence"],
+      "security_boundary": "Reasoning cannot create authority; entity, role, machine, candidate, production, simulation and physical scopes remain separated.",
+      "offline_behavior": "Deterministic structural reasoning controls require no cloud dependency.",
+      "recovery_method": ["rebuild source SHA", "verify artifact digest", "rerun focused, mutation, canonical and full gates"],
+      "portability": "Portable Python primitives independent of the commissioned runtime.",
+      "commercial_reuse_potential": "Medium-high after representative real-world evaluation and governed promotion."
+    },
+    {
       "capability": "bounded_metacognitive_controls",
       "purpose": "Classify epistemic state, preserve unknowns and contradictions, switch failed strategies and measure calibration without creating authority.",
       "component": "metacognition",
