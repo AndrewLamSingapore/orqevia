@@ -96,6 +96,11 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         self.assertIn('PRIME_INTERFACE_RUNTIME_VERSION: ${PRIME_INTERFACE_RUNTIME_VERSION:-UNKNOWN}', compose)
         self.assertIn('PRIME_INTERFACE_CANDIDATE_STATUS: ${PRIME_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}', compose)
 
+    def test_container_packages_every_required_pwa_startup_asset(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        for asset in ("index.html", "recovery.js", "release.mjs", "app.mjs", "sw.js"):
+            self.assertIn(f"clients/pwa/{asset}", dockerfile)
+
 
 if __name__ == "__main__":
     unittest.main()
