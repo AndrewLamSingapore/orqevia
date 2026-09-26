@@ -3,7 +3,7 @@
   "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
   "superseded_note": "Status claims in this file are superseded by STATUS.md as of 2026-09-22. This file is retained as a machine-readable component, release and observation reference only: it cannot select current status or promote anything to verified.",
   "status": "STALE",
-  "as_of_utc": "2026-09-26T01:14:44Z",
+  "as_of_utc": "2026-09-26T07:48:05Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
     "branch": "main",
@@ -16,11 +16,8 @@
     "expires_at_utc": "2026-09-17T12:39:34.111000Z",
     "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
     "stale_reasons": [
-      "dell_status_post_update_required",
-      "dell_status_predates_latest_update",
-      "physical_client_acceptance_unverified",
       "sky_webgl_device_acceptance_unverified",
-      "verification_expired:dell_runtime"
+      "global_public_system_evidence_expired"
     ],
     "rule": "CURRENT requires fresh source/deployment evidence and an independently verified ABEX receipt for the selected source, registry and product manifest. Historical Dell acceptance cannot satisfy ABEX acceptance."
   },
@@ -46,7 +43,7 @@
     "authorization": "Lam explicitly resumed recovery, alignment, implementation, merge and deployment on 7 September 2026."
   },
   "alignment_state": {
-    "source_and_deployments": "PUBLIC_APPS_ALIGNED_VERIFIED_PRIVATE_RUNTIME_UNVERIFIED",
+    "source_and_deployments": "LOCAL_PRIME_ACCEPTED_GLOBAL_EVIDENCE_STALE",
     "overall": "STALE"
   },
   "shared_contract": {
@@ -133,9 +130,9 @@
       "source_head_sha": null,
       "source_head_resolution": "live",
       "source_head_observed_before_manifest_commit_sha": "1bd2be98adf91df3bc4df22d7a2348848181b8b8",
-      "state": "SOURCE_RUNTIME_OBSERVED_INDEPENDENT_ACCEPTANCE_PENDING",
+      "state": "ALIGNED_VERIFIED",
       "authority": "ABEX PRIME is the canonical authority; direct observed ordinary work with narrow consequential controls.",
-      "note": "Current ABEX runtime was observed directly on ABEX; independent Dell acceptance remains pending after Dell tested stale evidence and omitted the canonical HTTPS port 8443. Historical Dell data remains historical only.",
+      "note": "Current ABEX generation independently accepted; Wuhan/Mainland-China remains physical verification pending.",
       "current_runtime_host": "ABEX",
       "historical_dell_release": {
         "scope": "Historical Dell evidence only; superseded for current runtime status",
@@ -150,10 +147,10 @@
         "publication_workflow_run": 34093768658,
         "publication_verified_at_utc": "2026-09-07T07:07:00Z"
       },
-      "release_sha": "f874eab4f69c43bdfda7eb8a79a604eaf378a054",
-      "runtime_sha": "f874eab4f69c43bdfda7eb8a79a604eaf378a054",
-      "verified_at_utc": null,
-      "published_image": "prime:sha-f874eab",
+      "release_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+      "runtime_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+      "verified_at_utc": "2026-09-26T07:48:05Z",
+      "published_image": "prime:sha-17fad78",
       "runtime": "private-abex-docker-production"
     },
     "velyqua": {
@@ -207,12 +204,12 @@
   },
   "dell_runtime": {
     "command": "JARVIS.cmd status",
-    "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
-    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
-    "verified_at_utc": "2026-09-07T07:12:00Z",
-    "accepted": false,
-    "post_update_status": false,
-    "result": "Historical September 7 Dell observation retained for compatibility and recovery only; current client/synchronizer state requires fresh evidence.",
+    "runtime_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "observed_image": "prime:sha-17fad78",
+    "verified_at_utc": "2026-09-26T07:25:32Z",
+    "accepted": true,
+    "post_update_status": true,
+    "result": "Corrected independent verification PASS for current ABEX generation; historical FAIL preserved as superseded.",
     "evidence": {
       "status_capture_library_file_id": "libfile_309baa13bf38819186c7c9d2209532f0",
       "status_capture_title": "IMG_5603.jpeg",
@@ -266,7 +263,12 @@
       ],
       "state": "HISTORICAL_RECHECK_REQUIRED"
     },
-    "observation_scope": "HISTORICAL_DELL_RUNTIME; not the active ABEX receipt"
+    "observation_scope": "INDEPENDENT_CURRENT_ABEX_RUNTIME_VERIFICATION",
+    "corrected_verification": {
+      "path": "docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json",
+      "sha256": "dc80ee30a8e13c541b677a97df283fc02d75ec81599a6d57e2bb9570f44c014d",
+      "verification_id": "f5a6f344-faf9-4eec-b4f9-f73bd20bc5ff"
+    }
   },
   "github_hygiene": {
     "live_reconciliation": {
@@ -328,7 +330,7 @@
       "client_acceptance",
       "rollback_recorded"
     ],
-    "current_result": "PENDING_RUNTIME_EVIDENCE",
+    "current_result": "PASSED_LOCAL_PRIME_GLOBAL_EVIDENCE_STALE",
     "secret_values_allowed": false
   },
   "supersession": {
@@ -438,16 +440,24 @@
     "channel_contract": "governance/CHANNEL_CONTRACT.md",
     "intended_agent_count": 21,
     "source_state": "CANONICAL_SOURCE_SELECTED",
-    "runtime_state": "UNVERIFIED",
-    "scope": "One intended source version; deployment is not asserted by publication."
+    "runtime_state": "VERIFIED",
+    "scope": "Local ABEX PRIME generation independently verified; broader ecosystem freshness remains separate."
   },
   "abex_runtime": {
     "authority": "canonical PRIME runtime host",
-    "state": "UNVERIFIED",
-    "receipt": null,
-    "source_sha": "f874eab4f69c43bdfda7eb8a79a604eaf378a054",
-    "observed_image": "prime:sha-f874eab",
-    "observed_image_id": "sha256:5a961ed5f3f8d06e9145b09ab4c8157fb63719f7c4770fc5f46d67e80999902c",
+    "state": "VERIFIED",
+    "receipt": {
+      "path": "docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json",
+      "sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+      "independent_verification": true,
+      "independent_artifact": "docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json",
+      "independent_artifact_sha256": "dc80ee30a8e13c541b677a97df283fc02d75ec81599a6d57e2bb9570f44c014d",
+      "verification_id": "f5a6f344-faf9-4eec-b4f9-f73bd20bc5ff",
+      "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3"
+    },
+    "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "observed_image": "prime:sha-17fad78",
+    "observed_image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
     "observed_registry": {
       "schema": "2.0",
       "logical_agents": 21,
@@ -455,9 +465,9 @@
       "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
     },
     "abex_observation": "docs/evidence/ABEX_RUNTIME_RECONCILIATION_20260926.md",
-    "independent_disagreement": "docs/evidence/DELL_REVERIFICATION_DISAGREEMENT_20260926.md",
-    "verified_at_utc": null,
-    "rule": "Only independent native-host evidence can establish the deployed revision; preserve sealed baseline."
+    "independent_disagreement": "Historical FAIL preserved and superseded by the corrected independent artifact.",
+    "verified_at_utc": "2026-09-26T07:48:05Z",
+    "rule": "Transition produced only by scripts/accept_abex_runtime.py after exact artifact, receipt, live image, TLS/PWA and task validation."
   },
   "channel_policy": {
     "contract": "governance/CHANNEL_CONTRACT.md",
@@ -475,14 +485,42 @@
     "adoption_state": "NOT_OBSERVED_ALL_CHANNELS"
   },
   "next_actions": [
-    "Bind published combined source to fresh ABEX/Dell deployment receipts without changing the sealed baseline.",
-    "Complete independent A12/A13 unfamiliar-repository trials and retain terminal evidence.",
-    "Complete six-phase ABEX Compute Profile.",
-    "Verify physical-client acceptance and Sky Tablet GPU appearance/performance. Cloud deployment identities are refreshed in the scoped public-release record."
+    "Keep qualified local PRIME production in quiet observation.",
+    "Perform read-only High-Context Engineering gap analysis outside production.",
+    "Complete Wuhan/Mainland-China physical verification when geographically available.",
+    "Refresh unrelated public-system evidence before claiming global CURRENT status."
   ],
   "public_experience": {
     "contract": "governance/public-experience.json",
     "entrypoint": "https://authority-engine-app.vercel.app/jarvis",
     "scope": "Public showcase, navigation and enquiries; no private runtime exposure."
+  },
+  "qualified_local_prime_baseline": {
+    "state": "FROZEN",
+    "accepted_at_utc": "2026-09-26T07:48:05Z",
+    "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "image_tag": "prime:sha-17fad78",
+    "image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
+    "pwa_index_sha256": "69d5915533dc878a686264f04eb8eca913c1acd1ae8ddd73ac98084b794a18f0",
+    "pwa_release": "jarvis-shell-v11",
+    "owner_task": "3c235145-0fbd-4fcb-9983-1074dd3c87f7",
+    "receipt_sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+    "independent_artifact_sha256": "dc80ee30a8e13c541b677a97df283fc02d75ec81599a6d57e2bb9570f44c014d",
+    "rollback_image": "prime:sha-2ca9b4a",
+    "rollback_checkpoint": "/data/recovery/pwa-mobile-control-predeploy-20260926"
+  },
+  "local_prime_commissioning": {
+    "state": "CLOSED",
+    "closed_at_utc": "2026-09-26T07:48:05Z",
+    "basis": [
+      "governed runtime receipt",
+      "corrected independent Dell verification",
+      "live immutable runtime readback",
+      "physical Owner and Dell acceptance"
+    ],
+    "wuhan_mainland_china": "PHYSICAL_VERIFICATION_PENDING",
+    "unresolved_p0": 0,
+    "unresolved_p1": 0,
+    "unresolved_p2": 0
   }
 }
