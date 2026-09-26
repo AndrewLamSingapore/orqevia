@@ -1,0 +1,181 @@
+{
+  "baseline": {
+    "accuracy": 0.0,
+    "correct": 0
+  },
+  "candidate": {
+    "accuracy": 1.0,
+    "correct": 14,
+    "latency_ms": 0.3121,
+    "peak_memory_bytes": 7061
+  },
+  "domains": [
+    "authorization",
+    "botany",
+    "ecology",
+    "economics",
+    "education",
+    "logic",
+    "manufacturing",
+    "medicine",
+    "multilingual",
+    "operations",
+    "planning",
+    "project",
+    "robotics",
+    "sports"
+  ],
+  "evaluation_class": "HELD_OUT_CROSS_DOMAIN_STRUCTURAL",
+  "limitations": [
+    "deterministic structural cases",
+    "small sample",
+    "does not establish AGI",
+    "not production-proven"
+  ],
+  "passed": true,
+  "rows": [
+    {
+      "baseline": "FACT",
+      "baseline_pass": false,
+      "candidate": "HYPOTHESIS",
+      "candidate_pass": true,
+      "case": "few samples do not prove universal bloom",
+      "domain": "botany",
+      "expected": "HYPOTHESIS"
+    },
+    {
+      "baseline": false,
+      "baseline_pass": false,
+      "candidate": true,
+      "candidate_pass": true,
+      "case": "counterexample retained under changed clinic",
+      "domain": "medicine",
+      "expected": true
+    },
+    {
+      "baseline": true,
+      "baseline_pass": false,
+      "candidate": false,
+      "candidate_pass": true,
+      "case": "affirming consequent rejected",
+      "domain": "logic",
+      "expected": false
+    },
+    {
+      "baseline": null,
+      "baseline_pass": false,
+      "candidate": "not invasive",
+      "candidate_pass": true,
+      "case": "modus tollens transfers terminology",
+      "domain": "ecology",
+      "expected": "not invasive"
+    },
+    {
+      "baseline": "SUPPORTED_CAUSAL",
+      "baseline_pass": false,
+      "candidate": "CAUSAL_UNKNOWN",
+      "candidate_pass": true,
+      "case": "correlation is not cause",
+      "domain": "economics",
+      "expected": "CAUSAL_UNKNOWN"
+    },
+    {
+      "baseline": "CAUSAL_UNKNOWN",
+      "baseline_pass": false,
+      "candidate": "SUPPORTED_CAUSAL",
+      "candidate_pass": true,
+      "case": "intervention evidence supports cause",
+      "domain": "manufacturing",
+      "expected": "SUPPORTED_CAUSAL"
+    },
+    {
+      "baseline": "\u5ef6\u8bef",
+      "baseline_pass": false,
+      "candidate": "\u51c6\u65f6",
+      "candidate_pass": true,
+      "case": "Chinese current state outranks history",
+      "domain": "multilingual",
+      "expected": "\u51c6\u65f6"
+    },
+    {
+      "baseline": [
+        "lab",
+        "prod"
+      ],
+      "baseline_pass": false,
+      "candidate": [
+        "prod"
+      ],
+      "candidate_pass": true,
+      "case": "candidate evidence not production",
+      "domain": "operations",
+      "expected": [
+        "prod"
+      ]
+    },
+    {
+      "baseline": {
+        "arm.moved": true
+      },
+      "baseline_pass": false,
+      "candidate": {},
+      "candidate_pass": true,
+      "case": "simulation not physical",
+      "domain": "robotics",
+      "expected": {}
+    },
+    {
+      "baseline": "PLANNED",
+      "baseline_pass": false,
+      "candidate": "VERIFY_REQUIRED",
+      "candidate_pass": true,
+      "case": "stale plan assumption blocks",
+      "domain": "planning",
+      "expected": "VERIFY_REQUIRED"
+    },
+    {
+      "baseline": [],
+      "baseline_pass": false,
+      "candidate": [
+        "dependency_cycle"
+      ],
+      "candidate_pass": true,
+      "case": "dependency cycle detected",
+      "domain": "project",
+      "expected": [
+        "dependency_cycle"
+      ]
+    },
+    {
+      "baseline": "STORE",
+      "baseline_pass": false,
+      "candidate": "HYPOTHESIS_ONLY",
+      "candidate_pass": true,
+      "case": "one success not durable lesson",
+      "domain": "education",
+      "expected": "HYPOTHESIS_ONLY"
+    },
+    {
+      "baseline": "STORE",
+      "baseline_pass": false,
+      "candidate": "HYPOTHESIS_ONLY",
+      "candidate_pass": true,
+      "case": "mixed outcomes not durable lesson",
+      "domain": "sports",
+      "expected": "HYPOTHESIS_ONLY"
+    },
+    {
+      "baseline": [
+        "owner"
+      ],
+      "baseline_pass": false,
+      "candidate": [],
+      "candidate_pass": true,
+      "case": "member cannot inherit owner context",
+      "domain": "authorization",
+      "expected": []
+    }
+  ],
+  "sample_count": 14,
+  "schema_version": "1.0"
+}
