@@ -133,9 +133,9 @@
       "source_head_sha": null,
       "source_head_resolution": "live",
       "source_head_observed_before_manifest_commit_sha": "1bd2be98adf91df3bc4df22d7a2348848181b8b8",
-      "state": "SOURCE_RUNTIME_ALIGNED_NATIVE_HOST_VERIFIED",
+      "state": "SOURCE_RUNTIME_OBSERVED_INDEPENDENT_ACCEPTANCE_PENDING",
       "authority": "ABEX PRIME is the canonical authority; direct observed ordinary work with narrow consequential controls.",
-      "note": "Current ABEX runtime was independently observed after Owner-authorized accelerated promotion; physical phone paths were not retested. Historical Dell data remains historical only.",
+      "note": "Current ABEX runtime was observed directly on ABEX; independent Dell acceptance remains pending after Dell tested stale evidence and omitted the canonical HTTPS port 8443. Historical Dell data remains historical only.",
       "current_runtime_host": "ABEX",
       "historical_dell_release": {
         "scope": "Historical Dell evidence only; superseded for current runtime status",
@@ -150,10 +150,10 @@
         "publication_workflow_run": 34093768658,
         "publication_verified_at_utc": "2026-09-07T07:07:00Z"
       },
-      "release_sha": "a1ea9ad0a253c40de70194ebf38b7a58c925e5b2",
-      "runtime_sha": "a1ea9ad0a253c40de70194ebf38b7a58c925e5b2",
-      "verified_at_utc": "2026-09-26T01:14:44Z",
-      "published_image": "prime:sha-a1ea9ad",
+      "release_sha": "f874eab4f69c43bdfda7eb8a79a604eaf378a054",
+      "runtime_sha": "f874eab4f69c43bdfda7eb8a79a604eaf378a054",
+      "verified_at_utc": null,
+      "published_image": "prime:sha-f874eab",
       "runtime": "private-abex-docker-production"
     },
     "velyqua": {
@@ -443,14 +443,20 @@
   },
   "abex_runtime": {
     "authority": "canonical PRIME runtime host",
-    "state": "VERIFIED",
-    "receipt": {
-      "path": "docs/evidence/PRODUCTION_PROMOTION_RECEIPT_20260926.json",
-      "independent_verification": true,
-      "source_sha": "a1ea9ad0a253c40de70194ebf38b7a58c925e5b2"
+    "state": "UNVERIFIED",
+    "receipt": null,
+    "source_sha": "f874eab4f69c43bdfda7eb8a79a604eaf378a054",
+    "observed_image": "prime:sha-f874eab",
+    "observed_image_id": "sha256:5a961ed5f3f8d06e9145b09ab4c8157fb63719f7c4770fc5f46d67e80999902c",
+    "observed_registry": {
+      "schema": "2.0",
+      "logical_agents": 21,
+      "historical_responsibility_mappings": 29,
+      "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
     },
-    "source_sha": "a1ea9ad0a253c40de70194ebf38b7a58c925e5b2",
-    "verified_at_utc": "2026-09-26T01:14:44Z",
+    "abex_observation": "docs/evidence/ABEX_RUNTIME_RECONCILIATION_20260926.md",
+    "independent_disagreement": "docs/evidence/DELL_REVERIFICATION_DISAGREEMENT_20260926.md",
+    "verified_at_utc": null,
     "rule": "Only independent native-host evidence can establish the deployed revision; preserve sealed baseline."
   },
   "channel_policy": {

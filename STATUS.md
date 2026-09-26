@@ -40,7 +40,14 @@ If you are an AI agent updating this file:
 
 - [item] — [exact evidence checked] — [date confirmed]
 
-### Claimed, not independently checked
+### Current ABEX observation — independent acceptance pending
+
+- **Current production runtime (26 September 2026):** PRIME and Interface are healthy on `prime:sha-f874eab`, image ID `sha256:5a961ed5f3f8d06e9145b09ab4c8157fb63719f7c4770fc5f46d67e80999902c`, OCI revision `f874eab4f69c43bdfda7eb8a79a604eaf378a054`. The deployed registry is schema `2.0`, registry version `1.0.0`, with 21 logical agents and 29 historical responsibility mappings; its runtime SHA-256 is `fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff`, identical to source. The production-lineage remote is `0266feb8c47a8167200a0e4f43cbce98c7f27b51`; `origin/main` is an intentionally divergent development lineage and is not automatically deployable. One canonical Owner session is active; three historical Member session records remain but no Member session is active. Seven production SQLite databases pass integrity checks, queues have no pending/running/failed work, and the HTTPS PWA is served only on `192.168.1.23:8443` while PRIME internal port 8000 remains loopback-only. Authority Engine correctly remains `unverified`: Dell's latest read-only check repeated stale `sha-c449dd1` evidence and omitted port 8443, so independent current-runtime acceptance is still pending. Evidence: `docs/evidence/ABEX_RUNTIME_RECONCILIATION_20260926.md` and `docs/evidence/DELL_REVERIFICATION_DISAGREEMENT_20260926.md`.
+
+### Historical claims and observations — not current status
+
+The records below preserve what was reported at their stated dates. They are
+historical and must not override the current ABEX observation above.
 
 - **Owner-authorized accelerated production promotion completed on ABEX (26 September 2026).** Reported by Codex from ABEX and not yet spot-checked by Lam. The frozen source `a1ea9ad0a253c40de70194ebf38b7a58c925e5b2` is running as immutable image `prime:sha-a1ea9ad` / `sha256:076c6c4cdf21066e6b1029850bef186697f2aedcde6fc0a493c65d68b293b144`; both PRIME and Interface labels match, while previous production `0ecb5803470bef2a941da31332d87702268648d6` and its image remain the rollback baseline. PRIME, Interface and Ollama were healthy with zero restarts; seven SQLite databases passed integrity checks; identity-table hashes matched the pre-promotion snapshot; a fresh deterministic objective `e0309e61-3b93-4f00-8013-22ecef14411e` completed and returned artifact `2b87ac30061649fbb24aabd396928bdf`. Two bounded defects were repaired, with zero unresolved new P0/P1 findings. The original seven-powered-on-day soak did **not** complete: approximately `25:51:29` was achieved and the remainder was explicitly Owner-waived for this promotion. GOLDEN remains pending, and new production observation epoch `prime-a1ea9ad-20260926T091048+0800` is active. Owner/Member records were preserved, but physical phone paths were not retested because all existing sessions were expired. Evidence: `docs/evidence/PRODUCTION_PROMOTION_CLOSURE_20260926.md` and `docs/evidence/PRODUCTION_PROMOTION_RECEIPT_20260926.json`.
 
