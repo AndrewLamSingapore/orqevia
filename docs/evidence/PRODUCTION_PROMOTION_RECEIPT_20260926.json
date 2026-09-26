@@ -29,6 +29,7 @@
   },
   "deployment": {
     "method": "pinned local image; Docker Compose replacement of PRIME and Interface only; persistent data retained; no reboot",
+    "runtime_configuration_commit": "95ccfa51365dbed2ee4e9a2a2bcfdf6a96408423",
     "prime_healthy": true,
     "interface_healthy": true,
     "ollama_healthy_and_not_restarted": true,

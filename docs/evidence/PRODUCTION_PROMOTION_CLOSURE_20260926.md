@@ -21,6 +21,8 @@ Verdict: **ACCEPT — production promoted and independently verified.** This is 
 
 The previous image, private configuration copy, Compose file, and consistent data snapshot are retained under `recovery-records/production-promotion-20260926-090630/rollback-baseline`. The snapshot contains 34 files; all seven SQLite databases passed `quick_check`; manifest SHA-256 is `4c9ab968760f77b8a98d9409e260bf25ad5ca269dc3c403b2f587a6fc6c8a2c0`.
 
+The exact four-line production Compose alignment is remotely durable on the existing runtime branch at `95ccfa51365dbed2ee4e9a2a2bcfdf6a96408423`; the runtime checkout is clean.
+
 ## Deployment and runtime acceptance
 
 - PRIME and Interface alone were recreated through Compose; Ollama and Windows were not restarted.
