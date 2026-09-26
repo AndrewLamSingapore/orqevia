@@ -43,6 +43,8 @@ class EpistemicClass(str, Enum):
 TERMINAL = frozenset({ObjectiveState.COMPLETED, ObjectiveState.CANCELLED})
 ROLES = frozenset({"OWNER", "MEMBER", "APPLICATION", "SYSTEM"})
 TOKEN = re.compile(r"[a-z0-9_\-\u3400-\u9fff]{2,}", re.I)
+HARD_MAXIMUM = re.compile(r"(?i)(?:maximum|at\s+most|no\s+more\s+than|not\s+exceed(?:ing)?|不超过|最高)[^\d]{0,40}(?:RMB|CNY|¥|￥)?\s*([0-9]+(?:\.[0-9]+)?)|(?:RMB|CNY|¥|￥)\s*([0-9]+(?:\.[0-9]+)?)[^\n]{0,30}(?:maximum|max|cap|上限)")
+CURRENCY_AMOUNT = re.compile(r"(?i)(?:RMB|CNY|¥|￥)\s*([0-9]+(?:\.[0-9]+)?)(?:\s*[–—-]\s*(?:RMB|CNY|¥|￥)?\s*([0-9]+(?:\.[0-9]+)?))?")
 
 
 def canonical(value: Any) -> str:
@@ -61,6 +63,22 @@ def require_text(value: Any, field: str, maximum: int = 20_000) -> str:
     if not isinstance(value, str) or not value.strip() or len(value) > maximum:
         raise ValueError(f"{field} must be nonempty text of at most {maximum} characters")
     return value.strip()
+
+
+def hard_numeric_constraint_violations(constraints: Iterable[str], result_texts: Iterable[str]) -> list[dict[str, Any]]:
+    """Fail closed on explicit currency maxima; model prose cannot waive the cap."""
+    maxima=[]
+    for constraint in constraints:
+        match=HARD_MAXIMUM.search(str(constraint))
+        if match: maxima.append((str(constraint),float(match.group(1) or match.group(2))))
+    if not maxima:return []
+    text="\n".join(str(value) for value in result_texts)
+    amounts=[float(high or low) for low,high in CURRENCY_AMOUNT.findall(text)]
+    violations=[]
+    for constraint,maximum in maxima:
+        if not amounts:violations.append({"constraint":constraint,"maximum":maximum,"observed":None,"reason":"numeric outcome not evidenced"})
+        elif max(amounts)>maximum:violations.append({"constraint":constraint,"maximum":maximum,"observed":max(amounts),"reason":"maximum exceeded"})
+    return violations
 
 
 @dataclass(frozen=True)
@@ -363,7 +381,7 @@ class Phase2Kernel:
             valid_ids=set()
             for row in rows:
                 value=dict(row); expected=value.pop("record_sha256")
-                if digest(value)==expected: valid_ids.add(row["evidence_id"])
+                if digest(value)==expected:valid_ids.add(row["evidence_id"])
             if valid_ids != set(refs.values()):
                 raise ValueError("completion evidence is unverified or belongs to another objective")
             current["checkpoint"]["verification"] = [

@@ -34,6 +34,15 @@ def model_content(steps,revision):
     return '\n\n'.join(values)
 
 
+def system_content(steps,revision):
+    values=[]
+    for step in steps:
+        dispatch=step.get('dispatch',{})
+        if step.get('revision',0)==revision and dispatch.get('state')=='COMPLETED' and dispatch.get('model_backend')=='none' and isinstance(dispatch.get('result'),str):
+            values.append(dispatch['result'].strip())
+    return '\n\n'.join(filter(None,values))
+
+
 def metadata_contradictions(text,metadata):
     """Detect claims that resemble authoritative facts without promoting them."""
     if not text:return []
@@ -125,7 +134,9 @@ def connect():
 def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)):
     authenticate_owner(authorization)
     from .operational_workflows import from_objective, execute_workflow
-    workflow_body=from_objective(body.objective,body.context) if not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
+    from .system_architecture import architecture_answer,is_architecture_question
+    architecture=architecture_answer(body.objective) if not body.deterministic_operation and is_architecture_question(body.objective) else None
+    workflow_body=from_objective(body.objective,body.context) if architecture is None and not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
     capabilities=list(dict.fromkeys(body.capabilities or ([body.capability] if body.capability!='auto' else select_capabilities(body.objective))))
     from .runtime_status import is_runtime_status
     if not body.deterministic_operation and is_runtime_status(body.objective,body.context):
@@ -139,6 +150,14 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         db.execute('INSERT INTO objectives VALUES(?,?,?,?)',(task_id,hashlib.sha256(body.objective.encode()).hexdigest(),'dispatching',json.dumps(capabilities)))
         db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,0,created,created))
         db.commit()
+        if architecture is not None:
+            steps=[{'capability':'system.architecture','dispatch':{'state':'COMPLETED','task_id':task_id,
+                'result':architecture['text'],'system_fact':architecture,'model_backend':'none'}}]
+            db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
+            db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id));db.commit()
+            from .public_task_errors import public_task
+            return public_task({'id':task_id,'steps':steps,'physical_inference_limit':compute_queue_api.queue.policy.global_concurrency,
+                'semantics':'Canonical system-owned architecture lookup; no model self-description'})
         if workflow_body is not None:
             try:
                 outcome=execute_workflow(workflow_body,parent_task_id=task_id)
@@ -218,6 +237,8 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     updated_at=max(observed_updates,default=None)
     started_at=min((job.get('started_at') for job in jobs if job.get('started_at')),default=None)
     completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
+    deterministic=system_content(steps,revision)
+    if state=='COMPLETED' and deterministic and completed_at is None:completed_at=updated_at
     revision_identity=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN')).strip().lower()
     if not re.fullmatch(r'[0-9a-f]{40}',revision_identity):revision_identity='UNKNOWN'
     host_id=os.getenv('PRIME_INTERFACE_HOST_ID','').strip()
@@ -243,7 +264,7 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     from .public_task_errors import public_task
     return public_task({'id':task_id,'revision':revision,'state':state,'steps':steps,
         'execution_metadata':metadata,'updated_at':updated_at,
-        'result':{'type':'MODEL_CONTENT','text':content,'authoritative':False,
+        'result':{'type':'SYSTEM_FACT','text':deterministic,'authoritative':True,'provenance':'CANONICAL_REGISTRY_AND_RUNTIME'} if deterministic else {'type':'MODEL_CONTENT','text':content,'authoritative':False,
             'epistemic_status':'GENERATED_CLAIM','verification_status':'VERIFY_REQUIRED',
             'may_update_truth_plane':False,'contradictions':contradictions} if content else None,
         'synthesis':'Source-labelled advisory contributions; model content is not execution metadata'})

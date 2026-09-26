@@ -103,7 +103,7 @@ def validate_envelope(envelope: dict[str, Any], *, artifact_bytes: dict[str, byt
         else:
             unresolved.append("artifact_bytes_not_supplied:" + str(artifact_id))
     relation_targets = {item.get("record_id") for item in envelope.get("relations", [])}
-    if envelope["action_id"] in relation_targets: errors.append("INVALID_SUPERSESSION:self_reference")
+    if envelope.get("action_id") in relation_targets: errors.append("INVALID_SUPERSESSION:self_reference")
     for relation in envelope.get("relations", []):
         if relation.get("type") not in RELATIONS: errors.append("INVALID_SUPERSESSION:relation")
     verification = envelope.get("verification", {})

@@ -91,6 +91,11 @@ def test_partial_cannot_masquerade_as_verified(tmp_path):
     assert validate_envelope(changed)['verdict']=='INVALID'
 
 
+def test_malformed_envelope_fails_closed_without_exception():
+    result=validate_envelope({'schema_version':'bad'})
+    assert result['verdict']=='INVALID' and 'INVALID_SCHEMA:missing_fields' in result['errors']
+
+
 def test_sdk_rejects_nonexistent_verification_reference(tmp_path):
     ledger=EvidenceLedger(tmp_path/'evidence.db')
     with action(ledger,namespace='demo',objective='x',actor={'type':'SERVICE','id':'x'},authority={'scope':'x','source':'iam'},idempotency_key='x') as item:

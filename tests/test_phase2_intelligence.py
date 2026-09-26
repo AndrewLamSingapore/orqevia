@@ -73,6 +73,13 @@ def test_completion_requires_verification_for_each_criterion(tmp_path):
         {"criterion":"cause verified","evidence_id":e1["evidence_id"]},{"criterion":"result delivered","evidence_id":e2["evidence_id"]}]
 
 
+def test_hard_numeric_budget_cap_cannot_be_overridden_by_plausible_range(tmp_path):
+    from app.phase2_intelligence import hard_numeric_constraint_violations
+    violations=hard_numeric_constraint_violations(["Maximum total local budget RMB 500"],["Estimated total RMB 480–520"])
+    assert violations==[{"constraint":"Maximum total local budget RMB 500","maximum":500.0,"observed":520.0,"reason":"maximum exceeded"}]
+    assert hard_numeric_constraint_violations(["Maximum total local budget RMB 500"],["Estimated total RMB 480–500"])==[]
+
+
 def test_member_cannot_read_owner_objective_or_inherit_owner(tmp_path):
     store=kernel(tmp_path); item=objective(store)
     member=auth("member-1","MEMBER")

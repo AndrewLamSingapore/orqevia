@@ -1,0 +1,16 @@
+{
+  "schema_version": "jarvis.phase2-governance-state.v1",
+  "scope": "Phase 2 isolated candidate",
+  "production_status": "NOT_DEPLOYED",
+  "runtime_acceptance": "NOT_APPLICABLE",
+  "independent_verification": "PENDING_NEW_CANDIDATE_FREEZE",
+  "latest_full_regression": {
+    "result": "PASS",
+    "tests_passed": 972,
+    "warnings": 5
+  },
+  "golden_gen1_modified": false,
+  "owner_assertion_is_system_verification": false,
+  "historical_candidate_verification_applies_to_current_candidate": false,
+  "authority": "This record describes candidate governance state only; a governed promotion receipt and independent verification are required for any later production acceptance."
+}
