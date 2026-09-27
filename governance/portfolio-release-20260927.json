@@ -2,6 +2,14 @@
   "schema_version": "lam.portfolio-release.v1",
   "release_id": "lam-portfolio-20260927",
   "observed_at_utc": "2026-09-27T04:53:53.2471754Z",
+  "execution_host": {
+    "role": "ABEX_BUILDER_PUBLISHER_RELEASE_ORCHESTRATOR",
+    "binding": "LOCAL_CIM_PLUS_LAN_PLUS_LIVE_PRIME_NODE",
+    "prime_node": "prime-abex-epoch-20260919",
+    "accepted_runtime_present": true,
+    "dell_role": "INDEPENDENT_READ_ONLY_VERIFIER_CHALLENGER_OBSERVER",
+    "dell_mutation_authority": false
+  },
   "architecture": {
     "systems": 6,
     "principle": "SOVEREIGNTY AT THE PRODUCT BOUNDARY. COMPOSABILITY AT THE CAPABILITY BOUNDARY."

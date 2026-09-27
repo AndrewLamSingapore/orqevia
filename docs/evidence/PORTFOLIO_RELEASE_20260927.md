@@ -6,11 +6,13 @@ Six sovereign systems remain independently discoverable: JARVIS PRIME, VELYQUA, 
 
 **SOVEREIGNTY AT THE PRODUCT BOUNDARY. COMPOSABILITY AT THE CAPABILITY BOUNDARY.**
 
+Execution-host binding was verified locally before release continuation: ABEX holds the accepted PRIME node `prime-abex-epoch-20260919` and is the builder, publisher and release orchestrator. Dell remains read-only verifier/challenger/observer with no ABEX mutation authority. Evidence: `docs/evidence/PORTFOLIO_RELEASE_HOST_BINDING_20260927.json`.
+
 The public index is the GitHub profile at `https://github.com/AndrewLamSingapore`; Authority Engine remains the public evidence/contact starting point. Neither makes PRIME mandatory for the other products.
 
 ## Release result
 
-Machine manifest: `governance/portfolio-release-20260927.json` — SHA-256 `8b83c470c136ccb3fbd3709316995f79191adb61af479602e1f002341f507f6c`.
+Machine manifest: `governance/portfolio-release-20260927.json` — SHA-256 `041d99b972456ab5f7bdd388842aced3b7c8f779871c8a3eef2bf7876e3c8016`.
 
 - PRIME Golden Gen 2 remains exact, healthy, independently verified and unchanged. Audio remains parked and failed, not accepted.
 - VELYQUA, Portal, Game Platform and Authority Engine live health endpoints return HTTP 200 and exact revisions equal to current `origin/main`.
