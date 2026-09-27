@@ -1,0 +1,173 @@
+F.FFFF                                                                   [100%]
+================================== FAILURES ===================================
+______________ test_same_pool_stop_start_processes_new_job_once _______________
+
+tmp_path = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Admin/pytest-285/test_same_pool_stop_start_proc0')
+
+    def test_same_pool_stop_start_processes_new_job_once(tmp_path):
+        calls = []
+        queue, pool = build(tmp_path, lambda job, provider: (calls.append(job['id']) or {'result': 'ok'}))
+        try:
+            first = submit(queue, 'first')
+            pool.start()
+            wait_for(lambda: queue.get(first['id'])['status'] == 'completed')
+            pool.stop()
+            second = submit(queue, 'second')
+            pool.start()
+>           wait_for(lambda: queue.get(second['id'])['status'] == 'completed')
+
+tests\test_worker_pool_lifecycle.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+predicate = <function test_same_pool_stop_start_processes_new_job_once.<locals>.<lambda> at 0x0000022231D2B6A0>
+seconds = 3
+
+    def wait_for(predicate, seconds=3):
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            if predicate():
+                return
+            time.sleep(.01)
+>       assert predicate(), 'isolated worker did not reach the expected state'
+E       AssertionError: isolated worker did not reach the expected state
+E       assert False
+E        +  where False = <function test_same_pool_stop_start_processes_new_job_once.<locals>.<lambda> at 0x0000022231D2B6A0>()
+
+tests\test_worker_pool_lifecycle.py:32: AssertionError
+________ test_stop_retains_inflight_worker_and_refuses_unsafe_restart _________
+
+tmp_path = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Admin/pytest-285/test_stop_retains_inflight_wor0')
+
+    def test_stop_retains_inflight_worker_and_refuses_unsafe_restart(tmp_path):
+        entered, release = threading.Event(), threading.Event()
+        calls = []
+    
+        def handler(job, provider):
+            calls.append(job['id'])
+            if job['prompt'] == 'first':
+                entered.set()
+                assert release.wait(12), 'test failed to release its isolated handler'
+            return {'result': 'ok'}
+    
+        queue, pool = build(tmp_path, handler)
+        original = ()
+        try:
+            first = submit(queue, 'first')
+            second = submit(queue, 'second')
+            pool.start()
+            assert entered.wait(3)
+            original = tuple(pool.threads)
+            started = time.monotonic()
+            pool.stop()
+            assert time.monotonic() - started < 4.5, 'stop must remain bounded'
+>           assert tuple(pool.threads) == original and original[0].is_alive()
+E           assert (() == (<Thread(Thre...aemon 6336)>,)
+E             
+E             Right contains one more item: <Thread(Thread-4 (_run), started daemon 6336)>
+E             Use -v to get more diff)
+
+tests\test_worker_pool_lifecycle.py:94: AssertionError
+_______ test_worker_can_request_stop_without_self_join_or_failed_effect _______
+
+tmp_path = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Admin/pytest-285/test_worker_can_request_stop_w0')
+
+    def test_worker_can_request_stop_without_self_join_or_failed_effect(tmp_path):
+        holder = {}
+        calls = []
+    
+        def handler(job, provider):
+            calls.append(job['id'])
+            holder['pool'].stop()
+            return {'result': 'completed-before-stop'}
+    
+        queue, pool = build(tmp_path, handler)
+        holder['pool'] = pool
+        try:
+            job = submit(queue, 'single effect')
+            pool.start()
+            wait_for(lambda: queue.get(job['id'])['status'] in {'completed', 'failed'})
+>           assert queue.get(job['id'])['status'] == 'completed'
+E           AssertionError: assert 'failed' == 'completed'
+E             
+E             - completed
+E             + failed
+
+tests\test_worker_pool_lifecycle.py:130: AssertionError
+________________ test_concurrent_start_calls_create_one_worker ________________
+
+tmp_path = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Admin/pytest-285/test_concurrent_start_calls_cr0')
+
+    def test_concurrent_start_calls_create_one_worker(tmp_path):
+        queue, pool = build(tmp_path, lambda job, provider: {'result': 'ok'})
+        barrier = threading.Barrier(9)
+        errors = []
+    
+        def starter():
+            barrier.wait()
+            try:
+                pool.start()
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+    
+        starters = [threading.Thread(target=starter) for _ in range(8)]
+        try:
+            for thread in starters:
+                thread.start()
+            barrier.wait()
+            for thread in starters:
+                thread.join(3)
+            assert not errors
+>           assert len(pool.threads) == 1
+E           assert 2 == 1
+E            +  where 2 = len([<Thread(Thread-15 (_run), started daemon 14776)>, <Thread(Thread-14 (_run), started daemon 10728)>])
+E            +    where [<Thread(Thread-15 (_run), started daemon 14776)>, <Thread(Thread-14 (_run), started daemon 10728)>] = <app.job_queue.WorkerPool object at 0x0000022231E5C890>.threads
+
+tests\test_worker_pool_lifecycle.py:157: AssertionError
+________ test_real_child_process_reuses_pool_without_external_services ________
+
+tmp_path = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Admin/pytest-285/test_real_child_process_reuses0')
+
+    def test_real_child_process_reuses_pool_without_external_services(tmp_path):
+        program = r'''
+    import json,sys,time
+    from pathlib import Path
+    from app.job_queue import JobQueue,Provider,QueuePolicy,WorkerPool
+    root=Path(sys.argv[1]); root.mkdir(exist_ok=True)
+    queue=JobQueue(root/'child-queue.db',QueuePolicy(global_concurrency=1,local_ram_mb=8192,local_vram_mb=0))
+    provider=Provider('child-isolated','local','test-model',8192,0,1)
+    effects=[]
+    pool=WorkerPool(queue,[provider],lambda job,provider:(effects.append(job['id']) or {'result':'ok'}))
+    try:
+     for n in range(2):
+      job=queue.submit(agent='planner',prompt=str(n),model='test-model',max_retries=0)
+      pool.start(); deadline=time.monotonic()+3
+      while queue.get(job['id'])['status']!='completed' and time.monotonic()<deadline: time.sleep(.01)
+      assert queue.get(job['id'])['status']=='completed', 'stop/start left a persisted job queued'
+      pool.stop()
+     assert len(effects)==len(set(effects))==2
+     print(json.dumps({'effects':len(effects),'unique_effects':len(set(effects)),'completed':queue.metrics()['statuses'].get('completed')}))
+    finally: pool.stop()
+    '''
+        repo = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        env['PRIME_DATA_DIR'] = str(tmp_path / 'child-data')
+        env['PRIME_COMPUTE_QUEUE_DB'] = str(tmp_path / 'unused-queue.db')
+        env['PYTHONDONTWRITEBYTECODE'] = '1'
+        result = subprocess.run([sys.executable, '-B', '-c', program, str(tmp_path / 'child')],
+                                cwd=repo, env=env, capture_output=True, text=True, timeout=15)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 15, in <module>
+E         AssertionError: stop/start left a persisted job queued
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\Admin\\AppData\\Local\\Temp\\prime-canonical-5816b445d08246458e868c1c9d107264\\venv...recent call last):\n  File "<string>", line 15, in <module>\nAssertionError: stop/start left a persisted job queued\n').returncode
+
+tests\test_worker_pool_lifecycle.py:191: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_worker_pool_lifecycle.py::test_same_pool_stop_start_processes_new_job_once
+FAILED tests/test_worker_pool_lifecycle.py::test_stop_retains_inflight_worker_and_refuses_unsafe_restart
+FAILED tests/test_worker_pool_lifecycle.py::test_worker_can_request_stop_without_self_join_or_failed_effect
+FAILED tests/test_worker_pool_lifecycle.py::test_concurrent_start_calls_create_one_worker
+FAILED tests/test_worker_pool_lifecycle.py::test_real_child_process_reuses_pool_without_external_services
+5 failed, 1 passed in 10.26s

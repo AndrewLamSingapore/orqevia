@@ -1,0 +1,131 @@
+{
+  "backlog_depth": 4,
+  "code_digests": {
+    "app/engineering_backlog.py": "b3d748d8aa53df5e6a16f5c1d4da5bcba819cce2c218fb53047414138b41a33f",
+    "app/phase2_intelligence.py": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31"
+  },
+  "continuous_improvement": "NOT_ESTABLISHED",
+  "duplicate_observations": 4,
+  "engineering_loop": "UNMOUNTED_CANDIDATE_ADAPTER",
+  "execution_authority": false,
+  "host_restarted": false,
+  "identity_modified": false,
+  "items": [
+    {
+      "code": "LENS-PRODUCTION-INTEGRATION",
+      "dependencies": [],
+      "dispositions": [],
+      "id": "b290f1e220fc08fcc9074b69c6c0f509dd5126827126e9a5ef2678673b12e602",
+      "observations": [
+        {
+          "code": "LENS-PRODUCTION-INTEGRATION",
+          "dependencies": [],
+          "evidence_ref": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\portfolio-truth-reconcile-20260927\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json",
+          "evidence_sha256": "a99989b6fe62cebe78745dbda802cbdb8ee599d6db763b18264f84fb71e9b799",
+          "id": "b290f1e220fc08fcc9074b69c6c0f509dd5126827126e9a5ef2678673b12e602",
+          "observation_digest": "51792ef3152dfa305e9546d6c6d2007fc451f80f8b9042e0809f20f7b832c0c4",
+          "observed_at": 1790509127.5427139,
+          "proposed_action": "Integrate a governed source reader and authenticated Lens record path only in an isolated successor",
+          "severity": "P1",
+          "source": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\portfolio-truth-reconcile-20260927\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json",
+          "test": "Rerun six real production-path gates only after qualified promotion; source-reader fixtures are not production PASS",
+          "verification": "OBSERVED_BYTES_NOT_REPAIR_VERIFICATION"
+        }
+      ],
+      "receipt": null,
+      "result": "UNVERIFIED",
+      "severity": "P1",
+      "source": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\portfolio-truth-reconcile-20260927\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json",
+      "status": "OPEN"
+    },
+    {
+      "code": "LENS-UNKNOWN-AUTHORITY-WRAPPER",
+      "dependencies": [],
+      "dispositions": [],
+      "id": "e48c9077921552ed38c4cc3e5a029e18166d03d42a6d401f42836e2e29382256",
+      "observations": [
+        {
+          "code": "LENS-UNKNOWN-AUTHORITY-WRAPPER",
+          "dependencies": [],
+          "evidence_ref": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\portfolio-truth-reconcile-20260927\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json",
+          "evidence_sha256": "a99989b6fe62cebe78745dbda802cbdb8ee599d6db763b18264f84fb71e9b799",
+          "id": "e48c9077921552ed38c4cc3e5a029e18166d03d42a6d401f42836e2e29382256",
+          "observation_digest": "c7e425b49fcac2592bcc74608db9f2fda5c1925448e5a52280fb04472d9600fc",
+          "observed_at": 1790509127.5582252,
+          "proposed_action": "Retain draft PR140 narrow candidate and qualify before any governed promotion",
+          "severity": "P1",
+          "source": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\portfolio-truth-reconcile-20260927\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json",
+          "test": "Unavailable deterministic claims must remain non-authoritative; preserve failed production receipt",
+          "verification": "OBSERVED_BYTES_NOT_REPAIR_VERIFICATION"
+        }
+      ],
+      "receipt": null,
+      "result": "UNVERIFIED",
+      "severity": "P1",
+      "source": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\portfolio-truth-reconcile-20260927\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json",
+      "status": "OPEN"
+    },
+    {
+      "code": "CODEX-CONVERSATION-LOAD",
+      "dependencies": [],
+      "dispositions": [],
+      "id": "a1c9d94525f926f0e9e83a0d79d4aaf0549636c763c97779ece2b666d23f19ba",
+      "observations": [
+        {
+          "code": "CODEX-CONVERSATION-LOAD",
+          "dependencies": [],
+          "evidence_ref": "C:\\Users\\Admin\\Documents\\ABEX\\recovery-records\\codex-ui-20260927\\READ-ONLY-LOG-DIAGNOSIS.md",
+          "evidence_sha256": "ab601f862197e9a028baafbde007db7e57a773c6fe6d9046c948eda4ff4ce947",
+          "id": "a1c9d94525f926f0e9e83a0d79d4aaf0549636c763c97779ece2b666d23f19ba",
+          "observation_digest": "3ebd54690afd244a80019c9da495219b92f85ff63469cd679d9370c6759dac62",
+          "observed_at": 1790509127.5844586,
+          "proposed_action": "Preserve owner-recovering evidence; bounded physical UI reload when convenient",
+          "severity": "P2",
+          "source": "C:\\Users\\Admin\\Documents\\ABEX\\recovery-records\\codex-ui-20260927\\READ-ONLY-LOG-DIAGNOSIS.md",
+          "test": "Actually display existing messages, submit a new message, and verify ordinary app reopen; logs alone are insufficient",
+          "verification": "OBSERVED_BYTES_NOT_REPAIR_VERIFICATION"
+        }
+      ],
+      "receipt": null,
+      "result": "UNVERIFIED",
+      "severity": "P2",
+      "source": "C:\\Users\\Admin\\Documents\\ABEX\\recovery-records\\codex-ui-20260927\\READ-ONLY-LOG-DIAGNOSIS.md",
+      "status": "OPEN"
+    },
+    {
+      "code": "WORKER-STOP-RESTART-LIFECYCLE",
+      "dependencies": [],
+      "dispositions": [],
+      "id": "d4eb195afa5d75a883dfee1232297396f34a99fa5466b151e8bd4adbfe11b2ab",
+      "observations": [
+        {
+          "code": "WORKER-STOP-RESTART-LIFECYCLE",
+          "dependencies": [],
+          "evidence_ref": "C:\\Users\\Admin\\Documents\\ABEX\\recovery-records\\worker-lifecycle-20260927\\baseline.txt",
+          "evidence_sha256": "372f6f9b16c3087b9ec551bda5f7a01a7510ca63511b8a065dfeee40ed0f1292",
+          "id": "d4eb195afa5d75a883dfee1232297396f34a99fa5466b151e8bd4adbfe11b2ab",
+          "observation_digest": "5b6d1c18707bf2a86c2cceb226b05299717440c91a8ddd7037f5ef49e78e6873",
+          "observed_at": 1790509127.5759976,
+          "proposed_action": "Repair isolated WorkerPool lifecycle and review stop/admission race",
+          "severity": "P2",
+          "source": "C:\\Users\\Admin\\Documents\\ABEX\\recovery-records\\worker-lifecycle-20260927\\baseline.txt",
+          "test": "Focused thread/process tests plus canonical regression; no production restart for testing",
+          "verification": "OBSERVED_BYTES_NOT_REPAIR_VERIFICATION"
+        }
+      ],
+      "receipt": null,
+      "result": "UNVERIFIED",
+      "severity": "P2",
+      "source": "C:\\Users\\Admin\\Documents\\ABEX\\recovery-records\\worker-lifecycle-20260927\\baseline.txt",
+      "status": "OPEN"
+    }
+  ],
+  "objective_id": "f0623f78-98dc-4c29-b924-d9cb50e840f9",
+  "objective_state": "ACTIVE",
+  "objective_version": 5,
+  "production_mutated": false,
+  "quiet_steady_state_qualified": false,
+  "recorded_at": "2026-09-27T11:38:47.722232+00:00",
+  "scope": "ISOLATED_CANDIDATE_CHECKPOINT_NOT_PRODUCTION",
+  "unresolved_critical_count": 2
+}

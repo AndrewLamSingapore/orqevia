@@ -16,11 +16,32 @@ def valid_receipt(path):
     }
 
 
-def test_evidence_bound_verifier_receipt_is_accepted(tmp_path,monkeypatch):
+def test_digest_bound_verifier_receipt_is_only_structurally_valid(tmp_path,monkeypatch):
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path/'data'))
     outcome=build_verify(root=tmp_path/'run',objective='fixture',builder=lambda *_:'candidate',
         verifier=valid_receipt,max_attempts=1)
-    assert outcome['state']=='VERIFIED_CANDIDATE'
+    assert outcome['state']=='RECEIPT_STRUCTURALLY_VALID'
+    assert outcome['independent_verification'] is False
+    assert outcome['production_acceptance'] is False
+
+
+def test_structured_fabricated_receipt_cannot_establish_independent_verification(tmp_path,monkeypatch):
+    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path/'data'))
+    nonexistent=tmp_path/'never-executed-verification.json'
+    def fabricated(path):
+        value=valid_receipt(path)
+        value['checks']=[{'name':'plausible-but-never-executed','status':'PASS','evidence_ref':str(nonexistent)}]
+        return value
+    outcome=build_verify(root=tmp_path/'run',objective='adversarial fixture',builder=lambda *_:'candidate',
+        verifier=fabricated,max_attempts=1)
+    assert not nonexistent.exists()
+    assert outcome['state']=='RECEIPT_STRUCTURALLY_VALID'
+    assert outcome['independent_verification'] is False
+    assert outcome['production_acceptance'] is False
+    assert outcome['attempts'][0]['verification']['independent_verification'] is False
+    observation=outcome['attempts'][0]['observation']
+    assert observation['receipt_structurally_valid'] is True
+    assert observation['final_artifact_validation'] is None
 
 
 @pytest.mark.parametrize('mutation',[

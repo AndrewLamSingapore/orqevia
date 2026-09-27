@@ -79,8 +79,10 @@ def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkey
                 'evidence_ref':'fixture:test_next_integration'}]}
     result=build_verify(root=tmp_path/'fixture-trial',objective='fixture only',builder=builder,
         verifier=verifier,model='fixture-model',backend='fixture-backend')
-    assert result['state']=='VERIFIED_CANDIDATE' and len(result['attempts'])==2
+    assert result['state']=='RECEIPT_STRUCTURALLY_VALID' and len(result['attempts'])==2
+    assert result['independent_verification'] is False and result['production_acceptance'] is False
     obs=result['attempts'][1]['observation']
-    assert obs['repair_cycles']==1 and obs['artifact_sha256_verified'] and obs['final_artifact_validation']
+    assert obs['repair_cycles']==1 and obs['artifact_sha256_verified'] and obs['receipt_structurally_valid']
+    assert obs['final_artifact_validation'] is None
     assert obs['input_tokens'] is None and obs['cost_usd'] is None and obs['handoff_accuracy'] is None
     assert calls[0] is None and calls[1]['passed'] is False and calls[1]['verdict']=='REJECT'

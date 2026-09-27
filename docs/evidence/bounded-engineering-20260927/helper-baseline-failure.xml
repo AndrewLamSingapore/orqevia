@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.257" timestamp="2026-09-27T19:43:44.500347+08:00" hostname="DESKTOP-27LKJ2V"><testcase classname="tests.test_engineering_verification_gate" name="test_structured_fabricated_receipt_cannot_establish_independent_verification" time="0.132"><failure message="AssertionError: assert 'VERIFIED_CANDIDATE' == 'RECEIPT_STRUCTURALLY_VALID'&#10;  &#10;  - RECEIPT_STRUCTURALLY_VALID&#10;  + VERIFIED_CANDIDATE">tmp_path = WindowsPath('C:/Users/Admin/AppData/Local/Temp/pytest-of-Admin/pytest-305/test_structured_fabricated_rec0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001DBBAE70B60&gt;
+
+    def test_structured_fabricated_receipt_cannot_establish_independent_verification(tmp_path,monkeypatch):
+        monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path/'data'))
+        nonexistent=tmp_path/'never-executed-verification.json'
+        def fabricated(path):
+            value=valid_receipt(path)
+            value['checks']=[{'name':'plausible-but-never-executed','status':'PASS','evidence_ref':str(nonexistent)}]
+            return value
+        outcome=build_verify(root=tmp_path/'run',objective='adversarial fixture',builder=lambda *_:'candidate',
+            verifier=fabricated,max_attempts=1)
+        assert not nonexistent.exists()
+&gt;       assert outcome['state']=='RECEIPT_STRUCTURALLY_VALID'
+E       AssertionError: assert 'VERIFIED_CANDIDATE' == 'RECEIPT_STRUCTURALLY_VALID'
+E         
+E         - RECEIPT_STRUCTURALLY_VALID
+E         + VERIFIED_CANDIDATE
+
+tests\test_engineering_verification_gate.py:36: AssertionError</failure></testcase></testsuite></testsuites>

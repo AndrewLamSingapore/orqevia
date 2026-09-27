@@ -269,7 +269,8 @@ class JobQueue:
         )
         return float(row["priority"] + boost)
 
-    def claim(self, worker_id: str, providers: list[Provider]) -> dict | None:
+    def claim(self, worker_id: str, providers: list[Provider], *,
+              admit: Callable[[], bool] | None = None) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued' LIMIT 1000").fetchall()
@@ -303,6 +304,11 @@ class JobQueue:
                                   (reason,estimate,utcnow(),utcnow(),row["id"]))
                         self._event(c,row["id"],"budget_blocked",{"reason":reason,"estimate":estimate})
                     continue
+                # The pool serializes this per-job admission decision with stop.
+                # A call delayed before admission cannot start an effect after
+                # stop; work admitted already is allowed to finish normally.
+                if admit is not None and not admit():
+                    return None
                 ts=utcnow();lease=time.time()+row["timeout_seconds"]+30
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
@@ -357,22 +363,46 @@ class WorkerPool:
     def __init__(self, queue: JobQueue, providers: list[Provider], execute: Callable[[dict,Provider],dict]):
         self.queue,self.providers,self.execute=queue,providers,execute
         self.stop_event=threading.Event(); self.threads:list[threading.Thread]=[]
+        self._lifecycle_lock=threading.RLock()
 
     def start(self) -> None:
-        if self.threads:return
-        for index in range(self.queue.policy.global_concurrency):
-            t=threading.Thread(target=self._run,args=(f"worker-{index+1}",),daemon=True);t.start();self.threads.append(t)
+        with self._lifecycle_lock:
+            self.threads=[t for t in self.threads if t.is_alive()]
+            if self.threads:
+                if self.stop_event.is_set():
+                    raise RuntimeError('Worker pool is still stopping; in-flight workers must finish before restart')
+                return
+            # Clearing the shared stop flag while an old worker lives would
+            # revive it alongside the replacement pool and violate concurrency.
+            self.stop_event.clear()
+            for index in range(self.queue.policy.global_concurrency):
+                t=threading.Thread(target=self._run,args=(f"worker-{index+1}",),daemon=True)
+                self.threads.append(t);t.start()
 
     def stop(self) -> None:
-        self.stop_event.set()
-        self.queue.wake.set()
-        for t in self.threads:t.join(timeout=3)
-        self.threads=[]
+        with self._lifecycle_lock:
+            self.stop_event.set()
+            self.queue.wake.set()
+            stopping=tuple(self.threads)
+        deadline=time.monotonic()+3
+        # A finishing handler may itself request stop. Never hold the lifecycle
+        # lock while joining it or while waiting for a blocked queue claim.
+        for t in stopping:
+            if t is not threading.current_thread():
+                t.join(timeout=max(0,deadline-time.monotonic()))
+        with self._lifecycle_lock:
+            # A bounded shutdown is not proof that a running effect ended.
+            # Retain live workers; never cancel/requeue their jobs here.
+            self.threads=[t for t in self.threads if t.is_alive()]
+
+    def _admit(self) -> bool:
+        with self._lifecycle_lock:
+            return not self.stop_event.is_set()
 
     def _run(self, worker_id: str) -> None:
         while not self.stop_event.is_set():
             self.queue.wake.clear()
-            self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers)
+            self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers,admit=self._admit)
             if not job:
                 self.queue.wake.wait(.5)
                 continue

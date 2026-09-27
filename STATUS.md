@@ -106,6 +106,24 @@ observations without erasing failures. W3-01 remains PARKED. No source-only
 reconciliation deploys software, changes identity, creates customer evidence or
 reopens physical acceptance.
 
+### Claimed, not independently checked — engineering paused, 27 September 2026
+
+The Owner requested a safe pause at approximately 19:45 SGT. Candidate-only
+worker lifecycle repairs, bounded continuity journals, an evidence-indexed
+backlog adapter, and an immutable source-reader foundation are preserved on
+`feat/bounded-engineering-continuity-20260927`. None is deployed. The first
+canonical run passed 653 tests with one platform skip, but it predates the final
+helper-status and nested-observation corrections; final full regression remains
+pending. Focused post-correction results and retained independent failures are
+in the [pause receipt](docs/evidence/BOUNDED_ENGINEERING_PAUSE_20260927.md).
+
+Permanent PRIME-owned engineering autonomy is **PARTIAL / NOT ESTABLISHED**, not
+PASS. The two production Evidence Lens P1 findings above remain open. Accepted
+Golden Gen 2, rollback, identities and production data remain protected. Resume
+quiet observation during the Owner-requested pause; do not start new engineering
+or promotion until the Owner resumes. This source-candidate record does not move
+anything into Lam's Verified sections or claim the requested final steady state.
+
 ## PRIME / VELYQUA / ABEX
 
 ### Verified (Lam personally confirmed the evidence)
