@@ -1,0 +1,37 @@
+{
+  "CANDIDATE SHA": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "IMAGE": "UNPROVEN: no independently acquired immutable successor image/digest bound to this SHA",
+  "SOURCE INTEGRITY": "PASS / PROVEN_BY_AUTOMATION: 509 blob hashes, full tree and exact commit matched; clean checkout; relevant authentic history restored. Exact successor freeze receipt not established.",
+  "CANONICAL REGRESSION": "FAIL: complete tests/ run 987 passed, 2 failed, 0 skipped. Both failures share receipt newline defect. Canonical subset 516 pass; PWA/Dell Node60 pass; Dell packaging3 pass; reproducible source manifest pass.",
+  "DELL ADVERSARIAL REGRESSION": "FAIL / PROVEN_BY_AUTOMATION, independently authored outside ABEX. Voice8:3 pass5 fail (2 P2 groups plus defensive gaps); candidate-provenance API accepts fabricated claims/dirty/wrong checkout. Native Dell run UNPROVEN.",
+  "P0": "None identified in performed scope; absence system-wide UNPROVEN",
+  "P1": "None identified in performed scope; absence system-wide UNPROVEN",
+  "P2": "4 finding groups: stale speech callback/attempt identity; missing post-start terminal watchdog; receipt newline-dependent digest; candidate-provenance checker trusts self-authored verification and does not bind checkout. Checker findings have no demonstrated production caller.",
+  "MIGRATION": "BLOCKED: independent target-image migration rehearsal not performed",
+  "ROLLBACK": "BLOCKED: independent target/previous-image rollback rehearsal not performed",
+  "IDENTITY": "UNPROVEN: native Dell binding and exact authenticated ABEX deployment identity absent",
+  "AUTHORITY": "UNPROVEN overall; provenance checker challenge FAIL; no demonstrated production authority bypass",
+  "PROVENANCE": "FAIL in candidate checker/evidence-binding scope; exact source integrity separately passes",
+  "SESSION/RECONNECT": "Scoped canonical software tests pass; native-device/session/restart acceptance UNPROVEN",
+  "PWA/CACHE": "Scoped Node source tests pass; installed iPhone cache/version/offline transitions UNPROVEN",
+  "PHYSICAL GATES REMAINING": [
+    "Owner audible iPhone English/Chinese Read Aloud with exact deployed revision",
+    "Owner tap/Stop/replay and interruptions",
+    "Actual PWA cache/update/offline/reconnect behavior",
+    "Physical Dell commissioning and scheduled/restart observation"
+  ],
+  "UNPROVEN CLAIMS": [
+    "This chat runs on physical Dell",
+    "Permanent native independent certification service installed",
+    "DeepSeek credential/live API/native Codex profile operational",
+    "Current successor image and approved/deployed identity correspondence",
+    "Independent migration and rollback readiness",
+    "Full mandatory adversarial coverage on native Dell",
+    "Longer-duration reliability and prediction accuracy",
+    "Physical audibility or root cause of historical iPhone silence"
+  ],
+  "PROMOTION VERIFICATION": "FAIL: do not issue PROMOTION_VERIFICATION_PASS for this source",
+  "PASS / FAIL / BLOCKED": "FAIL, with additional BLOCKED gates",
+  "EVIDENCE ARTIFACT": "See EVIDENCE.md for archive and SHA-256; raw initial and successor verification runs retained",
+  "next_action": "ABEX repairs via successor; native Dell Codex completes START-HERE.md. No repair to audited candidate or ABEX production occurred."
+}

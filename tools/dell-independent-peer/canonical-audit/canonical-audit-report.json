@@ -1,0 +1,95 @@
+{
+  "candidate_sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "tree": "4896b20bf5a036f59d0fb3702a14b9e240a3aacd",
+  "original_worktree": "",
+  "execution_copy_worktree": "",
+  "host": "Linux cloud; not physical Dell",
+  "qualification": "PROVEN_BY_AUTOMATION only; PROVEN_BY_INDEPENDENT_DELL not established",
+  "canonical_ci": {
+    "python_pass": 516,
+    "node_pass": 60,
+    "packaging_pass": 3,
+    "fail": 0,
+    "skip": 0,
+    "reproducible_source_manifests": true,
+    "source_manifest_sha256": "53f3e31539b9e6febd525b5a762e1cacce2ccdb80e1f8f3fe54f06f040c85ac5"
+  },
+  "full_python_suite": {
+    "pass": 981,
+    "fail": 8,
+    "skip": 0,
+    "warnings": 5,
+    "total": 989,
+    "note": "Canonical subset and separately run 47 Phase2 tests overlap this full run; do not add overlapping counts. Full Python 989 + Dell packaging 3 = 992."
+  },
+  "full_suite_failures": [
+    {
+      "test": "tests.test_abex_runtime_receipt::test_current_abex_observation_is_valid_but_not_independent_acceptance",
+      "message": "AssertionError: assert ['source_evid..._unavailable'] == []\n  \n  Left contains one more item: 'source_evidence_unavailable'\n  \n  Full diff:\n  - []\n  + [\n  +     'source_evidence_unavailable',\n  + ]",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    },
+    {
+      "test": "tests.test_accept_abex_runtime::test_exact_documents_bind_independent_verification_to_receipt",
+      "message": "AssertionError: ABEX receipt bytes mismatch",
+      "classification": "P2_CANDIDATE_RECEIPT_BYTE_BINDING_DEFECT"
+    },
+    {
+      "test": "tests.test_golden_gen1::test_golden_gen1_manifest_binds_authoritative_evidence",
+      "message": "subprocess.CalledProcessError: Command '['git', 'show', '17fad78d410dca5d9101483cb777a2b9b619bac3:config/agent_registry.json']' returned non-zero exit status 128.",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    },
+    {
+      "test": "tests.test_golden_gen1::test_golden_gen1_rejects_authority_and_generation_drift",
+      "message": "subprocess.CalledProcessError: Command '['git', 'show', '17fad78d410dca5d9101483cb777a2b9b619bac3:config/agent_registry.json']' returned non-zero exit status 128.",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    },
+    {
+      "test": "tests.test_phase2_candidate_manifest::test_phase2_candidate_manifest_is_fail_closed",
+      "message": "AssertionError: assert ['lineage_probe'] == []\n  \n  Left contains one more item: 'lineage_probe'\n  \n  Full diff:\n  - []\n  + [\n  +     'lineage_probe',\n  + ]",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    },
+    {
+      "test": "tests.test_phase2_freeze::test_exact_frozen_candidate_receipt_passes",
+      "message": "subprocess.CalledProcessError: Command '['git', 'rev-parse', 'jarvis-prime-phase2-candidate-20260926^{}']' returned non-zero exit status 128.",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    },
+    {
+      "test": "tests.test_phase2_freeze::test_freeze_rejects_self_promotion_and_digest_drift",
+      "message": "subprocess.CalledProcessError: Command '['git', 'rev-parse', 'jarvis-prime-phase2-candidate-20260926^{}']' returned non-zero exit status 128.",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    },
+    {
+      "test": "tests.test_phase2_freeze::test_replacement_v2_freeze_receipt_passes_exact_bindings",
+      "message": "subprocess.CalledProcessError: Command '['git', 'rev-parse', 'jarvis-prime-phase2-candidate-v2-20260926^{}']' returned non-zero exit status 128.",
+      "classification": "ENVIRONMENT_BLOCKER_MISSING_GIT_HISTORY"
+    }
+  ],
+  "independent_challenges": {
+    "findings": [
+      "All test/verifier/security receipts fabricated by one actor and arbitrary unbuilt artifact are accepted by candidate_provenance verifier.",
+      "Dirty worktree and a checkout whose HEAD differs from declared source are accepted by candidate_provenance verifier.",
+      "Malformed source_sha, remote_sha and branch types cause uncaught TypeError rather than a structured rejection."
+    ],
+    "severity": "Proposed P2 checker correctness findings. No production caller of verify_candidate_package found; do not claim production exploitation. Trust-binding gap would be P1 if used as a promotion authority.",
+    "reproduction": "provenance-reproduction.py",
+    "results": "provenance-reproduction.json"
+  },
+  "manifest_binding": "No native freeze/image/qualification receipt for exact candidate 091e2f9 was available in this checkout. Historical freeze receipts cannot qualify this revision.",
+  "migration": "UNPROVEN: fixture behavior passed, but no exact candidate image + representative pre-upgrade data migration rehearsal. Declared NONE in manifest is not a rehearsal.",
+  "rollback": "UNPROVEN: retained historical image IDs and PowerShell image-presence checks are not an independently executed rollback + data recovery rehearsal. Docker unavailable.",
+  "release_acceptance_remaining": [
+    "Historical Git lineage and byte-pinned receipts",
+    "PowerShell operator parsing on appropriate runtime",
+    "Compose validation",
+    "Production image build identity",
+    "Docker execution and persistence acceptance",
+    "Migration and rollback rehearsals"
+  ],
+  "physical_gates": [
+    "Owner must observe audible iPhone speech. Fake SpeechSynthesis start/end callbacks do not prove audible output.",
+    "Physical iPhone PWA cache/version transitions, session recovery, offline/reconnect and real output remain device gates."
+  ],
+  "production_touched": false,
+  "candidate_modified": false,
+  "promotion_verification": "FAIL: unresolved independently reproduced P2 receipt byte-binding defect and checker defects; additional image/device/rehearsal/history gates BLOCKED or UNPROVEN."
+}

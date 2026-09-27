@@ -1,0 +1,96 @@
+...F.................................................................... [  7%]
+........................................................................ [ 14%]
+........................................................................ [ 21%]
+........................................................................ [ 29%]
+.................................F...................................... [ 36%]
+........................................................................ [ 43%]
+........................................................................ [ 50%]
+........................................................................ [ 58%]
+........................................................................ [ 65%]
+........................................................................ [ 72%]
+........................................................................ [ 80%]
+........................................................................ [ 87%]
+........................................................................ [ 94%]
+.....................................................                    [100%]
+=================================== FAILURES ===================================
+________ test_exact_documents_bind_independent_verification_to_receipt _________
+
+    def test_exact_documents_bind_independent_verification_to_receipt():
+>       artifact,receipt=validate_documents(ROOT/'docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json',ROOT/'docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_accept_abex_runtime.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+artifact_path = PosixPath('/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/execution-copy/docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json')
+receipt_path = PosixPath('/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/execution-copy/docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json')
+
+    def validate_documents(artifact_path: Path, receipt_path: Path) -> tuple[dict, dict]:
+        assert artifact_path.stat().st_size == 7804 and digest(artifact_path) == ARTIFACT_SHA, "independent artifact bytes mismatch"
+>       assert digest(receipt_path) == RECEIPT_SHA, "ABEX receipt bytes mismatch"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ABEX receipt bytes mismatch
+
+scripts/accept_abex_runtime.py:28: AssertionError
+____________ test_golden_gen1_manifest_binds_authoritative_evidence ____________
+
+    def test_golden_gen1_manifest_binds_authoritative_evidence():
+        value = json.loads(MANIFEST.read_text(encoding="utf-8"))
+>       assert validate(value) == []
+E       AssertionError: assert ['receipt_digest'] == []
+E         
+E         Left contains one more item: 'receipt_digest'
+E         
+E         Full diff:
+E         - []
+E         + [
+E         +     'receipt_digest',
+E         + ]
+
+tests/test_golden_gen1.py:10: AssertionError
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/starlette/testclient.py:51
+  /workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_portal_api.py::PortalApiTests::test_ingest_get_and_idempotency
+  /workspace/scratch/e46efedd3273/dell-peer/canonical-audit/execution-copy/app/main.py:634: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event('startup')
+
+tests/test_portal_api.py::PortalApiTests::test_ingest_get_and_idempotency
+tests/test_portal_api.py::PortalApiTests::test_ingest_get_and_idempotency
+  /workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/lib/python3.12/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+tests/test_portal_api.py::PortalApiTests::test_ingest_get_and_idempotency
+  /workspace/scratch/e46efedd3273/dell-peer/canonical-audit/execution-copy/app/main.py:638: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event('shutdown')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_accept_abex_runtime.py::test_exact_documents_bind_independent_verification_to_receipt - AssertionError: ABEX receipt bytes mismatch
+FAILED tests/test_golden_gen1.py::test_golden_gen1_manifest_binds_authoritative_evidence - AssertionError: assert ['receipt_digest'] == []
+  
+  Left contains one more item: 'receipt_digest'
+  
+  Full diff:
+  - []
+  + [
+  +     'receipt_digest',
+  + ]
+2 failed, 987 passed, 5 warnings in 10.31s

@@ -1,0 +1,60 @@
+[
+  {
+    "source_receipt": "PHASE2_CANDIDATE_FREEZE_RECEIPT_20260926.json",
+    "repository": "AndrewLamSingapore/prime",
+    "branch": "feat/phase2-unified-intelligence-20260926",
+    "commit": "325c901836f51a4d6f39376766b114acdd7b506d",
+    "tree": "5b53f098e545eb0c8ae05ab8574a0322666d5b59",
+    "tag": "jarvis-prime-phase2-candidate-20260926",
+    "tag_object": "f293917c2799cf4dfc7f3e3a96d2b10080701252",
+    "remote_commit_verified": true,
+    "remote_tag_verified": true,
+    "bindings": {
+      "governance/phase2-candidate-manifest.json": "66493d1a2c1bce1d9213268d5f85d4a0816725405d9f68f41ab82bd735d4b1a0",
+      "governance/evidence-product-v0.1-manifest.json": "08f2fae77bd8f214557ae620661eda5995c44ebeda3855ab68f3bccbbf3664ba",
+      "governance/action-envelope-v0.1.schema.json": "dc833872b115a89bc53ec38d9bceff9fd741c903d534382f78d23296001c05fc",
+      "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md": "9ca89b24d9e48855bed0c8ebf784db45fbcb6d21a9930d3ebea49794801afef8",
+      "docs/EVIDENCE-PRODUCT-SSOT-v0.1.md": "b3ef8bee6b4bc66203e5d1be4ed1e419969ee220ea3b525a112879f46e6cd3c6",
+      "docs/ACTION-ENVELOPE-STANDARD-v0.1.md": "ecd46231869e0aa7880668d8a1afb663f4137fdd01a35075c956ea953b0ac3f6",
+      "docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json": "1a6ab2f684ba38cac0f23701b96b7766b82d1d8501480167957d0c1719517711",
+      "config/agent_registry.json": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6"
+    }
+  },
+  {
+    "source_receipt": "PHASE2_CANDIDATE_V2_FREEZE_RECEIPT_20260926.json",
+    "branch": "feat/phase2-unified-intelligence-20260926",
+    "commit": "c95ed89c384506b51f9d70acb14e75ca10832f27",
+    "tree": "edd2db56a2689509e8c9e4076e23503514d72034",
+    "tag": "jarvis-prime-phase2-candidate-v2-20260926",
+    "tag_object": "4b9972d927cf84b3a589c6bc496c77501dc10c96",
+    "remote_commit_verified": true,
+    "remote_tag_verified": true,
+    "bindings": {
+      "governance/phase2-candidate-manifest.json": "8d3dd646effed5d9b66c76604b3712cd704922e8e1489345f3aedcb9ecb34b36",
+      "governance/evidence-product-v0.1-manifest.json": "08f2fae77bd8f214557ae620661eda5995c44ebeda3855ab68f3bccbbf3664ba",
+      "governance/action-envelope-v0.1.schema.json": "dc833872b115a89bc53ec38d9bceff9fd741c903d534382f78d23296001c05fc",
+      "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md": "9ca89b24d9e48855bed0c8ebf784db45fbcb6d21a9930d3ebea49794801afef8",
+      "docs/EVIDENCE-PRODUCT-SSOT-v0.1.md": "b3ef8bee6b4bc66203e5d1be4ed1e419969ee220ea3b525a112879f46e6cd3c6",
+      "docs/ACTION-ENVELOPE-STANDARD-v0.1.md": "ecd46231869e0aa7880668d8a1afb663f4137fdd01a35075c956ea953b0ac3f6",
+      "docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json": "bf14c49a8de22f51cdb9c426ec881a9848b74dc285f00c4586510d3b31ffd6a4",
+      "config/agent_registry.json": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6"
+    }
+  },
+  {
+    "commit": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "paths": [
+      "config/agent_registry.json",
+      "system.manifest.json",
+      "clients/pwa/index.html",
+      "clients/pwa/app.mjs",
+      "clients/pwa/sw.js",
+      "clients/pwa/release.mjs",
+      "clients/pwa/recovery.js"
+    ]
+  },
+  {
+    "tag": "jarvis-prime-golden-gen1-20260926",
+    "commit": "26f7d49cfe7134f8665dda5886111e91b574554d",
+    "requires": "Authentic ancestry from candidate091e2f9 to golden26f7d49 for git merge-base; object identities must be verified, no fabricated lineage."
+  }
+]

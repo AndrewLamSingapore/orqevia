@@ -1,0 +1,10 @@
+{
+  "source_sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "tree": "4896b20bf5a036f59d0fb3702a14b9e240a3aacd",
+  "git_status_porcelain": "",
+  "history_restored_for_all_tested_refs": true,
+  "all_509_source_blobs_verified": true,
+  "candidate_source_mutated": false,
+  "production_mutated": false,
+  "native_dell_execution": false
+}

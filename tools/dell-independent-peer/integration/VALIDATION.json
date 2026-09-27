@@ -1,0 +1,32 @@
+{
+  "schema": "dell.integration.validation.v1",
+  "date": "2026-09-27",
+  "execution_host": "ChatGPT Linux workspace, not physical Dell",
+  "python_boundary_tests": {
+    "status": "PASS",
+    "count": 7,
+    "command": "python -m unittest discover -s integration -p test_deepseek_review.py",
+    "observed": "Ran 7 tests in 0.006s; OK",
+    "network_calls": "mocked only"
+  },
+  "toml_syntax": {
+    "status": "PASS",
+    "parser": "Python 3.12 tomllib"
+  },
+  "initial_test_harness_failure": {
+    "status": "PRESERVED_IN_RECORD",
+    "detail": "An overbroad mock of os.environ.get blocked argparse/gettext locale discovery. Changed test to forbid only DEEPSEEK_API_KEY lookup. Initial run: 7 tests; 1 failure. Subsequent run: 7 tests; PASS."
+  },
+  "windows_execution": "UNPROVEN",
+  "codex_live_profile_load": "UNPROVEN",
+  "deepseek_api_connectivity": "UNPROVEN",
+  "physical_dell_installation": "NOT_PERFORMED",
+  "abex_access_or_mutation": "NONE",
+  "credential_values_accessed": "NONE; only synthetic test placeholder",
+  "permanent_observer": "NOT_ACTIVATED",
+  "native_launcher": "BLOCKED_IN_CODE: no Codex launch or key access; effective inherited tool authority not locally verified",
+  "review_finding": {
+    "issue": "Named profile/read-only shell inherited potentially mutation-capable Codex MCP/app/hook/plugin configuration.",
+    "resolution": "Native launcher now unconditionally blocks. Separate exact-file API wrapper supplies a no-tools route. Existing config and CODEX_HOME are unchanged."
+  }
+}

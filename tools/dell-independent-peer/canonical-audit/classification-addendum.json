@@ -1,0 +1,11 @@
+{
+  "candidate": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "prior_report_sha256": "92adeeeaed0953a885afae1884304d71f4cde84442794614419a82ef81f1d463",
+  "classification_refinement": {
+    "P2_receipt_binding": "One confirmed receipt CRLF/LF mismatch defect (canonical committed LF bytes) blocks historical helper on Linux. No candidate modification.",
+    "P2_provenance_verifier": "Group self-minted receipts, unbuilt artifact acceptance, dirty checkout acceptance, and wrong checkout HEAD acceptance as ONE scoped checker trust/integrity defect; no production route found.",
+    "malformed_input_typeerrors": "Low-severity structured-rejection robustness finding within same checker, not a separate P2 count.",
+    "count_reconciliation": "989 full tests plus3 Dell packaging equals992 arithmetically. It is an inference, not proof, that this explains another report's992; exact command/log required."
+  },
+  "missing_history": "Seven failures currently environmental; rerun separately when authentic objects restored. Do not overwrite first failed run."
+}

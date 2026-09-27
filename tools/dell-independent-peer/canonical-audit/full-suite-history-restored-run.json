@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "no:cacheprovider",
+    "-q",
+    "--basetemp",
+    "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/full-suite-history-restored-temp",
+    "--junitxml",
+    "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/full-suite-history-restored.xml",
+    "tests"
+  ],
+  "exit_code": 1,
+  "scope": "Full tests directory; authentic Git history and bound historical blobs restored; source content unchanged"
+}

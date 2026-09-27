@@ -1,0 +1,18 @@
+test_candidate_json_claims_cannot_become_trusted_context (__main__.ReviewFindings.test_candidate_json_claims_cannot_become_trusted_context) ... ok
+test_missing_post_finding_evidence_cannot_pass (__main__.ReviewFindings.test_missing_post_finding_evidence_cannot_pass) ... ok
+test_post_drift_never_exposes_current_promotion_pass (__main__.ReviewFindings.test_post_drift_never_exposes_current_promotion_pass) ... FAIL
+test_post_findings_and_gap_accounting_survive (__main__.ReviewFindings.test_post_findings_and_gap_accounting_survive) ... ok
+test_software_pass_keeps_physical_iphone_gate_open (__main__.ReviewFindings.test_software_pass_keeps_physical_iphone_gate_open) ... ok
+
+======================================================================
+FAIL: test_post_drift_never_exposes_current_promotion_pass (__main__.ReviewFindings.test_post_drift_never_exposes_current_promotion_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/e46efedd3273/dell-peer/review/test_review_findings.py", line 39, in test_post_drift_never_exposes_current_promotion_pass
+    self.assertNotEqual(report["PROMOTION VERIFICATION"], "PROMOTION_VERIFICATION_PASS")
+AssertionError: 'PROMOTION_VERIFICATION_PASS' == 'PROMOTION_VERIFICATION_PASS'
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.007s
+
+FAILED (failures=1)

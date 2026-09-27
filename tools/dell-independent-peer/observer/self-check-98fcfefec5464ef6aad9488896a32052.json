@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "OBSERVER_SELF_CHECK_ONLY_NOT_CANDIDATE_VERIFICATION",
+  "observed_at_utc": "2026-09-27T03:13:14.439024+00:00",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "test_abbreviated_or_conflicting_refs_block (test_observer.ObserverChecks.test_abbreviated_or_conflicting_refs_block) ... ok\ntest_classification_has_no_approval_semantics (test_observer.ObserverChecks.test_classification_has_no_approval_semantics) ... ok\ntest_corrupt_baseline_blocks_without_overwrite (test_observer.ObserverChecks.test_corrupt_baseline_blocks_without_overwrite) ... ok\ntest_evidence_failure_does_not_advance_baseline (test_observer.ObserverChecks.test_evidence_failure_does_not_advance_baseline) ... ok\ntest_full_shas_and_annotated_tag_peeling (test_observer.ObserverChecks.test_full_shas_and_annotated_tag_peeling) ... ok\ntest_git_auth_failure_uses_existing_gh_read_only_fallback (test_observer.ObserverChecks.test_git_auth_failure_uses_existing_gh_read_only_fallback) ... ok\ntest_history_baseline_noop_change_and_delete (test_observer.ObserverChecks.test_history_baseline_noop_change_and_delete) ... ok\ntest_host_binding_is_observational_and_rejects_mismatch (test_observer.ObserverChecks.test_host_binding_is_observational_and_rejects_mismatch) ... ok\ntest_linux_is_blocked_without_creating_state (test_observer.ObserverChecks.test_linux_is_blocked_without_creating_state) ... ok\ntest_malformed_host_binding_blocks_without_replacement (test_observer.ObserverChecks.test_malformed_host_binding_blocks_without_replacement) ... ok\ntest_prior_fail_is_never_replaced (test_observer.ObserverChecks.test_prior_fail_is_never_replaced) ... ok\ntest_remote_failure_is_preserved_and_does_not_advance_baseline (test_observer.ObserverChecks.test_remote_failure_is_preserved_and_does_not_advance_baseline) ... ok\ntest_single_instance_lock_blocks_reentry_and_releases (test_observer.ObserverChecks.test_single_instance_lock_blocks_reentry_and_releases) ... ok\ntest_stdout_budget_stops_large_output (test_observer.ObserverChecks.test_stdout_budget_stops_large_output) ... ok\ntest_timeout_and_stderr_never_expose_credentials (test_observer.ObserverChecks.test_timeout_and_stderr_never_expose_credentials) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.077s\n\nOK\n",
+  "files": {
+    "observer.py": "8b4e51a3c7c8cc1f5de4aca8f21ee2db1c2deefe0379e49dc5d725ecb97b75fc",
+    "README.md": "c31b4d466e98c6799fcbcc75064ccbea6b4cc6d54548c838ccc44b853c7678f7",
+    "Install-DellObserver.ps1": "219abf944cb4665219f23f37e026b4c55b21924e1f5dea04c4ec891f9edaa41c",
+    "Uninstall-DellObserver.ps1": "8f0ed202330a14dc66b70fc05a2c063cb4da77f8c764f9367e7aa289af2c77d5",
+    "test_observer.py": "400d5fbb7d65a8218e2490959e7060cb38eb4de48b6690d036b1789263ba8678"
+  },
+  "native_windows_task_installation": "UNPROVEN",
+  "native_windows_powershell_parse": "UNPROVEN_POWERSHELL_UNAVAILABLE",
+  "linux_native_binding_guard": "BLOCKED_NATIVE_WINDOWS_DELL_REQUIRED",
+  "physical_iphone_audio": "UNPROVEN"
+}

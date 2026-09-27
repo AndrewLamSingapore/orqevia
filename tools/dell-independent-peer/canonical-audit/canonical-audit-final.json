@@ -1,0 +1,96 @@
+{
+  "candidate_sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "tree": "4896b20bf5a036f59d0fb3702a14b9e240a3aacd",
+  "source_clean": true,
+  "execution_copy_clean": true,
+  "host": "Linux cloud; not physical Dell",
+  "qualification": "PROVEN_BY_AUTOMATION",
+  "initial_full_suite": {
+    "passed": 981,
+    "failed": 8,
+    "skipped": 0,
+    "preserved_log": "full-suite.log",
+    "report_sha256": "92adeeeaed0953a885afae1884304d71f4cde84442794614419a82ef81f1d463"
+  },
+  "history_restoration": {
+    "method": "Authentic GitHub API commit/tag/tree/blob fields reconstructed and object hashes verified before import. No fabricated lineage.",
+    "imported_commits": 100,
+    "imported_tags": 3,
+    "tree_objects": 126,
+    "missing_required_historical_blobs": 0,
+    "merge_base_to_golden": "26f7d49cfe7134f8665dda5886111e91b574554d",
+    "source_content_changes": 0
+  },
+  "final_full_suite": {
+    "passed": 987,
+    "failed": 2,
+    "skipped": 0,
+    "total": 989,
+    "warnings": 5,
+    "seconds": 10.31,
+    "log": "full-suite-history-restored.log",
+    "junit": "full-suite-history-restored.xml"
+  },
+  "failures": [
+    {
+      "test": "tests.test_accept_abex_runtime::test_exact_documents_bind_independent_verification_to_receipt",
+      "message": "AssertionError: ABEX receipt bytes mismatch",
+      "root_cause": "P2 receipt newline binding mismatch"
+    },
+    {
+      "test": "tests.test_golden_gen1::test_golden_gen1_manifest_binds_authoritative_evidence",
+      "message": "AssertionError: assert ['receipt_digest'] == []\n  \n  Left contains one more item: 'receipt_digest'\n  \n  Full diff:\n  - []\n  + [\n  +     'receipt_digest',\n  + ]",
+      "root_cause": "P2 receipt newline binding mismatch"
+    }
+  ],
+  "canonical_subset": {
+    "passed": 516,
+    "failed": 0,
+    "skipped": 0,
+    "overlaps_full_suite": true
+  },
+  "node_regression": {
+    "passed": 60,
+    "failed": 0,
+    "skipped": 0
+  },
+  "dell_packaging": {
+    "passed": 3,
+    "failed": 0
+  },
+  "reproducible_source_package": {
+    "matched": true,
+    "source_manifest_sha256": "53f3e31539b9e6febd525b5a762e1cacce2ccdb80e1f8f3fe54f06f040c85ac5"
+  },
+  "P0": 0,
+  "P1": 0,
+  "P2_findings": [
+    {
+      "id": "RECEIPT_EOL_BINDING",
+      "scope": "Historical acceptance helper and Golden verifier",
+      "actual_receipt_sha256": "a84d531833665336254392adf2c4b0121c814ce9ea52ac8b2e001ae5be3abc8f",
+      "expected_CRLF_sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+      "evidence": "receipt-newline-finding.json"
+    },
+    {
+      "id": "PROVENANCE_CHECKER_TRUST_BINDING",
+      "scope": "app.candidate_provenance.verify_candidate_package API; no production caller found",
+      "behavior": "Accepts self-fabricated test/verifier/security receipts, arbitrary unbuilt artifact, dirty checkout and checkout whose HEAD differs from source_sha. Group as one checker integrity finding.",
+      "evidence": "provenance-reproduction.json",
+      "additional_lower_severity_observation": "Malformed source_sha, remote_sha and branch values cause uncaught TypeError; not a separate P2."
+    }
+  ],
+  "remaining_gates": [
+    "Exact candidate native freeze/qualification receipt unavailable",
+    "Candidate image digest and source/image build provenance unavailable",
+    "Migration rehearsal unproven",
+    "Rollback/recovery rehearsal unproven",
+    "PowerShell and Docker release-acceptance unexecuted",
+    "Physical iPhone audible speech and other physical UI behavior require actual device observation",
+    "Longer observation required for stability claims"
+  ],
+  "promotion_verification": "FAIL",
+  "production_touched": false,
+  "independent_dell_proven": false,
+  "count_inference": "989 full Python tests +3 Dell packaging=992; this may explain an external992 claim but exact external execution receipt remains required."
+}

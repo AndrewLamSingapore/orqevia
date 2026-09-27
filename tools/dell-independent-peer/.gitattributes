@@ -1,0 +1,6 @@
+* text eol=lf
+canonical-audit/** -text
+review/run-*/** -text
+review/observer-run-*/** -text
+challenges/voice-091e2f9/** -text
+challenges/portable-validation-*/** -text

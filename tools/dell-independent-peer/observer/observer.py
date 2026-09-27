@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+"""Passive, native-Dell ref observer. No candidate execution or promotion authority."""
+import argparse
+import contextlib
+import datetime as dt
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import queue
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import uuid
+
+REPOSITORY = "AndrewLamSingapore/prime"
+REMOTE = "https://github.com/AndrewLamSingapore/prime.git"
+CANONICAL_REF = "refs/heads/feat/supreme-integration-20260925"
+KNOWN_SUCCESSOR = "091e2f919edb1711b5a9e88404818095fa32b537"
+FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
+MAX_OUTPUT = 2 * 1024 * 1024
+
+
+class Blocked(Exception):
+    pass
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def canonical_bytes(value):
+    return (json.dumps(value, sort_keys=True, indent=2) + "\n").encode("utf-8")
+
+
+def atomic_json(path, value):
+    """Replace derived state only; this function is never used for evidence records."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=".pending-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(canonical_bytes(value))
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def append_record(root, record):
+    """Create a new artifact exclusively. Existing FAILs or records are never replaced."""
+    data = canonical_bytes(record)
+    digest = hashlib.sha256(data).hexdigest()
+    directory = Path(root) / "inbox"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / (dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+                        + "-" + uuid.uuid4().hex + ".json")
+    with path.open("xb") as handle:
+        handle.write(data)
+        handle.flush()
+        os.fsync(handle.fileno())
+    with path.with_suffix(".sha256").open("x", encoding="ascii") as handle:
+        handle.write(digest + "  " + path.name + "\n")
+    return str(path), digest
+
+
+@contextlib.contextmanager
+def single_instance(root):
+    """OS lock releases on process exit; never delete/recreate the lock inode."""
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    with (root / "observer.lock").open("a+b") as handle:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"0")
+            handle.flush()
+        handle.seek(0)
+        try:
+            if sys.platform == "win32":
+                import msvcrt
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            raise Blocked("OBSERVER_ALREADY_RUNNING") from None
+        try:
+            yield
+        finally:
+            handle.seek(0)
+            if sys.platform == "win32":
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def run_command(args, timeout=40):
+    env = dict(os.environ)
+    env.update(GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never", GH_PROMPT_DISABLED="1")
+    try:
+        process = subprocess.Popen(args, shell=False, stdin=subprocess.DEVNULL,
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env)
+    except OSError:
+        raise Blocked("READ_ONLY_COMMAND_UNAVAILABLE_OR_TIMED_OUT") from None
+    chunks = queue.Queue(maxsize=4)
+    stopped = threading.Event()
+
+    def reader():
+        try:
+            while not stopped.is_set():
+                chunk = process.stdout.read1(65536)
+                while not stopped.is_set():
+                    try:
+                        chunks.put(chunk, timeout=0.1)
+                        break
+                    except queue.Full:
+                        pass
+                if not chunk:
+                    break
+        except (OSError, ValueError):
+            pass
+        finally:
+            process.stdout.close()
+
+    thread = threading.Thread(target=reader, daemon=True)
+    thread.start()
+    output = bytearray()
+    deadline = time.monotonic() + timeout
+    try:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise Blocked("READ_ONLY_COMMAND_UNAVAILABLE_OR_TIMED_OUT")
+            try:
+                chunk = chunks.get(timeout=min(remaining, 0.1))
+            except queue.Empty:
+                continue
+            if not chunk:
+                break
+            if len(output) + len(chunk) > MAX_OUTPUT:
+                raise Blocked("READ_ONLY_COMMAND_FAILED_OR_OUTPUT_LIMIT")
+            output.extend(chunk)
+        try:
+            code = process.wait(timeout=max(0.001, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            raise Blocked("READ_ONLY_COMMAND_UNAVAILABLE_OR_TIMED_OUT") from None
+        if code != 0:
+            raise Blocked("READ_ONLY_COMMAND_FAILED_OR_OUTPUT_LIMIT")
+    finally:
+        stopped.set()
+        if process.poll() is None:
+            process.kill()
+        process.wait()
+        thread.join(timeout=0.2)
+    # Raw stderr is discarded; stdout is only returned to strict ref/host parsers.
+    try:
+        return output.decode("utf-8")
+    except UnicodeDecodeError:
+        raise Blocked("INVALID_REMOTE_ENCODING") from None
+
+
+def classify(ref):
+    if ref == CANONICAL_REF:
+        return "CANONICAL_BRANCH_OBSERVATION"
+    name = ref.lower()
+    if name.startswith(("refs/heads/", "refs/tags/")):
+        if "candidate" in name or name.startswith("refs/heads/fix/") or re.search(r"phase[-_]?2", name):
+            return "CANDIDATE_REF_OBSERVATION"
+    return None
+
+
+def parse_git_refs(raw):
+    if not raw.strip():
+        raise Blocked("EMPTY_REMOTE_REF_RESPONSE")
+    refs, peeled = {}, {}
+    for line in raw.splitlines():
+        fields = line.split()
+        if len(fields) != 2 or not FULL_SHA.fullmatch(fields[0]):
+            raise Blocked("INVALID_REMOTE_REF_DATA")
+        sha, ref = fields
+        if ref.endswith("^{}"):
+            target = peeled
+            ref = ref[:-3]
+        else:
+            target = refs
+        if ref in target and target[ref] != sha:
+            raise Blocked("CONFLICTING_REMOTE_REF_DATA")
+        target[ref] = sha
+    return {ref: {"source_sha": peeled.get(ref, sha), "ref_object_sha": sha,
+                  "source_identity": "OBSERVED_REMOTE_COMMIT_NOT_CONTENT_VERIFIED"}
+            for ref, sha in refs.items() if classify(ref)}
+
+
+def read_refs():
+    git = shutil.which("git")
+    if git:
+        try:
+            raw = run_command([git, "ls-remote", REMOTE, "refs/heads/*", "refs/tags/*"])
+            return parse_git_refs(raw), "git_ls_remote"
+        except Blocked:
+            pass
+    gh = shutil.which("gh")
+    if gh:
+        refs = {}
+        for kind, namespace in (("branches", "heads"), ("tags", "tags")):
+            raw = run_command([gh, "api", "--paginate", "--slurp",
+                               "repos/" + REPOSITORY + "/" + kind + "?per_page=100"])
+            try:
+                pages = json.loads(raw)
+                if not isinstance(pages, list):
+                    raise ValueError()
+                for page in pages:
+                    if not isinstance(page, list):
+                        raise ValueError()
+                    for entry in page:
+                        ref = "refs/" + namespace + "/" + entry["name"]
+                        sha = entry["commit"]["sha"]
+                        if not FULL_SHA.fullmatch(sha):
+                            raise ValueError()
+                        if classify(ref):
+                            refs[ref] = {"source_sha": sha, "ref_object_sha": None,
+                                         "source_identity": "OBSERVED_REMOTE_COMMIT_NOT_CONTENT_VERIFIED"}
+            except (ValueError, KeyError, TypeError):
+                raise Blocked("INVALID_REMOTE_REF_DATA") from None
+        return refs, "github_cli_api"
+    raise Blocked("NO_WORKING_NATIVE_GIT_OR_GH_READ_ACCESS")
+
+
+def host_identity():
+    if sys.platform != "win32" or os.environ.get("WSL_DISTRO_NAME"):
+        raise Blocked("NATIVE_WINDOWS_DELL_REQUIRED")
+    powershell = shutil.which("powershell.exe")
+    if not powershell:
+        raise Blocked("WINDOWS_HOST_PROBE_UNAVAILABLE")
+    query = ("$ErrorActionPreference='Stop'; $c=Get-CimInstance Win32_ComputerSystem; "
+             "$p=Get-CimInstance Win32_ComputerSystemProduct; "
+             "@{manufacturer=$c.Manufacturer;model=$c.Model;name=$c.Name;uuid=$p.UUID} | ConvertTo-Json -Compress")
+    try:
+        host = json.loads(run_command([powershell, "-NoProfile", "-NonInteractive", "-Command", query], 15))
+        if not isinstance(host, dict) or any(not isinstance(host.get(k), str) or not host[k].strip()
+                                              for k in ("manufacturer", "model", "name", "uuid")):
+            raise ValueError()
+        if not re.match(r"^Dell(?:\s|$)", host["manufacturer"], re.I):
+            raise Blocked("DELL_MANUFACTURER_NOT_OBSERVED")
+    except (ValueError, TypeError):
+        raise Blocked("INVALID_WINDOWS_HOST_OBSERVATION") from None
+    return host
+
+
+def bind_host(root, host):
+    path = Path(root) / "host-binding.json"
+    fingerprint = hashlib.sha256(canonical_bytes(host)).hexdigest()
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            raise Blocked("HOST_BINDING_UNREADABLE") from None
+        if not isinstance(existing, dict):
+            raise Blocked("HOST_BINDING_UNREADABLE")
+        if existing.get("host_fingerprint_sha256") != fingerprint:
+            raise Blocked("HOST_BINDING_MISMATCH")
+        return fingerprint
+    receipt = {"schema_version": 1, "observed_at_utc": now(), "host": host,
+               "host_fingerprint_sha256": fingerprint,
+               "assurance": "OBSERVATIONAL_HOST_TUPLE_NOT_CRYPTOGRAPHIC_ATTESTATION"}
+    with path.open("x", encoding="utf-8") as handle:
+        json.dump(receipt, handle, indent=2)
+        handle.write("\n")
+    return fingerprint
+
+
+def require_binding(root, host):
+    path = Path(root) / "host-binding.json"
+    if not path.exists():
+        raise Blocked("HOST_NOT_BOUND_RUN_NATIVE_INSTALLER")
+    return bind_host(root, host)
+
+
+def observe(root, refs, transport, fingerprint):
+    root = Path(root)
+    state_path = root / "baseline.json"
+    if state_path.exists():
+        try:
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            if state.get("repository") != REPOSITORY or not isinstance(state.get("refs"), dict):
+                raise ValueError()
+        except (ValueError, OSError, AttributeError):
+            raise Blocked("BASELINE_CORRUPT_PRESERVE_AND_INVESTIGATE") from None
+    else:
+        state = {"refs": {}}
+    previous = state["refs"]
+    artifacts = []
+    for ref in sorted(set(previous) | set(refs)):
+        old, current = previous.get(ref), refs.get(ref)
+        if old == current:
+            continue
+        source_sha = current["source_sha"] if current else old["source_sha"]
+        if not FULL_SHA.fullmatch(source_sha):
+            raise Blocked("BASELINE_OR_REF_SHA_INVALID")
+        record = {"schema_version": 1, "event_id": uuid.uuid4().hex,
+                  "observed_at_utc": now(), "repository": REPOSITORY, "ref": ref,
+                  "source_sha": source_sha, "previous_source_sha": old["source_sha"] if old else None,
+                  "event": "BASELINE_OBSERVATION" if not state_path.exists() else
+                           "REF_DELETED" if current is None else "REF_CHANGED" if old else "REF_DISCOVERED",
+                  "classification": classify(ref), "remote_identity": current,
+                  "transport": transport, "host_fingerprint_sha256": fingerprint,
+                  "known_successor_reference": source_sha == KNOWN_SUCCESSOR,
+                  "frozen_candidate": False,
+                  "freeze_manifest_status": "NOT_CHECKED_REQUIRES_INDEPENDENT_FREEZE_BINDING",
+                  "verification": "NOT_RUN", "promotion_verification": "BLOCKED",
+                  "physical_acceptance": "NOT_OBSERVED",
+                  "scope": "PASSIVE_REMOTE_REF_OBSERVATION_ONLY"}
+        artifacts.append(append_record(root, record))
+    # Evidence is persisted before advancing the baseline. A crash can add a duplicate
+    # observation on restart; it cannot silently erase a prior FAIL or skip evidence.
+    atomic_json(state_path, {"schema_version": 1, "repository": REPOSITORY,
+                            "observed_at_utc": now(), "refs": refs})
+    return artifacts
+
+
+def last_successful_observation(root):
+    try:
+        value = json.loads((Path(root) / "baseline.json").read_text(encoding="utf-8"))["observed_at_utc"]
+        parsed = dt.datetime.fromisoformat(value)
+        return parsed.isoformat() if parsed.tzinfo is not None else None
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--state-dir", type=Path, required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--bind-host", action="store_true")
+    mode.add_argument("--once", action="store_true")
+    args = parser.parse_args(argv)
+    root = args.state_dir.resolve()
+    try:
+        # Native-host validation precedes even creation of observer state.
+        host = host_identity()
+        with single_instance(root):
+            if args.bind_host:
+                bind_host(root, host)
+                print("HOST_BOUND_OBSERVATIONAL_ONLY")
+                return 0
+            fingerprint = require_binding(root, host)
+            try:
+                refs, transport = read_refs()
+                artifacts = observe(root, refs, transport, fingerprint)
+                atomic_json(root / "status.json", {"observed_at_utc": now(),
+                            "status": "OBSERVATION_COMPLETE", "new_records": len(artifacts),
+                            "last_successful_observation_utc": last_successful_observation(root),
+                            "verification": "NOT_RUN", "promotion_verification": "BLOCKED"})
+            except Blocked as error:
+                failure = {"schema_version": 1, "event_id": uuid.uuid4().hex,
+                           "observed_at_utc": now(), "event": "OBSERVER_BLOCKED",
+                           "status": "BLOCKED",
+                           "repository": REPOSITORY, "diagnostic_code": str(error),
+                           "host_fingerprint_sha256": fingerprint,
+                           "last_successful_observation_utc": last_successful_observation(root),
+                           "verification": "NOT_RUN", "promotion_verification": "BLOCKED"}
+                append_record(root, failure)
+                atomic_json(root / "status.json", failure)
+                raise
+            print("OBSERVATION_COMPLETE new_records=" + str(len(artifacts)) + " verification=NOT_RUN")
+            return 0
+    except Blocked as error:
+        # Only controlled diagnostic codes are emitted; never command output or credentials.
+        print("BLOCKED " + str(error))
+        return 2
+    except Exception:
+        print("BLOCKED UNEXPECTED_LOCAL_FAILURE")
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,12 @@
+test_malformed_host_binding_fails_closed_without_uncaught_exception (test_observer_review.ObserverReview.test_malformed_host_binding_fails_closed_without_uncaught_exception) ... ok
+test_remote_outage_updates_status_and_preserves_error_event (test_observer_review.ObserverReview.test_remote_outage_updates_status_and_preserves_error_event) ... ok
+test_candidate_json_claims_cannot_become_trusted_context (test_review_findings.ReviewFindings.test_candidate_json_claims_cannot_become_trusted_context) ... ok
+test_missing_post_finding_evidence_cannot_pass (test_review_findings.ReviewFindings.test_missing_post_finding_evidence_cannot_pass) ... ok
+test_post_drift_never_exposes_current_promotion_pass (test_review_findings.ReviewFindings.test_post_drift_never_exposes_current_promotion_pass) ... ok
+test_post_findings_and_gap_accounting_survive (test_review_findings.ReviewFindings.test_post_findings_and_gap_accounting_survive) ... ok
+test_software_pass_keeps_physical_iphone_gate_open (test_review_findings.ReviewFindings.test_software_pass_keeps_physical_iphone_gate_open) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.012s
+
+OK

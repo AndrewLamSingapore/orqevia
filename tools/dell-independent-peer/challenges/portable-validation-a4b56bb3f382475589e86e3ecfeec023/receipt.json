@@ -1,0 +1,57 @@
+{
+  "classification": "PROVEN_BY_AUTOMATION",
+  "nativeDell": "UNPROVEN",
+  "runs": [
+    {
+      "case": "exact-original",
+      "exitCode": 1,
+      "sha256": "e880089d67f2e15694d66332b4c59669d014871a7c9ab7d88b251ad73b84956c",
+      "outputTail": [
+        "  ...",
+        "1..10",
+        "# tests 10",
+        "# suites 0",
+        "# pass 4",
+        "# fail 5",
+        "# cancelled 0",
+        "# skipped 1",
+        "# todo 0",
+        "# duration_ms 96.759365"
+      ]
+    },
+    {
+      "case": "missing-inputs",
+      "exitCode": 1,
+      "sha256": "259311336c42f9334d9067f6c5cca983eb8ddb3c5261709762fd21c745a6ba5f",
+      "outputTail": [
+        "  ...",
+        "1..1",
+        "# tests 1",
+        "# suites 0",
+        "# pass 0",
+        "# fail 1",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 65.858942"
+      ]
+    },
+    {
+      "case": "wrong-digest",
+      "exitCode": 1,
+      "sha256": "05705e64bcd927f6999cf15ede902d4ab35da75c1ee9d3c8c4d24dfdb038be89",
+      "outputTail": [
+        "  ...",
+        "1..1",
+        "# tests 1",
+        "# suites 0",
+        "# pass 0",
+        "# fail 1",
+        "# cancelled 0",
+        "# skipped 0",
+        "# todo 0",
+        "# duration_ms 67.660543"
+      ]
+    }
+  ]
+}

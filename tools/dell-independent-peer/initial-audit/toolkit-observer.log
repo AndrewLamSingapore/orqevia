@@ -1,0 +1,20 @@
+test_abbreviated_or_conflicting_refs_block (test_observer.ObserverChecks.test_abbreviated_or_conflicting_refs_block) ... ok
+test_classification_has_no_approval_semantics (test_observer.ObserverChecks.test_classification_has_no_approval_semantics) ... ok
+test_corrupt_baseline_blocks_without_overwrite (test_observer.ObserverChecks.test_corrupt_baseline_blocks_without_overwrite) ... ok
+test_evidence_failure_does_not_advance_baseline (test_observer.ObserverChecks.test_evidence_failure_does_not_advance_baseline) ... ok
+test_full_shas_and_annotated_tag_peeling (test_observer.ObserverChecks.test_full_shas_and_annotated_tag_peeling) ... ok
+test_git_auth_failure_uses_existing_gh_read_only_fallback (test_observer.ObserverChecks.test_git_auth_failure_uses_existing_gh_read_only_fallback) ... ok
+test_history_baseline_noop_change_and_delete (test_observer.ObserverChecks.test_history_baseline_noop_change_and_delete) ... ok
+test_host_binding_is_observational_and_rejects_mismatch (test_observer.ObserverChecks.test_host_binding_is_observational_and_rejects_mismatch) ... ok
+test_linux_is_blocked_without_creating_state (test_observer.ObserverChecks.test_linux_is_blocked_without_creating_state) ... ok
+test_malformed_host_binding_blocks_without_replacement (test_observer.ObserverChecks.test_malformed_host_binding_blocks_without_replacement) ... ok
+test_prior_fail_is_never_replaced (test_observer.ObserverChecks.test_prior_fail_is_never_replaced) ... ok
+test_remote_failure_is_preserved_and_does_not_advance_baseline (test_observer.ObserverChecks.test_remote_failure_is_preserved_and_does_not_advance_baseline) ... ok
+test_single_instance_lock_blocks_reentry_and_releases (test_observer.ObserverChecks.test_single_instance_lock_blocks_reentry_and_releases) ... ok
+test_stdout_budget_stops_large_output (test_observer.ObserverChecks.test_stdout_budget_stops_large_output) ... ok
+test_timeout_and_stderr_never_expose_credentials (test_observer.ObserverChecks.test_timeout_and_stderr_never_expose_credentials) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.086s
+
+OK

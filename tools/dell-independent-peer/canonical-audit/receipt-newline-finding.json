@@ -1,0 +1,11 @@
+{
+  "tested_candidate_sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "path": "scripts/accept_abex_runtime.py",
+  "finding": "historical receipt assertion depends on Windows CRLF bytes while committed file is LF",
+  "raw_git_blob_sha256": "a84d531833665336254392adf2c4b0121c814ce9ea52ac8b2e001ae5be3abc8f",
+  "crlf_sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+  "expected_receipt_sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+  "behavior": "test_exact_documents_bind_independent_verification_to_receipt fails ABEX receipt bytes mismatch on exact clean Linux checkout",
+  "severity": "P2 portability/evidence binding defect; historical acceptance helper, not proof of production corruption",
+  "repair_performed": false
+}

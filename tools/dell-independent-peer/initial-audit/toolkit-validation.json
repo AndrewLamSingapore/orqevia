@@ -1,0 +1,34 @@
+{
+  "host": "cloud Linux, not native Dell",
+  "classification": "PROVEN_BY_AUTOMATION",
+  "runs": [
+    {
+      "suite": "core",
+      "exit_code": 0,
+      "log": "toolkit-core.log",
+      "sha256": "36f3cfe2db1859cc094d161bb8d546500d43af4963da2ee4a964ccd67914b7c8",
+      "summary": "bservation_is_not_silently_ignored (test_dell_peer.GateTests.test_unexpected_observation_is_not_silently_ignored) ... ok\n\n----------------------------------------------------------------------\nRan 31 tests in 0.140s\n\nOK\n"
+    },
+    {
+      "suite": "observer",
+      "exit_code": 0,
+      "log": "toolkit-observer.log",
+      "sha256": "0d6e5efd030e8546b6338d1c7c86b1c8700eba781150d734ed39a80f34106600",
+      "summary": "d_stderr_never_expose_credentials (test_observer.ObserverChecks.test_timeout_and_stderr_never_expose_credentials) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.086s\n\nOK\n"
+    },
+    {
+      "suite": "integration",
+      "exit_code": 0,
+      "log": "toolkit-integration.log",
+      "sha256": "8164058a2603736f5db2d547fcef62d0db0d6daca80ff5dd330b6b6ae8c4197e",
+      "summary": "ew_or_execution (test_deepseek_review.ReviewBoundaryTests.test_tool_call_output_cannot_become_review_or_execution) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.008s\n\nOK\n"
+    },
+    {
+      "suite": "independent-review",
+      "exit_code": 0,
+      "log": "toolkit-independent-review.log",
+      "sha256": "f91d608a375b459a3e27f7d35bda9bbf54cb24fceaf9f97908312148d0d89a3a",
+      "summary": "physical_iphone_gate_open (test_review_findings.ReviewFindings.test_software_pass_keeps_physical_iphone_gate_open) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.012s\n\nOK\n"
+    }
+  ]
+}

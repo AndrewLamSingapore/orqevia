@@ -1,0 +1,41 @@
+TAP version 13
+# node:internal/modules/run_main:107
+#     triggerUncaughtException(
+#     ^
+# AssertionError [ERR_ASSERTION]: Candidate voice source digest differs from independent runner expectation.
+# + actual - expected
+# + 'db8fd83608eae5848cb0ba07c15d078f09e804bee72c175cfc16649f89f20c61'
+# - '0000000000000000000000000000000000000000000000000000000000000000'
+#     at file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:23:8
+#     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+#     at async node:internal/modules/esm/loader:643:26
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+#   generatedMessage: false,
+#   code: 'ERR_ASSERTION',
+#   actual: 'db8fd83608eae5848cb0ba07c15d078f09e804bee72c175cfc16649f89f20c61',
+#   expected: '0000000000000000000000000000000000000000000000000000000000000000',
+#   operator: 'strictEqual',
+#   diff: 'simple'
+# }
+# Node.js v24.19.0
+# Subtest: /workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs
+not ok 1 - /workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs
+  ---
+  duration_ms: 60.808208
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.660543

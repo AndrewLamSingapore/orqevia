@@ -1,0 +1,47 @@
+[
+  {
+    "path": "canonical-audit-final.json",
+    "sha256": "5571eadbc23d7f906c8f32541c8f8b87e60be1615dea00886384c28698bf6fbd",
+    "bytes": 3855
+  },
+  {
+    "path": "full-suite-history-restored.log",
+    "sha256": "b133165b8d0d3d3431e4469df243ff5136f2f0045ff812d0a406103e01798c78",
+    "bytes": 5660
+  },
+  {
+    "path": "full-suite-history-restored.xml",
+    "sha256": "64e4091632a36dd8438eff79d88c7d63aaf36db3580c4ba859bbb95328913a72",
+    "bytes": 139445
+  },
+  {
+    "path": "full-suite-history-restored-run.json",
+    "sha256": "d60eb949830de18008b947c7f4d6db0f8ba46cf7c7a8c2e6148b02430c1cca7a",
+    "bytes": 562
+  },
+  {
+    "path": "classification-addendum.json",
+    "sha256": "d82c7e1b655f81f4651fa9924afb522d2a363715aef6e2ecd0c205ac226b7b9f",
+    "bytes": 1061
+  },
+  {
+    "path": "missing-history-refs.json",
+    "sha256": "b668278931505ae949a61691250e62eecf62cf307cada98a6806b91f892951a8",
+    "bytes": 3491
+  },
+  {
+    "path": "history-missing-blobs.json",
+    "sha256": "69f87a59ebf85a26b75a9c2485760e0bcba40a0e7f6ad32269370abc29f9fd0a",
+    "bytes": 3328
+  },
+  {
+    "path": "history-import-01.json",
+    "sha256": "f8a938fdfb8b70f68b129a356fb7edb51e68e40281b580500d744ef52b0fce75",
+    "bytes": 23396
+  },
+  {
+    "path": "import-history.py",
+    "sha256": "12c2bc6f21e546a39a6c41bd40c33dd6f2244a73c0b63acff750ec09476f0168",
+    "bytes": 6584
+  }
+]

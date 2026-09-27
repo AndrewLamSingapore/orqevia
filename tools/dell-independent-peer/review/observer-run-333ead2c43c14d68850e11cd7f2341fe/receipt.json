@@ -1,0 +1,12 @@
+{
+  "classification": "PROVEN_BY_AUTOMATION",
+  "environment": "cloud Linux synthetic host/network; not physical Dell",
+  "scope": "Observer outage and malformed-state handling",
+  "started_utc": "2026-09-27T03:11:11.818971+00:00",
+  "observer_sha256": "f278747fa5903ed3edb8d95deddf13ab6d0b1674f17fb7f461623a80ec4332b3",
+  "observer_after_sha256": "f278747fa5903ed3edb8d95deddf13ab6d0b1674f17fb7f461623a80ec4332b3",
+  "test_sha256": "c1367fc6a704725e184e7e5ab073c386916f11903e293d97759c7ab3a42a5efc",
+  "exit_code": 1,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e7ba88bce49c380d5c8aad4ac9e730d966335cfa89ab6904e1a1e5433ab8d715"
+}

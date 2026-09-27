@@ -1,0 +1,322 @@
+{
+  "execution_scope": "cloud Linux verification workspace; native Dell unavailable",
+  "abex_production_mutated": false,
+  "candidate_source_mutated": false,
+  "github_candidate": {
+    "name": "fix/phase2-ios-tts-observability-20260927",
+    "sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+    "tree": "4896b20bf5a036f59d0fb3702a14b9e240a3aacd"
+  },
+  "prime_status": {
+    "ok": true,
+    "observed_at": "2026-09-27T02:57:55.701638+00:00",
+    "expected_version": "7.3.1.1-evidence-grounded",
+    "prime": {
+      "version": "7.3.1.1-evidence-grounded",
+      "fast_ready": true,
+      "deep_ready": true,
+      "memory_ready": true,
+      "model_readiness": {
+        "ready": true,
+        "installed_models": [
+          "embeddinggemma:300m-qat-q4_0",
+          "gemma3:1b"
+        ],
+        "required_models": [
+          "gemma3:1b",
+          "embeddinggemma:300m-qat-q4_0"
+        ],
+        "missing_models": [],
+        "error": null
+      },
+      "facts": 0,
+      "memories": 0,
+      "documents": 0,
+      "datasets": 0,
+      "code_files": 0,
+      "pending_actions": 0,
+      "automations": 0,
+      "objectives": 1,
+      "projects": 0,
+      "project_tasks": 0,
+      "departments": 6,
+      "authority_grants": 0,
+      "portfolios": 0,
+      "queued_tasks": 0,
+      "autonomous_runs": 0,
+      "recurring_jobs": 0,
+      "watchdog_events": 0,
+      "artifacts": 0,
+      "verified_artifacts": 0,
+      "project_reviews": 0,
+      "pending_approvals": 0,
+      "orchestration_runs": 0,
+      "agent_jobs": 0,
+      "running_agent_jobs": 0,
+      "agent_inbox": 0,
+      "context_summaries": 0
+    },
+    "bridge_version": "1.0.0",
+    "read_only": true,
+    "physical_actuation": false
+  },
+  "prime_devices": {
+    "ok": true,
+    "observed_at": "2026-09-27T02:57:55.943530+00:00",
+    "snapshot_generated_at": null,
+    "devices": [],
+    "count": 0,
+    "hardware_integration": "not_configured",
+    "note": "ESP32/Open Aqua Edge is a separate lane and is not connected yet.",
+    "read_only": true,
+    "physical_actuation": false
+  },
+  "prime_health": {
+    "ok": true,
+    "observed_at": "2026-09-27T02:58:14.143476+00:00",
+    "health": {
+      "ok": true,
+      "version": "7.3.1.1-evidence-grounded",
+      "integrity": "ok",
+      "models": {
+        "ready": true,
+        "installed_models": [
+          "embeddinggemma:300m-qat-q4_0",
+          "gemma3:1b"
+        ],
+        "required_models": [
+          "gemma3:1b",
+          "embeddinggemma:300m-qat-q4_0"
+        ],
+        "missing_models": [],
+        "error": null
+      }
+    },
+    "selftest": {
+      "ok": true,
+      "health": {
+        "ok": true,
+        "version": "7.3.1.1-evidence-grounded",
+        "integrity": "ok",
+        "models": {
+          "ready": true,
+          "installed_models": [
+            "embeddinggemma:300m-qat-q4_0",
+            "gemma3:1b"
+          ],
+          "required_models": [
+            "gemma3:1b",
+            "embeddinggemma:300m-qat-q4_0"
+          ],
+          "missing_models": [],
+          "error": null
+        }
+      },
+      "status": {
+        "version": "7.3.1.1-evidence-grounded",
+        "fast_ready": true,
+        "deep_ready": true,
+        "memory_ready": true,
+        "model_readiness": {
+          "ready": true,
+          "installed_models": [
+            "embeddinggemma:300m-qat-q4_0",
+            "gemma3:1b"
+          ],
+          "required_models": [
+            "gemma3:1b",
+            "embeddinggemma:300m-qat-q4_0"
+          ],
+          "missing_models": [],
+          "error": null
+        },
+        "facts": 0,
+        "memories": 0,
+        "documents": 0,
+        "datasets": 0,
+        "code_files": 0,
+        "pending_actions": 0,
+        "automations": 0,
+        "objectives": 1,
+        "projects": 0,
+        "project_tasks": 0,
+        "departments": 6,
+        "authority_grants": 0,
+        "portfolios": 0,
+        "queued_tasks": 0,
+        "autonomous_runs": 0,
+        "recurring_jobs": 0,
+        "watchdog_events": 0,
+        "artifacts": 0,
+        "verified_artifacts": 0,
+        "project_reviews": 0,
+        "pending_approvals": 0,
+        "orchestration_runs": 0,
+        "agent_jobs": 0,
+        "running_agent_jobs": 0,
+        "agent_inbox": 0,
+        "context_summaries": 0
+      },
+      "agents_ok": true,
+      "agent_count": 29,
+      "governance_ok": true,
+      "phase2_ok": true,
+      "phase3_ok": true,
+      "orchestration_ok": true,
+      "constitution_rules": 9,
+      "departments": 6,
+      "code_guard_ok": true
+    },
+    "read_only": true,
+    "physical_actuation": false
+  },
+  "interpretation": "Read-only connector health is an observation of its configured endpoint, not independently bound to physical ABEX/source/image. No deployment correspondence asserted.",
+  "historical_physical_evidence": {
+    "api_tool_source": "files/read",
+    "results": [
+      {
+        "version_id": null,
+        "name": "IMG_8304.png",
+        "mime_type": "image/png",
+        "size_bytes": 983934,
+        "created_at": "2026-09-27T01:42:39.216510Z",
+        "modified_at": "2026-09-27T01:42:39.216510Z",
+        "file_provider": "native",
+        "library_file_id": "libfile_06a1b3032a2c8191bdd2be5a67a4490d",
+        "ref_id": "libfile_06a1b3032a2c8191bdd2be5a67a4490d",
+        "file_id": "file_000000006c3881faaa735586bdfdb0d0",
+        "surface": "library",
+        "requested_file_id": "libfile_06a1b3032a2c8191bdd2be5a67a4490d",
+        "start_line": 1,
+        "end_line": 8,
+        "total_lines": 8,
+        "has_more": false,
+        "pages": [],
+        "num_pages": 0,
+        "warnings": [],
+        "api_tool_source": "files/read",
+        "read_index": 0,
+        "mode": "full",
+        "include_text": true,
+        "include_images": false,
+        "requested_start_page": null,
+        "requested_end_page": null,
+        "next_start_line": null,
+        "next_start_page": null,
+        "next_read": null,
+        "next_image_read": null,
+        "content": [
+          "Caption: Mobile workspace screen showing a PRIME connection, task follow-up form, and read-aloud cancellation message.\nSource: mobile app screenshot\nPhotoCategory: screenshot\nSummary: This mobile app screenshot shows a dark teal “YOUR MOBILE WORKSPACE” interface connected to PRIME. Large text asks “What shall we work on?” above the tagline “One objective. The right expertise. Results you can keep.” A notification states that read aloud failed and the result remains available as text. The lower panel contains “Follow up on this task,” a large text-entry box, file and dictation controls, and a bright green “Send follow-up” button.\nTopic: productivity software\nSubtopic: AI task workspace\nQuery: mobile PRIME workspace screenshot with follow-up task form\nOCR: Your connection Connected to PRIME; YOUR MOBILE WORKSPACE; What shall we work on?; Read aloud failed: canceled. The result remains available as text.; Follow up on this task; Send follow-up ↗"
+        ]
+      },
+      {
+        "version_id": null,
+        "name": "IMG_8314.jpeg",
+        "mime_type": "image/jpeg",
+        "size_bytes": 526946,
+        "created_at": "2026-09-27T02:31:46.593248Z",
+        "modified_at": "2026-09-27T02:31:46.593248Z",
+        "file_provider": "native",
+        "library_file_id": "libfile_8256e2fcb4948191939817da2af239a2",
+        "ref_id": "libfile_8256e2fcb4948191939817da2af239a2",
+        "file_id": "file_000000003e2081fa9301781d09c58687",
+        "surface": "library",
+        "requested_file_id": "libfile_8256e2fcb4948191939817da2af239a2",
+        "start_line": 1,
+        "end_line": 9,
+        "total_lines": 9,
+        "has_more": false,
+        "pages": [],
+        "num_pages": 0,
+        "warnings": [],
+        "api_tool_source": "files/read",
+        "read_index": 1,
+        "mode": "full",
+        "include_text": true,
+        "include_images": false,
+        "requested_start_page": null,
+        "requested_end_page": null,
+        "next_start_line": null,
+        "next_start_page": null,
+        "next_read": null,
+        "next_image_read": null,
+        "content": [
+          "Caption: Camera photo of a computer screen showing a technical verification message for “Maximize PC power settings.”\n\nSource: camera photo of screen\nPhotoCategory: photo\nSummary: This is a camera photo of a computer screen displaying a dark-themed technical status message. The visible section is headed “Maximize PC power settings” and lists behavior changes involving browser synthesis state, utterance references, Chinese language selection, tap gestures, feedback visibility, and PWA cache generation. A “Verification” section shows live image, source, SHA-256, test results, and deployment checks, followed by instructions to reopen the Owner iPhone JARVIS app and test Read Aloud. Reflections reveal the photographer, a room, shelving, and a television or monitor behind them.\nTopic: Software testing and development\nSubtopic: PWA verification and voice interface testing\nQuery: camera photo of screen Maximize PC power settings verification JARVIS\nOCR: Maximize PC power settings; Verification; Live image: nprime:phase2-1f50580; Focused PWA tests: 16/16 passed; Full prior qualification: 992/992 Python and 45/45 browser tests; Read Aloud; Owner iPhone JARVIS app"
+        ]
+      },
+      {
+        "version_id": null,
+        "name": "IMG_8317.jpeg",
+        "mime_type": "image/jpeg",
+        "size_bytes": 501239,
+        "created_at": "2026-09-27T02:43:20.933374Z",
+        "modified_at": "2026-09-27T02:43:20.933374Z",
+        "file_provider": "native",
+        "library_file_id": "libfile_0bf8a01b35048191ad6fa978e972cc1d",
+        "ref_id": "libfile_0bf8a01b35048191ad6fa978e972cc1d",
+        "file_id": "file_00000000c12081faaa95306a5d98db04",
+        "surface": "library",
+        "requested_file_id": "libfile_0bf8a01b35048191ad6fa978e972cc1d",
+        "start_line": 1,
+        "end_line": 15,
+        "total_lines": 15,
+        "has_more": false,
+        "pages": [],
+        "num_pages": 0,
+        "warnings": [],
+        "api_tool_source": "files/read",
+        "read_index": 2,
+        "mode": "full",
+        "include_text": true,
+        "include_images": false,
+        "requested_start_page": null,
+        "requested_end_page": null,
+        "next_start_line": null,
+        "next_start_page": null,
+        "next_read": null,
+        "next_image_read": null,
+        "content": [
+          "Caption: Camera photo of a desktop coding assistant window showing PC power settings repair progress and command results.\n\nSource: camera photo of computer screen\n\nPhotoCategory: screenshot\n\nSummary: A camera photo captures a desktop AI coding assistant interface titled “Maximize PC power settings.” The dark window shows progress notes about iOS voice lifecycle handling, client/Dell regressions, immutable successors, manifest verification, Docker builds, and production qualification. A status badge reports 9 files changed with +69 and -19, while the bottom prompt bar shows “Do anything,” “Full access,” and “GPT-5.6 Sol light.” The Windows taskbar is visible underneath with app icons, network and volume controls, English input, and a clock.\n\nTopic: software development\n\nSubtopic: AI coding assistant progress log\n\nQuery: desktop coding assistant screen PC power settings Docker build\n\nOCR: Maximize PC power settings; Edited files, read files, ran commands; All 49 client/Dell regressions pass; canonical suite is 992/992; 9 files changed +69 -19; Do anything; Full access; GPT-5.6 Sol light"
+        ]
+      },
+      {
+        "version_id": null,
+        "name": "IMG_8316.jpeg",
+        "mime_type": "image/jpeg",
+        "size_bytes": 559213,
+        "created_at": "2026-09-27T02:42:56.195249Z",
+        "modified_at": "2026-09-27T02:42:56.195249Z",
+        "file_provider": "native",
+        "library_file_id": "libfile_0c3e702ad4488191b44c2897a33a9214",
+        "ref_id": "libfile_0c3e702ad4488191b44c2897a33a9214",
+        "file_id": "file_000000005b0881faa4e7172c39a7b6cd",
+        "surface": "library",
+        "requested_file_id": "libfile_0c3e702ad4488191b44c2897a33a9214",
+        "start_line": 1,
+        "end_line": 8,
+        "total_lines": 8,
+        "has_more": false,
+        "pages": [],
+        "num_pages": 0,
+        "warnings": [],
+        "api_tool_source": "files/read",
+        "read_index": 3,
+        "mode": "full",
+        "include_text": true,
+        "include_images": false,
+        "requested_start_page": null,
+        "requested_end_page": null,
+        "next_start_line": null,
+        "next_start_page": null,
+        "next_read": null,
+        "next_image_read": null,
+        "content": [
+          "Caption: A camera photo of a computer monitor showing the ChatGPT interface in dark mode with text about PC power settings.\nSource: camera photo of screen\nPhotoCategory: photo\nSummary: A camera photo of a desktop monitor shows the ChatGPT interface in dark mode with a long conversational response about “Maximum PC power settings.” The main pane contains several paragraphs with status-like lines such as “Context automatically compacted,” “Edited files, read files, ran commands,” and “Updating voice selection test assertions.” Near the bottom is the message composer with the placeholder “Say anything,” and the Windows taskbar is visible along the bottom edge. The monitor reflection and slight blur indicate this is a photo of a screen rather than a direct screenshot.\nTopic: technology\nSubtopic: ChatGPT screen\nQuery: ChatGPT dark mode screen on monitor with PC power settings\nOCR: Maximum PC power settings; Context automatically compacted; Edited files, read files, ran commands; Updating voice selection test assertions; Say anything; Full access; GPT-5.5o to light; 9 files changed +69 -19"
+        ]
+      }
+    ],
+    "warnings": [],
+    "external_connectors_accessed": false
+  },
+  "source_retrieval": "GitHub connector, exact SHA; see source-integrity.json"
+}

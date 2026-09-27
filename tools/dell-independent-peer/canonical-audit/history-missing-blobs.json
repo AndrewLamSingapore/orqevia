@@ -1,0 +1,68 @@
+[
+  {
+    "commit": "325c901836f51a4d6f39376766b114acdd7b506d",
+    "path": "governance/phase2-candidate-manifest.json",
+    "blob_sha": "4755bc04a9e8a8f5f7e7d95c8942e7553339c723",
+    "error": "fatal: bad object 325c901836f51a4d6f39376766b114acdd7b506d:governance/phase2-candidate-manifest.json\n"
+  },
+  {
+    "commit": "325c901836f51a4d6f39376766b114acdd7b506d",
+    "path": "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md",
+    "blob_sha": "f2ae02f041be6e50f9e12b7c75be0d8a585af501",
+    "error": "fatal: bad object 325c901836f51a4d6f39376766b114acdd7b506d:docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md\n"
+  },
+  {
+    "commit": "325c901836f51a4d6f39376766b114acdd7b506d",
+    "path": "docs/ACTION-ENVELOPE-STANDARD-v0.1.md",
+    "blob_sha": "8836c548a20b07b756f062e67cf7ded78172b79c",
+    "error": "fatal: bad object 325c901836f51a4d6f39376766b114acdd7b506d:docs/ACTION-ENVELOPE-STANDARD-v0.1.md\n"
+  },
+  {
+    "commit": "325c901836f51a4d6f39376766b114acdd7b506d",
+    "path": "docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json",
+    "blob_sha": "3fab83f2ce36a7be09f780accd81376e5767388d",
+    "error": "fatal: bad object 325c901836f51a4d6f39376766b114acdd7b506d:docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json\n"
+  },
+  {
+    "commit": "c95ed89c384506b51f9d70acb14e75ca10832f27",
+    "path": "governance/phase2-candidate-manifest.json",
+    "blob_sha": "c85b33d0bcc3a66719e86e5cde7131b484fe55f3",
+    "error": "fatal: bad object c95ed89c384506b51f9d70acb14e75ca10832f27:governance/phase2-candidate-manifest.json\n"
+  },
+  {
+    "commit": "c95ed89c384506b51f9d70acb14e75ca10832f27",
+    "path": "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md",
+    "blob_sha": "f2ae02f041be6e50f9e12b7c75be0d8a585af501",
+    "error": "fatal: bad object c95ed89c384506b51f9d70acb14e75ca10832f27:docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md\n"
+  },
+  {
+    "commit": "c95ed89c384506b51f9d70acb14e75ca10832f27",
+    "path": "docs/ACTION-ENVELOPE-STANDARD-v0.1.md",
+    "blob_sha": "8836c548a20b07b756f062e67cf7ded78172b79c",
+    "error": "fatal: bad object c95ed89c384506b51f9d70acb14e75ca10832f27:docs/ACTION-ENVELOPE-STANDARD-v0.1.md\n"
+  },
+  {
+    "commit": "c95ed89c384506b51f9d70acb14e75ca10832f27",
+    "path": "docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json",
+    "blob_sha": "544e21cea27566d1f71b3702c193a3bb3d27e49b",
+    "error": "fatal: bad object c95ed89c384506b51f9d70acb14e75ca10832f27:docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json\n"
+  },
+  {
+    "commit": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "path": "clients/pwa/app.mjs",
+    "blob_sha": "48d066a8df60ef0327841665de52921b2bcf0f27",
+    "error": "fatal: bad object 17fad78d410dca5d9101483cb777a2b9b619bac3:clients/pwa/app.mjs\n"
+  },
+  {
+    "commit": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "path": "clients/pwa/sw.js",
+    "blob_sha": "4c47931f9d8a434e4b22e2ac5476f5d0c1746054",
+    "error": "fatal: bad object 17fad78d410dca5d9101483cb777a2b9b619bac3:clients/pwa/sw.js\n"
+  },
+  {
+    "commit": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "path": "clients/pwa/release.mjs",
+    "blob_sha": "e88022e9c19e65c47fc8462a27ebbb837f6fc651",
+    "error": "fatal: bad object 17fad78d410dca5d9101483cb777a2b9b619bac3:clients/pwa/release.mjs\n"
+  }
+]

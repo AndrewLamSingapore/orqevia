@@ -1,0 +1,27 @@
+✖ DV-09: reentrant terminal callback cannot be overwritten with Starting (1.877981ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.657569
+
+✖ failing tests:
+
+test at voice-sync-independent.test.mjs:7:1
+✖ DV-09: reentrant terminal callback cannot be overwritten with Starting (1.877981ms)
+  AssertionError [ERR_ASSERTION]: A terminal state was overwritten by Starting after synchronous completion.
+      at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-sync-independent.test.mjs:22:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Starting Read aloud… TTS invoked; attempt=1; gesture=1; lang=en-SG; voices=0; matching=0; standalone=0; visibility=unknown; speaking=0; pending=0; paused=0',
+    expected: /TTS end/,
+    operator: 'match',
+    diff: 'simple'
+  }

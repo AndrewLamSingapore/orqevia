@@ -1,0 +1,159 @@
+✖ DV-01: a queued start callback after STOP cannot revive the stopped UI (2.330789ms)
+✖ DV-02: an older attempt cannot emit a start receipt bearing the new attempt number (0.373274ms)
+✖ DV-03: start with no end/error must eventually terminate and expose a timeout (0.901781ms)
+✖ DV-04: voice service exception must be visible and contained (0.434055ms)
+✖ DV-05: utterance construction exception must be visible and contained (0.332983ms)
+✔ DV-06: speak invocation exception is contained and releases owned state (0.474887ms)
+✔ DV-07: a late end from the old attempt cannot terminate the current attempt (0.373574ms)
+✔ DV-08: software lifecycle completion is observable without asserting physical audio (0.24513ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 3
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 93.721082
+
+✖ failing tests:
+
+test at voice-independent.test.mjs:56:1
+✖ DV-01: a queued start callback after STOP cannot revive the stopped UI (2.330789ms)
+  AssertionError [ERR_ASSERTION]: Late start after STOP must be ignored; current implementation changes UI to speaking.
+  
+  3 !== 2
+  
+      at file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:63:10
+      at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+      at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:56:83)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at voice-independent.test.mjs:66:1
+✖ DV-02: an older attempt cannot emit a start receipt bearing the new attempt number (0.373274ms)
+  AssertionError [ERR_ASSERTION]: Old callback writes TTS start; attempt=2 although attempt 2 has never started.
+  
+  4 !== 3
+  
+      at file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:72:10
+      at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+      at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:66:95)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 3,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at voice-independent.test.mjs:75:1
+✖ DV-03: start with no end/error must eventually terminate and expose a timeout (0.901781ms)
+  AssertionError [ERR_ASSERTION]: An owned short utterance remains stuck indefinitely after start; no terminal watchdog exists.
+  + actual - expected
+  
+  + {
+  +   lang: 'en-SG',
+  +   onend: [Function (anonymous)],
+  +   onerror: [Function (anonymous)],
+  +   onstart: [Function (anonymous)],
+  +   pitch: 1,
+  +   rate: 1,
+  +   text: 'One short sentence.',
+  +   voice: null,
+  +   volume: 1
+  + }
+  - null
+  
+      at file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:78:10
+      at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+      at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:75:90)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at voice-independent.test.mjs:84:1
+✖ DV-04: voice service exception must be visible and contained (0.434055ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: getVoices is an external service boundary and must share the failure handling.
+  Actual message: "Voice service unavailable"
+      at fixture.synthesis.getVoices (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:85:10)
+      at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+      at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:84:73)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: InvalidStateError: Voice service unavailable
+        at new DOMException (node:internal/per_context/domexception:76:18)
+        at Object.getVoices (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:87:33)
+        at Voice.speak (file:///workspace/scratch/e46efedd3273/candidate-091e2f9/clients/pwa/voice.mjs:8:704)
+        at file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:85:33
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at fixture.synthesis.getVoices (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:85:10)
+        at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+        at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:84:73)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }
+
+test at voice-independent.test.mjs:89:1
+✖ DV-05: utterance construction exception must be visible and contained (0.332983ms)
+  AssertionError [ERR_ASSERTION]: Got unwanted exception: Utterance construction failure must reach a user-visible error.
+  Actual message: "Speech engine unavailable"
+      at fixture.Utterance.constructor (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:90:10)
+      at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+      at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:89:82)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: InvalidStateError: Speech engine unavailable
+        at new DOMException (node:internal/per_context/domexception:76:18)
+        at new Utterance (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:92:41)
+        at Voice.speak (file:///workspace/scratch/e46efedd3273/candidate-091e2f9/clients/pwa/voice.mjs:8:922)
+        at file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:90:33
+        at getActual (node:assert:611:5)
+        at strict.doesNotThrow (node:assert:779:32)
+        at fixture.Utterance.constructor (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:90:10)
+        at fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:46:8)
+        at TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-091e2f9/voice-independent.test.mjs:89:82)
+        at Test.runInAsyncScope (node:async_hooks:227:14),
+    expected: undefined,
+    operator: 'doesNotThrow',
+    diff: 'simple'
+  }

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+    "-B",
+    "scripts/run_canonical_ci.py"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 6.17992377281189,
+  "source_sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+  "host": "Linux cloud, not physical Dell",
+  "network_boundary": "Python audit hook rejects IP socket.connect; Git protocols limited to file; credential-free allowlisted env; NOT kernel sandbox"
+}

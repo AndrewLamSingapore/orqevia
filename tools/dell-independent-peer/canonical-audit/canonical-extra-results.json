@@ -1,0 +1,61 @@
+[
+  {
+    "label": "canonical-state",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "scripts/check_canonical_state.py"
+    ],
+    "exit_code": 0,
+    "output_tail": "Canonical source and generated mirror: CONSISTENT; operational state: STALE\n"
+  },
+  {
+    "label": "dell-package",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "clients/dell/tools",
+      "-p",
+      "test_package_client.py"
+    ],
+    "exit_code": 0,
+    "output_tail": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.490s\n\nOK\n"
+  },
+  {
+    "label": "source-release-a",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "scripts/build_source_release.py",
+      "--output",
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/source-release-a"
+    ],
+    "exit_code": 0,
+    "output_tail": "Canonical source and generated mirror: CONSISTENT; operational state: STALE\n{\"source_revision\": \"091e2f919edb1711b5a9e88404818095fa32b537\", \"source_dirty\": false, \"deployment_eligible\": true, \"architecture_version\": \"JARVIS PRIME Architecture v1\", \"manifest_sha256\": \"53f3e31539b9e6febd525b5a762e1cacce2ccdb80e1f8f3fe54f06f040c85ac5\", \"files\": 234}\n"
+  },
+  {
+    "label": "source-release-b",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "scripts/build_source_release.py",
+      "--output",
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/source-release-b"
+    ],
+    "exit_code": 0,
+    "output_tail": "Canonical source and generated mirror: CONSISTENT; operational state: STALE\n{\"source_revision\": \"091e2f919edb1711b5a9e88404818095fa32b537\", \"source_dirty\": false, \"deployment_eligible\": true, \"architecture_version\": \"JARVIS PRIME Architecture v1\", \"manifest_sha256\": \"53f3e31539b9e6febd525b5a762e1cacce2ccdb80e1f8f3fe54f06f040c85ac5\", \"files\": 234}\n"
+  },
+  {
+    "label": "reproducible-source-manifest",
+    "equal": true
+  },
+  {
+    "label": "execution-copy-worktree",
+    "status": "",
+    "exit_code": 0
+  }
+]

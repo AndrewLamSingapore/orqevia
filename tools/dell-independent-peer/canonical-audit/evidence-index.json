@@ -1,0 +1,117 @@
+[
+  {
+    "path": "canonical-audit-report.json",
+    "sha256": "92adeeeaed0953a885afae1884304d71f4cde84442794614419a82ef81f1d463",
+    "bytes": 5815
+  },
+  {
+    "path": "canonical-regression.log",
+    "sha256": "1d8dda3f3c326a33ea9cf5586e3c4e8060a1611807d083e0b3ce46e1be35406a",
+    "bytes": 1291
+  },
+  {
+    "path": "canonical-run.json",
+    "sha256": "a8f3f42ed8410400aba0f38338450313e45e1c93f579115a264c284a48ece0d0",
+    "bytes": 461
+  },
+  {
+    "path": "node-regression.log",
+    "sha256": "187aa4c322316e6bd32bf8bfc22d0765c22ef9d72c7bf73df2599fcdfb1a27b4",
+    "bytes": 5469
+  },
+  {
+    "path": "node-regression-run.json",
+    "sha256": "1e1c9506df8e5e050b240238f1ff9ade9cc9e09f4e5821095f752366eb6b8492",
+    "bytes": 477
+  },
+  {
+    "path": "canonical-extra-results.json",
+    "sha256": "1a6ff308c92bfaf3683de52058e6985c599749b5610e7f63487ce25fbeddffb2",
+    "bytes": 2344
+  },
+  {
+    "path": "canonical-state.log",
+    "sha256": "45ebb83b38bd8c0b02df27f27478e6e0f3fe163889331cb69ca4dbe1c844a301",
+    "bytes": 76
+  },
+  {
+    "path": "dell-package.log",
+    "sha256": "492622d89cd41b12ab185372def8cd9d282156230e2dd209e660d33131deb566",
+    "bytes": 101
+  },
+  {
+    "path": "source-release-a.log",
+    "sha256": "bf93508409015cdff45fad2d40619cc920be215230d437a37e87b767bef9da5b",
+    "bytes": 349
+  },
+  {
+    "path": "source-release-b.log",
+    "sha256": "bf93508409015cdff45fad2d40619cc920be215230d437a37e87b767bef9da5b",
+    "bytes": 349
+  },
+  {
+    "path": "full-suite.log",
+    "sha256": "de53f157240d145ccc98cbc6f2ba09059fc544b87d07b4deb9425b907639ed41",
+    "bytes": 1091
+  },
+  {
+    "path": "full-suite.xml",
+    "sha256": "b431b3ac507779e5ec9546521e87445334059b462a7ee10df06f180fca963b05",
+    "bytes": 165332
+  },
+  {
+    "path": "full-suite-run.json",
+    "sha256": "8c941e8d9a6169a634ffde682d7148125897e470bb1eadd84a0ad1ccb0270e7a",
+    "bytes": 500
+  },
+  {
+    "path": "phase2-functional.log",
+    "sha256": "925ce7acf67ef0d87fabb5c266f29be441c6a7c67ca431b48e95483072e59685",
+    "bytes": 99
+  },
+  {
+    "path": "phase2-functional.xml",
+    "sha256": "04904d2ed72c50c9f1fa834d2046d065f046992788778f57ebcb39e521d28961",
+    "bytes": 6534
+  },
+  {
+    "path": "phase2-functional-run.json",
+    "sha256": "29d277bee0ae5ba6999ab54d5e1ba2934b7da26f40fdcb503f5a6dd9fab17073",
+    "bytes": 521
+  },
+  {
+    "path": "provenance-reproduction.py",
+    "sha256": "51f31f76bb57fa81ae26ae1765b9d0c095f974b037c924d39a0205a810b405d3",
+    "bytes": 4261
+  },
+  {
+    "path": "provenance-reproduction.json",
+    "sha256": "bb0bf75f8c233eeac6a8b94ad2f96317bfbe70a6273726f5cc33ec487fcf70cd",
+    "bytes": 2689
+  },
+  {
+    "path": "receipt-newline-finding.json",
+    "sha256": "69acd682eccbf5a9e267f7e779f10dec07103883461e9102ad5ee4236bc12ec8",
+    "bytes": 787
+  },
+  {
+    "path": "dependencies.txt",
+    "sha256": "7a105cb959030ce60494c691935bd799dc4ae2d17ccbf9b570a598ee07f6ed5a",
+    "bytes": 639
+  },
+  {
+    "path": "pip-install.log",
+    "sha256": "0b93264e39e58755815fbbb1b39772835ee362ce68818c5631468620eaa7413b",
+    "bytes": 11407
+  },
+  {
+    "path": "run-canonical.py",
+    "sha256": "ab406c8a3288e998a0dd5ca53c6abcc5b813361a2f41f160ca6b55857882ad64",
+    "bytes": 1651
+  },
+  {
+    "path": "network-guard/sitecustomize.py",
+    "sha256": "2a7ce1f8408fe2d8635691e9af3d0b4ffb23305ec5105a5a1653565eaf46b13e",
+    "bytes": 340
+  }
+]

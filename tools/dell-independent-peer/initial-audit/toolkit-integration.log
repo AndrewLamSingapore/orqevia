@@ -1,0 +1,12 @@
+test_advice_is_unproven_and_existing_artifacts_are_preserved (test_deepseek_review.ReviewBoundaryTests.test_advice_is_unproven_and_existing_artifacts_are_preserved) ... ok
+test_changed_input_is_blocked_before_network (test_deepseek_review.ReviewBoundaryTests.test_changed_input_is_blocked_before_network) ... ok
+test_dry_run_never_reads_key_or_builds_network_client (test_deepseek_review.ReviewBoundaryTests.test_dry_run_never_reads_key_or_builds_network_client) ... ok
+test_incomplete_answer_not_accepted (test_deepseek_review.ReviewBoundaryTests.test_incomplete_answer_not_accepted) ... ok
+test_malformed_content_not_accepted (test_deepseek_review.ReviewBoundaryTests.test_malformed_content_not_accepted) ... ok
+test_redirect_refuses_credential_forwarding (test_deepseek_review.ReviewBoundaryTests.test_redirect_refuses_credential_forwarding) ... ok
+test_tool_call_output_cannot_become_review_or_execution (test_deepseek_review.ReviewBoundaryTests.test_tool_call_output_cannot_become_review_or_execution) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.008s
+
+OK

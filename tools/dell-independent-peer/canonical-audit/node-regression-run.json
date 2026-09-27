@@ -1,0 +1,16 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "clients/pwa/candidate-tests.mjs",
+    "clients/pwa/followup-tests.mjs",
+    "clients/pwa/revision-tests.mjs",
+    "clients/pwa/tests.mjs",
+    "clients/pwa/voice-tests.mjs",
+    "clients/dell/test/client.test.mjs",
+    "clients/dell/test/url-transport.test.mjs"
+  ],
+  "exit_code": 0,
+  "environment": "clean whitelisted environment; fixture-only tests; Linux cloud host",
+  "source": "091e2f919edb1711b5a9e88404818095fa32b537"
+}

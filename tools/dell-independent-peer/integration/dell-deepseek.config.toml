@@ -1,0 +1,34 @@
+# Named user-level profile: ~/.codex/dell-deepseek.config.toml
+# Prepared 2026-09-27 from official documentation. Live Dell validation pending.
+# TEMPLATE ONLY: native launcher is blocked until effective connector/OS audit.
+model = "deepseek-flash"
+model_provider = "deepseek-dell"
+model_reasoning_effort = "high"
+approval_policy = "never"
+sandbox_mode = "read-only"
+web_search = "disabled"
+
+[features]
+apps = false
+
+[apps._default]
+enabled = false
+
+[model_providers.deepseek-dell]
+name = "DeepSeek Dell review"
+base_url = "https://api.deepseek.com"
+env_key = "DEEPSEEK_API_KEY"
+wire_api = "responses"
+requires_openai_auth = false
+request_max_retries = 0
+stream_max_retries = 0
+
+[shell_environment_policy]
+inherit = "core"
+ignore_default_excludes = false
+
+[shell_environment_policy.filters]
+"DEEPSEEK_API_KEY" = "exclude"
+"OPENAI_API_KEY" = "exclude"
+"*TOKEN*" = "exclude"
+"*SECRET*" = "exclude"

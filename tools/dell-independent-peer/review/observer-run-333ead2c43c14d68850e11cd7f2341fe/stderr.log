@@ -1,0 +1,27 @@
+test_malformed_host_binding_fails_closed_without_uncaught_exception (__main__.ObserverReview.test_malformed_host_binding_fails_closed_without_uncaught_exception) ... ERROR
+test_remote_outage_updates_status_and_preserves_error_event (__main__.ObserverReview.test_remote_outage_updates_status_and_preserves_error_event) ... ERROR
+
+======================================================================
+ERROR: test_malformed_host_binding_fails_closed_without_uncaught_exception (__main__.ObserverReview.test_malformed_host_binding_fails_closed_without_uncaught_exception)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/e46efedd3273/dell-peer/review/test_observer_review.py", line 27, in test_malformed_host_binding_fails_closed_without_uncaught_exception
+    observer.bind_host(self.root, self.host)
+  File "/workspace/scratch/e46efedd3273/dell-peer/observer/observer.py", line 214, in bind_host
+    if existing.get("host_fingerprint_sha256") != fingerprint:
+       ^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'get'
+
+======================================================================
+ERROR: test_remote_outage_updates_status_and_preserves_error_event (__main__.ObserverReview.test_remote_outage_updates_status_and_preserves_error_event)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/e46efedd3273/dell-peer/review/test_observer_review.py", line 41, in test_remote_outage_updates_status_and_preserves_error_event
+    self.assertEqual(status["status"], "BLOCKED")
+                     ~~~~~~^^^^^^^^^^
+KeyError: 'status'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+FAILED (errors=2)

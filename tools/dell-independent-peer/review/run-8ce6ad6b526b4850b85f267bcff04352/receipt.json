@@ -1,0 +1,12 @@
+{
+  "classification": "PROVEN_BY_AUTOMATION",
+  "environment": "cloud Linux test harness; not physical Dell",
+  "scope": "Synthetic gate semantics only",
+  "started_utc": "2026-09-27T03:09:23.393931+00:00",
+  "core_sha256": "861af6b27089db0b69c40e862996dcafff708c7d1ebe982e6cd5ce0a7d7df014",
+  "core_after_sha256": "861af6b27089db0b69c40e862996dcafff708c7d1ebe982e6cd5ce0a7d7df014",
+  "test_sha256": "3bf5570b4cf5bd81326c0caa748164157e3ec456b30c6d949f6f4eead625184e",
+  "exit_code": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "ded52318d42aae64170b9a01ac034d9ec2a187e37f1404216e88731fb40f07d4"
+}
