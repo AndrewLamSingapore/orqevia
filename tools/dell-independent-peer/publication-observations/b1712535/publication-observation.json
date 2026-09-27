@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-09-27T03:31:02.560Z",
+  "classification": "SOURCE_PUBLICATION_ONLY",
+  "evidence_class": "PROVEN_BY_AUTOMATION",
+  "execution_scope": "READ_ONLY_AUTHENTICATED_GITHUB_OBSERVATION_FROM_CLOUD_LINUX_NOT_NATIVE_DELL",
+  "repository": "AndrewLamSingapore/prime",
+  "branch": "fix/phase2-ios-audible-boundary-20260927",
+  "source_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+  "tree_sha": "d1aeb123cbafca365356caae417b2809ad49e6db",
+  "commit_timestamp": "2026-09-27T03:27:01Z",
+  "commit_message": "Clear audio UI on lifecycle stop",
+  "parent_sha": "b3ab11416dcc3b19bbbe929fbd6d5830aac52c66",
+  "changes_since_preserved_failed_source": {
+    "source_sha": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+    "ahead_by": 2,
+    "commits": [
+      {
+        "sha": "b3ab11416dcc3b19bbbe929fbd6d5830aac52c66",
+        "message": "Own Web Audio diagnostic lifecycle"
+      },
+      {
+        "sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+        "message": "Clear audio UI on lifecycle stop"
+      }
+    ],
+    "files": [
+      "clients/pwa/voice-tests.mjs",
+      "clients/pwa/voice.mjs"
+    ]
+  },
+  "freeze": {
+    "status": "NOT_ESTABLISHED",
+    "basis": [
+      "Exact source phase2-state.json says PENDING_NEW_CANDIDATE_FREEZE",
+      "Exact source candidate manifest has no b171 source commit/tree/image binding",
+      "Retrieved all 17 tag objects; none targets b171253566e7c879283d2aacf699ae6c1ec8988e",
+      "Releases response is empty",
+      "Three freeze receipts bind historical 325c901..., c95ed89..., ba2a275... commits, not b171"
+    ]
+  },
+  "image": {
+    "status": "UNPROVEN",
+    "manifest_value": "NOT_BUILT",
+    "exact_source_image_binding_observed": false
+  },
+  "deployment": {
+    "status": "UNPROVEN",
+    "manifest_receipt": "NOT_APPLICABLE_NOT_DEPLOYED",
+    "historical_receipts_bound_to_other_shas": [
+      "a1ea9ad0a253c40de70194ebf38b7a58c925e5b2",
+      "17fad78d410dca5d9101483cb777a2b9b619bac3"
+    ]
+  },
+  "source_content_integrity": "REMOTE_COMMIT_AND_TREE_METADATA_OBSERVED; NO_FULL_SOURCE_FETCH_OR_LOCAL_CONTENT_HASH_CHECK",
+  "canonical_regression": "NOT_RUN",
+  "independent_adversarial_regression": "NOT_RUN",
+  "physical_acceptance": "NOT_OBSERVED",
+  "promotion_verification": "BLOCKED",
+  "prior_fail_disposition": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702 FAIL remains historical evidence; no verdict transferred to b171",
+  "abex_mutated": false,
+  "github_mutated": false,
+  "candidate_code_executed": false,
+  "scope_limit": "No exact freeze/image/deployment binding found in the inspected GitHub branch, tags, releases, listed governance and evidence receipts. This does not rule out an unpublished or external receipt."
+}
+

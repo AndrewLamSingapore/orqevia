@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.558Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGU2YThmZmM5YmJhNTNmZTczYTAyN2ZiMmVhM2I3YWZmNTdiYTM1M2I\",\"sha\":\"e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b\",\"tagger\":{\"name\":\"AndrewLamSingapore\",\"email\":\"313231443+AndrewLamSingapore@users.noreply.github.com\",\"date\":\"2026-09-15T01:06:32Z\"},\"object\":{\"sha\":\"385b78524919eec532f61cef7dd870357fec20ed\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/385b78524919eec532f61cef7dd870357fec20ed\"},\"tag\":\"PRIME_SAFEPOINT_SSOT_GITHUB_MATURE_V1\",\"message\":\"Dell Truth Reconciler v1 commissioned on DESKTOP-IPV4PH9; SSOT schema 4.2.0; reconciler 1.0.0; 18/18 adversarial and 153/153 existing PRIME tests passed; evidence manifest SHA-256 F6BBD174FB3C70C46D70C4C4B072673C292FD6C19B02B5914189388020E271FF; final health AMBER with zero material contradictions and one declared-SSOT-stale finding.\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+    "display_title": "e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+    "structuredContent": {
+      "title": "e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGU2YThmZmM5YmJhNTNmZTczYTAyN2ZiMmVhM2I3YWZmNTdiYTM1M2I\",\"sha\":\"e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b\",\"tagger\":{\"name\":\"AndrewLamSingapore\",\"email\":\"313231443+AndrewLamSingapore@users.noreply.github.com\",\"date\":\"2026-09-15T01:06:32Z\"},\"object\":{\"sha\":\"385b78524919eec532f61cef7dd870357fec20ed\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/385b78524919eec532f61cef7dd870357fec20ed\"},\"tag\":\"PRIME_SAFEPOINT_SSOT_GITHUB_MATURE_V1\",\"message\":\"Dell Truth Reconciler v1 commissioned on DESKTOP-IPV4PH9; SSOT schema 4.2.0; reconciler 1.0.0; 18/18 adversarial and 153/153 existing PRIME tests passed; evidence manifest SHA-256 F6BBD174FB3C70C46D70C4C4B072673C292FD6C19B02B5914189388020E271FF; final health AMBER with zero material contradictions and one declared-SSOT-stale finding.\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b"
+    }
+  }
+}
+

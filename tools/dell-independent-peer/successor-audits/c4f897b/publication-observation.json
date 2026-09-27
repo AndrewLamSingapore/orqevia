@@ -1,0 +1,295 @@
+{
+  "classification": "PROVEN_BY_AUTOMATION",
+  "scope": "read-only publication discovery; cloud execution",
+  "candidate": {
+    "sha": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+    "node_id": "C_kwDOUDVGnNoAKGM0Zjg5N2IwZDMxMWE0YzE1YmUyN2RmNTJmMTRkNGM5ZTZhYjU3MDI",
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+    "html_url": "https://github.com/AndrewLamSingapore/prime/commit/c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+    "author": {
+      "name": "Andrew Lam",
+      "email": "andrew3657@hotmail.com",
+      "date": "2026-09-27T03:20:24Z"
+    },
+    "committer": {
+      "name": "Andrew Lam",
+      "email": "andrew3657@hotmail.com",
+      "date": "2026-09-27T03:20:24Z"
+    },
+    "tree": {
+      "sha": "36dd016eacae9c5495a6119ef00cab7e8ee44d36",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/trees/36dd016eacae9c5495a6119ef00cab7e8ee44d36"
+    },
+    "message": "Instrument post-start iOS audio boundary",
+    "parents": [
+      {
+        "sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/091e2f919edb1711b5a9e88404818095fa32b537",
+        "html_url": "https://github.com/AndrewLamSingapore/prime/commit/091e2f919edb1711b5a9e88404818095fa32b537"
+      }
+    ],
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  },
+  "branches": [
+    {
+      "name": "candidate/aef-high-assurance-20260925",
+      "sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa"
+    },
+    {
+      "name": "feat/phase2-unified-intelligence-20260926",
+      "sha": "963eed3b0e2594064b4cb4a3c5493e8c2b8a0142"
+    },
+    {
+      "name": "feat/supreme-integration-20260925",
+      "sha": "26f7d49cfe7134f8665dda5886111e91b574554d"
+    },
+    {
+      "name": "fix/phase2-ios-audible-boundary-20260927",
+      "sha": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702"
+    },
+    {
+      "name": "fix/phase2-ios-tts-observability-20260927",
+      "sha": "091e2f919edb1711b5a9e88404818095fa32b537"
+    },
+    {
+      "name": "fix/phase2-physical-acceptance-20260927",
+      "sha": "1f50580dcaf774a02f74b18e5a1d532c4e74b628"
+    }
+  ],
+  "tags": [
+    {
+      "ref": "refs/tags/PRIME_SAFEPOINT_SSOT_GITHUB_MATURE_V1",
+      "node_id": "REF_kwDOUDVGnNoAL3JlZnMvdGFncy9QUklNRV9TQUZFUE9JTlRfU1NPVF9HSVRIVUJfTUFUVVJFX1Yx",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/PRIME_SAFEPOINT_SSOT_GITHUB_MATURE_V1",
+      "object": {
+        "sha": "e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e6a8ffc9bba53fe73a027fb2ea3b7aff57ba353b"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-golden-gen1-20260926",
+      "node_id": "REF_kwDOUDVGnNoAK3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtZ29sZGVuLWdlbjEtMjAyNjA5MjY",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-golden-gen1-20260926",
+      "object": {
+        "sha": "40787df394188795bc0a3a4aec08462f35eb1040",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-20260926",
+      "node_id": "REF_kwDOUDVGnNoAMHJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-20260926",
+      "object": {
+        "sha": "f293917c2799cf4dfc7f3e3a96d2b10080701252",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v10-20260926",
+      "node_id": "REF_kwDOUDVGnNoANHJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12MTAtMjAyNjA5MjY",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v10-20260926",
+      "object": {
+        "sha": "801f61b6382d1121926e581662931825ccde52de",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/801f61b6382d1121926e581662931825ccde52de"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v11-20260926",
+      "node_id": "REF_kwDOUDVGnNoANHJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12MTEtMjAyNjA5MjY",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v11-20260926",
+      "object": {
+        "sha": "6d531b5e6c02a49e658ba6e97a0eb72e66ff04e5",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6d531b5e6c02a49e658ba6e97a0eb72e66ff04e5"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v12-20260926",
+      "node_id": "REF_kwDOUDVGnNoANHJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12MTItMjAyNjA5MjY",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v12-20260926",
+      "object": {
+        "sha": "233462aba9ead7934c42ae3a3bde6d0d0e880675",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/233462aba9ead7934c42ae3a3bde6d0d0e880675"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v13-20260926",
+      "node_id": "REF_kwDOUDVGnNoANHJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12MTMtMjAyNjA5MjY",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v13-20260926",
+      "object": {
+        "sha": "f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v14-20260926",
+      "node_id": "REF_kwDOUDVGnNoANHJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12MTQtMjAyNjA5MjY",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v14-20260926",
+      "object": {
+        "sha": "6bb27a49910c41af02f2eac080090098c2222a3f",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v2-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12Mi0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v2-20260926",
+      "object": {
+        "sha": "4b9972d927cf84b3a589c6bc496c77501dc10c96",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/4b9972d927cf84b3a589c6bc496c77501dc10c96"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v3-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12My0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v3-20260926",
+      "object": {
+        "sha": "aaa24f3e246086766d2f952acbf25bcc75158a95",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v4-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12NC0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v4-20260926",
+      "object": {
+        "sha": "176cfd1bbbb5ba088dc43ae011d490e14511ca89",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/176cfd1bbbb5ba088dc43ae011d490e14511ca89"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v5-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12NS0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v5-20260926",
+      "object": {
+        "sha": "078c35018669f595dd2eb624a83034538fa48287",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/078c35018669f595dd2eb624a83034538fa48287"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v6-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12Ni0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v6-20260926",
+      "object": {
+        "sha": "e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v7-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12Ny0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v7-20260926",
+      "object": {
+        "sha": "62b6b83431f7030dcf42bac5330319348e1c40ab",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/62b6b83431f7030dcf42bac5330319348e1c40ab"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v8-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12OC0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v8-20260926",
+      "object": {
+        "sha": "080378e6a22afeca7edce4ba3b469cb672faf828",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-candidate-v9-20260926",
+      "node_id": "REF_kwDOUDVGnNoAM3JlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLWNhbmRpZGF0ZS12OS0yMDI2MDkyNg",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-candidate-v9-20260926",
+      "object": {
+        "sha": "dcbb88130803eedbb5f5ad3c885cd5c15960a308",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/dcbb88130803eedbb5f5ad3c885cd5c15960a308"
+      }
+    },
+    {
+      "ref": "refs/tags/jarvis-prime-phase2-session-recovery-qualified-20260926",
+      "node_id": "REF_kwDOUDVGnNoAQXJlZnMvdGFncy9qYXJ2aXMtcHJpbWUtcGhhc2UyLXNlc3Npb24tcmVjb3ZlcnktcXVhbGlmaWVkLTIwMjYwOTI2",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/tags/jarvis-prime-phase2-session-recovery-qualified-20260926",
+      "object": {
+        "sha": "e4763eabe789de35bf00e07d36cd995ab42e3bb5",
+        "type": "tag",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4763eabe789de35bf00e07d36cd995ab42e3bb5"
+      }
+    }
+  ],
+  "releases": [],
+  "prime": {
+    "ok": true,
+    "observed_at": "2026-09-27T03:23:20.006728+00:00",
+    "expected_version": "7.3.1.1-evidence-grounded",
+    "prime": {
+      "version": "7.3.1.1-evidence-grounded",
+      "fast_ready": true,
+      "deep_ready": true,
+      "memory_ready": true,
+      "model_readiness": {
+        "ready": true,
+        "installed_models": [
+          "embeddinggemma:300m-qat-q4_0",
+          "gemma3:1b"
+        ],
+        "required_models": [
+          "gemma3:1b",
+          "embeddinggemma:300m-qat-q4_0"
+        ],
+        "missing_models": [],
+        "error": null
+      },
+      "facts": 0,
+      "memories": 0,
+      "documents": 0,
+      "datasets": 0,
+      "code_files": 0,
+      "pending_actions": 0,
+      "automations": 0,
+      "objectives": 1,
+      "projects": 0,
+      "project_tasks": 0,
+      "departments": 6,
+      "authority_grants": 0,
+      "portfolios": 0,
+      "queued_tasks": 0,
+      "autonomous_runs": 0,
+      "recurring_jobs": 0,
+      "watchdog_events": 0,
+      "artifacts": 0,
+      "verified_artifacts": 0,
+      "project_reviews": 0,
+      "pending_approvals": 0,
+      "orchestration_runs": 0,
+      "agent_jobs": 0,
+      "running_agent_jobs": 0,
+      "agent_inbox": 0,
+      "context_summaries": 0
+    },
+    "bridge_version": "1.0.0",
+    "read_only": true,
+    "physical_actuation": false
+  },
+  "limitations": [
+    "No exact frozen c4f897b candidate receipt or immutable image established",
+    "No host/source/image identity from read-only health; production correspondence unproven"
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "path": "canonical-audit-final.json",
+    "sha256": "9675e7bd0723d1da694e82a51185a8a85a277ab547e1519c8d2fe1979b8fbd5e",
+    "bytes": 5618
+  },
+  {
+    "path": "canonical.log",
+    "sha256": "58da29a3b6730763f782819e7797db7591b993b8d51244e76bb440c6bda32b3c",
+    "bytes": 1323
+  },
+  {
+    "path": "full-suite.log",
+    "sha256": "80351a6508b74108bb182c2e0d67bdfa500c9bdf2f9c4d04e1b7d98fa99a53e5",
+    "bytes": 5724
+  },
+  {
+    "path": "full-suite.xml",
+    "sha256": "d48636ba394738121fc9b79207ea43adb52da22c7b0bbb2098d613928595bcd5",
+    "bytes": 139461
+  },
+  {
+    "path": "node-regression.log",
+    "sha256": "1d4fae443d2b2eadf6bbb7ff03a5950f38c9f96335b3cf8a66777d5e7a4acbc6",
+    "bytes": 5774
+  },
+  {
+    "path": "dell-packaging.log",
+    "sha256": "4e30d61bc2045ef6d19db0e1e4719aa0d72dee20ba8c4bbf5112135007091d5e",
+    "bytes": 101
+  },
+  {
+    "path": "provenance-reproduction.py",
+    "sha256": "1f80d0b62be7d7504591f65811bdb5a233fb78e47012a3f9fbb94a499ddfec9e",
+    "bytes": 4268
+  },
+  {
+    "path": "provenance-reproduction.json",
+    "sha256": "41b1fd20041d783a96f5d7920d2f25fda3061db93e77374c930e19116c7ec026",
+    "bytes": 2689
+  },
+  {
+    "path": "provenance-reproduction.log",
+    "sha256": "03ff335a37dae3dae63b1b5dce2adf84ab37403bfa169672a79c6a4eb7086775",
+    "bytes": 2690
+  },
+  {
+    "path": "successor-runs.json",
+    "sha256": "6c789925fe633608835f93c7c673b91096c72b3d48fe767bdd0be291d197d339",
+    "bytes": 1867
+  },
+  {
+    "path": "run-successor.py",
+    "sha256": "598c6c3ca6a6046be56898666f42973d1bb3810f99e06fa5a3f69d08a1ccbfc9",
+    "bytes": 1394
+  },
+  {
+    "path": "run-canonical.py",
+    "sha256": "4515359f4d1647ed37178e1f67383532a0ad81e1402c19f04478491ac5df49c3",
+    "bytes": 1785
+  },
+  {
+    "path": "network-guard/sitecustomize.py",
+    "sha256": "2a7ce1f8408fe2d8635691e9af3d0b4ffb23305ec5105a5a1653565eaf46b13e",
+    "bytes": 340
+  },
+  {
+    "path": "dependencies-reused.txt",
+    "sha256": "7a105cb959030ce60494c691935bd799dc4ae2d17ccbf9b570a598ee07f6ed5a",
+    "bytes": 639
+  }
+]

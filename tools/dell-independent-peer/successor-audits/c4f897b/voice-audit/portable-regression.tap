@@ -1,0 +1,203 @@
+TAP version 13
+# {"type":"voice-challenge-binding","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourcePath":"/workspace/scratch/e46efedd3273/successor-c4f897b/source/clients/pwa/voice.mjs","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","note":"Caller must preserve immutable checkout and separately attest runner machine identity."}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-01","states":[{"message":"Starting Read aloud… TTS invoked; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Audio stopped.","state":null},{"message":"Reading your result. TTS start; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=0; paused=0","state":"speaking"}],"calls":["getVoices","speak","cancel"],"clock":0,"ownedUtterance":false,"speaking":false,"timers":0,"failure":{"name":"AssertionError","message":"Late start after STOP must be ignored; current implementation changes UI to speaking.\\n\\n3 !== 2\\n"},"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-02","states":[{"message":"Starting Read aloud… TTS invoked; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Audio stopped.","state":null},{"message":"Starting Read aloud… TTS invoked; attempt=2; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Reading your result. TTS start; attempt=2; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"}],"calls":["getVoices","speak","cancel","getVoices","speak"],"clock":0,"ownedUtterance":true,"speaking":true,"timers":1,"failure":{"name":"AssertionError","message":"Old callback writes TTS start; attempt=2 although attempt 2 has never started.\\n\\n4 !== 3\\n"},"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-03","states":[{"message":"Starting Read aloud… TTS invoked; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Reading your result. TTS start; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=1; pending=0; paused=0","state":"speaking"}],"calls":["getVoices","speak"],"clock":3600000,"ownedUtterance":true,"speaking":true,"timers":0,"failure":{"name":"AssertionError","message":"An owned short utterance remains stuck indefinitely after start; no terminal watchdog exists.\\n+ actual - expected\\n\\n+ {\\n+   lang: 'en-SG',\\n+   onend: [Function (anonymous)],\\n+   onerror: [Function (anonymous)],\\n+   onstart: [Function (anonymous)],\\n+   pitch: 1,\\n+   rate: 1,\\n+   text: 'One short sentence.',\\n+   voice: null,\\n+   volume: 1\\n+ }\\n- null\\n"},"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-04","states":[],"calls":[],"clock":0,"ownedUtterance":false,"speaking":false,"timers":0,"failure":{"name":"AssertionError","message":"Got unwanted exception: getVoices is an external service boundary and must share the failure handling.\\nActual message: \\"Voice service unavailable\\""},"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-05","states":[],"calls":["getVoices"],"clock":0,"ownedUtterance":false,"speaking":false,"timers":0,"failure":{"name":"AssertionError","message":"Got unwanted exception: Utterance construction failure must reach a user-visible error.\\nActual message: \\"Speech engine unavailable\\""},"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-06","states":[{"message":"Read aloud could not start. TTS exception; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=0; paused=0; error=NotAllowedError. The result remains available as text.","state":"error"}],"calls":["getVoices"],"clock":0,"ownedUtterance":false,"speaking":false,"timers":0,"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-07","states":[{"message":"Starting Read aloud… TTS invoked; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Audio stopped.","state":null},{"message":"Starting Read aloud… TTS invoked; attempt=2; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"}],"calls":["getVoices","speak","cancel","getVoices","speak"],"clock":0,"ownedUtterance":true,"speaking":true,"timers":1,"physicalAudioObserved":false}
+# {"type":"voice-challenge-observation","candidateClaim":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","proof":"PROVEN_BY_AUTOMATION","authorship":"independently authored outside ABEX","nativeDell":"UNPROVEN","id":"DV-08","states":[{"message":"Starting Read aloud… TTS invoked; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Reading your result. TTS start; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":"speaking"},{"message":"Finished reading. TTS end; attempt=1; gesture=1; lang=en-SG; voices=1; matching=1; selected=system-auto-unobservable; defaults=none; standalone=1; visibility=unknown; elapsed_ms=0; speaking=0; pending=1; paused=0","state":null}],"calls":["getVoices","speak"],"clock":0,"ownedUtterance":false,"speaking":false,"timers":0,"physicalAudioObserved":false}
+# Subtest: DV-01: a queued start callback after STOP cannot revive the stopped UI
+not ok 1 - DV-01: a queued start callback after STOP cannot revive the stopped UI
+  ---
+  duration_ms: 2.166701
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:70:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Late start after STOP must be ignored; current implementation changes UI to speaking.
+    
+    3 !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:77:10
+    fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:60:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:70:83)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: DV-02: an older attempt cannot emit a start receipt bearing the new attempt number
+not ok 2 - DV-02: an older attempt cannot emit a start receipt bearing the new attempt number
+  ---
+  duration_ms: 0.489108
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:80:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Old callback writes TTS start; attempt=2 although attempt 2 has never started.
+    
+    4 !== 3
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 3
+  actual: 4
+  operator: 'strictEqual'
+  stack: |-
+    file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:86:10
+    fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:60:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:80:95)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: DV-03: start with no end/error must eventually terminate and expose a timeout
+not ok 3 - DV-03: start with no end/error must eventually terminate and expose a timeout
+  ---
+  duration_ms: 0.854159
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:89:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    An owned short utterance remains stuck indefinitely after start; no terminal watchdog exists.
+    + actual - expected
+    
+    + {
+    +   lang: 'en-SG',
+    +   onend: [Function (anonymous)],
+    +   onerror: [Function (anonymous)],
+    +   onstart: [Function (anonymous)],
+    +   pitch: 1,
+    +   rate: 1,
+    +   text: 'One short sentence.',
+    +   voice: null,
+    +   volume: 1
+    + }
+    - null
+    
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: DV-04: voice service exception must be visible and contained
+not ok 4 - DV-04: voice service exception must be visible and contained
+  ---
+  duration_ms: 0.475177
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:98:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception: getVoices is an external service boundary and must share the failure handling.
+    Actual message: "Voice service unavailable"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: ''
+  stack: |-
+    new DOMException (node:internal/per_context/domexception:76:18)
+    Object.getVoices (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:101:33)
+    Voice.speak (file:///workspace/scratch/e46efedd3273/successor-c4f897b/source/clients/pwa/voice.mjs:8:698)
+    file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:99:33
+    getActual (node:assert:611:5)
+    strict.doesNotThrow (node:assert:779:32)
+    fixture.synthesis.getVoices (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:99:10)
+    fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:60:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:98:73)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+  operator: 'doesNotThrow'
+  stack: |-
+    fixture.synthesis.getVoices (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:99:10)
+    fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:60:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:98:73)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: DV-05: utterance construction exception must be visible and contained
+not ok 5 - DV-05: utterance construction exception must be visible and contained
+  ---
+  duration_ms: 0.361936
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:103:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception: Utterance construction failure must reach a user-visible error.
+    Actual message: "Speech engine unavailable"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: ''
+  stack: |-
+    new DOMException (node:internal/per_context/domexception:76:18)
+    new Utterance (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:106:41)
+    Voice.speak (file:///workspace/scratch/e46efedd3273/successor-c4f897b/source/clients/pwa/voice.mjs:8:898)
+    file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:104:33
+    getActual (node:assert:611:5)
+    strict.doesNotThrow (node:assert:779:32)
+    fixture.Utterance.constructor (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:104:10)
+    fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:60:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:103:82)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+  operator: 'doesNotThrow'
+  stack: |-
+    fixture.Utterance.constructor (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:104:10)
+    fixture (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:60:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/dell-peer/challenges/voice-regression.test.mjs:103:82)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: DV-06: speak invocation exception is contained and releases owned state
+ok 6 - DV-06: speak invocation exception is contained and releases owned state
+  ---
+  duration_ms: 0.406223
+  type: 'test'
+  ...
+# Subtest: DV-07: a late end from the old attempt cannot terminate the current attempt
+ok 7 - DV-07: a late end from the old attempt cannot terminate the current attempt
+  ---
+  duration_ms: 0.334434
+  type: 'test'
+  ...
+# Subtest: DV-08: software lifecycle completion is observable without asserting physical audio
+ok 8 - DV-08: software lifecycle completion is observable without asserting physical audio
+  ---
+  duration_ms: 0.388757
+  type: 'test'
+  ...
+# Subtest: DV-09: reentrant terminal callback cannot be overwritten with Starting
+ok 9 - DV-09: reentrant terminal callback cannot be overwritten with Starting # SKIP
+  ---
+  duration_ms: 0.135094
+  type: 'test'
+  ...
+# Subtest: Source remains bound to the runner-supplied digest after challenges
+ok 10 - Source remains bound to the runner-supplied digest after challenges
+  ---
+  duration_ms: 0.236967
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 4
+# fail 5
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 89.562615

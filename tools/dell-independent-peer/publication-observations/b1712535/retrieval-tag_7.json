@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.558Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKDZiYjI3YTQ5OTEwYzQxYWYwMmYyZWFjMDgwMDkwMDk4YzIyMjJhM2Y\",\"sha\":\"6bb27a49910c41af02f2eac080090098c2222a3f\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T13:37:25Z\"},\"object\":{\"sha\":\"ba2a2759072f5b45269979f170b42a0b053ba45f\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/ba2a2759072f5b45269979f170b42a0b053ba45f\"},\"tag\":\"jarvis-prime-phase2-candidate-v14-20260926\",\"message\":\"Phase 2 candidate v14: atomic lesson receipt claims\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "6bb27a49910c41af02f2eac080090098c2222a3f",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f",
+    "display_title": "6bb27a49910c41af02f2eac080090098c2222a3f",
+    "structuredContent": {
+      "title": "6bb27a49910c41af02f2eac080090098c2222a3f",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKDZiYjI3YTQ5OTEwYzQxYWYwMmYyZWFjMDgwMDkwMDk4YzIyMjJhM2Y\",\"sha\":\"6bb27a49910c41af02f2eac080090098c2222a3f\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T13:37:25Z\"},\"object\":{\"sha\":\"ba2a2759072f5b45269979f170b42a0b053ba45f\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/ba2a2759072f5b45269979f170b42a0b053ba45f\"},\"tag\":\"jarvis-prime-phase2-candidate-v14-20260926\",\"message\":\"Phase 2 candidate v14: atomic lesson receipt claims\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/6bb27a49910c41af02f2eac080090098c2222a3f"
+    }
+  }
+}
+

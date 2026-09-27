@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.559Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKDA4MDM3OGU2YTIyYWZlY2E3ZWRjZTRiYTNiNDY5Y2I2NzJmYWY4Mjg\",\"sha\":\"080378e6a22afeca7edce4ba3b469cb672faf828\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T12:50:21Z\"},\"object\":{\"sha\":\"f1a2e4a20df0064863effa9bb70e6078db2aa40b\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/f1a2e4a20df0064863effa9bb70e6078db2aa40b\"},\"tag\":\"jarvis-prime-phase2-candidate-v8-20260926\",\"message\":\"Phase 2 candidate v8: event-anchored verification records\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "080378e6a22afeca7edce4ba3b469cb672faf828",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828",
+    "display_title": "080378e6a22afeca7edce4ba3b469cb672faf828",
+    "structuredContent": {
+      "title": "080378e6a22afeca7edce4ba3b469cb672faf828",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKDA4MDM3OGU2YTIyYWZlY2E3ZWRjZTRiYTNiNDY5Y2I2NzJmYWY4Mjg\",\"sha\":\"080378e6a22afeca7edce4ba3b469cb672faf828\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T12:50:21Z\"},\"object\":{\"sha\":\"f1a2e4a20df0064863effa9bb70e6078db2aa40b\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/f1a2e4a20df0064863effa9bb70e6078db2aa40b\"},\"tag\":\"jarvis-prime-phase2-candidate-v8-20260926\",\"message\":\"Phase 2 candidate v8: event-anchored verification records\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/080378e6a22afeca7edce4ba3b469cb672faf828"
+    }
+  }
+}
+

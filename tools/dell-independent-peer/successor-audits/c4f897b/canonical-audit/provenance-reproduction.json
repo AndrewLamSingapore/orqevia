@@ -1,0 +1,75 @@
+{
+  "tested_candidate_sha": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+  "host": "Linux cloud, not physical Dell",
+  "production_touched": false,
+  "network_used": false,
+  "scope": "app.candidate_provenance.verify_candidate_package public function only; no production route to this function found",
+  "results": [
+    {
+      "case": "fabricated_all_receipts_and_unbuilt_artifact",
+      "expected": "REJECT when establishing independent verification",
+      "actual": {
+        "verdict": "ACCEPT",
+        "violations": [],
+        "source_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "remote_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "artifact_digest": "sha256:f6ab1fa19953add43d5060d52038beb0606d9788d6a44b95c8386dcf1ba49a94",
+        "tests_verified": 1
+      },
+      "independent_actor_used": false,
+      "tests_executed": 0,
+      "artifact_built": false
+    },
+    {
+      "case": "dirty_checkout",
+      "expected": "REJECT when establishing frozen source integrity",
+      "worktree_status": "M source.txt",
+      "actual": {
+        "verdict": "ACCEPT",
+        "violations": [],
+        "source_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "remote_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "artifact_digest": "sha256:f6ab1fa19953add43d5060d52038beb0606d9788d6a44b95c8386dcf1ba49a94",
+        "tests_verified": 1
+      }
+    },
+    {
+      "case": "wrong_checkout_head",
+      "expected": "REJECT when establishing exact frozen checkout",
+      "actual_head": "c6ca5d1b481465d4c698c4600a3dd7ad54d2c7fe",
+      "claimed_source": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+      "actual": {
+        "verdict": "ACCEPT",
+        "violations": [],
+        "source_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "remote_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "artifact_digest": "sha256:f6ab1fa19953add43d5060d52038beb0606d9788d6a44b95c8386dcf1ba49a94",
+        "tests_verified": 1
+      }
+    },
+    {
+      "case": "malformed_source_sha",
+      "expected": "REJECT without crash",
+      "actual": {
+        "uncaught_exception": "TypeError",
+        "message": "expected string or bytes-like object, got 'list'"
+      }
+    },
+    {
+      "case": "malformed_remote_sha",
+      "expected": "REJECT without crash",
+      "actual": {
+        "uncaught_exception": "TypeError",
+        "message": "expected string or bytes-like object, got 'int'"
+      }
+    },
+    {
+      "case": "malformed_branch",
+      "expected": "REJECT without crash",
+      "actual": {
+        "uncaught_exception": "TypeError",
+        "message": "expected string or bytes-like object, got 'int'"
+      }
+    }
+  ]
+}

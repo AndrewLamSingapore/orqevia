@@ -1,0 +1,73 @@
+[
+  {
+    "label": "canonical",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "scripts/run_canonical_ci.py"
+    ],
+    "exit_code": 0,
+    "seconds": 6.6815032958984375
+  },
+  {
+    "label": "full-suite",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "-p",
+      "no:cacheprovider",
+      "-q",
+      "--basetemp",
+      "/workspace/scratch/e46efedd3273/successor-c4f897b/canonical-audit/full-suite-temp",
+      "--junitxml",
+      "/workspace/scratch/e46efedd3273/successor-c4f897b/canonical-audit/full-suite.xml",
+      "tests"
+    ],
+    "exit_code": 1,
+    "seconds": 11.253410577774048
+  },
+  {
+    "label": "node-regression",
+    "command": [
+      "node",
+      "--test",
+      "clients/pwa/candidate-tests.mjs",
+      "clients/pwa/followup-tests.mjs",
+      "clients/pwa/revision-tests.mjs",
+      "clients/pwa/tests.mjs",
+      "clients/pwa/voice-tests.mjs",
+      "clients/dell/test/client.test.mjs",
+      "clients/dell/test/url-transport.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.21442484855651855
+  },
+  {
+    "label": "dell-packaging",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "clients/dell/tools",
+      "-p",
+      "test_package_client.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.6153054237365723
+  },
+  {
+    "label": "provenance-reproduction",
+    "command": [
+      "/workspace/scratch/e46efedd3273/dell-peer/canonical-audit/venv/bin/python",
+      "-B",
+      "/workspace/scratch/e46efedd3273/successor-c4f897b/canonical-audit/provenance-reproduction.py"
+    ],
+    "exit_code": 0,
+    "seconds": 0.11407327651977539
+  }
+]

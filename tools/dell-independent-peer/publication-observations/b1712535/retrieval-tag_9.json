@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.558Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGFhYTI0ZjNlMjQ2MDg2NzY2ZDJmOTUyYWNiZjI1YmNjNzUxNThhOTU\",\"sha\":\"aaa24f3e246086766d2f952acbf25bcc75158a95\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T11:54:10Z\"},\"object\":{\"sha\":\"f25db2314f864f7bc28e25950073a3ea4c83c96e\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/f25db2314f864f7bc28e25950073a3ea4c83c96e\"},\"tag\":\"jarvis-prime-phase2-candidate-v3-20260926\",\"message\":\"JARVIS PRIME Phase 2 candidate v3 integrity hardening\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "aaa24f3e246086766d2f952acbf25bcc75158a95",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95",
+    "display_title": "aaa24f3e246086766d2f952acbf25bcc75158a95",
+    "structuredContent": {
+      "title": "aaa24f3e246086766d2f952acbf25bcc75158a95",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGFhYTI0ZjNlMjQ2MDg2NzY2ZDJmOTUyYWNiZjI1YmNjNzUxNThhOTU\",\"sha\":\"aaa24f3e246086766d2f952acbf25bcc75158a95\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T11:54:10Z\"},\"object\":{\"sha\":\"f25db2314f864f7bc28e25950073a3ea4c83c96e\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/f25db2314f864f7bc28e25950073a3ea4c83c96e\"},\"tag\":\"jarvis-prime-phase2-candidate-v3-20260926\",\"message\":\"JARVIS PRIME Phase 2 candidate v3 integrity hardening\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/aaa24f3e246086766d2f952acbf25bcc75158a95"
+    }
+  }
+}
+

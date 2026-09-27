@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: iOS Read Aloud retains utterance, delegates usable Chinese voice choice to WebKit, and exposes lifecycle state
+ok 1 - iOS Read Aloud retains utterance, delegates usable Chinese voice choice to WebKit, and exposes lifecycle state
+  ---
+  duration_ms: 1.396748
+  type: 'test'
+  ...
+# Subtest: Read Aloud errors are visible and never silently treated as success
+ok 2 - Read Aloud errors are visible and never silently treated as success
+  ---
+  duration_ms: 0.243488
+  type: 'test'
+  ...
+# Subtest: paused synthesis is resumed before the user-gesture speak call
+ok 3 - paused synthesis is resumed before the user-gesture speak call
+  ---
+  duration_ms: 0.719676
+  type: 'test'
+  ...
+# Subtest: end without start is reported as an error, never success
+ok 4 - end without start is reported as an error, never success
+  ---
+  duration_ms: 0.243027
+  type: 'test'
+  ...
+# Subtest: no-start timeout cancels the owned utterance and exposes observable state
+ok 5 - no-start timeout cancels the owned utterance and exposes observable state
+  ---
+  duration_ms: 0.329397
+  type: 'test'
+  ...
+# Subtest: lifecycle cleanup is silent when no audio is active
+ok 6 - lifecycle cleanup is silent when no audio is active
+  ---
+  duration_ms: 0.170497
+  type: 'test'
+  ...
+# Subtest: stale browser pending flag does not pre-cancel a fresh iOS user-gesture utterance
+ok 7 - stale browser pending flag does not pre-cancel a fresh iOS user-gesture utterance
+  ---
+  duration_ms: 0.197127
+  type: 'test'
+  ...
+# Subtest: a second tap stops owned audio without cancel-and-restart in the same gesture turn
+ok 8 - a second tap stops owned audio without cancel-and-restart in the same gesture turn
+  ---
+  duration_ms: 0.214123
+  type: 'test'
+  ...
+# Subtest: stop does not cancel synthesis state this Voice instance does not own
+ok 9 - stop does not cancel synthesis state this Voice instance does not own
+  ---
+  duration_ms: 0.207784
+  type: 'test'
+  ...
+# Subtest: terminal speech telemetry identifies browser voice-selection limits and elapsed state
+ok 10 - terminal speech telemetry identifies browser voice-selection limits and elapsed state
+  ---
+  duration_ms: 0.346232
+  type: 'test'
+  ...
+# Subtest: independent Web Audio control is invoked synchronously and reports its terminal state
+ok 11 - independent Web Audio control is invoked synchronously and reports its terminal state
+  ---
+  duration_ms: 0.350018
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 83.173515

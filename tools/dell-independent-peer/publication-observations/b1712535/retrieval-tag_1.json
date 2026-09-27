@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.558Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKDQwNzg3ZGYzOTQxODg3OTViYzBhM2E0YWVjMDg0NjJmMzVlYjEwNDA\",\"sha\":\"40787df394188795bc0a3a4aec08462f35eb1040\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T10:15:15Z\"},\"object\":{\"sha\":\"26f7d49cfe7134f8665dda5886111e91b574554d\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/26f7d49cfe7134f8665dda5886111e91b574554d\"},\"tag\":\"jarvis-prime-golden-gen1-20260926\",\"message\":\"JARVIS PRIME Golden Baseline Architecture Generation 1\\nRuntime source: 17fad78d410dca5d9101483cb777a2b9b619bac3\\nImage: prime:sha-17fad78\\nPRIME.RUNTIME: VERIFIED\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "40787df394188795bc0a3a4aec08462f35eb1040",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040",
+    "display_title": "40787df394188795bc0a3a4aec08462f35eb1040",
+    "structuredContent": {
+      "title": "40787df394188795bc0a3a4aec08462f35eb1040",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKDQwNzg3ZGYzOTQxODg3OTViYzBhM2E0YWVjMDg0NjJmMzVlYjEwNDA\",\"sha\":\"40787df394188795bc0a3a4aec08462f35eb1040\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T10:15:15Z\"},\"object\":{\"sha\":\"26f7d49cfe7134f8665dda5886111e91b574554d\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/26f7d49cfe7134f8665dda5886111e91b574554d\"},\"tag\":\"jarvis-prime-golden-gen1-20260926\",\"message\":\"JARVIS PRIME Golden Baseline Architecture Generation 1\\nRuntime source: 17fad78d410dca5d9101483cb777a2b9b619bac3\\nImage: prime:sha-17fad78\\nPRIME.RUNTIME: VERIFIED\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/40787df394188795bc0a3a4aec08462f35eb1040"
+    }
+  }
+}
+

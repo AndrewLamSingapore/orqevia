@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-09-27T03:29:20.981Z",
+  "qualification": "PROVEN_BY_AUTOMATION",
+  "ref_result": {
+    "content": "{\"ref\":\"refs/heads/fix/phase2-ios-audible-boundary-20260927\",\"node_id\":\"REF_kwDOUDVGnNoAM3JlZnMvaGVhZHMvZml4L3BoYXNlMi1pb3MtYXVkaWJsZS1ib3VuZGFyeS0yMDI2MDkyNw\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/heads/fix/phase2-ios-audible-boundary-20260927\",\"object\":{\"sha\":\"b171253566e7c879283d2aacf699ae6c1ec8988e\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/b171253566e7c879283d2aacf699ae6c1ec8988e\"}}",
+    "title": "phase2-ios-audible-boundary-20260927",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/heads/fix/phase2-ios-audible-boundary-20260927",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/heads/fix/phase2-ios-audible-boundary-20260927",
+    "display_title": "phase2-ios-audible-boundary-20260927",
+    "structuredContent": {
+      "title": "phase2-ios-audible-boundary-20260927",
+      "content": "{\"ref\":\"refs/heads/fix/phase2-ios-audible-boundary-20260927\",\"node_id\":\"REF_kwDOUDVGnNoAM3JlZnMvaGVhZHMvZml4L3BoYXNlMi1pb3MtYXVkaWJsZS1ib3VuZGFyeS0yMDI2MDkyNw\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/heads/fix/phase2-ios-audible-boundary-20260927\",\"object\":{\"sha\":\"b171253566e7c879283d2aacf699ae6c1ec8988e\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/b171253566e7c879283d2aacf699ae6c1ec8988e\"}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/refs/heads/fix/phase2-ios-audible-boundary-20260927"
+    }
+  },
+  "interpretation": "The mutable branch has moved beyond audited c4f897b. This observation is not freeze, deployment or acceptance proof."
+}

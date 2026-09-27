@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.556Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/contents/governance/phase2-state.json?ref=b171253566e7c879283d2aacf699ae6c1ec8988e",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\n  \"schema_version\": \"jarvis.phase2-governance-state.v1\",\n  \"scope\": \"Phase 2 isolated candidate\",\n  \"production_status\": \"NOT_DEPLOYED\",\n  \"runtime_acceptance\": \"NOT_APPLICABLE\",\n  \"independent_verification\": \"PENDING_NEW_CANDIDATE_FREEZE\",\n  \"latest_full_regression\": {\n    \"result\": \"PASS\",\n    \"tests_passed\": 984,\n    \"warnings\": 5\n  },\n  \"latest_independent_verification\": {\n    \"candidate\": \"c5f93b5370e1daed8ece604c88e1bc12eac48f09\",\n    \"result\": \"FAIL\",\n    \"material_severity\": \"P1\",\n    \"superseded\": true\n  },\n  \"golden_gen1_modified\": false,\n  \"owner_assertion_is_system_verification\": false,\n  \"historical_candidate_verification_applies_to_current_candidate\": false,\n  \"authority\": \"This record describes candidate governance state only; a governed promotion receipt and independent verification are required for any later production acceptance.\"\n}\n",
+    "title": "phase2-state.json",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/contents/governance/phase2-state.json?ref=b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/contents/governance/phase2-state.json?ref=b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "display_title": "phase2-state.json",
+    "structuredContent": {
+      "title": "phase2-state.json",
+      "content": "{\n  \"schema_version\": \"jarvis.phase2-governance-state.v1\",\n  \"scope\": \"Phase 2 isolated candidate\",\n  \"production_status\": \"NOT_DEPLOYED\",\n  \"runtime_acceptance\": \"NOT_APPLICABLE\",\n  \"independent_verification\": \"PENDING_NEW_CANDIDATE_FREEZE\",\n  \"latest_full_regression\": {\n    \"result\": \"PASS\",\n    \"tests_passed\": 984,\n    \"warnings\": 5\n  },\n  \"latest_independent_verification\": {\n    \"candidate\": \"c5f93b5370e1daed8ece604c88e1bc12eac48f09\",\n    \"result\": \"FAIL\",\n    \"material_severity\": \"P1\",\n    \"superseded\": true\n  },\n  \"golden_gen1_modified\": false,\n  \"owner_assertion_is_system_verification\": false,\n  \"historical_candidate_verification_applies_to_current_candidate\": false,\n  \"authority\": \"This record describes candidate governance state only; a governed promotion receipt and independent verification are required for any later production acceptance.\"\n}\n",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/contents/governance/phase2-state.json?ref=b171253566e7c879283d2aacf699ae6c1ec8988e"
+    }
+  }
+}
+

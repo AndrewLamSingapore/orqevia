@@ -1,0 +1,10 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.556Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/tags?per_page=100",
+  "tool": "github_fetch_GET",
+  "response": {
+    "error": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+    "error_code": "INVALID_ARGUMENT"
+  }
+}
+

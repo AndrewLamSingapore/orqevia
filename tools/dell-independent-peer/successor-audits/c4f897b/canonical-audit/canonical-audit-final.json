@@ -1,0 +1,138 @@
+{
+  "candidate_sha": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+  "tree": "36dd016eacae9c5495a6119ef00cab7e8ee44d36",
+  "source_clean": true,
+  "execution_copy_clean": true,
+  "host": "Linux cloud, not physical Dell",
+  "qualification": "PROVEN_BY_AUTOMATION",
+  "execution": "Fresh exact successor execution copy, new fixture/data dirs, independent reruns; pinned dependency venv reused. Python IP socket.connect blocked via audit hook, Git transports file-only, allowlisted credential-free environment. Not a kernel sandbox.",
+  "full_python_suite": {
+    "passed": 987,
+    "failed": 2,
+    "skipped": 0,
+    "total": 989,
+    "warnings": 5,
+    "seconds": 10.65
+  },
+  "failures": [
+    {
+      "test": "tests.test_accept_abex_runtime::test_exact_documents_bind_independent_verification_to_receipt",
+      "message": "AssertionError: ABEX receipt bytes mismatch",
+      "root_cause": "RECEIPT_EOL_BINDING"
+    },
+    {
+      "test": "tests.test_golden_gen1::test_golden_gen1_manifest_binds_authoritative_evidence",
+      "message": "AssertionError: assert ['receipt_digest'] == []\n  \n  Left contains one more item: 'receipt_digest'\n  \n  Full diff:\n  - []\n  + [\n  +     'receipt_digest',\n  + ]",
+      "root_cause": "RECEIPT_EOL_BINDING"
+    }
+  ],
+  "canonical_subset": {
+    "passed": 516,
+    "failed": 0,
+    "skipped": 0,
+    "overlaps_full_python_suite": true
+  },
+  "node_regression": {
+    "passed": 63,
+    "failed": 0,
+    "skipped": 0
+  },
+  "dell_packaging": {
+    "passed": 3,
+    "failed": 0
+  },
+  "independent_challenge_verdict": "FAIL",
+  "provenance_challenge": [
+    {
+      "case": "fabricated_all_receipts_and_unbuilt_artifact",
+      "expected": "REJECT when establishing independent verification",
+      "actual": {
+        "verdict": "ACCEPT",
+        "violations": [],
+        "source_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "remote_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "artifact_digest": "sha256:f6ab1fa19953add43d5060d52038beb0606d9788d6a44b95c8386dcf1ba49a94",
+        "tests_verified": 1
+      },
+      "independent_actor_used": false,
+      "tests_executed": 0,
+      "artifact_built": false
+    },
+    {
+      "case": "dirty_checkout",
+      "expected": "REJECT when establishing frozen source integrity",
+      "worktree_status": "M source.txt",
+      "actual": {
+        "verdict": "ACCEPT",
+        "violations": [],
+        "source_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "remote_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "artifact_digest": "sha256:f6ab1fa19953add43d5060d52038beb0606d9788d6a44b95c8386dcf1ba49a94",
+        "tests_verified": 1
+      }
+    },
+    {
+      "case": "wrong_checkout_head",
+      "expected": "REJECT when establishing exact frozen checkout",
+      "actual_head": "c6ca5d1b481465d4c698c4600a3dd7ad54d2c7fe",
+      "claimed_source": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+      "actual": {
+        "verdict": "ACCEPT",
+        "violations": [],
+        "source_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "remote_sha": "2ad158b86cd77c600c18f3b292a3f893209c1b24",
+        "artifact_digest": "sha256:f6ab1fa19953add43d5060d52038beb0606d9788d6a44b95c8386dcf1ba49a94",
+        "tests_verified": 1
+      }
+    },
+    {
+      "case": "malformed_source_sha",
+      "expected": "REJECT without crash",
+      "actual": {
+        "uncaught_exception": "TypeError",
+        "message": "expected string or bytes-like object, got 'list'"
+      }
+    },
+    {
+      "case": "malformed_remote_sha",
+      "expected": "REJECT without crash",
+      "actual": {
+        "uncaught_exception": "TypeError",
+        "message": "expected string or bytes-like object, got 'int'"
+      }
+    },
+    {
+      "case": "malformed_branch",
+      "expected": "REJECT without crash",
+      "actual": {
+        "uncaught_exception": "TypeError",
+        "message": "expected string or bytes-like object, got 'int'"
+      }
+    }
+  ],
+  "P0": 0,
+  "P1": 0,
+  "P2_findings": [
+    {
+      "id": "RECEIPT_EOL_BINDING",
+      "scope": "Historical acceptance helper and Golden verifier; independently reproduced on successor",
+      "actual_receipt_sha256": "a84d531833665336254392adf2c4b0121c814ce9ea52ac8b2e001ae5be3abc8f",
+      "expected_sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+      "CRLF_sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0"
+    },
+    {
+      "id": "PROVENANCE_CHECKER_TRUST_BINDING",
+      "scope": "app.candidate_provenance.verify_candidate_package API only; no production caller found",
+      "behavior": "Independently created fabricated receipts + arbitrary unbuilt artifact ACCEPT; dirty checkout ACCEPT; checkout HEAD mismatch ACCEPT. Same checker trust/integrity root cause group.",
+      "lower_severity": "Malformed scalar types cause uncaught TypeError; no additional P2 count."
+    }
+  ],
+  "physical_gate": "63 Node PASS include fake SpeechSynthesis/AudioContext fixtures; does not establish audible iPhone output or independent physical Dell execution. Owner physical observation remains required.",
+  "manifest": "Exact successor frozen manifest/image/qualification receipt unavailable; historical candidate receipts do not certify this SHA.",
+  "migration": "UNPROVEN rehearsal; no production database touched",
+  "rollback": "UNPROVEN rehearsal; no production rollback attempted",
+  "production_touched": false,
+  "candidate_modified": false,
+  "promotion_verification": "FAIL",
+  "historical_evidence": "All prior candidate audit logs retained in separate directories; none overwritten."
+}

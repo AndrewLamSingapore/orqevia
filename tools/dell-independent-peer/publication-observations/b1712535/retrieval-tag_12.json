@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.559Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGU0YzIzNDY1ODY0ZmY1MTA4YWI0ODY1ZTA1M2JkNTQ5YjBmY2IzZmI\",\"sha\":\"e4c23465864ff5108ab4865e053bd549b0fcb3fb\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T12:31:12Z\"},\"object\":{\"sha\":\"d3e4683980f576012f16503aeb6007e8cc95256c\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/d3e4683980f576012f16503aeb6007e8cc95256c\"},\"tag\":\"jarvis-prime-phase2-candidate-v6-20260926\",\"message\":\"Phase 2 candidate v6: host-bound portable verification\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+    "display_title": "e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+    "structuredContent": {
+      "title": "e4c23465864ff5108ab4865e053bd549b0fcb3fb",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGU0YzIzNDY1ODY0ZmY1MTA4YWI0ODY1ZTA1M2JkNTQ5YjBmY2IzZmI\",\"sha\":\"e4c23465864ff5108ab4865e053bd549b0fcb3fb\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T12:31:12Z\"},\"object\":{\"sha\":\"d3e4683980f576012f16503aeb6007e8cc95256c\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/d3e4683980f576012f16503aeb6007e8cc95256c\"},\"tag\":\"jarvis-prime-phase2-candidate-v6-20260926\",\"message\":\"Phase 2 candidate v6: host-bound portable verification\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/e4c23465864ff5108ab4865e053bd549b0fcb3fb"
+    }
+  }
+}
+

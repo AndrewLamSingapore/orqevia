@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.558Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGYyOTM5MTdjMjc5OWNmNGRmYzdmM2UzYTk2ZDJiMTAwODA3MDEyNTI\",\"sha\":\"f293917c2799cf4dfc7f3e3a96d2b10080701252\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T11:35:06Z\"},\"object\":{\"sha\":\"325c901836f51a4d6f39376766b114acdd7b506d\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/325c901836f51a4d6f39376766b114acdd7b506d\"},\"tag\":\"jarvis-prime-phase2-candidate-20260926\",\"message\":\"JARVIS PRIME Phase 2 qualified candidate freeze 2026-09-26\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "f293917c2799cf4dfc7f3e3a96d2b10080701252",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252",
+    "display_title": "f293917c2799cf4dfc7f3e3a96d2b10080701252",
+    "structuredContent": {
+      "title": "f293917c2799cf4dfc7f3e3a96d2b10080701252",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGYyOTM5MTdjMjc5OWNmNGRmYzdmM2UzYTk2ZDJiMTAwODA3MDEyNTI\",\"sha\":\"f293917c2799cf4dfc7f3e3a96d2b10080701252\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T11:35:06Z\"},\"object\":{\"sha\":\"325c901836f51a4d6f39376766b114acdd7b506d\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/325c901836f51a4d6f39376766b114acdd7b506d\"},\"tag\":\"jarvis-prime-phase2-candidate-20260926\",\"message\":\"JARVIS PRIME Phase 2 qualified candidate freeze 2026-09-26\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f293917c2799cf4dfc7f3e3a96d2b10080701252"
+    }
+  }
+}
+

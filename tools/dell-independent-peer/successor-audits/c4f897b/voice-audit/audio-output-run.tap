@@ -1,0 +1,151 @@
+TAP version 13
+# {"candidate":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","id":"DA-01","classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false,"clock":0,"states":[{"message":"Audio output control started; gesture=1; context=running. A short tone should be audible.","state":"speaking"}],"contexts":[{"state":"running","closeCalls":0,"resumeCalls":0,"stopTimes":[0.65]}]}
+# {"candidate":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","id":"DA-02","classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false,"clock":60000,"states":[{"message":"Audio output control started; gesture=1; context=suspended. A short tone should be audible.","state":"speaking"}],"contexts":[{"state":"suspended","closeCalls":0,"resumeCalls":1,"stopTimes":[0.65]}]}
+# {"candidate":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","id":"DA-03","classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false,"clock":0,"states":[{"message":"Audio output control started; gesture=1; context=suspended. A short tone should be audible.","state":"speaking"},{"message":"Audio output control started; gesture=1; context=suspended. A short tone should be audible.","state":"speaking"},{"message":"Audio output control started; gesture=1; context=suspended. A short tone should be audible.","state":"speaking"}],"contexts":[{"state":"suspended","closeCalls":0,"resumeCalls":1,"stopTimes":[0.65]},{"state":"suspended","closeCalls":0,"resumeCalls":1,"stopTimes":[0.65]},{"state":"suspended","closeCalls":0,"resumeCalls":1,"stopTimes":[0.65]}]}
+# {"candidate":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","id":"DA-04","classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false,"clock":0,"states":[{"message":"Audio output control failed: InvalidStateError.","state":"error"}],"contexts":[{"state":"closed","closeCalls":1,"resumeCalls":0}]}
+# {"candidate":"c4f897b0d311a4c15be27df52f14d4c9e6ab5702","sourceSha256":"040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078","id":"DA-05","classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false,"clock":0,"states":[{"message":"Audio output control started; gesture=1; context=running. A short tone should be audible.","state":"speaking"},{"message":"Audio output control ended; gesture=1; context=running; elapsed_ms=0. Confirm whether the tone was physically audible.","state":null}],"contexts":[{"state":"closed","closeCalls":1,"resumeCalls":0,"stopTimes":[0.65]}]}
+# {"mode":"resume","states":[{"message":"Audio output control started; gesture=1; context=suspended. A short tone should be audible.","state":"speaking"}],"unhandled":["NotAllowedError"],"classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false}
+# {"mode":"close","states":[{"message":"Audio output control started; gesture=1; context=running. A short tone should be audible.","state":"speaking"},{"message":"Audio output control ended; gesture=1; context=running; elapsed_ms=0. Confirm whether the tone was physically audible."}],"unhandled":["InvalidStateError"],"classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false}
+# Subtest: DA-01: Stop audio must cancel a diagnostic tone it started
+not ok 1 - DA-01: Stop audio must cancel a diagnostic tone it started
+  ---
+  duration_ms: 1.986869
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: 'Stop ignores the tone: context remains running, only the original future stop is scheduled.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:37:10
+    fixture (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:28:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:35:71)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.start (node:internal/test_runner/test:1242:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: DA-02: pending resume must have a wall-clock bound and cleanup
+not ok 2 - DA-02: pending resume must have a wall-clock bound and cleanup
+  ---
+  duration_ms: 0.327855
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:40:1'
+  failureType: 'testCodeFailure'
+  error: 'Suspended context is never closed when resume remains pending; audio-clock stop cannot expire.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    fixture.suspended (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:42:10)
+    fixture (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:28:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:40:75)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: DA-03: repeat test-sound taps cannot accumulate unowned pending contexts
+not ok 3 - DA-03: repeat test-sound taps cannot accumulate unowned pending contexts
+  ---
+  duration_ms: 0.280603
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:46:1'
+  failureType: 'testCodeFailure'
+  error: 'Three safe test taps created three live pending contexts with no ownership/replacement policy.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    fixture.suspended (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:48:10)
+    fixture (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:28:8)
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:46:85)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: DA-04: synchronous node-creation failure is visible and closes context
+ok 4 - DA-04: synchronous node-creation failure is visible and closes context
+  ---
+  duration_ms: 0.503971
+  type: 'test'
+  ...
+# Subtest: DA-05: ended tone still requests physical audibility confirmation
+ok 5 - DA-05: ended tone still requests physical audibility confirmation
+  ---
+  duration_ms: 0.302667
+  type: 'test'
+  ...
+# Subtest: DA-06: rejected resume Promise must be contained
+not ok 6 - DA-06: rejected resume Promise must be contained
+  ---
+  duration_ms: 63.842204
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:61:38'
+  failureType: 'testCodeFailure'
+  error: |-
+    resume rejection escapes handling. Child observation: {"mode":"resume","states":[{"message":"Audio output control started; gesture=1; context=suspended. A short tone should be audible.","state":"speaking"}],"unhandled":["NotAllowedError"],"classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false} 
+    
+    17 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 17
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:81:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: DA-07: rejected close Promise must be contained
+not ok 7 - DA-07: rejected close Promise must be contained
+  ---
+  duration_ms: 68.647849
+  type: 'test'
+  location: '/workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:61:38'
+  failureType: 'testCodeFailure'
+  error: |-
+    close rejection escapes handling. Child observation: {"mode":"close","states":[{"message":"Audio output control started; gesture=1; context=running. A short tone should be audible.","state":"speaking"},{"message":"Audio output control ended; gesture=1; context=running; elapsed_ms=0. Confirm whether the tone was physically audible."}],"unhandled":["InvalidStateError"],"classification":"PROVEN_BY_AUTOMATION","nativeDell":"UNPROVEN","physicalAudioObserved":false} 
+    
+    17 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 17
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/scratch/e46efedd3273/successor-c4f897b/voice-audit/audio-output-independent.test.mjs:81:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 2
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 212.377656

@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-09-27T03:31:02.558Z",
+  "request_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+  "tool": "github_fetch_GET",
+  "response": {
+    "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGYwMmE3YzZlODU2ZDFjZGYzN2I0YTNjZTllZWUwMWI4Yzc1MGMyMTQ\",\"sha\":\"f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T13:27:56Z\"},\"object\":{\"sha\":\"424e8958c70d36cf501cd151e833aac4a7fc72cf\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/424e8958c70d36cf501cd151e833aac4a7fc72cf\"},\"tag\":\"jarvis-prime-phase2-candidate-v13-20260926\",\"message\":\"Phase 2 candidate v13: semantically bound lesson qualification\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+    "title": "f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+    "modified_date": null,
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+    "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+    "display_title": "f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+    "structuredContent": {
+      "title": "f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214",
+      "content": "{\"node_id\":\"TA_kwDOUDVGnNoAKGYwMmE3YzZlODU2ZDFjZGYzN2I0YTNjZTllZWUwMWI4Yzc1MGMyMTQ\",\"sha\":\"f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214\",\"tagger\":{\"name\":\"Andrew Lam\",\"email\":\"andrew3657@hotmail.com\",\"date\":\"2026-09-26T13:27:56Z\"},\"object\":{\"sha\":\"424e8958c70d36cf501cd151e833aac4a7fc72cf\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/424e8958c70d36cf501cd151e833aac4a7fc72cf\"},\"tag\":\"jarvis-prime-phase2-candidate-v13-20260926\",\"message\":\"Phase 2 candidate v13: semantically bound lesson qualification\\n\",\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}}",
+      "display_url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/f02a7c6e856d1cdf37b4a3ce9eee01b8c750c214"
+    }
+  }
+}
+

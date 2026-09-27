@@ -1,0 +1,8 @@
+{
+  "candidate": "c4f897b0d311a4c15be27df52f14d4c9e6ab5702",
+  "sourceSha256": "040e9406333c7577264bc5a3215d9031a688ffc2564d89ad59b916facf5d1078",
+  "classification": "PROVEN_BY_AUTOMATION",
+  "nativeDell": "UNPROVEN",
+  "exitCode": 1,
+  "logSha256": "cefcc1cfae394ea896924c369bdd3a9c3113b95b7d9d7a3f7ad09491fff78d56"
+}
