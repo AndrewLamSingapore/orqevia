@@ -1,0 +1,98 @@
+{
+  "schema_version": "abex.phase2.runtime-observation.v1",
+  "receipt_state": "ABEX_ACCEPTED_OWNER_AUDIO_WAIVER_DELL_POST_AUDIT_PENDING",
+  "observed_at_utc": "2026-09-27T04:02:39Z",
+  "authority_boundary": "Owner accepted the qualified non-audio Phase-2 scope. Read Aloud remains a preserved physical failure and is excluded, not passed. Dell post-promotion verification remains independent and pending.",
+  "runtime": {
+    "host_id": "ABEX",
+    "deployment_epoch": "prime-epoch-20260919",
+    "source_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "remote_branch": "fix/phase2-ios-audible-boundary-20260927",
+    "remote_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "freeze_tag": "jarvis-prime-phase2-audio-diagnostic-b171253-20260927",
+    "image_tag": "prime:phase2-audio-diagnostic-b171253",
+    "image_id": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "prime": {"health": "healthy", "restart_count": 0, "oom_killed": false},
+    "interface": {"health": "healthy", "restart_count": 0, "oom_killed": false, "listener": "192.168.1.23:8443"},
+    "ollama": {"health": "healthy", "restart_count": 0, "oom_killed": false, "image_id": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532"}
+  },
+  "canonical_components": {
+    "product_manifest_sha256": "4e5533c39c95ee3cd4b735f81ce35c587f4785b1d7b2c7e3ebecadfc62e94ccd",
+    "runtime_contract_sha256": "59b8050334d33111a8a82494bcce5d3fc0b500dd61345452ab2d761ee0e798a2",
+    "registry_schema": "2.0",
+    "logical_agent_count": 21,
+    "registry_sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+  },
+  "pwa": {
+    "https_scope": "LAN_ONLY",
+    "cache_generation": "jarvis-shell-v14",
+    "source_served_hash_match": true,
+    "assets": {
+      "index.html": "2781d6232a403778f385a62a5da8c9f376024db5162bda995a6d9c6b223ee812",
+      "app.mjs": "6c279b7044276f9ab91905c64c2f55409d15cdb84be680186ed27773ca6ec5eb",
+      "sw.js": "d2abcde31653d1f673bde94beffa7170e248598cfefa242677b487a5ffd85f99",
+      "release.mjs": "e4a530ef974ecfc69827acac775aa1f92f8a50d0de56aaa9bf0d05a077da42f3",
+      "voice.mjs": "0a35654895ad0d12be656d726faaa94e5bcf0fda1bb72288a9f0507c862291ab",
+      "recovery.js": "dc9f204e4945dac0aa964364d3428ddaa25dbfec159b7bf0e6ba740f891ceba5"
+    }
+  },
+  "qualification": {
+    "canonical_python": {"passed": 992, "failed": 0, "warnings": 5},
+    "client_and_dell": {"passed": 55, "failed": 0},
+    "independent_review": {"verdict": "PASS", "p0": 0, "p1": 0, "p2": 0},
+    "candidate_manifest_verifier": "PASS",
+    "remote_sha_verified": true
+  },
+  "live_acceptance": {
+    "task_id": "d18a34dc-b76f-4520-b9a5-e3eded219245",
+    "state": "COMPLETED",
+    "created_at": "2026-09-27T04:00:16.530525+00:00",
+    "started_at": "2026-09-27T04:00:16.592247+00:00",
+    "completed_at": "2026-09-27T04:00:20.381708+00:00",
+    "runtime_source_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "runtime_image_digest": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "exact_result": "JARVIS Phase 2 runtime acceptance healthy.",
+    "model_system_contradictions": []
+  },
+  "data": {
+    "database_integrity": {
+      "compute-ledger.db": "ok", "compute-queue.db": "ok", "interface.db": "ok",
+      "jarvis-memory.db": "ok", "objectives.db": "ok", "offline-queue.db": "ok",
+      "prime-spine.db": "ok", "prime.db": "ok", "pwa-sessions.db": "ok"
+    },
+    "compute_jobs": {"completed": 32, "active": 0, "failed": 0},
+    "offline_queue": {"reconciled": 1, "unreconciled": 0},
+    "service_restart_persistence": "PASS",
+    "identity_counts_preserved": {"owner_devices": 1, "owner_sessions": 6, "member_sessions": 3, "unused_pairing_codes": 0}
+  },
+  "security": {
+    "prime_listener": "127.0.0.1:8000",
+    "interface_listener": "192.168.1.23:8443",
+    "unexpected_public_listeners": 0,
+    "relevant_bugcheck_storage_ntfs_nvme_whea_events_24h": 0,
+    "owner_member_isolation_regression": "PASS",
+    "model_content_authoritative": false
+  },
+  "rollback": {
+    "former_golden_tag": "prime:sha-17fad78",
+    "former_golden_image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
+    "checkpoint": "/data/recovery/phase2-audio-diagnostic-predeploy-20260927-b171253",
+    "ready": true
+  },
+  "audio": {
+    "issue_id": "IOS_PWA_AUDIO_OUTPUT_NOT_PHYSICALLY_VERIFIED",
+    "status": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
+    "production_critical": false,
+    "owner_scope_waiver": true,
+    "read_aloud_pass": false,
+    "next_action": "NONE_UNTIL_SEPARATELY_AUTHORIZED"
+  },
+  "acceptance": {
+    "non_audio_phase2_scope": "VERIFIED",
+    "prime_runtime_acceptance": "VERIFIED_WITH_EXPLICIT_AUDIO_EXCLUSION",
+    "dell_post_promotion_verification": "PENDING",
+    "unresolved_p0": 0,
+    "unresolved_p1": 0,
+    "unresolved_p2_accepted_scope": 0
+  }
+}
