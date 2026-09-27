@@ -2,3 +2,6 @@
 clients/dell/** text eol=lf
 tests/fixtures/historical-agent-registry-29.json text eol=lf
 governance/JARVIS_Resume_Checkpoint.generated.md text eol=lf
+# The runtime receipt is owner-verified at its CRLF digest (49c6668f...). Pin its
+# bytes verbatim so git never re-normalizes them on commit or checkout.
+docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json -text
