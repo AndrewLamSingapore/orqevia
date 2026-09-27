@@ -13,9 +13,9 @@ assert p['canonical_url'] in (root/'README.md').read_text()
 # STATUS.md is the single status authority; this file is a component pointer only.
 assert p.get('status_authority', '').endswith('prime/blob/feat/supreme-integration-20260925/STATUS.md'), \
     'SSOT.json must point at the canonical STATUS.md'
-assert p['golden_architecture']=='docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md'
-assert p['golden_manifest']=='governance/golden-gen1-manifest.json'
-assert p['active_golden_generation']==1
+assert p['golden_architecture']=='docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md'
+assert p['golden_manifest']=='governance/golden-gen2-manifest.json'
+assert p['active_golden_generation']==2
 for banned in ('status', 'current_status', 'verification', 'verified'):
     assert banned not in p, f'{banned} belongs in STATUS.md, not in a component pointer'
 

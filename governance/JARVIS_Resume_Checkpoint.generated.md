@@ -26,8 +26,9 @@ Current PRIME runtime was independently accepted at source `17fad78d410dca5d9101
 
 ## Current priorities
 
-- Keep qualified local PRIME production in quiet observation.
-- Perform read-only High-Context Engineering gap analysis outside production.
+- Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.
+- Complete Dell post-promotion verification when the physical Dell verifier is available.
+- Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.
 - Complete Wuhan/Mainland-China physical verification when geographically available.
 - Refresh unrelated public-system evidence before claiming global CURRENT status.
 
