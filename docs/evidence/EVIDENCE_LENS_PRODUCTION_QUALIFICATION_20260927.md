@@ -38,8 +38,10 @@ claims, not the authoritative answers or copied source records, to JARVIS.
 
 - All six tasks reached authoritative COMPLETED on the expected immutable runtime.
 - Each task was fetched twice in separate requests; the response objects matched.
-- Six real task-bound artifacts were created through the registered artifact sink.
-  Independently fetched bytes matched both stored SHA-256 and response headers.
+- The qualifier requested six real task-bound artifacts through the existing
+  from-task artifact sink after task completion. Independently fetched bytes
+  matched stored SHA-256 and response headers. This proves the artifact sink,
+  not autonomous JARVIS evidence discovery or Lens-record creation.
 - Model-generated text remained `authoritative: false`, `VERIFY_REQUIRED`, and
   `may_update_truth_plane: false`. Invented citations or plausible prose did not
   become system metadata, accepted customer evidence or a governed SSOT change.
