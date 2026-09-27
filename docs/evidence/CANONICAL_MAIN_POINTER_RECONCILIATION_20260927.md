@@ -39,10 +39,12 @@ production configuration, database, session, identity, or host setting changed.
 ## Executed qualification
 
 - Pointer and operational-manifest tests: **21 passed**.
+- Independent root-agent rerun of the same focused tests: **21 passed**;
+  root also reviewed the source-only diff.
 - Current SSOT pointer check: PASS.
 - Canonical source/generated mirror check: CONSISTENT.
 - Generated mirror `--check`: CONSISTENT.
-- Offline SSOT/schema/secret-pattern check: PASS, 524 files scanned,
+- Offline SSOT/schema/secret-pattern check: PASS, 526 files scanned,
   21 registry agents, zero secret-pattern findings.
 - Operational manifest `--allow-stale`: accepted its truthful STALE state with
   zero schema errors. Existing expired/public/physical evidence was not promoted.
@@ -62,5 +64,5 @@ require a separately qualified successor before runtime changes.
 No Evidence Lens end-to-end PASS is established by this pointer reconciliation.
 The full A–F live objective qualification remains unfinished; static demo tests,
 direct function probes and source-pointer checks are distinct evidence scopes.
-Root's local `EVIDENCE-LENS-RESUME-CHECKPOINT-20260927.md` preserves that diagnosis.
+`docs/evidence/EVIDENCE_LENS_ACCESS_GAP_20260927.md` preserves that diagnosis.
 The present change is a clean source/governance checkpoint only.
