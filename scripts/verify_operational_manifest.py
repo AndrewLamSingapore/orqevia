@@ -117,10 +117,10 @@ def assess_static(
     canonical = value.get("canonical_machine_source")
     if canonical != {
         "repository": "AndrewLamSingapore/prime",
-        "branch": "feat/supreme-integration-20260925",
+        "branch": "main",
         "path": "governance/operational-manifest.json",
     }:
-        result.error("canonical_machine_source is not the PRIME production-lineage manifest")
+        result.error("canonical_machine_source is not the PRIME main manifest")
 
     # Source unification must never promote historical Dell identity to ABEX.
     abex = value.get("abex_runtime", {})

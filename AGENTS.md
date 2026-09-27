@@ -1,19 +1,19 @@
 # Shared JARVIS source of truth
 
 For JARVIS/PRIME and portfolio work, status begins with
-[STATUS.md](https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/STATUS.md) in the
+[STATUS.md](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md) in the
 private PRIME repository. STATUS.md is the only current status source of truth.
 Only Lam may move an item into its "Verified" sections.
 
 Then begin with SSOT.json for the machine-readable component references. Resolve
-the latest canonical PRIME production-lineage commit (`feat/supreme-integration-20260925`) and read governance/operational-manifest.json
+the latest canonical PRIME `main` commit and read governance/operational-manifest.json
 and governance/CHANNEL_CONTRACT.md at that same commit as component and
 observation references: they describe recorded architecture and observed
 revisions, and cannot establish current status. On PRIME itself, a clean checkout
-of the production lineage provides the same files. A working branch is a candidate, never a
+of `main` provides the same files. A working branch is a candidate, never a
 second current version.
 
-Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/governance/operational-manifest.json
+Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
 
 This applies equally to ChatGPT, Codex, Sol, Astra and other assistants. Prior
 chat, memory, exported documents, screenshots, old branches and model identity

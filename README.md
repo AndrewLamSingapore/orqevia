@@ -1,17 +1,18 @@
 # JARVIS PRIME
 
 Start with [STATUS.md](STATUS.md) for current status, then the
-[machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/governance/operational-manifest.json) and
+[machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) and
 [the shared channel contract](governance/CHANNEL_CONTRACT.md).
 
 STATUS.md is the only current status source of truth. The operational reference
 records architecture, component revisions and observations; it cannot establish
 current status.
 
-Golden Generation 1 is the frozen accepted architecture, described by
-`docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md` and
-`governance/golden-gen1-manifest.json`. Architecture v1 remains its implementation
-predecessor/reference: ABEX PRIME, authenticated
+Golden Generation 2 is the frozen accepted non-audio architecture, described by
+`docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md` and
+`governance/golden-gen2-manifest.json`. Golden Generation 1 and its immutable
+manifest remain the preserved rollback/reference. Architecture v1 remains the
+implementation foundation: ABEX PRIME, authenticated
 Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and direct
 observed execution with narrow consequential controls. Runtime acceptance is
 recorded separately and must not be inferred from this README or passing CI.
