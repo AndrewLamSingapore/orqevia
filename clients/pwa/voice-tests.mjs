@@ -69,3 +69,17 @@ test('stop does not cancel synthesis state this Voice instance does not own',()=
   globalThis.speechSynthesis={speaking:true,pending:true,paused:false,getVoices:()=>[],cancel:()=>cancelled.push(true)};
   const voice=new Voice({onText:()=>{},onState:()=>{}});voice.stop();assert.deepEqual(cancelled,[]);
 });
+
+test('terminal speech telemetry identifies browser voice-selection limits and elapsed state',()=>{
+  const states=[],spoken=[];
+  globalThis.speechSynthesis={speaking:true,pending:false,paused:false,getVoices:()=>[{name:'Default Voice',lang:'en-SG',localService:true,default:true}],speak:u=>spoken.push(u),cancel:()=>{}};
+  const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.speak('Result');spoken[0].onstart();spoken[0].onend();
+  assert.match(states.at(-1)[0],/selected=system-auto-unobservable/);assert.match(states.at(-1)[0],/defaults=Default Voice\|en-SG\|local=1/);assert.match(states.at(-1)[0],/elapsed_ms=\d+/);assert.match(states.at(-1)[0],/speaking=1/);
+});
+
+test('independent Web Audio control is invoked synchronously and reports its terminal state',()=>{
+  const states=[];let oscillator;
+  class AudioContext {constructor(){this.state='running';this.currentTime=4;this.destination={};}createOscillator(){oscillator={frequency:{},connect:()=>{},start:()=>{},stop:()=>{}};return oscillator;}createGain(){return {gain:{},connect:()=>{}};}close(){this.state='closed';return Promise.resolve();}}
+  globalThis.AudioContext=AudioContext;
+  const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.testOutput();assert.match(states.at(-1)[0],/Audio output control started/);assert.match(states.at(-1)[0],/gesture=1/);oscillator.onended();assert.match(states.at(-1)[0],/Audio output control ended/);assert.match(states.at(-1)[0],/elapsed_ms=\d+/);delete globalThis.AudioContext;
+});
