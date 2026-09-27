@@ -486,7 +486,6 @@
   },
   "next_actions": [
     "Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.",
-    "Complete Dell post-promotion verification when the physical Dell verifier is available.",
     "Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.",
     "Complete Wuhan/Mainland-China physical verification when geographically available.",
     "Refresh unrelated public-system evidence before claiming global CURRENT status."
@@ -507,7 +506,13 @@
     "runtime_task": "d18a34dc-b76f-4520-b9a5-e3eded219245",
     "receipt_sha256": "4f250145fe150f79f6a85fefe547a956a5f8ca6751a031ee8a6dacfd97ad1af5",
     "audio": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
-    "dell_post_promotion": "PENDING",
+    "dell_post_promotion": "PROMOTION_VERIFICATION_PASS",
+    "dell_receipt": {
+      "location": "C:/Users/User/Documents/Codex/2026-09-27/y/outputs/DELL-GEN2-POST-PROMOTION-RECEIPT-20260927.md",
+      "bytes": 2445,
+      "sha256": "566e5f8d0f55f0af30d02ca2c0672b08fa329809ee26fd3fc19a680165055d71",
+      "abex_copy": false
+    },
     "rollback_image": "prime:sha-17fad78",
     "rollback_checkpoint": "/data/recovery/phase2-audio-diagnostic-predeploy-20260927-b171253"
   },
@@ -521,7 +526,7 @@
       "independent review",
       "Owner-authorized explicit audio exclusion"
     ],
-    "dell_post_promotion": "PENDING",
+    "dell_post_promotion": "PROMOTION_VERIFICATION_PASS",
     "read_aloud_ios_audio": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
     "wuhan_mainland_china": "PHYSICAL_VERIFICATION_PENDING",
     "unresolved_p0": 0,
@@ -538,6 +543,6 @@
     "runtime_image": "prime:phase2-audio-diagnostic-b171253",
     "accepted_scope": "PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
     "former_generation": "jarvis-prime-golden-gen1-20260926",
-    "dell_post_promotion": "PENDING"
+    "dell_post_promotion": "PROMOTION_VERIFICATION_PASS"
   }
 }

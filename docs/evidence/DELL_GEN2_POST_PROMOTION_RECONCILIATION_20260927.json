@@ -1,0 +1,41 @@
+{
+  "schema_version": "jarvis.independent-verification-reconciliation.v1",
+  "verdict": "PROMOTION_VERIFICATION_PASS",
+  "scope": "GOLDEN_GEN2_ACCEPTED_NON_AUDIO_SCOPE",
+  "reported_by": "Dell independent verifier",
+  "confirmed_by_owner": true,
+  "external_receipt": {
+    "filename": "DELL-GEN2-POST-PROMOTION-RECEIPT-20260927.md",
+    "dell_path": "C:/Users/User/Documents/Codex/2026-09-27/y/outputs/DELL-GEN2-POST-PROMOTION-RECEIPT-20260927.md",
+    "bytes": 2445,
+    "sha256": "566e5f8d0f55f0af30d02ca2c0672b08fa329809ee26fd3fc19a680165055d71",
+    "copied_to_abex": false,
+    "recreated_on_abex": false
+  },
+  "live_binding": {
+    "source_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "image_tag": "prime:phase2-audio-diagnostic-b171253",
+    "image_digest": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "golden_generation": "jarvis-prime-golden-gen2-20260927",
+    "manifest_sha256": "8c013e913e4a75df737346ea98bfdd531afcb9a39bd21bdb1c9c406d64b2fbc0",
+    "runtime_receipt_sha256": "4f250145fe150f79f6a85fefe547a956a5f8ca6751a031ee8a6dacfd97ad1af5",
+    "attestation_signer_fingerprint": "SHA256:qtAf3agqYCAAcBk6n4Tf4fqqAJ3t444NEKD7sxr+QPA"
+  },
+  "gates": {
+    "signed_live_runtime_attestation": "PASS",
+    "golden_tag": "PASS",
+    "manifest": "PASS",
+    "runtime_receipt": "PASS",
+    "live_pwa": "PASS",
+    "identity_authority": "PASS",
+    "task_lifecycle": "PASS",
+    "session_reconnect": "PASS",
+    "evidence_provenance": "PASS",
+    "rollback": "READY"
+  },
+  "audio": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
+  "unresolved_accepted_scope": {"p0": 0, "p1": 0, "p2": 0},
+  "abex_production_modified_by_dell": false,
+  "historical_blocked_preserved": true,
+  "authority_note": "This record reconciles the Owner-supplied Dell verdict and exact external receipt identity. It does not recreate the Dell file, change the immutable audited Golden manifest, or convert parked audio into PASS."
+}
