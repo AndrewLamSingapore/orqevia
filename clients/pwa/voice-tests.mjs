@@ -83,3 +83,17 @@ test('independent Web Audio control is invoked synchronously and reports its ter
   globalThis.AudioContext=AudioContext;
   const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.testOutput();assert.match(states.at(-1)[0],/Audio output control started/);assert.match(states.at(-1)[0],/gesture=1/);oscillator.onended();assert.match(states.at(-1)[0],/Audio output control ended/);assert.match(states.at(-1)[0],/elapsed_ms=\d+/);delete globalThis.AudioContext;
 });
+
+test('Stop owns and closes the Web Audio control without leaving speaking UI state',()=>{
+  const states=[],contexts=[];
+  class AudioContext {constructor(){this.state='running';this.currentTime=0;this.destination={};this.closeCount=0;contexts.push(this);}createOscillator(){return {frequency:{},connect:()=>{},start:()=>{},stop:()=>{},onended:null};}createGain(){return {gain:{},connect:()=>{}};}close(){this.closeCount+=1;this.state='closed';return Promise.resolve();}}
+  globalThis.AudioContext=AudioContext;
+  const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.testOutput();voice.stop();assert.equal(contexts[0].closeCount,1);assert.equal(voice.outputContext,null);assert.equal(voice.outputOscillator,null);assert.deepEqual(states.at(-1),['Audio stopped.']);delete globalThis.AudioContext;
+});
+
+test('repeated phone-sound control cannot overlap AudioContexts',()=>{
+  const contexts=[];
+  class AudioContext {constructor(){this.state='running';this.currentTime=0;this.destination={};this.closeCount=0;contexts.push(this);}createOscillator(){return {frequency:{},connect:()=>{},start:()=>{},stop:()=>{},onended:null};}createGain(){return {gain:{},connect:()=>{}};}close(){this.closeCount+=1;this.state='closed';return Promise.resolve();}}
+  globalThis.AudioContext=AudioContext;
+  const voice=new Voice({onText:()=>{},onState:()=>{}});voice.testOutput();voice.testOutput();assert.equal(contexts.length,2);assert.equal(contexts[0].closeCount,1);assert.equal(contexts[1].closeCount,0);voice.stop({announce:false});assert.equal(contexts[1].closeCount,1);delete globalThis.AudioContext;
+});
