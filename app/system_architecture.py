@@ -7,7 +7,9 @@ from .agent_registry import RegistryError,agent_record,load_agent_registry,orche
 
 PATTERNS=(r'how many agents',r'list (?:your|the) agents',r'which agent (?:answered|is answering)',
           r'what does agent\s+\w+',r'which tools can agent\s+\w+',r'can an agent change its own role',
-          r'what (?:prime )?generation',r'(?:source|runtime) identity')
+          r'what (?:prime )?generation',r'(?:source|runtime) identity',
+          r'(?:多少|几个|数量).{0,12}(?:已注册)?代理',r'(?:已注册)?代理.{0,12}(?:多少|几个|数量)',
+          r'(?:列出|有哪些|什么).{0,12}(?:已注册)?代理')
 GOVERNANCE_PATTERNS=(r'phase.?2.*(?:verified|production.ready|golden|accepted)',r'(?:verified|production.ready|golden|accepted).*phase.?2',
                      r'(?:is|are).*(?:prime|jarvis).*(?:verified|production.ready|golden|accepted)')
 PLATFORM_PATTERNS=(r'(?:abex|dell|prime|jarvis).*(?:architecture|system|host|computer|relationship|role)',
@@ -68,8 +70,11 @@ def architecture_answer(question: str)->dict[str,Any]:
     except (OSError,ValueError,RegistryError):
         return {'status':'UNAVAILABLE','provenance':'CANONICAL_REGISTRY','text':'PRIME architecture information is currently UNAVAILABLE. JARVIS will not guess.'}
     agents=list(registry['agents']); lower=question.lower(); lines=[]
-    if 'how many agents' in lower:
-        lines=[f"REGISTERED AGENTS: {len(agents)}",'ACTIVE/INVOLVED IN THIS TASK: deterministic PRIME control plane; no model agent selected for this architecture lookup.']
+    chinese=bool(re.search(r'[\u3400-\u4dbf\u4e00-\u9fff]',question))
+    asks_count='how many agents' in lower or bool(re.search(r'(?:多少|几个|数量).{0,12}(?:已注册)?代理|(?:已注册)?代理.{0,12}(?:多少|几个|数量)',question))
+    if asks_count:
+        lines=([f"我叫 JARVIS。已注册代理：{len(agents)} 个。",'本次任务实际参与：PRIME 确定性控制平面；此架构查询未选择模型代理。'] if chinese else
+               [f"REGISTERED AGENTS: {len(agents)}",'ACTIVE/INVOLVED IN THIS TASK: deterministic PRIME control plane; no model agent selected for this architecture lookup.'])
     elif re.search(r'list (?:your|the) agents',lower):
         lines=[f"REGISTERED AGENTS: {len(agents)}"]+[f"{item['id']}: {item['role']}" for item in agents]
     elif 'which agent answered' in lower or 'which agent is answering' in lower:

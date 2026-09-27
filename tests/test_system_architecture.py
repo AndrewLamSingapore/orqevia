@@ -16,6 +16,15 @@ def test_registered_count_defeats_model_single_agent_self_description():
     assert 'REGISTERED AGENTS: 21' in answer['text']
     assert 'ACTIVE/INVOLVED IN THIS TASK:' in answer['text']
 
+def test_chinese_combined_identity_and_agent_count_uses_registry_not_model():
+    question='请用中文回答：你叫什么名字？你有多少个已注册代理？'
+    assert facts.is_architecture_question(question)
+    answer=facts.architecture_answer(question)
+    assert answer['status']=='VERIFIED'
+    assert answer['provenance']=='CANONICAL_REGISTRY_AND_RUNTIME'
+    assert 'JARVIS' in answer['text'] and '21' in answer['text']
+    assert '三个' not in answer['text']
+
 def test_unavailable_registry_abstains_instead_of_fabricating(monkeypatch):
     def unavailable():raise facts.RegistryError('offline')
     monkeypatch.setattr(facts,'load_agent_registry',unavailable)

@@ -126,8 +126,27 @@ def connect():
     db.execute('CREATE TABLE IF NOT EXISTS objectives (id TEXT PRIMARY KEY, objective_hash TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL)')
     db.execute('CREATE TABLE IF NOT EXISTS objective_turns (task TEXT NOT NULL, revision INTEGER NOT NULL, idempotency_key TEXT NOT NULL, digest TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL, PRIMARY KEY(task,revision), UNIQUE(task,idempotency_key))')
     db.execute('CREATE TABLE IF NOT EXISTS objective_metadata (task TEXT NOT NULL, revision INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(task,revision))')
+    db.execute('CREATE TABLE IF NOT EXISTS objective_runtime (task TEXT NOT NULL, revision INTEGER NOT NULL, host_id TEXT NOT NULL, source_revision TEXT NOT NULL, version TEXT NOT NULL, image_digest TEXT, PRIMARY KEY(task,revision))')
     db.commit()
     return db
+
+
+def runtime_snapshot():
+    source=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','')).strip().lower()
+    host=os.getenv('PRIME_INTERFACE_HOST_ID','').strip()
+    version=os.getenv('PRIME_INTERFACE_RUNTIME_VERSION','').strip()
+    image=os.getenv('PRIME_RUNTIME_IMAGE_DIGEST','').strip() or None
+    return {
+        'host_id':host if re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}',host) else 'UNKNOWN',
+        'source_revision':source if re.fullmatch(r'[0-9a-f]{40}',source) else 'UNKNOWN',
+        'version':version if version else 'UNKNOWN',
+        'image_digest':image if image and re.fullmatch(r'sha256:[0-9a-f]{64}',image) else None,
+    }
+
+
+def store_runtime(db,task,revision):
+    value=runtime_snapshot()
+    db.execute('INSERT INTO objective_runtime VALUES(?,?,?,?,?,?)',(task,revision,value['host_id'],value['source_revision'],value['version'],value['image_digest']))
 
 
 @router.post('',status_code=202)
@@ -149,6 +168,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         created=utcnow()
         db.execute('INSERT INTO objectives VALUES(?,?,?,?)',(task_id,hashlib.sha256(body.objective.encode()).hexdigest(),'dispatching',json.dumps(capabilities)))
         db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,0,created,created))
+        store_runtime(db,task_id,0)
         db.commit()
         if architecture is not None:
             steps=[{'capability':'system.architecture','dispatch':{'state':'COMPLETED','task_id':task_id,
@@ -207,6 +227,8 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
         turns=db.execute('SELECT revision,state,steps_json FROM objective_turns WHERE task=? ORDER BY revision',(task_id,)).fetchall()
         timing={item[0]:(item[1],item[2]) for item in db.execute(
             'SELECT revision,created_at,updated_at FROM objective_metadata WHERE task=?',(task_id,)).fetchall()}
+        runtime_rows={item[0]:{'host_id':item[1],'source_revision':item[2],'version':item[3],'image_digest':item[4]}
+            for item in db.execute('SELECT revision,host_id,source_revision,version,image_digest FROM objective_runtime WHERE task=?',(task_id,)).fetchall()}
     finally:
         db.close()
     if row is None:
@@ -244,23 +266,20 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
         lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'
     if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and completed_at is None:
         completed_at=updated_at;lifecycle['completed_at_source']='TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE'
-    revision_identity=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN')).strip().lower()
-    if not re.fullmatch(r'[0-9a-f]{40}',revision_identity):revision_identity='UNKNOWN'
-    host_id=os.getenv('PRIME_INTERFACE_HOST_ID','').strip()
-    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}',host_id):host_id='UNKNOWN'
+    runtime=runtime_rows.get(revision)
+    runtime_provenance='IMMUTABLE_OBJECTIVE_RUNTIME' if runtime else 'UNAVAILABLE_LEGACY_TASK'
+    if runtime is None:runtime={'host_id':'UNKNOWN','source_revision':'UNKNOWN','version':'UNKNOWN','image_digest':None}
     metadata={
         'schema_version':'jarvis.authoritative-execution.v1','authoritative':True,
         'task_id':task_id,'revision':revision,'state':state,
         'created_at':created_at,'started_at':started_at,'completed_at':completed_at,'updated_at':updated_at,
-        'runtime':{'host_id':host_id,'source_revision':revision_identity,
-            'version':os.getenv('PRIME_INTERFACE_RUNTIME_VERSION','UNKNOWN'),
-            'image_digest':os.getenv('PRIME_RUNTIME_IMAGE_DIGEST') or None},
+        'runtime':runtime,
         'jobs':[{'job_id':job.get('id'),'agent':job.get('agent'),'model':job.get('model'),'provider':job.get('provider'),
             'state':job.get('status'),'created_at':job.get('created_at'),
             'started_at':job.get('started_at'),'completed_at':job.get('completed_at')} for job in jobs],
         'agent_execution':[agent_execution_metadata(step) for step in current_steps if step.get('job')],
-        'provenance':{'task_id':'DATABASE','state':'QUEUE','timestamps':'QUEUE','runtime':'RUNTIME','jobs':'QUEUE',
-            'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER'},
+        'provenance':{'task_id':'DATABASE','state':'QUEUE','timestamps':'QUEUE','jobs':'QUEUE',
+            'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER','runtime':runtime_provenance},
         'closed_world_policy':'UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE',
         'model_content_is_authoritative_metadata':False,
         'lifecycle':lifecycle,
@@ -295,6 +314,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
         created=utcnow()
         db.execute('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',(task_id,revision,idempotency_key,digest,'dispatching','[]'))
         db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,revision,created,created))
+        store_runtime(db,task_id,revision)
         db.commit()
         from .operational_workflows import from_objective, execute_workflow
         workflow=from_objective(body.objective,body.context)

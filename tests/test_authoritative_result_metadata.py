@@ -113,6 +113,28 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
             self.assertEqual(metadata['lifecycle']['started_at_reason'],'NO_EXECUTION_STARTED_DISPATCH_BLOCKED')
             self.assertEqual(metadata['lifecycle']['completed_at_source'],'TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE')
 
+    def test_runtime_identity_is_immutable_per_task_across_generation_change(self):
+        first={'PRIME_DATA_DIR':None,'PRIME_INTERFACE_HOST_ID':'ABEX','PRIME_RUNTIME_REVISION':'1'*40,
+               'PRIME_INTERFACE_RUNTIME_VERSION':'generation-one','PRIME_RUNTIME_IMAGE_DIGEST':'sha256:'+'a'*64}
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{**first,'PRIME_DATA_DIR':root},clear=False), patch.object(objective_api,'authenticate_owner',lambda _:None):
+            db=objective_api.connect();created='2026-09-27T01:00:00+00:00'
+            db.execute('insert into objectives values(?,?,?,?)',('bound-task','digest','submitted',json.dumps([{'capability':'system.architecture','dispatch':{'state':'COMPLETED','result':'ok'}}])))
+            db.execute('insert into objective_metadata values(?,?,?,?)',('bound-task',0,created,created));objective_api.store_runtime(db,'bound-task',0);db.commit();db.close()
+            os.environ['PRIME_RUNTIME_REVISION']='2'*40;os.environ['PRIME_INTERFACE_RUNTIME_VERSION']='generation-two';os.environ['PRIME_RUNTIME_IMAGE_DIGEST']='sha256:'+'b'*64
+            metadata=objective_api.get('bound-task',authorization='fixture')['execution_metadata']
+            self.assertEqual(metadata['runtime']['source_revision'],'1'*40)
+            self.assertEqual(metadata['runtime']['image_digest'],'sha256:'+'a'*64)
+            self.assertEqual(metadata['provenance']['runtime'],'IMMUTABLE_OBJECTIVE_RUNTIME')
+
+    def test_legacy_task_runtime_identity_abstains_instead_of_using_current_environment(self):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root,'PRIME_RUNTIME_REVISION':'2'*40}), patch.object(objective_api,'authenticate_owner',lambda _:None):
+            db=objective_api.connect();created='2026-09-27T01:00:00+00:00'
+            db.execute('insert into objectives values(?,?,?,?)',('legacy-task','digest','submitted',json.dumps([{'capability':'system.architecture','dispatch':{'state':'COMPLETED','result':'ok'}}])))
+            db.execute('insert into objective_metadata values(?,?,?,?)',('legacy-task',0,created,created));db.commit();db.close()
+            metadata=objective_api.get('legacy-task',authorization='fixture')['execution_metadata']
+            self.assertEqual(metadata['runtime']['source_revision'],'UNKNOWN')
+            self.assertEqual(metadata['provenance']['runtime'],'UNAVAILABLE_LEGACY_TASK')
+
 
 if __name__=='__main__':
     unittest.main()
