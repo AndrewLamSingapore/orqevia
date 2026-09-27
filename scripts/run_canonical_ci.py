@@ -33,6 +33,7 @@ def main():
     names.append('structured_output_verifier')
     names.append('semantic_evidence_adversarial')
     names.append('authoritative_result_metadata')
+    names.append('system_fact_authority')
     names.append('supreme_integration')
     names.append('supreme_integration_verifier')
     names.append('candidate_manifest')

@@ -43,6 +43,31 @@ def system_content(steps,revision):
     return '\n\n'.join(filter(None,values))
 
 
+def system_result(steps,revision):
+    """Project claim verification separately from completed system execution."""
+    text=system_content(steps,revision)
+    if not text:return None
+    assessments=[]
+    for step in steps:
+        dispatch=step.get('dispatch',{})
+        if (step.get('revision',0)!=revision or dispatch.get('state')!='COMPLETED'
+                or dispatch.get('model_backend')!='none'
+                or not isinstance(dispatch.get('result'),str) or not dispatch['result'].strip()):continue
+        fact=dispatch.get('system_fact')
+        bound=(isinstance(fact,dict) and fact.get('text')==dispatch['result']
+               and isinstance(fact.get('status'),str) and re.fullmatch(r'[A-Z][A-Z0-9_]{0,79}',fact['status'])
+               and isinstance(fact.get('provenance'),str) and re.fullmatch(r'[A-Z][A-Z0-9_]{0,79}',fact['provenance']))
+        assessments.append({'verification_status':fact['status'] if bound else 'UNVERIFIED',
+                            'provenance':fact['provenance'] if bound else 'UNAVAILABLE'})
+    states={item['verification_status'] for item in assessments}
+    provenance={item['provenance'] for item in assessments}
+    status=next(iter(states)) if len(states)==1 else 'PARTIAL' if states & {'VERIFIED','PARTIAL'} else 'UNVERIFIED'
+    return {'type':'SYSTEM_FACT','text':text,'authoritative':states=={'VERIFIED'},
+            'verification_status':status,
+            'provenance':next(iter(provenance)) if len(provenance)==1 else 'MULTIPLE_SYSTEM_SOURCES',
+            'source_assessments':assessments,'may_update_truth_plane':False}
+
+
 def metadata_contradictions(text,metadata):
     """Detect claims that resemble authoritative facts without promoting them."""
     if not text:return []
@@ -289,7 +314,7 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     from .public_task_errors import public_task
     return public_task({'id':task_id,'revision':revision,'state':state,'steps':steps,
         'execution_metadata':metadata,'updated_at':updated_at,
-        'result':{'type':'SYSTEM_FACT','text':deterministic,'authoritative':True,'provenance':'CANONICAL_REGISTRY_AND_RUNTIME'} if deterministic else {'type':'MODEL_CONTENT','text':content,'authoritative':False,
+        'result':system_result(steps,revision) if deterministic else {'type':'MODEL_CONTENT','text':content,'authoritative':False,
             'epistemic_status':'GENERATED_CLAIM','verification_status':'VERIFY_REQUIRED',
             'may_update_truth_plane':False,'contradictions':contradictions} if content else None,
         'synthesis':'Source-labelled advisory contributions; model content is not execution metadata'})
