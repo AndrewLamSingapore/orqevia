@@ -100,3 +100,33 @@ the existing stop-before-repair boundary. Firmware/security settings were unchan
 
 Golden Gen 2 and Golden Gen 1 rollback are preserved. The upstream socket
 condition is mitigated by bounded preservation/recovery, not declared fixed.
+
+## Later Owner connection confirmation — 18:22 +08:00
+
+The earlier physical-retest-pending checkpoint above remains historical evidence.
+After the bounded close/reopen action, the Owner reported **connected**. The
+root-agent read-only canonical database check at
+`2026-09-27T18:22:16+08:00` independently correlated this with one valid Owner
+session, where the preceding checkpoint had zero valid Owner short sessions.
+
+| Canonical observation | Owner | Member |
+| --- | ---: | ---: |
+| Total retained sessions | 6 | 4 |
+| Currently valid sessions | 1 | 1 |
+| Distinct accounts in those sessions | 1 | 1 |
+| Durable devices, total/currently valid/distinct accounts | 1 / 1 / 1 | 1 / 1 / 1 |
+
+The canonical Owner account count remained one; live unused enrollment codes
+remained zero. This supports recovery through the existing durable enrollment
+and governed session renewal. No replacement account, new enrollment code, or
+diagnostic session impersonation was used.
+
+The same check found the accepted `b171253566e7c879283d2aacf699ae6c1ec8988e`
+runtime and image ID
+`sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5`
+unchanged. PRIME, Interface and Ollama were healthy with restart counters zero,
+and their start timestamps still belonged to the 09:59:45 UTC recovery.
+
+Scope: physical Owner **Connected** confirmation plus server-side session
+correlation. No new objective round-trip or audible-output acceptance is claimed.
+Earlier acceptance evidence and the parked audio classification remain intact.
