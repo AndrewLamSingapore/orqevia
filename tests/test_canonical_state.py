@@ -25,6 +25,11 @@ def test_old_pass_cannot_masquerade_as_current_release():
 def test_dell_acceptance_does_not_prove_abex_deployment():
     m,p,r=records();m['status']='CURRENT';m['alignment_state']['overall']='CURRENT'
     m['verification']['stale_reasons']=[];m['dell_runtime']['accepted']=True
+    m['abex_runtime']={
+        'authority':'canonical PRIME runtime host','state':'UNVERIFIED','receipt':None,
+        'source_sha':None,'verified_at_utc':None,
+        'rule':'Dell evidence cannot establish ABEX deployment',
+    }
     with pytest.raises(AssertionError):validate_state(m,p,r)
 
 def test_component_manifest_cannot_select_another_release():

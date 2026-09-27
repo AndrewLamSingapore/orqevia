@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "evidence_date": "2026-09-25",
+  "privacy": "LOCAL_ONLY",
+  "profiles": [
+    {
+      "name": "ollama-fast",
+      "model": "gemma3:1b",
+      "location": "local",
+      "median_latency_seconds": 1.885,
+      "verified_capabilities": ["reasoning", "coding", "chinese", "english", "retrieval", "verification"],
+      "failed_capabilities": ["structured_output", "tool_selection"]
+    },
+    {
+      "name": "ollama-deep",
+      "model": "gemma3:4b",
+      "location": "local",
+      "median_latency_seconds": 6.429,
+      "verified_capabilities": ["reasoning", "coding", "chinese", "english", "tool_selection", "retrieval", "verification"],
+      "failed_capabilities": ["structured_output"]
+    }
+  ]
+}

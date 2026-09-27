@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "source_sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa",
+  "suite": "AEF risk-selected domain and cross-domain security",
+  "command_class": "focused-domain",
+  "exit_code": 0,
+  "passed": 215,
+  "failed": 0,
+  "skipped": 0,
+  "warnings": 1,
+  "independent_verifiers": {
+    "aef_controls": "5/5",
+    "application_boundaries": "6/6",
+    "jarvis": "7/7",
+    "vision": "5/5",
+    "independence": "7/7"
+  },
+  "production_touched": false
+}

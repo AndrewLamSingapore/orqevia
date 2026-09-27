@@ -130,6 +130,34 @@ class TestStoreAndForward:
 
 
 class TestReconciliation:
+    def test_degraded_reconciles_only_explicitly_revalidated_dependency(self, tmp_path):
+        survival = build(tmp_path)
+        survival.observe(network=True, provider=False)
+        actions = survival.offline_actions(local_model_ready=True, memory_ready=True, local_tools_ready=True)
+        assert actions["actions"]["web.research"] == "AVAILABLE"
+        assert actions["actions"]["model.frontier"] == "DEGRADED"
+        operation = queue_one(survival, operation_type="web.research")
+        calls = []
+        results = survival.reconcile(
+            executors={"web.research": lambda op: calls.append(op.id) or {"accepted": True}},
+            authority_valid=lambda op: True,
+            dependency_available=lambda op: op.dependency is DependencyClass.NETWORK_REQUIRED,
+        )
+        assert calls == [operation.id]
+        assert results[0].state is QueueState.RECONCILED
+
+    def test_degraded_without_dependency_proof_executes_nothing(self, tmp_path):
+        survival = build(tmp_path)
+        survival.observe(network=True, provider=False)
+        operation = queue_one(survival)
+        calls = []
+        assert survival.reconcile(
+            executors={"portal.publish": lambda op: calls.append(op.id) or {"accepted": True}},
+            authority_valid=lambda op: True,
+        ) == []
+        assert calls == []
+        assert survival.get(operation.id).state is QueueState.DEFERRED_OFFLINE
+
     def test_offline_reconcile_does_nothing(self, tmp_path):
         survival = build(tmp_path)
         survival.observe(network=False, provider=False)

@@ -1,0 +1,78 @@
+{
+  "schema_version": "jarvis.golden-baseline.v1",
+  "golden_baseline_id": "jarvis-prime-golden-gen2-20260927",
+  "generation": 2,
+  "architecture_state": "FROZEN",
+  "scope": "PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
+  "source": {
+    "repository": "AndrewLamSingapore/prime",
+    "accepted_commit": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "production_lineage": "fix/phase2-ios-audible-boundary-20260927",
+    "freeze_reference": "jarvis-prime-phase2-audio-diagnostic-b171253-20260927"
+  },
+  "build": {
+    "image_tag": "prime:phase2-audio-diagnostic-b171253",
+    "image_id": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "product_manifest_sha256": "4e5533c39c95ee3cd4b735f81ce35c587f4785b1d7b2c7e3ebecadfc62e94ccd",
+    "runtime_contract_sha256": "59b8050334d33111a8a82494bcce5d3fc0b500dd61345452ab2d761ee0e798a2"
+  },
+  "runtime_receipt": {
+    "path": "docs/evidence/PHASE2_RUNTIME_RECEIPT_B171253_20260927.json",
+    "sha256": "4f250145fe150f79f6a85fefe547a956a5f8ca6751a031ee8a6dacfd97ad1af5"
+  },
+  "qualification": {
+    "canonical_python_passed": 992,
+    "client_and_dell_passed": 55,
+    "candidate_manifest_verifier": "PASS",
+    "independent_review": "PASS",
+    "unresolved_p0": 0,
+    "unresolved_p1": 0,
+    "unresolved_p2_accepted_scope": 0
+  },
+  "acceptance": {
+    "state": "VERIFIED_WITH_EXPLICIT_AUDIO_EXCLUSION",
+    "accepted_at_utc": "2026-09-27T04:02:39Z",
+    "runtime_task_id": "d18a34dc-b76f-4520-b9a5-e3eded219245",
+    "local_prime_commissioning": "CLOSED_NON_AUDIO_SCOPE",
+    "dell_post_promotion": "PENDING"
+  },
+  "interface": {
+    "endpoint": "https://192.168.1.23:8443/pwa/",
+    "exposure": "LAN_ONLY",
+    "protocol": "jarvis.interface.v1",
+    "pwa_generation": "jarvis-shell-v14"
+  },
+  "registry": {
+    "schema": "2.0",
+    "logical_agent_count": 21,
+    "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+  },
+  "authority": {
+    "production_authority": "ABEX",
+    "identity_enforcement": "SERVER_SIDE",
+    "member_inherits_owner": false,
+    "model_content_grants_authority": false,
+    "agent_delegation_grants_authority": false
+  },
+  "audio": {
+    "issue_id": "IOS_PWA_AUDIO_OUTPUT_NOT_PHYSICALLY_VERIFIED",
+    "known_issue_path": "docs/evidence/IOS_PWA_AUDIO_OUTPUT_NOT_PHYSICALLY_VERIFIED.md",
+    "known_issue_sha256": "eaf08fd00c73f929fca746fd2d94fea83e5b9965e5ec9700b422c8cee02e9bf8",
+    "read_aloud": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
+    "production_critical": false,
+    "owner_waiver": true,
+    "next_action": "NONE_UNTIL_SEPARATELY_AUTHORIZED"
+  },
+  "rollback": {
+    "former_golden_baseline": "jarvis-prime-golden-gen1-20260926",
+    "image_tag": "prime:sha-17fad78",
+    "image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
+    "checkpoint": "/data/recovery/phase2-audio-diagnostic-predeploy-20260927-b171253",
+    "ready": true
+  },
+  "historical_preservation": {
+    "golden_gen1_preserved": true,
+    "audio_physical_failures_preserved": true,
+    "rejected_candidates_preserved": true
+  }
+}

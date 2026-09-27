@@ -1,9 +1,11 @@
 """Bounded logical orchestration over the single shared inference scheduler."""
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sqlite3
 import uuid
 
@@ -11,12 +13,82 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import Field
 
 from .agent_dispatch_api import AgentRequest, dispatch_request
-from .agent_registry import canonical_agent_id
+from .agent_registry import RegistryError, agent_record, canonical_agent_id, responsibility_owner
 from .agent_runtime import DOMAIN_CHILDREN
 from . import compute_queue_api
 from .client_auth import authenticate_owner
 
 router=APIRouter(prefix='/api/agents/objectives',tags=['governed-objectives'])
+
+
+def utcnow():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def model_content(steps,revision):
+    values=[]
+    for step in steps:
+        job=step.get('job',{})
+        if step.get('revision',0)==revision and job.get('status')=='completed' and isinstance(job.get('result'),str) and job['result'].strip():
+            values.append(job['result'].strip())
+    return '\n\n'.join(values)
+
+
+def system_content(steps,revision):
+    values=[]
+    for step in steps:
+        dispatch=step.get('dispatch',{})
+        if step.get('revision',0)==revision and dispatch.get('state')=='COMPLETED' and dispatch.get('model_backend')=='none' and isinstance(dispatch.get('result'),str):
+            values.append(dispatch['result'].strip())
+    return '\n\n'.join(filter(None,values))
+
+
+def metadata_contradictions(text,metadata):
+    """Detect claims that resemble authoritative facts without promoting them."""
+    if not text:return []
+    findings=[]
+    task_id=metadata['task_id'].lower()
+    for value in sorted(set(re.findall(r'(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b',text))):
+        if value.lower()!=task_id:findings.append({'kind':'TASK_ID_CONTRADICTION','claim':value,'authoritative':metadata['task_id'],'provenance':'MODEL_CONTENT'})
+    authoritative_times={value for value in (metadata.get('created_at'),metadata.get('started_at'),metadata.get('completed_at')) if value}
+    for value in sorted(set(re.findall(r'\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})\b',text))):
+        if value not in authoritative_times:findings.append({'kind':'TIMESTAMP_CONTRADICTION','claim':value,'authoritative':sorted(authoritative_times),'provenance':'MODEL_CONTENT'})
+    revision=metadata.get('runtime',{}).get('source_revision')
+    for value in sorted(set(re.findall(r'(?i)(?:(?:production|source|runtime)\s+(?:sha|revision)\s*[:=]?\s*)([0-9a-f]{40,64})',text))):
+        if revision=='UNKNOWN' or value.lower()!=revision:findings.append({'kind':'RUNTIME_IDENTITY_CONTRADICTION','claim':value,'authoritative':revision,'provenance':'MODEL_CONTENT'})
+    if re.search(r'(?i)\b(?:runtime|prime\.state)\s+(?:is\s+)?(?:independently\s+)?verified\b',text):
+        findings.append({'kind':'UNSUPPORTED_VERIFICATION_CLAIM','claim':'VERIFIED','authoritative':'NOT_ESTABLISHED_BY_MODEL_CONTENT','provenance':'MODEL_CONTENT'})
+    for value in sorted(set(re.findall(r'(?i)\b(?:execution\s+)?status\s*[:=]\s*(COMPLETED_WITH_FAILURES|COMPLETED|FAILED|RUNNING|QUEUED|VERIFIED)\b',text))):
+        if value.upper()!=metadata.get('state'):findings.append({'kind':'EXECUTION_STATE_CONTRADICTION','claim':value.upper(),'authoritative':metadata.get('state'),'provenance':'MODEL_CONTENT'})
+    for value in sorted(set(re.findall(r'(?i)\b(?:artifact\s+)?sha-?256\s*[:=]\s*([0-9a-f]{64})\b',text))):
+        findings.append({'kind':'UNSUPPORTED_ARTIFACT_DIGEST_CLAIM','claim':value.lower(),'authoritative':'ARTIFACT_STORE_ONLY','provenance':'MODEL_CONTENT'})
+    selected={item.get('selected_agent_id') for item in metadata.get('agent_execution',[]) if item.get('selected_agent_id')}
+    for value in sorted(set(re.findall(r'(?i)\bI\s+am\s+(a\d{2})\b',text))):
+        if value.lower() not in selected:findings.append({'kind':'AGENT_IDENTITY_CONTRADICTION','claim':value.lower(),'authoritative':sorted(selected),'provenance':'MODEL_CONTENT'})
+    if re.search(r'(?i)\b(?:I\s+am|I\s+have|my\s+role\s+is)\s+(?:the\s+)?(?:Owner|Administrator)\b',text):
+        findings.append({'kind':'UNSUPPORTED_AUTHORITY_CLAIM','claim':'OWNER_OR_ADMINISTRATOR','authoritative':'IDENTITY_SERVICE_AND_REGISTRY_ONLY','provenance':'MODEL_CONTENT'})
+    return findings
+
+
+def agent_execution_metadata(step):
+    job=step.get('job',{})
+    selected=job.get('agent')
+    capability=step.get('capability')
+    result={'task_binding':'OBJECTIVE_STORE','selected_agent_id':selected,'capability_used':capability,
+        'model':job.get('model'),'provider':job.get('provider'),'selection_reason_code':'CANONICAL_RESPONSIBILITY_OWNER',
+        'provenance':{'selected_agent_id':'QUEUE','capability_used':'SYSTEM','role':'REGISTRY',
+            'tool_policy':'REGISTRY','model':'RUNTIME','authority_scope':'REGISTRY'}}
+    try:
+        record=agent_record(selected)
+        owner=responsibility_owner(capability)
+        if owner!=selected:raise RegistryError('selected agent does not own capability')
+        result.update({'canonical_role':record.get('role'),'allowed_tools':record.get('tool_eligibility',[]),
+            'authority_scope':record.get('tap_relationship',{}),'delegation_targets':record.get('allowed_delegation_targets',[]),
+            'verification_requirements':record.get('observability',{}),'registry_binding':'VERIFIED'})
+    except (RegistryError,TypeError):
+        result.update({'canonical_role':'UNKNOWN','allowed_tools':[],'authority_scope':'UNKNOWN',
+            'delegation_targets':[],'verification_requirements':'UNKNOWN','registry_binding':'NO_AUTHORIZED_ROUTE'})
+    return result
 
 
 class ObjectiveRequest(AgentRequest):
@@ -49,17 +121,41 @@ def connect():
     path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'objectives.db'
     path.parent.mkdir(parents=True,exist_ok=True)
     db=sqlite3.connect(path,timeout=15)
+    # Keep the original tables byte-for-byte compatible with the rollback image.
+    # New system timestamps live in an additive side table old runtimes ignore.
     db.execute('CREATE TABLE IF NOT EXISTS objectives (id TEXT PRIMARY KEY, objective_hash TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL)')
     db.execute('CREATE TABLE IF NOT EXISTS objective_turns (task TEXT NOT NULL, revision INTEGER NOT NULL, idempotency_key TEXT NOT NULL, digest TEXT NOT NULL, state TEXT NOT NULL, steps_json TEXT NOT NULL, PRIMARY KEY(task,revision), UNIQUE(task,idempotency_key))')
+    db.execute('CREATE TABLE IF NOT EXISTS objective_metadata (task TEXT NOT NULL, revision INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(task,revision))')
+    db.execute('CREATE TABLE IF NOT EXISTS objective_runtime (task TEXT NOT NULL, revision INTEGER NOT NULL, host_id TEXT NOT NULL, source_revision TEXT NOT NULL, version TEXT NOT NULL, image_digest TEXT, PRIMARY KEY(task,revision))')
     db.commit()
     return db
+
+
+def runtime_snapshot():
+    source=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','')).strip().lower()
+    host=os.getenv('PRIME_INTERFACE_HOST_ID','').strip()
+    version=os.getenv('PRIME_INTERFACE_RUNTIME_VERSION','').strip()
+    image=os.getenv('PRIME_RUNTIME_IMAGE_DIGEST','').strip() or None
+    return {
+        'host_id':host if re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}',host) else 'UNKNOWN',
+        'source_revision':source if re.fullmatch(r'[0-9a-f]{40}',source) else 'UNKNOWN',
+        'version':version if version else 'UNKNOWN',
+        'image_digest':image if image and re.fullmatch(r'sha256:[0-9a-f]{64}',image) else None,
+    }
+
+
+def store_runtime(db,task,revision):
+    value=runtime_snapshot()
+    db.execute('INSERT INTO objective_runtime VALUES(?,?,?,?,?,?)',(task,revision,value['host_id'],value['source_revision'],value['version'],value['image_digest']))
 
 
 @router.post('',status_code=202)
 def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)):
     authenticate_owner(authorization)
     from .operational_workflows import from_objective, execute_workflow
-    workflow_body=from_objective(body.objective,body.context) if not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
+    from .system_architecture import architecture_answer,is_architecture_question
+    architecture=architecture_answer(body.objective) if not body.deterministic_operation and is_architecture_question(body.objective) else None
+    workflow_body=from_objective(body.objective,body.context) if architecture is None and not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
     capabilities=list(dict.fromkeys(body.capabilities or ([body.capability] if body.capability!='auto' else select_capabilities(body.objective))))
     from .runtime_status import is_runtime_status
     if not body.deterministic_operation and is_runtime_status(body.objective,body.context):
@@ -69,8 +165,19 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
     task_id=str(uuid.uuid4())
     db=connect()
     try:
+        created=utcnow()
         db.execute('INSERT INTO objectives VALUES(?,?,?,?)',(task_id,hashlib.sha256(body.objective.encode()).hexdigest(),'dispatching',json.dumps(capabilities)))
+        db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,0,created,created))
+        store_runtime(db,task_id,0)
         db.commit()
+        if architecture is not None:
+            steps=[{'capability':'system.architecture','dispatch':{'state':'COMPLETED','task_id':task_id,
+                'result':architecture['text'],'system_fact':architecture,'model_backend':'none'}}]
+            db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
+            db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id));db.commit()
+            from .public_task_errors import public_task
+            return public_task({'id':task_id,'steps':steps,'physical_inference_limit':compute_queue_api.queue.policy.global_concurrency,
+                'semantics':'Canonical system-owned architecture lookup; no model self-description'})
         if workflow_body is not None:
             try:
                 outcome=execute_workflow(workflow_body,parent_task_id=task_id)
@@ -84,6 +191,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
             except Exception as exc:
                 steps=[{'capability':'workflow.operational','state':'failed','reason':type(exc).__name__}]
             db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
+            db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id))
             db.commit()
             from .public_task_errors import public_task
             return public_task({'id':task_id,'steps':steps,'physical_inference_limit':compute_queue_api.queue.policy.global_concurrency,
@@ -101,6 +209,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         with ThreadPoolExecutor(max_workers=min(3,len(capabilities))) as workers:
             steps=list(workers.map(run,capabilities))
         db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
+        db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id))
         db.commit()
         from .public_task_errors import public_task
         return public_task({'id':task_id,'steps':steps,'physical_inference_limit':compute_queue_api.queue.policy.global_concurrency,
@@ -116,6 +225,10 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     try:
         row=db.execute('SELECT state,steps_json FROM objectives WHERE id=?',(task_id,)).fetchone()
         turns=db.execute('SELECT revision,state,steps_json FROM objective_turns WHERE task=? ORDER BY revision',(task_id,)).fetchall()
+        timing={item[0]:(item[1],item[2]) for item in db.execute(
+            'SELECT revision,created_at,updated_at FROM objective_metadata WHERE task=?',(task_id,)).fetchall()}
+        runtime_rows={item[0]:{'host_id':item[1],'source_revision':item[2],'version':item[3],'image_digest':item[4]}
+            for item in db.execute('SELECT revision,host_id,source_revision,version,image_digest FROM objective_runtime WHERE task=?',(task_id,)).fetchall()}
     finally:
         db.close()
     if row is None:
@@ -134,12 +247,52 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
             step['state']='completed'
         elif 'job' in step.get('dispatch',{}):
             job=compute_queue_api.queue.get(step['dispatch']['job']['id'])
-            step['job']={key:job.get(key) for key in ('id','agent','status','result','error','created_at','started_at','completed_at')}
+            step['job']={key:job.get(key) for key in ('id','agent','model','provider','status','result','error','created_at','started_at','completed_at')}
     states=[step.get('job',{}).get('status',step.get('state','unknown')) for step in steps if step['revision']==revision]
     state='RUNNING' if 'running' in states else 'WAITING FOR RESOURCE' if 'queued' in states else 'COMPLETED' if states and all(value=='completed' for value in states) else 'COMPLETED_WITH_FAILURES'
     if turns and turns[-1][1]=='dispatching':state='reconciliation_required'
+    current_steps=[step for step in steps if step.get('revision',0)==revision]
+    jobs=[step.get('job',{}) for step in current_steps if step.get('job')]
+    recorded=timing.get(revision,(None,None))
+    created_at=recorded[0] or min((job.get('created_at') for job in jobs if job.get('created_at')),default=None)
+    observed_updates=[value for value in [recorded[1],*(job.get('completed_at') or job.get('started_at') or job.get('created_at') for job in jobs)] if value]
+    updated_at=max(observed_updates,default=None)
+    started_at=min((job.get('started_at') for job in jobs if job.get('started_at')),default=None)
+    completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
+    deterministic=system_content(steps,revision)
+    if state=='COMPLETED' and deterministic and completed_at is None:completed_at=updated_at
+    lifecycle={}
+    if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and started_at is None:
+        lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'
+    if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and completed_at is None:
+        completed_at=updated_at;lifecycle['completed_at_source']='TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE'
+    runtime=runtime_rows.get(revision)
+    runtime_provenance='IMMUTABLE_OBJECTIVE_RUNTIME' if runtime else 'UNAVAILABLE_LEGACY_TASK'
+    if runtime is None:runtime={'host_id':'UNKNOWN','source_revision':'UNKNOWN','version':'UNKNOWN','image_digest':None}
+    metadata={
+        'schema_version':'jarvis.authoritative-execution.v1','authoritative':True,
+        'task_id':task_id,'revision':revision,'state':state,
+        'created_at':created_at,'started_at':started_at,'completed_at':completed_at,'updated_at':updated_at,
+        'runtime':runtime,
+        'jobs':[{'job_id':job.get('id'),'agent':job.get('agent'),'model':job.get('model'),'provider':job.get('provider'),
+            'state':job.get('status'),'created_at':job.get('created_at'),
+            'started_at':job.get('started_at'),'completed_at':job.get('completed_at')} for job in jobs],
+        'agent_execution':[agent_execution_metadata(step) for step in current_steps if step.get('job')],
+        'provenance':{'task_id':'DATABASE','state':'QUEUE','timestamps':'QUEUE','jobs':'QUEUE',
+            'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER','runtime':runtime_provenance},
+        'closed_world_policy':'UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE',
+        'model_content_is_authoritative_metadata':False,
+        'lifecycle':lifecycle,
+    }
+    content=model_content(steps,revision)
+    contradictions=metadata_contradictions(content,metadata)
     from .public_task_errors import public_task
-    return public_task({'id':task_id,'revision':revision,'state':state,'steps':steps,'synthesis':'Source-labelled advisory contributions; no unverified execution claims'})
+    return public_task({'id':task_id,'revision':revision,'state':state,'steps':steps,
+        'execution_metadata':metadata,'updated_at':updated_at,
+        'result':{'type':'SYSTEM_FACT','text':deterministic,'authoritative':True,'provenance':'CANONICAL_REGISTRY_AND_RUNTIME'} if deterministic else {'type':'MODEL_CONTENT','text':content,'authoritative':False,
+            'epistemic_status':'GENERATED_CLAIM','verification_status':'VERIFY_REQUIRED',
+            'may_update_truth_plane':False,'contradictions':contradictions} if content else None,
+        'synthesis':'Source-labelled advisory contributions; model content is not execution metadata'})
 
 
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):
@@ -158,7 +311,10 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
         if current.get('revision',0)!=expected_revision:raise HTTPException(409,'Task revision conflict')
         if current['state'] not in {'COMPLETED','COMPLETED_WITH_FAILURES'}:raise HTTPException(409,'Current task turn is not terminal')
         revision=expected_revision+1
+        created=utcnow()
         db.execute('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',(task_id,revision,idempotency_key,digest,'dispatching','[]'))
+        db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)',(task_id,revision,created,created))
+        store_runtime(db,task_id,revision)
         db.commit()
         from .operational_workflows import from_objective, execute_workflow
         workflow=from_objective(body.objective,body.context)
@@ -189,6 +345,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
             capabilities=select_capabilities(body.objective)
             with ThreadPoolExecutor(max_workers=min(3,len(capabilities))) as pool:steps=list(pool.map(run,capabilities))
         db.execute('UPDATE objective_turns SET state=?,steps_json=? WHERE task=? AND revision=?',('submitted',json.dumps(steps),task_id,revision))
+        db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=?',(utcnow(),task_id,revision))
         db.commit()
         return {'task_id':task_id,'taskId':task_id,'revision':revision,'state':'ROUTED','idempotent_replay':False}
     finally:db.close()

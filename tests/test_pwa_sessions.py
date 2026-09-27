@@ -4,6 +4,7 @@ import secrets
 import time
 import pytest
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 ORIGIN='https://192.168.1.23:8443'
@@ -16,6 +17,9 @@ def setup(monkeypatch,tmp_path):
     monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
     app=FastAPI();app.include_router(pwa.router);app.include_router(pwa.owner_router);app.include_router(interface_contract.router)
+    @app.get('/pwa/',response_class=HTMLResponse)
+    @app.get('/pwa/index.html',response_class=HTMLResponse)
+    def pwa_shell():return '<!doctype html><title>JARVIS</title>'
     app.add_middleware(pwa.PWASessionMiddleware)
     return root,pwa,app,interface_node
 
@@ -51,6 +55,28 @@ def test_csrf_host_spoof_and_caller_identity_rejected(setup):
         assert client.get('/pwa/api/session',headers={'Host':'evil.invalid'}).status_code==403
         assert client.get('/interface/v1/health',headers={'Authorization':'Bearer spoof'}).status_code==400
         assert client.get('/interface/v1/health',headers={'X-Jarvis-Client-Id':'dell:spoof'}).status_code==400
+
+def test_cross_site_top_level_navigation_can_load_only_the_unauthenticated_shell(setup):
+    root,pwa,app,node=setup
+    navigation={
+        'Sec-Fetch-Site':'cross-site',
+        'Sec-Fetch-Mode':'navigate',
+        'Sec-Fetch-Dest':'document',
+        'Referer':'https://authority-engine-app.vercel.app/jarvis',
+        'User-Agent':'Mozilla/5.0 (iPhone) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1',
+    }
+    with TestClient(app,base_url=ORIGIN) as client:
+        shell=client.get('/pwa/',headers=navigation)
+        assert shell.status_code==200 and '<title>JARVIS</title>' in shell.text
+        assert client.get('/pwa/index.html',headers=navigation).status_code==200
+        # Cross-site navigation is never an authenticated API bypass.
+        assert client.get('/pwa/api/session',headers=navigation).status_code==403
+        assert client.get('/interface/v1/health',headers=navigation).status_code==401
+        # Missing navigation metadata, an Origin, a write, or another PWA path stays rejected.
+        assert client.get('/pwa/',headers={'Sec-Fetch-Site':'cross-site'}).status_code==403
+        assert client.get('/pwa/',headers={**navigation,'Origin':'https://authority-engine-app.vercel.app'}).status_code==403
+        assert client.post('/pwa/',headers=navigation).status_code==403
+        assert client.get('/pwa/app.mjs',headers=navigation).status_code==403
 
 def test_two_clients_upload_ownership_and_expiry(setup):
     root,pwa,app,node=setup
@@ -117,7 +143,17 @@ def test_owner_and_member_roles_are_server_issued_and_persisted(setup):
         assert member_session['role']=='MEMBER'
         assert owner_client.get('/pwa/api/session').json()['role']=='OWNER'
         assert member_client.get('/pwa/api/session').json()['role']=='MEMBER'
-        assert pwa.client_policy(owner_session['clientId'])['capabilities']==pwa.client_policy(member_session['clientId'])['capabilities']
+        owner_policy=pwa.client_policy(owner_session['clientId']);member_policy=pwa.client_policy(member_session['clientId'])
+        assert owner_policy['role']=='OWNER' and member_policy['role']=='MEMBER'
+        assert 'authority.owner.verify' in owner_policy['capabilities']
+        assert 'authority.owner.verify' not in member_policy['capabilities']
+        assert owner_client.post('/pwa/api/owner-authority-check',headers=HEADERS).json()=={
+            'authorized':True,'role':'OWNER','capability':'authority.owner.verify'}
+        denied=member_client.post('/pwa/api/owner-authority-check',headers=HEADERS)
+        assert denied.status_code==403 and denied.json()=={'detail':'Owner authority required'}
+        assert member_client.post('/pwa/api/owner-authority-check',headers={**HEADERS,'X-Role':'OWNER'}).status_code==403
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,owner_session['clientId']))
+        assert owner_client.post('/pwa/api/owner-authority-check',headers=HEADERS).status_code==401
 
 def test_missing_policy_config_stays_local_only_and_bounded(setup,monkeypatch):
     root,pwa,app,node=setup
@@ -170,3 +206,88 @@ def test_existing_unlinked_session_not_broadened_by_environment(setup,monkeypatc
         response,_=enroll(pwa,client)
         monkeypatch.setenv('PRIME_PWA_OWNER_ACCOUNT_ID','owner:fixture')
         assert 'owner_account_id' not in pwa.client_policy(response.json()['clientId'])
+
+def test_durable_device_refresh_preserves_identity_role_and_running_task(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];device_cookie=client.cookies.get(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
+        refreshed=client.get('/pwa/api/session')
+        assert refreshed.status_code==200 and refreshed.json()['authenticated'] is True
+        assert refreshed.json()['clientId']==identity and refreshed.json()['role']=='MEMBER'
+        assert client.cookies.get(pwa.DEVICE_COOKIE)==device_cookie
+
+def test_invalid_or_revoked_device_fails_closed_without_changing_identity(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        with pwa.database() as db:
+            db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity));db.execute('UPDATE devices SET revoked=1 WHERE client_id=?',(identity,))
+        assert client.get('/pwa/api/session').json()['authenticated'] is False
+        with pwa.database() as db:
+            row=db.execute('SELECT client_id,role,revoked FROM devices WHERE client_id=?',(identity,)).fetchone()
+        assert row==(identity,'MEMBER',1)
+
+def test_revoked_device_cannot_be_reissued_while_short_session_is_active(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];old=client.cookies.get(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('UPDATE devices SET revoked=1 WHERE client_id=?',(identity,))
+        current=client.get('/pwa/api/session')
+        assert current.json()['authenticated'] is False
+        assert old and client.cookies.get(pwa.DEVICE_COOKIE) is None
+        with pwa.database() as db:assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(identity,)).fetchone()==(1,)
+
+def test_revoked_session_cannot_be_resurrected_by_valid_device(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        with pwa.database() as db:db.execute('UPDATE sessions SET revoked=1 WHERE client_id=?',(identity,))
+        assert client.get('/pwa/api/session').json()['authenticated'] is False
+        with pwa.database() as db:assert db.execute('SELECT revoked FROM sessions WHERE client_id=?',(identity,)).fetchone()==(1,)
+
+def test_invalid_session_token_cannot_use_valid_device_for_silent_recovery(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enroll(pwa,client);client.cookies.set(pwa.COOKIE,secrets.token_urlsafe(32),domain='192.168.1.23',path='/')
+        assert client.get('/pwa/api/session').json()['authenticated'] is False
+        assert client.cookies.get(pwa.COOKIE) is None and client.cookies.get(pwa.DEVICE_COOKIE) is None
+
+def test_mismatched_session_and_device_fail_closed_without_authority_switch(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as member,TestClient(app,base_url=ORIGIN) as owner:
+        member_result,_=enroll(pwa,member)
+        code=secrets.token_urlsafe(16)
+        with pwa.database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used,owner_account_id,role) VALUES(?,?,0,?,?)',(pwa.digest(code),time.time()+300,'owner:fixture','OWNER'))
+        owner_result=owner.post('/pwa/api/enroll',headers=HEADERS,json={'code':code});assert owner_result.status_code==200
+        member.cookies.set(pwa.DEVICE_COOKIE,owner.cookies.get(pwa.DEVICE_COOKIE),domain='192.168.1.23',path='/')
+        assert member.get('/pwa/api/session').json()['authenticated'] is False
+        assert member.cookies.get(pwa.COOKIE) is None and member.cookies.get(pwa.DEVICE_COOKIE) is None
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,member_result.json()['clientId']))
+        refreshed=member.get('/pwa/api/session').json()
+        assert refreshed['authenticated'] is False
+        assert owner.get('/pwa/api/session').json()['clientId']==owner_result.json()['clientId']
+
+def test_active_legacy_session_bootstraps_durable_device_without_reenrollment(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        client.cookies.delete(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('DELETE FROM devices WHERE client_id=?',(identity,))
+        current=client.get('/pwa/api/session')
+        assert current.json()['authenticated'] is True and current.json()['clientId']==identity
+        assert client.cookies.get(pwa.DEVICE_COOKIE)
+
+def test_pwa_close_reopen_and_service_restart_refresh_same_durable_identity(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as first:
+        enrolled,_=enroll(pwa,first);identity=enrolled.json()['clientId'];device_token=first.cookies.get(pwa.DEVICE_COOKIE)
+    # A new browser process/app instance represents close/reopen and server restart;
+    # only the durable HttpOnly device credential is carried forward.
+    with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
+    restarted=FastAPI();restarted.include_router(pwa.router);restarted.add_middleware(pwa.PWASessionMiddleware)
+    with TestClient(restarted,base_url=ORIGIN) as reopened:
+        reopened.cookies.set(pwa.DEVICE_COOKIE,device_token)
+        current=reopened.get('/pwa/api/session')
+        assert current.status_code==200 and current.json()['authenticated'] is True
+        assert current.json()['clientId']==identity

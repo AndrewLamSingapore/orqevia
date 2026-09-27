@@ -1,0 +1,64 @@
+{
+  "schema_version": "jarvis.phase2-candidate-freeze.v1",
+  "freeze_id": "jarvis-prime-phase2-candidate-20260926",
+  "state": "FROZEN_CANDIDATE_NOT_PRODUCTION",
+  "source": {
+    "repository": "AndrewLamSingapore/prime",
+    "branch": "feat/phase2-unified-intelligence-20260926",
+    "commit": "325c901836f51a4d6f39376766b114acdd7b506d",
+    "tree": "5b53f098e545eb0c8ae05ab8574a0322666d5b59",
+    "tag": "jarvis-prime-phase2-candidate-20260926",
+    "tag_object": "f293917c2799cf4dfc7f3e3a96d2b10080701252",
+    "remote_commit_verified": true,
+    "remote_tag_verified": true
+  },
+  "bindings": {
+    "governance/phase2-candidate-manifest.json": "66493d1a2c1bce1d9213268d5f85d4a0816725405d9f68f41ab82bd735d4b1a0",
+    "governance/evidence-product-v0.1-manifest.json": "08f2fae77bd8f214557ae620661eda5995c44ebeda3855ab68f3bccbbf3664ba",
+    "governance/action-envelope-v0.1.schema.json": "dc833872b115a89bc53ec38d9bceff9fd741c903d534382f78d23296001c05fc",
+    "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md": "9ca89b24d9e48855bed0c8ebf784db45fbcb6d21a9930d3ebea49794801afef8",
+    "docs/EVIDENCE-PRODUCT-SSOT-v0.1.md": "b3ef8bee6b4bc66203e5d1be4ed1e419969ee220ea3b525a112879f46e6cd3c6",
+    "docs/ACTION-ENVELOPE-STANDARD-v0.1.md": "ecd46231869e0aa7880668d8a1afb663f4137fdd01a35075c956ea953b0ac3f6",
+    "docs/evidence/PHASE2_CANDIDATE_QUALIFICATION_20260926.json": "1a6ab2f684ba38cac0f23701b96b7766b82d1d8501480167957d0c1719517711",
+    "config/agent_registry.json": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6"
+  },
+  "qualification": {
+    "canonical_tests": {"passed": 928, "failed": 0, "known_deprecation_warnings": 5},
+    "candidate_verifier": "PASS",
+    "evidence_lens_owner_physical_acceptance": "PASS",
+    "unresolved_p0": 0,
+    "unresolved_p1": 1,
+    "unresolved_p2": 0
+  },
+  "authority": {
+    "registry_schema": "2.0",
+    "logical_agents": 21,
+    "candidate_grants_production_authority": false,
+    "member_inherits_owner": false,
+    "model_content_authoritative": false
+  },
+  "rollback": {
+    "golden_generation": 1,
+    "golden_tag": "jarvis-prime-golden-gen1-20260926",
+    "accepted_source": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "running_image": "prime:sha-17fad78",
+    "running_image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
+    "immediate_rollback_image": "prime:sha-2ca9b4a",
+    "immediate_rollback_image_id": "sha256:77024fd32de246fe61ed5043f82482f44cb78c5e94a2600fb43e85318fdf7539",
+    "checkpoint": "/data/recovery/pwa-mobile-control-predeploy-20260926"
+  },
+  "production": {
+    "modified": false,
+    "deployment": "NOT_PERFORMED",
+    "runtime_receipt": "NOT_APPLICABLE_NOT_DEPLOYED",
+    "prime_runtime_acceptance": "GOLDEN_GEN1_REMAINS_VERIFIED"
+  },
+  "independent_verification": {
+    "verdict": "FAIL",
+    "severity": "P1_FALSE_SUCCESS",
+    "record": "docs/evidence/PHASE2_INDEPENDENT_ADVERSARIAL_FAIL_325C901_20260926.md",
+    "image_build_allowed": false,
+    "promotion_allowed": false
+  },
+  "pending_gates": ["repair and re-freeze a new candidate", "repeat independent adversarial verification"]
+}

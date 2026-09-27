@@ -1,0 +1,25 @@
+{
+  "classification": "LAB_EXECUTED",
+  "generated_at": "2026-09-25T02:58:06.930524+00:00",
+  "measurement_scope": {
+    "host_cpu": "not measured by this container-local harness",
+    "host_ram": "not measured by this container-local harness",
+    "ollama_api_timing": true,
+    "response_content_persisted": false
+  },
+  "model": "gemma3:4b",
+  "model_id": "a2af6cc3eb7f",
+  "overall": {"median_latency_seconds": 6.429, "passed": 7, "pass_rate": 0.875, "total": 8},
+  "privacy": "docker-internal-only",
+  "results": [
+    {"category": "reasoning", "latency_seconds": 25.455, "passed": true, "tokens_per_second": 7.877},
+    {"category": "coding", "latency_seconds": 11.022, "passed": true, "tokens_per_second": 7.808},
+    {"category": "structured_output", "failure": "invalid:json", "latency_seconds": 4.561, "passed": false, "tokens_per_second": 7.889},
+    {"category": "chinese", "latency_seconds": 1.772, "passed": true, "tokens_per_second": 8.796},
+    {"category": "english", "latency_seconds": 3.494, "passed": true, "tokens_per_second": 8.0},
+    {"category": "tool_selection", "latency_seconds": 1.098, "passed": true, "tokens_per_second": 9.354},
+    {"category": "retrieval", "latency_seconds": 30.566, "passed": true, "tokens_per_second": 7.477},
+    {"category": "verification", "latency_seconds": 8.297, "passed": true, "tokens_per_second": 7.723}
+  ],
+  "schema_version": "2.0"
+}

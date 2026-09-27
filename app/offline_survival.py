@@ -27,6 +27,7 @@ import os
 import sqlite3
 import time
 import uuid
+from contextlib import closing
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -190,7 +191,7 @@ class OfflineSurvival:
         return db
 
     def _init(self) -> None:
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript(
                 """
@@ -295,7 +296,14 @@ class OfflineSurvival:
         else:
             disposition = {}
             for name, dependency in self.classification.items():
-                disposition[name] = "AVAILABLE" if dependency is DependencyClass.LOCAL_AVAILABLE else "DEGRADED"
+                if dependency is DependencyClass.LOCAL_AVAILABLE:
+                    disposition[name] = "AVAILABLE"
+                elif dependency is DependencyClass.NETWORK_REQUIRED and self._network_available is True:
+                    disposition[name] = "AVAILABLE"
+                elif dependency is DependencyClass.PROVIDER_REQUIRED and self._provider_available is True:
+                    disposition[name] = "AVAILABLE"
+                else:
+                    disposition[name] = "DEGRADED"
         return {
             "mode": f"OFFLINE — LOCAL INTELLIGENCE" if self._state is CapabilityState.OFFLINE else self._state.value,
             "internet": "AVAILABLE" if self._network_available is True else "UNAVAILABLE" if self._network_available is False else "UNKNOWN",
@@ -330,7 +338,7 @@ class OfflineSurvival:
             raise OperationRejected(f"{operation_type} is local; it must not be deferred")
         if resolved_dependency is DependencyClass.NON_DEFERABLE:
             raise OperationRejected(f"{operation_type} is unknown or non-deferable; refusing to queue it")
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
             existing = db.execute(
                 "SELECT * FROM deferred_operations WHERE idempotency_key=?", (idempotency_key,)
             ).fetchone()
@@ -361,14 +369,14 @@ class OfflineSurvival:
         return self.get(operation_id)
 
     def get(self, operation_id: str) -> DeferredOperation:
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
             row = db.execute("SELECT * FROM deferred_operations WHERE id=?", (operation_id,)).fetchone()
         if row is None:
             raise KeyError(operation_id)
         return self._row_to_operation(row)
 
     def all(self) -> list[DeferredOperation]:
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
             rows = db.execute("SELECT * FROM deferred_operations ORDER BY created_at").fetchall()
         return [self._row_to_operation(row) for row in rows]
 
@@ -383,13 +391,13 @@ class OfflineSurvival:
         if not fields:
             return
         columns = ", ".join(f"{name}=?" for name in fields)
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
             db.execute(f"UPDATE deferred_operations SET {columns} WHERE id=?", (*fields.values(), operation_id))
 
     def _claim(self, operation: DeferredOperation, *, now: float) -> bool:
         """Atomically grant one reconciler a bounded lease for an operation."""
         lease_until = now + 300.0
-        with self.connect() as db:
+        with closing(self.connect()) as db, db:
             cursor = db.execute(
                 "UPDATE deferred_operations SET state=?, next_retry_at=?, reason=? "
                 "WHERE id=? AND state IN (?,?,?,?) AND next_retry_at<=?",
@@ -428,6 +436,7 @@ class OfflineSurvival:
         authority_valid: Callable[[DeferredOperation], bool],
         still_relevant: Callable[[DeferredOperation], bool] | None = None,
         remote_applied: Callable[[DeferredOperation], bool] | None = None,
+        dependency_available: Callable[[DeferredOperation], bool] | None = None,
         now: float | None = None,
         limit: int = 25,
     ) -> list[ReconcileResult]:
@@ -442,7 +451,12 @@ class OfflineSurvival:
         silently completed.
         """
         moment = time.time() if now is None else float(now)
-        if self._state is not CapabilityState.ONLINE:
+        if self._state is CapabilityState.OFFLINE:
+            return []
+        # DEGRADED means some dependencies may be usable (for example Internet
+        # works while a model provider does not). Never guess: a caller must
+        # explicitly revalidate each operation's dependency in that state.
+        if self._state is not CapabilityState.ONLINE and dependency_available is None:
             return []
         self.expire(now=moment)
         due = [
@@ -462,6 +476,15 @@ class OfflineSurvival:
                     reason="authority changed while offline; not executed",
                 )
                 results.append(ReconcileResult(operation.id, QueueState.SUPERSEDED, False, "authority_invalid"))
+                continue
+            if dependency_available is not None and not dependency_available(operation):
+                self._update(
+                    operation.id,
+                    state=QueueState.DEFERRED_OFFLINE.value,
+                    reason="required dependency is not currently verified",
+                    next_retry_at=moment,
+                )
+                results.append(ReconcileResult(operation.id, QueueState.DEFERRED_OFFLINE, False, "dependency_unavailable"))
                 continue
             executor = executors.get(operation.operation_type)
             if executor is None:

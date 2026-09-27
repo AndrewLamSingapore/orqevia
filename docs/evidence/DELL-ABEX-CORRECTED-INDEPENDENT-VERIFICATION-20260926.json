@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0.0",
+  "reconciler_version": "dell-corrected-independent-production-verification-v1",
+  "verification_id": "f5a6f344-faf9-4eec-b4f9-f73bd20bc5ff",
+  "reconciliation_id": "f5a6f344-faf9-4eec-b4f9-f73bd20bc5ff",
+  "timestamp": "2026-09-26T15:25:32+08:00",
+  "verifier_role": "DELL independent verifier (read-only)",
+  "dell_identity": "DESKTOP-IPV4PH9 @ 192.168.1.17 (Windows 11 26200.9550)",
+  "abex_target_identity": "DESKTOP-BGD97NB @ 192.168.1.23 (ARP 08-8e-90-0f-91-0a)",
+  "canonical_endpoint": "https://192.168.1.23:8443/pwa/",
+  "supersedes": "DELL-ABEX-FINAL-INDEPENDENT-VERIFICATION-20260926.json (verification_id 0931d2f1-46c2-4028-8c09-4aa27c5bc030)",
+  "supersession_reason": "Prior FAIL evaluated historical pre-repair task 22bc6513 and a stale Authority Engine status surface; corrected verification uses the canonical ABEX Interface and the production receipt at 8e7686fc.",
+  "production_runtime_identity": {
+    "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "remote_branch": "feat/supreme-integration-20260925",
+    "remote_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "image_tag": "prime:sha-17fad78",
+    "image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
+    "runtime_host": "ABEX",
+    "registry_schema": "2.0",
+    "logical_agent_count": 21,
+    "registry_sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff",
+    "pwa_cache_generation": "jarvis-shell-v11"
+  },
+  "receipt_hash_digest": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+  "receipt_verdict": "ABEX_OBSERVATION_VALID_PENDING_INDEPENDENT_VERIFICATION",
+  "receipt_violations": [],
+  "receipt_file": "docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json (branch feat/supreme-integration-20260925 @ 8e7686fc26a9018c886919fced5aabdbf9e38dcf)",
+  "post_repair_owner_task_id": "3c235145-0fbd-4fcb-9983-1074dd3c87f7",
+  "post_repair_owner_task_state": "COMPLETED",
+  "post_repair_result_language": "zh-CN",
+  "historical_preserved": {
+    "pre_repair_task_id": "22bc6513-e267-40c3-868f-bf21190b9a28",
+    "pre_repair_fabricated_uuid": "78a2b3c4-d5e6-4f78-9a0b-1c23456789ab",
+    "pre_repair_fabricated_timestamp": "2024-02-29T10:00:00Z",
+    "classification": "historical pre-repair failure evidence; superseded by current repaired production"
+  },
+  "checks": [
+    {
+      "id": "DELL_CLIENT_PATH",
+      "verdict": "PASS",
+      "evidence": "Fresh canonical Interface https://192.168.1.23:8443/pwa/ returned HTTP 200 (server uvicorn, x-prime-protocol jarvis.interface.v1, strict CSP)."
+    },
+    {
+      "id": "OWNER_AUTHORITY",
+      "verdict": "PASS",
+      "evidence": "Receipt records canonical owner (owner:lam:prime-epoch-20260919, role OWNER), server-correlated session, owner-authority endpoint HTTP_200, session persisted after reopen, no duplicate owner identity."
+    },
+    {
+      "id": "PRIME_END_TO_END_EXECUTION",
+      "verdict": "PASS",
+      "evidence": "Post-repair Owner task 3c235145-0fbd-4fcb-9983-1074dd3c87f7 completed (objective -> job -> COMPLETED -> zh-CN result -> artifact), with authoritative metadata separate from model content."
+    },
+    {
+      "id": "TASK_UUID_PROVENANCE",
+      "verdict": "PASS",
+      "evidence": "Current production task UUIDs are authoritative; receipt records model_content_authoritative=false and no model-system contradictions. Historical pre-repair fabricated UUID 78a2b3c4... is superseded."
+    },
+    {
+      "id": "TIMESTAMP_PROVENANCE",
+      "verdict": "PASS",
+      "evidence": "Receipt task_evidence has authoritative created/started/completed/updated timestamps with valid lifecycle order (created <= started <= completed == updated). Historical pre-repair fabricated timestamp 2024-02-29T10:00:00Z is superseded."
+    },
+    {
+      "id": "RUNTIME_IDENTITY",
+      "verdict": "PASS",
+      "evidence": "Source 17fad78d410dca5d9101483cb777a2b9b619bac3 independently verified (registry, product manifest, and 5 PWA asset digests re-derived from git and matched); image_tag prime:sha-17fad78 matches source prefix."
+    },
+    {
+      "id": "ARTIFACT_BINDING",
+      "verdict": "PASS",
+      "evidence": "Receipt binds task 0fbc896f to artifact_id aa85a93e1b7e4757805896500c070b9c with artifact_sha256 2a0f32c1a4022e24d7d32b8e2d50e969f441fa8e062cfab1edbb76aa3ec2e2bf (valid digest, 628 bytes)."
+    },
+    {
+      "id": "AGENT_ROLE_AUTHORITY_ENFORCEMENT",
+      "verdict": "PASS",
+      "evidence": "Canonical registry schema 2.0 with exactly 21 logical agents; registry SHA-256 fec92b1d... re-derived from git source and matched. Superseded 29-agent schema 1.1 drift (sha-c449dd1) no longer current."
+    },
+    {
+      "id": "HALLUCINATION_CONTAINMENT",
+      "verdict": "PASS",
+      "evidence": "Current production enforces authoritative metadata separation: receipt records authoritative_metadata_separate_from_model_content=true, model_content_authoritative=false, and zero model-system contradictions."
+    },
+    {
+      "id": "SECURITY_BOUNDARY",
+      "verdict": "PASS",
+      "evidence": "Canonical Interface fail-closed (strict CSP, no-store, nosniff); receipt records private_network_exposure=false; reconciliation records no public Ollama/DB/Docker/PRIME-internal listener."
+    },
+    {
+      "id": "RUNTIME_RECEIPT",
+      "verdict": "PASS",
+      "evidence": "Receipt exists on production branch at exact SHA 8e7686fc26a9018c886919fced5aabdbf9e38dcf; canonical scripts/verify_abex_runtime_receipt.py returned zero violations."
+    },
+    {
+      "id": "ABEX_PRODUCTION_MODIFIED_BY_DELL",
+      "verdict": "NO",
+      "evidence": "All actions were read-only (git fetch, worktree materialization, receipt verification, HTTPS read probes). No ABEX restart, deploy, DB, identity, or configuration change was performed."
+    }
+  ],
+  "unresolved_findings": [],
+  "independent_cross_check": {
+    "live_index_html_sha256": "69d5915533dc878a686264f04eb8eca913c1acd1ae8ddd73ac98084b794a18f0",
+    "receipt_index_html_sha256": "69d5915533dc878a686264f04eb8eca913c1acd1ae8ddd73ac98084b794a18f0",
+    "live_release": "jarvis-shell-v11",
+    "note": "Live served /pwa/index.html bytes hash-identical to the receipt digest and to the git source digest at 17fad78d."
+  },
+  "overall_health": "GREEN",
+  "final_verification": "PASS",
+  "final_verification_reason": "Corrected independent verification of the current production generation passed: receipt valid (zero violations), source 17fad78d / image prime:sha-17fad78 independently verified, post-repair task 3c235145 returned Chinese JARVIS text without fabricated metadata, and the live Interface serves the matching build.",
+  "prime_runtime_acceptance": "UNVERIFIED",
+  "prime_runtime_acceptance_note": "Dell does NOT transition PRIME.RUNTIME acceptance. That remains ABEX-owned and additionally requires a governed non-forgeable receipt-validation path. Dell reports this independent result only.",
+  "abex_modified_by_dell": false,
+  "statement": "Dell did not modify ABEX production.",
+  "evidence_refs": [
+    "repos/prime branch feat/supreme-integration-20260925 @ 8e7686fc26a9018c886919fced5aabdbf9e38dcf",
+    "docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json",
+    "scripts/verify_abex_runtime_receipt.py (verdict: ABEX_OBSERVATION_VALID_PENDING_INDEPENDENT_VERIFICATION, violations: [])",
+    "live https://192.168.1.23:8443/pwa/ (HTTP 200; index.html sha256 69d59155...; release.mjs jarvis-shell-v11)",
+    "git source 17fad78d410dca5d9101483cb777a2b9b619bac3 (digests re-derived and matched)"
+  ],
+  "owner_unblock_required": [
+    "ABEX: implement and exercise the governed non-forgeable receipt-validation path, then reconcile PRIME.RUNTIME acceptance canonically.",
+    "Dell: none. Dell must not transition PRIME.RUNTIME itself."
+  ]
+}

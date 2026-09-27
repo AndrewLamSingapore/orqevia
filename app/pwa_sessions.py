@@ -17,8 +17,11 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 COOKIE='__Host-JARVIS-PWA'
+DEVICE_COOKIE='__Host-JARVIS-Device'
 SCOPES=['identity.read','health.read','objective.submit','task.read','task.cancel','artifact.read']
+OWNER_SCOPES=[*SCOPES,'authority.owner.verify']
 SESSION_SECONDS=8*3600
+DEVICE_SECONDS=90*24*3600
 router=APIRouter(prefix='/pwa/api',tags=['pwa-session'])
 owner_router=APIRouter(prefix='/pwa/owner',tags=['local-pairing'])
 
@@ -31,6 +34,7 @@ def database():
     db.execute('BEGIN IMMEDIATE')
     db.execute('CREATE TABLE IF NOT EXISTS pairing(code_hash TEXT PRIMARY KEY,expires REAL NOT NULL,used INTEGER NOT NULL DEFAULT 0)')
     db.execute('CREATE TABLE IF NOT EXISTS sessions(session_hash TEXT PRIMARY KEY,client_id TEXT UNIQUE NOT NULL,expires REAL NOT NULL,revoked INTEGER NOT NULL DEFAULT 0)')
+    db.execute('CREATE TABLE IF NOT EXISTS devices(device_hash TEXT PRIMARY KEY,client_id TEXT UNIQUE NOT NULL,expires REAL NOT NULL,revoked INTEGER NOT NULL DEFAULT 0,owner_account_id TEXT,role TEXT NOT NULL DEFAULT \'MEMBER\')')
     db.execute('CREATE TABLE IF NOT EXISTS admission(peer_hash TEXT,bucket INTEGER,count INTEGER,PRIMARY KEY(peer_hash,bucket))')
     for table in ('pairing','sessions'):
         if 'owner_account_id' not in {r[1] for r in db.execute('PRAGMA table_info('+table+')')}:
@@ -46,28 +50,82 @@ def internal_token(client):
 
 def client_policy(client):
     if not re.fullmatch(r'pwa:[a-f0-9]{32}',client or ''):return {}
-    with database() as db:row=db.execute('SELECT expires,revoked,owner_account_id FROM sessions WHERE client_id=?',(client,)).fetchone()
+    with database() as db:row=db.execute('SELECT expires,revoked,owner_account_id,role FROM sessions WHERE client_id=?',(client,)).fetchone()
     if not row or row[1] or row[0]<=time.time():return {}
     # Browser identity grants only the existing bounded server-owned client policy.
     classification=os.getenv('PRIME_PWA_DATA_CLASSIFICATION','LOCAL_ONLY')
     try:ceiling=float(os.getenv('PRIME_PWA_MAX_COST_USD','0'))
     except ValueError:raise HTTPException(503,'PWA policy unavailable') from None
     if classification not in {'LOCAL_ONLY','CLOUD_PERMITTED'} or not math.isfinite(ceiling) or not 0<=ceiling<=1:raise HTTPException(503,'PWA policy unavailable')
-    return {'token_sha256':digest(internal_token(client)),'expires_at':row[0],'capabilities':SCOPES,
+    if row[3] not in {'OWNER','MEMBER'}:raise HTTPException(503,'PWA role unavailable')
+    capabilities=OWNER_SCOPES if row[3]=='OWNER' else SCOPES
+    return {'token_sha256':digest(internal_token(client)),'expires_at':row[0],'capabilities':capabilities,'role':row[3],
             'data_classification':classification,'max_cost_usd':ceiling,
             **({'owner_account_id':row[2]} if row[2] else {})}
 
-def session(request):
+def session_state(request):
     cookie=request.cookies.get(COOKIE,'')
-    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',cookie):return None
-    with database() as db:row=db.execute('SELECT client_id,expires,revoked,role FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
-    if not row or row[2] or row[1]<=time.time():return None
-    return {'clientId':row[0],'expiresAt':row[1],'role':row[3]}
+    if not cookie:return 'MISSING',None
+    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',cookie):return 'INVALID',None
+    with database() as db:row=db.execute('SELECT client_id,expires,revoked,role,owner_account_id FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
+    if not row:return 'INVALID',None
+    value={'clientId':row[0],'expiresAt':row[1],'role':row[3],'ownerAccountId':row[4]}
+    if row[2]:return 'REVOKED',value
+    if row[1]<=time.time():return 'EXPIRED',value
+    if row[3] not in {'OWNER','MEMBER'}:return 'INVALID',None
+    return 'VALID',value
+
+def session(request):
+    state,value=session_state(request)
+    return value if state=='VALID' else None
+
+def device_state(request):
+    raw=request.cookies.get(DEVICE_COOKIE,'')
+    if not raw:return 'MISSING',None
+    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',raw):return 'INVALID',None
+    with database() as db:row=db.execute('SELECT client_id,expires,revoked,owner_account_id,role FROM devices WHERE device_hash=?',(digest(raw),)).fetchone()
+    if not row:return 'INVALID',None
+    if row[2]:return 'REVOKED',None
+    if row[1]<=time.time():return 'EXPIRED',None
+    if row[4] not in {'OWNER','MEMBER'}:return 'INVALID',None
+    return 'VALID',{'clientId':row[0],'deviceExpiresAt':row[1],'ownerAccountId':row[3],'role':row[4]}
+
+def device(request):return device_state(request)[1]
+
+def _cookies(response,session_token,device_token=None):
+    if session_token:response.set_cookie(COOKIE,session_token,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    if device_token:response.set_cookie(DEVICE_COOKIE,device_token,max_age=DEVICE_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    return response
+
+def _issue_device(current):
+    raw=secrets.token_urlsafe(32);expires=clock()+DEVICE_SECONDS
+    with database() as db:
+        row=db.execute('SELECT owner_account_id,role FROM sessions WHERE client_id=?',(current['clientId'],)).fetchone()
+        existing=db.execute('SELECT 1 FROM devices WHERE client_id=?',(current['clientId'],)).fetchone()
+        if not row or existing:return None
+        db.execute('INSERT INTO devices VALUES(?,?,?,0,?,?)',(digest(raw),current['clientId'],expires,row[0],row[1]))
+    return raw
+
+def _refresh_session(bound):
+    raw=secrets.token_urlsafe(32);expires=clock()+SESSION_SECONDS;internal_token(bound['clientId'])
+    with database() as db:
+        changed=db.execute('UPDATE sessions SET session_hash=?,expires=?,owner_account_id=?,role=? WHERE client_id=? AND revoked=0',
+            (digest(raw),expires,bound['ownerAccountId'],bound['role'],bound['clientId'])).rowcount
+        if changed!=1:return None
+    return raw,{'clientId':bound['clientId'],'expiresAt':expires,'role':bound['role']}
 
 def require_session(request):
     value=session(request)
     if not value:raise HTTPException(401,'Session unavailable')
     return value
+
+def safe_shell_navigation(request):
+    """Allow only an unauthenticated top-level browser handoff to the PWA shell."""
+    return (request.method=='GET'
+            and request.url.path in {'/pwa/','/pwa/index.html'}
+            and request.headers.get('origin') is None
+            and request.headers.get('sec-fetch-mode')=='navigate'
+            and request.headers.get('sec-fetch-dest')=='document')
 
 def origin_valid(request,write=False):
     expected=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')
@@ -76,7 +134,8 @@ def origin_valid(request,write=False):
     if request.url.scheme!='https' or str(request.base_url).rstrip('/')!=expected:return False
     origin=request.headers.get('origin')
     if origin is not None and origin!=expected:return False
-    if request.headers.get('sec-fetch-site') in {'cross-site','same-site'}:return False
+    site=request.headers.get('sec-fetch-site')
+    if site in {'cross-site','same-site'} and not (not write and safe_shell_navigation(request)):return False
     return not write or (origin==expected and request.headers.get('x-jarvis-pwa')=='1')
 
 async def bounded_body(request,limit):
@@ -110,8 +169,29 @@ async def pairing(request:Request):
 
 @router.get('/session')
 def get_session(request:Request):
-    current=session(request)
-    return {'authenticated':bool(current),**(current or {})}
+    session_status,current=session_state(request)
+    device_status,bound=device_state(request)
+    device_token=None;session_token=None;clear_credentials=False
+    if session_status in {'INVALID','REVOKED'}:
+        current=None;clear_credentials=True
+    elif current and bound and any(current[key]!=bound[key] for key in ('clientId','role','ownerAccountId')):
+        current=None;clear_credentials=True
+    elif session_status=='VALID' and device_status=='MISSING':device_token=_issue_device(current)
+    elif session_status=='VALID' and device_status!='VALID':current=None;clear_credentials=True
+    elif session_status in {'MISSING','EXPIRED'} and bound:
+        if current and any(current[key]!=bound[key] for key in ('clientId','role','ownerAccountId')):
+            current=None;clear_credentials=True
+        else:
+            refreshed=_refresh_session(bound)
+            if refreshed:session_token,current=refreshed
+    elif session_status!='VALID':
+        current=None
+    response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),**(current or {})})
+    if clear_credentials:
+        response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
+        response.delete_cookie(DEVICE_COOKIE,path='/',secure=True,httponly=True,samesite='strict')
+        return response
+    return _cookies(response,session_token,device_token) if session_token or device_token else response
 
 @router.post('/enroll')
 async def enroll(request:Request):
@@ -133,20 +213,31 @@ async def enroll(request:Request):
         db.execute('BEGIN IMMEDIATE')
         row=db.execute('SELECT expires,used,owner_account_id,role FROM pairing WHERE code_hash=?',(digest(body['code']),)).fetchone()
         if not row or row[1] or row[0]<=now:raise HTTPException(401,'Enrollment unavailable')
-        raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex;expires=now+SESSION_SECONDS
+        raw=secrets.token_urlsafe(32);device_raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex;expires=now+SESSION_SECONDS
         internal_token(client)
         db.execute('UPDATE pairing SET used=1 WHERE code_hash=?',(digest(body['code']),))
         db.execute('INSERT INTO sessions(session_hash,client_id,expires,revoked,owner_account_id,role) VALUES(?,?,?,0,?,?)',(digest(raw),client,expires,row[2],row[3]))
+        db.execute('INSERT INTO devices VALUES(?,?,?,0,?,?)',(digest(device_raw),client,now+DEVICE_SECONDS,row[2],row[3]))
     response=JSONResponse({'authenticated':True,'clientId':client,'expiresAt':expires,'role':row[3]})
-    response.set_cookie(COOKIE,raw,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
-    return response
+    return _cookies(response,raw,device_raw)
 
 @router.post('/logout')
 def logout(request:Request):
     raw=request.cookies.get(COOKIE,'')
-    with database() as db:db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
+    device_raw=request.cookies.get(DEVICE_COOKIE,'')
+    with database() as db:
+        db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
+        db.execute('UPDATE devices SET revoked=1 WHERE device_hash=?',(digest(device_raw),))
     response=JSONResponse({'authenticated':False});response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
+    response.delete_cookie(DEVICE_COOKIE,path='/',secure=True,httponly=True,samesite='strict')
     return response
+
+@router.post('/owner-authority-check')
+def owner_authority_check(request:Request):
+    """Side-effect-free proof that current authority is enforced by PRIME."""
+    current=require_session(request)
+    if current['role']!='OWNER':raise HTTPException(403,'Owner authority required')
+    return {'authorized':True,'role':'OWNER','capability':'authority.owner.verify'}
 
 @router.post('/uploads')
 async def upload(request:Request):

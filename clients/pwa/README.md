@@ -13,6 +13,7 @@ The paired backend supplies:
 - `GET /pwa/api/session` → `{authenticated, clientId, expiresAt}`; expiry is Unix seconds.
 - `POST /pwa/api/enroll` with `{code}`; a one-time code is issued through the existing local owner interface.
 - `POST /pwa/api/logout` revokes the HttpOnly Secure session.
+- `POST /pwa/api/owner-authority-check` is a side-effect-free server authorization proof: Owner receives the explicit capability; Member receives HTTP 403.
 - `POST /pwa/api/uploads` with raw bytes and URL-encoded `X-Filename`; TXT/Markdown/JSON only, maximum 1 MiB. Returns `{artifactId, sha256, bytes, reference}`.
 - Existing `/interface/v1` routes accept the session cookie; the server supplies client identity internally. Every POST carries `X-Jarvis-PWA: 1`; the browser supplies Origin for server validation.
 - Objective submissions carry `uploaded_artifact_ids`, at most four. The backend verifies ownership/integrity and appends the UTF-8 text as labelled untrusted evidence within its 80,000-character combined context limit. The UI does not claim arbitrary binary analysis.

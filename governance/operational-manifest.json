@@ -1,12 +1,12 @@
 {
   "schema_version": "4.3.0",
-  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
+  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/STATUS.md",
   "superseded_note": "Status claims in this file are superseded by STATUS.md as of 2026-09-22. This file is retained as a machine-readable component, release and observation reference only: it cannot select current status or promote anything to verified.",
   "status": "STALE",
-  "as_of_utc": "2026-09-17T06:02:28Z",
+  "as_of_utc": "2026-09-26T07:48:05Z",
   "canonical_machine_source": {
     "repository": "AndrewLamSingapore/prime",
-    "branch": "main",
+    "branch": "feat/supreme-integration-20260925",
     "path": "governance/operational-manifest.json"
   },
   "verification": {
@@ -16,12 +16,8 @@
     "expires_at_utc": "2026-09-17T12:39:34.111000Z",
     "vercel_team_id": "team_QFMtEQWesw5ZCgmUlYszHtX7",
     "stale_reasons": [
-      "abex_runtime_receipt_missing",
-      "dell_status_post_update_required",
-      "dell_status_predates_latest_update",
-      "physical_client_acceptance_unverified",
       "sky_webgl_device_acceptance_unverified",
-      "verification_expired:dell_runtime"
+      "global_public_system_evidence_expired"
     ],
     "rule": "CURRENT requires fresh source/deployment evidence and an independently verified ABEX receipt for the selected source, registry and product manifest. Historical Dell acceptance cannot satisfy ABEX acceptance."
   },
@@ -47,7 +43,7 @@
     "authorization": "Lam explicitly resumed recovery, alignment, implementation, merge and deployment on 7 September 2026."
   },
   "alignment_state": {
-    "source_and_deployments": "PUBLIC_APPS_ALIGNED_VERIFIED_PRIVATE_RUNTIME_UNVERIFIED",
+    "source_and_deployments": "LOCAL_PRIME_ACCEPTED_GLOBAL_EVIDENCE_STALE",
     "overall": "STALE"
   },
   "shared_contract": {
@@ -134,9 +130,9 @@
       "source_head_sha": null,
       "source_head_resolution": "live",
       "source_head_observed_before_manifest_commit_sha": "1bd2be98adf91df3bc4df22d7a2348848181b8b8",
-      "state": "UNVERIFIED",
+      "state": "ALIGNED_VERIFIED",
       "authority": "ABEX PRIME is the canonical authority; direct observed ordinary work with narrow consequential controls.",
-      "note": "No independently accepted current ABEX deployment receipt. Historical Dell data is retained only in historical_dell_release and dell_runtime.",
+      "note": "Current ABEX generation independently accepted; Wuhan/Mainland-China remains physical verification pending.",
       "current_runtime_host": "ABEX",
       "historical_dell_release": {
         "scope": "Historical Dell evidence only; superseded for current runtime status",
@@ -151,11 +147,11 @@
         "publication_workflow_run": 34093768658,
         "publication_verified_at_utc": "2026-09-07T07:07:00Z"
       },
-      "release_sha": null,
-      "runtime_sha": null,
-      "verified_at_utc": null,
-      "published_image": null,
-      "runtime": "private-abex-intended"
+      "release_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+      "runtime_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+      "verified_at_utc": "2026-09-26T07:48:05Z",
+      "published_image": "prime:sha-17fad78",
+      "runtime": "private-abex-docker-production"
     },
     "velyqua": {
       "role": "independent hardware-agnostic living-water intelligence",
@@ -208,12 +204,12 @@
   },
   "dell_runtime": {
     "command": "JARVIS.cmd status",
-    "runtime_sha": "c449dd1c8e22976c97507733201807d4d73bf92e",
-    "observed_image": "ghcr.io/andrewlamsingapore/prime:sha-c449dd1",
-    "verified_at_utc": "2026-09-07T07:12:00Z",
-    "accepted": false,
-    "post_update_status": false,
-    "result": "Historical September 7 Dell observation retained for compatibility and recovery only; current client/synchronizer state requires fresh evidence.",
+    "runtime_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "observed_image": "prime:sha-17fad78",
+    "verified_at_utc": "2026-09-26T07:25:32Z",
+    "accepted": true,
+    "post_update_status": true,
+    "result": "Corrected independent verification PASS for current ABEX generation; historical FAIL preserved as superseded.",
     "evidence": {
       "status_capture_library_file_id": "libfile_309baa13bf38819186c7c9d2209532f0",
       "status_capture_title": "IMG_5603.jpeg",
@@ -267,7 +263,12 @@
       ],
       "state": "HISTORICAL_RECHECK_REQUIRED"
     },
-    "observation_scope": "HISTORICAL_DELL_RUNTIME; not the active ABEX receipt"
+    "observation_scope": "INDEPENDENT_CURRENT_ABEX_RUNTIME_VERIFICATION",
+    "corrected_verification": {
+      "path": "docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json",
+      "sha256": "dc80ee30a8e13c541b677a97df283fc02d75ec81599a6d57e2bb9570f44c014d",
+      "verification_id": "f5a6f344-faf9-4eec-b4f9-f73bd20bc5ff"
+    }
   },
   "github_hygiene": {
     "live_reconciliation": {
@@ -329,7 +330,7 @@
       "client_acceptance",
       "rollback_recorded"
     ],
-    "current_result": "PENDING_RUNTIME_EVIDENCE",
+    "current_result": "PASSED_LOCAL_PRIME_GLOBAL_EVIDENCE_STALE",
     "secret_values_allowed": false
   },
   "supersession": {
@@ -439,16 +440,34 @@
     "channel_contract": "governance/CHANNEL_CONTRACT.md",
     "intended_agent_count": 21,
     "source_state": "CANONICAL_SOURCE_SELECTED",
-    "runtime_state": "UNVERIFIED",
-    "scope": "One intended source version; deployment is not asserted by publication."
+    "runtime_state": "VERIFIED",
+    "scope": "Local ABEX PRIME generation independently verified; broader ecosystem freshness remains separate."
   },
   "abex_runtime": {
     "authority": "canonical PRIME runtime host",
-    "state": "UNVERIFIED",
-    "receipt": null,
-    "source_sha": null,
-    "verified_at_utc": null,
-    "rule": "Only independent native-host evidence can establish the deployed revision; preserve sealed baseline."
+    "state": "VERIFIED",
+    "receipt": {
+      "path": "docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json",
+      "sha256": "49c6668f38b9654cc1b20e46af7b70664b79b787b45befac8bc42b1d1ce488b0",
+      "independent_verification": true,
+      "independent_artifact": "docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json",
+      "independent_artifact_sha256": "dc80ee30a8e13c541b677a97df283fc02d75ec81599a6d57e2bb9570f44c014d",
+      "verification_id": "f5a6f344-faf9-4eec-b4f9-f73bd20bc5ff",
+      "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3"
+    },
+    "source_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
+    "observed_image": "prime:sha-17fad78",
+    "observed_image_id": "sha256:745244a3a8fb6d2708e96b63504e55c10aead7538fc4ed9c0621328cd7ef3681",
+    "observed_registry": {
+      "schema": "2.0",
+      "logical_agents": 21,
+      "historical_responsibility_mappings": 29,
+      "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+    },
+    "abex_observation": "docs/evidence/ABEX_RUNTIME_RECONCILIATION_20260926.md",
+    "independent_disagreement": "Historical FAIL preserved and superseded by the corrected independent artifact.",
+    "verified_at_utc": "2026-09-26T07:48:05Z",
+    "rule": "Transition produced only by scripts/accept_abex_runtime.py after exact artifact, receipt, live image, TLS/PWA and task validation."
   },
   "channel_policy": {
     "contract": "governance/CHANNEL_CONTRACT.md",
@@ -466,14 +485,64 @@
     "adoption_state": "NOT_OBSERVED_ALL_CHANNELS"
   },
   "next_actions": [
-    "Bind published combined source to fresh ABEX/Dell deployment receipts without changing the sealed baseline.",
-    "Complete independent A12/A13 unfamiliar-repository trials and retain terminal evidence.",
-    "Complete six-phase ABEX Compute Profile.",
-    "Verify physical-client acceptance and Sky Tablet GPU appearance/performance. Cloud deployment identities are refreshed in the scoped public-release record."
+    "Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.",
+    "Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.",
+    "Complete Wuhan/Mainland-China physical verification when geographically available.",
+    "Refresh unrelated public-system evidence before claiming global CURRENT status."
   ],
   "public_experience": {
     "contract": "governance/public-experience.json",
     "entrypoint": "https://authority-engine-app.vercel.app/jarvis",
     "scope": "Public showcase, navigation and enquiries; no private runtime exposure."
+  },
+  "qualified_local_prime_baseline": {
+    "state": "FROZEN",
+    "accepted_at_utc": "2026-09-27T04:02:39Z",
+    "accepted_scope": "ALL_QUALIFIED_PHASE2_CAPABILITIES_EXCEPT_READ_ALOUD_AND_IOS_AUDIO",
+    "source_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "image_tag": "prime:phase2-audio-diagnostic-b171253",
+    "image_id": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "pwa_release": "jarvis-shell-v14",
+    "runtime_task": "d18a34dc-b76f-4520-b9a5-e3eded219245",
+    "receipt_sha256": "4f250145fe150f79f6a85fefe547a956a5f8ca6751a031ee8a6dacfd97ad1af5",
+    "audio": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
+    "dell_post_promotion": "PROMOTION_VERIFICATION_PASS",
+    "dell_receipt": {
+      "location": "C:/Users/User/Documents/Codex/2026-09-27/y/outputs/DELL-GEN2-POST-PROMOTION-RECEIPT-20260927.md",
+      "bytes": 2445,
+      "sha256": "566e5f8d0f55f0af30d02ca2c0672b08fa329809ee26fd3fc19a680165055d71",
+      "abex_copy": false
+    },
+    "rollback_image": "prime:sha-17fad78",
+    "rollback_checkpoint": "/data/recovery/phase2-audio-diagnostic-predeploy-20260927-b171253"
+  },
+  "local_prime_commissioning": {
+    "state": "CLOSED_NON_AUDIO_SCOPE",
+    "closed_at_utc": "2026-09-27T04:02:39Z",
+    "basis": [
+      "governed runtime receipt",
+      "live immutable runtime readback",
+      "qualified canonical regression",
+      "independent review",
+      "Owner-authorized explicit audio exclusion"
+    ],
+    "dell_post_promotion": "PROMOTION_VERIFICATION_PASS",
+    "read_aloud_ios_audio": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
+    "wuhan_mainland_china": "PHYSICAL_VERIFICATION_PENDING",
+    "unresolved_p0": 0,
+    "unresolved_p1": 0,
+    "unresolved_p2": 0
+  },
+  "golden_architecture": {
+    "active_generation": 2,
+    "architecture_state": "FROZEN",
+    "architecture": "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md",
+    "manifest": "governance/golden-gen2-manifest.json",
+    "immutable_reference": "jarvis-prime-golden-gen2-20260927",
+    "runtime_source_sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "runtime_image": "prime:phase2-audio-diagnostic-b171253",
+    "accepted_scope": "PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
+    "former_generation": "jarvis-prime-golden-gen1-20260926",
+    "dell_post_promotion": "PROMOTION_VERIFICATION_PASS"
   }
 }

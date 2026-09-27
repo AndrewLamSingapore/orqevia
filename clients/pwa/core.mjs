@@ -16,6 +16,9 @@ export function errorMessage(error) {
   if (error?.code === 'timeout' || error instanceof TypeError) return 'Connection interrupted. Retry the same objective or refresh your task when online.';
   return 'PRIME could not complete this request. Try again when the connection is available.';
 }
+export function sessionActive(session, nowSeconds = Date.now() / 1000) {
+  return Boolean(session?.authenticated && session.protocol === PROTOCOL && Number.isFinite(session.expiresAt) && session.expiresAt > nowSeconds && Number.isFinite(session.verifiedAt) && nowSeconds-session.verifiedAt <= 90);
+}
 export async function sha256(bytes) { return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(x => x.toString(16).padStart(2,'0')).join(''); }
 export function nextSubmission(prior, digest, key) {
   if (prior?.digest === digest) return prior;
@@ -42,6 +45,13 @@ export function submissionPayload(objective,uploads=[],action={kind:'new'}) {
 }
 export function taskID(task) { const id = task.taskId ?? task.task_id ?? task.id; if (!safeID(id)) throw new ClientError('protocol'); return id; }
 export function taskRevision(task) { const revision=task.revision??0;if(!Number.isSafeInteger(revision)||revision<0)throw new ClientError('protocol');return revision; }
+export function authoritativeMetadataText(task) {
+  const value=task.executionMetadata??task.execution_metadata;if(!value)return '';
+  if(value.authoritative!==true||value.task_id!==taskID(task)||value.revision!==taskRevision(task))throw new ClientError('protocol');
+  const shown=item=>item===null||item===undefined||item===''?'UNKNOWN':String(item);
+  const contradictions=Array.isArray(task.result?.contradictions)?task.result.contradictions.length:0;
+  return `PRIME SYSTEM RECORD\nTask UUID: ${shown(value.task_id)}\nState: ${shown(value.state)}\nCreated: ${shown(value.created_at)}\nStarted: ${shown(value.started_at)}\nCompleted: ${shown(value.completed_at)}\nRuntime: ${shown(value.runtime?.host_id)} · ${shown(value.runtime?.source_revision)}\n${contradictions?`Warning: ${contradictions} model metadata claim(s) conflict with or are unsupported by the system record.\n`:''}\nThe response below is model-generated content. Any UUID, timestamp, digest, runtime identity, or authority claim inside it is not system metadata.`;
+}
 export function currentSteps(task) { const revision=taskRevision(task);return (task.steps||[]).filter(step=>(step.revision??0)===revision).slice(0,21); }
 export function resultText(task) {
   const textOf = value => typeof value === 'string' ? value : value && [value.text,value.summary,value.message].find(x => typeof x === 'string');
@@ -49,12 +59,10 @@ export function resultText(task) {
   if (direct) return direct.slice(0,40000);
   return currentSteps(task).map(step => {
     const text = textOf(step.job?.result);
-    return text ? `${safeID(step.job?.agent) ? step.job.agent : 'PRIME'}\n${text}` : '';
+    return text || '';
   }).filter(Boolean).join('\n\n').slice(0,40000);
 }
-// Read-aloud text deliberately excludes the internal agent label. The label is
-// presentation metadata for the screen; speaking "a13" or "a02" at a person is a
-// defect, not information.
+// Read-aloud and visible result text both exclude internal agent identities.
 export function spokenText(task) {
   if (!task) return '';
   const textOf = value => typeof value === 'string' ? value : value && [value.text,value.summary,value.message].find(x => typeof x === 'string');
@@ -122,6 +130,7 @@ export class InterfaceAPI {
   session() { return this.request('/pwa/api/session'); }
   enroll(code) { return this.request('/pwa/api/enroll',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})}); }
   logout() { return this.request('/pwa/api/logout',{method:'POST'}); }
+  ownerAuthorityCheck() { return this.request('/pwa/api/owner-authority-check',{method:'POST'}); }
   submit(objective,key,uploads,signal) { return this.request('/interface/v1/objectives',{method:'POST',headers:{'content-type':'application/json','idempotency-key':key},body:JSON.stringify({objective,uploaded_artifact_ids:uploads}),retry:true,signal}); }
   continueTask(action,objective,key,signal) {
     const payload=submissionPayload(objective,[],action);

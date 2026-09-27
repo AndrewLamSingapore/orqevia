@@ -96,6 +96,11 @@ def task_wire(value, request, task_id=None):
         'QUEUED': 'WAITING'}.get(value.get('state'), value.get('state'))
     result['message'] = value.get('message', result['internal_state'] or '')
     result['updatedAt'] = value.get('updatedAt', value.get('updated_at', ''))
+    metadata=value.get('execution_metadata')
+    if metadata is not None:
+        if metadata.get('task_id')!=result['taskId']:
+            raise HTTPException(500,'Authoritative task metadata binding mismatch')
+        result['executionMetadata']=metadata
     return result
 
 
@@ -198,12 +203,17 @@ def artifacts(task_id: str, request: Request, offset: int = 0, limit: int = 100)
         if metadata.get('task_id') == task_id:
             from .public_task_errors import publishable_task_artifact
             if not publishable_task_artifact(metadata,raw):continue
-            items.append({key: metadata[key] for key in ('artifact_id', 'task_id', 'type', 'sha256', 'bytes', 'validation_state')})
+            items.append({key: metadata[key] for key in ('artifact_id', 'task_id', 'type', 'sha256', 'bytes', 'validation_state')}
+                | {'runtime_revision':metadata.get('runtime_revision','UNKNOWN'),'provenance':'ARTIFACT_STORE'})
     if request.headers.get('x-jarvis-client-id') is not None:
         items = [dict(item, artifactId=item['artifact_id'], taskId=item['task_id'],
                       status=item['validation_state']) for item in items]
+    artifact_metadata=None if latest is None else {
+        'artifact_id':latest['artifact_id'],'sha256':latest['sha256'],'bytes':latest['bytes'],
+        'provenance':'ARTIFACT_STORE'}
     return {'task_id': task_id, 'taskId': task_id, 'revision':status.get('revision',0),
             'latest_result_artifact_id':latest.get('artifact_id') if latest else None, 'artifacts': items[offset:offset + limit],
+            'authoritative_artifact':artifact_metadata,
             'next_offset': offset + limit if offset + limit < len(items) else None}
 
 

@@ -38,7 +38,10 @@ class ContractTests(unittest.TestCase):
         self.sub = patch.object(contract.node.objective_api, 'submit', return_value={'id': 'task-fixture'})
         self.dispatch = self.sub.start()
         self.get = patch.object(contract.node.objective_api, 'get', return_value={
-            'id': 'task-fixture', 'state': 'COMPLETED', 'steps': []})
+            'id': 'task-fixture', 'revision':0, 'state': 'COMPLETED', 'steps': [],
+            'execution_metadata':{'authoritative':True,'task_id':'task-fixture','revision':0,
+                'state':'COMPLETED','created_at':None,'started_at':None,'completed_at':None,
+                'runtime':{'host_id':'ABEX-TEST','source_revision':'UNKNOWN'}}})
         self.get.start()
 
     def tearDown(self):

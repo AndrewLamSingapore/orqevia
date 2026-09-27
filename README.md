@@ -1,14 +1,17 @@
 # JARVIS PRIME
 
 Start with [STATUS.md](STATUS.md) for current status, then the
-[machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) and
+[machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/feat/supreme-integration-20260925/governance/operational-manifest.json) and
 [the shared channel contract](governance/CHANNEL_CONTRACT.md).
 
 STATUS.md is the only current status source of truth. The operational reference
 records architecture, component revisions and observations; it cannot establish
 current status.
 
-Architecture v1 is the sole intended architecture: ABEX PRIME, authenticated
+Golden Generation 1 is the frozen accepted architecture, described by
+`docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md` and
+`governance/golden-gen1-manifest.json`. Architecture v1 remains its implementation
+predecessor/reference: ABEX PRIME, authenticated
 Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and direct
 observed execution with narrow consequential controls. Runtime acceptance is
 recorded separately and must not be inferred from this README or passing CI.
@@ -33,4 +36,4 @@ the sealed ABEX baseline. Historical source and migration evidence remain in Git
 
 The public contract is `governance/public-experience.json`. Authority Engine, The Portal, Living Worlds, Sky Tablet and VELYQUA link to that experience. Navigation and enquiry context do not grant private runtime access or merge product databases.
 
-The operational manifest is the only current status record. Its generated resume checkpoint is a mirror, not a second authority. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.
+STATUS.md is the only current status record. The operational manifest and its generated resume checkpoint are machine references, not second status authorities. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.

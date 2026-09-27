@@ -1,5 +1,6 @@
 """Local shell security and actual deterministic API roundtrip; no providers run."""
 import hashlib
+from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
@@ -123,3 +124,116 @@ def test_same_candidate_lifespan(shell, monkeypatch):
     with TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('127.0.0.1', 40000)) as client:
         assert client.get('/health').status_code == 200
     assert calls == ['start', 'stop', 'close']
+
+
+def test_survival_queue_is_real_durable_and_fail_closed(shell):
+    _, client = shell
+    headers = {'Origin': 'http://127.0.0.1:8000'}
+    status = client.get('/control/api/survival/status')
+    assert status.status_code == 200
+    assert status.json()['queue_durable'] is True
+    assert status.json()['internet'] == 'UNKNOWN'
+    assert status.json()['cloud_model'] == 'UNKNOWN'
+    assert status.json()['mode'] == 'CAPABILITY_UNVERIFIED'
+    assert status.json()['actions']['github.push'] == 'UNVERIFIED'
+    assert status.json()['actions']['memory.index'] == 'AVAILABLE'
+    assert status.json()['remote_execution'].startswith('DISABLED_')
+
+    body = {
+        'objective_id': 'offline-fixture',
+        'operation_type': 'github.push',
+        'payload_ref': 'refs/heads/fixture',
+        'idempotency_key': 'fixture-idempotency-0001',
+        'authorization_ref': 'owner-lease-fixture',
+        'payload': {'repository': 'fixture/repository'},
+    }
+    queued = client.post('/control/api/survival/queue', json=body, headers=headers)
+    assert queued.status_code == 202, queued.text
+    assert queued.json()['operation_type'] == 'github.push'
+    assert queued.json()['state'] in {'PENDING', 'DEFERRED_OFFLINE'}
+    duplicate = client.post('/control/api/survival/queue', json=body, headers=headers)
+    assert duplicate.status_code == 202
+    assert duplicate.json()['id'] == queued.json()['id']
+
+    listed = client.get('/control/api/survival/queue').json()['operations']
+    assert [item['id'] for item in listed] == [queued.json()['id']]
+
+    unknown = {**body, 'operation_type': 'danger.unknown', 'idempotency_key': 'fixture-idempotency-0002'}
+    assert client.post('/control/api/survival/queue', json=unknown, headers=headers).status_code == 422
+    nested_secret = {**body, 'idempotency_key': 'fixture-idempotency-0003',
+                     'payload': {'items': [{'api_token': 'must-not-persist'}]}}
+    assert client.post('/control/api/survival/queue', json=nested_secret, headers=headers).status_code == 422
+    assert 'must-not-persist' not in Path(status.json()['queue_path']).read_bytes().decode('latin1')
+
+
+def test_survival_mutation_requires_local_same_origin(shell):
+    _, client = shell
+    body = {
+        'objective_id': 'offline-fixture', 'operation_type': 'github.push',
+        'payload_ref': 'refs/heads/fixture', 'idempotency_key': 'fixture-idempotency-0004',
+        'authorization_ref': 'owner-lease-fixture',
+    }
+    assert client.post('/control/api/survival/queue', json=body).status_code == 403
+
+
+def test_governed_memory_is_on_production_path_and_durable(shell):
+    _, client = shell
+    headers = {'Origin': 'http://127.0.0.1:8000'}
+    body = {
+        'memory_class': 'semantic',
+        'key': 'acceptance.production-memory',
+        'value': {'statement': 'Production memory fixture'},
+        'confidence': 0.99,
+    }
+    written = client.post('/control/api/survival/memory', json=body, headers=headers)
+    assert written.status_code == 201, written.text
+    read = client.get('/control/api/survival/memory/semantic/acceptance.production-memory')
+    assert read.status_code == 200
+    assert read.json()['value']['record'] == body['value']
+    found = client.get('/control/api/survival/memory', params={'q': 'production memory fixture'})
+    assert [item['memory_key'] for item in found.json()['records']] == ['acceptance.production-memory']
+    assert client.post('/control/api/survival/memory', json=body).status_code == 403
+
+
+def test_reconcile_requires_configured_probes_and_origin(shell):
+    _, client = shell
+    assert client.post('/control/api/survival/reconcile').status_code == 403
+    assert client.post('/control/api/survival/reconcile',
+                       headers={'Origin': 'http://127.0.0.1:8000'}).status_code == 503
+
+
+def test_allowlisted_network_reconciliation_executes_once(shell, monkeypatch):
+    entry, client = shell
+    from app import production_survival as survival
+    target = 'https://fixture.invalid/immutable-evidence'
+    monkeypatch.setenv('PRIME_SURVIVAL_NETWORK_PROBE_URL', target)
+    monkeypatch.setenv('PRIME_SURVIVAL_CLOUD_PROBE_URL', target)
+    monkeypatch.setenv('PRIME_SURVIVAL_FETCH_ALLOWLIST', target)
+    monkeypatch.setenv('PRIME_SURVIVAL_AUTHORITY_REF', 'prime-epoch-20260919:owner')
+    monkeypatch.setattr(survival, '_probe', lambda url: True)
+    calls = []
+
+    class Response:
+        status_code = 200
+        headers = {'etag': 'fixture-etag'}
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def iter_bytes(self):
+            calls.append(target)
+            yield b'immutable remote evidence'
+
+    monkeypatch.setattr(survival.httpx, 'stream', lambda *args, **kwargs: Response())
+    headers = {'Origin': 'http://127.0.0.1:8000'}
+    queued = client.post('/control/api/survival/queue', headers=headers, json={
+        'objective_id': 'network-acceptance', 'operation_type': 'web.research',
+        'payload_ref': target, 'idempotency_key': 'network-acceptance-idempotency',
+        'authorization_ref': 'prime-epoch-20260919:owner',
+    })
+    assert queued.status_code == 202, queued.text
+    first = client.post('/control/api/survival/reconcile', headers=headers)
+    assert first.status_code == 200
+    assert first.json()['results'][0]['state'] == 'RECONCILED'
+    assert first.json()['results'][0]['receipt']['content_bytes'] == 25
+    second = client.post('/control/api/survival/reconcile', headers=headers)
+    assert second.json()['results'] == []
+    assert calls == [target]

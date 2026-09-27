@@ -1,0 +1,67 @@
+{
+  "schema_version": "jarvis.phase2-candidate.v1",
+  "candidate_id": "jarvis-prime-phase2-unified-intelligence-20260926",
+  "state": "CANDIDATE_NOT_DEPLOYED",
+  "parent_golden": {
+    "tag": "jarvis-prime-golden-gen1-20260926",
+    "commit": "26f7d49cfe7134f8665dda5886111e91b574554d",
+    "manifest": "governance/golden-gen1-manifest.json"
+  },
+  "source": {
+    "branch": "feat/phase2-unified-intelligence-20260926",
+    "implementation": "app/phase2_intelligence.py",
+    "architecture": "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md",
+    "gap_analysis": "docs/evidence/PHASE2_GAP_ANALYSIS_20260926.md"
+  },
+  "capabilities": {
+    "objective_continuity": "IMPLEMENTED_CANDIDATE",
+    "context_fabric": "IMPLEMENTED_CANDIDATE",
+    "complex_problem_solving": "IMPLEMENTED_CANDIDATE",
+    "qualified_learning": "IMPLEMENTED_CANDIDATE",
+    "predictive_intelligence": "SHADOW_CANDIDATE",
+    "evidence_envelope": "IMPLEMENTED_CANDIDATE",
+    "evidence_ledger": "IMPLEMENTED_CANDIDATE",
+    "evidence_lens": "IMPLEMENTED_REFERENCE_UI",
+    "prime_evidence_adapter": "IMPLEMENTED_CANDIDATE"
+  },
+  "authority": {
+    "creates_authority": false,
+    "model_content_authoritative": false,
+    "member_inherits_owner": false,
+    "predictions_trigger_actions": false,
+    "lessons_trigger_actions": false
+  },
+  "feature_flags": {
+    "production_enabled": false,
+    "shadow_prediction_only": true
+  },
+  "production": {
+    "modified": false,
+    "runtime_receipt": "NOT_APPLICABLE_NOT_DEPLOYED",
+    "image": "NOT_BUILT",
+    "database_migration": "NONE"
+  },
+  "qualification": {
+    "focused_suite": "tests/test_phase2_intelligence.py",
+    "held_out_suite": "tests/test_phase2_held_out.py",
+    "verifier": "scripts/verify_phase2_candidate.py",
+    "focused_and_held_out": "45_PASSED",
+    "full_regression": "955_PASSED_5_KNOWN_DEPRECATION_WARNINGS",
+    "machine_verifier": "PASS",
+    "external_independent_verification": "PENDING_NOT_DEPLOYED",
+    "mutation": "PASS_DIRECT_DATABASE_AND_FALSE_SUCCESS_MUTATIONS_REJECTED",
+    "performance": "100_OBJECTIVE_CREATES_MEAN_15.515_MS"
+  },
+  "external_boundaries": {
+    "wuhan_mainland_china": "PHYSICAL_VERIFICATION_PENDING",
+    "velyqua_physical": "PARKED",
+    "real_horizon_prediction_accuracy": "PENDING_ELAPSED_TIME"
+  },
+  "promotion": {
+    "authorized_by_this_manifest": false,
+    "requires_immutable_build": true,
+    "requires_runtime_receipt": true,
+    "requires_independent_verification": true,
+    "requires_acceptance_readback": true
+  }
+}

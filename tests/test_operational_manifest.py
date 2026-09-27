@@ -15,17 +15,27 @@ def fixtures():
     return manifest, inventory
 
 
+def unverify_abex(manifest):
+    """Construct the historical no-ABEX-receipt condition explicitly."""
+    manifest = copy.deepcopy(manifest)
+    manifest["abex_runtime"].update({"state": "UNVERIFIED", "receipt": None,
+                                     "source_sha": None, "verified_at_utc": None})
+    manifest["systems"]["prime"].update({"state": "UNVERIFIED", "release_sha": None,
+                                           "runtime_sha": None, "published_image": None,
+                                           "verified_at_utc": None})
+    return manifest
+
+
 def test_fresh_dell_acceptance_still_requires_abex_receipt():
     manifest, inventory = fixtures()
+    manifest = unverify_abex(manifest)
     now = datetime.fromisoformat(manifest["verification"]["verified_at_utc"].replace("Z", "+00:00"))
-    manifest = copy.deepcopy(manifest)
     manifest["dell_runtime"]["accepted"] = True
     manifest["dell_runtime"]["post_update_status"] = True
     for system in manifest["systems"].values():
         system["verified_at_utc"] = manifest["verification"]["verified_at_utc"]
         if system["source_head_sha"] is not None: system["source_head_sha"] = system["release_sha"]
     manifest["dell_runtime"]["verified_at_utc"] = manifest["verification"]["verified_at_utc"]
-    manifest["systems"]["prime"]["runtime_sha"] = manifest["systems"]["prime"]["release_sha"]
     manifest["dell_runtime"]["runtime_sha"] = manifest["systems"]["prime"]["release_sha"]
     manifest["status"] = "CURRENT"
     manifest["alignment_state"]["overall"] = "CURRENT"
@@ -37,6 +47,7 @@ def test_fresh_dell_acceptance_still_requires_abex_receipt():
 
 def test_published_image_can_be_ahead_of_unverified_host():
     manifest, inventory = fixtures()
+    manifest = unverify_abex(manifest)
     manifest["systems"]["prime"]["release_sha"] = "f" * 40
     manifest["systems"]["prime"]["published_image"] = "ghcr.io/andrewlamsingapore/prime:sha-fffffff"
     now = datetime.fromisoformat(manifest["as_of_utc"].replace("Z", "+00:00"))
@@ -193,6 +204,7 @@ def test_refresh_does_not_churn_fresh_unchanged_observations():
 
 def test_current_prime_identity_cannot_reuse_historical_dell_receipt():
     manifest, inventory = fixtures()
+    manifest = unverify_abex(manifest)
     manifest['systems']['prime']['runtime_sha'] = manifest['dell_runtime']['runtime_sha']
     result = assess_static(manifest, inventory, now=datetime.now(timezone.utc))
     assert 'unverified current PRIME runtime_sha must be null; retain historical identity separately' in result.errors
@@ -200,6 +212,7 @@ def test_current_prime_identity_cannot_reuse_historical_dell_receipt():
 
 def test_unknown_current_prime_identity_is_valid_but_not_accepted():
     manifest, inventory = fixtures()
+    manifest = unverify_abex(manifest)
     result = assess_static(manifest, inventory, now=datetime.now(timezone.utc))
     assert result.errors == []
     assert manifest['systems']['prime']['runtime_sha'] is None

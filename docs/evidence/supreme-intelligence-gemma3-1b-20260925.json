@@ -1,0 +1,30 @@
+{
+  "classification": "LAB_EXECUTED",
+  "generated_at": "2026-09-25T02:44:30.121179+00:00",
+  "measurement_scope": {
+    "host_cpu": "not measured by this container-local harness",
+    "host_ram": "not measured by this container-local harness",
+    "ollama_api_timing": true,
+    "response_content_persisted": false
+  },
+  "model": "gemma3:1b",
+  "model_id": "8648f39daa8f",
+  "overall": {
+    "median_latency_seconds": 1.885,
+    "passed": 6,
+    "pass_rate": 0.75,
+    "total": 8
+  },
+  "privacy": "docker-internal-only",
+  "results": [
+    {"category": "reasoning", "generated_tokens": 124, "latency_seconds": 8.59, "passed": true, "prompt_tokens": 33, "tokens_per_second": 22.261},
+    {"category": "coding", "generated_tokens": 136, "latency_seconds": 6.288, "passed": true, "prompt_tokens": 25, "tokens_per_second": 22.135},
+    {"category": "structured_output", "failure": "invalid:json", "generated_tokens": 24, "latency_seconds": 1.178, "passed": false, "prompt_tokens": 25, "tokens_per_second": 23.272},
+    {"category": "chinese", "generated_tokens": 29, "latency_seconds": 1.537, "passed": true, "prompt_tokens": 27, "tokens_per_second": 20.934},
+    {"category": "english", "generated_tokens": 21, "latency_seconds": 1.212, "passed": true, "prompt_tokens": 27, "tokens_per_second": 19.557},
+    {"category": "tool_selection", "failure": "missing:memory.search", "generated_tokens": 4, "latency_seconds": 0.277, "passed": false, "prompt_tokens": 24, "tokens_per_second": 28.892},
+    {"category": "retrieval", "generated_tokens": 296, "latency_seconds": 13.739, "passed": true, "prompt_tokens": 31, "tokens_per_second": 21.785},
+    {"category": "verification", "generated_tokens": 46, "latency_seconds": 2.233, "passed": true, "prompt_tokens": 37, "tokens_per_second": 22.587}
+  ],
+  "schema_version": "2.0"
+}

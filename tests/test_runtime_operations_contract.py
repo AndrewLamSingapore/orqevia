@@ -66,14 +66,30 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         example = (ROOT / ".env.example").read_text(encoding="utf-8")
         self.assertIn("PRIME_REGISTRY_V1_ENABLED=1", example)
 
+    def test_survival_probes_and_executor_are_explicitly_wired(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        for name in ("PRIME_SURVIVAL_NETWORK_PROBE_URL", "PRIME_SURVIVAL_CLOUD_PROBE_URL",
+                     "PRIME_SURVIVAL_FETCH_ALLOWLIST", "PRIME_SURVIVAL_AUTHORITY_REF"):
+            self.assertIn(name + ": ${" + name, compose)
+
     def test_image_starts_canonical_owner_entrypoint_without_proxy_trust(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn('"app.production_entry:app"', dockerfile)
         self.assertIn('"--no-proxy-headers"', dockerfile)
+        self.assertGreater(dockerfile.index("ARG PRIME_RUNTIME_REVISION"),
+                           dockerfile.index("RUN pip install"))
 
     def test_container_owner_peer_is_explicit_not_a_network_wildcard(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         self.assertIn("PRIME_OWNER_TRUSTED_PEERS: ${PRIME_OWNER_TRUSTED_PEERS:-}", compose)
+
+    def test_owner_account_reaches_pairing_authority_and_client_interface(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        prime, interface = compose.split("  interface:", 1)
+        setting = "PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}"
+        self.assertIn(setting, prime)
+        self.assertIn(setting, interface)
+        self.assertEqual(compose.count(setting), 2)
 
     def test_physical_client_runtime_is_https_narrow_and_profile_gated(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
@@ -87,6 +103,11 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         self.assertIn('COPY clients/pwa/index.html', dockerfile)
         self.assertIn('PRIME_INTERFACE_RUNTIME_VERSION: ${PRIME_INTERFACE_RUNTIME_VERSION:-UNKNOWN}', compose)
         self.assertIn('PRIME_INTERFACE_CANDIDATE_STATUS: ${PRIME_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}', compose)
+
+    def test_container_packages_every_required_pwa_startup_asset(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        for asset in ("index.html", "recovery.js", "release.mjs", "app.mjs", "sw.js"):
+            self.assertIn(f"clients/pwa/{asset}", dockerfile)
 
 
 if __name__ == "__main__":

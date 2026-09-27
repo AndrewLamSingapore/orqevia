@@ -1,0 +1,46 @@
+{
+  "acceptance_gates": [
+    "Explicit production-promotion authority",
+    "Migration and authority impact review",
+    "Post-deployment server/API/database/identity/session acceptance",
+    "Physical phone acceptance only for changed client dependencies",
+    "Golden observation remains separate"
+  ],
+  "artifact_digest": "sha256:e930988fbf5869d809cb4b9bd86e7abd186953a549fec75d77e3a5d0f80c87bc",
+  "branch": "feat/supreme-integration-20260925",
+  "change_risk_fingerprint": [
+    "application-boundary-contract",
+    "candidate-only-not-deployed",
+    "governance-evidence",
+    "test-suite-expansion"
+  ],
+  "independent_verification": {
+    "boundary_checks": 6,
+    "independence_checks": 7,
+    "jarvis_checks": 7,
+    "status": "PASS",
+    "vision_checks": 5
+  },
+  "manifest_sha256": "987138d5518b9d404a0a4ca08e801771a671acdaa36ca6ad278f5bf74f23dc8b",
+  "migration_requirements": [],
+  "recovery_method": [
+    "Retain protected production at source 0ecb5803470bef2a941da31332d87702268648d6",
+    "Delete/reject candidate branch without changing production",
+    "Rebuild exact source archive and verify sha256 digest"
+  ],
+  "schema_version": "1.0",
+  "security": {
+    "cross_domain_tests": 4,
+    "secret_scan_matches": 0,
+    "status": "PASS"
+  },
+  "source_sha": "2d0a3482a56e5345463dd74f1c5ebab480b6fb16",
+  "status": "CANDIDATE_ONLY_NOT_DEPLOYED",
+  "tests": {
+    "canonical_passed": 404,
+    "failed": 0,
+    "focused_passed": 107,
+    "full_passed": 778,
+    "passed": 1289
+  }
+}
