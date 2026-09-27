@@ -1,0 +1,27 @@
+{
+  "at": "2026-09-27T10:55:40.080402+00:00",
+  "response": {
+    "http_status": 202,
+    "body": {
+      "id": "8774a8ab-5961-40e1-9ca6-f49a34ba04b3",
+      "steps": [
+        {
+          "capability": "system.architecture",
+          "dispatch": {
+            "state": "COMPLETED",
+            "task_id": "8774a8ab-5961-40e1-9ca6-f49a34ba04b3",
+            "result": "Platform architecture is UNAVAILABLE because canonical evidence golden-gen1-manifest.json or the agent registry could not be read. JARVIS will not infer it from model memory.",
+            "system_fact": {
+              "status": "UNAVAILABLE",
+              "provenance": "CANONICAL_GOVERNANCE_SSOT",
+              "text": "Platform architecture is UNAVAILABLE because canonical evidence golden-gen1-manifest.json or the agent registry could not be read. JARVIS will not infer it from model memory."
+            },
+            "model_backend": "none"
+          }
+        }
+      ],
+      "physical_inference_limit": 1,
+      "semantics": "Canonical system-owned architecture lookup; no model self-description"
+    }
+  }
+}

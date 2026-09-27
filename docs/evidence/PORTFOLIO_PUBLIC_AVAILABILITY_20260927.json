@@ -1,0 +1,34 @@
+{
+  "observations": [
+    {
+      "url": "https://velyqua.vercel.app/",
+      "observed_at": "2026-09-27T11:02:47.5881278Z",
+      "status": 200,
+      "scope": "Public root availability only; not functional or commercial validation"
+    },
+    {
+      "url": "https://the-portal-ten.vercel.app/",
+      "observed_at": "2026-09-27T11:02:47.8316211Z",
+      "status": 200,
+      "scope": "Public root availability only; not functional or commercial validation"
+    },
+    {
+      "url": "https://sky-tablet.vercel.app/",
+      "observed_at": "2026-09-27T11:02:47.8963973Z",
+      "status": 200,
+      "scope": "Public root availability only; not functional or commercial validation"
+    },
+    {
+      "url": "https://game-platform-wine-nine.vercel.app/",
+      "observed_at": "2026-09-27T11:02:47.9761539Z",
+      "status": 200,
+      "scope": "Public root availability only; not functional or commercial validation"
+    },
+    {
+      "url": "https://authority-engine-app.vercel.app/",
+      "observed_at": "2026-09-27T11:02:48.0433007Z",
+      "status": 200,
+      "scope": "Public root availability only; not functional or commercial validation"
+    }
+  ]
+}

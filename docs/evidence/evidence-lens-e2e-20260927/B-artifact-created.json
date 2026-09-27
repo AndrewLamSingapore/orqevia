@@ -1,0 +1,24 @@
+{
+  "at": "2026-09-27T10:59:00.677701+00:00",
+  "response": {
+    "http_status": 201,
+    "body": {
+      "artifact_id": "1781d17f801b4a2d97ea772d81010ff6",
+      "task_id": "df319f44-4832-45a3-8602-e786bda257ca",
+      "type": "json",
+      "creator_agents": [
+        "a09"
+      ],
+      "timestamp": "2026-09-27T10:59:00.553735+00:00",
+      "version": "1.0.0",
+      "provenance": "Source-labelled governed objective results",
+      "runtime_revision": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+      "validation_state": "STRUCTURE_VALIDATED",
+      "content_validation": "Not independently established by structural validation",
+      "location": "artifact.json",
+      "sha256": "1170e83399ae2f0c28b3532381274de3c8a30d40eac4a18307a9436e7f85b757",
+      "bytes": 2426,
+      "delivery_state": "AVAILABLE"
+    }
+  }
+}

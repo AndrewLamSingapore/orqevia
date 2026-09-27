@@ -1,0 +1,7 @@
+{
+  "http_status": 200,
+  "bytes": 3728,
+  "body_sha256": "736877816848d8b6c1f5717092c856612725cb6d222f9e76b4bf6960431c5eef",
+  "json_error": "Expecting value: line 1 column 1 (char 0)",
+  "artifact_sha256_header": "736877816848d8b6c1f5717092c856612725cb6d222f9e76b4bf6960431c5eef"
+}

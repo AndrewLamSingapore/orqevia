@@ -34,6 +34,78 @@ If you are an AI agent updating this file:
 
 ---
 
+## Portfolio current observation — 27 September 2026
+
+### Claimed, not independently checked — six-product reconciliation
+
+This is the canonical current portfolio status section. Recorded by ABEX Codex,
+not a promotion into any Lam-Verified section. Source baseline:
+`main@1e77ae10834465f579452b9086014f0c2ab3a62b`. There are exactly six products:
+`prime`, `velyqua`, `the-portal`, `sky-tablet`, `game-platform`, and
+`authority-engine`. Evidence Lens is a cross-product capability, not a seventh
+product; the GitHub profile is a source/discovery surface, not another product.
+
+| Product | Current source commit | Observed deployment / runtime identity |
+|---|---|---|
+| JARVIS PRIME | Canonical documentation base `1e77ae10834465f579452b9086014f0c2ab3a62b`; accepted runtime source `b171253566e7c879283d2aacf699ae6c1ec8988e` | ABEX `prime:phase2-audio-diagnostic-b171253`; image `sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5`; Golden Gen 2 |
+| VELYQUA | `176c168456d0cb216793e02202bbb6bd8a93813c` | Vercel `dpl_E32A7rqTWeEZrkWX3qMhrrFmiK2X`, READY production at `velyqua.vercel.app`; source matches |
+| The Portal | `f9932b5a76fa50d58b7b21c95852dd35749c54b9` | Vercel `dpl_3ApWu9rLWZEzDvuxdJLmJWfTP7gc`, READY production at `the-portal-ten.vercel.app`; source matches |
+| The Sky Tablet | `1ac937ad25b70068195093c9950adc8c7f9703a0` | Vercel `dpl_9o1oF2ax3ShER4ULS4wDsC8Ywy8M`, READY production at `sky-tablet.vercel.app`; source matches |
+| Game Platform / Living Worlds | `2ae2223e647a0a5da2c78f984208dd436d6ce83e` | Vercel `dpl_CPorQa2daqLjFyNTSdv2HckwHdPR`, READY production at `game-platform-wine-nine.vercel.app`; source matches |
+| Authority Engine | `a4134f155f7b7f0e560e692a947234b3f9610828` | Vercel `dpl_7JuWQNANwBwZTdiqyCiqjXfyhBqZ`, READY production at `authority-engine-app.vercel.app`; source matches |
+
+Public identities above bind Vercel applications, not a fresh audit of separately
+hosted databases or edge functions. PRIME source-main/documentation and its
+immutable accepted runtime intentionally differ; no redeployment is implied.
+
+| Product | Target customer | Proposition | Pricing hypothesis (SGD, UNTESTED) |
+|---|---|---|---|
+| JARVIS PRIME | Knowledge-intensive owner-operators and technical leaders | Private governed objectives, traceable results and bounded authority | S$1,500–5,000 setup + S$300–1,000/month |
+| VELYQUA | Aquarists, aquarium service firms and specialist retailers | Manual-first water observations, durable history and transparent decision support | S$15–30/month hobbyist; S$100–300/month operator |
+| The Portal | Researchers, curators, educators and innovation teams | Encounters become inspectable artifacts, connections and experiment questions | S$250–750/session; S$1,000–3,000/team pilot |
+| The Sky Tablet | Museums, educators, cultural venues and experience studios | Standalone interpretive city-to-sky learning experience | S$2,000–8,000 pilot; S$250–750/month programme |
+| Game Platform / Living Worlds | Indie developers, narrative/tabletop creators; separately players | Persistent AI-assisted worlds with structured authoritative consequences | S$49–199/developer/month or usage API; free player pilot |
+| Authority Engine | Founders, operators, candidates and claim reviewers | Public evidence hub; bounded manual Evidence Portfolio Studio offer | S$750–2,500/fixed-scope package |
+
+| Product | Internal readiness / technical validation | External validation (separate from commercial) | Commercial validation | Known defects | Contradictions / missing evidence | Next gate / genuine Owner involvement |
+|---|---|---|---|---|---|---|
+| JARVIS PRIME | Accepted Golden Gen 2 non-audio; Golden Gen 1 rollback preserved | Earlier scoped Dell post-promotion PASS and Owner/Member observations preserved; new Lens tests are ABEX backend tests, not physical or customer tests | L0; no qualifying external customer receipt | **Evidence Lens PRODUCTION_QUALIFICATION_FAIL**: six full gates fail; P1 missing integration, P1 unavailable deterministic claims projected authoritative, P2 unrequested Tamil | Historical acceptance does not prove every new capability. Model prose stays `MODEL_CONTENT` / `VERIFY_REQUIRED`, not accepted evidence. Audio parked/not accepted | Preserve failure; qualify isolated successor before any promotion. `VAL-PRIME-001`: five real prospect interviews; participant access/consent and binding pilot decisions |
+| VELYQUA | Working web prototype; prior release records 82 tests plus contracts | Hosting-source binding observed; no real-water/sensor or new physical-client qualification | L0; no real-keeper trial/customer-payment receipt | No new defect reproduced by bounded source/deployment audit; not a full bug sweep | Physical offline/sync durability and native store release unverified; no certified telemetry. Package 0.4.0 and historical reconstruction 0.6 are distinct | `VAL-VEL-001`: five interviews/two manual-data trials; real keepers/consent, no actuation |
+| The Portal | Public E2 prototype; prior canonical verification recorded | Hosting-source binding observed; no external workflow-use qualification | L0; no external workflow-use receipt | No new defect reproduced by bounded source/deployment audit | Artifact Foundry embedded demo, not separate qualified API; generated curation is not historical authority | `VAL-PORTAL-001`: five interviews/three sessions; participants and source permissions |
+| The Sky Tablet | Public standalone E2 demo; prior 21-test release recorded | Hosting-source binding now observed; physical GPU/mobile and learning outcomes unverified | L0; no buyer/learner outcome receipt | No new defect reproduced by bounded source/deployment audit | Old source-binding gap closed only in that scope; physical and interpretive limits remain | `VAL-SKY-001`: five buyers/three users; real programme contacts and physical GPU client |
+| Game Platform / Living Worlds | Public guest prototype; prior policy/persistence/UI checks | Hosting-source binding observed; earlier physical UI reacceptance not inferred | L0; no external integration/voluntary-return receipt | No new defect reproduced by bounded source/deployment audit | Guest browser-bound; separate GM API and production-scale reliability unqualified | `VAL-GAME-001`: five developers/five players; participants plus relevant age/moderation decisions |
+| Authority Engine | Production evidence hub; manual offer prepared, customer delivery unproven | Hosting-source binding observed; no independent external customer/reviewer outcome | L0; no external paid-package/reviewer-outcome receipt | Historical local Node24/pnpm `canvas` build P2 unresolved by hosting check | Operational case revenue is not product revenue; deployed hub is not service demand | `VAL-AUTH-001`: five interviews/two packages; real claim owners/reviewers, input rights and binding business decisions |
+
+Fresh source/deployment correspondence for all five public apps is supported by
+authenticated read-only Vercel observations at approximately 18:55 SGT, not a
+new browser journey or customer test. Exact commits, deployment IDs, hashes and
+limits: [deployment receipt](docs/evidence/PORTFOLIO_DEPLOYMENT_OBSERVATION_20260927.json)
+and [source index](docs/portfolio/source-index-20260927.json).
+
+The six-case live Evidence Lens qualification is separate from Golden Gen 2's
+historical accepted scope. Do not turn its failed/insufficient evidence into
+readiness, commercial validation or a generic zero-defect claim. Its authoritative
+result (`ABEX_EVIDENCE_LENS_E2E_FAIL`) and case receipts are in
+[the production qualification](docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json).
+No external participant or credential is required to acknowledge this software
+qualification failure. Owner/family testing, model assertions and deployment
+health do not establish commercial validation.
+
+All six remain commercial L0. Zero counts mean **zero qualifying events recorded
+in this programme**, not an audited claim about all historical business activity.
+No outreach, payment or customer commitment is claimed by this reconciliation.
+Real participants/consent, input rights, and decisions on binding terms,
+payments/refunds/tax, relevant age policy and data processing remain external
+gates; routine already-authorized source work needs no renewed approval.
+
+Detailed dated evidence, launch experiments and nine byte-preserved historical
+commercial originals are [indexed here](docs/portfolio/README.md). They are
+subordinate records, not a parallel current SSOT. Historical Known broken/open
+lines below remain intact; use the dated reconciliation to identify superseded
+observations without erasing failures. W3-01 remains PARKED. No source-only
+reconciliation deploys software, changes identity, creates customer evidence or
+reopens physical acceptance.
+
 ## PRIME / VELYQUA / ABEX
 
 ### Verified (Lam personally confirmed the evidence)

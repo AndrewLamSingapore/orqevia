@@ -1,0 +1,202 @@
+{
+  "at": "2026-09-27T10:56:16.470245+00:00",
+  "response": {
+    "http_status": 202,
+    "body": {
+      "id": "31117c8d-dd30-494b-94c2-bc456eb29387",
+      "steps": [
+        {
+          "capability": "responsibility.a07",
+          "dispatch": {
+            "job": {
+              "id": "7cebf4b4-63b1-4b13-9539-8831f67467bd",
+              "agent": "a07",
+              "prompt": "You are JARVIS, the user-facing assistant powered by PRIME. Always identify yourself as JARVIS; never present yourself as a model, provider, or internal agent. Reply in the language used by the user unless the user explicitly requests another language. Internal agent IDs, responsibility IDs, and provider names are implementation details; do not expose them unless the user explicitly requests diagnostics. Follow any requested output format exactly.\nUser-facing response requirement: Use the language of the objective for the entire response unless the user explicitly requests another language.\nObjective:\nEvidence Lens production qualification EL-20260927-F. CLAIM: The Portal has an independently audited external customer-retention rate for September 2026.\nFind the authoritative audit and its provenance, or explicitly report unavailable evidence. Do not infer customer retention from deployment or internal tests.\nRetrieve authoritative evidence yourself. Separate current and historical records. Return canonical claim state and verification state, source/repository/commit/artifact/digest and provenance if available. Model memory and Owner assertions are not authoritative evidence. Do not fabricate citations or success. Do not change identities, runtime, or external systems.",
+              "priority": 25,
+              "model_role": "auto",
+              "model": "gemma3:1b",
+              "ram_mb": 1024,
+              "vram_mb": 0,
+              "timeout_seconds": 300,
+              "max_retries": 0,
+              "attempts": 0,
+              "max_cost_usd": 0.0,
+              "allow_cloud": 0,
+              "external_execution": 0,
+              "status": "queued",
+              "approval_status": "not_required",
+              "approval_reason": null,
+              "provider": null,
+              "route_reason": null,
+              "lease_until": null,
+              "estimated_cost_usd": 0.0,
+              "actual_cost_usd": 0.0,
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "result": null,
+              "error": null,
+              "created_at": "2026-09-27T10:56:16.190577+00:00",
+              "updated_at": "2026-09-27T10:56:16.190577+00:00",
+              "started_at": null,
+              "completed_at": null,
+              "classification": "R0",
+              "harness_envelope": null,
+              "preferred_provider": "ollama-fast",
+              "data_classification": "LOCAL_ONLY",
+              "task_class": "classification"
+            },
+            "correlation_id": "8af4b4ad-2cc1-4667-8d7f-ffa07e646974",
+            "execution_model": "DIRECT_OBSERVED",
+            "classification": "R0",
+            "agent_path": [
+              "a06",
+              "a07"
+            ],
+            "registry_version": "1.0.0",
+            "capability": "responsibility.a07",
+            "tier": "NANO",
+            "routing_ms": 0.31751400001667207,
+            "model_selection_ms": 0.10101199995915522,
+            "dispatch_ms": 51.60070600004474,
+            "logging": {
+              "persisted": 27,
+              "pending": 1,
+              "dropped": 0,
+              "last_error": null,
+              "healthy": true
+            },
+            "result_contract": "Model text is a contribution; tool effects have separate action records"
+          }
+        },
+        {
+          "capability": "responsibility.a27",
+          "dispatch": {
+            "job": {
+              "id": "59291ebd-6b2b-47d4-ba53-9c92325fb3ea",
+              "agent": "a18",
+              "prompt": "You are JARVIS, the user-facing assistant powered by PRIME. Always identify yourself as JARVIS; never present yourself as a model, provider, or internal agent. Reply in the language used by the user unless the user explicitly requests another language. Internal agent IDs, responsibility IDs, and provider names are implementation details; do not expose them unless the user explicitly requests diagnostics. Follow any requested output format exactly.\nUser-facing response requirement: Use the language of the objective for the entire response unless the user explicitly requests another language.\nObjective:\nEvidence Lens production qualification EL-20260927-F. CLAIM: The Portal has an independently audited external customer-retention rate for September 2026.\nFind the authoritative audit and its provenance, or explicitly report unavailable evidence. Do not infer customer retention from deployment or internal tests.\nRetrieve authoritative evidence yourself. Separate current and historical records. Return canonical claim state and verification state, source/repository/commit/artifact/digest and provenance if available. Model memory and Owner assertions are not authoritative evidence. Do not fabricate citations or success. Do not change identities, runtime, or external systems.",
+              "priority": 25,
+              "model_role": "auto",
+              "model": "gemma3:1b",
+              "ram_mb": 1024,
+              "vram_mb": 0,
+              "timeout_seconds": 300,
+              "max_retries": 0,
+              "attempts": 0,
+              "max_cost_usd": 0.0,
+              "allow_cloud": 0,
+              "external_execution": 0,
+              "status": "queued",
+              "approval_status": "not_required",
+              "approval_reason": null,
+              "provider": null,
+              "route_reason": null,
+              "lease_until": null,
+              "estimated_cost_usd": 0.0,
+              "actual_cost_usd": 0.0,
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "result": null,
+              "error": null,
+              "created_at": "2026-09-27T10:56:16.191124+00:00",
+              "updated_at": "2026-09-27T10:56:16.191124+00:00",
+              "started_at": null,
+              "completed_at": null,
+              "classification": "R0",
+              "harness_envelope": null,
+              "preferred_provider": "ollama-fast",
+              "data_classification": "LOCAL_ONLY",
+              "task_class": "classification"
+            },
+            "correlation_id": "b2e9f04c-0c79-421c-96be-42de52501185",
+            "execution_model": "DIRECT_OBSERVED",
+            "classification": "R0",
+            "agent_path": [
+              "a15",
+              "a18"
+            ],
+            "registry_version": "1.0.0",
+            "capability": "responsibility.a27",
+            "tier": "NANO",
+            "routing_ms": 0.1365499997518782,
+            "model_selection_ms": 0.035929000205214834,
+            "dispatch_ms": 88.55421899988869,
+            "logging": {
+              "persisted": 28,
+              "pending": 1,
+              "dropped": 0,
+              "last_error": null,
+              "healthy": true
+            },
+            "result_contract": "Model text is a contribution; tool effects have separate action records"
+          }
+        },
+        {
+          "capability": "responsibility.a14",
+          "dispatch": {
+            "job": {
+              "id": "be7e9031-658d-4a4b-8d57-3de9d32ed1b3",
+              "agent": "a14",
+              "prompt": "You are JARVIS, the user-facing assistant powered by PRIME. Always identify yourself as JARVIS; never present yourself as a model, provider, or internal agent. Reply in the language used by the user unless the user explicitly requests another language. Internal agent IDs, responsibility IDs, and provider names are implementation details; do not expose them unless the user explicitly requests diagnostics. Follow any requested output format exactly.\nUser-facing response requirement: Use the language of the objective for the entire response unless the user explicitly requests another language.\nObjective:\nEvidence Lens production qualification EL-20260927-F. CLAIM: The Portal has an independently audited external customer-retention rate for September 2026.\nFind the authoritative audit and its provenance, or explicitly report unavailable evidence. Do not infer customer retention from deployment or internal tests.\nRetrieve authoritative evidence yourself. Separate current and historical records. Return canonical claim state and verification state, source/repository/commit/artifact/digest and provenance if available. Model memory and Owner assertions are not authoritative evidence. Do not fabricate citations or success. Do not change identities, runtime, or external systems.",
+              "priority": 25,
+              "model_role": "auto",
+              "model": "gemma3:1b",
+              "ram_mb": 1024,
+              "vram_mb": 0,
+              "timeout_seconds": 300,
+              "max_retries": 0,
+              "attempts": 0,
+              "max_cost_usd": 0.0,
+              "allow_cloud": 0,
+              "external_execution": 0,
+              "status": "queued",
+              "approval_status": "not_required",
+              "approval_reason": null,
+              "provider": null,
+              "route_reason": null,
+              "lease_until": null,
+              "estimated_cost_usd": 0.0,
+              "actual_cost_usd": 0.0,
+              "input_tokens": 0,
+              "output_tokens": 0,
+              "result": null,
+              "error": null,
+              "created_at": "2026-09-27T10:56:16.191825+00:00",
+              "updated_at": "2026-09-27T10:56:16.191825+00:00",
+              "started_at": null,
+              "completed_at": null,
+              "classification": "R0",
+              "harness_envelope": null,
+              "preferred_provider": "ollama-fast",
+              "data_classification": "LOCAL_ONLY",
+              "task_class": "classification"
+            },
+            "correlation_id": "51922773-604f-46ad-9836-a18921899268",
+            "execution_model": "DIRECT_OBSERVED",
+            "classification": "R0",
+            "agent_path": [
+              "a10",
+              "a14"
+            ],
+            "registry_version": "1.0.0",
+            "capability": "responsibility.a14",
+            "tier": "NANO",
+            "routing_ms": 0.12970699981451617,
+            "model_selection_ms": 0.03816299977188464,
+            "dispatch_ms": 117.82014500022342,
+            "logging": {
+              "persisted": 29,
+              "pending": 1,
+              "dropped": 0,
+              "last_error": null,
+              "healthy": true
+            },
+            "result_contract": "Model text is a contribution; tool effects have separate action records"
+          }
+        }
+      ],
+      "physical_inference_limit": 1,
+      "semantics": "Independent advisory contributions; no delegated execution authority"
+    }
+  }
+}

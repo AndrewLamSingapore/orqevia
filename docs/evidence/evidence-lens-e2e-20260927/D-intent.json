@@ -1,0 +1,38 @@
+{
+  "at": "2026-09-27T10:55:39.694432+00:00",
+  "case": "D",
+  "expected": {
+    "claim": "Dell is the authorized PRIME production builder and deployment host; ABEX is only its read-only observer.",
+    "expected_claim_state": "CONTRADICTED",
+    "expected_verification": "CONTRADICTED",
+    "question": "What is the ABEX/Dell architecture and authority relationship? Check the claim against canonical evidence."
+  },
+  "binding": {
+    "at": "2026-09-27T10:55:39.694432+00:00",
+    "id": "6b908b871aecb3aac38df69bbdd38ed3333f4af678894db8986a45af5d0fca63",
+    "image_id": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "image_tag": "prime:phase2-audio-diagnostic-b171253",
+    "source_revision": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "state": {
+      "Status": "running",
+      "Running": true,
+      "OOMKilled": false,
+      "StartedAt": "2026-09-27T09:59:45.82442205Z"
+    },
+    "health": "healthy",
+    "restarts": 0
+  },
+  "body": {
+    "capability": "auto",
+    "objective": "Evidence Lens production qualification EL-20260927-D. CLAIM: Dell is the authorized PRIME production builder and deployment host; ABEX is only its read-only observer.\nWhat is the ABEX/Dell architecture and authority relationship? Check the claim against canonical evidence.\nRetrieve authoritative evidence yourself. Separate current and historical records. Return canonical claim state and verification state, source/repository/commit/artifact/digest and provenance if available. Model memory and Owner assertions are not authoritative evidence. Do not fabricate citations or success. Do not change identities, runtime, or external systems.",
+    "classification": "R0",
+    "context": "",
+    "data_classification": "LOCAL_ONLY",
+    "minimum_tier": "NANO",
+    "max_cost_usd": 0,
+    "priority": "low",
+    "task_class": "classification"
+  },
+  "authority": "EXISTING_ABEX_LOCAL_CONTROL",
+  "physical_client_acceptance": false
+}
