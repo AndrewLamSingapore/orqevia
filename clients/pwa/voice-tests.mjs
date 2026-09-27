@@ -97,3 +97,10 @@ test('repeated phone-sound control cannot overlap AudioContexts',()=>{
   globalThis.AudioContext=AudioContext;
   const voice=new Voice({onText:()=>{},onState:()=>{}});voice.testOutput();voice.testOutput();assert.equal(contexts.length,2);assert.equal(contexts[0].closeCount,1);assert.equal(contexts[1].closeCount,0);voice.stop({announce:false});assert.equal(contexts[1].closeCount,1);delete globalThis.AudioContext;
 });
+
+test('silent offline or visibility cleanup clears stale speaking UI state',()=>{
+  const states=[],contexts=[];
+  class AudioContext {constructor(){this.state='running';this.currentTime=0;this.destination={};this.closeCount=0;contexts.push(this);}createOscillator(){return {frequency:{},connect:()=>{},start:()=>{},stop:()=>{},onended:null};}createGain(){return {gain:{},connect:()=>{}};}close(){this.closeCount+=1;this.state='closed';return Promise.resolve();}}
+  globalThis.AudioContext=AudioContext;
+  const voice=new Voice({onText:()=>{},onState:(...value)=>states.push(value)});voice.testOutput();voice.stop({announce:false});assert.equal(contexts[0].closeCount,1);assert.equal(voice.outputContext,null);assert.deepEqual(states.at(-1),['']);delete globalThis.AudioContext;
+});
