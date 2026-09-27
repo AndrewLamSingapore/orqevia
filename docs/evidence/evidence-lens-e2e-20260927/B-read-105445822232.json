@@ -1,0 +1,87 @@
+{
+  "at": "2026-09-27T10:54:45.822232+00:00",
+  "task_id": "df319f44-4832-45a3-8602-e786bda257ca",
+  "response": {
+    "http_status": 200,
+    "body": {
+      "id": "df319f44-4832-45a3-8602-e786bda257ca",
+      "revision": 0,
+      "state": "COMPLETED",
+      "steps": [
+        {
+          "capability": "system.architecture",
+          "dispatch": {
+            "state": "COMPLETED",
+            "task_id": "df319f44-4832-45a3-8602-e786bda257ca",
+            "result": "The requested governance state is UNVERIFIED because its canonical evidence is unavailable. Owner or model assertions cannot replace it.",
+            "system_fact": {
+              "status": "UNVERIFIED",
+              "provenance": "CANONICAL_GOVERNANCE_SSOT",
+              "text": "The requested governance state is UNVERIFIED because its canonical evidence is unavailable. Owner or model assertions cannot replace it."
+            },
+            "model_backend": "none"
+          },
+          "revision": 0,
+          "state": "completed"
+        }
+      ],
+      "execution_metadata": {
+        "schema_version": "jarvis.authoritative-execution.v1",
+        "authoritative": true,
+        "task_id": "df319f44-4832-45a3-8602-e786bda257ca",
+        "revision": 0,
+        "state": "COMPLETED",
+        "created_at": "2026-09-27T10:54:45.243936+00:00",
+        "started_at": null,
+        "completed_at": "2026-09-27T10:54:45.259798+00:00",
+        "updated_at": "2026-09-27T10:54:45.259798+00:00",
+        "runtime": {
+          "host_id": "ABEX",
+          "source_revision": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+          "version": "prime-epoch-20260919",
+          "image_digest": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5"
+        },
+        "jobs": [],
+        "agent_execution": [],
+        "provenance": {
+          "task_id": "DATABASE",
+          "state": "QUEUE",
+          "timestamps": "QUEUE",
+          "jobs": "QUEUE",
+          "authority": "IDENTITY_SERVICE",
+          "artifact": "ARTIFACT_STORE",
+          "verification": "VERIFIER",
+          "runtime": "IMMUTABLE_OBJECTIVE_RUNTIME"
+        },
+        "closed_world_policy": "UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE",
+        "model_content_is_authoritative_metadata": false,
+        "lifecycle": {
+          "started_at_reason": "NO_EXECUTION_START_RECORDED"
+        }
+      },
+      "updated_at": "2026-09-27T10:54:45.259798+00:00",
+      "result": {
+        "type": "SYSTEM_FACT",
+        "text": "The requested governance state is UNVERIFIED because its canonical evidence is unavailable. Owner or model assertions cannot replace it.",
+        "authoritative": true,
+        "provenance": "CANONICAL_REGISTRY_AND_RUNTIME"
+      },
+      "synthesis": "Source-labelled advisory contributions; model content is not execution metadata"
+    }
+  },
+  "binding": {
+    "at": "2026-09-27T10:54:45.966232+00:00",
+    "id": "6b908b871aecb3aac38df69bbdd38ed3333f4af678894db8986a45af5d0fca63",
+    "image_id": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+    "image_tag": "prime:phase2-audio-diagnostic-b171253",
+    "source_revision": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "state": {
+      "Status": "running",
+      "Running": true,
+      "OOMKilled": false,
+      "StartedAt": "2026-09-27T09:59:45.82442205Z"
+    },
+    "health": "healthy",
+    "restarts": 0
+  }
+}

@@ -1,0 +1,2 @@
+# Original archived evidence is byte-pinned, including original CRLF and encoding.
+archive/** -text

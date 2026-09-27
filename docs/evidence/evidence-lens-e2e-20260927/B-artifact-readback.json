@@ -1,0 +1,13 @@
+{
+  "at": "2026-09-27T10:59:01.016350+00:00",
+  "task_id": "df319f44-4832-45a3-8602-e786bda257ca",
+  "artifact_id": "1781d17f801b4a2d97ea772d81010ff6",
+  "bytes": 2426,
+  "sha256": "1170e83399ae2f0c28b3532381274de3c8a30d40eac4a18307a9436e7f85b757",
+  "metadata_sha256": "1170e83399ae2f0c28b3532381274de3c8a30d40eac4a18307a9436e7f85b757",
+  "task_binding": "df319f44-4832-45a3-8602-e786bda257ca",
+  "http_status": 200,
+  "sha256_header": "1170e83399ae2f0c28b3532381274de3c8a30d40eac4a18307a9436e7f85b757",
+  "result": "PASS",
+  "meaning": "Artifact byte integrity only; not evidence that model claims are true"
+}
