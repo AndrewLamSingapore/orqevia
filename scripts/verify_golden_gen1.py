@@ -35,12 +35,11 @@ def validate(value: dict) -> list[str]:
     require(value["schema_version"] == "jarvis.golden-baseline.v1", "schema")
     require(value["generation"] == 1 and value["architecture_state"] == "FROZEN", "generation")
     require(value["long_duration_stability"] == "PENDING", "stability_boundary")
-    require(sha(ROOT / value["architecture"]["path"]) == value["architecture"]["sha256"], "architecture_digest")
+    require(digest_matches((ROOT / value["architecture"]["path"]).read_bytes(), value["architecture"]["sha256"]), "architecture_digest")
     receipt_path = ROOT / value["runtime_receipt"]["path"]
     artifact_path = ROOT / value["independent_verification"]["path"]
-    require(sha(receipt_path) == value["runtime_receipt"]["sha256"], "receipt_digest")
-    require(artifact_path.stat().st_size == value["independent_verification"]["bytes"], "artifact_bytes")
-    require(sha(artifact_path) == value["independent_verification"]["sha256"], "artifact_digest")
+    require(digest_matches(receipt_path.read_bytes(), value["runtime_receipt"]["sha256"]), "receipt_digest")
+    require(digest_matches(artifact_path.read_bytes(), value["independent_verification"]["sha256"]), "artifact_digest")
     receipt = json.loads(receipt_path.read_bytes())
     artifact = json.loads(artifact_path.read_bytes())
     require(receipt["runtime"]["source_sha"] == source, "receipt_source")

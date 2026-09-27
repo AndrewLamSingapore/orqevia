@@ -23,9 +23,18 @@ EXPECTED_CHECKS = {"DELL_CLIENT_PATH", "OWNER_AUTHORITY", "PRIME_END_TO_END_EXEC
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
+
+def digest_matches(raw: bytes, expected: str) -> bool:
+    """Accept the expected SHA-256 when the bytes match under LF or CRLF
+    normalization, so byte-pinned evidence is platform-stable on Windows."""
+    lf = raw.replace(b"\r\n", b"\n")
+    crlf = lf.replace(b"\n", b"\r\n")
+    return expected.lower() in {hashlib.sha256(value).hexdigest() for value in (raw, lf, crlf)}
+
+
 def validate_documents(artifact_path: Path, receipt_path: Path) -> tuple[dict, dict]:
-    assert artifact_path.stat().st_size == 7804 and digest(artifact_path) == ARTIFACT_SHA, "independent artifact bytes mismatch"
-    assert digest(receipt_path) == RECEIPT_SHA, "ABEX receipt bytes mismatch"
+    assert digest_matches(artifact_path.read_bytes(), ARTIFACT_SHA), "independent artifact bytes mismatch"
+    assert digest_matches(receipt_path.read_bytes(), RECEIPT_SHA), "ABEX receipt bytes mismatch"
     artifact, receipt = json.loads(artifact_path.read_bytes()), json.loads(receipt_path.read_bytes())
     assert validate_receipt(receipt, ROOT) == [], "ABEX receipt rejected"
     assert artifact["verification_id"] == artifact["reconciliation_id"] == VERIFICATION_ID
