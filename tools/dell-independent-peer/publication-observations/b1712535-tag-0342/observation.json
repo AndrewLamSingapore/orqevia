@@ -1,0 +1,123 @@
+{
+  "observed_at": "2026-09-27T03:44:23.979Z",
+  "classification": "PROVEN_BY_AUTOMATION",
+  "execution_host": "CLOUD_NOT_NATIVE_DELL",
+  "repository": "AndrewLamSingapore/prime",
+  "branches": [
+    {
+      "name": "candidate/aef-high-assurance-20260925",
+      "commit": {
+        "sha": "f8790a8cd9feda2bf9f63ad2f24ae9a289926efa",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/f8790a8cd9feda2bf9f63ad2f24ae9a289926efa"
+      },
+      "protected": false
+    },
+    {
+      "name": "codex/dell-independent-peer-20260927",
+      "commit": {
+        "sha": "22e08723f807def655caa7fbb81f5b96e5ba8601",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/22e08723f807def655caa7fbb81f5b96e5ba8601"
+      },
+      "protected": false
+    },
+    {
+      "name": "feat/phase2-unified-intelligence-20260926",
+      "commit": {
+        "sha": "963eed3b0e2594064b4cb4a3c5493e8c2b8a0142",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/963eed3b0e2594064b4cb4a3c5493e8c2b8a0142"
+      },
+      "protected": false
+    },
+    {
+      "name": "feat/supreme-integration-20260925",
+      "commit": {
+        "sha": "26f7d49cfe7134f8665dda5886111e91b574554d",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/26f7d49cfe7134f8665dda5886111e91b574554d"
+      },
+      "protected": false
+    },
+    {
+      "name": "fix/phase2-ios-audible-boundary-20260927",
+      "commit": {
+        "sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/b171253566e7c879283d2aacf699ae6c1ec8988e"
+      },
+      "protected": false
+    },
+    {
+      "name": "fix/phase2-ios-tts-observability-20260927",
+      "commit": {
+        "sha": "091e2f919edb1711b5a9e88404818095fa32b537",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/091e2f919edb1711b5a9e88404818095fa32b537"
+      },
+      "protected": false
+    },
+    {
+      "name": "fix/phase2-physical-acceptance-20260927",
+      "commit": {
+        "sha": "1f50580dcaf774a02f74b18e5a1d532c4e74b628",
+        "url": "https://api.github.com/repos/AndrewLamSingapore/prime/commits/1f50580dcaf774a02f74b18e5a1d532c4e74b628"
+      },
+      "protected": false
+    }
+  ],
+  "pagination": {
+    "page1_count": 100,
+    "page2_count": 32
+  },
+  "new_tag": {
+    "node_id": "TA_kwDOUDVGnNoAKDczZDA4MGJmYWJlYzlkN2UwNzQzN2ZjYWVkMDgzNzEwMGFkNzY5YTc",
+    "sha": "73d080bfabec9d7e07437fcaed0837100ad769a7",
+    "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/tags/73d080bfabec9d7e07437fcaed0837100ad769a7",
+    "tagger": {
+      "name": "Andrew Lam",
+      "email": "andrew3657@hotmail.com",
+      "date": "2026-09-27T03:32:20Z"
+    },
+    "object": {
+      "sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+      "type": "commit",
+      "url": "https://api.github.com/repos/AndrewLamSingapore/prime/git/commits/b171253566e7c879283d2aacf699ae6c1ec8988e"
+    },
+    "tag": "jarvis-prime-phase2-audio-diagnostic-b171253-20260927",
+    "message": "Qualified bounded iOS audible-path diagnostic successor\n",
+    "verification": {
+      "verified": false,
+      "reason": "unsigned",
+      "signature": null,
+      "payload": null,
+      "verified_at": null
+    }
+  },
+  "tag_ref_count": 18,
+  "releases": [],
+  "verifier_pr": {
+    "number": 135,
+    "head": "22e08723f807def655caa7fbb81f5b96e5ba8601",
+    "draft": true,
+    "comments": []
+  },
+  "commit_status": {
+    "sha": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+    "state": "pending",
+    "statuses": []
+  },
+  "assessment": {
+    "change": "New diagnostic tag now targets previously observed b171 source. Previous observation of 17 tags predates this publication and remains historical evidence.",
+    "qualification": "BLOCKED",
+    "exact_freeze_receipt": "NOT_ESTABLISHED",
+    "candidate_image": "NOT_ESTABLISHED",
+    "deployment_binding": "NOT_ESTABLISHED",
+    "native_dell_commissioning": "No new receipt found in inspected branches or PR135; actual physical host not accessed",
+    "tests": "NOT_RUN; no prior source result transferred",
+    "authority": "Authenticated retrieval establishes publication; tag message and tagger name do not independently establish qualification. An unsigned tag is recorded, not treated by itself as a defect.",
+    "prior_fail": "091e2f9 and c4f897b preserved unchanged",
+    "next_actions": [
+      "ABEX publishes exact candidate freeze/source/tree/image and provenance bindings",
+      "Native Dell Codex performs already-authorized commissioning and returns machine-bound receipts",
+      "Independently acquire frozen successor and rerun reviewed canonical/challenge/migration/rollback gates",
+      "Owner physical speech acceptance remains separate"
+    ],
+    "limitations": "This search does not rule out unpublished or external receipts. No candidate-provided commands, production tasks, deployment or ABEX mutations performed."
+  }
+}
