@@ -5,3 +5,11 @@ Discovery conclusion: **NO RECOVERABLE IMPLEMENTATION FOUND** after bounded insp
 Source base: cached verified `origin/main` `4806694afd2729761fa108c9d64a48d8a47f54f9`. Branch: `feature/jarvis-prime-cockpit`. Worktree: `C:/Users/Admin/Documents/ABEX/worktrees/jarvis-prime-cockpit`. Initial checkout clean. Production remains image `sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5` and `/pwa/` untouched.
 
 Boundary: ABEX host stability UNQUALIFIED. This branch is isolated source work only. No production routing, service restart, network interruption, or promotion. Real offline, restart, and physical mobile acceptance are deferred. Test harnesses must not be called production evidence.
+
+## Owner-requested pause, 2026-09-30
+
+Current isolated WIP: `clients/cockpit/` has a static navigation shell, an existing-Interface-contract client, and a Brain graph projection over retrieved task/job/agent/artifact records. It is **not** integrated, deployed, or production-qualified. It has no new backend graph/retrieval API, no proven dev same-origin authentication path, and no full test suite. Missing source classes are explicitly UNAVAILABLE. The live accepted `/pwa/` was not changed.
+
+Executed safe checks before pause: `node --check clients/cockpit/app.mjs`, `node --check clients/cockpit/brain.mjs`, and `node clients/cockpit/brain-tests.mjs` (8 passing assertions). These are syntax/unit checks only, not an E2E result. Known WIP defect: the Ask flow does not yet prepare a durable retry key before submitting, so do not use it for real objectives or call it accepted. Other unimplemented gates include actual backend graph data, governed memory/search, registry truth, responsive browser testing, security review, safe E2E, offline/restart/mobile qualification, and promotion.
+
+Resume from this branch and this file. First inspect `git status`, then repair the Ask durable-retry path and test it using isolated fixtures, not live production. Continue with the existing PWA authority boundary; never bypass session/cookie/origin controls to make a localhost preview appear connected. No automatic engineering resume from the quiet health monitor.
