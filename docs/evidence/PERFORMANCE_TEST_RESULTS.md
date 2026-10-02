@@ -58,3 +58,19 @@ submission and continuation dispatch paths, a focused integration run passed
 53 tests. The complete Python suite was rerun on the final code candidate:
 **1,078 passed, 5 deprecation warnings** in 197.07 seconds. This proves
 branch regression behavior, not that production is running the candidate.
+
+## Parallel/context branch continuation
+
+The configuration-only 21-agent projections reproduce the registry SHA-256
+and pass their deterministic `--check` comparison. The opt-in context-pack
+dispatch path and its oversize fail-closed behavior passed focused tests after
+the final request-snapshot freshness adjustment: **27 passed, 1 deprecation
+warning** across agent dispatch, context pack, and export tests.
+
+The complete Python suite on this isolated branch returned **1,107 passed,
+26 subtests passed, 5 deprecation warnings** in 208.47 seconds. This run
+covered the opt-in context-pack source path, but it did not connect to live
+production PRIME or measure production latency. No production deployment or
+restart was attempted. The PWA Node suite also returned **48 passed, 0 failed**.
+See `PRIME_PARALLEL_CONTEXT_PARTIAL_RECEIPT_20261002.md`
+for the unresolved live-proof and host-safety boundaries.
