@@ -11,4 +11,11 @@ retry, persist, create background workers, or alter the production compute queue
 Callers must classify work and identify all shared write resources accurately.
 The owner fast lane is dispatch priority, not preemption of running work.
 Inference remains governed by the existing compute queue and its separate
-capacity settings. This candidate has no production activation or promotion.
+capacity settings. The branch now calls this scheduler from both the actual
+`objective_api.submit` and continuation dispatch paths mounted by
+`production_entry`; a focused route test verified that call with two real
+registered capabilities, 53 relevant tests passed, and the full branch suite
+passed 1,078 tests. This schedules the
+bounded submission/deterministic stage only. It does not wait for model job
+completion, construct a full objective dependency DAG, or prove 21-agent live
+execution. The branch has no production activation or promotion.

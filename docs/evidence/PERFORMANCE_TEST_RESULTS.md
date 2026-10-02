@@ -48,5 +48,13 @@ the historical insertion commit rather than comparing all later legitimate
 `pytest tests -q --tb=short`: **1,077 passed, 5 deprecation warnings** in
 203.60 seconds. `node --test clients/pwa/*.test.mjs clients/pwa/*-tests.mjs`:
 **48 passed**. The earlier 1,073/4 result above remains historical evidence;
-it is not the current ABEX branch test result. A fresh cross-platform checkout
-has not yet been tested.
+it is not the current ABEX branch test result. A fresh detached Windows
+checkout with `core.autocrlf=false` subsequently showed the intended LF/CRLF
+forms and passed all 14 targeted Golden/receipt/portfolio tests. A native
+Linux checkout has not yet been tested.
+
+After wiring the existing bounded ready-work scheduler into both objective
+submission and continuation dispatch paths, a focused integration run passed
+53 tests. The complete Python suite was rerun on the final code candidate:
+**1,078 passed, 5 deprecation warnings** in 197.07 seconds. This proves
+branch regression behavior, not that production is running the candidate.
