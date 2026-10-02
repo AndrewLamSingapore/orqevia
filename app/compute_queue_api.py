@@ -41,10 +41,12 @@ def candidate_global_concurrency(environment: dict[str, str], profile: dict | No
 
 
 POLICY = QueuePolicy.from_env()
-# Additional slots are candidates only, requiring explicit backend and signed
+# Additional slots are candidates only, requiring explicit backend and hash-pinned
 # measured-profile support. It is never inferred merely from spare host CPU.
-POLICY = replace(POLICY, global_concurrency=candidate_global_concurrency(os.environ, load_compute_profile()),
-                 per_agent_concurrency=1)
+_candidate_slots = candidate_global_concurrency(os.environ, load_compute_profile())
+POLICY = replace(POLICY, global_concurrency=_candidate_slots,
+                 per_agent_concurrency=1,
+                 background_concurrency=(_candidate_slots - 1 if _candidate_slots > 1 else 0))
 validate_configuration(SETTINGS,POLICY)
 queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 

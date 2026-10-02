@@ -12,6 +12,9 @@ is selected only when all three conditions hold:
 Per-agent concurrency remains 1. The queue's existing atomic SQLite leases,
 provider concurrency and RAM/VRAM admission checks remain in place. No
 production environment variable, profile, service, or running queue changed.
+For candidate N>1 the queue additionally limits local noncritical inference
+to N−1, preserving one slot for an arriving Owner-critical request. This
+deliberately trades idle-time background saturation for responsiveness.
 The isolated Compose candidate now mirrors `OLLAMA_NUM_PARALLEL` into PRIME as
 well as Ollama. This is only a configuration signal, not proof that the backend
 actually activated N slots. A future qualification must inspect the running
@@ -29,6 +32,12 @@ N=6 and N=8 reached the 6 GiB cap when warming at the real context and are
 rejected for lack of memory margin. This is evidence for an N=3 *candidate*,
 not a completed owner-fast-lane, sustained, restart, or production proof.
 `HOST_STABILITY=UNQUALIFIED` is unchanged.
+
+The [Owner-under-load proof](PRIME_OWNER_LOAD_PROOF_20261002.md) found that
+unreserved N=3 increased Owner first-token delay despite faster batch
+completion, whereas the N=3 reserve reduced Owner first-token time below one
+second in the sampled short and longer workloads. This remains isolated
+candidate evidence, not a production Owner PWA receipt.
 
 The isolated interface candidate assigns queue priority `critical` only when
 the server-issued client policy has role `OWNER`, for both new objectives and

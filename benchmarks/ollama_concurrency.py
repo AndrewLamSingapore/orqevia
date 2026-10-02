@@ -11,13 +11,14 @@ import time
 import urllib.request
 
 
-PROMPT = "Write only the integers 1 through 20 in order, separated by spaces. No prose."
-
-
-def request(base_url: str, model: str, start_at: float, timeout: int, context: int = 8192) -> dict:
+def request(base_url: str, model: str, start_at: float, timeout: int, context: int = 8192,
+            sequence_max: int = 20) -> dict:
+    if sequence_max not in (20, 50):
+        raise ValueError("unsupported deterministic sequence length")
+    prompt = f"Write only the integers 1 through {sequence_max} in order, separated by spaces. No prose."
     body = json.dumps({
-        "model": model, "prompt": PROMPT, "stream": True, "keep_alive": "30m",
-        "options": {"temperature": 0, "num_predict": 64, "num_ctx": context},
+        "model": model, "prompt": prompt, "stream": True, "keep_alive": "30m",
+        "options": {"temperature": 0, "num_predict": (64 if sequence_max == 20 else 160), "num_ctx": context},
     }).encode()
     queued = time.perf_counter()
     delay = start_at - queued
@@ -45,7 +46,7 @@ def request(base_url: str, model: str, start_at: float, timeout: int, context: i
         ended = time.perf_counter()
         answer = "".join(chunks)
         return {
-            "ok": final is not None and re.findall(r"\d+", answer) == [str(i) for i in range(1, 21)],
+            "ok": final is not None and re.findall(r"\d+", answer) == [str(i) for i in range(1, sequence_max + 1)],
             "start_s": started, "first_token_s": first, "end_s": ended,
             "ttft_s": None if first is None else first - started,
             "wall_s": ended - started,
