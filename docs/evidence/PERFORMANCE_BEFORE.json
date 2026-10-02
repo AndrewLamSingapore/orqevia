@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "captured_at_local": "2026-10-02T15:45:10+08:00",
+  "scope": "ABEX production PRIME loopback dispatch and Ollama, not Owner PWA or Codex UI",
+  "host_stability": "UNQUALIFIED",
+  "production_image": "prime:phase2-audio-diagnostic-b171253",
+  "production_source": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+  "host_snapshot": {
+    "captured_at_local": "2026-10-02T15:40:57.2480546+08:00",
+    "cpu_percent_3s": 2.75,
+    "memory_free_mb": 18230,
+    "memory_total_mb": 32085,
+    "c_free_gb": 842.39,
+    "power_plan": "Ultimate Performance - Always On"
+  },
+  "endpoint_probe_seconds": {
+    "prime_health_ttfb": 0.003087,
+    "prime_health_total": 0.003172,
+    "interface_pwa_ttfb": 0.011082,
+    "interface_pwa_total": 0.011537
+  },
+  "cold_prime_request": {
+    "job_id": "f8710dcd-47ae-43fc-8cd5-94cf030be331",
+    "model": "gemma3:4b",
+    "processor": "100% CPU",
+    "dispatch_http_seconds": 0.06831,
+    "routing_ms": 6.136490992503241,
+    "model_selection_ms": 0.0883759930729866,
+    "dispatch_ms": 54.0403249906376,
+    "queue_wait_seconds_from_timestamps": 0.048667,
+    "model_load_seconds_from_queue_event": 9.155453348,
+    "generation_seconds_from_queue_event": 0.986179,
+    "input_tokens": 178,
+    "output_tokens": 10,
+    "total_seconds": 12.194774,
+    "first_visible_response_seconds": null,
+    "first_token_seconds": null,
+    "prompt_eval_seconds": null
+  },
+  "warm_prime_request": {
+    "job_id": "3bf0fac1-58f7-41ea-8579-0f1964539a94",
+    "model": "gemma3:4b",
+    "dispatch_http_seconds": 0.046805,
+    "queue_wait_seconds_from_timestamps": 0.036048,
+    "model_load_seconds_from_queue_event": 0.001113862,
+    "generation_seconds_from_queue_event": 0.997277,
+    "input_tokens": 178,
+    "output_tokens": 10,
+    "total_seconds": 1.596262,
+    "first_visible_response_seconds": null,
+    "first_token_seconds": null,
+    "prompt_eval_seconds": null
+  },
+  "warm_direct_ollama_probe": {
+    "model": "gemma3:4b",
+    "prompt_chars": 908,
+    "prompt_tokens": 178,
+    "output_tokens": 10,
+    "model_load_seconds": 0.001324,
+    "prompt_eval_seconds": 0.211778,
+    "first_token_seconds": 0.232208,
+    "generation_seconds": 1.00145,
+    "tokens_per_second": 9.99,
+    "total_seconds": 1.233648
+  },
+  "owner_pwa_end_to_end": null,
+  "codex_ui_render_latency": null
+}
