@@ -11,3 +11,7 @@ docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json text eol=crlf
 docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json -text
 docs/evidence/PHASE2_RUNTIME_RECEIPT_B171253_20260927.json -text
 docs/evidence/IOS_PWA_AUDIO_OUTPUT_NOT_PHYSICALLY_VERIFIED.md -text
+# Generated registry projections are compared byte-for-byte by their check mode.
+docs/evidence/PRIME_AGENT_MATRIX.json text eol=lf
+docs/evidence/PRIME_CAPABILITY_GRAPH.json text eol=lf
+docs/evidence/PRIME_CONTEXT_PROFILES.json text eol=lf

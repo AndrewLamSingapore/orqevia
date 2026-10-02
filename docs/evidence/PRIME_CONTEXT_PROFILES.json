@@ -1,0 +1,762 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "declared_input_contract_projection",
+  "source": {
+    "path": "config/agent_registry.json",
+    "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff",
+    "registry_version": "1.0.0"
+  },
+  "limitation": "Registry declarations only. No live dispatch, model assignment, tool execution, runtime reachability, or production concurrency is proven by these files.",
+  "shared_boundary": {
+    "source_labelled_context_required": true,
+    "credentials_in_context": "prohibited by registry declaration",
+    "context_window_or_token_budget": "not specified by registry; no value inferred",
+    "data_classification_required": true,
+    "consequential_execution": "requires independent authority; registry grants none"
+  },
+  "profiles": [
+    {
+      "agent_id": "a01",
+      "role": "Strategic reasoning owner",
+      "declared_receives": "Objectives, constraints, evidence summaries and portfolio context.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a01": "Objectives, constraints, evidence summaries and portfolio context."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a02",
+      "role": "Objective-to-task decomposition; Milestone and dependency planning",
+      "declared_receives": "Approved objectives, constraints, dependencies and available capacity.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a02": "Approved objectives, constraints, dependencies and available capacity.",
+        "a03": "Strategic priorities, task plans, dependencies, risks and target dates."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a04",
+      "role": "Option evaluation; Structured comparison",
+      "declared_receives": "Decision question, options, criteria, evidence, uncertainty and constraints.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a04": "Decision question, options, criteria, evidence, uncertainty and constraints.",
+        "a08": "Alternatives, comparison criteria, evidence and uncertainty."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a05",
+      "role": "Portfolio prioritization; Resource optimization",
+      "declared_receives": "Candidate initiatives, strategic objectives, dependencies, capacity, value estimates and risk findings.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a05": "Candidate initiatives, strategic objectives, dependencies, capacity, value estimates and risk findings.",
+        "a23": "Demand, capacity, constraints, service targets, skills and cost information."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a06",
+      "role": "Research direction",
+      "declared_receives": "Research questions, decision context, source constraints and evidence gaps.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a06": "Research questions, decision context, source constraints and evidence gaps."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a07",
+      "role": "Evidence discovery",
+      "declared_receives": "Research questions, source criteria, date bounds and known claims.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a07": "Research questions, source criteria, date bounds and known claims."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a09",
+      "role": "Knowledge organization",
+      "declared_receives": "Verified findings, definitions, decisions, provenance and update signals.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a09": "Verified findings, definitions, decisions, provenance and update signals."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a10",
+      "role": "Data and analytics coordination",
+      "declared_receives": "Data requests, schemas, pipeline questions and architecture tradeoffs.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a10": "Data requests, schemas, pipeline questions and architecture tradeoffs."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a12",
+      "role": "KPI definition; Descriptive/diagnostic analysis",
+      "declared_receives": "Validated datasets, metric definitions, analytical question and assumptions.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a11": "Objectives, processes, data availability, baselines and decision needs.",
+        "a12": "Validated datasets, metric definitions, analytical question and assumptions."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a13",
+      "role": "Forecasting",
+      "declared_receives": "Time-indexed validated data, forecast horizon, drivers, constraints and loss criteria.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a13": "Time-indexed validated data, forecast horizon, drivers, constraints and loss criteria."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a14",
+      "role": "Data quality checks",
+      "declared_receives": "Datasets, schemas, lineage, validation rules and intended analytical use.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a14": "Datasets, schemas, lineage, validation rules and intended analytical use."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a15",
+      "role": "Technical execution ownership",
+      "declared_receives": "Approved requirements, architecture constraints, risks, telemetry and quality gates.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a15": "Approved requirements, architecture constraints, risks, telemetry and quality gates."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a16",
+      "role": "System architecture design",
+      "declared_receives": "Requirements, system telemetry and interface, caching, consistency and CAP tradeoffs.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a16": "Requirements, system telemetry and interface, caching, consistency and CAP tradeoffs."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a17",
+      "role": "Design-to-code conversion",
+      "declared_receives": "Approved design, acceptance criteria, repository context, constraints and test requirements.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a17": "Approved design, acceptance criteria, repository context, constraints and test requirements."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a18",
+      "role": "Functional testing; Compliance verification",
+      "declared_receives": "Requirements, implementation artifacts, interfaces, fixtures and risk scenarios.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a18": "Requirements, implementation artifacts, interfaces, fixtures and risk scenarios.",
+        "a27": "Claims, artifacts, acceptance criteria, policies, provenance and test evidence."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a19",
+      "role": "Operational resilience evaluation",
+      "declared_receives": "Architecture, telemetry, service objectives, dependency map and failure history.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a19": "Architecture, telemetry, service objectives, dependency map and failure history."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a20",
+      "role": "Economic analysis ownership; Market and pricing analysis",
+      "declared_receives": "Commercial objective, constraints, demand evidence, cost data and resource context.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a20": "Commercial objective, constraints, demand evidence, cost data and resource context.",
+        "a24": "Customer problem, market evidence, competitive context, costs and constraints."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a21",
+      "role": "Cost analysis; Value/ROI evaluation",
+      "declared_receives": "Resource plan, price inputs, usage assumptions, time horizon and uncertainty.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a21": "Resource plan, price inputs, usage assumptions, time horizon and uncertainty.",
+        "a22": "Benefits, costs, risks, time horizon, baseline and strategic objectives."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a26",
+      "role": "Quality governance ownership; Independent review",
+      "declared_receives": "Work product, requirements, evidence, assumptions and review rubric.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a25": "Requirements, outputs, evidence, policies, risk assessments and release criteria.",
+        "a26": "Work product, requirements, evidence, assumptions and review rubric."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a28",
+      "role": "Risk identification",
+      "declared_receives": "Plans, architecture, dependencies, assumptions, controls and operating context.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a28": "Plans, architecture, dependencies, assumptions, controls and operating context."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    },
+    {
+      "agent_id": "a29",
+      "role": "Release readiness gate",
+      "declared_receives": "Approved change set, test and verification results, risk acceptance, rollback plan and release criteria.",
+      "required_input_fields": [
+        "objective",
+        "context",
+        "data_classification"
+      ],
+      "declared_context_rule": "Source-labelled evidence and explicit constraints; never credentials",
+      "allowed_classification_labels": [
+        "LOCAL_ONLY",
+        "CLOUD_PERMITTED",
+        "SENSITIVE",
+        "RESTRICTED"
+      ],
+      "declared_capability_inputs": {
+        "a29": "Approved change set, test and verification results, risk acceptance, rollback plan and release criteria."
+      },
+      "required_output_fields": [
+        "agent_id",
+        "status",
+        "result",
+        "uncertainty",
+        "proposed_actions"
+      ],
+      "allowed_output_status": [
+        "completed",
+        "needs_evidence",
+        "denied",
+        "failed"
+      ],
+      "model_assignment": "unassigned",
+      "runtime_context_handling_verified": false
+    }
+  ]
+}

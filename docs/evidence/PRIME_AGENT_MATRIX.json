@@ -1,0 +1,554 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "configuration_projection",
+  "source": {
+    "path": "config/agent_registry.json",
+    "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff",
+    "registry_version": "1.0.0"
+  },
+  "limitation": "Registry declarations only. No live dispatch, model assignment, tool execution, runtime reachability, or production concurrency is proven by these files.",
+  "counts": {
+    "registered_agents": 21,
+    "declared_active_lifecycle": 21,
+    "runtime_activation_verified": 0,
+    "responsibilities": 29
+  },
+  "agents": [
+    {
+      "agent_id": "a01",
+      "name": "Strategy Lead",
+      "role": "Strategic reasoning owner",
+      "reports_to": "prime",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": true,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a01"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a02",
+      "name": "Planning and Roadmap Agent",
+      "role": "Objective-to-task decomposition; Milestone and dependency planning",
+      "reports_to": "lead_strategy",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a02",
+        "responsibility.a03"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a04",
+      "name": "Decision and Comparison Agent",
+      "role": "Option evaluation; Structured comparison",
+      "reports_to": "lead_strategy",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a04",
+        "responsibility.a08"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a05",
+      "name": "Portfolio and Capacity Agent",
+      "role": "Portfolio prioritization; Resource optimization",
+      "reports_to": "lead_strategy",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a05",
+        "responsibility.a23"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a06",
+      "name": "Research Lead",
+      "role": "Research direction",
+      "reports_to": "prime",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": true,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a06"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a07",
+      "name": "Evidence Agent",
+      "role": "Evidence discovery",
+      "reports_to": "lead_research",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a07"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a09",
+      "name": "Knowledge Agent",
+      "role": "Knowledge organization",
+      "reports_to": "lead_research",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "artifact.create",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a09"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a10",
+      "name": "Data Lead",
+      "role": "Data and analytics coordination",
+      "reports_to": "prime",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": true,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a10"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a12",
+      "name": "Metrics and Analysis Agent",
+      "role": "KPI definition; Descriptive/diagnostic analysis",
+      "reports_to": "lead_data",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a11",
+        "responsibility.a12"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a13",
+      "name": "Forecast Agent",
+      "role": "Forecasting",
+      "reports_to": "lead_data",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a13"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a14",
+      "name": "Data Quality Agent",
+      "role": "Data quality checks",
+      "reports_to": "lead_data",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a14"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a15",
+      "name": "Engineering Lead",
+      "role": "Technical execution ownership",
+      "reports_to": "prime",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": true,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a15"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a16",
+      "name": "Architecture Agent",
+      "role": "System architecture design",
+      "reports_to": "lead_engineering",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a16"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a17",
+      "name": "Implementation Agent",
+      "role": "Design-to-code conversion",
+      "reports_to": "lead_engineering",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "restricted",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read",
+        "sandbox.wasm.execute"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a17"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a18",
+      "name": "Test and Verification Agent",
+      "role": "Functional testing; Compliance verification",
+      "reports_to": "lead_engineering",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read",
+        "sandbox.wasm.execute"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a18",
+        "responsibility.a27"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a19",
+      "name": "Reliability Agent",
+      "role": "Operational resilience evaluation",
+      "reports_to": "lead_engineering",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a19"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a20",
+      "name": "Commercial and Economic Lead",
+      "role": "Economic analysis ownership; Market and pricing analysis",
+      "reports_to": "prime",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": true,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a20",
+        "responsibility.a24"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a21",
+      "name": "Cost and Value Agent",
+      "role": "Cost analysis; Value/ROI evaluation",
+      "reports_to": "lead_economic",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a21",
+        "responsibility.a22"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a26",
+      "name": "Independent Quality Lead",
+      "role": "Quality governance ownership; Independent review",
+      "reports_to": "prime",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": true,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a25",
+        "responsibility.a26"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a28",
+      "name": "Risk Agent",
+      "role": "Risk identification",
+      "reports_to": "lead_quality",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a28"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    },
+    {
+      "agent_id": "a29",
+      "name": "Release Agent",
+      "role": "Release readiness gate",
+      "reports_to": "lead_quality",
+      "registry_status": "registered",
+      "declared_lifecycle_status": "active",
+      "model_assignment": "unassigned",
+      "authority": "restricted",
+      "can_delegate": false,
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "owned_responsibilities": [
+        "responsibility.a29"
+      ],
+      "runtime_activation_verified": false,
+      "live_task_execution_verified_by_this_export": false
+    }
+  ]
+}

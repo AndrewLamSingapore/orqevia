@@ -1,0 +1,594 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "configuration_projection",
+  "source": {
+    "path": "config/agent_registry.json",
+    "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff",
+    "registry_version": "1.0.0"
+  },
+  "limitation": "Registry declarations only. No live dispatch, model assignment, tool execution, runtime reachability, or production concurrency is proven by these files.",
+  "nodes": [
+    {
+      "id": "prime",
+      "kind": "orchestrator"
+    },
+    {
+      "id": "a01",
+      "kind": "agent",
+      "name": "Strategy Lead"
+    },
+    {
+      "id": "a02",
+      "kind": "agent",
+      "name": "Planning and Roadmap Agent"
+    },
+    {
+      "id": "a04",
+      "kind": "agent",
+      "name": "Decision and Comparison Agent"
+    },
+    {
+      "id": "a05",
+      "kind": "agent",
+      "name": "Portfolio and Capacity Agent"
+    },
+    {
+      "id": "a06",
+      "kind": "agent",
+      "name": "Research Lead"
+    },
+    {
+      "id": "a07",
+      "kind": "agent",
+      "name": "Evidence Agent"
+    },
+    {
+      "id": "a09",
+      "kind": "agent",
+      "name": "Knowledge Agent"
+    },
+    {
+      "id": "a10",
+      "kind": "agent",
+      "name": "Data Lead"
+    },
+    {
+      "id": "a12",
+      "kind": "agent",
+      "name": "Metrics and Analysis Agent"
+    },
+    {
+      "id": "a13",
+      "kind": "agent",
+      "name": "Forecast Agent"
+    },
+    {
+      "id": "a14",
+      "kind": "agent",
+      "name": "Data Quality Agent"
+    },
+    {
+      "id": "a15",
+      "kind": "agent",
+      "name": "Engineering Lead"
+    },
+    {
+      "id": "a16",
+      "kind": "agent",
+      "name": "Architecture Agent"
+    },
+    {
+      "id": "a17",
+      "kind": "agent",
+      "name": "Implementation Agent"
+    },
+    {
+      "id": "a18",
+      "kind": "agent",
+      "name": "Test and Verification Agent"
+    },
+    {
+      "id": "a19",
+      "kind": "agent",
+      "name": "Reliability Agent"
+    },
+    {
+      "id": "a20",
+      "kind": "agent",
+      "name": "Commercial and Economic Lead"
+    },
+    {
+      "id": "a21",
+      "kind": "agent",
+      "name": "Cost and Value Agent"
+    },
+    {
+      "id": "a26",
+      "kind": "agent",
+      "name": "Independent Quality Lead"
+    },
+    {
+      "id": "a28",
+      "kind": "agent",
+      "name": "Risk Agent"
+    },
+    {
+      "id": "a29",
+      "kind": "agent",
+      "name": "Release Agent"
+    },
+    {
+      "id": "responsibility.a01",
+      "kind": "responsibility",
+      "description": "Strategic reasoning owner"
+    },
+    {
+      "id": "responsibility.a02",
+      "kind": "responsibility",
+      "description": "Objective-to-task decomposition"
+    },
+    {
+      "id": "responsibility.a03",
+      "kind": "responsibility",
+      "description": "Milestone and dependency planning"
+    },
+    {
+      "id": "responsibility.a04",
+      "kind": "responsibility",
+      "description": "Option evaluation"
+    },
+    {
+      "id": "responsibility.a05",
+      "kind": "responsibility",
+      "description": "Portfolio prioritization"
+    },
+    {
+      "id": "responsibility.a06",
+      "kind": "responsibility",
+      "description": "Research direction"
+    },
+    {
+      "id": "responsibility.a07",
+      "kind": "responsibility",
+      "description": "Evidence discovery"
+    },
+    {
+      "id": "responsibility.a08",
+      "kind": "responsibility",
+      "description": "Structured comparison"
+    },
+    {
+      "id": "responsibility.a09",
+      "kind": "responsibility",
+      "description": "Knowledge organization"
+    },
+    {
+      "id": "responsibility.a10",
+      "kind": "responsibility",
+      "description": "Data and analytics coordination"
+    },
+    {
+      "id": "responsibility.a11",
+      "kind": "responsibility",
+      "description": "KPI definition"
+    },
+    {
+      "id": "responsibility.a12",
+      "kind": "responsibility",
+      "description": "Descriptive/diagnostic analysis"
+    },
+    {
+      "id": "responsibility.a13",
+      "kind": "responsibility",
+      "description": "Forecasting"
+    },
+    {
+      "id": "responsibility.a14",
+      "kind": "responsibility",
+      "description": "Data quality checks"
+    },
+    {
+      "id": "responsibility.a15",
+      "kind": "responsibility",
+      "description": "Technical execution ownership"
+    },
+    {
+      "id": "responsibility.a16",
+      "kind": "responsibility",
+      "description": "System architecture design"
+    },
+    {
+      "id": "responsibility.a17",
+      "kind": "responsibility",
+      "description": "Design-to-code conversion"
+    },
+    {
+      "id": "responsibility.a18",
+      "kind": "responsibility",
+      "description": "Functional testing"
+    },
+    {
+      "id": "responsibility.a19",
+      "kind": "responsibility",
+      "description": "Operational resilience evaluation"
+    },
+    {
+      "id": "responsibility.a20",
+      "kind": "responsibility",
+      "description": "Economic analysis ownership"
+    },
+    {
+      "id": "responsibility.a21",
+      "kind": "responsibility",
+      "description": "Cost analysis"
+    },
+    {
+      "id": "responsibility.a22",
+      "kind": "responsibility",
+      "description": "Value/ROI evaluation"
+    },
+    {
+      "id": "responsibility.a23",
+      "kind": "responsibility",
+      "description": "Resource optimization"
+    },
+    {
+      "id": "responsibility.a24",
+      "kind": "responsibility",
+      "description": "Market and pricing analysis"
+    },
+    {
+      "id": "responsibility.a25",
+      "kind": "responsibility",
+      "description": "Quality governance ownership"
+    },
+    {
+      "id": "responsibility.a26",
+      "kind": "responsibility",
+      "description": "Independent review"
+    },
+    {
+      "id": "responsibility.a27",
+      "kind": "responsibility",
+      "description": "Compliance verification"
+    },
+    {
+      "id": "responsibility.a28",
+      "kind": "responsibility",
+      "description": "Risk identification"
+    },
+    {
+      "id": "responsibility.a29",
+      "kind": "responsibility",
+      "description": "Release readiness gate"
+    }
+  ],
+  "edges": [
+    {
+      "from": "a01",
+      "to": "a02",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a01",
+      "to": "a04",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a01",
+      "to": "a05",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a06",
+      "to": "a07",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a06",
+      "to": "a09",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a10",
+      "to": "a12",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a10",
+      "to": "a13",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a10",
+      "to": "a14",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a15",
+      "to": "a16",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a15",
+      "to": "a17",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a15",
+      "to": "a18",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a15",
+      "to": "a19",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a20",
+      "to": "a21",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a26",
+      "to": "a28",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a26",
+      "to": "a29",
+      "kind": "may_delegate_declared"
+    },
+    {
+      "from": "a01",
+      "to": "responsibility.a01",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a02",
+      "to": "responsibility.a02",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a02",
+      "to": "responsibility.a03",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a04",
+      "to": "responsibility.a04",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a04",
+      "to": "responsibility.a08",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a05",
+      "to": "responsibility.a05",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a05",
+      "to": "responsibility.a23",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a06",
+      "to": "responsibility.a06",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a07",
+      "to": "responsibility.a07",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a09",
+      "to": "responsibility.a09",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a10",
+      "to": "responsibility.a10",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a12",
+      "to": "responsibility.a11",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a12",
+      "to": "responsibility.a12",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a13",
+      "to": "responsibility.a13",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a14",
+      "to": "responsibility.a14",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a15",
+      "to": "responsibility.a15",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a16",
+      "to": "responsibility.a16",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a17",
+      "to": "responsibility.a17",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a18",
+      "to": "responsibility.a18",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a18",
+      "to": "responsibility.a27",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a19",
+      "to": "responsibility.a19",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a20",
+      "to": "responsibility.a20",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a20",
+      "to": "responsibility.a24",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a21",
+      "to": "responsibility.a21",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a21",
+      "to": "responsibility.a22",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a26",
+      "to": "responsibility.a25",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a26",
+      "to": "responsibility.a26",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a28",
+      "to": "responsibility.a28",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a29",
+      "to": "responsibility.a29",
+      "kind": "owns_declared"
+    },
+    {
+      "from": "a01",
+      "to": "prime",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a02",
+      "to": "a01",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a04",
+      "to": "a01",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a05",
+      "to": "a01",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a06",
+      "to": "prime",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a07",
+      "to": "a06",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a09",
+      "to": "a06",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a10",
+      "to": "prime",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a12",
+      "to": "a10",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a13",
+      "to": "a10",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a14",
+      "to": "a10",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a15",
+      "to": "prime",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a16",
+      "to": "a15",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a17",
+      "to": "a15",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a18",
+      "to": "a15",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a19",
+      "to": "a15",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a20",
+      "to": "prime",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a21",
+      "to": "a20",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a26",
+      "to": "prime",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a28",
+      "to": "a26",
+      "kind": "reports_to_declared"
+    },
+    {
+      "from": "a29",
+      "to": "a26",
+      "kind": "reports_to_declared"
+    }
+  ],
+  "runtime_edges_verified": false
+}
