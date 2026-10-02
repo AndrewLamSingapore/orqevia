@@ -3,3 +3,11 @@ clients/dell/** text eol=lf
 tests/fixtures/historical-agent-registry-29.json text eol=lf
 governance/JARVIS_Resume_Checkpoint.generated.md text eol=lf
 docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json -text
+# These frozen LF receipts are hashed byte-for-byte by the Golden verifiers.
+# Disable checkout conversion for LF evidence. The Gen 1 runtime receipt has
+# a historical CRLF digest, so its checkout form is explicitly CRLF.
+docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md -text
+docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json text eol=crlf
+docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json -text
+docs/evidence/PHASE2_RUNTIME_RECEIPT_B171253_20260927.json -text
+docs/evidence/IOS_PWA_AUDIO_OUTPUT_NOT_PHYSICALLY_VERIFIED.md -text

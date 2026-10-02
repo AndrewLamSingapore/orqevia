@@ -20,6 +20,7 @@
 
 - Focused Python regression: 126 passed. Focused PWA Node tests: 28 passed.
 - Broad Python run before the final queue-lane fix: 1,073 passed, three protected exact-byte receipt/Golden checks failed on CRLF working-tree copies of LF-indexed evidence. The protected bytes were not rewritten; the final queue-lane change passed focused tests afterward.
+- Follow-up ABEX checkout/test repair: explicit per-file Git checkout line endings preserve the frozen digests; the historical portfolio insertion assertion is anchored to its insertion commit. The final branch then passed the full Python suite (1,077 tests) and 48 PWA Node tests. The frozen Git blobs and manifest digests were not changed. Fresh cross-platform checkout remains unverified.
 - Production PRIME/Interface/Ollama remained healthy and on the accepted image after the isolated probes. The temporary benchmark container was removed; no model volume was mounted writable for it.
 - Owner PWA first paint, sustained thermal/resource behavior, live 21-agent execution, service-restart and normal-reboot persistence of an N>1 deployment, and a genuine host-stability PASS remain unverified. Do not report this as integrated or accepted production performance.
 

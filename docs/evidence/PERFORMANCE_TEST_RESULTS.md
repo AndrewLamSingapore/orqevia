@@ -34,3 +34,19 @@ After adding server-issued OWNER priority to the isolated interface candidate, a
 The later isolated queue plus real Ollama [Owner-under-load proof](PRIME_OWNER_LOAD_PROOF_20261002.md) compared N=2, N=3 and N=3 with one reserved Owner slot. The reserved N=3 short workload reached first token in 0.913 s after Owner submission versus 6.989 s for unreserved N=3; the longer 142-output-token case reached first token in 0.976 s. All six jobs produced the expected sequence in each measured case. These are isolated backend/queue observations, not production PWA paint measurements. The reservation deliberately reduces idle-time background saturation.
 
 After the queue starvation/backlog/reservation fixes, the focused Python suite passed **126/126** and focused PWA Node tests passed **28/28**. The full Python suite passed **1,073 tests** and failed the same three protected exact-byte Golden/independent-evidence checks caused by this checkout's CRLF working-tree bytes; no new functional test failed. A final same-agent backlog lane fix followed that full run and passed its focused regression, but the full suite was not rerun afterward. The protected documents remain unmodified. Thus the full suite is still **not green** on this Windows checkout.
+
+## 2 October follow-up: exact-byte checkout repair
+
+The final branch revision was retested on ABEX after adding explicit checkout
+line endings for five frozen files in `.gitattributes`. Four LF-pinned files
+were restored locally to their manifest-verified byte sequences; the Gen 1
+runtime receipt retains its historical CRLF checkout form. No frozen receipt
+content or expected digest changed. The portfolio insertion test now checks
+the historical insertion commit rather than comparing all later legitimate
+`STATUS.md` entries against a pre-insertion baseline.
+
+`pytest tests -q --tb=short`: **1,077 passed, 5 deprecation warnings** in
+203.60 seconds. `node --test clients/pwa/*.test.mjs clients/pwa/*-tests.mjs`:
+**48 passed**. The earlier 1,073/4 result above remains historical evidence;
+it is not the current ABEX branch test result. A fresh cross-platform checkout
+has not yet been tested.

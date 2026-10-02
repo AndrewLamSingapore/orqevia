@@ -76,7 +76,12 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
-    after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Verify the insertion at its historical commit. Later legitimate status
+    # entries must not change the original preservation claim.
+    after = subprocess.check_output(
+        ["git", "show", "f945f6019cdb4742359cdb714cc523b5fe8fe63c:STATUS.md"],
+        cwd=ROOT,
+    ).decode("utf-8")
     start = after.index("## Portfolio current observation — 27 September 2026")
     end = after.index("## PRIME / VELYQUA / ABEX", start)
     preserved = (after[:start] + after[end:]).encode("utf-8")
