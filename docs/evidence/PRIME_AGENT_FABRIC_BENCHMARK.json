@@ -1,0 +1,78 @@
+{
+  "date_sgt": "2026-10-02",
+  "method": "50 ms deterministic sleep fake I/O task; monotonic perf_counter; serial loop versus ThreadPoolExecutor; no model or service calls",
+  "command": "ABEX test-runs lens-20260928-venv Python importing benchmark_fake_tools for widths 2,4,8,21",
+  "results": [
+    {
+      "width": 2,
+      "serial_wall_ms": 101.923,
+      "parallel_wall_ms": 52.342,
+      "speedup": 1.947,
+      "max_timestamp_overlap": 2,
+      "parallel_intervals_ms": [
+        {"agent_id": "a01", "start": 1.227, "end": 51.611},
+        {"agent_id": "a02", "start": 1.527, "end": 52.079}
+      ]
+    },
+    {
+      "width": 4,
+      "serial_wall_ms": 201.62,
+      "parallel_wall_ms": 51.483,
+      "speedup": 3.916,
+      "max_timestamp_overlap": 4,
+      "parallel_intervals_ms": [
+        {"agent_id": "a01", "start": 0.516, "end": 51.193},
+        {"agent_id": "a02", "start": 0.686, "end": 51.049},
+        {"agent_id": "a04", "start": 0.818, "end": 51.168},
+        {"agent_id": "a05", "start": 0.95, "end": 51.14}
+      ]
+    },
+    {
+      "width": 8,
+      "serial_wall_ms": 403.239,
+      "parallel_wall_ms": 52.795,
+      "speedup": 7.638,
+      "max_timestamp_overlap": 8,
+      "parallel_intervals_ms": [
+        {"agent_id": "a01", "start": 0.406, "end": 51.409},
+        {"agent_id": "a02", "start": 0.707, "end": 51.68},
+        {"agent_id": "a04", "start": 1.034, "end": 51.589},
+        {"agent_id": "a05", "start": 1.302, "end": 51.903},
+        {"agent_id": "a06", "start": 1.548, "end": 51.874},
+        {"agent_id": "a07", "start": 1.801, "end": 52.313},
+        {"agent_id": "a09", "start": 1.908, "end": 52.304},
+        {"agent_id": "a10", "start": 2.032, "end": 52.284}
+      ]
+    },
+    {
+      "width": 21,
+      "serial_wall_ms": 1060.069,
+      "parallel_wall_ms": 54.875,
+      "speedup": 19.318,
+      "max_timestamp_overlap": 21,
+      "parallel_intervals_ms": [
+        {"agent_id": "a01", "start": 0.586, "end": 51.169},
+        {"agent_id": "a02", "start": 0.769, "end": 51.097},
+        {"agent_id": "a04", "start": 0.942, "end": 51.244},
+        {"agent_id": "a05", "start": 1.168, "end": 51.596},
+        {"agent_id": "a06", "start": 1.281, "end": 51.585},
+        {"agent_id": "a07", "start": 1.53, "end": 51.626},
+        {"agent_id": "a09", "start": 1.653, "end": 52.123},
+        {"agent_id": "a10", "start": 1.816, "end": 52.098},
+        {"agent_id": "a12", "start": 1.93, "end": 52.114},
+        {"agent_id": "a13", "start": 2.101, "end": 52.663},
+        {"agent_id": "a14", "start": 2.235, "end": 52.654},
+        {"agent_id": "a15", "start": 2.363, "end": 52.646},
+        {"agent_id": "a16", "start": 2.478, "end": 52.618},
+        {"agent_id": "a17", "start": 2.585, "end": 52.637},
+        {"agent_id": "a18", "start": 2.689, "end": 53.161},
+        {"agent_id": "a19", "start": 2.783, "end": 53.188},
+        {"agent_id": "a20", "start": 2.893, "end": 53.153},
+        {"agent_id": "a21", "start": 3.02, "end": 53.135},
+        {"agent_id": "a26", "start": 3.108, "end": 53.146},
+        {"agent_id": "a28", "start": 3.208, "end": 53.648},
+        {"agent_id": "a29", "start": 3.282, "end": 53.664}
+      ]
+    }
+  ]
+}

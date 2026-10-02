@@ -1,0 +1,71 @@
+{
+  "audit_date": "2026-10-02",
+  "scope": "Read-only registry and code-contract audit; no agent jobs dispatched",
+  "source": {
+    "registry_path": "config/agent_registry.json",
+    "registry_sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff",
+    "live_container_registry_sha256_matches": true,
+    "migration_path": "config/agent_registry_migration.json",
+    "migration_sha256": "91d8bd362d45b1ed99b99c590b2e5c89b0d7526ade9ca7d70836c3b617b64ea5",
+    "registry_version": "1.0.0",
+    "schema_version": "2.0",
+    "registry_last_updated": "2026-09-13",
+    "live_registry_v1_enabled": true
+  },
+  "verified_structure": {
+    "registered_agent_count": 21,
+    "lead_count": 6,
+    "owned_responsibility_count": 29,
+    "orchestrator_id": "prime",
+    "all_agents_status": "registered",
+    "all_agents_lifecycle_status": "active",
+    "all_agents_model": "unassigned",
+    "max_delegation_depth": 2,
+    "queue_global_concurrency_configured": 1,
+    "queue_per_agent_concurrency_configured": 1,
+    "runtime_activation_verified": false,
+    "twenty_one_independent_agent_executions_verified": false,
+    "twenty_one_job_parallelism_verified": false
+  },
+  "execution_contract": {
+    "route": "responsibility ID -> unique registry owner -> advisory dispatch -> shared compute queue",
+    "ordinary_agent_output": "model text contribution, not proof of tool execution",
+    "separate_action_records_required_for_tool_effects": true,
+    "default_authority": "advisory",
+    "restricted_agents": ["a17", "a29"],
+    "consequential_action_owner_approval_required": true,
+    "tool_eligibility_is_not_tool_execution_proof": true,
+    "live_per_agent_success_latency_quality": "UNVERIFIED",
+    "live_per_agent_tool_use": "UNVERIFIED"
+  },
+  "agents": [
+    {"id":"a01","name":"Strategy Lead","parent":"prime","responsibilities":["a01"],"authority":"advisory","can_delegate":true,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a02","name":"Planning and Roadmap Agent","parent":"a01","responsibilities":["a02","a03"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a04","name":"Decision and Comparison Agent","parent":"a01","responsibilities":["a04","a08"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a05","name":"Portfolio and Capacity Agent","parent":"a01","responsibilities":["a05","a23"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a06","name":"Research Lead","parent":"prime","responsibilities":["a06"],"authority":"advisory","can_delegate":true,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a07","name":"Evidence Agent","parent":"a06","responsibilities":["a07"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a09","name":"Knowledge Agent","parent":"a06","responsibilities":["a09"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose","artifact.create"],"execution_verified":false},
+    {"id":"a10","name":"Data Lead","parent":"prime","responsibilities":["a10"],"authority":"advisory","can_delegate":true,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a12","name":"Metrics and Analysis Agent","parent":"a10","responsibilities":["a11","a12"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a13","name":"Forecast Agent","parent":"a10","responsibilities":["a13"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a14","name":"Data Quality Agent","parent":"a10","responsibilities":["a14"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a15","name":"Engineering Lead","parent":"prime","responsibilities":["a15"],"authority":"advisory","can_delegate":true,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a16","name":"Architecture Agent","parent":"a15","responsibilities":["a16"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a17","name":"Implementation Agent","parent":"a15","responsibilities":["a17"],"authority":"restricted","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose","sandbox.wasm.execute"],"execution_verified":false},
+    {"id":"a18","name":"Test and Verification Agent","parent":"a15","responsibilities":["a18","a27"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose","sandbox.wasm.execute"],"execution_verified":false},
+    {"id":"a19","name":"Reliability Agent","parent":"a15","responsibilities":["a19"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a20","name":"Commercial and Economic Lead","parent":"prime","responsibilities":["a20","a24"],"authority":"advisory","can_delegate":true,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a21","name":"Cost and Value Agent","parent":"a20","responsibilities":["a21","a22"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a26","name":"Independent Quality Lead","parent":"prime","responsibilities":["a25","a26"],"authority":"advisory","can_delegate":true,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a28","name":"Risk Agent","parent":"a26","responsibilities":["a28"],"authority":"advisory","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false},
+    {"id":"a29","name":"Release Agent","parent":"a26","responsibilities":["a29"],"authority":"restricted","can_delegate":false,"tool_eligibility":["provided_context.read","action.propose"],"execution_verified":false}
+  ],
+  "unverified": [
+    "Whether every registered role has a distinct running process or distinct model",
+    "Live per-role dispatch success, quality, latency, and output-contract compliance",
+    "Live execution of artifact.create or sandbox.wasm.execute by each eligible role",
+    "Safe concurrency above the configured one-slot compute queue",
+    "Actual 21-job throughput or aggregate resource envelope"
+  ]
+}

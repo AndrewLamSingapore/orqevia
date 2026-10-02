@@ -55,6 +55,20 @@ class ContractTests(unittest.TestCase):
         return self.client.post('/interface/v1/objectives', headers=self.headers,
             json={'objective': 'fixture supplied facts', 'idempotency_key': 'one'})
 
+    def test_server_issued_owner_role_sets_interactive_priority(self):
+        self.policies['dell']['role'] = 'OWNER'
+        with patch.dict(os.environ, {'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
+            assert self.submit().status_code == 202
+            assert self.dispatch.call_args.args[0].priority == 'critical'
+            with patch.object(contract.node.objective_api, 'continue_objective',
+                              return_value={'task_id': 'task-fixture', 'state': 'ROUTED'}) as continued:
+                response = self.client.post('/interface/v1/tasks/task-fixture/continue', headers=self.headers,
+                    json={'objective': 'Continue fixture', 'expected_revision': 0, 'idempotency_key': 'turn'})
+                assert response.status_code == 202, response.text
+                assert continued.call_args.args[1].priority == 'critical'
+        assert contract.node.dispatch_priority({'role': 'MEMBER'}) == 'normal'
+        assert contract.node.dispatch_priority({}) == 'normal'
+
     def test_identity_transport_pin_auth_scope(self):
         assert self.client.get('/interface/v1/identity', headers=self.headers).json()['role'] == 'AUTHORITATIVE_PRIME_HOST'
         assert self.client.get('http://testserver/interface/v1/identity', headers={**self.headers, 'X-Forwarded-Proto': 'https'}).status_code == 426

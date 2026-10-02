@@ -15,13 +15,36 @@ from pydantic import BaseModel, Field
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 from .settings import SETTINGS
-from .compute_profile import validate_configuration, require_compute_capacity, generation_options
+from .compute_profile import validate_configuration, require_compute_capacity, generation_options, load_compute_profile
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
+def candidate_global_concurrency(environment: dict[str, str], profile: dict | None) -> int:
+    """Allow at most three slots with explicit backend and measured-envelope support.
+
+    The production default stays at one; unsupported or malformed overrides
+    fail closed to one. Per-agent concurrency is separately fixed at one.
+    """
+    requested = environment.get("PRIME_QUEUE_CONCURRENCY")
+    if requested not in {"2", "3"}:
+        return 1
+    try:
+        backend_parallel = int(environment.get("OLLAMA_NUM_PARALLEL", ""))
+    except ValueError:
+        return 1
+    if backend_parallel < int(requested) or not isinstance(profile, dict):
+        return 1
+    measured = profile.get("normal_concurrency")
+    if isinstance(measured, bool) or not isinstance(measured, int) or measured < int(requested):
+        return 1
+    return int(requested)
+
+
 POLICY = QueuePolicy.from_env()
-# Preserve the measured ABEX one-slot compute envelope, independent of authority.
-POLICY = replace(POLICY, global_concurrency=1, per_agent_concurrency=1)
+# Additional slots are candidates only, requiring explicit backend and signed
+# measured-profile support. It is never inferred merely from spare host CPU.
+POLICY = replace(POLICY, global_concurrency=candidate_global_concurrency(os.environ, load_compute_profile()),
+                 per_agent_concurrency=1)
 validate_configuration(SETTINGS,POLICY)
 queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 

@@ -143,7 +143,8 @@ def continue_task(task_id: str,body: dict,request: Request):
     except ValidationError:raise HTTPException(422,'Invalid continuation payload')
     policy=node.client_policy(client)
     objective=node.objective_api.ObjectiveRequest(objective=turn.objective,context=turn.context,
-        data_classification=policy.get('data_classification','LOCAL_ONLY'),max_cost_usd=policy.get('max_cost_usd',0))
+        data_classification=policy.get('data_classification','LOCAL_ONLY'),max_cost_usd=policy.get('max_cost_usd',0),
+        priority=node.dispatch_priority(policy))
     return node.objective_api.continue_objective(task_id,objective,turn.expected_revision,turn.idempotency_key,node.owner_transport())
 
 

@@ -22,3 +22,7 @@ First instrument a genuine authorized PWA objective end to end with monotonic ti
 If the serial fetch and fixed polling interval are then material on the measured critical path, a scoped candidate could move full-status retrieval ahead of the redundant snapshot or replace the two-request polling cycle with a governed long-poll/stream contract. Preserve authorization, reconnect cursor, revocation, bounded retries, offline/visibility handling, intermediate-vs-final status, and artifact integrity. Do **not** simply render SSE payload as final output or drop status polling: `clients/pwa/revision-tests.mjs:10` explicitly requires status checks even when no new event arrives. Prove via existing PWA revision tests, interface contract tests, disconnection/cancel/revocation tests, and measured before/after first-useful-output latency. Keep only a statistically meaningful improvement without correctness or resource regression.
 
 Status: SOURCE-INSPECTED / LATENCY-UNMEASURED / NO OPTIMIZATION APPLIED in this lane.
+
+## Isolated timing component
+
+`clients/pwa/timing.mjs` now contains an opt-in, local-memory-only monotonic stage recorder. It is disabled by default, bounded to 128 samples, and accepts only the fixed stage vocabulary; it never accepts objective text, task IDs, credentials, response bodies, or headers. It is **not wired to `app.mjs` yet**, so no owner or production timing is claimed. Focused recorder and PWA regression tests ran on 2026-10-02 with `node --test clients/pwa/timing-tests.mjs clients/pwa/revision-tests.mjs`: 19 passed, 0 failed.

@@ -1,0 +1,79 @@
+{
+  "captured_at_utc": "2026-10-02T09:51:40.933955+00:00",
+  "configured_parallel": 3,
+  "fixed_request_count": 5,
+  "model": "gemma3:4b",
+  "context_tokens": 8192,
+  "all_correct": true,
+  "failures": 0,
+  "workload_wall_s": 12.715906399999767,
+  "aggregate_output_tokens_per_wall_s": 20.446831851483648,
+  "mean_individual_generation_tokens_per_s": 8.795668633874339,
+  "requests": [
+    {
+      "ok": true,
+      "start_s": 2865.0898923,
+      "first_token_s": 2865.6685159,
+      "end_s": 2871.6418196,
+      "ttft_s": 0.5786235999999008,
+      "wall_s": 6.5519272999999885,
+      "answer_sha256": "84340db45c8746350177defa2653a38b5522204bc388f6b5ec3c6a5549be7fc5",
+      "eval_count": 52,
+      "eval_duration_ns": 5972298000,
+      "load_duration_ns": 2382359,
+      "prompt_eval_duration_ns": 521840000
+    },
+    {
+      "ok": true,
+      "start_s": 2865.090729,
+      "first_token_s": 2865.6684005,
+      "end_s": 2871.642093,
+      "ttft_s": 0.5776715000001786,
+      "wall_s": 6.551363999999921,
+      "answer_sha256": "84340db45c8746350177defa2653a38b5522204bc388f6b5ec3c6a5549be7fc5",
+      "eval_count": 52,
+      "eval_duration_ns": 5972340000,
+      "load_duration_ns": 2835593,
+      "prompt_eval_duration_ns": 521506999
+    },
+    {
+      "ok": true,
+      "start_s": 2865.0906561,
+      "first_token_s": 2865.6694259,
+      "end_s": 2871.6421552,
+      "ttft_s": 0.5787697999999182,
+      "wall_s": 6.551499100000001,
+      "answer_sha256": "84340db45c8746350177defa2653a38b5522204bc388f6b5ec3c6a5549be7fc5",
+      "eval_count": 52,
+      "eval_duration_ns": 5971436000,
+      "load_duration_ns": 2098136,
+      "prompt_eval_duration_ns": 522010999
+    },
+    {
+      "ok": true,
+      "start_s": 2865.0904521,
+      "first_token_s": 2871.8825922,
+      "end_s": 2877.7048781,
+      "ttft_s": 6.79214009999987,
+      "wall_s": 12.61442599999964,
+      "answer_sha256": "84340db45c8746350177defa2653a38b5522204bc388f6b5ec3c6a5549be7fc5",
+      "eval_count": 52,
+      "eval_duration_ns": 5821206000,
+      "load_duration_ns": 3217038,
+      "prompt_eval_duration_ns": 229465000
+    },
+    {
+      "ok": true,
+      "start_s": 2865.0905717,
+      "first_token_s": 2871.8810777,
+      "end_s": 2877.7047793,
+      "ttft_s": 6.790505999999823,
+      "wall_s": 12.6142076000001,
+      "answer_sha256": "84340db45c8746350177defa2653a38b5522204bc388f6b5ec3c6a5549be7fc5",
+      "eval_count": 52,
+      "eval_duration_ns": 5822724000,
+      "load_duration_ns": 3518464,
+      "prompt_eval_duration_ns": 228584000
+    }
+  ]
+}

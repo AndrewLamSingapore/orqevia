@@ -26,6 +26,16 @@
     "output_tokens": 10,
     "model_residency_minutes_after_request_approximately": 29
   },
+  "parallel_two_job_probe": {
+    "concurrency_requested": 2,
+    "queue_global_concurrency": 1,
+    "total_seconds": 14.660932,
+    "first_job_model_load_seconds": 8.360872495,
+    "second_job_model_load_seconds": 0.001775518,
+    "first_job_output_tokens": 13,
+    "second_job_output_tokens": 13,
+    "interpretation": "First load was confounded by preceding request-scoped num_thread runner experiments; jobs executed serially by the one-slot queue. No N=2 improvement demonstrated."
+  },
   "host_snapshot_after_idle": {"timestamp_local": "2026-10-02T16:17:36.2833832+08:00", "free_memory_mb": 17046, "ollama_memory_gib": 3.504},
   "first_visible_response_seconds": null,
   "owner_pwa_end_to_end": null,

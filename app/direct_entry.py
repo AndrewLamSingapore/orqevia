@@ -11,12 +11,18 @@ from .compute_queue_api import router as compute,start_compute_queue,stop_comput
 from .action_records import action_ledger,close_ledgers
 from .client_auth import authenticate_owner
 from .agent_registry import registered_agent_ids
+from .model_prewarm import start_optional_prewarm
+from .settings import SETTINGS
 
 
 @asynccontextmanager
 async def lifespan(app):
     start_compute_queue()
-    try:yield
+    try:
+        # Optional best-effort warm-up never delays or authorizes execution.
+        try: app.state.model_prewarm = start_optional_prewarm(SETTINGS)
+        except Exception: app.state.model_prewarm = None
+        yield
     finally:
         stop_compute_queue()
         close_ledgers()
