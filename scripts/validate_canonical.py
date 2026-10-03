@@ -11,7 +11,9 @@ def component_hash_matches(path, expected):
 
 def validate():
     from check_canonical_state import main as check_current
+    from check_status_authority import validate_status_authority
     check_current()
+    validate_status_authority()
     manifest=json.loads((ROOT/'system.manifest.json').read_text())
     for item in manifest['components'].values():
         path=(ROOT/item['path']).resolve()

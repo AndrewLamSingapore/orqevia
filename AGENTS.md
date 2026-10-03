@@ -5,8 +5,7 @@ For JARVIS/PRIME and portfolio work, status begins with
 private PRIME repository. STATUS.md is the only current status source of truth.
 Only Lam may move an item into its "Verified" sections.
 
-Then begin with SSOT.json for the machine-readable component references. Resolve
-the latest canonical PRIME `main` commit and read governance/operational-manifest.json
+Then resolve the latest canonical PRIME `main` commit and read governance/operational-manifest.json
 and governance/CHANNEL_CONTRACT.md at that same commit as component and
 observation references: they describe recorded architecture and observed
 revisions, and cannot establish current status. On PRIME itself, a clean checkout

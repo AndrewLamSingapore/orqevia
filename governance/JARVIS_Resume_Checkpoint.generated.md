@@ -38,4 +38,4 @@ Current PRIME runtime was independently accepted at source `17fad78d410dca5d9101
 
 ## Resume contract
 
-Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. STATUS.md is the only current status authority; the immutable Golden manifest owns generation architecture identity. This mirror and the operational manifest it derives from are machine-readable component and observation references. system.manifest.json is a subordinate product manifest. Repository SSOT.json files are references. This is the only current generated mirror; earlier exports and installer bundles are superseded.
+Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. STATUS.md is the only current status authority; the immutable Golden manifest owns generation architecture identity. This mirror and the operational manifest it derives from are machine-readable component and observation references. system.manifest.json is a subordinate product manifest. No parallel status pointer is maintained. This is the only current generated mirror; earlier exports and installer bundles are superseded.

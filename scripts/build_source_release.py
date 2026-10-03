@@ -1,7 +1,7 @@
 """Build a new source-only runtime directory; never deploy or overwrite."""
 import argparse,hashlib,json,shutil,subprocess
 from pathlib import Path
-from validate_ssot import ROOT,validate
+from validate_canonical import ROOT,validate
 
 def build(output):
     validate()

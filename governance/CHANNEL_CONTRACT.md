@@ -11,7 +11,8 @@ This contract is subordinate to the operational manifest; it is not another SSOT
    that commit. Do not mix files from different commits or rely on chat memory.
 2. The operational manifest selects the one architecture and records evidence
    status. system.manifest.json is a subordinate product/component manifest,
-   not a competing operational record. Repository SSOT.json files are pointers.
+   not a competing operational record. STATUS.md alone owns current status;
+   no parallel status pointer is maintained.
 3. ABEX/PRIME owns runtime coordination. Dell is an authenticated client,
    development/synchronization node and independent verifier. PWA and voice use
    the same Interface contract. Client identity never increases authority.
