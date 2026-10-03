@@ -115,6 +115,7 @@ services:
       PRIME_INTERFACE_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
       PRIME_INTERFACE_CANDIDATE_STATUS: ${PRIME_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}
       PRIME_PWA_ORIGIN: ${PRIME_PWA_ORIGIN:-}
+      PRIME_INTERFACE_HEALTH_ORIGIN: ${PRIME_INTERFACE_HEALTH_ORIGIN:-}
       PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}
       PRIME_PWA_DATA_CLASSIFICATION: ${PRIME_PWA_DATA_CLASSIFICATION:-LOCAL_ONLY}
       PRIME_PWA_MAX_COST_USD: ${PRIME_PWA_MAX_COST_USD:-0}
@@ -132,7 +133,7 @@ services:
       prime:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import ssl, urllib.request; context=ssl.create_default_context(cafile='/run/prime-tls/ca.crt'); urllib.request.urlopen('${PRIME_PWA_ORIGIN:-https://invalid}/pwa/', context=context, timeout=5).read()"]
+      test: ["CMD", "python", "-m", "app.interface_healthcheck"]
       interval: 30s
       timeout: 8s
       retries: 5
