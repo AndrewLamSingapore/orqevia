@@ -58,3 +58,17 @@ quality and latency checks before enablement. The 21-agent registry still does
 not prove 21 live competent workers.
 
 Accepted Golden Gen 2 production and Golden Gen 1 rollback remain untouched.
+
+## Thermal-hold follow-up (3 Oct, after the tested source checkpoint)
+
+An independent review identified a mixed-provider Owner-reserve bypass and an
+availability risk if an optional measured profile is malformed. A narrow
+branch-only follow-up now counts all noncritical active jobs (local or cloud)
+against the Owner reserve and makes malformed optional profiles fall back to
+baseline N=1. Focused tests were added, and `git diff --check` passed, but the
+new tests have **NOT RUN**: the ABEX SSD measured 69°C under normal use, only
+1°C below Lexar's specified operating ceiling. Do not carry the prior 1,072
+Python/55 PWA pass forward as verification of these new edits. No image build
+or production mutation was performed. Objective capability submission still
+labels every per-request task Owner/P0, so this source is not evidence of a
+global 21-agent Owner-priority scheduler.

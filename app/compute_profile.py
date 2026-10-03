@@ -1,6 +1,6 @@
 """Optional measured machine envelope, independent of Registry and TAP."""
 from functools import lru_cache
-import hashlib,json,os
+import hashlib,json,logging,os
 from pathlib import Path
 
 
@@ -20,8 +20,24 @@ def load_compute_profile():
     return profile
 
 
+@lru_cache(maxsize=1)
+def runtime_compute_profile():
+    """Treat a malformed optional envelope as absent, retaining baseline N=1.
+
+    The strict loader remains available to diagnostics/tests. Runtime callers
+    must not make PRIME unavailable because an optional profile is malformed.
+    """
+    try:
+        return load_compute_profile()
+    except (OSError, RuntimeError, ValueError, TypeError, KeyError):
+        logging.getLogger(__name__).warning(
+            'Invalid measured Compute Profile; using baseline inference policy'
+        )
+        return None
+
+
 def validate_configuration(settings,queue_policy):
-    profile=load_compute_profile()
+    profile=runtime_compute_profile()
     if not profile:return
     if queue_policy.global_concurrency>profile['normal_concurrency']:
         raise RuntimeError('Queue concurrency exceeds measured envelope')
@@ -43,12 +59,12 @@ def validate_configuration(settings,queue_policy):
 
 
 def generation_options():
-    profile=load_compute_profile()
+    profile=runtime_compute_profile()
     return dict(profile.get('generation_options',{})) if profile else {}
 
 
 def require_compute_capacity(model):
-    profile=load_compute_profile()
+    profile=runtime_compute_profile()
     if not profile:return
     if model not in profile['models']:
         raise PermissionError('Model is outside measured Compute Profile')

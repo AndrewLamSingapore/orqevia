@@ -11,13 +11,30 @@ def measured(tmp_path,monkeypatch):
     monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE',str(path))
     monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
     cp.load_compute_profile.cache_clear()
+    cp.runtime_compute_profile.cache_clear()
     yield path
     cp.load_compute_profile.cache_clear()
+    cp.runtime_compute_profile.cache_clear()
 
 
 def test_changed_profile_fails_closed(measured):
     measured.write_text('{}')
     with pytest.raises(RuntimeError,match='integrity'):cp.load_compute_profile()
+
+
+def test_malformed_optional_profile_keeps_runtime_available_at_baseline(measured):
+    measured.write_text('{}')
+    assert cp.runtime_compute_profile() is None
+    settings=SimpleNamespace(multi_specialist_workers=1,context_tokens=8192,
+                             max_output_tokens=512,required_models=['gemma3:1b'])
+    cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))
+    assert cp.generation_options()=={}
+    cp.require_compute_capacity('gemma3:1b')
+
+
+def test_missing_optional_profile_keeps_runtime_available_at_baseline(measured):
+    measured.unlink()
+    assert cp.runtime_compute_profile() is None
 
 
 def test_profile_cannot_expand_scheduler_or_models(measured):

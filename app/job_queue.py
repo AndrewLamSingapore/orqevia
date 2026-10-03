@@ -235,10 +235,14 @@ class JobQueue:
         if sum(1 for x in active if identity(x["agent"])==row["agent"])>=self.policy.per_agent_concurrency:return None,"per-agent concurrency limit",0
         used_ram=sum(int(x["ram_mb"]) for x in active if x["provider"] in local_names)
         used_vram=sum(int(x["vram_mb"]) for x in active if x["provider"] in local_names)
+        # Reserve a worker for Owner-critical work, regardless of whether the
+        # other workers are executing local or cloud jobs. A cloud fallback
+        # must not bypass the reserve after local capacity is exhausted.
         background_at_limit=(self.policy.background_concurrency>0 and
             row["priority"]<PRIORITIES["critical"] and
-            sum(1 for x in active if x["provider"] in local_names and
-                x["priority"]<PRIORITIES["critical"])>=self.policy.background_concurrency)
+            sum(1 for x in active if x["priority"]<PRIORITIES["critical"])
+            >=self.policy.background_concurrency)
+        if background_at_limit:return None,"owner inference reserve",0
         local=[]
         for p in providers:
             if p.kind!="local":continue
@@ -248,10 +252,9 @@ class JobQueue:
             if row["model"] and row["model"]!=p.model:continue
             if not row["model"] and row["model_role"]!="auto" and not p.name.endswith("-"+row["model_role"]):continue
             local.append(p)
-        if local and not background_at_limit:return local[0],"local capacity available",0
+        if local:return local[0],"local capacity available",0
         if not row["allow_cloud"]:
-            return None,("owner inference reserve" if background_at_limit else
-                         "local capacity unavailable; cloud not permitted"),0
+            return None,"local capacity unavailable; cloud not permitted",0
         from .tier_router import classify_for_cloud
         if not classify_for_cloud(row['data_classification'],row['prompt']):return None,'data locality excludes cloud',0
         waited=max(0,time.time()-datetime.fromisoformat(row["created_at"]).timestamp())

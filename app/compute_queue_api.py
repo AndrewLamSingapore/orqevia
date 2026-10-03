@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 from .settings import SETTINGS
-from .compute_profile import validate_configuration, require_compute_capacity, generation_options, load_compute_profile
+from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
@@ -43,7 +43,7 @@ def candidate_global_concurrency(environment: dict[str, str], profile: dict | No
 POLICY = QueuePolicy.from_env()
 # Additional slots are candidates only, requiring explicit backend and hash-pinned
 # measured-profile support. It is never inferred merely from spare host CPU.
-_candidate_slots = candidate_global_concurrency(os.environ, load_compute_profile())
+_candidate_slots = candidate_global_concurrency(os.environ, runtime_compute_profile())
 POLICY = replace(POLICY, global_concurrency=_candidate_slots,
                  per_agent_concurrency=1,
                  background_concurrency=(_candidate_slots - 1 if _candidate_slots > 1 else 0))

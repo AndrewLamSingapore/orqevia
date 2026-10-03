@@ -150,3 +150,46 @@ def test_background_reserve_keeps_one_local_slot_for_arriving_owner(tmp_path):
     assert q.get(third["id"])["status"] == "queued"
     q.finish(first["id"], result="done")
     assert q.claim("w1", [backend])["id"] == third["id"]
+
+
+def test_background_reserve_counts_mixed_local_and_cloud_jobs(tmp_path):
+    policy = QueuePolicy(global_concurrency=3, per_agent_concurrency=1,
+                         background_concurrency=2, local_ram_mb=8192,
+                         local_vram_mb=4096, cloud_wait_seconds=0,
+                         max_job_cost_usd=2, daily_cost_ceiling_usd=3)
+    q = JobQueue(tmp_path / "mixed-owner-reserve.db", policy)
+    backend = Provider("ollama", "local", "fast", 8192, 4096, 3)
+    providers = [backend, CLOUD]
+    local = q.submit(agent="a01", prompt="local", priority="background")
+    cloud = q.submit(agent="a02", prompt="cloud", priority="background",
+                     model="large", vram_mb=8000, allow_cloud=True,
+                     data_classification="CLOUD_PERMITTED", max_cost_usd=1)
+    extra = q.submit(agent="a04", prompt="extra cloud", priority="background",
+                     model="large", vram_mb=8000, allow_cloud=True,
+                     data_classification="CLOUD_PERMITTED", max_cost_usd=1)
+    assert q.claim("w1", providers)["id"] == local["id"]
+    assert q.claim("w2", providers)["id"] == cloud["id"]
+    assert q.get(cloud["id"])["provider"] == "gpu-cloud"
+    assert q.claim("w3", providers) is None
+    assert q.get(extra["id"])["status"] == "queued"
+    owner = q.submit(agent="a26", prompt="owner", priority="critical")
+    assert q.claim("w3", providers)["id"] == owner["id"]
+    assert q.get(owner["id"])["provider"] == "ollama"
+    q.finish(cloud["id"], result="done")
+    assert q.claim("w2", providers)["id"] == extra["id"]
+
+
+def test_n1_baseline_has_no_background_reserve(tmp_path):
+    policy = QueuePolicy(global_concurrency=1, per_agent_concurrency=1,
+                         background_concurrency=0, local_ram_mb=8192,
+                         local_vram_mb=4096, cloud_wait_seconds=0,
+                         max_job_cost_usd=2, daily_cost_ceiling_usd=3)
+    q = JobQueue(tmp_path / "n1-reserve.db", policy)
+    background = q.submit(agent="a01", prompt="cloud", priority="background",
+                          model="large", vram_mb=8000, allow_cloud=True,
+                          data_classification="CLOUD_PERMITTED", max_cost_usd=1)
+    assert q.claim("w1", [LOCAL, CLOUD])["id"] == background["id"]
+    owner = q.submit(agent="a26", prompt="owner", priority="critical")
+    assert q.claim("w2", [LOCAL, CLOUD]) is None
+    q.finish(background["id"], result="done")
+    assert q.claim("w1", [LOCAL, CLOUD])["id"] == owner["id"]
