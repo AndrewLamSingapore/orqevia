@@ -8,7 +8,7 @@ Date: 2026-10-02 (SGT). Scope: isolated `prime-performance-20261002` worktree. T
 
 The same test module ran deterministic fake tool tasks at logical concurrency widths 2, 4, 8, and 21. A barrier held every task in flight simultaneously; the observed peak equaled the requested width each time. Every task returned a distinct, correctly attributed output shaped to that agent's declared output contract. The tasks made zero model requests and did not contact a service or production database.
 
-The ABEX `test-runs/lens-20260928-venv` Python ran `python -m pytest tests/test_agent_fabric_parallel.py -q`: **29 passed in 4.01s**. The generic `python` command was unavailable on this host, so this existing test virtual environment supplied pytest.
+At candidate tip `d5a544f` plus this focused test change, the ABEX `test-runs/lens-20260928-venv` Python ran `python -m pytest tests/test_agent_fabric_parallel.py -q`: **50 passed in 5.71s**. The new individual task test gave **21/21** registered identities an authorized handoff, a deterministic local fake execution, an attributed result matching the declared output shape, and started/completed action records tied to the same trace. All ledgers were created under pytest temporary directories. The generic `python` command was unavailable on this host, so this existing test virtual environment supplied pytest.
 
 The [benchmark JSON](PRIME_AGENT_FABRIC_BENCHMARK.json) records monotonic start/end intervals for every fake task. A 50 ms fixed-duration fake I/O job was run serially and through a thread pool at each width:
 
@@ -23,6 +23,6 @@ These are one local sample of sleeping fake jobs, not service throughput or mode
 
 ## Boundary
 
-This proves registry consistency, legal handoff paths, and overlapping independent Python fake tasks in this worktree. It does not establish that 21 model instances, workers, physical slots, queue entries, or agents are available concurrently in the deployed service. Registry records explicitly have `model: unassigned`, and their physical slot claim is `scheduler only`. The input/output contracts are registry declarations; the current dispatcher does not validate a live model answer against every output field. Live operational availability and end-to-end model performance remain unverified by this proof.
+This proves registry consistency, legal handoff paths, 21/21 individually attributable local fake send/execute/result cycles, and overlapping independent Python fake tasks in this worktree. It does not establish that 21 model instances, workers, physical slots, queue entries, or agents are available concurrently in the deployed service. Registry records explicitly have `model: unassigned`, and their physical slot claim is `scheduler only`. The input/output contracts are registry declarations; the current dispatcher does not validate a live model answer against every output field. Live operational availability and end-to-end model performance remain unverified by this proof.
 
 No production host or data changes were made.
