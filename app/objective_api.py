@@ -96,16 +96,29 @@ class ObjectiveRequest(AgentRequest):
     capabilities: list[str] = Field(default_factory=list,max_length=6)
 
 
-def dispatch_ready_capabilities(capabilities, run):
+READY_PRIORITY = {
+    'critical': 'P0',
+    'high': 'P1',
+    'normal': 'P2',
+    'low': 'P3',
+    'background': 'P3',
+}
+
+
+def dispatch_ready_capabilities(capabilities, run, *, priority='normal'):
     """Schedule independent objective dispatches without occupying inference slots.
 
     This is only the submission stage: model jobs remain governed by the
     compute queue, and a submitted contribution is not an accepted objective.
+    The per-request ready-work lane reflects the authenticated request priority;
+    it is not a global priority scheduler across objective requests.
     """
+    if priority not in READY_PRIORITY:
+        raise ValueError('invalid ready-work priority')
     if not capabilities:
         return []
     items = [WorkItem(f"dispatch-{index}", lambda capability=capability: run(capability),
-                      owner=True, priority="P0")
+                      owner=priority == 'critical', priority=READY_PRIORITY[priority])
              for index, capability in enumerate(capabilities)]
     outcomes = run_ready_work(items, max_parallel=min(3, len(items)))
     return [outcomes[item.id].value if outcomes[item.id].status == "completed" else
@@ -223,7 +236,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                 # No automatic retry: the authority/queue may already have accepted
                 # this step. Preserve an indeterminate result for reconciliation.
                 return {'capability':capability,'state':'indeterminate','reason':type(exc).__name__}
-        steps=dispatch_ready_capabilities(capabilities,run)
+        steps=dispatch_ready_capabilities(capabilities,run,priority=body.priority)
         db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
         db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id))
         db.commit()
@@ -359,7 +372,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
                 except HTTPException:return {'capability':capability,'state':'blocked','reason':'STEP_DISPATCH_FAILED'}
                 except Exception:return {'capability':capability,'state':'indeterminate','reason':'STEP_DISPATCH_FAILED'}
             capabilities=select_capabilities(body.objective)
-            steps=dispatch_ready_capabilities(capabilities,run)
+            steps=dispatch_ready_capabilities(capabilities,run,priority=body.priority)
         db.execute('UPDATE objective_turns SET state=?,steps_json=? WHERE task=? AND revision=?',('submitted',json.dumps(steps),task_id,revision))
         db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=?',(utcnow(),task_id,revision))
         db.commit()
