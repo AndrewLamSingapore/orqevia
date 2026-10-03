@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from functools import lru_cache
 from pathlib import Path
 
 from .agent_registry import agent_record, canonical_agent_id, registered_agent_ids
@@ -26,8 +25,9 @@ class SkillRegistryError(ValueError):
     pass
 
 
-@lru_cache(maxsize=1)
 def load_skill_registry() -> tuple[dict, str]:
+    # The registry is small. Read it for each selection so the returned digest
+    # always identifies the guidance actually loaded, even after a file update.
     try:
         raw = SKILL_REGISTRY_PATH.read_bytes()
         data = json.loads(raw)

@@ -31,6 +31,10 @@ class ContextCandidate:
     priority: int = 0
     invalidation_key: str | None = None
     invalidation_version: str | None = None
+    # Optional caller-declared claim identity for exact contradiction detection.
+    # These labels are untrusted metadata, not a semantic truth assessment.
+    claim_key: str | None = None
+    claim_value: str | None = None
     # A request receipt is not evidence that facts inside the request are fresh.
     # This mode carries the text as untrusted data with unknown source freshness.
     receipt_only: bool = False
@@ -75,7 +79,8 @@ def build_context_pack(
     tag_set = set(task_tags)
     known_agents = registered_agent_ids()
     versions = current_versions or {}
-    counts = {"out_of_scope": 0, "stale_or_unknown": 0, "invalidated": 0, "duplicate": 0, "budget": 0}
+    counts = {"out_of_scope": 0, "stale_or_unknown": 0, "invalidated": 0,
+              "conflict": 0, "duplicate": 0, "budget": 0}
     eligible: list[ContextCandidate] = []
     seen_ids: set[str] = set()
     for item in candidates:
@@ -89,6 +94,13 @@ def build_context_pack(
             raise ContextPackError("candidate priority must be an integer")
         if not isinstance(item.receipt_only, bool):
             raise ContextPackError("receipt_only must be a boolean")
+        if (item.claim_key is None) != (item.claim_value is None):
+            raise ContextPackError("claim key and value must be paired")
+        if item.claim_key is not None and (not isinstance(item.claim_key, str)
+                                           or not item.claim_key.strip()
+                                           or not isinstance(item.claim_value, str)
+                                           or not item.claim_value.strip()):
+            raise ContextPackError("claim key and value must be nonempty strings")
         if item.source_id in seen_ids:
             raise ContextPackError("duplicate source_id")
         seen_ids.add(item.source_id)
@@ -118,6 +130,17 @@ def build_context_pack(
             counts["invalidated"] += 1
             continue
         eligible.append(item)
+
+    # Never silently choose one of two explicitly contradictory observations.
+    # Comparison is exact and caller-labelled; semantic contradictions without
+    # shared claim_key remain outside this pure packing boundary.
+    values_by_claim: dict[str, set[str]] = {}
+    for item in eligible:
+        if item.claim_key is not None:
+            values_by_claim.setdefault(item.claim_key, set()).add(item.claim_value)
+    conflicting_keys = {key for key, values in values_by_claim.items() if len(values) > 1}
+    counts["conflict"] = sum(item.claim_key in conflicting_keys for item in eligible)
+    eligible = [item for item in eligible if item.claim_key not in conflicting_keys]
 
     # Dedupe exact bytes only. Different text must not be silently conflated.
     grouped: dict[tuple[str, bool], dict] = {}

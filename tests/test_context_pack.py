@@ -148,3 +148,30 @@ def test_receipt_and_observed_source_with_same_text_do_not_share_freshness():
     assert len(result["context"]) == 2
     assert {record["source_freshness"] for record in result["context"]} == {
         "UNKNOWN_RECEIPT_ONLY", "SOURCE_OBSERVED"}
+
+
+def test_explicit_conflicting_claims_are_excluded_without_losing_unrelated_context():
+    result = pack([
+        candidate("first", "N is one", claim_key="inference_slots", claim_value="1"),
+        candidate("second", "N is two", claim_key="inference_slots", claim_value="2"),
+        candidate("unrelated", "rollback retained"),
+    ])
+    assert [item["content"] for item in result["context"]] == ["rollback retained"]
+    assert result["omitted"]["conflict"] == 2
+
+
+def test_equal_explicit_claim_values_do_not_prevent_exact_content_dedupe():
+    result = pack([
+        candidate("first", "same", claim_key="inference_slots", claim_value="1"),
+        candidate("second", "same", claim_key="inference_slots", claim_value="1"),
+    ])
+    assert len(result["context"]) == 1
+    assert result["omitted"]["duplicate"] == 1
+    assert result["omitted"]["conflict"] == 0
+
+
+def test_unpaired_or_invalid_claim_metadata_fails_closed():
+    with pytest.raises(ContextPackError, match="must be paired"):
+        pack([candidate("first", "text", claim_key="slots")])
+    with pytest.raises(ContextPackError, match="nonempty strings"):
+        pack([candidate("first", "text", claim_key="slots", claim_value="")])

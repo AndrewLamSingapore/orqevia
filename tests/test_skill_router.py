@@ -37,13 +37,11 @@ def test_invalid_or_missing_registry_fails_closed(tmp_path):
     candidate = tmp_path / "skills.json"
     candidate.write_text("{invalid", encoding="utf-8")
     with patch("app.skill_router.SKILL_REGISTRY_PATH", candidate):
-        load_skill_registry.cache_clear()
         with pytest.raises(SkillRegistryError, match="unavailable"):
             select_skill_pack("a17", "planning", Tier.MINI)
         candidate.unlink()
         with pytest.raises(SkillRegistryError, match="unavailable"):
             select_skill_pack("a17", "planning", Tier.MINI)
-    load_skill_registry.cache_clear()
 
 
 @pytest.mark.parametrize("mutation,error", [
@@ -61,10 +59,21 @@ def test_malformed_registry_shape_and_dependency_cycle_fail_closed(tmp_path, mut
     candidate = tmp_path / "skills.json"
     candidate.write_text(json.dumps(mutation(original)), encoding="utf-8")
     with patch("app.skill_router.SKILL_REGISTRY_PATH", candidate):
-        load_skill_registry.cache_clear()
         with pytest.raises(SkillRegistryError, match=error):
             load_skill_registry()
-    load_skill_registry.cache_clear()
+
+
+def test_registry_digest_and_guidance_refresh_after_file_change(tmp_path):
+    registry = json.loads(SKILL_REGISTRY_PATH.read_text(encoding="utf-8"))
+    candidate = tmp_path / "skills.json"
+    candidate.write_text(json.dumps(registry), encoding="utf-8")
+    with patch("app.skill_router.SKILL_REGISTRY_PATH", candidate):
+        first = select_skill_pack("a17", "planning", Tier.MINI)
+        registry["skills"][0]["instruction"] = "Report source boundaries and uncertainty."
+        candidate.write_text(json.dumps(registry), encoding="utf-8")
+        second = select_skill_pack("a17", "planning", Tier.MINI)
+    assert second["registry_sha256"] != first["registry_sha256"]
+    assert second["guidance"][0] == "Report source boundaries and uncertainty."
 
 
 class SkillDispatchTests(HarnessApiTests):
