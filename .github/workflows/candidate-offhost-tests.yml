@@ -64,6 +64,7 @@ jobs:
             -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1' >/dev/null 2>&1
           cp "$RUNNER_TEMP/prime-ci-tls/server.crt" "$RUNNER_TEMP/prime-ci-tls/ca.crt"
           docker run -d --name prime-ci-tls --publish 127.0.0.1:18443:8443 \
+            --env PRIME_PWA_ORIGIN=https://127.0.0.1:18443 \
             --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.crt,target=/run/prime-tls/server.crt,readonly" \
             --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.key,target=/run/prime-tls/server.key,readonly" \
             --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/ca.crt,target=/run/prime-tls/ca.crt,readonly" \
