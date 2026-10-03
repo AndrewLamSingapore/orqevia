@@ -51,3 +51,9 @@ Lam states the task; Codex then works through it without routine approval prompt
 
 Do not merge risky work into the canonical branch automatically. Human confirmation is not required
 after every edit or test.
+
+## Gate Zero — Owner operating doctrine (3 October 2026)
+
+Default to useful execution with maximum functional capability and minimum process overhead. A `BLOCKER` requires concrete current evidence that it prevents the **specific requested operation**, or that continuing that operation creates material risk that cannot reasonably be contained or reversed. State its smallest affected scope. A failed probe is a failed probe, not automatic system failure; `UNKNOWN` is neither `FAIL` nor `BLOCKER`. Historical incidents are retained as evidence and monitored for recurrence, not made permanent global stops. Backlog, optional qualification, unavailable auxiliary peers and future optimizations are not operational blockers merely because they are unfinished.
+
+Continue independent work when one lane is blocked. Classify observations as `PASS`, `FAIL`, `MONITOR`, `DEFERRED`, `EXTERNAL`, `NOT APPLICABLE` or a justified localized `BLOCKER`. Test to learn or verify relevant behavior, not to satisfy invented gates. Do not disable probes, tools, agents, models, networking or other functioning capability to make a status clean. Preserve authentication, authorization, secrets, data integrity, recoverability and known-good production. Prefer the simplest reversible solution; request Owner intervention only for an actual physical, credential, financial, external-access or irreversible decision dependency. This doctrine governs classifications and execution priority; it does not turn an untested candidate into deployed or verified production.
