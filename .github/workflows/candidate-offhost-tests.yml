@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
@@ -39,3 +40,49 @@ jobs:
           node clients/pwa/revision-tests.mjs
           node clients/pwa/candidate-tests.mjs
           node clients/pwa/followup-tests.mjs
+
+  image-smoke:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build disposable candidate image
+        run: docker build --tag prime:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+      - name: Verify packaged runtime and PWA without production data
+        run: docker run --rm --entrypoint python prime:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
+      - name: Smoke isolated TLS startup and unauthenticated denial
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/prime-ci-tls"
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout "$RUNNER_TEMP/prime-ci-tls/server.key" \
+            -out "$RUNNER_TEMP/prime-ci-tls/server.crt" \
+            -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1' >/dev/null 2>&1
+          cp "$RUNNER_TEMP/prime-ci-tls/server.crt" "$RUNNER_TEMP/prime-ci-tls/ca.crt"
+          docker run -d --name prime-ci-tls --publish 127.0.0.1:18443:8443 \
+            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.crt,target=/run/prime-tls/server.crt,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.key,target=/run/prime-tls/server.key,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/ca.crt,target=/run/prime-tls/ca.crt,readonly" \
+            prime:candidate uvicorn app.interface_server:app --host 0.0.0.0 --port 8443 \
+              --no-proxy-headers --ssl-keyfile /run/prime-tls/server.key \
+              --ssl-certfile /run/prime-tls/server.crt
+          trap 'docker rm -f prime-ci-tls >/dev/null 2>&1 || true' EXIT
+          docker exec prime-ci-tls sh -c 'test ! -e /run/prime-tls/ca.key'
+          ready=false
+          for attempt in {1..20}; do
+            if curl -fsS --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
+                https://127.0.0.1:18443/pwa/ -o /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = true
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
+            https://127.0.0.1:18443/interface/v1/health)
+          test "$status" = 401

@@ -135,7 +135,24 @@ services:
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
     volumes:
       - prime-data:/data
-      - "${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}:/run/prime-tls:ro"
+      - type: bind
+        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.crt
+        target: /run/prime-tls/server.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.key
+        target: /run/prime-tls/server.key
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
+        target: /run/prime-tls/ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
       - "${PRIME_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/JARVIS-ABEX-HTTPS.mobileconfig:ro"
     depends_on:
       prime:

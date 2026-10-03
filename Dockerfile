@@ -4,6 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
+RUN mkdir -p /run/prime-tls
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
