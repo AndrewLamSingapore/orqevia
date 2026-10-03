@@ -1,3 +1,4 @@
+import re
 import unittest
 from pathlib import Path
 
@@ -108,6 +109,18 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         for asset in ("index.html", "recovery.js", "release.mjs", "app.mjs", "sw.js"):
             self.assertIn(f"clients/pwa/{asset}", dockerfile)
+
+    def test_pwa_static_imports_are_packaged_and_available_offline(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        service_worker = (ROOT / "clients/pwa/sw.js").read_text(encoding="utf-8")
+        for module in (ROOT / "clients/pwa").glob("*.mjs"):
+            source = module.read_text(encoding="utf-8")
+            imports = re.findall(r"\bfrom\s+['\"]\./([^'\"]+)['\"]", source)
+            for imported in imports:
+                with self.subTest(module=module.name, imported=imported):
+                    self.assertTrue((module.parent / imported).is_file())
+                    self.assertIn(f"clients/pwa/{imported}", dockerfile)
+                    self.assertIn(f"'/pwa/{imported}'", service_worker)
 
 
 if __name__ == "__main__":
