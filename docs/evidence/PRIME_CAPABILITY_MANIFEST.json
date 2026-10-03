@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "source_inspected_branch_candidate",
+  "sources": {
+    "agent_registry": {
+      "path": "config/agent_registry.json",
+      "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+    },
+    "skill_registry": {
+      "path": "config/prime_skill_registry.json",
+      "sha256": "b3eece2e44a3b85354500b43a1453e1b359e3b9a6d2d92eba7abcfc9c59adf8a"
+    }
+  },
+  "limitation": "Branch configuration and routing projection, not live agent skill competence, production deployment, tool execution, or authority proof.",
+  "production_status": "NOT_DEPLOYED_GOLDEN_GEN2_UNCHANGED",
+  "capabilities": [
+    {
+      "id": "agent_registry",
+      "source": "config/agent_registry.json",
+      "state": "DECLARED_21_IDENTITIES"
+    },
+    {
+      "id": "advisory_skill_registry",
+      "source": "config/prime_skill_registry.json",
+      "state": "BRANCH_CANDIDATE"
+    },
+    {
+      "id": "advisory_skill_router",
+      "source": "app/skill_router.py",
+      "state": "BRANCH_TESTED_NOT_PRODUCTION_VERIFIED"
+    },
+    {
+      "id": "dispatch_prompt_integration",
+      "source": "app/agent_dispatch_api.py",
+      "state": "OPT_IN_BRANCH_TESTED_NOT_LIVE_21_AGENT_PROOF"
+    },
+    {
+      "id": "tool_authority",
+      "source": "app/spine.py",
+      "state": "SEPARATE_FROM_SKILLS_NO_NEW_GRANTS"
+    }
+  ],
+  "open_proofs": [
+    "live per-agent task completion and result quality",
+    "tool availability and execution per eligible role",
+    "safe production trial and host stability qualification"
+  ]
+}

@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from scripts.export_agent_capability_evidence import SOURCE, build_documents
+from scripts.export_agent_capability_evidence import SKILL_SOURCE, SOURCE, build_documents
 
 
 def test_agent_capability_projection_is_complete_and_explicitly_unverified():
@@ -29,6 +29,11 @@ def test_agent_capability_projection_is_complete_and_explicitly_unverified():
     assert all(not agent["runtime_activation_verified"] for agent in matrix["agents"])
     assert len([edge for edge in graph["edges"] if edge["kind"] == "owns_declared"]) == 29
     assert len([edge for edge in graph["edges"] if edge["kind"] == "reports_to_declared"]) == 21
+    assert graph["skill_source"]["sha256"] == hashlib.sha256(SKILL_SOURCE.read_bytes()).hexdigest()
+    assert len([node for node in graph["nodes"] if node["kind"] == "candidate_skill"]) == 3
+    assert len([edge for edge in graph["edges"] if edge["kind"] == "candidate_skill_route_not_competence_proof"]) == 63
+    assert graph["runtime_edges_verified"] is False
+    assert not any(edge["kind"] == "skill_grants_tool" for edge in graph["edges"])
     assert len(profiles["profiles"]) == 21
     assert all(not profile["runtime_context_handling_verified"] for profile in profiles["profiles"])
     assert all("data_classification" in profile["required_input_fields"] for profile in profiles["profiles"])

@@ -1,0 +1,377 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "branch_candidate_projection",
+  "sources": {
+    "agent_registry": {
+      "path": "config/agent_registry.json",
+      "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+    },
+    "skill_registry": {
+      "path": "config/prime_skill_registry.json",
+      "sha256": "b3eece2e44a3b85354500b43a1453e1b359e3b9a6d2d92eba7abcfc9c59adf8a"
+    }
+  },
+  "limitation": "Branch configuration and routing projection, not live agent skill competence, production deployment, tool execution, or authority proof.",
+  "agents": [
+    {
+      "agent_id": "a01",
+      "role": "Strategic reasoning owner",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a02",
+      "role": "Objective-to-task decomposition; Milestone and dependency planning",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a04",
+      "role": "Option evaluation; Structured comparison",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a05",
+      "role": "Portfolio prioritization; Resource optimization",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a06",
+      "role": "Research direction",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a07",
+      "role": "Evidence discovery",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a09",
+      "role": "Knowledge organization",
+      "declared_tools": [
+        "action.propose",
+        "artifact.create",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a10",
+      "role": "Data and analytics coordination",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a12",
+      "role": "KPI definition; Descriptive/diagnostic analysis",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a13",
+      "role": "Forecasting",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a14",
+      "role": "Data quality checks",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a15",
+      "role": "Technical execution ownership",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a16",
+      "role": "System architecture design",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a17",
+      "role": "Design-to-code conversion",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read",
+        "sandbox.wasm.execute"
+      ],
+      "declared_authority": "restricted",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a18",
+      "role": "Functional testing; Compliance verification",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read",
+        "sandbox.wasm.execute"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a19",
+      "role": "Operational resilience evaluation",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a20",
+      "role": "Economic analysis ownership; Market and pricing analysis",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a21",
+      "role": "Cost analysis; Value/ROI evaluation",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a26",
+      "role": "Quality governance ownership; Independent review",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a28",
+      "role": "Risk identification",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "advisory",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    },
+    {
+      "agent_id": "a29",
+      "role": "Release readiness gate",
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_authority": "restricted",
+      "candidate_shared_skills": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "route_test_scope": "shared registry selection only; no live per-agent execution proof",
+      "runtime_skill_competence": "UNVERIFIED",
+      "production_skill_availability": "NOT_DEPLOYED"
+    }
+  ]
+}

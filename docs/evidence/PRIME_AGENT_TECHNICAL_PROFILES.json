@@ -1,0 +1,574 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "declared_and_branch_candidate",
+  "sources": {
+    "agent_registry": {
+      "path": "config/agent_registry.json",
+      "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+    },
+    "skill_registry": {
+      "path": "config/prime_skill_registry.json",
+      "sha256": "b3eece2e44a3b85354500b43a1453e1b359e3b9a6d2d92eba7abcfc9c59adf8a"
+    }
+  },
+  "limitation": "Branch configuration and routing projection, not live agent skill competence, production deployment, tool execution, or authority proof.",
+  "profiles": [
+    {
+      "agent_id": "a01",
+      "name": "Strategy Lead",
+      "role": "Strategic reasoning owner",
+      "responsibilities": [
+        "responsibility.a01"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a02",
+      "name": "Planning and Roadmap Agent",
+      "role": "Objective-to-task decomposition; Milestone and dependency planning",
+      "responsibilities": [
+        "responsibility.a02",
+        "responsibility.a03"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a04",
+      "name": "Decision and Comparison Agent",
+      "role": "Option evaluation; Structured comparison",
+      "responsibilities": [
+        "responsibility.a04",
+        "responsibility.a08"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a05",
+      "name": "Portfolio and Capacity Agent",
+      "role": "Portfolio prioritization; Resource optimization",
+      "responsibilities": [
+        "responsibility.a05",
+        "responsibility.a23"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a06",
+      "name": "Research Lead",
+      "role": "Research direction",
+      "responsibilities": [
+        "responsibility.a06"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a07",
+      "name": "Evidence Agent",
+      "role": "Evidence discovery",
+      "responsibilities": [
+        "responsibility.a07"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a09",
+      "name": "Knowledge Agent",
+      "role": "Knowledge organization",
+      "responsibilities": [
+        "responsibility.a09"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "artifact.create",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a10",
+      "name": "Data Lead",
+      "role": "Data and analytics coordination",
+      "responsibilities": [
+        "responsibility.a10"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a12",
+      "name": "Metrics and Analysis Agent",
+      "role": "KPI definition; Descriptive/diagnostic analysis",
+      "responsibilities": [
+        "responsibility.a11",
+        "responsibility.a12"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a13",
+      "name": "Forecast Agent",
+      "role": "Forecasting",
+      "responsibilities": [
+        "responsibility.a13"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a14",
+      "name": "Data Quality Agent",
+      "role": "Data quality checks",
+      "responsibilities": [
+        "responsibility.a14"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a15",
+      "name": "Engineering Lead",
+      "role": "Technical execution ownership",
+      "responsibilities": [
+        "responsibility.a15"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a16",
+      "name": "Architecture Agent",
+      "role": "System architecture design",
+      "responsibilities": [
+        "responsibility.a16"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a17",
+      "name": "Implementation Agent",
+      "role": "Design-to-code conversion",
+      "responsibilities": [
+        "responsibility.a17"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read",
+        "sandbox.wasm.execute"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "restricted",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a18",
+      "name": "Test and Verification Agent",
+      "role": "Functional testing; Compliance verification",
+      "responsibilities": [
+        "responsibility.a18",
+        "responsibility.a27"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read",
+        "sandbox.wasm.execute"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a19",
+      "name": "Reliability Agent",
+      "role": "Operational resilience evaluation",
+      "responsibilities": [
+        "responsibility.a19"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a20",
+      "name": "Commercial and Economic Lead",
+      "role": "Economic analysis ownership; Market and pricing analysis",
+      "responsibilities": [
+        "responsibility.a20",
+        "responsibility.a24"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a21",
+      "name": "Cost and Value Agent",
+      "role": "Cost analysis; Value/ROI evaluation",
+      "responsibilities": [
+        "responsibility.a21",
+        "responsibility.a22"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a26",
+      "name": "Independent Quality Lead",
+      "role": "Quality governance ownership; Independent review",
+      "responsibilities": [
+        "responsibility.a25",
+        "responsibility.a26"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a28",
+      "name": "Risk Agent",
+      "role": "Risk identification",
+      "responsibilities": [
+        "responsibility.a28"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "advisory",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    },
+    {
+      "agent_id": "a29",
+      "name": "Release Agent",
+      "role": "Release readiness gate",
+      "responsibilities": [
+        "responsibility.a29"
+      ],
+      "declared_tools": [
+        "action.propose",
+        "provided_context.read"
+      ],
+      "declared_model_tiers": [
+        "FLAGSHIP",
+        "MINI",
+        "NANO"
+      ],
+      "model_assignment": "unassigned",
+      "authority": "restricted",
+      "candidate_skill_ids": [
+        "core.evidence-boundary",
+        "core.failure-diagnosis",
+        "core.verification-discipline"
+      ],
+      "candidate_tool_grants": [],
+      "live_execution_evidence": "UNVERIFIED"
+    }
+  ]
+}

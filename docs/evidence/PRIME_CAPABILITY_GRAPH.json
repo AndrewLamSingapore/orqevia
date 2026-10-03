@@ -6,6 +6,10 @@
     "sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff",
     "registry_version": "1.0.0"
   },
+  "skill_source": {
+    "path": "config/prime_skill_registry.json",
+    "sha256": "b3eece2e44a3b85354500b43a1453e1b359e3b9a6d2d92eba7abcfc9c59adf8a"
+  },
   "limitation": "Registry declarations only. No live dispatch, model assignment, tool execution, runtime reachability, or production concurrency is proven by these files.",
   "nodes": [
     {
@@ -261,9 +265,478 @@
       "id": "responsibility.a29",
       "kind": "responsibility",
       "description": "Release readiness gate"
+    },
+    {
+      "id": "core.evidence-boundary",
+      "kind": "candidate_skill",
+      "name": "Evidence boundary"
+    },
+    {
+      "id": "core.failure-diagnosis",
+      "kind": "candidate_skill",
+      "name": "Bounded failure diagnosis"
+    },
+    {
+      "id": "core.verification-discipline",
+      "kind": "candidate_skill",
+      "name": "Verification discipline"
+    },
+    {
+      "id": "tool:action.propose",
+      "kind": "declared_tool_eligibility"
+    },
+    {
+      "id": "tool:artifact.create",
+      "kind": "declared_tool_eligibility"
+    },
+    {
+      "id": "tool:provided_context.read",
+      "kind": "declared_tool_eligibility"
+    },
+    {
+      "id": "tool:sandbox.wasm.execute",
+      "kind": "declared_tool_eligibility"
+    },
+    {
+      "id": "authority:advisory",
+      "kind": "declared_authority"
+    },
+    {
+      "id": "authority:restricted",
+      "kind": "declared_authority"
     }
   ],
   "edges": [
+    {
+      "from": "a01",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a02",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a04",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a05",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a06",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a07",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a09",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a10",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a12",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a13",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a14",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a15",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a16",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a17",
+      "to": "authority:restricted",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a18",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a19",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a20",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a21",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a26",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a28",
+      "to": "authority:advisory",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "a29",
+      "to": "authority:restricted",
+      "kind": "authority_declared"
+    },
+    {
+      "from": "core.failure-diagnosis",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_depends_on"
+    },
+    {
+      "from": "core.verification-discipline",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_depends_on"
+    },
+    {
+      "from": "a01",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a01",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a01",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a02",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a02",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a02",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a04",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a04",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a04",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a05",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a05",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a05",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a06",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a06",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a06",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a07",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a07",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a07",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a09",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a09",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a09",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a10",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a10",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a10",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a12",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a12",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a12",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a13",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a13",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a13",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a14",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a14",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a14",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a15",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a15",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a15",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a16",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a16",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a16",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a17",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a17",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a17",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a18",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a18",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a18",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a19",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a19",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a19",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a20",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a20",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a20",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a21",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a21",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a21",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a26",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a26",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a26",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a28",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a28",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a28",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a29",
+      "to": "core.evidence-boundary",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a29",
+      "to": "core.failure-diagnosis",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
+    {
+      "from": "a29",
+      "to": "core.verification-discipline",
+      "kind": "candidate_skill_route_not_competence_proof"
+    },
     {
       "from": "a01",
       "to": "a02",
@@ -588,6 +1061,231 @@
       "from": "a29",
       "to": "a26",
       "kind": "reports_to_declared"
+    },
+    {
+      "from": "a01",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a01",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a02",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a02",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a04",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a04",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a05",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a05",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a06",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a06",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a07",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a07",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a09",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a09",
+      "to": "tool:artifact.create",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a09",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a10",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a10",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a12",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a12",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a13",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a13",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a14",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a14",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a15",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a15",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a16",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a16",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a17",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a17",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a17",
+      "to": "tool:sandbox.wasm.execute",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a18",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a18",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a18",
+      "to": "tool:sandbox.wasm.execute",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a19",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a19",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a20",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a20",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a21",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a21",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a26",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a26",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a28",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a28",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a29",
+      "to": "tool:action.propose",
+      "kind": "tool_eligible_declared_not_runtime_proven"
+    },
+    {
+      "from": "a29",
+      "to": "tool:provided_context.read",
+      "kind": "tool_eligible_declared_not_runtime_proven"
     }
   ],
   "runtime_edges_verified": false

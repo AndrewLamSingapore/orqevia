@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "config" / "agent_registry.json"
+SKILL_SOURCE = ROOT / "config" / "prime_skill_registry.json"
 DESTINATION = ROOT / "docs" / "evidence"
 
 
@@ -18,8 +19,16 @@ def _document(payload: dict) -> bytes:
     return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
 
-def build_documents(source: bytes) -> dict[str, bytes]:
+def build_documents(source: bytes, skill_source: bytes | None = None) -> dict[str, bytes]:
     registry = json.loads(source)
+    skill_raw = SKILL_SOURCE.read_bytes() if skill_source is None else skill_source
+    skill_registry = json.loads(skill_raw)
+    if skill_registry.get("schema_version") != "1.0":
+        raise ValueError("unsupported skill registry")
+    skills = skill_registry.get("skills", [])
+    skill_ids = {item["skill_id"] for item in skills}
+    if len(skill_ids) != len(skills):
+        raise ValueError("duplicate skill ID")
     agents = sorted(registry["agents"], key=lambda agent: agent["agent_id"])
     responsibility_coverage = sorted(
         registry["responsibility_coverage"], key=lambda item: item["responsibility_id"]
@@ -80,6 +89,12 @@ def build_documents(source: bytes) -> dict[str, bytes]:
         {"id": item["responsibility_id"], "kind": "responsibility", "description": item["description"]}
         for item in responsibility_coverage
     ]
+    nodes += [{"id": item["skill_id"], "kind": "candidate_skill", "name": item["name"]}
+              for item in skills]
+    tool_ids = sorted({tool for agent in agents for tool in agent["tool_eligibility"]})
+    nodes += [{"id": "tool:" + tool, "kind": "declared_tool_eligibility"} for tool in tool_ids]
+    nodes += [{"id": "authority:" + authority, "kind": "declared_authority"}
+              for authority in sorted({a["authority"] for a in agents})]
     edges = []
     for a in agents:
         parent = lead_ids.get(a["reports_to"], a["reports_to"])
@@ -92,10 +107,33 @@ def build_documents(source: bytes) -> dict[str, bytes]:
             edges.append({"from": a["agent_id"], "to": child, "kind": "may_delegate_declared"})
     for item in responsibility_coverage:
         edges.append({"from": item["owner"], "to": item["responsibility_id"], "kind": "owns_declared"})
+    for agent in agents:
+        for tool in agent["tool_eligibility"]:
+            edges.append({"from": agent["agent_id"], "to": "tool:" + tool,
+                          "kind": "tool_eligible_declared_not_runtime_proven"})
+        edges.append({"from": agent["agent_id"], "to": "authority:" + agent["authority"],
+                      "kind": "authority_declared"})
+    for skill in skills:
+        if skill["applicable_agents"] == "all_registered_agents":
+            for actor in sorted(identities):
+                edges.append({"from": actor, "to": skill["skill_id"],
+                              "kind": "candidate_skill_route_not_competence_proof"})
+        for dependency in skill["dependencies"]:
+            if dependency not in skill_ids:
+                raise ValueError("unknown skill dependency")
+            edges.append({"from": skill["skill_id"], "to": dependency,
+                          "kind": "candidate_skill_depends_on"})
+        for tool in skill["required_tools"]:
+            if tool not in tool_ids:
+                raise ValueError("unknown skill tool")
+            edges.append({"from": skill["skill_id"], "to": "tool:" + tool,
+                          "kind": "skill_requires_declared_tool"})
     graph = {
         "schema_version": "1.0",
         "evidence_kind": "configuration_projection",
         "source": source_ref,
+        "skill_source": {"path": "config/prime_skill_registry.json",
+                         "sha256": hashlib.sha256(skill_raw).hexdigest()},
         "limitation": limitation,
         "nodes": nodes,
         "edges": sorted(edges, key=lambda e: (e["kind"], e["from"], e["to"])),
@@ -141,7 +179,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="fail if checked-in projections differ")
     args = parser.parse_args()
-    documents = build_documents(SOURCE.read_bytes())
+    documents = build_documents(SOURCE.read_bytes(), SKILL_SOURCE.read_bytes())
     if args.check:
         stale = [name for name, body in documents.items() if not (DESTINATION / name).exists() or (DESTINATION / name).read_bytes() != body]
         if stale:
