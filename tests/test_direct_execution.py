@@ -112,7 +112,7 @@ def test_secrets_redacted(tmp_path):
 def test_direct_sandbox_and_containment(api,monkeypatch):
     client,_=api
     import app.engineering_api as engineering
-    monkeypatch.setattr(engineering,'require_compute_capacity',lambda *a:None)
+    monkeypatch.setattr(engineering,'require_bounded_work_capacity',lambda:None)
     headers={'Authorization':'Bearer isolated-test-owner'}
     for role in ('A12 Builder','A13 Test Engineer'):
         result=client.post('/api/agents/engineering/wasm',headers=headers,json={

@@ -81,6 +81,19 @@ def require_compute_capacity(model):
     if not profile:return
     if model not in profile['models']:
         raise PermissionError('Model is outside measured Compute Profile')
+    try:require_bounded_work_capacity()
+    except PermissionError:
+        raise PermissionError('Measured Compute Profile memory reserve reached; local inference held') from None
+
+
+def require_bounded_work_capacity():
+    """Admit bounded local work by RAM reserve, independent of model slots.
+
+    The WebAssembly executor has its own fuel, memory, and concurrency limits;
+    a measured model's presence is irrelevant to that non-inference work.
+    """
+    profile=runtime_compute_profile()
+    if not profile:return
     import psutil
     if psutil.virtual_memory().available < profile['minimum_available_mib']*1048576:
-        raise PermissionError('Measured Compute Profile memory reserve reached; local inference held')
+        raise PermissionError('Measured Compute Profile memory reserve reached; bounded work held')

@@ -65,3 +65,14 @@ def test_low_memory_holds_inference_without_authority_change(measured,monkeypatc
     with pytest.raises(PermissionError,match='reserve'):cp.require_compute_capacity('gemma3:1b')
     monkeypatch.setattr(psutil,'virtual_memory',lambda:SimpleNamespace(available=8192*1048576))
     cp.require_compute_capacity('gemma3:1b')
+
+
+def test_bounded_work_respects_memory_reserve_without_model_requirement(measured,monkeypatch):
+    import psutil
+    monkeypatch.setattr(psutil,'virtual_memory',lambda:SimpleNamespace(available=8192*1048576))
+    cp.require_bounded_work_capacity()
+    with pytest.raises(PermissionError,match='Model'):
+        cp.require_compute_capacity('unmeasured-model')
+    monkeypatch.setattr(psutil,'virtual_memory',lambda:SimpleNamespace(available=8192*1048576-1))
+    with pytest.raises(PermissionError,match='reserve'):
+        cp.require_bounded_work_capacity()

@@ -8,8 +8,7 @@ from pydantic import BaseModel,Field
 from .client_auth import authenticate_owner
 from .connector_sdk import ConnectorRegistry,Sink
 from .wasm_sandbox import WasmSandbox
-from .compute_profile import require_compute_capacity
-from .settings import SETTINGS
+from .compute_profile import require_bounded_work_capacity
 
 router=APIRouter(prefix='/api/agents/engineering',tags=['bounded-engineering'])
 slots=threading.BoundedSemaphore(2)
@@ -27,7 +26,8 @@ def execute(body: WasmRequest,authorization: str | None=Header(None)):
     authenticate_owner(authorization)
     if not slots.acquire(blocking=False):raise HTTPException(429,'Bounded engineering capacity is occupied')
     try:
-        require_compute_capacity(SETTINGS.fast_model)
+        try:require_bounded_work_capacity()
+        except PermissionError:raise HTTPException(503,'Bounded engineering memory reserve reached') from None
         return _execute(body,authorization)
     finally:slots.release()
 
