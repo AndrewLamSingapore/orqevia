@@ -149,6 +149,28 @@ def test_shared_scheduler_orders_owner_across_requests_after_capacity_release():
     assert order == ["owner", "low"]
 
 
+def test_shared_scheduler_owner_precedes_earlier_ordinary_p0():
+    started = Event()
+    release = Event()
+    order = []
+
+    def occupied():
+        started.set()
+        assert release.wait(2)
+
+    with ReadyWorkScheduler(max_parallel=1) as scheduler:
+        running = scheduler.submit(WorkItem("running", occupied, priority="P2"))
+        assert started.wait(2)
+        ordinary = scheduler.submit(WorkItem("ordinary-p0", lambda: order.append("ordinary"), priority="P0"))
+        owner = scheduler.submit(WorkItem("owner-p0", lambda: order.append("owner"), owner=True, priority="P0"))
+        release.set()
+        running.result(2)
+        owner.result(2)
+        ordinary.result(2)
+
+    assert order == ["owner", "ordinary"]
+
+
 def test_shared_scheduler_releases_capacity_after_failure_and_isolates_write_resource():
     started = Event()
     release = Event()

@@ -133,11 +133,11 @@ class ReadyWorkScheduler:
             self._pending = [entry for entry in self._pending if entry[3] is not result]
             self._condition.notify_all()
 
-    def _rank(self, sequence: int, queued_dispatches: int, item: WorkItem) -> tuple[int, int]:
+    def _rank(self, sequence: int, queued_dispatches: int, item: WorkItem) -> tuple[int, int, int]:
         if item.owner or item.priority == "P0":
-            return (0, sequence)
+            return (0, 0 if item.owner else 1, sequence)
         age = max(0, self._dispatches - queued_dispatches) // 4
-        return (max(1, int(item.priority[1]) - age), sequence)
+        return (max(1, int(item.priority[1]) - age), 1, sequence)
 
     def _dispatch(self) -> None:
         while True:
