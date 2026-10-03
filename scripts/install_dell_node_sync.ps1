@@ -38,7 +38,7 @@ if ($RegisterTask) {
         -RepetitionInterval (New-TimeSpan -Minutes 30) `
         -RepetitionDuration (New-TimeSpan -Days 3650) -ErrorAction Stop
     $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 10) -ErrorAction Stop
-    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($logon, $periodic) -Settings $settings -Description 'Bounded validated Dell-to-GitHub synchronization under PRIME SSOT authority' -Force -ErrorAction Stop | Out-Null
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($logon, $periodic) -Settings $settings -Description 'Bounded validated Dell-to-GitHub synchronization; STATUS.md owns current status' -Force -ErrorAction Stop | Out-Null
 }
 
 [pscustomobject]@{

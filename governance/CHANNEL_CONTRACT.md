@@ -4,7 +4,8 @@ Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/main/gove
 
 Lam's 15 September 2026 instruction establishes one current architecture and
 operational record for ChatGPT, Codex, Sol, Astra, ABEX, Dell and all seven repositories.
-This contract is subordinate to the operational manifest; it is not another SSOT.
+This contract is subordinate to STATUS.md for status and to the operational
+manifest for component references; it is not another status authority.
 
 1. Resolve PRIME `main` once and pin that commit for the whole read. Read the
    operational manifest, its product manifest and architecture references at

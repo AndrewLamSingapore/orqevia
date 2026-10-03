@@ -1,6 +1,6 @@
 # STATUS.md — Single source of truth
 
-Last updated: 27 September 2026
+Last updated: 3 October 2026
 
 **This file replaces and supersedes every previous SSOT document — technical, course-study, and job-search alike.** Any older SSOT file (on ABEX, in a repo, or elsewhere) is now historical only. Do not treat any prior SSOT document as current once this file exists. Archive or delete the old ones once this file is confirmed good — do not maintain both in parallel.
 
@@ -33,6 +33,12 @@ If you are an AI agent updating this file:
 - Commit and push every legitimate update.
 
 ---
+
+## Status authority — 3 October 2026
+
+### Claimed, not independently checked
+
+- **PRIME active status pointer retired.** Agent-reported, not personally spot-checked by Lam. PRIME PR #149 merged as `e7705936ba01848a596651a3cbec19dfc739062f`: root `SSOT.json` and its checker were deleted, `STATUS.md` remains the sole current status authority, and the replacement authority check and canonical CI passed on the exact PR head. The operational manifest remains a component and observation reference, not a second status authority. This source/governance cleanup made no ABEX production deployment or host-stability claim. Earlier dated references to `SSOT.json` below are historical records of the 22–23 September arrangement, not current instructions.
 
 ## Portfolio current observation — 27 September 2026
 

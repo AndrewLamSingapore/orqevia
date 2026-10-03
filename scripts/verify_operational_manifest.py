@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate PRIME's operational SSOT and, optionally, its live boundaries."""
+"""Validate PRIME's operational component reference and optional live boundaries."""
 from __future__ import annotations
 
 import argparse
@@ -278,7 +278,7 @@ def assess_static(
 
 
 def http_json(url: str, *, token: str | None = None, timeout: int = 15) -> dict[str, Any]:
-    headers = {"Accept": "application/json", "User-Agent": "prime-operational-ssot/4.0"}
+    headers = {"Accept": "application/json", "User-Agent": "prime-operational-reference/4.0"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
         headers["X-GitHub-Api-Version"] = "2022-11-28"
@@ -293,7 +293,7 @@ def http_json(url: str, *, token: str | None = None, timeout: int = 15) -> dict[
 
 
 def http_bytes(url: str, *, token: str | None = None, timeout: int = 15) -> bytes:
-    headers = {"Accept": "*/*", "User-Agent": "prime-operational-ssot/4.2"}
+    headers = {"Accept": "*/*", "User-Agent": "prime-operational-reference/4.2"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
         headers["X-GitHub-Api-Version"] = "2022-11-28"
