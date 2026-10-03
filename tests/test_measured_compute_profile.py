@@ -37,6 +37,21 @@ def test_missing_optional_profile_keeps_runtime_available_at_baseline(measured):
     assert cp.runtime_compute_profile() is None
 
 
+@pytest.mark.parametrize('missing', ['context_tokens','output_limit','models'])
+def test_hash_pinned_incomplete_profile_falls_back_to_baseline(measured,monkeypatch,missing):
+    profile=json.loads(measured.read_text())
+    del profile[missing]
+    raw=json.dumps(profile).encode()
+    measured.write_bytes(raw)
+    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
+    cp.load_compute_profile.cache_clear()
+    cp.runtime_compute_profile.cache_clear()
+    assert cp.runtime_compute_profile() is None
+    settings=SimpleNamespace(multi_specialist_workers=1,context_tokens=8192,
+                             max_output_tokens=512,required_models=['gemma3:1b'])
+    cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))
+
+
 def test_profile_cannot_expand_scheduler_or_models(measured):
     settings=SimpleNamespace(multi_specialist_workers=1,context_tokens=8192,max_output_tokens=512,required_models=['gemma3:1b'])
     cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))

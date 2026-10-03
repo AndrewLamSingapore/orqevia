@@ -72,3 +72,16 @@ Python/55 PWA pass forward as verification of these new edits. No image build
 or production mutation was performed. Objective capability submission still
 labels every per-request task Owner/P0, so this source is not evidence of a
 global 21-agent Owner-priority scheduler.
+
+## Static-only follow-up while SSD thermal qualification is partial
+
+Static review found that a SHA-pinned optional Compute Profile with valid
+`schema`, `normal_concurrency`, and `minimum_available_mib` but missing
+`context_tokens`, `output_limit`, or `models` could pass the loader and then
+raise during module-level configuration validation. The isolated candidate now
+validates the complete required shape before accepting a profile, with a
+focused regression test for each missing field. `git diff --check` passed.
+These edits and the earlier thermal-hold edits are **UNTESTED**; no Python or
+PWA tests, image build, production change, or reboot was run during this
+thermal hold. The prior 1,072 Python and 55 PWA passes apply only to the
+earlier tested source checkpoint, not to the current branch tip.

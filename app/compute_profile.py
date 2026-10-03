@@ -13,10 +13,23 @@ def load_compute_profile():
     if not expected or hashlib.sha256(raw).hexdigest()!=expected:
         raise RuntimeError('Measured Compute Profile integrity mismatch')
     profile=json.loads(raw)
-    if profile.get('schema')!='abex.measured-compute.v1':
+    if not isinstance(profile,dict) or profile.get('schema')!='abex.measured-compute.v1':
         raise RuntimeError('Unsupported measured Compute Profile schema')
-    if profile['normal_concurrency']<1 or profile['minimum_available_mib']<1:
+    bounds=('normal_concurrency','minimum_available_mib','context_tokens','output_limit')
+    if any(type(profile.get(key)) is not int or profile[key]<1 for key in bounds):
         raise RuntimeError('Invalid measured Compute Profile bounds')
+    models=profile.get('models')
+    if (not isinstance(models,dict) or not models or
+            any(not isinstance(name,str) or not name or not isinstance(details,dict)
+                for name,details in models.items())):
+        raise RuntimeError('Invalid measured Compute Profile models')
+    if not isinstance(profile.get('generation_options',{}),dict):
+        raise RuntimeError('Invalid measured Compute Profile generation options')
+    if profile.get('runtime_version'):
+        if (not isinstance(profile['runtime_version'],str) or
+                any(not isinstance(details.get('digest'),str) or not details['digest']
+                    for details in models.values())):
+            raise RuntimeError('Invalid measured Compute Profile runtime identity')
     return profile
 
 
