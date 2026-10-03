@@ -1,5 +1,4 @@
 """Bounded logical orchestration over the single shared inference scheduler."""
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -17,6 +16,7 @@ from .agent_registry import RegistryError, agent_record, canonical_agent_id, res
 from .agent_runtime import DOMAIN_CHILDREN
 from . import compute_queue_api
 from .client_auth import authenticate_owner
+from .ready_work import WorkItem, run_ready_work
 
 router=APIRouter(prefix='/api/agents/objectives',tags=['governed-objectives'])
 
@@ -94,6 +94,23 @@ def agent_execution_metadata(step):
 class ObjectiveRequest(AgentRequest):
     capability: str = 'auto'
     capabilities: list[str] = Field(default_factory=list,max_length=6)
+
+
+def dispatch_ready_capabilities(capabilities, run):
+    """Schedule independent objective dispatches without occupying inference slots.
+
+    This is only the submission stage: model jobs remain governed by the
+    compute queue, and a submitted contribution is not an accepted objective.
+    """
+    if not capabilities:
+        return []
+    items = [WorkItem(f"dispatch-{index}", lambda capability=capability: run(capability),
+                      owner=True, priority="P0")
+             for index, capability in enumerate(capabilities)]
+    outcomes = run_ready_work(items, max_parallel=min(3, len(items)))
+    return [outcomes[item.id].value if outcomes[item.id].status == "completed" else
+            {"capability": capability, "state": "indeterminate", "reason": "STEP_DISPATCH_FAILED"}
+            for item, capability in zip(items, capabilities)]
 
 
 def select_capabilities(objective: str) -> list[str]:
@@ -206,8 +223,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                 # No automatic retry: the authority/queue may already have accepted
                 # this step. Preserve an indeterminate result for reconciliation.
                 return {'capability':capability,'state':'indeterminate','reason':type(exc).__name__}
-        with ThreadPoolExecutor(max_workers=min(3,len(capabilities))) as workers:
-            steps=list(workers.map(run,capabilities))
+        steps=dispatch_ready_capabilities(capabilities,run)
         db.execute('UPDATE objectives SET state=?,steps_json=? WHERE id=?',('submitted',json.dumps(steps),task_id))
         db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=0',(utcnow(),task_id))
         db.commit()
@@ -343,7 +359,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
                 except HTTPException:return {'capability':capability,'state':'blocked','reason':'STEP_DISPATCH_FAILED'}
                 except Exception:return {'capability':capability,'state':'indeterminate','reason':'STEP_DISPATCH_FAILED'}
             capabilities=select_capabilities(body.objective)
-            with ThreadPoolExecutor(max_workers=min(3,len(capabilities))) as pool:steps=list(pool.map(run,capabilities))
+            steps=dispatch_ready_capabilities(capabilities,run)
         db.execute('UPDATE objective_turns SET state=?,steps_json=? WHERE task=? AND revision=?',('submitted',json.dumps(steps),task_id,revision))
         db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=?',(utcnow(),task_id,revision))
         db.commit()

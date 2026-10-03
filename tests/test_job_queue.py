@@ -95,7 +95,7 @@ def test_old_low_priority_job_ages_out_of_starvation(tmp_path):
     )
     q = JobQueue(tmp_path / "fair.db", policy)
     old = q.submit(agent="planner", prompt="old", priority="background")
-    urgent = q.submit(agent="critic", prompt="new", priority="critical")
+    urgent = q.submit(agent="critic", prompt="new", priority="high")
     with q.connect() as db:
         db.execute(
             "UPDATE compute_jobs SET created_at=datetime('now','-20 seconds') WHERE id=?",
@@ -103,3 +103,50 @@ def test_old_low_priority_job_ages_out_of_starvation(tmp_path):
         )
     assert q.claim("w", [LOCAL])["id"] == old["id"]
     assert q.get(urgent["id"])["status"] == "queued"
+
+
+def test_aged_background_never_overtakes_owner_critical(tmp_path):
+    q = queue(tmp_path, **{"global": 1})
+    old = q.submit(agent="planner", prompt="old", priority="background")
+    owner = q.submit(agent="critic", prompt="owner", priority="critical")
+    with q.connect() as db:
+        db.execute("UPDATE compute_jobs SET created_at=datetime('now','-10000 seconds') WHERE id=?",
+                   (old["id"],))
+    assert q.claim("owner-worker", [LOCAL])["id"] == owner["id"]
+
+
+def test_owner_critical_is_visible_after_large_background_backlog(tmp_path):
+    q = queue(tmp_path, **{"global": 1})
+    for index in range(1001):
+        q.submit(agent="planner", prompt=f"background-{index}", priority="background")
+    owner = q.submit(agent="critic", prompt="owner", priority="critical")
+    assert q.claim("owner-worker", [LOCAL])["id"] == owner["id"]
+
+
+def test_blocked_same_agent_critical_backlog_does_not_hide_other_agent(tmp_path):
+    q = queue(tmp_path)
+    first = q.submit(agent="a02", prompt="first", priority="critical")
+    assert q.claim("w1", [LOCAL])["id"] == first["id"]
+    for index in range(1001):
+        q.submit(agent="a02", prompt=f"blocked-{index}", priority="critical")
+    another = q.submit(agent="a26", prompt="independent-owner-work", priority="critical")
+    assert q.claim("w2", [LOCAL])["id"] == another["id"]
+
+
+def test_background_reserve_keeps_one_local_slot_for_arriving_owner(tmp_path):
+    policy = QueuePolicy(global_concurrency=3, per_agent_concurrency=1,
+                         background_concurrency=2, local_ram_mb=8192,
+                         local_vram_mb=4096)
+    q = JobQueue(tmp_path / "owner-reserve.db", policy)
+    backend = Provider("ollama", "local", "fast", 8192, 4096, 3)
+    first = q.submit(agent="a01", prompt="background-1", priority="background")
+    second = q.submit(agent="a02", prompt="background-2", priority="background")
+    third = q.submit(agent="a04", prompt="background-3", priority="background")
+    assert q.claim("w1", [backend])["id"] == first["id"]
+    assert q.claim("w2", [backend])["id"] == second["id"]
+    assert q.claim("w3", [backend]) is None
+    owner = q.submit(agent="a26", prompt="owner", priority="critical")
+    assert q.claim("w3", [backend])["id"] == owner["id"]
+    assert q.get(third["id"])["status"] == "queued"
+    q.finish(first["id"], result="done")
+    assert q.claim("w1", [backend])["id"] == third["id"]

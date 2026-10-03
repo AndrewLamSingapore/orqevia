@@ -27,10 +27,13 @@ def utcnow() -> str:
 
 @dataclass(frozen=True)
 class QueuePolicy:
-    # Harness v0 starts with exactly one local inference job. Raising this to two
-    # requires explicit operator configuration after monitored acceptance.
+    # Production remains at one inference slot. Candidate N>1 needs a measured
+    # profile and bounded Owner reserve before monitored acceptance.
     global_concurrency: int = 1
     per_agent_concurrency: int = 1
+    # Zero disables reservation. A positive value caps simultaneous local
+    # noncritical inference and leaves capacity for an arriving Owner request.
+    background_concurrency: int = 0
     local_ram_mb: int = 32768
     local_vram_mb: int = 0
     cloud_wait_seconds: int = 300
@@ -53,6 +56,7 @@ class QueuePolicy:
         return cls(
             global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 1, 1, 29),
             per_agent_concurrency=integer("PRIME_AGENT_CONCURRENCY", 1, 1, 8),
+            background_concurrency=integer("PRIME_BACKGROUND_INFERENCE_LIMIT", 0, 0, 29),
             local_ram_mb=integer("PRIME_LOCAL_RAM_MB", 32768, 1024, 1048576),
             local_vram_mb=integer("PRIME_LOCAL_VRAM_MB", 0, 0, 1048576),
             cloud_wait_seconds=integer("PRIME_CLOUD_WAIT_SECONDS", 300, 0, 86400),
@@ -223,7 +227,7 @@ class JobQueue:
         local_names={p.name for p in providers if p.kind=="local"}
         if row['preferred_provider']:
             providers=[p for p in providers if p.name==row['preferred_provider']]
-        active=c.execute("SELECT provider,agent,ram_mb,vram_mb FROM compute_jobs WHERE status='running'").fetchall()
+        active=c.execute("SELECT provider,agent,ram_mb,vram_mb,priority FROM compute_jobs WHERE status='running'").fetchall()
         if len(active)>=self.policy.global_concurrency:return None,"global concurrency limit",0
         def identity(value: str) -> str:
             try: return canonical_agent_id(value)
@@ -231,6 +235,10 @@ class JobQueue:
         if sum(1 for x in active if identity(x["agent"])==row["agent"])>=self.policy.per_agent_concurrency:return None,"per-agent concurrency limit",0
         used_ram=sum(int(x["ram_mb"]) for x in active if x["provider"] in local_names)
         used_vram=sum(int(x["vram_mb"]) for x in active if x["provider"] in local_names)
+        background_at_limit=(self.policy.background_concurrency>0 and
+            row["priority"]<PRIORITIES["critical"] and
+            sum(1 for x in active if x["provider"] in local_names and
+                x["priority"]<PRIORITIES["critical"])>=self.policy.background_concurrency)
         local=[]
         for p in providers:
             if p.kind!="local":continue
@@ -240,8 +248,10 @@ class JobQueue:
             if row["model"] and row["model"]!=p.model:continue
             if not row["model"] and row["model_role"]!="auto" and not p.name.endswith("-"+row["model_role"]):continue
             local.append(p)
-        if local:return local[0],"local capacity available",0
-        if not row["allow_cloud"]:return None,"local capacity unavailable; cloud not permitted",0
+        if local and not background_at_limit:return local[0],"local capacity available",0
+        if not row["allow_cloud"]:
+            return None,("owner inference reserve" if background_at_limit else
+                         "local capacity unavailable; cloud not permitted"),0
         from .tier_router import classify_for_cloud
         if not classify_for_cloud(row['data_classification'],row['prompt']):return None,'data locality excludes cloud',0
         waited=max(0,time.time()-datetime.fromisoformat(row["created_at"]).timestamp())
@@ -260,19 +270,28 @@ class JobQueue:
         return None,"no eligible provider",0
 
     def _effective_priority(self, row: sqlite3.Row, now_epoch: float) -> float:
-        """Age queued work so sustained high-priority traffic cannot starve it."""
+        """Age noncritical work without displacing the Owner-critical lane."""
+        if row["priority"] >= PRIORITIES["critical"]:
+            return float(PRIORITIES["critical"])
         waited = max(0.0, now_epoch - datetime.fromisoformat(row["created_at"]).timestamp())
         intervals = int(waited // self.policy.starvation_interval_seconds)
         boost = min(
             self.policy.starvation_boost_cap,
             intervals * self.policy.starvation_boost_per_interval,
         )
-        return float(row["priority"] + boost)
+        return float(min(PRIORITIES["critical"] - 1, row["priority"] + boost))
 
     def claim(self, worker_id: str, providers: list[Provider]) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
-            rows=c.execute("SELECT * FROM compute_jobs WHERE status='queued' LIMIT 1000").fetchall()
+            # Consider the oldest job in every agent/priority lane. A thousand
+            # blocked jobs for one agent must not hide a ready Owner or another
+            # agent, while one agent's same-priority jobs remain FIFO.
+            rows=c.execute("""SELECT * FROM (
+                SELECT compute_jobs.*,ROW_NUMBER() OVER (
+                    PARTITION BY agent,priority ORDER BY created_at,id) AS lane_rank
+                FROM compute_jobs WHERE status='queued'
+            ) WHERE lane_rank=1 ORDER BY priority DESC,created_at,id LIMIT 1000""").fetchall()
             claim_time = time.time()
             rows=sorted(
                 rows,
