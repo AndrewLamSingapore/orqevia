@@ -34,7 +34,8 @@ def load_skill_registry() -> tuple[dict, str]:
     except (OSError, json.JSONDecodeError) as exc:
         raise SkillRegistryError("advisory skill registry unavailable") from exc
     digest = hashlib.sha256(raw).hexdigest()
-    if data.get("schema_version") != "1.0" or not isinstance(data.get("skills"), list):
+    if (not isinstance(data, dict) or data.get("schema_version") != "1.0"
+            or not isinstance(data.get("skills"), list)):
         raise SkillRegistryError("unsupported skill registry")
     ids: set[str] = set()
     for item in data["skills"]:
@@ -59,11 +60,34 @@ def load_skill_registry() -> tuple[dict, str]:
                 or not isinstance(item["instruction"], str)
                 or not 1 <= len(item["instruction"]) <= 240):
             raise SkillRegistryError("invalid bounded guidance")
-        if not set(item["task_classes"]) <= ALLOWED_TASK_CLASSES:
+        if (not isinstance(item["task_classes"], list)
+                or not item["task_classes"]
+                or any(not isinstance(task_class, str) for task_class in item["task_classes"])
+                or not set(item["task_classes"]) <= ALLOWED_TASK_CLASSES):
             raise SkillRegistryError("invalid task class")
+        if (not isinstance(item["dependencies"], list)
+                or any(not isinstance(dependency, str) for dependency in item["dependencies"])):
+            raise SkillRegistryError("invalid skill dependency")
     for item in data["skills"]:
         if not set(item["dependencies"]) <= ids or item["skill_id"] in item["dependencies"]:
             raise SkillRegistryError("unknown or self-referential skill dependency")
+    by_id = {item["skill_id"]: item for item in data["skills"]}
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(skill_id: str) -> None:
+        if skill_id in visiting:
+            raise SkillRegistryError("cyclic skill dependency")
+        if skill_id in visited:
+            return
+        visiting.add(skill_id)
+        for dependency in by_id[skill_id]["dependencies"]:
+            visit(dependency)
+        visiting.remove(skill_id)
+        visited.add(skill_id)
+
+    for skill_id in by_id:
+        visit(skill_id)
     return data, digest
 
 

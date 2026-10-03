@@ -1,4 +1,5 @@
 """Skill routing is branch-only prompt guidance, not live agent competence."""
+import json
 import os
 from unittest.mock import patch
 
@@ -6,7 +7,7 @@ import pytest
 
 from app import compute_queue_api
 from app.agent_registry import registered_agent_ids
-from app.skill_router import SkillRegistryError, load_skill_registry, select_skill_pack
+from app.skill_router import SKILL_REGISTRY_PATH, SkillRegistryError, load_skill_registry, select_skill_pack
 from app.tier_router import Backend, Tier
 from tests.test_harness_api import HarnessApiTests
 
@@ -42,6 +43,27 @@ def test_invalid_or_missing_registry_fails_closed(tmp_path):
         candidate.unlink()
         with pytest.raises(SkillRegistryError, match="unavailable"):
             select_skill_pack("a17", "planning", Tier.MINI)
+    load_skill_registry.cache_clear()
+
+
+@pytest.mark.parametrize("mutation,error", [
+    (lambda data: [], "unsupported skill registry"),
+    (lambda data: {**data, "skills": [{**data["skills"][0], "task_classes": "planning"}]},
+     "invalid task class"),
+    (lambda data: {**data, "skills": [{**data["skills"][0], "dependencies": {}}]},
+     "invalid skill dependency"),
+    (lambda data: {**data, "skills": [
+        {**data["skills"][0], "dependencies": ["core.verification-discipline"]},
+        data["skills"][1], data["skills"][2]]}, "cyclic skill dependency"),
+])
+def test_malformed_registry_shape_and_dependency_cycle_fail_closed(tmp_path, mutation, error):
+    original = json.loads(SKILL_REGISTRY_PATH.read_text(encoding="utf-8"))
+    candidate = tmp_path / "skills.json"
+    candidate.write_text(json.dumps(mutation(original)), encoding="utf-8")
+    with patch("app.skill_router.SKILL_REGISTRY_PATH", candidate):
+        load_skill_registry.cache_clear()
+        with pytest.raises(SkillRegistryError, match=error):
+            load_skill_registry()
     load_skill_registry.cache_clear()
 
 
