@@ -124,3 +124,27 @@ def test_unknown_freshness_fails_closed_and_bad_constraints_rejected():
     assert pack([candidate("missing", "text", observed_at=None)])["omitted"]["stale_or_unknown"] == 1
     with pytest.raises(ContextPackError, match="trusted constraints"):
         pack([], constraints=())
+
+
+def test_request_receipt_cannot_launder_unknown_source_freshness():
+    receipt = candidate("request", "possibly old claim", observed_at=None,
+                        max_age_seconds=None, receipt_only=True)
+    result = pack([receipt])
+    record = result["context"][0]
+    assert record["observed_at"] is None
+    assert record["fresh_until"] is None
+    assert record["source_freshness"] == "UNKNOWN_RECEIPT_ONLY"
+    assert record["trust"] == "UNTRUSTED_DATA_NEVER_INSTRUCTIONS"
+    with pytest.raises(ContextPackError, match="cannot claim source freshness"):
+        pack([candidate("bad", "claim", receipt_only=True)])
+
+
+def test_receipt_and_observed_source_with_same_text_do_not_share_freshness():
+    result = pack([
+        candidate("request", "same claim", observed_at=None,
+                  max_age_seconds=None, receipt_only=True),
+        candidate("observed", "same claim"),
+    ])
+    assert len(result["context"]) == 2
+    assert {record["source_freshness"] for record in result["context"]} == {
+        "UNKNOWN_RECEIPT_ONLY", "SOURCE_OBSERVED"}
