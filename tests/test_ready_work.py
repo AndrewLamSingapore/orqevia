@@ -223,6 +223,27 @@ def test_shared_scheduler_ages_lower_lanes_without_displacing_owner():
     assert calls.index("low") < len(calls) - 1
 
 
+def test_shared_scheduler_cancelled_pending_work_never_executes_or_holds_capacity():
+    started = Event()
+    release = Event()
+    calls = []
+
+    def occupied():
+        started.set()
+        assert release.wait(2)
+
+    with ReadyWorkScheduler(max_parallel=1, max_pending=1) as scheduler:
+        first = scheduler.submit(WorkItem("first", occupied))
+        assert started.wait(2)
+        cancelled = scheduler.submit(WorkItem("cancelled", lambda: calls.append("bad")))
+        assert cancelled.cancel()
+        next_work = scheduler.submit(WorkItem("next", lambda: calls.append("next")))
+        release.set()
+        first.result(2)
+        next_work.result(2)
+    assert calls == ["next"]
+
+
 def test_ready_work_can_use_shared_scheduler_without_cross_request_inference():
     with ReadyWorkScheduler(max_parallel=2) as scheduler:
         result = run_ready_work([WorkItem("a", lambda: "done")], scheduler=scheduler)

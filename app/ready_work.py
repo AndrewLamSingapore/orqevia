@@ -122,8 +122,16 @@ class ReadyWorkScheduler:
             self._sequence += 1
             future = Future()
             self._pending.append((self._sequence, self._dispatches, item, future))
+            future.add_done_callback(self._drop_cancelled)
             self._condition.notify_all()
             return future
+
+    def _drop_cancelled(self, result: Future) -> None:
+        if not result.cancelled():
+            return
+        with self._condition:
+            self._pending = [entry for entry in self._pending if entry[3] is not result]
+            self._condition.notify_all()
 
     def _rank(self, sequence: int, queued_dispatches: int, item: WorkItem) -> tuple[int, int]:
         if item.owner or item.priority == "P0":
@@ -145,6 +153,8 @@ class ReadyWorkScheduler:
                             sequence, queued_dispatches, item, result = min(
                                 eligible, key=lambda entry: self._rank(entry[0], entry[1], entry[2]))
                             self._pending.remove((sequence, queued_dispatches, item, result))
+                            if not result.set_running_or_notify_cancel():
+                                continue
                             self._active += 1
                             self._used_ram_mb += item.estimated_ram_mb
                             self._held_writes.update(item.writes)
