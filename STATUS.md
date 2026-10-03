@@ -1,6 +1,6 @@
 # STATUS.md — Single source of truth
 
-Last updated: 27 September 2026
+Last updated: 3 October 2026 (Gate Zero policy note; dated portfolio observations below are not refreshed)
 
 **This file replaces and supersedes every previous SSOT document — technical, course-study, and job-search alike.** Any older SSOT file (on ABEX, in a repo, or elsewhere) is now historical only. Do not treat any prior SSOT document as current once this file exists. Archive or delete the old ones once this file is confirmed good — do not maintain both in parallel.
 
@@ -31,6 +31,8 @@ If you are an AI agent updating this file:
 - When uncertain, understate confidence.
 - Update this file on real events, not on a schedule.
 - Commit and push every legitimate update.
+
+Owner operating directive, 3 October 2026: **Gate Zero** means maximum functional capability with minimum bureaucracy. Only concrete current prevention of a specific requested operation, or material risk that cannot reasonably be contained or reversed, justifies a localized `BLOCKER`. Failed probes, unknowns, historical incidents, backlog, optional checks and unavailable auxiliary peers do not automatically fail or block unrelated work. Keep security, evidence and recovery intact; continue every independent safe lane. The shared `AGENTS.md` applies this classification rule to agent and portfolio workflows. This policy note is not a Lam-Verified product or deployment claim.
 
 ---
 
