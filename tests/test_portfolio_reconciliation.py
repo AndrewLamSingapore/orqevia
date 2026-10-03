@@ -77,6 +77,15 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # This dated, agent-reported update is new; preserve the original historical
+    # byte proof by removing only this known addition before comparing it.
+    authority_start = after.index("## Status authority — 3 October 2026")
+    authority_end = after.index("## Portfolio current observation — 27 September 2026", authority_start)
+    authority_update = after[authority_start:authority_end]
+    assert "### Claimed, not independently checked" in authority_update
+    assert "PRIME PR #149 merged" in authority_update
+    after = after[:authority_start] + after[authority_end:]
+    after = after.replace("Last updated: 3 October 2026", "Last updated: 27 September 2026", 1)
     start = after.index("## Portfolio current observation — 27 September 2026")
     end = after.index("## PRIME / VELYQUA / ABEX", start)
     preserved = (after[:start] + after[end:]).encode("utf-8")
