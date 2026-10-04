@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import json
 import re
+import hashlib
 from collections.abc import Mapping
 from datetime import datetime, timezone
+from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -140,3 +142,33 @@ class Ed25519CertificationVerifier:
         except (InvalidSignature, KeyError, TypeError, ValueError, OverflowError,
                 RecursionError, RegistryError):
             return False
+
+
+def verifier_from_pin_file(path: Path) -> Ed25519CertificationVerifier:
+    """Load an operator controlled public-key pin set; empty pins deny all rows.
+
+    The pin file is deployment configuration, never selected by a record. A
+    fingerprint protects against accidental key substitution in that file;
+    custody and integrity of the file itself remain the deployer's boundary.
+    """
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if (not isinstance(data, dict) or set(data) != {"schema_version", "service_identity", "keys"}
+            or data["schema_version"] != "1.0"
+            or not isinstance(data["service_identity"], str)
+            or not _SERVICE_ID.fullmatch(data["service_identity"])
+            or not isinstance(data["keys"], dict)):
+        raise ValueError("invalid certification verifier pin file")
+    keys = {}
+    for key_id, pin in data["keys"].items():
+        if (not isinstance(key_id, str) or not _KEY_ID.fullmatch(key_id)
+                or not isinstance(pin, dict) or set(pin) != {"public_key_hex", "sha256"}
+                or not isinstance(pin["public_key_hex"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", pin["public_key_hex"])
+                or not isinstance(pin["sha256"], str)
+                or not _HEX_SHA256.fullmatch(pin["sha256"])):
+            raise ValueError("invalid certification verifier public key pin")
+        public = bytes.fromhex(pin["public_key_hex"])
+        if hashlib.sha256(public).hexdigest() != pin["sha256"]:
+            raise ValueError("certification verifier fingerprint mismatch")
+        keys[key_id] = public
+    return Ed25519CertificationVerifier({data["service_identity"]: keys})
