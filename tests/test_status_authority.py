@@ -27,8 +27,26 @@ def authority_copy(tmp_path):
     return tmp_path
 
 
-def test_status_is_the_only_current_authority():
+def test_status_is_scoped_to_portfolio_claims():
     validate_status_authority()
+
+
+def test_universal_master_claim_is_rejected(authority_copy):
+    path = authority_copy / 'STATUS.md'
+    path.write_text(path.read_text(encoding='utf-8') +
+                    '\nThis file replaces and supersedes every previous SSOT document.\n',
+                    encoding='utf-8')
+    with pytest.raises(AssertionError):
+        validate_status_authority(authority_copy)
+
+
+def test_product_ownership_contract_is_required(authority_copy):
+    path = authority_copy / 'STATUS.md'
+    path.write_text(path.read_text(encoding='utf-8').replace(
+        'Each product owns its source, configuration, contracts, and domain records in its repository.',
+        ''), encoding='utf-8')
+    with pytest.raises(AssertionError):
+        validate_status_authority(authority_copy)
 
 
 def test_retired_pointer_is_rejected(authority_copy):

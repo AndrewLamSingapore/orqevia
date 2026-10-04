@@ -1,12 +1,13 @@
 # JARVIS PRIME
 
-Start with [STATUS.md](STATUS.md) for current status, then the
+Read [STATUS.md](STATUS.md) for current portfolio status claims, then the
 [machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) and
 [the shared channel contract](governance/CHANNEL_CONTRACT.md).
 
-STATUS.md is the only current status source of truth. The operational reference
-records architecture, component revisions and observations; it cannot establish
-current status.
+Each product owns its source, configuration, contracts, and domain records in its
+repository. STATUS.md records portfolio status and evidence classification only.
+The operational reference records architecture, component revisions and dated
+observations; it cannot establish current runtime status.
 
 Golden Generation 2 is the frozen accepted non-audio architecture, described by
 `docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md` and
@@ -17,8 +18,7 @@ Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and dire
 observed execution with narrow consequential controls. Runtime acceptance is
 recorded separately and must not be inferred from this README or passing CI.
 
-`system.manifest.json` binds product components; it is subordinate to STATUS.md for
-status and to the operational reference for component identity. `deploy/product-runtime-v1.json`
+`system.manifest.json` binds PRIME product components. `deploy/product-runtime-v1.json`
 defines entrypoints and external inputs.
 
 Validate with `python scripts/validate_canonical.py` and
@@ -37,4 +37,4 @@ the sealed ABEX baseline. Historical source and migration evidence remain in Git
 
 The public contract is `governance/public-experience.json`. Authority Engine, The Portal, Living Worlds, Sky Tablet and VELYQUA link to that experience. Navigation and enquiry context do not grant private runtime access or merge product databases.
 
-STATUS.md is the only current status record. The operational manifest and its generated resume checkpoint are machine references, not second status authorities. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.
+STATUS.md records current portfolio status claims. The operational manifest and its generated resume checkpoint are machine references, not second status records. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.
