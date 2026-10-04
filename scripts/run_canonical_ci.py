@@ -57,6 +57,7 @@ def main():
     names.append('competence_frontier_evaluation')
     names.append('portfolio_reconciliation')
     names.append('evidence_lens_qualification_receipt')
+    names.append('agent_role_contract_matrix')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]
