@@ -4,13 +4,19 @@ import time
 import uuid
 from decimal import Decimal,InvalidOperation
 from .compute_catalog import load_catalog,model_spec
-from .provider_runtime import ChatCompletionProvider,ProviderFailure,complete,complete_with_fallback
+from .provider_runtime import ChatCompletionProvider,HuggingFaceProvider,ProviderFailure,complete,complete_with_fallback
 from .secret_refs import resolve_secret,SecretUnavailable
 from .tier_router import classify_for_cloud
 from .tier_router import Tier
 from .outcome_metrics import OutcomeMetrics
 from .action_records import ActionRecord,DirectExecutor,action_ledger
 from .reasoning_budgets import select_budget,verify_reserved_cost
+
+
+def adapter_for(entry):
+    if entry.get('provider_kind')=='huggingface':
+        return HuggingFaceProvider(entry['secret_ref'],secret_resolver=resolve_secret)
+    return ChatCompletionProvider(entry['endpoint'],entry['secret_ref'],secret_resolver=resolve_secret)
 
 
 def configured_provider_health():
@@ -25,7 +31,7 @@ def configured_provider_health():
         status={'readiness':'DISABLED','provider_health':'UNMEASURED','network_probe_performed':False}
         if entry.get('enabled'):
             try:
-                status=ChatCompletionProvider(entry['endpoint'],entry['secret_ref'],secret_resolver=resolve_secret).health()
+                status=adapter_for(entry).health()
             except Exception:
                 status={'readiness':'CONFIGURATION_INVALID','provider_health':'UNMEASURED','network_probe_performed':False}
         result.append({'provider_id':entry['id'],**status})
@@ -37,7 +43,10 @@ def execute_cloud(job,provider,data,cancelled):
     catalog=load_catalog()
     entries=[x for x in catalog if x['id']==provider.name and x.get('enabled')]
     if not entries:raise ProviderFailure('PROVIDER_UNAVAILABLE')
-    entry=entries[0];spec=model_spec(entry);metrics=OutcomeMetrics(data/'compute-ledger.db')
+    entry=entries[0]
+    if entry.get('provider_kind')=='huggingface' and entry.get('qualification_status')!='QUALIFIED':
+        raise ProviderFailure('PROVIDER_UNQUALIFIED',pre_execution=True)
+    spec=model_spec(entry);metrics=OutcomeMetrics(data/'compute-ledger.db')
     started=time.monotonic();answer=None;failure=None;selected=entry;failure_retries=0;failure_routes=[]
     def operation():
         nonlocal selected
@@ -80,12 +89,12 @@ def execute_cloud(job,provider,data,cancelled):
                 action.parameters_summary['selected_model']=target['model']
                 action.parameters_summary['reasoning_budget']=budgets[candidate.provider].receipt()
                 return True
-            adapters=[(ChatCompletionProvider(x['endpoint'],x['secret_ref'],secret_resolver=resolve_secret),specs[x['id']]) for x in candidates]
+            adapters=[(adapter_for(x),specs[x['id']]) for x in candidates]
             result=asyncio.run(complete_with_fallback(adapters,[{'role':'user','content':job['prompt']}],authorize_candidate=approve,
                 output_tokens=budget.output_tokens,timeout=min(x.timeout_seconds for x in budgets.values()),cancelled=cancelled,max_retries=min(1,int(entry.get('max_retries',1)))))
             action.parameters_summary['fallback_failures']=result['fallback_failures']
             return result
-        adapter=ChatCompletionProvider(entry['endpoint'],entry['secret_ref'],secret_resolver=resolve_secret)
+        adapter=adapter_for(entry)
         return asyncio.run(complete(adapter,budget.model,messages,output_tokens=budget.output_tokens,timeout=budget.timeout_seconds,cancelled=cancelled,max_retries=min(1,int(entry.get('max_retries',1)))))
     try:
         action=ActionRecord(job['id'],job['agent'],'inference.run',provider.name,classification=job.get('classification','R0'),model_backend=spec.name)
