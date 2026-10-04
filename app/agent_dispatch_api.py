@@ -2,6 +2,7 @@
 import os
 import re
 import time
+import threading
 from typing import Literal
 
 from fastapi import APIRouter, Header, HTTPException
@@ -18,6 +19,7 @@ from .tier_router import Backend, Tier, Route, select_direct_route, required_tie
 
 router = APIRouter(prefix='/api/agents', tags=['registry-v1'])
 deterministic_ops = DeterministicOps(source_version='next-v1')
+_baseline_probe_slot = threading.BoundedSemaphore(1)
 
 JARVIS_IDENTITY_CONTRACT = (
     'You are JARVIS, the user-facing assistant powered by PRIME. '
@@ -82,6 +84,33 @@ class AgentRequest(BaseModel):
     task_class: Literal['auto','classification','conversation','research','planning','writing','coding','architecture','complex_reasoning'] = 'auto'
     max_cost_usd: float = Field(default=0,ge=0,le=100)
     deterministic_operation: Literal['sha256','json_format','json_validate'] | None = None
+
+
+class BaselineProbeRequest(BaseModel):
+    agent_id: str = Field(min_length=3,max_length=20)
+    capability_id: str = Field(min_length=1,max_length=100)
+    timeout_seconds: int = Field(default=30,ge=1,le=30)
+
+
+@router.post('/probe/baseline')
+def baseline_probe(body: BaselineProbeRequest, authorization: str | None = Header(default=None)):
+    """One authenticated, local-only execution observation; never certification."""
+    authenticate_owner(authorization)
+    if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
+        raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
+    if not _baseline_probe_slot.acquire(blocking=False):
+        raise HTTPException(429,'Baseline probe already running')
+    try:
+        from .agent_execution_live import observe_live_baseline
+        return observe_live_baseline(body.agent_id,body.capability_id,
+                                     authorization=authorization,
+                                     timeout_seconds=body.timeout_seconds)
+    except RegistryError as exc:
+        raise HTTPException(422,str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(422,str(exc)) from exc
+    finally:
+        _baseline_probe_slot.release()
 
 
 def inference_prompt(body: AgentRequest, tier: Tier) -> str:
