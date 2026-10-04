@@ -23,6 +23,13 @@ LEVEL_DIMENSIONS = (
     ("baseline", "role", "general", "collaboration", "recovery"),
     ("baseline", "role", "general", "collaboration", "recovery",
      "authority", "tools", "models", "cross_verification", "fresh_challenge", "health"),
+    ("baseline", "role", "general", "collaboration", "recovery",
+     "authority", "tools", "models", "cross_verification", "fresh_challenge", "health",
+     "broad_transfer", "unseen_task", "adversarial", "context_integrity",
+     "conflict_resolution", "injection_resistance", "unauthorized_rejection",
+     "model_substitution", "tool_recovery", "handoff_recovery",
+     "evidence_integrity", "cross_agent_conflict", "graceful_degradation",
+     "independent_verification", "clean_room_audit", "continuous_revalidation"),
 )
 REQUIRED_CASES = {
     "baseline": ("identity", "initialization", "authorization", "objective", "instruction",
@@ -32,7 +39,23 @@ REQUIRED_CASES = {
     "general": ("analysis", "planning", "reasoning", "communication", "evidence",
                 "decomposition", "artifact_consume", "artifact_produce", "review",
                 "verification", "error_recognition", "handoff", "recovery"),
+    "adversarial": ("ambiguous_instruction", "contradictory_evidence", "stale_information",
+                    "invalid_artifact", "malformed_input", "missing_dependency",
+                    "false_completion", "unauthorized_action", "injection_attempt"),
+    "unauthorized_rejection": ("authorized", "unauthorized", "owner_only"),
+    "tool_recovery": ("tool_failure", "bounded_response"),
+    "handoff_recovery": ("agent_failure", "bounded_response"),
 }
+CERTIFICATION_WAVES = (
+    ("baseline",),
+    ("role", "general", "tools", "models", "broad_transfer"),
+    ("collaboration", "cross_verification", "cross_agent_conflict"),
+    ("recovery", "tool_recovery", "handoff_recovery", "graceful_degradation"),
+    ("authority", "adversarial", "context_integrity", "conflict_resolution",
+     "injection_resistance", "unauthorized_rejection", "evidence_integrity"),
+    ("fresh_challenge", "unseen_task", "model_substitution"),
+    ("independent_verification", "clean_room_audit", "continuous_revalidation", "health"),
+)
 MAX_EVIDENCE_BYTES = 1024 * 1024
 
 
@@ -100,7 +123,8 @@ class AgentCertificationRegistry:
         if capability_id not in record["capability_requirements"]:
             return {"agent_id": agent_id, "capability_id": capability_id,
                     "level": "L0", "trust_state": "UNPROVEN", "health": "UNKNOWN",
-                    "authority_scope": "NOT_AUTHORIZED", "current_dimensions": []}
+                    "authority_scope": "NOT_AUTHORIZED", "current_dimensions": [],
+                    "current_cases": [], "missing_cases": []}
         now = now or datetime.now(timezone.utc)
         if now.tzinfo is None:
             raise ValueError("projection time requires timezone")
@@ -158,20 +182,72 @@ class AgentCertificationRegistry:
                 artifacts = [latest[(dimension, case)][1]["evidence"] for case in required]
                 if len(artifacts) == len(set(artifacts)):
                     current.add(dimension)
-        level = max(index for index, required in enumerate(LEVEL_DIMENSIONS)
-                    if set(required).issubset(current))
         latest_rows = [row for _, row in latest.values()]
         health_row = latest.get(("health", "complete"))
         health = "HEALTHY" if "health" in current and health_row and health_row[1].get("health") == "HEALTHY" else "UNKNOWN"
-        if level == 6 and health != "HEALTHY":
-            level = 5
+        if health != "HEALTHY":
+            current.discard("health")
+        level = max(index for index, required in enumerate(LEVEL_DIMENSIONS)
+                    if set(required).issubset(current))
         stale = bool(matching) and (len(valid) < len(latest) or not current)
+        missing = [(dimension, case) for dimension in LEVEL_DIMENSIONS[-1]
+                   for case in REQUIRED_CASES.get(dimension, ("complete",))
+                   if dimension not in current or (dimension, case) not in valid]
         return {"agent_id": agent_id, "capability_id": capability_id,
                 "level": f"L{level}",
-                "trust_state": ("CERTIFIED-HEALTHY" if level == 6 else
-                                "REVALIDATION-REQUIRED" if stale else "UNPROVEN" if level == 0 else "CERTIFIED-DEGRADED"),
+                "trust_state": ("REVALIDATION-REQUIRED" if stale else
+                                "L7-CURRENT" if level == 7 else
+                                "CERTIFIED-HEALTHY" if level == 6 else
+                                "UNPROVEN" if level == 0 else "CERTIFIED-DEGRADED"),
                 "health": health, "authority_scope": record["authority"],
                 "current_dimensions": sorted(current),
+                "current_cases": [f"{dimension}:{case}" for dimension, case in sorted(valid)
+                                  if dimension in current],
+                "missing_cases": [f"{dimension}:{case}" for dimension, case in missing],
                 "failure_count": max((row.get("failure_count", 0) for row in latest_rows
                                       if isinstance(row.get("failure_count", 0), int)
                                       and row.get("failure_count", 0) >= 0), default=0)}
+
+    def matrix(self, *, now: datetime | None = None) -> list[dict]:
+        """Return one fail-closed certification row per registered specialist.
+
+        A row is L7 only when every owned capability projects to L7. This is
+        a read-only work/evidence projection, not a runtime agent test runner.
+        """
+        from .agent_registry import load_agent_registry
+
+        now = now or datetime.now(timezone.utc)
+        rows = []
+        for agent in load_agent_registry()["agents"]:
+            capabilities = [self.project(agent["id"], capability, now=now)
+                            for capability in agent["capability_requirements"]]
+            level = min(int(item["level"][1:]) for item in capabilities)
+            missing = {item["capability_id"]: item["missing_cases"] for item in capabilities
+                       if item["missing_cases"]}
+            rows.append({"agent_id": agent["id"], "role": agent["role"],
+                         "capabilities": capabilities, "level": f"L{level}",
+                         "trust_state": ("REVALIDATION-REQUIRED" if any(
+                                             item["trust_state"] == "REVALIDATION-REQUIRED"
+                                             for item in capabilities) else
+                                         "L7-CURRENT" if level == 7 else
+                                         "CERTIFIED-HEALTHY" if level == 6 else
+                                         "UNPROVEN" if level == 0 else "CERTIFIED-DEGRADED"),
+                         "health": "HEALTHY" if all(item["health"] == "HEALTHY"
+                                                  for item in capabilities) else "UNKNOWN",
+                         "missing": missing})
+        return rows
+
+    def pending_waves(self, *, now: datetime | None = None) -> list[list[dict]]:
+        """Batch only missing cases; waves encode dependencies, not PASS claims."""
+        matrix = self.matrix(now=now)
+        waves = []
+        for dimensions in CERTIFICATION_WAVES:
+            wave = []
+            for agent in matrix:
+                for capability, missing in agent["missing"].items():
+                    for case in missing:
+                        if case.partition(":")[0] in dimensions:
+                            wave.append({"agent_id": agent["agent_id"],
+                                         "capability_id": capability, "case": case})
+            waves.append(wave)
+        return waves

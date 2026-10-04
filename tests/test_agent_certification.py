@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.agent_certification import AgentCertificationRegistry, LEVEL_DIMENSIONS, REQUIRED_CASES, MAX_EVIDENCE_BYTES
+from app.agent_certification import (AgentCertificationRegistry, CERTIFICATION_WAVES,
+                                     LEVEL_DIMENSIONS, REQUIRED_CASES, MAX_EVIDENCE_BYTES)
 from app.agent_registry import load_agent_registry
 
 
@@ -53,14 +54,14 @@ def test_all_21_default_to_l0_without_domain_evidence(tmp_path):
 
 
 def test_current_independent_artifacts_can_project_ladder_without_granting_authority(tmp_path):
-    fixture_rows(tmp_path, LEVEL_DIMENSIONS[-1])
+    fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
     assert AgentCertificationRegistry(tmp_path, source_revision=REVISION).project(
         "a17", "responsibility.a17", now=NOW)["level"] == "L0"
     result = projection(tmp_path)
     assert result["level"] == "L6"
     assert result["trust_state"] == "CERTIFIED-HEALTHY"
     assert result["authority_scope"] == "restricted"
-    assert len(result["current_dimensions"]) == len(LEVEL_DIMENSIONS[-1])
+    assert len(result["current_dimensions"]) == len(LEVEL_DIMENSIONS[6])
 
 
 def test_expiry_and_changed_source_require_revalidation(tmp_path):
@@ -140,7 +141,7 @@ def test_self_verification_missing_artifact_and_wrong_capability_cannot_certify(
 
 
 def test_revoked_verifier_and_degraded_health_prevent_l6(tmp_path):
-    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[-1])
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
     revoked = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
                                          verify_record=lambda row: False).project(
         "a17", "responsibility.a17", now=NOW)
@@ -152,6 +153,7 @@ def test_revoked_verifier_and_degraded_health_prevent_l6(tmp_path):
     degraded = projection(tmp_path)
     assert (degraded["level"], degraded["trust_state"], degraded["health"]) == (
         "L5", "CERTIFIED-DEGRADED", "UNKNOWN")
+    assert "health:complete" in degraded["missing_cases"]
 
 
 def test_one_role_or_general_case_cannot_promote_whole_dimension(tmp_path):
@@ -184,7 +186,10 @@ def test_reused_artifact_cannot_claim_distinct_role_cases(tmp_path):
         row["evidence_sha256"] = role_rows[0]["evidence_sha256"]
     (tmp_path / "a17" / "certification.json").write_text(
         json.dumps({"schema_version": "1.0", "records": rows}))
-    assert projection(tmp_path)["level"] == "L1"
+    result = projection(tmp_path)
+    assert result["level"] == "L1"
+    assert {f"role:{row['test_case']}" for row in role_rows}.issubset(
+        result["missing_cases"])
 
 
 @pytest.mark.parametrize("shape", [[], "invalid", None])
@@ -214,3 +219,61 @@ def test_agent_directory_and_manifest_symlinks_fail_closed(tmp_path):
     manifest.unlink()
     manifest.symlink_to(external / "a17" / "certification.json")
     assert projection(local)["level"] == "L0"
+
+
+def test_l7_needs_every_authenticated_dimension_and_health(tmp_path):
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[7])
+    current = projection(tmp_path)
+    assert (current["level"], current["trust_state"], current["missing_cases"]) == (
+        "L7", "L7-CURRENT", [])
+    missing = [row for row in rows if not (row["dimension"] == "unseen_task"
+                                        and row["test_case"] == "complete")]
+    manifest = tmp_path / "a17" / "certification.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": missing}))
+    result = projection(tmp_path)
+    assert result["level"] == "L6"
+    assert result["missing_cases"] == ["unseen_task:complete"]
+    # A later failed adversarial challenge revokes L7, even if the older pass remains.
+    failed = dict(next(row for row in rows if row["dimension"] == "adversarial"),
+                  test_result="FAIL", certified_at=NOW.isoformat(),
+                  last_revalidated=NOW.isoformat())
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [failed]}))
+    result = projection(tmp_path)
+    assert (result["level"], result["trust_state"]) == ("L6", "REVALIDATION-REQUIRED")
+
+
+def test_matrix_covers_21_without_inventing_execution_evidence(tmp_path):
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION)
+    matrix = registry.matrix(now=NOW)
+    assert len(matrix) == 21
+    assert len({row["agent_id"] for row in matrix}) == 21
+    assert all(row["level"] == "L0" and row["trust_state"] == "UNPROVEN"
+               and row["health"] == "UNKNOWN" for row in matrix)
+    assert all(len(row["capabilities"]) >= 1 for row in matrix)
+    waves = registry.pending_waves(now=NOW)
+    assert len(waves) == len(CERTIFICATION_WAVES)
+    assert sum(map(len, waves)) == sum(len(c["missing_cases"])
+                                       for row in matrix for c in row["capabilities"])
+    assert {task["agent_id"] for task in waves[0]} == {row["agent_id"] for row in matrix}
+
+
+def test_pending_waves_skip_existing_verified_cases_not_whole_agent(tmp_path):
+    fixture_rows(tmp_path, ("baseline",))
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                          verify_record=lambda row: row.get("verifier") == "a18")
+    row = next(row for row in registry.matrix(now=NOW) if row["agent_id"] == "a17")
+    assert row["level"] == "L1"
+    assert all(not case.startswith("baseline:")
+               for case in row["missing"]["responsibility.a17"])
+    assert not any(task["agent_id"] == "a17" and task["capability_id"] == "responsibility.a17"
+                   for task in registry.pending_waves(now=NOW)[0])
+
+
+def test_matrix_preserves_l6_when_l7_work_is_outstanding(tmp_path):
+    fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                          verify_record=lambda row: row.get("verifier") == "a18")
+    row = next(row for row in registry.matrix(now=NOW) if row["agent_id"] == "a17")
+    assert (row["level"], row["trust_state"], row["health"]) == (
+        "L6", "CERTIFIED-HEALTHY", "HEALTHY")
+    assert "unseen_task:complete" in row["missing"]["responsibility.a17"]
