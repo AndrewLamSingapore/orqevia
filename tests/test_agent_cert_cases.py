@@ -5,7 +5,7 @@ import pytest
 from app.agent_cert_cases import AGENT_ID, CAPABILITY_ID, case_ids, challenge
 from app.agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
 from app.agent_dispatch_api import AgentRequest
-from app.agent_registry import agent_record, responsibility_owner
+from app.agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from app.runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
 
 
@@ -54,3 +54,51 @@ def test_unseen_challenge_accepts_held_out_context_without_recording_a_pass():
 def test_unknown_case_fails_closed():
     with pytest.raises(ValueError, match="unknown certification case"):
         challenge("baseline:imaginary")
+
+
+def test_all_permanent_agents_receive_owned_role_specific_unverified_challenges():
+    for agent_id in sorted(registered_agent_ids(include_orchestrator=False)):
+        record = agent_record(agent_id)
+        for capability in record["capability_requirements"]:
+            responsibility = next(row for row in record["responsibilities"] if row["id"] == capability)
+            spec = challenge("role:normal", agent_id=agent_id, capability_id=capability)
+            request = AgentRequest(**spec["request"])
+            assert spec["agent_id"] == agent_id
+            assert spec["capability_id"] == capability
+            assert spec["certification"] == "UNVERIFIED"
+            assert request.capability == capability
+            assert request.data_classification == "LOCAL_ONLY"
+            assert request.max_cost_usd == 0
+            assert "independent_verifier" in spec["independent_review"]
+            if agent_id != AGENT_ID and not (agent_id == "a20" and capability == "responsibility.a20"):
+                assert responsibility["description"] in request.objective
+                assert responsibility["input"] in request.objective
+                assert responsibility["output"] in request.objective
+
+
+def test_a20_normal_case_is_discriminating_synthetic_margin_task():
+    spec = challenge("role:normal", agent_id="a20", capability_id="responsibility.a20")
+    assert "gross margin" in spec["request"]["objective"]
+    assert "100 units" in spec["request"]["context"]
+    assert "fixed costs unknown" in spec["request"]["context"]
+    assert spec["certification"] == "UNVERIFIED"
+
+
+def test_challenge_rejects_aliases_unknown_ids_and_cross_owner_capabilities():
+    for agent_id in ("engineering", "a03", "prime", "invented-agent"):
+        with pytest.raises(ValueError, match="registered permanent ID"):
+            challenge("role:normal", agent_id=agent_id)
+    with pytest.raises(ValueError, match="not owned"):
+        challenge("role:normal", agent_id="a17", capability_id="responsibility.a19")
+    with pytest.raises(ValueError, match="not owned"):
+        challenge("role:normal", agent_id="a17", capability_id="")
+
+
+def test_other_role_cases_are_distinct_and_held_out_context_is_preserved():
+    held_out = "SYNTHETIC source=auditor; approved design=partial"
+    normal = challenge("role:normal", agent_id="a17", context=held_out)
+    invalid = challenge("role:invalid_input", agent_id="a17", context=held_out)
+    assert normal["request"]["context"] == invalid["request"]["context"] == held_out
+    assert normal["request"]["objective"] != invalid["request"]["objective"]
+    assert "Design-to-code conversion" in normal["request"]["objective"]
+    assert "invalid" in invalid["request"]["objective"].lower()

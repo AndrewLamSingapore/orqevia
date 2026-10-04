@@ -37,6 +37,23 @@ def test_independent_denial_or_missing_dependency_fails_closed(signal):
     assert route(**{signal: False}).state == "HOLD"
 
 
+@pytest.mark.parametrize("signal", ["authority_allowed", "runtime_healthy", "tools_available",
+                                     "model_available", "capacity_available", "allow_demonstration"])
+@pytest.mark.parametrize("value", ["false", 1, None])
+def test_malformed_live_signals_fail_closed(signal, value):
+    result = route(**{signal: value})
+    assert result.state == "HOLD"
+    assert result.grants_execution_authority is False
+
+
+@pytest.mark.parametrize("field", ["level", "trust_state"])
+@pytest.mark.parametrize("value", [[], {}, None])
+def test_malformed_certification_fields_fail_closed(field, value):
+    result = route({**cert(), field: value}, allow_demonstration=True)
+    assert result.state == "HOLD"
+    assert result.grants_execution_authority is False
+
+
 @pytest.mark.parametrize("trust", ["REVALIDATION-REQUIRED", "SUSPENDED", "FAILED", "L7-DEGRADED"])
 def test_downgrade_cannot_be_bypassed_by_demonstration(trust):
     result = route(cert(trust=trust), allow_demonstration=True)

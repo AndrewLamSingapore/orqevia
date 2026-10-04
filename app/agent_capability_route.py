@@ -47,6 +47,10 @@ def select_agent_capability_route(
     def result(state: str, reason: str, verify: bool = False) -> AgentCapabilityRoute:
         return AgentCapabilityRoute(state, owner, capability_id, reason, level, verify)
 
+    signals = (authority_allowed, runtime_healthy, tools_available,
+               model_available, capacity_available, allow_demonstration)
+    if any(type(signal) is not bool for signal in signals):
+        return result("HOLD", "Invalid live eligibility signal")
     if not authority_allowed:
         return result("HOLD", "Independent authority decision denied")
     if not runtime_healthy:
@@ -61,7 +65,8 @@ def select_agent_capability_route(
         return result("HOLD", "Certification does not bind the canonical capability owner")
     level = certification.get("level", "L0")
     trust = certification.get("trust_state")
-    if level not in {f"L{n}" for n in range(8)} or trust in INVALID_TRUST:
+    if (not isinstance(level, str) or not isinstance(trust, str) or
+            level not in {f"L{n}" for n in range(8)} or trust in INVALID_TRUST):
         return result("HOLD", "Certification is invalid or requires revalidation")
     current = ((level == "L6" and trust == "CERTIFIED-HEALTHY") or
                (level == "L7" and trust == "L7-CURRENT"))
