@@ -96,6 +96,18 @@ def test_a20_normal_case_is_discriminating_synthetic_margin_task():
     assert spec["certification"] == "UNVERIFIED"
 
 
+def test_a01_normal_case_separates_total_value_from_efficiency():
+    spec = challenge("role:normal", agent_id="a01", capability_id="responsibility.a01")
+    objective = spec["request"]["objective"]
+    context = spec["request"]["context"]
+    criteria = " ".join(spec["expected_discriminants"])
+    assert "total points and points per engineer-day separately" in objective
+    assert "8 TOTAL estimated points" in context
+    assert "6 TOTAL estimated points" in context
+    assert "8/3 points per day is LESS than Beta's 6/2" in criteria
+    assert spec["certification"] == "UNVERIFIED"
+
+
 def test_a18_normal_case_explicitly_checks_test_oracle_against_requirement():
     spec = challenge("role:normal", agent_id="a18", capability_id="responsibility.a18")
     assert "expected test value from the requirement" in spec["request"]["objective"]

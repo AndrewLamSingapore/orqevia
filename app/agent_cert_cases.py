@@ -28,9 +28,9 @@ ROLE_CASES = {
 # These are prompts only: no worker result, PASS, or attestation is implied.
 ROLE_NORMAL_FIXTURES = {
     "responsibility.a01": (
-        "Rank two launch priorities under the stated capacity limit and name a decision trigger.",
-        "SYNTHETIC: Alpha needs 3 engineer-days and yields 8 points; Beta needs 2 days and yields 6 points; only 3 days are available; points are estimates.",
-        ("Only one option fits now", "Compare points per day and uncertainty", "State what evidence could reverse the priority")),
+        "Rank two indivisible launch priorities under the stated capacity limit. Compare total points and points per engineer-day separately, and name a numerical decision trigger.",
+        "SYNTHETIC: Alpha needs 3 engineer-days and yields 8 TOTAL estimated points; Beta needs 2 engineer-days and yields 6 TOTAL estimated points; only 3 days are available; no third project exists.",
+        ("Alpha has 8 total points and Beta 6 total points", "Alpha's 8/3 points per day is LESS than Beta's 6/2", "Alpha maximizes total points if at most one project can be selected", "A decision trigger must use consistent units and a changed estimate")),
     "responsibility.a02": (
         "Decompose the approved report objective into bounded tasks with acceptance criteria.",
         "SYNTHETIC: deliver a read-only weekly incident report; inputs are logs and service map; no alerting or configuration change approved.",
