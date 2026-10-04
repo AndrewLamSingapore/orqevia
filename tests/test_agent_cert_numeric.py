@@ -26,6 +26,20 @@ def test_exact_priority_facts_and_valid_structured_answer():
     assert review_priority_json(SOURCE, json.dumps(CORRECT)) == (True, ())
 
 
+def test_held_out_values_are_computed_not_reused_from_fixture():
+    held_out = {**SOURCE, "alpha_total_points": 7, "beta_total_points": 8}
+    facts = priority_facts(held_out)
+    assert facts["higher_total_project"] == "Beta"
+    assert facts["higher_efficiency_project"] == "Beta"
+    assert facts["beta_total_points_needed_to_reverse_choice"] is None
+    held_out_answer = {**CORRECT, "alpha_total_points": 7, "beta_total_points": 8,
+                       "alpha_points_per_day": "7/3", "beta_points_per_day": "4/1",
+                       "higher_total_project": "Beta", "chosen_project_under_three_day_limit": "Beta",
+                       "beta_total_points_needed_to_reverse_choice": None}
+    assert review_priority_json(held_out, json.dumps(held_out_answer)) == (True, ())
+    assert not review_priority_json(held_out, json.dumps(CORRECT))[0]
+
+
 @pytest.mark.parametrize("changes,missing", [
     ({"alpha_total_points": 24, "beta_total_points": 12}, "alpha_total_points"),
     ({"higher_efficiency_project": "Alpha"}, "higher_efficiency_project"),
