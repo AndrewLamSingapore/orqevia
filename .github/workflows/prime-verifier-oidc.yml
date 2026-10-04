@@ -45,7 +45,7 @@ jobs:
     # The reusable signer is resolved from main, never from a PR head.
     needs: preflight
     if: needs.preflight.outputs.permitted == 'true'
-    uses: AndrewLamSingapore/prime/.github/workflows/prime-verifier-signer.yml@refs/heads/main
+    uses: AndrewLamSingapore/prime/.github/workflows/prime-verifier-signer.yml@main
     permissions:
       id-token: write
       contents: none
