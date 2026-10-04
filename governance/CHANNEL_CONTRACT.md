@@ -1,19 +1,23 @@
-# One current source across channels
+# Shared channel reading contract
 
-Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
+PRIME component reference: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
 
-Lam's 15 September 2026 instruction establishes one current architecture and
-operational record for ChatGPT, Codex, Sol, Astra, ABEX, Dell and all seven repositories.
-This contract is subordinate to STATUS.md for status and to the operational
-manifest for component references; it is not another status authority.
+Lam's 15 September 2026 instruction requires ChatGPT, Codex, Sol, Astra, ABEX
+and Dell to reconcile the same evidence. PRIME owns shared orchestration and
+cross-product contracts; each product repository owns its own source,
+configuration, contracts and domain records. STATUS.md records portfolio
+status claims. The operational manifest provides dated PRIME component and
+observation references; neither this contract nor that manifest establishes
+current deployment status.
 
-1. Resolve PRIME `main` once and pin that commit for the whole read. Read the
-   operational manifest, its product manifest and architecture references at
-   that commit. Do not mix files from different commits or rely on chat memory.
-2. The operational manifest selects the one architecture and records evidence
-   status. system.manifest.json is a subordinate product/component manifest,
-   not a competing operational record. STATUS.md alone owns current status;
-   no parallel status pointer is maintained.
+1. Resolve PRIME `main` once and pin that commit for shared PRIME references.
+   Read the operational manifest, PRIME product manifest and architecture
+   references at that commit. Resolve each relevant product's owning repository
+   separately; do not mix files from different commits or rely on chat memory.
+2. The operational manifest records PRIME architecture references and dated
+   observations; `system.manifest.json` binds PRIME components. STATUS.md
+   records portfolio status claims and their evidence classification. No
+   parallel portfolio status pointer is maintained.
 3. ABEX/PRIME owns runtime coordination. Dell is an authenticated client,
    development/synchronization node and independent verifier. PWA and voice use
    the same Interface contract. Client identity never increases authority.
@@ -26,17 +30,17 @@ manifest for component references; it is not another status authority.
 6. Git defines intended source, runtime receipts define deployment, and retained
    independent evidence proves correspondence. Never upgrade UNKNOWN, STALE,
    DISPUTED or a scoped test PASS into general production acceptance.
-7. Report the canonical revision, scope verified and unresolved differences.
-   Source unification and operational freshness are different fields. All channels
-   must preserve that distinction and the same outstanding priorities.
-8. Make changes through canonical source and existing repository controls. Generate
-   the one resume mirror from the manifest. Older exports/installers/architecture
-   documents are superseded; retain recovery history without current authority.
+7. Report the relevant owning source revisions, scope verified and unresolved
+   differences. Source identity and operational freshness are different fields.
+   All channels must preserve that distinction and dated outstanding priorities.
+8. Make changes through each owning repository's source and controls. Regenerate
+   the PRIME resume mirror when its input manifest changes. Older exports,
+   installers and architecture documents remain historical evidence.
 
 Domain data remains with its system of record: VELYQUA owns aquarium observations,
 Portal owns its artifacts/relay records, and the other applications own their
-product data. One portfolio truth does not require moving all databases into Git.
+product data. Cross-product reconciliation does not move databases into Git.
 
 Old conversations and model memories cannot be remotely rewritten by this file.
-Conformance requires a channel to read the current source; lack of access must be
+Conformance requires a channel to read each relevant owning source; lack of access must be
 reported, never presented as successful synchronization.
