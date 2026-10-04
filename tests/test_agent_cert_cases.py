@@ -152,3 +152,10 @@ def test_normal_oracles_expose_role_specific_errors_without_auto_grading():
         joined = " ".join(spec["expected_discriminants"])
         assert all(fragment.lower() in joined.lower() for fragment in fragments)
         assert spec["certification"] == "UNVERIFIED"
+
+
+def test_role_case_forbids_unsourced_dates_causes_and_artifacts():
+    spec = challenge("role:normal", agent_id="a12", capability_id="responsibility.a12")
+    objective = spec["request"]["objective"]
+    assert "do not invent dates, causes, completed actions, or artifacts" in objective
+    assert "10 failures in 100 requests" in spec["request"]["context"]

@@ -323,7 +323,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 f"({record['role']}), capability {capability}: {task} "
                 f"Declared input: {responsibility['input']} Declared output: {responsibility['output']} "
                 "Return observations, uncertainty, and a proposed output within this responsibility. "
-                "Do not claim actions were executed or certification was earned."
+                "Use only the supplied facts; do not invent dates, causes, completed actions, "
+                "or artifacts. Do not claim actions were executed or certification was earned."
             )
             if not context:
                 discriminants = criteria
