@@ -31,3 +31,16 @@ empty pin set and an unavailable verifier callback leave certification at L0.
 Only a real independent review of every missing case, a signed evidence record,
 and a current registry projection can support an L7 claim. Candidate tests use
 synthetic in-memory keys and cannot establish live verifier custody.
+
+## Azure Key Vault ES256 option
+
+`ProtectedAzureES256Signer` is an alternative protected-process boundary for
+the separately provisioned non-exportable P-256 Key Vault key. It consumes the
+same versioned key ID and pinned public JWK as
+`AzureES256CertificationVerifier`; no private key or cloud credential is stored
+in PRIME. Its injected operation must call Key Vault `sign(ES256, digest)` only
+after the protected reviewer has independently approved the exact record and
+artifact. The returned Key Vault key ID and 64-byte R||S signature are checked
+against the pin before a record can be returned. No agent-facing or PRIME
+runtime endpoint for the signer is supplied here. Synthetic tests are contract
+proof, not live Azure signing or L7 certification.
