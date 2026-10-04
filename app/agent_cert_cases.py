@@ -318,14 +318,27 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                  "Reject an inverted assertion even if it passes buggy code")
         elif case_id == "role:normal":
             task, _, criteria = ROLE_NORMAL_FIXTURES[capability]
-            objective = (
+            role_prefix = (
                 f"For a bounded synthetic {responsibility['description']} exercise by registered {agent_id} "
                 f"({record['role']}), capability {capability}: {task} "
                 f"Declared input: {responsibility['input']} Declared output: {responsibility['output']} "
-                "Return observations, uncertainty, and a proposed output within this responsibility. "
-                "Use only the supplied facts; do not invent dates, causes, completed actions, "
-                "or artifacts. Do not claim actions were executed or certification was earned."
             )
+            if agent_id == "a12" and capability == "responsibility.a12" and not context:
+                objective = role_prefix + (
+                    " Output only one strict JSON object with exactly these keys: "
+                    "week1_failures, week1_requests, week2_failures, week2_requests, "
+                    "week1_rate, week2_rate, failure_count_change, failure_rate_change, cause. "
+                    "Copy counts from the source. Write rates as reduced fraction strings. "
+                    "Use UP, DOWN, or UNCHANGED for each change and UNKNOWN for cause when "
+                    "the source does not establish one. No prose, markdown, date, or extra fields. "
+                    "Do not claim actions were executed or certification was earned."
+                )
+            else:
+                objective = role_prefix + (
+                    "Return observations, uncertainty, and a proposed output within this responsibility. "
+                    "Use only the supplied facts; do not invent dates, causes, completed actions, "
+                    "or artifacts. Do not claim actions were executed or certification was earned."
+                )
             if not context:
                 discriminants = criteria
         else:
@@ -371,6 +384,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                   "case_specific_result_review", "independent_verifier")
         if agent_id == "a01" and capability == "responsibility.a01" and case_id == "role:normal" and not context:
             review += ("exact_numeric_oracle",)
+        if agent_id == "a12" and capability == "responsibility.a12" and case_id == "role:normal" and not context:
+            review += ("exact_rate_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -385,6 +400,9 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             "priority": "low",
             "task_class": task_class,
             "max_cost_usd": 0,
+            **({"response_format": "strict_json"} if case_id == "role:normal" and not context
+               and (agent_id, capability) in {("a01", "responsibility.a01"),
+                                              ("a12", "responsibility.a12")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,
