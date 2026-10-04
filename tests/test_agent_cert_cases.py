@@ -102,6 +102,8 @@ def test_a01_normal_case_separates_total_value_from_efficiency():
     context = spec["request"]["context"]
     criteria = " ".join(spec["expected_discriminants"])
     assert "total points and points per engineer-day separately" in objective
+    assert "strict JSON object" in objective
+    assert "exact_numeric_oracle" in spec["independent_review"]
     assert "8 TOTAL estimated points" in context
     assert "6 TOTAL estimated points" in context
     assert "8/3 points per day is LESS than Beta's 6/2" in criteria

@@ -28,7 +28,7 @@ ROLE_CASES = {
 # These are prompts only: no worker result, PASS, or attestation is implied.
 ROLE_NORMAL_FIXTURES = {
     "responsibility.a01": (
-        "Rank two indivisible launch priorities under the stated capacity limit. Compare total points and points per engineer-day separately, and name a numerical decision trigger.",
+        "Rank two indivisible launch priorities under the stated capacity limit. Compare total points and points per engineer-day separately. Return ONLY a strict JSON object with alpha_total_points, beta_total_points, alpha_points_per_day, beta_points_per_day, higher_efficiency_project, higher_total_project, chosen_project_under_three_day_limit, and beta_total_points_needed_to_reverse_choice. Express each per-day ratio as a reduced fraction string, not a JSON arithmetic expression. Check the comparative fields against the calculated values and name the smallest integer Beta total that would strictly reverse the choice.",
         "SYNTHETIC: Alpha needs 3 engineer-days and yields 8 TOTAL estimated points; Beta needs 2 engineer-days and yields 6 TOTAL estimated points; only 3 days are available; no third project exists.",
         ("Alpha has 8 total points and Beta 6 total points", "Alpha's 8/3 points per day is LESS than Beta's 6/2", "Alpha maximizes total points if at most one project can be selected", "A decision trigger must use consistent units and a changed estimate")),
     "responsibility.a02": (
@@ -368,6 +368,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
         route_review = "registered_a19_route" if agent_id == AGENT_ID else "registered_agent_route"
         review = ("authenticated_owner", route_review, "worker_observed",
                   "case_specific_result_review", "independent_verifier")
+        if agent_id == "a01" and capability == "responsibility.a01" and case_id == "role:normal" and not context:
+            review += ("exact_numeric_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
