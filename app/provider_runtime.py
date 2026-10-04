@@ -171,7 +171,7 @@ class HuggingFaceProvider(ChatCompletionProvider):
     _PINNED_MODEL=re.compile(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+:[A-Za-z0-9._-]+\Z')
 
     def __init__(self, secret_ref='env:HF_TOKEN', *, secret_resolver=None, transport=None):
-        if secret_ref!='env:HF_TOKEN':
+        if secret_ref not in ('env:HF_TOKEN','file:HF_TOKEN'):
             raise ValueError('Hugging Face requires the governed HF_TOKEN reference')
         if secret_resolver is None:
             from .secret_refs import resolve_secret

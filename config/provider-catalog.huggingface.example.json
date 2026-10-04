@@ -11,7 +11,7 @@
       "tier": "MINI",
       "model": "openai/gpt-oss-20b:groq",
       "endpoint": "https://router.huggingface.co/v1/chat/completions",
-      "secret_ref": "env:HF_TOKEN",
+      "secret_ref": "file:HF_TOKEN",
       "context_tokens": 4096,
       "output_tokens": 256,
       "concurrency": 1
