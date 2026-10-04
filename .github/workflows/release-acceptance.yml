@@ -76,6 +76,7 @@ jobs:
             --network prime-acceptance \
             -p 18000:8000 \
             -v prime-acceptance-data:/data \
+            -v "${{ github.workspace }}/benchmarks:/benchmarks:ro" \
             -e OLLAMA_BASE_URL=http://ollama:11434 \
             -e PRIME_FAST_MODEL=gemma3:1b \
             -e PRIME_DEEP_MODEL=gemma3:1b \
@@ -148,6 +149,8 @@ jobs:
               assert error.code==403
           print('Docker gateway denied')
           PY
+      - name: Benchmark 50 current production-entrypoint objective and artifact cases
+        run: docker exec prime-acceptance python /benchmarks/run_production_control.py
       - name: Verify objective and artifact survive container restart
         run: |
           docker rm -f prime-acceptance
