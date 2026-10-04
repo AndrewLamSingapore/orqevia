@@ -130,7 +130,10 @@ def challenge(case_id: str, *, context: str = "") -> dict:
                      " Return observations, uncertainty, and proposed actions. Do not claim actions were executed.")
         supplied_context = context or ("SYNTHETIC source=case-fixture; service=example-api; "
                                        "health=unknown; restarts=0; observation_time=2026-10-04T00:00:00Z")
-        task_class = "complex_reasoning"
+        # A bounded single-service normal assessment needs the qualified MINI
+        # planning tier, not an unavailable FLAGSHIP route. Harder cases retain
+        # their higher requirement; availability never silently lowers it.
+        task_class = "planning" if case_id == "role:normal" else "complex_reasoning"
         review = ("authenticated_owner", "registered_a19_route", "worker_observed",
                   "case_specific_result_review", "independent_verifier")
     return {

@@ -38,6 +38,11 @@ def test_identity_uses_exact_deterministic_a19_route_without_claiming_model_work
     assert "worker_observed" not in spec["independent_review"]
 
 
+def test_normal_role_case_uses_available_mini_tier_without_downgrading_hard_cases():
+    assert challenge("role:normal")["request"]["task_class"] == "planning"
+    assert challenge("role:difficult")["request"]["task_class"] == "complex_reasoning"
+
+
 def test_unseen_challenge_accepts_held_out_context_without_recording_a_pass():
     held_out = "SYNTHETIC source=auditor; service=unseen-queue; health=unknown"
     spec = challenge("unseen_task:complete", context=held_out)
