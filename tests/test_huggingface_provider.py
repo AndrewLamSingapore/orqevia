@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sqlite3
 
 import httpx
 import pytest
@@ -77,3 +78,49 @@ def test_catalog_requires_fixed_endpoint_token_pin_and_qualification(tmp_path):
     qualified = {**entry, 'enabled': True, 'qualification_status': 'QUALIFIED'}
     assert load(qualified)[0]['provider_kind'] == 'huggingface'
     assert isinstance(adapter_for(qualified), HuggingFaceProvider)
+
+
+def test_qualified_hf_route_flows_through_governed_queue_and_outcome(monkeypatch, tmp_path):
+    from app import cloud_execution as cloud
+    from app.job_queue import JobQueue, Provider, QueuePolicy
+    from app.outcome_metrics import OutcomeMetrics
+
+    entry = {'id': 'hf-fixture', 'provider_kind': 'huggingface', 'enabled': True,
+             'qualification_status': 'QUALIFIED', 'location': 'cloud', 'tier': 'MINI',
+             'model': MODEL.name, 'endpoint': HuggingFaceProvider.ENDPOINT,
+             'secret_ref': 'env:HF_TOKEN', 'context_tokens': 4096, 'output_tokens': 64,
+             'input_usd_million': '0.1', 'output_usd_million': '0.5'}
+    catalog = tmp_path / 'catalog.json'
+    catalog.write_text(json.dumps({'models': [entry]}))
+    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('PRIME_PROVIDER_CATALOG', str(catalog))
+    monkeypatch.setenv('HF_TOKEN', 'fixture-secret')
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, text=stream_response())
+
+    real_adapter = cloud.HuggingFaceProvider
+    monkeypatch.setattr(cloud, 'HuggingFaceProvider',
+                        lambda ref, secret_resolver: real_adapter(ref, secret_resolver=secret_resolver,
+                                                                 transport=httpx.MockTransport(handler)))
+    queue = JobQueue(tmp_path / 'queue.db', QueuePolicy(cloud_wait_seconds=0))
+    provider = Provider('hf-fixture', 'cloud', MODEL.name, 0, 0, 1, .1, .5, 64)
+    submitted = queue.submit(agent='a10', prompt='Count three fixture services',
+                             preferred_provider='hf-fixture', allow_cloud=True,
+                             data_classification='CLOUD_PERMITTED', max_cost_usd=.01,
+                             timeout_seconds=10)
+    job = queue.claim('fixture-worker', [provider])
+    assert job and job['id'] == submitted['id']
+    result = cloud.execute_cloud(job, provider, tmp_path, lambda: False)
+    queue.finish(job['id'], **result)
+    assert queue.get(job['id'])['status'] == 'completed'
+    assert result['result'] == 'three' and len(calls) == 1
+    assert json.loads(calls[0].content)['max_tokens'] == 64
+    ledger = tmp_path / 'compute-ledger.db'
+    assert OutcomeMetrics(ledger).summary('auto')['attempts'] == 1
+    with sqlite3.connect(ledger) as db:
+        details = json.loads(db.execute('SELECT details FROM reasoning_attempts').fetchone()[0])
+    assert details['success'] is True and details['provider'] == 'hf-fixture'
+    assert details['model'] == MODEL.name and details['agent_id'] == 'a10'
