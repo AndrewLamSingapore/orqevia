@@ -187,6 +187,13 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 "For a synthetic product, calculate gross margin and identify one pricing risk. "
                 "Separate arithmetic from assumptions. Do not claim market research was performed."
             )
+        elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":
+            objective = (
+                "Review the synthetic function against the stated requirement. Identify the concrete "
+                "boundary defect, propose the minimal correction and one discriminating test. "
+                "Derive each expected test value from the requirement, not the buggy implementation; "
+                "check the test against the proposed correction. Do not claim tests ran."
+            )
         else:
             topic = _role_topic(dimension, case)
             objective = (
@@ -202,6 +209,12 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             supplied_context = context or (
                 "SYNTHETIC: 100 units sold at USD 20 each; variable cost USD 12 per unit; "
                 "fixed costs unknown; no market demand data."
+            )
+        elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":
+            supplied_context = context or (
+                "SYNTHETIC requirement: is_nonnegative(n) returns True for n >= 0. "
+                "Proposed Python implementation: def is_nonnegative(n): return n > 0. "
+                "No test results are supplied."
             )
         elif agent_id != AGENT_ID or capability != CAPABILITY_ID:
             supplied_context = context or (

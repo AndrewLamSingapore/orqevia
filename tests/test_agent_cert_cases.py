@@ -70,7 +70,7 @@ def test_all_permanent_agents_receive_owned_role_specific_unverified_challenges(
             assert request.data_classification == "LOCAL_ONLY"
             assert request.max_cost_usd == 0
             assert "independent_verifier" in spec["independent_review"]
-            if agent_id != AGENT_ID and not (agent_id == "a20" and capability == "responsibility.a20"):
+            if agent_id != AGENT_ID and not (agent_id in {"a18", "a20"} and capability == f"responsibility.{agent_id}"):
                 assert responsibility["description"] in request.objective
                 assert responsibility["input"] in request.objective
                 assert responsibility["output"] in request.objective
@@ -81,6 +81,14 @@ def test_a20_normal_case_is_discriminating_synthetic_margin_task():
     assert "gross margin" in spec["request"]["objective"]
     assert "100 units" in spec["request"]["context"]
     assert "fixed costs unknown" in spec["request"]["context"]
+    assert spec["certification"] == "UNVERIFIED"
+
+
+def test_a18_normal_case_explicitly_checks_test_oracle_against_requirement():
+    spec = challenge("role:normal", agent_id="a18", capability_id="responsibility.a18")
+    assert "expected test value from the requirement" in spec["request"]["objective"]
+    assert "n >= 0" in spec["request"]["context"]
+    assert "n > 0" in spec["request"]["context"]
     assert spec["certification"] == "UNVERIFIED"
 
 
