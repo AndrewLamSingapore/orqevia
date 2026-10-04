@@ -78,6 +78,11 @@ class AgentCertificationRegistry:
             evidence = Path(row["evidence"])
             if evidence.is_absolute() or ".." in evidence.parts:
                 return False
+            cursor = agent_dir
+            for part in evidence.parts:
+                cursor = cursor / part
+                if cursor.is_symlink():
+                    return False
             artifact = (agent_dir / evidence).resolve()
             if not artifact.is_relative_to(agent_dir.resolve()) or not artifact.is_file():
                 return False
@@ -101,10 +106,18 @@ class AgentCertificationRegistry:
             raise ValueError("projection time requires timezone")
         agent_dir = self.root / agent_id
         try:
+            if self.root.is_symlink() or agent_dir.is_symlink():
+                raise ValueError("certification root or agent directory is a symlink")
+            if not agent_dir.resolve().is_relative_to(self.root.resolve()):
+                raise ValueError("agent directory escapes certification root")
             manifest = agent_dir / "certification.json"
+            if manifest.is_symlink():
+                raise ValueError("certification manifest is a symlink")
             if manifest.stat().st_size > MAX_EVIDENCE_BYTES:
                 raise ValueError("certification manifest exceeds size limit")
             data = json.loads(manifest.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("certification manifest must be an object")
             rows = data["records"] if data.get("schema_version") == "1.0" else []
             if not isinstance(rows, list):
                 rows = []
@@ -113,6 +126,7 @@ class AgentCertificationRegistry:
         matching = [row for row in rows if isinstance(row, dict)
                     and row.get("agent_id") == agent_id and row.get("capability_id") == capability_id]
         latest = {}
+        malformed = set()
         for row in matching:
             dimension = row.get("dimension")
             if dimension not in LEVEL_DIMENSIONS[-1]:
@@ -120,14 +134,16 @@ class AgentCertificationRegistry:
             test_case = row.get("test_case")
             if not isinstance(test_case, str) or not test_case:
                 continue
-            try:
-                timestamp = _utc(row["certified_at"])
-            except (KeyError, TypeError, ValueError):
-                continue
             key = (dimension, test_case)
+            try:
+                timestamp = (_utc(row["last_revalidated"]), _utc(row["certified_at"]),
+                             row.get("test_result") != "PASS")
+            except (KeyError, TypeError, ValueError):
+                malformed.add(key)
+                continue
             if key not in latest or timestamp > latest[key][0]:
                 latest[key] = (timestamp, row)
-        valid = {key for key, (_, row) in latest.items()
+        valid = {key for key, (_, row) in latest.items() if key not in malformed
                  if self._valid(row, agent_dir, agent_id, capability_id, now)}
         current = set()
         for dimension in LEVEL_DIMENSIONS[-1]:

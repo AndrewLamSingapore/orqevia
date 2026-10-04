@@ -2,6 +2,8 @@ import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from app.agent_certification import AgentCertificationRegistry, LEVEL_DIMENSIONS, REQUIRED_CASES, MAX_EVIDENCE_BYTES
 from app.agent_registry import load_agent_registry
 
@@ -86,6 +88,21 @@ def test_latest_failed_check_downgrades_prior_pass(tmp_path):
         "L1", "REVALIDATION-REQUIRED", 1)
 
 
+def test_later_revalidation_and_tied_fail_override_old_pass(tmp_path):
+    rows = fixture_rows(tmp_path, ("baseline", "role"))
+    role_row = next(row for row in rows if row["dimension"] == "role")
+    later = dict(role_row, test_result="FAIL",
+                 last_revalidated=(NOW + timedelta(hours=1)).isoformat())
+    manifest = tmp_path / "a17" / "certification.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [later]}))
+    assert AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                      verify_record=lambda row: True).project(
+        "a17", "responsibility.a17", now=NOW + timedelta(hours=2))["level"] == "L1"
+    tied = dict(role_row, test_result="FAIL")
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [tied]}))
+    assert projection(tmp_path)["level"] == "L1"
+
+
 def test_self_verification_missing_artifact_and_wrong_capability_cannot_certify(tmp_path):
     rows = fixture_rows(tmp_path, ("baseline",))
     rows[0]["verifier"] = "a17"
@@ -145,3 +162,32 @@ def test_reused_artifact_cannot_claim_distinct_role_cases(tmp_path):
     (tmp_path / "a17" / "certification.json").write_text(
         json.dumps({"schema_version": "1.0", "records": rows}))
     assert projection(tmp_path)["level"] == "L1"
+
+
+@pytest.mark.parametrize("shape", [[], "invalid", None])
+def test_malformed_manifest_shape_fails_closed(tmp_path, shape):
+    fixture_rows(tmp_path, ("baseline",))
+    (tmp_path / "a17" / "certification.json").write_text(json.dumps(shape))
+    assert projection(tmp_path)["level"] == "L0"
+
+
+def test_agent_directory_and_manifest_symlinks_fail_closed(tmp_path):
+    root = tmp_path / "root"
+    external = tmp_path / "external"
+    external.mkdir()
+    fixture_rows(external, ("baseline",))
+    root.mkdir()
+    try:
+        (root / "a17").symlink_to(external / "a17", target_is_directory=True)
+    except OSError:
+        pytest.skip("symlink creation unavailable on this host")
+    assert AgentCertificationRegistry(root, source_revision=REVISION,
+                                      verify_record=lambda row: True).project(
+        "a17", "responsibility.a17", now=NOW)["level"] == "L0"
+    local = tmp_path / "local"
+    local.mkdir()
+    fixture_rows(local, ("baseline",))
+    manifest = local / "a17" / "certification.json"
+    manifest.unlink()
+    manifest.symlink_to(external / "a17" / "certification.json")
+    assert projection(local)["level"] == "L0"
