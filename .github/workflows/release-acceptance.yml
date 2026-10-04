@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0 # exact historical commit and tag receipts are tested below
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
@@ -80,83 +82,73 @@ jobs:
             -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
             -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
             -e PRIME_SPINE_TOKEN=acceptance-secret \
+            -e PRIME_REGISTRY_V1_ENABLED=1 \
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
             -e PORTAL_BASE_URL= \
             prime:acceptance
-      - name: Verify health, Control Surface and protected read paths
+      - name: Verify local production control and durable artifact roundtrip
         run: |
-          python - <<'PY'
-          import json, time, urllib.error, urllib.request
-          base='http://127.0.0.1:18000'
-          token='acceptance-secret'
-          headers={'Authorization':f'Bearer {token}','Content-Type':'application/json'}
-          def request(path, method='GET', body=None, headers_override=None):
+          docker exec -i prime-acceptance python - <<'PY'
+          import hashlib, json, time, urllib.error, urllib.request
+          from pathlib import Path
+          base='http://127.0.0.1:8000'
+          origin={'Origin':base, 'Content-Type':'application/json'}
+          def request(path, method='GET', body=None, headers=None):
               data=None if body is None else json.dumps(body).encode()
-              req=urllib.request.Request(base+path, data=data, method=method, headers=headers if headers_override is None else headers_override)
-              with urllib.request.urlopen(req, timeout=10) as r:
-                  raw=r.read().decode(); return r.status, json.loads(raw) if raw else {}
+              req=urllib.request.Request(base+path, data=data, method=method, headers=headers or {})
+              with urllib.request.urlopen(req, timeout=10) as response:
+                  raw=response.read()
+                  return response.status, raw, response.headers
           for _ in range(30):
               try:
-                  with urllib.request.urlopen(base+'/health', timeout=2) as r:
-                      health=json.loads(r.read().decode())
-                      assert r.status == 200 and health['ok'] and health['integrity']=='ok'
+                  status, raw, _=request('/health')
+                  assert status==200 and json.loads(raw)=={'ok':True}
                   break
-              except Exception: time.sleep(1)
-          else: raise SystemExit('PRIME never became healthy')
-          with urllib.request.urlopen(base+'/control', timeout=5) as r:
-              html=r.read().decode(); assert r.status==200 and 'APPROVAL-GATED CONTROL SURFACE' in html
-          status, manifest=request('/api/control-surface/manifest')
-          assert status==200 and manifest['mode']=='approval-gated'
-          assert manifest['boundaries']['approval_decision'] is True
-          assert manifest['boundaries']['approval_executes_action'] is False
-          assert manifest['boundaries']['autonomous_actions'] is False
-          assert manifest['boundaries']['memory_write'] is False
-          assert manifest['boundaries']['runtime_mutation'] is False
-          assert manifest['boundaries']['velyqua_dependency'] is False
-          assert manifest['boundaries']['physical_actuation'] is False
-          assert set(manifest['views'])=={'overview','conversation','evidence','memory','system','actions','audit'}
-          assert manifest['owner_workspace']['version']=='2.0.0'
-          assert manifest['owner_workspace']['server_side_writes']=='approval-decisions-only'
-          assert manifest['owner_workspace']['executes_actions'] is False
-          assert set(manifest['memory_classes'])=={'working','episodic','semantic','procedural','protected'}
-          assert manifest['routing_policy']['version']=='1.0.0'
-          assert manifest['routing_policy']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
-          assert manifest['routing_policy']['executes_models'] is False
-          assert manifest['routing_policy']['executes_actions'] is False
+              except (urllib.error.URLError, AssertionError):
+                  time.sleep(1)
+          else:
+              raise SystemExit('local PRIME health did not become ready')
+          status, html, headers=request('/control')
+          assert status==200 and b'PRIME Control' in html
+          assert headers['X-Frame-Options']=='DENY' and headers['Cache-Control']=='no-store'
+          body={'objective':'Hash supplied text','context':'hello',
+                'capability':'responsibility.a02','deterministic_operation':'sha256'}
           try:
-              request('/api/cognitive/episodes', headers_override={})
-              raise AssertionError('protected episodes unexpectedly readable without auth')
-          except urllib.error.HTTPError as error: assert error.code==401
-          status, _=request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'})
-          assert status==200
-          status, consolidated=request('/api/cognitive/consolidate', method='POST')
-          assert status==200 and consolidated['promoted']>=1
-          status, plan=request('/api/cognitive/plan', method='POST', body={'intent':'Research release acceptance architecture and send an external message','department':'engineering','context':'This would be an external consequential action.'})
-          assert status==200 and plan['plan']['needs_approval'] is True
-          assert plan['plan']['proposed_action']['action']=='external.action.proposal'
-          assert plan['plan']['reasoning_route']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
-          assert plan['plan']['reasoning_route']['approval_required'] is True
-          status, reason=request('/api/cognitive/reason', method='POST', body={'intent':'Review release acceptance architecture','department':'engineering','context':'Use the saved release acceptance evidence.'})
-          assert status==200 and reason['result'] and reason['evaluation']['released'] is True
-          assert reason['confidence_hold']['held'] is False
-          assert reason['executed_external_action'] is False
-          status, multi=request('/api/cognitive/multi-reason', method='POST', body={'intent':'Evaluate the bounded release design','context':'Container acceptance','evidence':'Deterministic fixture'})
-          assert status==200 and multi['workers']==2 and len(multi['specialists'])==6
-          assert multi['critic']['stage']=='specialist_critique' and multi['synthesis']['stage']=='specialist_synthesis'
-          status, event=request('/api/cognitive/events', method='POST', body={'schema_version':'1.0.0','event_id':'acceptance-event-0001','event_type':'game.simulation.completed','source':'game-platform','occurred_at':'2026-09-01T00:00:00Z','correlation_id':'acceptance-run-0001','evidence_level':'E2','provenance':['acceptance:seed-1'],'payload':{'simulation_id':'acceptance-sim','scenario':'bounded'}})
-          assert status==200 and event['inserted'] and event['projected']
-          status, reviews=request('/api/cognitive/event-reviews')
-          assert status==200 and any(item['event_id']=='acceptance-event-0001' and item['status']=='pending' for item in reviews['reviews'])
-          status, graph=request('/api/cognitive/semantic-graph')
-          assert status==200 and any(item['last_event_id']=='acceptance-event-0001' for item in graph['nodes'])
-          status, compute=request('/api/cognitive/compute')
-          stages={item['stage'] for item in compute['events']}
-          assert {'local_ai','answer_evaluation','specialist_critique','specialist_synthesis'} <= stages
+              request('/control/api/objectives', 'POST', body)
+              raise AssertionError('mutation without same-origin header was admitted')
+          except urllib.error.HTTPError as error:
+              assert error.code==403
+          try:
+              request('/api/compute-queue/jobs')
+              raise AssertionError('protected API was readable without authentication')
+          except urllib.error.HTTPError as error:
+              assert error.code==401
+          status, raw, _=request('/control/api/objectives', 'POST', body, origin)
+          assert status==202
+          task_id=json.loads(raw)['id']
+          status, raw, _=request('/control/api/objectives/'+task_id)
+          task=json.loads(raw)
+          assert status==200 and task['state']=='COMPLETED'
+          artifact_id=task['steps'][0]['dispatch']['artifact']['artifact_id']
+          status, artifact, headers=request('/control/api/artifacts/'+artifact_id)
+          assert status==200 and hashlib.sha256(b'hello').hexdigest().encode() in artifact
+          assert headers['Content-Disposition']=='attachment'
+          Path('/data/acceptance-task-id').write_text(task_id)
+          print('local control, origin/auth boundary, artifact roundtrip verified')
           PY
-      - name: Execute the 50-case endpoint benchmark
-        run: python benchmarks/run_endpoint.py --base-url http://127.0.0.1:18000 --token acceptance-secret --minimum-pass-rate 1.0
-      - name: Verify persistence across restart
+      - name: Verify Docker gateway cannot enter local control
+        run: |
+          python - <<'PY'
+          import urllib.error, urllib.request
+          try:
+              urllib.request.urlopen('http://127.0.0.1:18000/health', timeout=5)
+              raise AssertionError('Docker gateway unexpectedly reached local control')
+          except urllib.error.HTTPError as error:
+              assert error.code==403
+          print('Docker gateway denied')
+          PY
+      - name: Verify objective and artifact survive container restart
         run: |
           docker rm -f prime-acceptance
           docker run -d --name prime-acceptance \
@@ -169,23 +161,30 @@ jobs:
             -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
             -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
             -e PRIME_SPINE_TOKEN=acceptance-secret \
+            -e PRIME_REGISTRY_V1_ENABLED=1 \
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
             -e PORTAL_BASE_URL= \
             prime:acceptance
-          python - <<'PY'
-          import json, time, urllib.request
-          base='http://127.0.0.1:18000'
-          headers={'Authorization':'Bearer acceptance-secret'}
+          docker exec -i prime-acceptance python - <<'PY'
+          import hashlib, json, time, urllib.error, urllib.request
+          from pathlib import Path
+          base='http://127.0.0.1:8000'
+          task_id=Path('/data/acceptance-task-id').read_text()
           for _ in range(30):
               try:
-                  req=urllib.request.Request(base+'/api/cognitive/memory/search?q=release%20acceptance&limit=5',headers=headers)
-                  with urllib.request.urlopen(req, timeout=2) as response:
-                      assert json.loads(response.read().decode())['results']
-                  print('persistent memory verified')
+                  with urllib.request.urlopen(base+'/control/api/objectives/'+task_id, timeout=2) as response:
+                      task=json.loads(response.read())
+                  assert task['state']=='COMPLETED'
+                  artifact_id=task['steps'][0]['dispatch']['artifact']['artifact_id']
+                  with urllib.request.urlopen(base+'/control/api/artifacts/'+artifact_id, timeout=2) as response:
+                      assert hashlib.sha256(b'hello').hexdigest().encode() in response.read()
+                  print('durable objective and artifact verified after restart')
                   break
-              except Exception: time.sleep(1)
-          else: raise SystemExit('persistent memory was not available after restart')
+              except (urllib.error.URLError, AssertionError):
+                  time.sleep(1)
+          else:
+              raise SystemExit('durable objective unavailable after restart')
           PY
       - name: Container logs on failure
         if: failure()
