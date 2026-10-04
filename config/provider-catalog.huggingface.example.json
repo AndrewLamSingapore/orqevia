@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "status": "HUGGING_FACE_CANDIDATE_NOT_QUALIFIED",
+  "models": [
+    {
+      "id": "hf-chat-candidate",
+      "provider_kind": "huggingface",
+      "enabled": false,
+      "qualification_status": "UNMEASURED",
+      "location": "cloud",
+      "tier": "MINI",
+      "model": "openai/gpt-oss-20b:groq",
+      "endpoint": "https://router.huggingface.co/v1/chat/completions",
+      "secret_ref": "env:HF_TOKEN",
+      "context_tokens": 4096,
+      "output_tokens": 256,
+      "concurrency": 1
+    }
+  ]
+}
