@@ -103,6 +103,29 @@ def test_later_revalidation_and_tied_fail_override_old_pass(tmp_path):
     assert projection(tmp_path)["level"] == "L1"
 
 
+@pytest.mark.parametrize("defect", ["revoked_verifier", "bad_hash"])
+@pytest.mark.parametrize("bad_first", [False, True])
+def test_conflicting_tied_pass_rows_fail_closed_in_any_order(tmp_path, defect, bad_first):
+    rows = fixture_rows(tmp_path, ("baseline", "role"))
+    original = next(row for row in rows if row["dimension"] == "role")
+    conflict = dict(original)
+    if defect == "revoked_verifier":
+        conflict["verifier"] = "a26"
+    else:
+        conflict["evidence_sha256"] = "0" * 64
+    ordered = ([conflict] + rows) if bad_first else (rows + [conflict])
+    (tmp_path / "a17" / "certification.json").write_text(
+        json.dumps({"schema_version": "1.0", "records": ordered}))
+    assert projection(tmp_path)["level"] == "L1"
+    repaired = dict(original, certified_at=(NOW + timedelta(hours=1)).isoformat(),
+                    last_revalidated=(NOW + timedelta(hours=1)).isoformat())
+    (tmp_path / "a17" / "certification.json").write_text(
+        json.dumps({"schema_version": "1.0", "records": ordered + [repaired]}))
+    assert AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                      verify_record=lambda row: row.get("verifier") == "a18").project(
+        "a17", "responsibility.a17", now=NOW + timedelta(hours=2))["level"] == "L2"
+
+
 def test_self_verification_missing_artifact_and_wrong_capability_cannot_certify(tmp_path):
     rows = fixture_rows(tmp_path, ("baseline",))
     rows[0]["verifier"] = "a17"

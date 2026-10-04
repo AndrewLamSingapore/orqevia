@@ -127,6 +127,7 @@ class AgentCertificationRegistry:
                     and row.get("agent_id") == agent_id and row.get("capability_id") == capability_id]
         latest = {}
         malformed = set()
+        ambiguous = set()
         for row in matching:
             dimension = row.get("dimension")
             if dimension not in LEVEL_DIMENSIONS[-1]:
@@ -141,9 +142,14 @@ class AgentCertificationRegistry:
             except (KeyError, TypeError, ValueError):
                 malformed.add(key)
                 continue
+            if key in latest:
+                if timestamp[:2] == latest[key][0][:2]:
+                    ambiguous.add(key)
+                elif timestamp > latest[key][0]:
+                    ambiguous.discard(key)
             if key not in latest or timestamp > latest[key][0]:
                 latest[key] = (timestamp, row)
-        valid = {key for key, (_, row) in latest.items() if key not in malformed
+        valid = {key for key, (_, row) in latest.items() if key not in malformed and key not in ambiguous
                  if self._valid(row, agent_dir, agent_id, capability_id, now)}
         current = set()
         for dimension in LEVEL_DIMENSIONS[-1]:
