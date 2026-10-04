@@ -1,0 +1,51 @@
+name: PRIME independent verifier OIDC preflight
+
+# This workflow is intentionally unavailable to pull requests and feature refs.
+# It observes GitHub's actual OIDC claims; it does not sign a certification case.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: none
+    outputs:
+      permitted: ${{ steps.guard.outputs.permitted }}
+    steps:
+      - id: guard
+        name: Require protected canonical main
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          REF_PROTECTED: ${{ github.ref_protected }}
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          python - <<'PY'
+          import os
+
+          expected = "AndrewLamSingapore/prime/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
+          allowed = (
+              os.environ["REPOSITORY"] == "AndrewLamSingapore/prime"
+              and os.environ["REF"] == "refs/heads/main"
+              and os.environ["REF_PROTECTED"] == "true"
+              and os.environ["EVENT_NAME"] == "workflow_dispatch"
+              and os.environ["WORKFLOW_REF"] == expected
+          )
+          if not allowed:
+              raise SystemExit("OIDC preflight denied: protected canonical main is required")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write("permitted=true\n")
+          PY
+
+  signer:
+    # The reusable signer is resolved from main, never from a PR head.
+    needs: preflight
+    if: needs.preflight.outputs.permitted == 'true'
+    uses: AndrewLamSingapore/prime/.github/workflows/prime-verifier-signer.yml@refs/heads/main
+    permissions:
+      id-token: write
+      contents: none
