@@ -61,6 +61,9 @@ def main():
     names.append('agent_certification')
     names.append('agent_capability_route')
     names.append('agent_cert_attestation')
+    names.append('agent_execution_probe')
+    names.append('hf_admission')
+    names.append('system_architecture')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

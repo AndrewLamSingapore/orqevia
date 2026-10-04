@@ -109,6 +109,7 @@ class SubmitJob(BaseModel):
     allow_cloud: bool=False
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
+    preferred_provider: str|None=None
 
 
 class Approval(BaseModel):
@@ -124,6 +125,13 @@ def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
         from .tier_router import classify_for_cloud
         if not classify_for_cloud(body.data_classification,body.prompt):raise HTTPException(422,'Data locality excludes cloud')
         if not any(p.kind=='cloud' for p in providers()):raise HTTPException(503,'No configured cloud provider')
+    if body.preferred_provider:
+        from .compute_catalog import load_catalog
+        candidate=next((x for x in load_catalog() if x['id']==body.preferred_provider),None)
+        if candidate and candidate.get('provider_kind')=='huggingface' and (
+            not body.allow_cloud or body.data_classification!='CLOUD_PERMITTED' or body.max_cost_usd<=0
+        ):
+            raise HTTPException(422,'Hugging Face requires explicit cloud, disclosure, and cost opt-in')
     try:
         canonical = canonical_agent_id(body.agent)
     except RegistryError:
