@@ -68,6 +68,7 @@ def main():
     names.append('agent_dispatch_api')
     names.append('agent_cert_cases')
     names.append('agent_cert_numeric')
+    names.append('agent_cert_numeric_boundaries')
     names.append('agent_cert_execution')
     names.append('hf_admission')
     names.append('system_architecture')

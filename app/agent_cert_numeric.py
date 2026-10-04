@@ -24,6 +24,15 @@ def _integer(value: object, name: str) -> int:
     return value
 
 
+def _unique_object(pairs: list[tuple[str, object]]) -> dict:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate JSON field")
+        result[key] = value
+    return result
+
+
 def priority_facts(source: dict) -> dict:
     """Compute exact two-project facts without model interpretation."""
     if not isinstance(source, dict) or set(source) != {
@@ -39,6 +48,8 @@ def priority_facts(source: dict) -> dict:
     beta_points = _integer(source["beta_total_points"], "beta_total_points")
     if alpha_days > capacity or beta_days > capacity:
         raise ValueError("both projects must fit the stated case")
+    if alpha_days + beta_days <= capacity:
+        raise ValueError("this reviewer requires capacity for only one project")
     alpha_rate = Fraction(alpha_points, alpha_days)
     beta_rate = Fraction(beta_points, beta_days)
     total_choice = "Alpha" if alpha_points > beta_points else (
@@ -64,7 +75,7 @@ def review_priority_json(source: dict, response: str) -> tuple[bool, tuple[str, 
     if not isinstance(response, str) or len(response) > 4096:
         return False, ("response_not_bounded_text",)
     try:
-        answer = json.loads(response)
+        answer = json.loads(response, object_pairs_hook=_unique_object)
     except (json.JSONDecodeError, ValueError):
         return False, ("not_strict_json",)
     if not isinstance(answer, dict) or set(answer) != _FIELDS:
