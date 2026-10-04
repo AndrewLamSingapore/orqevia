@@ -61,6 +61,8 @@ def main():
     names.append('agent_certification')
     names.append('agent_capability_route')
     names.append('agent_cert_attestation')
+    names.append('agent_cert_ed25519')
+    names.append('agent_cert_plan')
     names.append('agent_execution_probe')
     names.append('agent_execution_live')
     names.append('agent_dispatch_api')

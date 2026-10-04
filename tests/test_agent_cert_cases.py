@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.agent_cert_cases import AGENT_ID, CAPABILITY_ID, case_ids, challenge
+from app.agent_cert_cases import AGENT_ID, CAPABILITY_ID, ROLE_NORMAL_FIXTURES, case_ids, challenge
 from app.agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
 from app.agent_dispatch_api import AgentRequest
 from app.agent_registry import agent_record, registered_agent_ids, responsibility_owner
@@ -57,6 +57,11 @@ def test_unknown_case_fails_closed():
 
 
 def test_all_permanent_agents_receive_owned_role_specific_unverified_challenges():
+    all_capabilities = {capability for agent_id in registered_agent_ids(include_orchestrator=False)
+                        for capability in agent_record(agent_id)["capability_requirements"]}
+    assert set(ROLE_NORMAL_FIXTURES) == all_capabilities - {
+        "responsibility.a18", "responsibility.a19", "responsibility.a20"}
+    objectives, contexts = set(), set()
     for agent_id in sorted(registered_agent_ids(include_orchestrator=False)):
         record = agent_record(agent_id)
         for capability in record["capability_requirements"]:
@@ -70,6 +75,12 @@ def test_all_permanent_agents_receive_owned_role_specific_unverified_challenges(
             assert request.data_classification == "LOCAL_ONLY"
             assert request.max_cost_usd == 0
             assert "independent_verifier" in spec["independent_review"]
+            assert request.objective not in objectives
+            assert request.context not in contexts
+            assert len(spec["expected_discriminants"]) >= 3
+            assert all(isinstance(item, str) and item.strip() for item in spec["expected_discriminants"])
+            objectives.add(request.objective)
+            contexts.add(request.context)
             if agent_id != AGENT_ID and not (agent_id in {"a18", "a20"} and capability == f"responsibility.{agent_id}"):
                 assert responsibility["description"] in request.objective
                 assert responsibility["input"] in request.objective
@@ -81,6 +92,7 @@ def test_a20_normal_case_is_discriminating_synthetic_margin_task():
     assert "gross margin" in spec["request"]["objective"]
     assert "100 units" in spec["request"]["context"]
     assert "fixed costs unknown" in spec["request"]["context"]
+    assert "40%" in " ".join(spec["expected_discriminants"])
     assert spec["certification"] == "UNVERIFIED"
 
 
@@ -89,6 +101,7 @@ def test_a18_normal_case_explicitly_checks_test_oracle_against_requirement():
     assert "expected test value from the requirement" in spec["request"]["objective"]
     assert "n >= 0" in spec["request"]["context"]
     assert "n > 0" in spec["request"]["context"]
+    assert "inverted assertion" in " ".join(spec["expected_discriminants"])
     assert spec["certification"] == "UNVERIFIED"
 
 
@@ -110,3 +123,18 @@ def test_other_role_cases_are_distinct_and_held_out_context_is_preserved():
     assert normal["request"]["objective"] != invalid["request"]["objective"]
     assert "Design-to-code conversion" in normal["request"]["objective"]
     assert "invalid" in invalid["request"]["objective"].lower()
+    assert normal["expected_discriminants"] == ()
+
+
+def test_normal_oracles_expose_role_specific_errors_without_auto_grading():
+    examples = {
+        ("a04", "responsibility.a04"): ("tie", "scores 9"),
+        ("a12", "responsibility.a12"): ("rate", "10%"),
+        ("a26", "responsibility.a26"): ("100% claim", "95%"),
+        ("a29", "responsibility.a29"): ("runtime identity", "abc123"),
+    }
+    for (agent_id, capability_id), fragments in examples.items():
+        spec = challenge("role:normal", agent_id=agent_id, capability_id=capability_id)
+        joined = " ".join(spec["expected_discriminants"])
+        assert all(fragment.lower() in joined.lower() for fragment in fragments)
+        assert spec["certification"] == "UNVERIFIED"

@@ -176,12 +176,17 @@ class AgentCertificationRegistry:
         valid = {key for key, (_, row) in latest.items() if key not in malformed and key not in ambiguous
                  if self._valid(row, agent_dir, agent_id, capability_id, now)}
         current = set()
+        duplicate_artifact_cases = set()
         for dimension in LEVEL_DIMENSIONS[-1]:
             required = REQUIRED_CASES.get(dimension, ("complete",))
             if all((dimension, case) in valid for case in required):
                 artifacts = [latest[(dimension, case)][1]["evidence"] for case in required]
                 if len(artifacts) == len(set(artifacts)):
                     current.add(dimension)
+                else:
+                    duplicate_artifact_cases.update(
+                        (dimension, case) for case in required
+                        if artifacts.count(latest[(dimension, case)][1]["evidence"]) > 1)
         latest_rows = [row for _, row in latest.values()]
         health_row = latest.get(("health", "complete"))
         health = "HEALTHY" if "health" in current and health_row and health_row[1].get("health") == "HEALTHY" else "UNKNOWN"
@@ -192,7 +197,9 @@ class AgentCertificationRegistry:
         stale = bool(matching) and (len(valid) < len(latest) or not current)
         missing = [(dimension, case) for dimension in LEVEL_DIMENSIONS[-1]
                    for case in REQUIRED_CASES.get(dimension, ("complete",))
-                   if dimension not in current or (dimension, case) not in valid]
+                   if ((dimension, case) not in valid
+                       or (dimension, case) in duplicate_artifact_cases
+                       or (dimension == "health" and "health" not in current))]
         return {"agent_id": agent_id, "capability_id": capability_id,
                 "level": f"L{level}",
                 "trust_state": ("REVALIDATION-REQUIRED" if stale else
@@ -203,6 +210,7 @@ class AgentCertificationRegistry:
                 "current_dimensions": sorted(current),
                 "current_cases": [f"{dimension}:{case}" for dimension, case in sorted(valid)
                                   if dimension in current],
+                "valid_cases": [f"{dimension}:{case}" for dimension, case in sorted(valid)],
                 "missing_cases": [f"{dimension}:{case}" for dimension, case in missing],
                 "failure_count": max((row.get("failure_count", 0) for row in latest_rows
                                       if isinstance(row.get("failure_count", 0), int)

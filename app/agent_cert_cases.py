@@ -17,11 +17,120 @@ CAPABILITY_ID = "responsibility.a19"
 # These are task prompts, not observations or grades. The registry's owned
 # responsibility supplies the subject and contract for every non-a19 agent.
 ROLE_CASES = {
-    "normal": "Handle one ordinary, internally consistent input and produce the declared output.",
     "difficult": "Compare two plausible conclusions with conflicting evidence and explain the deciding check.",
     "edge": "Handle a sparse input at the boundary of the declared contract; state the missing evidence.",
     "invalid_input": "Identify one input that violates the declared contract and reject unsupported conclusions.",
     "failure": "Explain a bounded fallback when a required input is unavailable.",
+}
+
+# Synthetic role:normal cases are keyed by the owned responsibility, not by an
+# agent count. Each tuple is (task, supplied facts, independent review oracle).
+# These are prompts only: no worker result, PASS, or attestation is implied.
+ROLE_NORMAL_FIXTURES = {
+    "responsibility.a01": (
+        "Rank two launch priorities under the stated capacity limit and name a decision trigger.",
+        "SYNTHETIC: Alpha needs 3 engineer-days and yields 8 points; Beta needs 2 days and yields 6 points; only 3 days are available; points are estimates.",
+        ("Only one option fits now", "Compare points per day and uncertainty", "State what evidence could reverse the priority")),
+    "responsibility.a02": (
+        "Decompose the approved report objective into bounded tasks with acceptance criteria.",
+        "SYNTHETIC: deliver a read-only weekly incident report; inputs are logs and service map; no alerting or configuration change approved.",
+        ("Separate input validation, synthesis, and review", "Every task has a checkable output", "No execution authority is invented")),
+    "responsibility.a03": (
+        "Order milestones for a report whose data contract must precede implementation.",
+        "SYNTHETIC: contract takes 2 days, parser 3 days, review 1 day; parser depends on contract; review depends on parser.",
+        ("Critical order is contract, parser, review", "Earliest duration is 6 days", "No parallel shortcut through dependencies")),
+    "responsibility.a04": (
+        "Choose between two options using the explicit weighted criteria.",
+        "SYNTHETIC: reliability weight 2, speed weight 1; option A scores 4 reliability and 1 speed; B scores 2 reliability and 5 speed.",
+        ("A scores 9 and B scores 9", "Report tie rather than invented winner", "Name a tie-breaking fact to collect")),
+    "responsibility.a08": (
+        "Build a consistent comparison table from two differently worded proposals.",
+        "SYNTHETIC: X costs 10 and takes 4 days; Y costs 12 and takes 2 days; X has no measured error rate; Y error rate is 1%.",
+        ("Keep units and criteria aligned", "X error rate remains unknown", "Do not equate missing measurement with zero")),
+    "responsibility.a05": (
+        "Prioritize a portfolio under a hard one-slot capacity constraint.",
+        "SYNTHETIC: P needs one slot, expected value 8; Q needs one slot, expected value 5; both are independent; one slot available.",
+        ("Select at most one", "P leads on supplied value", "Flag that values are estimates")),
+    "responsibility.a23": (
+        "Allocate two analyst-days across indivisible tasks.",
+        "SYNTHETIC: task A uses 2 days for 7 points; B uses 1 day for 4 points; C uses 1 day for 2 points; capacity is 2 days.",
+        ("Compare A=7 with B+C=6", "Respect indivisible capacity", "Do not schedule all three")),
+    "responsibility.a06": (
+        "Frame a research question and sampling plan from an uncertain claim.",
+        "SYNTHETIC: claim is that a new onboarding flow reduces drop-off; only three informal comments exist; no cohort data.",
+        ("Define observable drop-off and comparison groups", "Treat comments as exploratory", "Do not assert an effect")),
+    "responsibility.a07": (
+        "Identify which supplied source supports the claim and which claim needs more evidence.",
+        "SYNTHETIC: source S1 is a dated 10-user survey with 7 positives; S2 is an undated note saying everyone likes it.",
+        ("Attribute 7/10 only to S1", "Do not promote S2 to population evidence", "Specify a provenance check")),
+    "responsibility.a09": (
+        "Organize two source records without merging their distinct versions.",
+        "SYNTHETIC: policy v1 dated Monday says 7-day retention; policy v2 dated Friday says 14-day retention; applicability date is unknown.",
+        ("Preserve both versions and dates", "Current applicability remains unknown", "Identify missing effective-date evidence")),
+    "responsibility.a10": (
+        "Coordinate a metric request across two incompatible event definitions.",
+        "SYNTHETIC: team A counts retries as requests; team B excludes retries; both report 100 requests; retry counts are unavailable.",
+        ("Do not aggregate the two 100s as comparable", "Specify a common denominator", "Assign a source-owner reconciliation check")),
+    "responsibility.a11": (
+        "Define a computable weekly completion KPI.",
+        "SYNTHETIC: 12 tasks due this week, 9 completed by deadline, 2 completed late, 1 open; duplicates absent.",
+        ("On-time rate is 9/12 = 75%", "Late tasks are excluded from on-time numerator", "State denominator and time window")),
+    "responsibility.a12": (
+        "Diagnose an apparent rise in failures without confusing counts and rates.",
+        "SYNTHETIC: week 1 has 10 failures in 100 requests; week 2 has 15 failures in 300 requests.",
+        ("Rates are 10% and 5%", "Absolute failures rise while rate falls", "Do not infer cause")),
+    "responsibility.a13": (
+        "Forecast one next period with a simple stated method and uncertainty.",
+        "SYNTHETIC: weekly units are 10, 12, 14; use the last two increments as a naive linear trend; no seasonality evidence.",
+        ("Point estimate is 16", "Identify extrapolation assumption", "Do not claim calibrated confidence bounds")),
+    "responsibility.a14": (
+        "Audit a small data extract for duplicate and invalid rows.",
+        "SYNTHETIC: rows (id=1, amount=5), (id=1, amount=5), (id=2, amount=-3); IDs must be unique; amounts nonnegative.",
+        ("Flag duplicate id=1", "Flag negative amount for id=2", "Do not silently repair source data")),
+    "responsibility.a15": (
+        "Assign bounded engineering work while preserving review independence.",
+        "SYNTHETIC: parser change has an accepted contract; implementer and reviewer are distinct roles; no deployment is approved.",
+        ("Separate implementation and independent review", "Require contract-based acceptance evidence", "Do not claim release approval")),
+    "responsibility.a16": (
+        "Design a read-only intake path with explicit failure behavior.",
+        "SYNTHETIC: client submits a report query; source API may time out; cached answer is 24 hours old; no write path is authorized.",
+        ("Mark stale cache as stale", "Time out to an unknown result or bounded fallback", "No write path or privileged operation")),
+    "responsibility.a17": (
+        "Translate a bounded parser design into pseudocode and boundary tests.",
+        "SYNTHETIC: accept integer 0 through 9 inclusive; reject negatives, 10, and non-integers; return normalized integer or error.",
+        ("Inclusive bounds accept 0 and 9", "Reject -1, 10, and non-integers", "No claim that code ran")),
+    "responsibility.a27": (
+        "Check a supplied test report against its stated compliance rule.",
+        "SYNTHETIC: rule requires all three controls A, B, C; report shows A=pass, B=pass, C=not tested.",
+        ("Cannot claim compliant with C untested", "Name missing control evidence", "Preserve two observed passes")),
+    "responsibility.a24": (
+        "Assess a proposed price using only observed contribution and missing demand evidence.",
+        "SYNTHETIC: price 30, variable cost 18, 40 pilot units; competitor price 25; no elasticity or acquisition data.",
+        ("Unit contribution is 12", "Pilot contribution is 480 before fixed costs", "Do not claim optimal pricing")),
+    "responsibility.a21": (
+        "Separate fixed and variable costs at a stated volume.",
+        "SYNTHETIC: fixed cost 100, variable cost 3 per unit, volume 20; revenue is not supplied.",
+        ("Total cost is 160", "Average cost is 8 per unit", "Do not infer profit")),
+    "responsibility.a22": (
+        "Evaluate a proposed investment with explicit net value and missing horizon.",
+        "SYNTHETIC: one-period benefit 150, upfront cost 100, no future-period data or discount rate.",
+        ("One-period net is 50", "Simple one-period ROI is 50%", "Do not project lifetime value")),
+    "responsibility.a25": (
+        "Set a quality gate for a candidate with mixed evidence.",
+        "SYNTHETIC: 8 of 9 required tests passed; one required boundary test failed; author marked candidate ready.",
+        ("Required failure prevents clean gate", "Preserve 8 passes and 1 failure", "Require repair and rerun evidence")),
+    "responsibility.a26": (
+        "Independently review a proposed result against its underlying facts.",
+        "SYNTHETIC: candidate claims 100% success; underlying report has 19 passes and 1 failure out of 20 required checks.",
+        ("Observed success is 19/20 = 95%", "Reject 100% claim", "Do not trust candidate status flag")),
+    "responsibility.a28": (
+        "Rank two risks using stated likelihood and impact scales.",
+        "SYNTHETIC: risk A likelihood 2, impact 5; risk B likelihood 4, impact 2; score is product; scales are ordinal estimates.",
+        ("A scores 10 and B scores 8", "Prioritize A under given rule", "Call out ordinal score limitation")),
+    "responsibility.a29": (
+        "Evaluate a release gate from separate source and runtime receipts.",
+        "SYNTHETIC: tests pass on source commit abc123; deployment receipt is for older commit def456; no current runtime receipt.",
+        ("Source test pass is preserved", "Release binding is not established", "Require runtime identity for abc123")),
 }
 
 MATRIX_CASES = {
@@ -173,6 +282,7 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
         raise ValueError("unknown certification case")
     capability, record, responsibility = _registered_responsibility(agent_id, capability_id)
     dimension, case = case_id.split(":", 1)
+    discriminants: tuple[str, ...] = ()
     if agent_id == AGENT_ID and capability == CAPABILITY_ID and case_id == "baseline:identity":
         objective, supplied_context, task_class = RUNTIME_STATUS_OBJECTIVE, "", "classification"
         review = ("authenticated_owner", "registered_a19_route", "validated_runtime_artifact",
@@ -182,11 +292,19 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             topic = CHALLENGES[dimension][case] if dimension in REQUIRED_CASES else CHALLENGES[dimension]
             objective = ("For a bounded synthetic operational-resilience exercise: " + topic +
                          " Return observations, uncertainty, and proposed actions. Do not claim actions were executed.")
+            if case_id == "role:normal" and not context:
+                discriminants = ("Treat the initial failed check and healthy retry as distinct observations",
+                                 "Do not infer continuous health from one retry",
+                                 "Recommend a bounded trend check without restarting a service")
         elif agent_id == "a20" and capability == "responsibility.a20" and case_id == "role:normal":
             objective = (
                 "For a synthetic product, calculate gross margin and identify one pricing risk. "
                 "Separate arithmetic from assumptions. Do not claim market research was performed."
             )
+            if not context:
+                discriminants = ("Revenue is 2000 and variable cost is 1200",
+                                 "Gross margin is 800, or 40% of revenue",
+                                 "Fixed costs and market demand remain unknown")
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":
             objective = (
                 "Review the synthetic function against the stated requirement. Identify the concrete "
@@ -194,6 +312,21 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 "Derive each expected test value from the requirement, not the buggy implementation; "
                 "check the test against the proposed correction. Do not claim tests ran."
             )
+            if not context:
+                discriminants = ("Zero must return True under the requirement",
+                                 "The n > 0 implementation is defective at zero",
+                                 "Reject an inverted assertion even if it passes buggy code")
+        elif case_id == "role:normal":
+            task, _, criteria = ROLE_NORMAL_FIXTURES[capability]
+            objective = (
+                f"For a bounded synthetic {responsibility['description']} exercise by registered {agent_id} "
+                f"({record['role']}), capability {capability}: {task} "
+                f"Declared input: {responsibility['input']} Declared output: {responsibility['output']} "
+                "Return observations, uncertainty, and a proposed output within this responsibility. "
+                "Do not claim actions were executed or certification was earned."
+            )
+            if not context:
+                discriminants = criteria
         else:
             topic = _role_topic(dimension, case)
             objective = (
@@ -205,7 +338,12 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             )
         supplied_context = context or ("SYNTHETIC source=case-fixture; service=example-api; "
                                        "health=unknown; restarts=0; observation_time=2026-10-04T00:00:00Z")
-        if agent_id == "a20" and capability == "responsibility.a20" and case_id == "role:normal":
+        if agent_id == AGENT_ID and capability == CAPABILITY_ID and case_id == "role:normal":
+            supplied_context = context or (
+                "SYNTHETIC source=case-fixture; example-api health check failed at 10:00Z, "
+                "retry passed at 10:01Z; no later observations or dependency map supplied."
+            )
+        elif agent_id == "a20" and capability == "responsibility.a20" and case_id == "role:normal":
             supplied_context = context or (
                 "SYNTHETIC: 100 units sold at USD 20 each; variable cost USD 12 per unit; "
                 "fixed costs unknown; no market demand data."
@@ -216,6 +354,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 "Proposed Python implementation: def is_nonnegative(n): return n > 0. "
                 "No test results are supplied."
             )
+        elif case_id == "role:normal":
+            supplied_context = context or ROLE_NORMAL_FIXTURES[capability][1]
         elif agent_id != AGENT_ID or capability != CAPABILITY_ID:
             supplied_context = context or (
                 f"SYNTHETIC source=case-fixture; capability={capability}; "
@@ -244,5 +384,6 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             "max_cost_usd": 0,
         },
         "independent_review": review,
+        "expected_discriminants": discriminants,
         "certification": "UNVERIFIED",
     }
