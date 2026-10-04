@@ -3,7 +3,8 @@ from unittest.mock import patch
 from tests.test_harness_api import HarnessApiTests
 from app.agent_registry import registered_agent_ids
 from app import compute_queue_api
-from app.agent_dispatch_api import local_model_backends, _baseline_probe_slot
+from app.agent_dispatch_api import AgentRequest, inference_prompt, local_model_backends, _baseline_probe_slot
+from app.tier_router import Tier
 from app.settings import PrimeSettings
 
 
@@ -70,6 +71,19 @@ class AgentDispatchTests(HarnessApiTests):
         same=PrimeSettings(ollama_base_url='http://fixture',fast_model='same',deep_model='same',
                            embedding_model='embed',multi_specialist_workers=1)
         assert len(local_model_backends(same))==1
+
+    def test_structured_agent_output_avoids_conflicting_user_facing_identity_preface(self):
+        request = AgentRequest(capability='responsibility.a12', objective='Output strict JSON.',
+                               context='SYNTHETIC: 10 failures in 100 requests.',
+                               response_format='strict_json')
+        prompt = inference_prompt(request, Tier.MINI)
+        assert 'Return only one valid JSON object' in prompt
+        assert 'without a name, preface, Markdown, or code fence' in prompt
+        assert 'Always identify yourself as JARVIS' not in prompt
+        assert '10 failures in 100 requests' in prompt
+        ordinary = inference_prompt(AgentRequest(capability='responsibility.a12',
+                                                  objective='Explain the count.'), Tier.MINI)
+        assert 'Always identify yourself as JARVIS' in ordinary
 
     def test_scope_and_unavailable_tier_fail_only_the_affected_request(self):
         for capability,tier,expected in [('invented','NANO',422),('responsibility.a02','FLAGSHIP',409)]:
