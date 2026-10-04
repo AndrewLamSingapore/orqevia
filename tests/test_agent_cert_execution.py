@@ -60,6 +60,24 @@ def test_other_agent_case_remains_unreviewed_not_auto_passed():
     assert observation["certification"] == "UNVERIFIED"
 
 
+def test_a12_rate_check_is_scoped_and_never_certifies():
+    spec = challenge("role:normal", agent_id="a12", capability_id="responsibility.a12")
+    answer = {"week1_failures": 10, "week1_requests": 100,
+              "week2_failures": 15, "week2_requests": 300,
+              "week1_rate": "1/10", "week2_rate": "1/20",
+              "failure_count_change": "UP", "failure_rate_change": "DOWN",
+              "cause": "UNKNOWN"}
+    observed = _run(spec, json.dumps(answer))
+    assert observed["case_review"] == "RATE_CHECK_PASS"
+    assert observed["certification"] == "UNVERIFIED"
+    assert "result" not in observed
+    failed = _run(spec, json.dumps({**answer, "failure_rate_change": "UP"}))
+    assert failed["case_review"] == "RATE_CHECK_FAIL"
+    assert "failure_rate_change" in failed["review_errors"]
+    forged = {**spec, "request": {**spec["request"], "context": "different numbers"}}
+    assert _run(forged, json.dumps(answer))["reason"] == "rate_oracle_source_mismatch"
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"

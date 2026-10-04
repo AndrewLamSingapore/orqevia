@@ -15,6 +15,7 @@ from collections.abc import Callable
 from datetime import datetime
 
 from .agent_cert_numeric import review_priority_json
+from .agent_cert_rates import review_rate_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
 
@@ -25,6 +26,8 @@ _A01_SOURCE = {
     "capacity_days": 3, "alpha_days": 3, "alpha_total_points": 8,
     "beta_days": 2, "beta_total_points": 6,
 }
+_A12_SOURCE = {"week1_failures": 10, "week1_requests": 100,
+               "week2_failures": 15, "week2_requests": 300}
 
 
 def _time(value: object) -> datetime | None:
@@ -110,6 +113,16 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "numeric_oracle_source_mismatch"}
                     valid, review_errors = review_priority_json(_A01_SOURCE, result)
                     review = "NUMERIC_CHECK_PASS" if valid else "NUMERIC_CHECK_FAIL"
+                if "exact_rate_oracle" in spec.get("independent_review", ()):
+                    if agent != "a12" or capability != "responsibility.a12" or spec.get("case") != "role:normal":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "rate_oracle_scope_mismatch"}
+                    if request != challenge("role:normal", agent_id="a12",
+                                            capability_id="responsibility.a12")["request"]:
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "rate_oracle_source_mismatch"}
+                    valid, review_errors = review_rate_json(_A12_SOURCE, result)
+                    review = "RATE_CHECK_PASS" if valid else "RATE_CHECK_FAIL"
                 return {**base, "job_id": job_id, "state": "EXECUTED",
                         "provider": provider, "attempts": row["attempts"],
                         "started_at": began.isoformat(), "completed_at": ended.isoformat(),

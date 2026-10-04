@@ -157,5 +157,7 @@ def test_normal_oracles_expose_role_specific_errors_without_auto_grading():
 def test_role_case_forbids_unsourced_dates_causes_and_artifacts():
     spec = challenge("role:normal", agent_id="a12", capability_id="responsibility.a12")
     objective = spec["request"]["objective"]
-    assert "do not invent dates, causes, completed actions, or artifacts" in objective
+    assert "No prose, markdown, date, or extra fields" in objective
     assert "10 failures in 100 requests" in spec["request"]["context"]
+    assert "exact_rate_oracle" in spec["independent_review"]
+    assert "strict JSON object" in objective
