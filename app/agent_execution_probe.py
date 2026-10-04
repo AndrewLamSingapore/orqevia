@@ -117,7 +117,7 @@ def observe_baseline_execution(
                             and not row.get("error"))
                 return {**base, "job_id": job_id, "state": "EXECUTED" if executed else "REJECTED",
                         "reason": "worker_observed" if executed else "worker_evidence_missing",
-                        "challenge_returned": bool(executed and challenge in result),
+                        "challenge_returned": bool(executed and result.strip() == challenge),
                         "result_sha256": hashlib.sha256(result.encode()).hexdigest() if executed else None,
                         "provider": provider if executed else None,
                         "started_at": started_at.isoformat() if executed else None,

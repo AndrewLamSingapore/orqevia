@@ -45,7 +45,8 @@ def providers() -> list[Provider]:
         spec=model_spec(entry)
         # Unpriced external calls cannot enter automatic budgeted execution.
         if spec.input_usd_million is None or spec.output_usd_million is None:continue
-        result.append(Provider(entry['id'],'cloud',entry['model'],0,0,int(entry.get('concurrency',1)),float(spec.input_usd_million),float(spec.output_usd_million),spec.output_tokens))
+        result.append(Provider(entry['id'],'cloud',entry['model'],0,0,int(entry.get('concurrency',1)),float(spec.input_usd_million),float(spec.output_usd_million),spec.output_tokens,
+                               explicit_selection_required=entry.get('provider_kind')=='huggingface'))
     return result
 
 

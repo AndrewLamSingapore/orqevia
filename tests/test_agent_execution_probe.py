@@ -54,6 +54,27 @@ def test_queued_job_does_not_claim_execution_or_certification():
     assert observed["certification"] == "UNVERIFIED"
 
 
+def test_extra_output_does_not_satisfy_exact_marker_challenge():
+    captured = {}
+
+    def dispatch(request):
+        captured.update(request)
+        return {"capability": request["capability"], "job": {"id": JOB_ID, "agent": "a17"}}
+
+    def get_job(_job_id):
+        marker = captured["objective"].rsplit(" ", 1)[1]
+        return {"id": JOB_ID, "agent": "a17", "status": "completed",
+                "prompt": captured["objective"], "result": "answer: " + marker,
+                "started_at": "2026-10-04T00:00:00Z", "completed_at": "2026-10-04T00:00:01Z",
+                "provider": "ollama-fast", "attempts": 1, "error": None}
+
+    observed = observe_baseline_execution("a17", "responsibility.a17",
+                                          dispatch=dispatch, get_job=get_job)
+    assert observed["state"] == "EXECUTED"
+    assert observed["challenge_returned"] is False
+    assert observed["certification"] == "UNVERIFIED"
+
+
 def test_forged_route_and_workerless_completion_fail_closed():
     wrong = observe_baseline_execution(
         "a17", "responsibility.a17",

@@ -129,3 +129,33 @@ def test_qualified_hf_route_flows_through_governed_queue_and_outcome(monkeypatch
         details = json.loads(db.execute('SELECT details FROM reasoning_attempts').fetchone()[0])
     assert details['success'] is True and details['provider'] == 'hf-fixture'
     assert details['model'] == MODEL.name and details['agent_id'] == 'a10'
+
+
+def test_hf_queue_requires_explicit_selection_before_claim(monkeypatch, tmp_path):
+    from app import compute_catalog, compute_queue_api
+    from app.job_queue import JobQueue, QueuePolicy
+
+    entry = {'id': 'hf-fixture', 'provider_kind': 'huggingface', 'enabled': True,
+             'qualification_status': 'QUALIFIED', 'location': 'cloud', 'tier': 'MINI',
+             'model': MODEL.name, 'endpoint': HuggingFaceProvider.ENDPOINT,
+             'secret_ref': 'env:HF_TOKEN', 'context_tokens': 4096, 'output_tokens': 64,
+             'input_usd_million': '0.1', 'output_usd_million': '0.5'}
+    monkeypatch.setattr(compute_catalog, 'load_catalog', lambda: [entry])
+    monkeypatch.delenv('HF_TOKEN', raising=False)
+    provider = next(p for p in compute_queue_api.providers() if p.name == 'hf-fixture')
+    assert provider.explicit_selection_required
+
+    queue = JobQueue(tmp_path / 'queue.db', QueuePolicy(cloud_wait_seconds=0))
+    for preferred in (None, 'missing-provider'):
+        job = queue.submit(agent='a10', prompt='Synthetic cloud task',
+                           preferred_provider=preferred, allow_cloud=True,
+                           data_classification='CLOUD_PERMITTED', max_cost_usd=.01)
+        assert queue.claim('fixture-worker', [provider]) is None
+        assert queue.get(job['id'])['status'] == 'queued'
+
+    explicit = queue.submit(agent='a10', prompt='Synthetic HF task',
+                            preferred_provider='hf-fixture', allow_cloud=True,
+                            data_classification='CLOUD_PERMITTED', max_cost_usd=.01)
+    claimed = queue.claim('fixture-worker', [provider])
+    assert claimed and claimed['id'] == explicit['id']
+    assert 'HF_TOKEN' not in json.dumps(claimed)
