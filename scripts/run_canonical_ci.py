@@ -17,7 +17,7 @@ def main():
             path=data/('test-'+uuid.uuid4().hex);path.mkdir();return path
     names=['status_authority','canonical_state','operational_manifest','registry_v1','dell_node_sync','truth_reconciler','agent_registry','task_continuation','interface_contract','pwa_sessions',
            'product_handoff','operational_workflows','workflow_objective_integration',
-           'cloud_capacity_recovery','huggingface_provider','production_compatibility','public_task_errors',
+           'cloud_capacity_recovery','huggingface_provider','hf_file_secret','production_compatibility','public_task_errors',
            'interface_server','consequential_intent','stable_spine','sink_guard',
            'provider_failure_boundaries','interface_cloud_policy',
            'direct_execution','connector_sdk']
