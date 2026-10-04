@@ -20,13 +20,13 @@ from .compute_profile import validate_configuration, require_compute_capacity, g
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
 def candidate_global_concurrency(environment: dict[str, str], profile: dict | None) -> int:
-    """Allow at most three slots with explicit backend and measured-envelope support.
+    """Allow at most four slots with explicit backend and measured-envelope support.
 
     The production default stays at one; unsupported or malformed overrides
     fail closed to one. Per-agent concurrency is separately fixed at one.
     """
     requested = environment.get("PRIME_QUEUE_CONCURRENCY")
-    if requested not in {"2", "3"}:
+    if requested not in {"2", "3", "4"}:
         return 1
     try:
         backend_parallel = int(environment.get("OLLAMA_NUM_PARALLEL", ""))

@@ -50,6 +50,19 @@ class QueueParallelCandidateTests(unittest.TestCase):
         self.assertEqual(candidate_global_concurrency({**environment, "OLLAMA_NUM_PARALLEL": "2"},
                                                        {"normal_concurrency": 3}), 1)
 
+    def test_four_requires_matching_backend_and_measured_envelope(self):
+        environment = {"PRIME_QUEUE_CONCURRENCY": "4", "OLLAMA_NUM_PARALLEL": "4"}
+        self.assertEqual(candidate_global_concurrency(environment, {"normal_concurrency": 4}), 4)
+        for changed_environment, profile in (
+            (environment, None),
+            (environment, {"normal_concurrency": 3}),
+            ({**environment, "OLLAMA_NUM_PARALLEL": "3"}, {"normal_concurrency": 4}),
+            ({**environment, "PRIME_QUEUE_CONCURRENCY": "5", "OLLAMA_NUM_PARALLEL": "5"},
+             {"normal_concurrency": 5}),
+        ):
+            with self.subTest(environment=changed_environment, profile=profile):
+                self.assertEqual(candidate_global_concurrency(changed_environment, profile), 1)
+
     def test_fake_executor_two_distinct_agents_and_per_agent_limit(self):
         policy = QueuePolicy(global_concurrency=candidate_global_concurrency(
             {"PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"},
