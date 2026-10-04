@@ -1,4 +1,4 @@
-"""Check that STATUS.md is the sole current status authority."""
+"""Check that portfolio status and component authority stay distinct."""
 import json
 from pathlib import Path
 
@@ -10,8 +10,10 @@ SOURCE_URL = 'https://github.com/AndrewLamSingapore/prime/blob/main/governance/o
 def validate_status_authority(root: Path = ROOT) -> None:
     assert not (root / 'SSOT.json').exists(), 'retired SSOT.json must not be maintained'
     status = (root / 'STATUS.md').read_text(encoding='utf-8')
-    assert status.startswith('# STATUS.md'), 'STATUS.md is missing its authority heading'
-    assert 'replaces and supersedes every previous SSOT document' in status
+    assert status.startswith('# STATUS.md — Portfolio status record'), 'STATUS.md is missing its scoped heading'
+    assert 'STATUS.md records current portfolio status claims and their evidence classification.' in status
+    assert 'Each product owns its source, configuration, contracts, and domain records in its repository.' in status
+    assert 'replaces and supersedes every previous SSOT document' not in status
 
     manifest = json.loads((root / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
     assert manifest['status_authority'] == STATUS_URL
