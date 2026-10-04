@@ -28,6 +28,10 @@ def validate_status_authority(root: Path = ROOT) -> None:
         content = (root / name).read_text(encoding='utf-8')
         assert SOURCE_URL in content, f'{name} must identify the PRIME component reference'
         assert 'STATUS.md' in content, f'{name} must identify the status authority'
+    channel = (root / 'governance/CHANNEL_CONTRACT.md').read_text(encoding='utf-8')
+    assert 'each product repository owns its own source' in channel
+    mirror = (root / 'governance/JARVIS_Resume_Checkpoint.generated.md').read_text(encoding='utf-8')
+    assert 'This dated mirror does not establish current deployment' in mirror
     for name in ('governance/golden-gen2-manifest.json',
                  'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md'):
         assert (root / name).is_file(), f'Golden reference missing: {name}'
