@@ -63,6 +63,7 @@ def main():
     names.append('agent_cert_attestation')
     names.append('agent_cert_ed25519')
     names.append('agent_cert_signer')
+    names.append('agent_cert_azure_es256')
     names.append('agent_cert_plan')
     names.append('agent_execution_probe')
     names.append('agent_execution_live')
