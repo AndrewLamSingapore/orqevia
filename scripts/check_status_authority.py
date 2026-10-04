@@ -26,7 +26,7 @@ def validate_status_authority(root: Path = ROOT) -> None:
                  'governance/CHANNEL_CONTRACT.md',
                  'governance/JARVIS_Resume_Checkpoint.generated.md'):
         content = (root / name).read_text(encoding='utf-8')
-        assert SOURCE_URL in content, f'{name} must identify the canonical component reference'
+        assert SOURCE_URL in content, f'{name} must identify the PRIME component reference'
         assert 'STATUS.md' in content, f'{name} must identify the status authority'
     for name in ('governance/golden-gen2-manifest.json',
                  'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md'):
@@ -35,4 +35,4 @@ def validate_status_authority(root: Path = ROOT) -> None:
 
 if __name__ == '__main__':
     validate_status_authority()
-    print('STATUS authority: PASS; runtime freshness is independently assessed')
+    print('Portfolio status scope: PASS; runtime freshness is independently assessed')

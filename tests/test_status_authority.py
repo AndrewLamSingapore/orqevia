@@ -63,7 +63,7 @@ def test_stale_component_reference_is_rejected(authority_copy, name):
     path = authority_copy / name
     path.write_text(path.read_text(encoding='utf-8').replace('/blob/main/',
                     '/blob/old-candidate/'), encoding='utf-8')
-    with pytest.raises(AssertionError, match='canonical component reference'):
+    with pytest.raises(AssertionError, match='PRIME component reference'):
         validate_status_authority(authority_copy)
 
 
