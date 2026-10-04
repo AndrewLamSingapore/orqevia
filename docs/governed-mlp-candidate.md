@@ -15,15 +15,21 @@ rate are bounded. Categorical values, missing values, non-finite numbers,
 unknown fields, and malformed shapes are rejected. Inference binds values by
 the artifact's ordered feature names.
 
-`approve_candidate` records an explicit reviewer and rationale. The local
-model registry accepts only approved artifacts. JSON loading validates tensor
-shapes and the SHA-256 identity of the immutable model body. Runtime inference
+`approve_candidate` requires an independent approval receipt and an injected
+verification callback. A reviewer string by itself cannot approve a model.
+Registration verifies the receipt again and fails closed when no verifier is
+configured. The callback must be supplied by PRIME's authority integration,
+outside the executing agent's control. JSON loading validates version,
+provenance, metrics, tensor shapes, and the SHA-256 identity of the immutable
+model body. Runtime inference
 uses only registered models and records latency, failures, and validation
 failures without recording input rows. Separate `evaluate` calls return metrics
 for new labeled data and require review; they never retrain or change a model.
-Agent invocation uses the existing certification-aware route and requires an
-authorized, healthy, current certified owner. It returns model identity and
-provenance with the numerical result.
+Agent invocation requires an independently verified decision for the exact
+`ml.mlp.classification` or `ml.mlp.regression` capability, agent, model hash,
+and trace, as well as the existing healthy certification route. The decision
+verifier also fails closed when unconfigured. The result carries model
+identity, decision ID, and provenance.
 
 The synthetic tests demonstrate actual CPU training and inference for a
 quadratic regression and an XOR-like classification. Both beat their simple
@@ -32,6 +38,6 @@ a synthetic L7 projection to verify the software gate; it is not evidence that
 a real agent is currently L7 certified. No live ABEX inference, approved
 production artifact, durable model registry, or HTTP routing was changed by
 this branch. Real agent acceptance must bind an independently verified live
-certification projection and authority decision, persist the approved artifact
+certification projection and authority and approval receipt verifiers, persist the approved artifact
 in the owning artifact system, and record a live runtime receipt. Those remain
 integration work before production promotion.

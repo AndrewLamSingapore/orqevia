@@ -9,11 +9,12 @@ import hashlib
 import json
 import math
 import random
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .agent_capability_route import select_agent_capability_route
 from .agent_registry import canonical_agent_id
@@ -26,6 +27,8 @@ CAPABILITIES = frozenset({
 MAX_ARTIFACT_BYTES = 2_000_000
 MAX_TRAIN_MULTIPLIES = 2_000_000
 MAX_INFER_MULTIPLIES = 2_000_000
+_VERSION = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _canonical(value: Any) -> bytes:
@@ -40,6 +43,25 @@ def _number(value: Any) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         raise ValueError("features and labels must be finite numbers")
     return float(value)
+
+
+def _utc_timestamp(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        return datetime.fromisoformat(value).utcoffset() is not None
+    except ValueError:
+        return False
+
+
+def _verified(callback: Callable[[dict[str, Any]], bool] | None,
+              receipt: dict[str, Any]) -> bool:
+    if callback is None or not callable(callback):
+        return False
+    try:
+        return callback(receipt) is True
+    except Exception:
+        return False
 
 
 @dataclass(frozen=True)
@@ -177,7 +199,9 @@ def train_candidate(config: MLPConfig, rows: list[dict[str, float]], labels: lis
     config.validate()
     x = _matrix(rows, config.features)
     y = _labels(labels, config.task, len(x))
-    if len(x) < 20 or len(x) > 10_000 or not dataset_reference or len(dataset_reference) > 256:
+    if (len(x) < 20 or len(x) > 10_000 or not isinstance(dataset_reference, str) or
+            not dataset_reference.strip() or len(dataset_reference) > 256 or
+            not isinstance(version, str) or not _VERSION.fullmatch(version)):
         raise ValueError("training requires 20-10000 attributable rows")
     indices = list(range(len(x)))
     rng = random.Random(config.seed)
@@ -249,13 +273,42 @@ def validate_artifact(artifact: dict[str, Any]) -> None:
                  "architecture", "training_configuration", "dataset_reference", "dataset_hash",
                  "preprocessing", "weights", "framework", "evaluation_result")
     try:
+        required = set(body_keys) | {"model_id", "model_artifact_hash", "created_at",
+                                     "approval_state", "health", "provenance"}
+        allowed = required | ({"approval"} if artifact["approval_state"] == "APPROVED" else set())
+        if set(artifact) != allowed:
+            raise ValueError("unexpected or missing artifact metadata")
         body = {key: artifact[key] for key in body_keys}
+        if not isinstance(body["version"], str) or not _VERSION.fullmatch(body["version"]):
+            raise ValueError("invalid model version")
+        if (not isinstance(body["dataset_reference"], str) or
+                not 1 <= len(body["dataset_reference"].strip()) <= 256 or
+                not isinstance(body["dataset_hash"], str) or not _SHA256.fullmatch(body["dataset_hash"])):
+            raise ValueError("invalid dataset provenance")
+        if (not isinstance(body["input_schema"], dict) or
+                not isinstance(body["input_schema"].get("features"), list) or
+                not isinstance(body["architecture"], dict) or
+                not isinstance(body["architecture"].get("hidden_layers"), list) or
+                not isinstance(body["training_configuration"], dict)):
+            raise ValueError("invalid model schema")
         config = MLPConfig(task=body["task"], features=tuple(body["input_schema"]["features"]),
                            hidden_layers=tuple(body["architecture"]["hidden_layers"]),
                            activation=body["architecture"]["activation"],
+                           seed=body["training_configuration"]["seed"],
+                           epochs=body["training_configuration"]["epochs"],
+                           learning_rate=body["training_configuration"]["learning_rate"],
                            output_dimensions=body["architecture"]["output_dimensions"])
         config.validate()
-        if body["framework"] != "prime-stdlib-mlp-v1" or body["output_schema"]["dimensions"] != 1:
+        if (body["training_configuration"]["split"] != [0.6, 0.2, 0.2] or
+                set(body["training_configuration"]) != {"seed", "epochs", "learning_rate", "split"}):
+            raise ValueError("invalid training split")
+        if set(body["input_schema"]) != {"features", "types"} or set(body["output_schema"]) != {"type", "dimensions"}:
+            raise ValueError("invalid data schema")
+        if set(body["architecture"]) != {"hidden_layers", "activation", "output_dimensions"}:
+            raise ValueError("invalid architecture schema")
+        if (body["framework"] != "prime-stdlib-mlp-v1" or
+                type(body["output_schema"]["dimensions"]) is not int or
+                body["output_schema"]["dimensions"] != 1):
             raise ValueError("unsupported model format")
         expected_output = "binary_probability" if config.task == "classification" else "float"
         if body["output_schema"].get("type") != expected_output:
@@ -266,7 +319,8 @@ def validate_artifact(artifact: dict[str, Any]) -> None:
         if len(body["weights"]) != len(widths) - 1:
             raise ValueError("layer count mismatch")
         for k, layer in enumerate(body["weights"]):
-            if len(layer["weights"]) != widths[k + 1] or len(layer["biases"]) != widths[k + 1]:
+            if (not isinstance(layer, dict) or set(layer) != {"weights", "biases"} or
+                    len(layer["weights"]) != widths[k + 1] or len(layer["biases"]) != widths[k + 1]):
                 raise ValueError("layer shape mismatch")
             for vector in layer["weights"]:
                 if len(vector) != widths[k]:
@@ -276,7 +330,9 @@ def validate_artifact(artifact: dict[str, Any]) -> None:
             for value in layer["biases"]:
                 _number(value)
         prep = body["preprocessing"]
-        if prep["encoding"] != "numeric_only" or prep["missing"] != "reject" or len(prep["mean"]) != widths[0] or len(prep["scale"]) != widths[0]:
+        if (set(prep) != {"mean", "scale", "encoding", "missing"} or
+                prep["encoding"] != "numeric_only" or prep["missing"] != "reject" or
+                len(prep["mean"]) != widths[0] or len(prep["scale"]) != widths[0]):
             raise ValueError("invalid preprocessing")
         for value in prep["mean"]:
             _number(value)
@@ -284,18 +340,59 @@ def validate_artifact(artifact: dict[str, Any]) -> None:
             if _number(value) <= 0:
                 raise ValueError("invalid scale")
         digest = _digest(body)
+        if not isinstance(artifact["model_artifact_hash"], str) or not _SHA256.fullmatch(artifact["model_artifact_hash"]):
+            raise ValueError("invalid artifact hash")
         if artifact["model_artifact_hash"] != digest or artifact["model_id"] != "mlp-" + digest[:20]:
             raise ValueError("model identity mismatch")
-        if not artifact["dataset_reference"] or not isinstance(artifact["evaluation_result"], dict):
+        evaluation = artifact["evaluation_result"]
+        if not isinstance(evaluation, dict) or set(evaluation) != {"validation", "test", "baseline_test"}:
             raise ValueError("missing provenance or evaluation")
-        if (not isinstance(artifact.get("created_at"), str) or
-                not isinstance(artifact.get("provenance"), dict) or
-                artifact.get("health") not in {"UNVERIFIED", "HEALTHY", "DEGRADED"}):
+        metric_names = ({"accuracy", "precision", "recall", "f1", "confusion_matrix"}
+                        if config.task == "classification" else {"mae", "mse", "rmse", "r2"})
+        for name in ("validation", "test", "baseline_test"):
+            metrics = evaluation[name]
+            if not isinstance(metrics, dict) or not metric_names.issubset(metrics):
+                raise ValueError("invalid evaluation metrics")
+            for key in metric_names - {"confusion_matrix", "r2"}:
+                _number(metrics[key])
+                if config.task == "classification" and not 0 <= metrics[key] <= 1:
+                    raise ValueError("classification metric outside range")
+            if config.task == "regression" and metrics["r2"] is not None:
+                _number(metrics["r2"])
+            if config.task == "classification":
+                matrix = metrics["confusion_matrix"]
+                if (not isinstance(matrix, list) or len(matrix) != 2 or
+                        any(not isinstance(row, list) or len(row) != 2 or
+                            any(type(count) is not int or count < 0 for count in row)
+                            for row in matrix)):
+                    raise ValueError("invalid confusion matrix")
+        expected_baseline = "logistic" if config.task == "classification" else "linear"
+        if evaluation["baseline_test"].get("type") != expected_baseline:
+            raise ValueError("incorrect baseline")
+        provenance = artifact.get("provenance")
+        counts = [provenance.get(key) for key in ("training_rows", "validation_rows", "test_rows")] if isinstance(provenance, dict) else []
+        if (not _utc_timestamp(artifact.get("created_at")) or
+                not isinstance(provenance, dict) or provenance.get("origin") != "local_training" or
+                provenance.get("split_seed") != config.seed or
+                len(counts) != 3 or any(type(count) is not int or count <= 0 for count in counts) or
+                not 20 <= sum(counts) <= 10_000 or
+                counts[0] != int(0.6 * sum(counts)) or
+                counts[0] + counts[1] != int(0.8 * sum(counts)) or
+                artifact.get("health") != ("HEALTHY" if artifact["approval_state"] == "APPROVED" else "UNVERIFIED")):
             raise ValueError("missing model metadata")
         if artifact["approval_state"] == "APPROVED":
             approval = artifact.get("approval")
-            if (not isinstance(approval, dict) or not approval.get("reviewer") or
-                    not approval.get("rationale") or not approval.get("approved_at")):
+            if (not isinstance(approval, dict) or
+                    set(approval) != {"reviewer", "requesting_agent_id", "rationale", "approved_at",
+                                      "model_id", "model_artifact_hash", "receipt"} or
+                    not isinstance(approval["reviewer"], str) or not approval["reviewer"].strip() or
+                    not isinstance(approval["requesting_agent_id"], str) or
+                    approval["reviewer"] == approval["requesting_agent_id"] or
+                    not isinstance(approval["rationale"], str) or not approval["rationale"].strip() or
+                    not _utc_timestamp(approval["approved_at"]) or
+                    approval["model_id"] != artifact["model_id"] or
+                    approval["model_artifact_hash"] != digest or
+                    not isinstance(approval["receipt"], dict) or not approval["receipt"]):
                 raise ValueError("approved model lacks review evidence")
     except (KeyError, TypeError, IndexError, OverflowError) as exc:
         raise ValueError("invalid model artifact") from exc
@@ -320,19 +417,34 @@ def load_artifact(path: Path) -> dict[str, Any]:
     return artifact
 
 
-def approve_candidate(artifact: dict[str, Any], *, reviewer: str, rationale: str) -> dict[str, Any]:
+def approve_candidate(artifact: dict[str, Any], *, reviewer: str, requesting_agent_id: str,
+                      rationale: str, receipt: dict[str, Any],
+                      verify_approval: Callable[[dict[str, Any]], bool] | None = None) -> dict[str, Any]:
+    """Require an independently verified approval receipt; a name grants nothing."""
     validate_artifact(artifact)
-    if artifact["approval_state"] != "CANDIDATE" or not reviewer.strip() or not rationale.strip():
+    if (artifact["approval_state"] != "CANDIDATE" or not isinstance(reviewer, str) or
+            not isinstance(requesting_agent_id, str) or not reviewer.strip() or
+            reviewer == requesting_agent_id or not isinstance(rationale, str) or
+            not rationale.strip() or not isinstance(receipt, dict) or not receipt):
         raise ValueError("explicit candidate review is required")
-    return {**artifact, "approval_state": "APPROVED", "health": "HEALTHY",
-            "approval": {"reviewer": reviewer, "rationale": rationale,
-                         "approved_at": datetime.now(timezone.utc).isoformat()}}
+    approval = {"reviewer": reviewer, "requesting_agent_id": requesting_agent_id,
+                "rationale": rationale, "approved_at": datetime.now(timezone.utc).isoformat(),
+                "model_id": artifact["model_id"],
+                "model_artifact_hash": artifact["model_artifact_hash"], "receipt": receipt}
+    if not _verified(verify_approval, approval):
+        raise PermissionError("independent model approval could not be verified")
+    approved = {**artifact, "approval_state": "APPROVED", "health": "HEALTHY", "approval": approval}
+    validate_artifact(approved)
+    return approved
 
 
 class MLPCapabilityFabric:
     """Model registry, discovery, bounded inference, and input-free health state."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, verify_approval: Callable[[dict[str, Any]], bool] | None = None,
+                 verify_capability_decision: Callable[[dict[str, Any]], bool] | None = None) -> None:
+        self.verify_approval = verify_approval
+        self.verify_capability_decision = verify_capability_decision
         self.models: dict[str, dict[str, Any]] = {}
         self.stats: dict[str, dict[str, Any]] = {}
 
@@ -340,6 +452,8 @@ class MLPCapabilityFabric:
         validate_artifact(artifact)
         if artifact["approval_state"] != "APPROVED" or not artifact.get("approval"):
             raise ValueError("only reviewed models may be registered")
+        if not _verified(self.verify_approval, artifact["approval"]):
+            raise PermissionError("independent model approval could not be verified")
         model_id = artifact["model_id"]
         if model_id in self.models:
             raise ValueError("model identity already registered")
@@ -405,19 +519,31 @@ class MLPCapabilityFabric:
                 "quality_decision": "REVIEW_REQUIRED"}
 
     def infer_for_agent(self, agent_id: str, model_id: str, rows: list[dict[str, float]], *, trace_id: str,
-                        certification: dict[str, Any], authority_allowed: bool, runtime_healthy: bool) -> dict[str, Any]:
+                        certification: dict[str, Any], capability_decision: dict[str, Any],
+                        runtime_healthy: bool) -> dict[str, Any]:
         agent = canonical_agent_id(agent_id)
         model = self.models.get(model_id)
         if model is None:
             raise ValueError("model is not registered")
+        mlp_capability = "ml.mlp." + model["task"]
+        if (not isinstance(capability_decision, dict) or
+                capability_decision.get("capability") != mlp_capability or
+                capability_decision.get("agent_id") != agent or
+                capability_decision.get("model_id") != model_id or
+                capability_decision.get("model_artifact_hash") != model["model_artifact_hash"] or
+                capability_decision.get("trace_id") != trace_id or
+                not capability_decision.get("decision_id") or
+                not _verified(self.verify_capability_decision, capability_decision)):
+            raise PermissionError("MLP capability authority decision is unavailable or invalid")
         capability = "responsibility." + agent
-        route = select_agent_capability_route(capability, certification, authority_allowed=authority_allowed,
+        route = select_agent_capability_route(capability, certification, authority_allowed=True,
                                               runtime_healthy=runtime_healthy, tools_available=True,
                                               model_available=True)
         if route.state != "READY" or route.agent_id != agent:
             raise PermissionError("agent capability is not certified and authorized")
         result = self.infer(model_id, rows, trace_id=trace_id)
         return {**result, "agent_id": agent, "agent_capability": capability,
+                "mlp_capability": mlp_capability, "authority_decision_id": capability_decision["decision_id"],
                 "agent_route_state": route.state, "requires_independent_verification": True}
 
     def health(self, model_id: str) -> dict[str, Any]:

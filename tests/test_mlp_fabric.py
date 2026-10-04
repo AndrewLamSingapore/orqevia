@@ -11,6 +11,26 @@ from app.mlp_fabric import (
 
 
 class MLPCapabilityTests(unittest.TestCase):
+    @staticmethod
+    def verify_approval(approval):
+        return (approval.get("receipt") == {"id": "independent-fixture-review"} and
+                approval.get("reviewer") == "fixture-reviewer" and
+                approval.get("requesting_agent_id") == "a12")
+
+    @staticmethod
+    def verify_decision(decision):
+        return decision.get("decision_id") == "independent-fixture-authority"
+
+    def approve(self, candidate):
+        return approve_candidate(candidate, reviewer="fixture-reviewer", requesting_agent_id="a12",
+                                 rationale="Synthetic held-out fixture exceeds simple baseline",
+                                 receipt={"id": "independent-fixture-review"},
+                                 verify_approval=self.verify_approval)
+
+    def fabric(self):
+        return MLPCapabilityFabric(verify_approval=self.verify_approval,
+                                   verify_capability_decision=self.verify_decision)
+
     @classmethod
     def setUpClass(cls):
         cls.regression_rows = [{"x": float(i) / 10} for i in range(-30, 30)]
@@ -34,11 +54,13 @@ class MLPCapabilityTests(unittest.TestCase):
         second = train_candidate(config, self.regression_rows, self.regression_labels,
                                  dataset_reference="fixture:quadratic-v1")
         self.assertEqual(candidate["model_artifact_hash"], second["model_artifact_hash"])
-        fabric = MLPCapabilityFabric()
+        fabric = self.fabric()
         with self.assertRaises(ValueError):
             fabric.register(candidate)
-        approved = approve_candidate(candidate, reviewer="fixture-reviewer",
-                                     rationale="Synthetic fixture exceeded linear baseline")
+        with self.assertRaises(PermissionError):
+            approve_candidate(candidate, reviewer="fixture-reviewer", requesting_agent_id="a12",
+                              rationale="Fixture review", receipt={"id": "independent-fixture-review"})
+        approved = self.approve(candidate)
         with tempfile.TemporaryDirectory() as temp:
             artifact_path = Path(temp) / "model.json"
             save_artifact(artifact_path, approved)
@@ -49,20 +71,36 @@ class MLPCapabilityTests(unittest.TestCase):
         self.assertNotEqual(fabric.discover("ml.mlp.train"), fabric.discover("ml.mlp.inference"))
         certification = {"agent_id": "a12", "capability_id": "responsibility.a12",
                          "level": "L7", "trust_state": "L7-CURRENT", "health": "HEALTHY"}
+        decision = {"decision_id": "independent-fixture-authority", "agent_id": "a12",
+                    "capability": "ml.mlp.regression", "model_id": model_id,
+                    "model_artifact_hash": approved["model_artifact_hash"], "trace_id": "fixture-1"}
         output = fabric.infer_for_agent("a12", model_id, [{"x": 0.5}], trace_id="fixture-1",
-                                        certification=certification, authority_allowed=True,
+                                        certification=certification, capability_decision=decision,
                                         runtime_healthy=True)
         self.assertAlmostEqual(output["output"][0], 0.25, delta=0.2)
         self.assertEqual(output["agent_route_state"], "READY")
+        self.assertEqual(output["mlp_capability"], "ml.mlp.regression")
         self.assertEqual(output["artifact_hash"], candidate["model_artifact_hash"])
         self.assertEqual(fabric.health(model_id)["inferences"], 1)
         revalidation = fabric.evaluate(model_id, [{"x": 0.5}], [0.25])
         self.assertEqual(revalidation["quality_decision"], "REVIEW_REQUIRED")
         self.assertLess(revalidation["metrics"]["mae"], 0.2)
+        for tamper in ({"capability": "ml.mlp.classification"}, {"model_id": "other"},
+                       {"trace_id": "other"}, {"decision_id": "self-asserted"}):
+            with self.assertRaises(PermissionError):
+                fabric.infer_for_agent("a12", model_id, [{"x": 0.5}], trace_id="fixture-1",
+                                       certification=certification,
+                                       capability_decision={**decision, **tamper}, runtime_healthy=True)
         with self.assertRaises(PermissionError):
-            fabric.infer_for_agent("a12", model_id, [{"x": 0.5}], trace_id="fixture-2",
-                                   certification=certification, authority_allowed=False,
-                                   runtime_healthy=True)
+            fabric.infer_for_agent("a12", model_id, [{"x": 0.5}], trace_id="fixture-1",
+                                   certification=certification, capability_decision=decision,
+                                   runtime_healthy=False)
+        without_decision_verifier = MLPCapabilityFabric(verify_approval=self.verify_approval)
+        without_decision_verifier.register(approved)
+        with self.assertRaises(PermissionError):
+            without_decision_verifier.infer_for_agent(
+                "a12", model_id, [{"x": 0.5}], trace_id="fixture-1",
+                certification=certification, capability_decision=decision, runtime_healthy=True)
 
     def test_classification_and_input_contract(self):
         candidate = train_candidate(MLPConfig("classification", ("x", "y"), hidden_layers=(8,),
@@ -71,8 +109,8 @@ class MLPCapabilityTests(unittest.TestCase):
         self.assertGreaterEqual(candidate["evaluation_result"]["test"]["accuracy"], 0.8)
         self.assertGreater(candidate["evaluation_result"]["test"]["accuracy"],
                            candidate["evaluation_result"]["baseline_test"]["accuracy"])
-        approved = approve_candidate(candidate, reviewer="fixture-reviewer", rationale="Synthetic case")
-        fabric = MLPCapabilityFabric()
+        approved = self.approve(candidate)
+        fabric = self.fabric()
         model_id = fabric.register(approved)
         with self.assertRaises(ValueError):
             fabric.register(approved)
@@ -102,6 +140,31 @@ class MLPCapabilityTests(unittest.TestCase):
             path.write_text('{"schema_version":"1.0","model_type":"MLP"}', encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_artifact(path)
+        approved = self.approve(candidate)
+        for field, value in (("version", "latest"), ("dataset_hash", "not-sha256"),
+                             ("created_at", "yesterday"), ("training_configuration", {"seed": 1})):
+            bad = copy.deepcopy(approved)
+            bad[field] = value
+            with self.assertRaises(ValueError):
+                validate_artifact(bad)
+        bad = copy.deepcopy(approved)
+        bad["approval"]["model_id"] = "different"
+        with self.assertRaises(ValueError):
+            validate_artifact(bad)
+        bad = copy.deepcopy(approved)
+        bad["approval"]["receipt"] = {"id": "self-asserted"}
+        with self.assertRaises(PermissionError):
+            self.fabric().register(bad)
+        bad = copy.deepcopy(approved)
+        bad["input_schema"]["features"] = ["different"]
+        with self.assertRaises(ValueError):
+            validate_artifact(bad)
+        with self.assertRaises(PermissionError):
+            MLPCapabilityFabric().register(approved)
+        with self.assertRaises(ValueError):
+            approve_candidate(candidate, reviewer="a12", requesting_agent_id="a12",
+                              rationale="Self review", receipt={"id": "independent-fixture-review"},
+                              verify_approval=self.verify_approval)
         with self.assertRaises(ValueError):
             train_candidate(MLPConfig("regression", ("x",), hidden_layers=(64, 64, 64),
                                       epochs=2000), self.regression_rows,
