@@ -75,7 +75,12 @@ def test_catalog_requires_fixed_endpoint_token_pin_and_qualification(tmp_path):
                    {'secret_ref': 'env:OTHER_TOKEN'}, {'model': 'openai/gpt-oss-20b'}):
         with pytest.raises(ValueError):
             load({**entry, **change})
-    qualified = {**entry, 'enabled': True, 'qualification_status': 'QUALIFIED'}
+    with pytest.raises(ValueError):
+        load({**entry, 'enabled': True, 'qualification_status': 'QUALIFIED'})
+    qualified = {**entry, 'enabled': True, 'qualification_status': 'QUALIFIED',
+                 'input_usd_million': '0.1', 'output_usd_million': '0.5'}
+    with pytest.raises(ValueError):
+        load({**qualified, 'input_usd_million': 'NaN'})
     assert load(qualified)[0]['provider_kind'] == 'huggingface'
     assert isinstance(adapter_for(qualified), HuggingFaceProvider)
 

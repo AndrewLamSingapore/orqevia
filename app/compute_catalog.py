@@ -64,6 +64,9 @@ def load_catalog(path=None):
                 raise ValueError('Hugging Face model must pin an explicit provider')
             if item.get('enabled') and item.get('qualification_status')!='QUALIFIED':
                 raise ValueError('Unqualified Hugging Face model cannot be enabled')
+            if item.get('enabled') and any(item.get(field) is None for field in ('input_usd_million','output_usd_million')):
+                raise ValueError('Hugging Face model requires explicit current price limits')
+            if item.get('enabled'):model_spec(item)
         if not 1<=int(item['output_tokens'])<int(item['context_tokens']):raise ValueError('Invalid model context limits')
         for field in ('expected_seconds','expected_cost_usd'):
             if field in item and (not math.isfinite(float(item[field])) or float(item[field])<0):
