@@ -3,3 +3,4 @@ clients/dell/** text eol=lf
 tests/fixtures/historical-agent-registry-29.json text eol=lf
 governance/JARVIS_Resume_Checkpoint.generated.md text eol=lf
 docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json -text
+docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json -text
