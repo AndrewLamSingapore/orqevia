@@ -2,10 +2,13 @@ import hashlib,json
 from types import SimpleNamespace
 import pytest
 from app import compute_profile as cp
+from app.settings import SETTINGS
+from tests.backend_receipt_fixture import install as install_backend_receipt
 
 
 @pytest.fixture
 def measured(tmp_path,monkeypatch):
+    install_backend_receipt(monkeypatch,tmp_path,SETTINGS.ollama_base_url)
     raw=json.dumps({'schema':'abex.measured-compute.v1','normal_concurrency':1,'minimum_available_mib':8192,'context_tokens':8192,'output_limit':512,'models':{'gemma3:1b':{}}}).encode()
     path=tmp_path/'profile.json';path.write_bytes(raw)
     monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE',str(path))

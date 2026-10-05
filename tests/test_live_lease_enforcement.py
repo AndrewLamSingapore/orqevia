@@ -49,7 +49,10 @@ class LiveLeaseTests(HarnessApiTests):
 
     def test_authority_denial_is_not_retried(self):
         job,_=self.dispatch_job();q=compute_queue_api.queue
-        assert q.claim('test-worker',compute_queue_api.providers())['id']==job['id']
+        # Isolate lease revocation from operator-side backend telemetry; the
+        # admission receipt boundary is covered by test_backend_admission.
+        with mock.patch('app.job_queue.backend_admission.reserve'):
+            assert q.claim('test-worker',compute_queue_api.providers())['id']==job['id']
         assert q.finish(job['id'],error='PermissionError: lease revoked',retryable=False)['status']=='failed'
 
     def test_streaming_deadline_bounds_total_execution(self):

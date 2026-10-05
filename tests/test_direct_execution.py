@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from app.action_records import ActionRecord,ActionLedger,DirectExecutor,action_ledger,close_ledgers
 from app.connector_sdk import ConnectorRegistry,Sink
+from tests.backend_receipt_fixture import install as install_backend_receipt
 
 
 @pytest.fixture(autouse=True)
@@ -18,6 +19,8 @@ def isolated(monkeypatch,tmp_path):
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
     monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
+    monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
+    install_backend_receipt(monkeypatch,tmp_path,'http://fixture')
     yield
     close_ledgers()
 
@@ -150,7 +153,7 @@ def test_cancellation_is_operational(api):
     assert compute.queue.finish(job['id'],result='late result')['status']=='cancelled'
 
 
-def test_direct_stream_without_lease(monkeypatch):
+def test_direct_stream_without_lease(monkeypatch,tmp_path):
     from app.direct_stream import infer
     import app.direct_stream as stream
     class Response:
@@ -163,8 +166,8 @@ def test_direct_stream_without_lease(monkeypatch):
         def __init__(self,*args,**kwargs):pass
         def stream(self,*args,**kwargs):return Response()
     monkeypatch.setattr(stream.httpx,'AsyncClient',Client)
-    settings=SimpleNamespace(ollama_base_url='http://unused',keep_alive='1m',context_tokens=128,max_output_tokens=4)
-    result=asyncio.run(infer({'prompt':'test','timeout_seconds':1},SimpleNamespace(model='test'),settings=settings,capacity=lambda m:None,options=lambda:{}))
+    settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive='1m',context_tokens=128,max_output_tokens=4)
+    result=asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='test'),settings=settings,capacity=lambda m:None,options=lambda:{}))
     assert result['result']=='actual'
 
 
