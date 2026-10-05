@@ -108,9 +108,11 @@ ROLE_NORMAL_FIXTURES = {
         "SYNTHETIC: price 30, variable cost 18, 40 pilot units; competitor price 25; no elasticity or acquisition data.",
         ("Unit contribution is 12", "Pilot contribution is 480 before fixed costs", "Do not claim optimal pricing")),
     "responsibility.a21": (
-        "Separate fixed and variable costs at a stated volume.",
+        "Separate fixed, variable, average, and incremental costs at a stated volume. Return ONLY a strict JSON object with fixed_cost, variable_cost_per_unit, volume, total_variable_cost, total_cost, average_cost_per_unit, cost_at_next_unit, incremental_cost_next_unit, revenue_known, and profit_known. Copy source integers exactly; express average_cost_per_unit as a reduced fraction string, including /1 for whole numbers. The next unit changes variable cost but does not repeat fixed cost. Use JSON booleans for the last two fields. No revenue is supplied, so do not infer profit or break-even.",
         "SYNTHETIC: fixed cost 100, variable cost 3 per unit, volume 20; revenue is not supplied.",
-        ("Total cost is 160", "Average cost is 8 per unit", "Do not infer profit")),
+        ("Total variable cost is 60 and total cost is 160",
+         "Average cost is 8/1 but incremental cost of unit 21 is 3",
+         "Cost at 21 units is 163; revenue and profit remain unknown")),
     "responsibility.a22": (
         "Evaluate a proposed investment with explicit net value and missing horizon.",
         "SYNTHETIC: one-period benefit 150, upfront cost 100, no future-period data or discount rate.",
@@ -390,6 +392,13 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                     "values as estimates, not guaranteed outcomes. Do not invent "
                     "completed actions or claim certification."
                 )
+            elif agent_id == "a21" and capability == "responsibility.a21" and not context:
+                objective = role_prefix + (
+                    "Copy the synthetic source integers exactly. Return only the declared "
+                    "strict JSON object; distinguish average cost from incremental cost, "
+                    "and do not infer revenue, profit, or break-even. Do not claim "
+                    "certification or executed actions."
+                )
             else:
                 objective = role_prefix + (
                     "Return observations, uncertainty, and a proposed output within this responsibility. "
@@ -453,6 +462,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_data_quality_oracle",)
         if agent_id == "a05" and capability == "responsibility.a05" and case_id == "role:normal" and not context:
             review += ("exact_portfolio_oracle",)
+        if agent_id == "a21" and capability == "responsibility.a21" and case_id == "role:normal" and not context:
+            review += ("exact_cost_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -474,7 +485,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a17", "responsibility.a17"),
                                               ("a18", "responsibility.a18"),
                                               ("a14", "responsibility.a14"),
-                                              ("a05", "responsibility.a05")} else {}),
+                                              ("a05", "responsibility.a05"),
+                                              ("a21", "responsibility.a21")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,

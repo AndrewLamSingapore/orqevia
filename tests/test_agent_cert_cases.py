@@ -112,6 +112,16 @@ def test_a05_role_case_has_exact_capacity_oracle():
     assert "both_feasible_together" in spec["request"]["objective"]
 
 
+def test_a21_role_case_requires_exact_cost_and_non_profit_oracle():
+    spec = challenge("role:normal", agent_id="a21", capability_id="responsibility.a21")
+    assert spec["request"]["response_format"] == "strict_json"
+    assert "exact_cost_oracle" in spec["independent_review"]
+    assert "fixed cost 100" in spec["request"]["context"]
+    assert "incremental_cost_next_unit" in spec["request"]["objective"]
+    assert "profit_known" in spec["request"]["objective"]
+    assert spec["certification"] == "UNVERIFIED"
+
+
 def test_a01_normal_case_separates_total_value_from_efficiency():
     spec = challenge("role:normal", agent_id="a01", capability_id="responsibility.a01")
     objective = spec["request"]["objective"]
