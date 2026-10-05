@@ -1,4 +1,9 @@
 {
-  "key_id": "",
-  "jwk": {}
+  "key_id": "https://abexprimeverify26.vault.azure.net/keys/prime-agent-cert-verifier/90297767516f4fbcb22fd13367f71069",
+  "jwk": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "J1USyEzHQ4lFxtEY5_Sz-3b1MLFBdJHojOLQQZ94pcY",
+    "y": "JiDdh3l0hs8cnUREXT0QAy-Aj-btLGo4rI1b3ZQVo9U"
+  }
 }
