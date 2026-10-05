@@ -378,6 +378,18 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                     "otherwise PASS. Do not modify source rows, invent repairs, "
                     "or claim certification."
                 )
+            elif agent_id == "a05" and capability == "responsibility.a05" and not context:
+                objective = role_prefix + (
+                    "Return ONLY a strict JSON object with exactly available_slots, "
+                    "p_slots, q_slots, p_expected_value, q_expected_value, "
+                    "selected_project, selected_slots, selected_expected_value, "
+                    "values_are_estimates, and both_feasible_together. "
+                    "Copy the source integers exactly. Select P or Q for the single "
+                    "available slot using the supplied expected values; do not select "
+                    "both. Use JSON booleans for the last two fields. Treat expected "
+                    "values as estimates, not guaranteed outcomes. Do not invent "
+                    "completed actions or claim certification."
+                )
             else:
                 objective = role_prefix + (
                     "Return observations, uncertainty, and a proposed output within this responsibility. "
@@ -439,6 +451,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_a17_boundary_oracle",)
         if agent_id == "a14" and capability == "responsibility.a14" and case_id == "role:normal" and not context:
             review += ("exact_data_quality_oracle",)
+        if agent_id == "a05" and capability == "responsibility.a05" and case_id == "role:normal" and not context:
+            review += ("exact_portfolio_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -459,7 +473,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a12", "responsibility.a12"),
                                               ("a17", "responsibility.a17"),
                                               ("a18", "responsibility.a18"),
-                                              ("a14", "responsibility.a14")} else {}),
+                                              ("a14", "responsibility.a14"),
+                                              ("a05", "responsibility.a05")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,

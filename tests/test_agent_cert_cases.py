@@ -104,6 +104,14 @@ def test_a04_role_case_has_exact_tie_oracle():
     assert "missing_tie_breaker" in spec["request"]["objective"]
 
 
+def test_a05_role_case_has_exact_capacity_oracle():
+    spec = challenge("role:normal", agent_id="a05", capability_id="responsibility.a05")
+    assert spec["request"]["response_format"] == "strict_json"
+    assert "exact_portfolio_oracle" in spec["independent_review"]
+    assert "one slot available" in spec["request"]["context"]
+    assert "both_feasible_together" in spec["request"]["objective"]
+
+
 def test_a01_normal_case_separates_total_value_from_efficiency():
     spec = challenge("role:normal", agent_id="a01", capability_id="responsibility.a01")
     objective = spec["request"]["objective"]

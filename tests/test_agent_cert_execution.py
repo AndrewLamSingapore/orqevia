@@ -148,6 +148,25 @@ def test_a14_data_quality_check_rejects_false_pass_and_forged_source():
     assert _run(forged, json.dumps(answer))["reason"] == "data_quality_oracle_source_mismatch"
 
 
+def test_a05_portfolio_check_rejects_both_projects_and_forged_source():
+    spec = challenge("role:normal", agent_id="a05", capability_id="responsibility.a05")
+    answer = {"available_slots": 1, "p_slots": 1, "q_slots": 1,
+              "p_expected_value": 8, "q_expected_value": 5,
+              "selected_project": "P", "selected_slots": 1,
+              "selected_expected_value": 8, "values_are_estimates": True,
+              "both_feasible_together": False}
+    observed = _run(spec, json.dumps(answer))
+    assert observed["state"] == "EXECUTED"
+    assert observed["case_review"] == "PORTFOLIO_CHECK_PASS"
+    assert observed["certification"] == "UNVERIFIED"
+    assert "result" not in observed
+    failed = _run(spec, json.dumps({**answer, "both_feasible_together": True}))
+    assert failed["case_review"] == "PORTFOLIO_CHECK_FAIL"
+    assert "both_feasible_together" in failed["review_errors"]
+    forged = {**spec, "request": {**spec["request"], "context": "two slots available"}}
+    assert _run(forged, json.dumps(answer))["reason"] == "portfolio_oracle_source_mismatch"
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"
