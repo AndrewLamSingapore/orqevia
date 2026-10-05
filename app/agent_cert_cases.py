@@ -130,9 +130,9 @@ ROLE_NORMAL_FIXTURES = {
         "SYNTHETIC: risk A likelihood 2, impact 5; risk B likelihood 4, impact 2; score is product; each scale is an ordinal estimate from 1 through 5; no controls or calibrated frequencies are supplied.",
         ("A scores 10 and B scores 8", "Prioritize A under given rule", "No calibrated probability or post-control residual risk is supplied")),
     "responsibility.a29": (
-        "Evaluate a release gate from separate source and runtime receipts.",
-        "SYNTHETIC: tests pass on source commit abc123; deployment receipt is for older commit def456; no current runtime receipt.",
-        ("Source test pass is preserved", "Release binding is not established", "Require runtime identity for abc123")),
+        "Evaluate source tests separately from historical deployment and current runtime evidence. Return ONLY a strict JSON object with exactly source_revision, historical_deployment_revision, source_tests_pass, current_runtime_receipt_present, historical_deployment_matches_source, current_runtime_identity_verified, release_binding_proven, and production_promotion_authorized. Copy the supplied revisions exactly and use literal JSON booleans. A historical deployment receipt is not a current runtime receipt; source CI cannot authorize production promotion. Do not claim an approval or completed deployment.",
+        "SYNTHETIC: source_revision=abc123; source_tests_pass=true; historical_deployment_revision=def456; current_runtime_receipt_present=false. No current runtime identity or independent promotion approval is supplied.",
+        ("Source test pass is preserved", "Historical deployment def456 differs from abc123", "Current runtime identity for abc123 is unverified", "Release binding and promotion authorization are not established")),
 }
 
 MATRIX_CASES = {
@@ -399,6 +399,12 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                     "and do not infer revenue, profit, or break-even. Do not claim "
                     "certification or executed actions."
                 )
+            elif agent_id == "a29" and capability == "responsibility.a29" and not context:
+                objective = role_prefix + (
+                    "Return only the declared strict JSON object. Do not treat passing "
+                    "source tests or a historical deployment receipt as current runtime "
+                    "identity, release approval, or executed production promotion."
+                )
             else:
                 objective = role_prefix + (
                     "Return observations, uncertainty, and a proposed output within this responsibility. "
@@ -466,6 +472,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_cost_oracle",)
         if agent_id == "a28" and capability == "responsibility.a28" and case_id == "role:normal" and not context:
             review += ("exact_risk_oracle",)
+        if agent_id == "a29" and capability == "responsibility.a29" and case_id == "role:normal" and not context:
+            review += ("exact_release_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -489,7 +497,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a14", "responsibility.a14"),
                                               ("a05", "responsibility.a05"),
                                               ("a21", "responsibility.a21"),
-                                              ("a28", "responsibility.a28")} else {}),
+                                              ("a28", "responsibility.a28"),
+                                              ("a29", "responsibility.a29")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,

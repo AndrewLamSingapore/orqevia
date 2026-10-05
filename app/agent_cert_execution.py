@@ -23,6 +23,7 @@ from .agent_cert_data_quality import review_data_quality_json
 from .agent_cert_portfolio import review_portfolio_json
 from .agent_cert_cost import review_cost_json
 from .agent_cert_risk import review_risk_json
+from .agent_cert_release import review_release_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
 
@@ -45,6 +46,8 @@ _A05_SOURCE = {"available_slots": 1, "p_slots": 1, "q_slots": 1,
 _A21_SOURCE = {"fixed_cost": 100, "variable_cost_per_unit": 3, "volume": 20}
 _A28_SOURCE = {"a_likelihood": 2, "a_impact": 5,
                "b_likelihood": 4, "b_impact": 2}
+_A29_SOURCE = {"source_revision": "abc123", "historical_deployment_revision": "def456",
+               "source_tests_pass": True, "current_runtime_receipt_present": False}
 
 
 def _time(value: object) -> datetime | None:
@@ -210,6 +213,16 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "risk_oracle_source_mismatch"}
                     valid, review_errors = review_risk_json(_A28_SOURCE, result)
                     review = "RISK_CHECK_PASS" if valid else "RISK_CHECK_FAIL"
+                if "exact_release_oracle" in spec.get("independent_review", ()):
+                    if agent != "a29" or capability != "responsibility.a29" or spec.get("case") != "role:normal":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "release_oracle_scope_mismatch"}
+                    if spec != challenge("role:normal", agent_id="a29",
+                                         capability_id="responsibility.a29"):
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "release_oracle_source_mismatch"}
+                    valid, review_errors = review_release_json(_A29_SOURCE, result)
+                    review = "RELEASE_CHECK_PASS" if valid else "RELEASE_CHECK_FAIL"
                 return {**base, "job_id": job_id, "state": "EXECUTED",
                         "provider": provider, "attempts": row["attempts"],
                         "started_at": began.isoformat(), "completed_at": ended.isoformat(),
