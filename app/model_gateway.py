@@ -12,6 +12,8 @@ from typing import Any
 from .compute_ledger import ComputeLedger
 from .settings import SETTINGS, PrimeSettings
 from .compute_profile import require_compute_capacity, generation_options
+from .compute_profile import runtime_compute_profile
+from . import backend_admission
 
 
 @dataclass(frozen=True)
@@ -94,8 +96,27 @@ class ModelGateway:
         task_id = task_id or str(uuid.uuid4())
         model = self.local_evaluator if role == "evaluator" else (self.local_deep if deep else self.local_fast)
         require_compute_capacity(model)
+        profile = runtime_compute_profile()
+        demand = profile.get('models', {}).get(model, {}).get('peak_mib') if profile else None
+        lease_id = str(uuid.uuid4())
+        endpoint = self.ollama_url.rstrip('/')
+        c = backend_admission.transaction()
+        try:
+            backend_admission.reserve(c, endpoint, lease_id, demand)
+            c.commit()
+        except BaseException:
+            c.rollback()
+            raise
+        finally:
+            c.close()
         started = time.monotonic()
         try:
+            c = backend_admission.transaction()
+            try:
+                backend_admission.dispatch(c, endpoint, lease_id)
+                c.commit()
+            finally:
+                c.close()
             data = self._post(
                 f"{self.ollama_url}/api/generate",
                 {
@@ -106,8 +127,14 @@ class ModelGateway:
             )
             latency = int((time.monotonic() - started) * 1000)
             text = str(data.get("response") or "").strip()
-            if not text:
+            if not text or data.get('done') is not True:
                 raise RuntimeError("local model returned an empty response")
+            c = backend_admission.transaction()
+            try:
+                backend_admission.completed(c, endpoint, lease_id)
+                c.commit()
+            finally:
+                c.close()
             usage = {
                 key: data.get(key) for key in (
                     "prompt_eval_count", "eval_count", "total_duration", "load_duration",
@@ -122,6 +149,12 @@ class ModelGateway:
             )
             return ModelResult(task_id, stage, "ollama", model, text, latency, usage)
         except Exception as exc:
+            c = backend_admission.transaction()
+            try:
+                backend_admission.cancel(c, endpoint, lease_id)
+                c.commit()
+            finally:
+                c.close()
             latency = int((time.monotonic() - started) * 1000)
             self.ledger.record(task_id=task_id, stage=stage, provider="ollama", model=model, latency_ms=latency, success=False, metadata={"error": type(exc).__name__})
             raise

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Callable
 
 from .agent_registry import RegistryError, canonical_agent_id
+from . import backend_admission
 
 
 TERMINAL = {"completed", "failed", "cancelled", "budget_blocked"}
@@ -88,6 +89,7 @@ class JobQueue:
     def __init__(self, db_path: str | Path, policy: QueuePolicy | None = None):
         self.db_path = str(db_path)
         self.policy = policy or QueuePolicy.from_env()
+        self.backend_endpoint = os.getenv('OLLAMA_BASE_URL', 'http://ollama:11434').rstrip('/')
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
         self.wake = threading.Event()
@@ -130,6 +132,7 @@ class JobQueue:
               id TEXT PRIMARY KEY, job_id TEXT, event_type TEXT NOT NULL,
               details_json TEXT NOT NULL, created_at TEXT NOT NULL);
             """)
+            backend_admission.init(c)
 
             if 'classification' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
                 c.execute("ALTER TABLE compute_jobs ADD COLUMN classification TEXT DEFAULT 'R0'")
@@ -179,9 +182,11 @@ class JobQueue:
 
     def cancel(self,job_id):
         with self.lock,self.connect() as c:
-            row=c.execute('SELECT status FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
+            row=c.execute('SELECT status,provider FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
             if not row:raise KeyError(job_id)
             if row['status'] not in TERMINAL:
+                if row['status']=='running':
+                    backend_admission.cancel(c,self.backend_endpoint,job_id)
                 c.execute("UPDATE compute_jobs SET status='cancelled',updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
                 self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
         self.wake.set()
@@ -224,7 +229,8 @@ class JobQueue:
         estimated_output=provider.max_output_tokens
         return (estimated_input*provider.input_cost_per_mtok + estimated_output*provider.output_cost_per_mtok)/1_000_000
 
-    def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider]) -> tuple[Provider | None,str,float]:
+    def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider],
+               *, local_unavailable: bool = False) -> tuple[Provider | None,str,float]:
         local_names={p.name for p in providers if p.kind=="local"}
         if row['preferred_provider']:
             providers=[p for p in providers if p.name==row['preferred_provider']]
@@ -253,7 +259,7 @@ class JobQueue:
             if row["model"] and row["model"]!=p.model:continue
             if not row["model"] and row["model_role"]!="auto" and not p.name.endswith("-"+row["model_role"]):continue
             local.append(p)
-        if local:return local[0],"local capacity available",0
+        if local and not local_unavailable:return local[0],"local capacity available",0
         if not row["allow_cloud"]:
             return None,"local capacity unavailable; cloud not permitted",0
         from .tier_router import classify_for_cloud
@@ -328,6 +334,15 @@ class JobQueue:
                         self._event(c,row["id"],"budget_blocked",{"reason":reason,"estimate":estimate})
                     continue
                 ts=utcnow();lease=time.time()+row["timeout_seconds"]+30
+                if provider.kind=='local':
+                    # The SQLite write transaction makes this reservation atomic
+                    # with the scheduler claim across workers and processes.
+                    try:
+                        backend_admission.reserve(c,self.backend_endpoint,row['id'],row['ram_mb'])
+                    except PermissionError:
+                        provider,reason,estimate=self._route(c,row,providers,local_unavailable=True)
+                        if not provider:
+                            continue
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
                              lease_until=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status='queued'""",
@@ -335,6 +350,8 @@ class JobQueue:
                 if changed.rowcount:
                     self._event(c,row["id"],"claimed",{"worker":worker_id,"provider":provider.name,"reason":reason})
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
+                if provider.kind=='local':
+                    backend_admission.cancel(c,self.backend_endpoint,row['id'])
         return None
 
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
@@ -345,6 +362,7 @@ class JobQueue:
             if not row: raise KeyError(job_id)
             if row["status"]=="cancelled":return dict(row)
             if row["status"]!="running": raise ValueError("job is not running")
+            backend_admission.cancel(c,self.backend_endpoint,job_id)
             cost=None if actual_cost_usd is None else max(0.0,float(actual_cost_usd)); ts=utcnow()
             budget_cost=row['estimated_cost_usd'] if cost is None else cost
             over=budget_cost>row["max_cost_usd"] or self._daily_spend(c)+budget_cost>self.policy.daily_cost_ceiling_usd
@@ -363,6 +381,7 @@ class JobQueue:
         with self.lock, self.connect() as c:
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='running' AND lease_until<?",(time.time(),)).fetchall()
             for row in rows:
+                backend_admission.cancel(c,self.backend_endpoint,row['id'])
                 status="queued" if not row['allow_cloud'] and row["attempts"]<=row["max_retries"] else "failed"
                 c.execute("UPDATE compute_jobs SET status=?,provider=NULL,lease_until=NULL,error='worker lease expired',updated_at=?,completed_at=? WHERE id=?",
                           (status,utcnow(),utcnow() if status=="failed" else None,row["id"]))
@@ -401,7 +420,9 @@ class WorkerPool:
                 self.queue.wake.wait(.5)
                 continue
             provider=next(p for p in self.providers if p.name==job["provider"])
-            try:self.queue.finish(job["id"],**self.execute(job,provider))
+            try:
+                job['_admission_db'] = self.queue.db_path
+                self.queue.finish(job["id"],**self.execute(job,provider))
             except Exception as exc:
                 if provider.kind=='cloud':
                     # Unknown billing remains reserved; no blind replay of an
