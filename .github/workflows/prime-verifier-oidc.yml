@@ -48,4 +48,4 @@ jobs:
     uses: AndrewLamSingapore/prime/.github/workflows/prime-verifier-signer.yml@main
     permissions:
       id-token: write
-      contents: none
+      contents: read
