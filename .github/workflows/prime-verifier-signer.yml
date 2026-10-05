@@ -1,7 +1,7 @@
 name: PRIME independent verifier signer
 
-# A reusable protected-code boundary. The caller may not supply code, secrets,
-# signing payloads, or parameters. This initial stage observes only OIDC claims.
+# Callable only from the protected-main OIDC wrapper. No caller-supplied input,
+# source ref, signing payload, credential or artifact is accepted.
 on:
   workflow_call:
 
@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: none
+      contents: read
     steps:
-      - name: Require protected canonical main caller
+      - name: Require protected canonical caller
         env:
           REPOSITORY: ${{ github.repository }}
           REF: ${{ github.ref }}
@@ -35,47 +35,14 @@ jobs:
           ):
               raise SystemExit("Verifier signer denied: protected canonical caller required")
           PY
-      - name: Observe Azure-audience claims without printing the token
-        env:
-          EXPECTED_REPOSITORY: AndrewLamSingapore/prime
-          EXPECTED_CALLER_REF: AndrewLamSingapore/prime/.github/workflows/prime-verifier-oidc.yml@refs/heads/main
-          EXPECTED_SIGNER_REF: AndrewLamSingapore/prime/.github/workflows/prime-verifier-signer.yml@refs/heads/main
-        run: |
-          python - <<'PY'
-          import base64
-          import json
-          import os
-          import urllib.parse
-          import urllib.request
-
-          audience = "api://AzureADTokenExchange"
-          url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
-          separator = "&" if "?" in url else "?"
-          url += separator + urllib.parse.urlencode({"audience": audience})
-          request = urllib.request.Request(
-              url,
-              headers={"Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]},
-          )
-          with urllib.request.urlopen(request, timeout=15) as response:
-              token = json.load(response)["value"]
-          payload = token.split(".")[1]
-          claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
-          if (
-              claims.get("iss") != "https://token.actions.githubusercontent.com"
-              or claims.get("aud") != audience
-              or claims.get("repository") != os.environ["EXPECTED_REPOSITORY"]
-              or claims.get("ref") != "refs/heads/main"
-              or claims.get("workflow_ref") != os.environ["EXPECTED_CALLER_REF"]
-              or claims.get("job_workflow_ref") != os.environ["EXPECTED_SIGNER_REF"]
-              or claims.get("event_name") != "workflow_dispatch"
-          ):
-              raise SystemExit("OIDC claims do not match the protected verifier workflow")
-          # Never log the JWT or bearer. Observe the actual subject before
-          # establishing any Azure federated credential or key permission.
-          observed = {name: claims.get(name) for name in (
-              "iss", "aud", "sub", "repository", "repository_id", "repository_owner_id",
-              "ref", "ref_protected", "workflow_ref", "job_workflow_ref", "event_name",
-          )}
-          print(json.dumps(observed, sort_keys=True))
-          print("OIDC_CLAIM_PREFLIGHT=PASS; NO_AZURE_LOGIN_OR_SIGNING_ATTEMPTED")
-          PY
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install bounded verifier dependency
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.2
+      - name: Protected Azure sign, public verification, tamper rejection
+        run: python -m scripts.azure_verifier_live_canary
