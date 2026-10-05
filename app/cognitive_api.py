@@ -67,7 +67,7 @@ def multi_invoke(request:MultiInvocationRequest,authorization:str|None=Header(de
     if os.getenv("PRIME_MULTI_INVOCATION_ENABLED", "") != "1":
         raise HTTPException(status_code=503,detail="Multi-invocation candidate is disabled")
     try:
-        max_calls=min(64,max(4,int(os.getenv("PRIME_MULTI_INVOCATION_MAX_CALLS","8"))))
+        max_calls=min(64,max(5,int(os.getenv("PRIME_MULTI_INVOCATION_MAX_CALLS","8"))))
         budget=InvocationBudget(max_calls=max_calls,max_parallel=1,max_elapsed_seconds=180)
         runtime=MultiInvocationRuntime(local_gateway_invoker(orchestrator.gateway))
         return {"ok":True,**runtime.run(objective=request.objective,depth=request.depth,

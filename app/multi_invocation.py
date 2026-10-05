@@ -83,8 +83,8 @@ class MultiInvocationRuntime:
             raise ValueError("objective missing or exceeds context budget")
         if not 1 <= permitted_parallel <= 16:
             raise ValueError("invalid provider concurrency admission")
-        if depth is not Depth.FAST and budget.max_calls < 4:
-            raise ValueError("budget cannot reserve critique, synthesis and verification")
+        if depth is not Depth.FAST and budget.max_calls < 5:
+            raise ValueError("budget cannot reserve two independent drafts, critique, synthesis and verification")
         trace_id = str(uuid.uuid4())
         began = time.monotonic()
         ledger: list[dict[str, object]] = []

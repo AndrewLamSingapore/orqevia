@@ -92,7 +92,7 @@ def test_missing_mandatory_review_fails_closed(role):
         return output(current)
     with pytest.raises(RuntimeError, match="mandatory"):
         MultiInvocationRuntime(invoke).run(
-            objective="Analyze", depth=Depth.STANDARD, budget=InvocationBudget(max_calls=4))
+            objective="Analyze", depth=Depth.STANDARD, budget=InvocationBudget(max_calls=5))
 
 
 def test_budget_and_context_boundaries():
