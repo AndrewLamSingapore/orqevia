@@ -78,6 +78,24 @@ def test_a12_rate_check_is_scoped_and_never_certifies():
     assert _run(forged, json.dumps(answer))["reason"] == "rate_oracle_source_mismatch"
 
 
+def test_a04_weighted_tie_case_rejects_false_winner_and_never_certifies():
+    spec = challenge("role:normal", agent_id="a04", capability_id="responsibility.a04")
+    answer = {"reliability_weight": 2, "speed_weight": 1,
+              "a_reliability": 4, "a_speed": 1, "b_reliability": 2, "b_speed": 5,
+              "a_score": 9, "b_score": 9, "decision": "TIE",
+              "missing_tie_breaker": True}
+    observed = _run(spec, json.dumps(answer))
+    assert observed["state"] == "EXECUTED"
+    assert observed["case_review"] == "WEIGHTED_CHECK_PASS"
+    assert observed["certification"] == "UNVERIFIED"
+    assert "result" not in observed
+    failed = _run(spec, json.dumps({**answer, "decision": "A"}))
+    assert failed["case_review"] == "WEIGHTED_CHECK_FAIL"
+    assert "decision" in failed["review_errors"]
+    forged = {**spec, "request": {**spec["request"], "context": "different weights"}}
+    assert _run(forged, json.dumps(answer))["reason"] == "weighted_oracle_source_mismatch"
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"

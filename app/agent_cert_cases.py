@@ -316,6 +316,19 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 discriminants = ("Zero must return True under the requirement",
                                  "The n > 0 implementation is defective at zero",
                                  "Reject an inverted assertion even if it passes buggy code")
+        elif agent_id == "a04" and capability == "responsibility.a04" and case_id == "role:normal":
+            objective = (
+                f"For {responsibility['description']} by registered {agent_id}, capability {capability}: "
+                f"declared input {responsibility['input']}; declared output {responsibility['output']}. "
+                "Apply the supplied reliability and speed weights to options A and B. "
+                "Return ONLY a strict JSON object with reliability_weight, speed_weight, "
+                "a_reliability, a_speed, b_reliability, b_speed, a_score, b_score, "
+                "decision, and missing_tie_breaker. Copy source integers exactly. "
+                "Use A, B, or TIE for decision; missing_tie_breaker is a JSON boolean. "
+                "Do not invent a winner, unprovided tie breaker, completed action, or certification."
+            )
+            if not context:
+                discriminants = ROLE_NORMAL_FIXTURES[capability][2]
         elif case_id == "role:normal":
             task, _, criteria = ROLE_NORMAL_FIXTURES[capability]
             role_prefix = (
@@ -386,6 +399,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_numeric_oracle",)
         if agent_id == "a12" and capability == "responsibility.a12" and case_id == "role:normal" and not context:
             review += ("exact_rate_oracle",)
+        if agent_id == "a04" and capability == "responsibility.a04" and case_id == "role:normal" and not context:
+            review += ("exact_weighted_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -402,6 +417,7 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             "max_cost_usd": 0,
             **({"response_format": "strict_json"} if case_id == "role:normal" and not context
                and (agent_id, capability) in {("a01", "responsibility.a01"),
+                                              ("a04", "responsibility.a04"),
                                               ("a12", "responsibility.a12")} else {}),
         },
         "independent_review": review,

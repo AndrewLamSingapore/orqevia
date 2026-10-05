@@ -16,6 +16,7 @@ from datetime import datetime
 
 from .agent_cert_numeric import review_priority_json
 from .agent_cert_rates import review_rate_json
+from .agent_cert_weighted import review_weighted_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
 
@@ -28,6 +29,9 @@ _A01_SOURCE = {
 }
 _A12_SOURCE = {"week1_failures": 10, "week1_requests": 100,
                "week2_failures": 15, "week2_requests": 300}
+_A04_SOURCE = {"reliability_weight": 2, "speed_weight": 1,
+               "a_reliability": 4, "a_speed": 1,
+               "b_reliability": 2, "b_speed": 5}
 
 
 def _time(value: object) -> datetime | None:
@@ -123,6 +127,16 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "rate_oracle_source_mismatch"}
                     valid, review_errors = review_rate_json(_A12_SOURCE, result)
                     review = "RATE_CHECK_PASS" if valid else "RATE_CHECK_FAIL"
+                if "exact_weighted_oracle" in spec.get("independent_review", ()):
+                    if agent != "a04" or capability != "responsibility.a04" or spec.get("case") != "role:normal":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "weighted_oracle_scope_mismatch"}
+                    if request != challenge("role:normal", agent_id="a04",
+                                            capability_id="responsibility.a04")["request"]:
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "weighted_oracle_source_mismatch"}
+                    valid, review_errors = review_weighted_json(_A04_SOURCE, result)
+                    review = "WEIGHTED_CHECK_PASS" if valid else "WEIGHTED_CHECK_FAIL"
                 return {**base, "job_id": job_id, "state": "EXECUTED",
                         "provider": provider, "attempts": row["attempts"],
                         "started_at": began.isoformat(), "completed_at": ended.isoformat(),
