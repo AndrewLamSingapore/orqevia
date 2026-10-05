@@ -1,6 +1,6 @@
-from concurrent.futures import Barrier
 import threading
 import time
+from threading import Barrier
 
 import pytest
 
