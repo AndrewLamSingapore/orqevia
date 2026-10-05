@@ -114,6 +114,23 @@ def test_a18_zero_boundary_case_preserves_failure_repair_and_unverified_status()
     assert _run(forged, json.dumps(answer))["reason"] == "boundary_oracle_source_mismatch"
 
 
+def test_a17_boundary_check_rejects_null_error_and_forged_source():
+    spec = challenge("role:normal", agent_id="a17", capability_id="responsibility.a17")
+    answer = {"type_guard": "type(n) is int", "accepted_range": "0 <= n <= 9",
+              "zero_result": 0, "nine_result": 9, "negative_one_error": True,
+              "ten_error": True, "string_error": True, "float_error": True,
+              "tests_executed": False}
+    observed = _run(spec, json.dumps(answer))
+    assert observed["state"] == "EXECUTED"
+    assert observed["case_review"] == "A17_BOUNDARY_CHECK_PASS"
+    assert observed["certification"] == "UNVERIFIED"
+    failed = _run(spec, json.dumps({**answer, "string_error": None}))
+    assert failed["case_review"] == "A17_BOUNDARY_CHECK_FAIL"
+    assert "string_error" in failed["review_errors"]
+    forged = {**spec, "request": {**spec["request"], "context": "changed requirement"}}
+    assert _run(forged, json.dumps(answer))["reason"] == "a17_boundary_oracle_source_mismatch"
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"

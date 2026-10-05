@@ -18,6 +18,7 @@ from .agent_cert_numeric import review_priority_json
 from .agent_cert_rates import review_rate_json
 from .agent_cert_weighted import review_weighted_json
 from .agent_cert_boundary import review_zero_boundary_json
+from .agent_cert_a17_boundary import review_a17_boundary_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
 
@@ -148,6 +149,16 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "boundary_oracle_source_mismatch"}
                     valid, review_errors = review_zero_boundary_json(result)
                     review = "BOUNDARY_CHECK_PASS" if valid else "BOUNDARY_CHECK_FAIL"
+                if "exact_a17_boundary_oracle" in spec.get("independent_review", ()):
+                    if agent != "a17" or capability != "responsibility.a17" or spec.get("case") != "role:normal":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "a17_boundary_oracle_scope_mismatch"}
+                    if request != challenge("role:normal", agent_id="a17",
+                                            capability_id="responsibility.a17")["request"]:
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "a17_boundary_oracle_source_mismatch"}
+                    valid, review_errors = review_a17_boundary_json(result)
+                    review = "A17_BOUNDARY_CHECK_PASS" if valid else "A17_BOUNDARY_CHECK_FAIL"
                 return {**base, "job_id": job_id, "state": "EXECUTED",
                         "provider": provider, "attempts": row["attempts"],
                         "started_at": began.isoformat(), "completed_at": ended.isoformat(),

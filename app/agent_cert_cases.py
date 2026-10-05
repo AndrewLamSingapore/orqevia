@@ -323,6 +323,18 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 discriminants = ("Zero must return True under the requirement",
                                  "The n > 0 implementation is defective at zero",
                                  "Reject an inverted assertion even if it passes buggy code")
+        elif agent_id == "a17" and capability == "responsibility.a17" and case_id == "role:normal":
+            objective = (
+                "For the supplied synthetic parser contract, return ONLY strict JSON with exactly: "
+                "type_guard, accepted_range, zero_result, nine_result, negative_one_error, "
+                "ten_error, string_error, float_error, tests_executed. "
+                "Use the Python expressions 'type(n) is int' and '0 <= n <= 9' for the first two "
+                "fields. Use integer results for accepted inputs and JSON booleans for error fields. "
+                "An error field means the input raises an error, not returns null. Python booleans "
+                "are not accepted as integers. No code has run; set tests_executed=false."
+            )
+            if not context:
+                discriminants = ROLE_NORMAL_FIXTURES[capability][2]
         elif agent_id == "a04" and capability == "responsibility.a04" and case_id == "role:normal":
             objective = (
                 f"For {responsibility['description']} by registered {agent_id}, capability {capability}: "
@@ -410,6 +422,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_weighted_oracle",)
         if agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal" and not context:
             review += ("exact_zero_boundary_oracle",)
+        if agent_id == "a17" and capability == "responsibility.a17" and case_id == "role:normal" and not context:
+            review += ("exact_a17_boundary_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -428,6 +442,7 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                and (agent_id, capability) in {("a01", "responsibility.a01"),
                                               ("a04", "responsibility.a04"),
                                               ("a12", "responsibility.a12"),
+                                              ("a17", "responsibility.a17"),
                                               ("a18", "responsibility.a18")} else {}),
         },
         "independent_review": review,
