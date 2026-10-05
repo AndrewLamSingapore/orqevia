@@ -1,10 +1,12 @@
 import os
 import json
+from types import SimpleNamespace
 from unittest.mock import patch
 from tests.test_harness_api import HarnessApiTests
 from app.agent_registry import registered_agent_ids
 from app import compute_queue_api
 from app.agent_dispatch_api import local_model_backends
+from app import agent_dispatch_api
 from app.settings import PrimeSettings
 
 
@@ -81,3 +83,24 @@ class AgentDispatchTests(HarnessApiTests):
             submit.assert_not_called()
         finally:
             os.environ.pop('PRIME_CONTEXT_PACKS_ENABLED',None)
+
+    def test_dispatch_reserves_output_and_rejects_oversize_before_enqueue(self):
+        settings=SimpleNamespace(context_tokens=384,max_output_tokens=128)
+        with patch.object(agent_dispatch_api,'SETTINGS',settings):
+            with patch.object(compute_queue_api.queue,'submit',wraps=compute_queue_api.queue.submit) as submit:
+                response=self.client.post('/api/agents/dispatch',headers=self.headers,json={
+                    'capability':'responsibility.a17','objective':'Explain '+('x'*1000),
+                    'task_class':'classification'})
+            assert response.status_code==413,response.text
+            submit.assert_not_called()
+
+    def test_dispatch_reports_bounded_prompt_bytes(self):
+        with patch.object(compute_queue_api.queue,'submit',wraps=compute_queue_api.queue.submit) as submit:
+            response=self.client.post('/api/agents/dispatch',headers=self.headers,json={
+                'capability':'responsibility.a17','objective':'Classify as yes or no.',
+                'task_class':'classification'})
+        assert response.status_code==202,response.text
+        payload=response.json()
+        assert payload['prompt_bytes']==len(submit.call_args.kwargs['prompt'].encode('utf-8'))
+        assert payload['prompt_bytes']<=payload['input_budget_bytes']
+        assert payload['input_budget_bytes']<=4096
