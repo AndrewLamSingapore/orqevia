@@ -75,3 +75,34 @@ def test_public_pin_and_signature_require_exact_bytes():
     assert not canary.verify(public, message, signature[:-1])
     with pytest.raises(ValueError):
         canary._public_key({**_public(private), "x": "broken"})
+
+
+def test_oidc_reusable_revision_must_match_checkout(monkeypatch):
+    head = "b" * 40
+    monkeypatch.setenv("GITHUB_SHA", head)
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "https://oidc.example.test/token")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "synthetic-test-only")
+    claims = {
+        "iss": "https://token.actions.githubusercontent.com",
+        "aud": canary.AUDIENCE, "sub": canary.SUBJECT,
+        "repository": "AndrewLamSingapore/prime",
+        "repository_id": "1345668764", "repository_owner_id": "313231443",
+        "ref": "refs/heads/main", "ref_protected": "true",
+        "workflow_ref": canary.CALLER, "job_workflow_ref": canary.SIGNER,
+        "workflow_sha": head, "job_workflow_sha": head,
+        "event_name": "workflow_dispatch",
+    }
+
+    def jwt():
+        payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).rstrip(b"=").decode()
+        return "header." + payload + ".signature"
+
+    monkeypatch.setattr(canary, "_read_json", lambda operation: {"value": jwt()})
+    assert canary._oidc() == jwt()
+    claims["job_workflow_sha"] = "c" * 40
+    with pytest.raises(ValueError, match="OIDC claims not bound"):
+        canary._oidc()
+    claims["job_workflow_sha"] = head
+    claims["workflow_sha"] = "c" * 40
+    with pytest.raises(ValueError, match="OIDC claims not bound"):
+        canary._oidc()
