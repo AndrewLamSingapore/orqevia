@@ -85,6 +85,16 @@ def test_review_or_artifact_failure_never_calls_key_vault(tmp_path):
     assert calls == []
 
 
+def test_executor_self_review_never_calls_key_vault(tmp_path):
+    signer, _, calls, root, row, _ = _fixture(tmp_path)
+    row["executor_identity"] = row["verifier"]
+    approved = hashlib.sha256(azure_es256_signed_bytes(row, SERVICE, KEY_ID)).hexdigest()
+    with pytest.raises(ValueError, match="independent reviewer"):
+        signer.sign(row, approved_digest=approved, evidence_root=root,
+                    source_revision=row["source_revision"], now=NOW)
+    assert calls == []
+
+
 def test_wrong_key_response_fails_closed(tmp_path):
     signer, public, _, root, row, digest = _fixture(tmp_path)
     wrong = ProtectedAzureES256Signer(SERVICE, KEY_ID, public,

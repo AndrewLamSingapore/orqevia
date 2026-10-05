@@ -118,6 +118,8 @@ class ProtectedAzureES256Signer:
             raise ValueError("aware verification time required")
         if row.get("source_revision") != source_revision or row.get("test_result") != "PASS":
             raise ValueError("record source or result does not match approval")
+        if row.get("verifier") == row.get("executor_identity"):
+            raise ValueError("independent reviewer required")
         body = azure_es256_signed_bytes(row, self._service, self._key_id)
         if (not isinstance(approved_digest, str)
                 or not hmac.compare_digest(approved_digest, hashlib.sha256(body).hexdigest())):

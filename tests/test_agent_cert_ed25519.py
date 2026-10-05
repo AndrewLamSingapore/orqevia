@@ -87,6 +87,23 @@ def test_full_record_round_trip_uses_real_signature_only_in_memory():
     assert not verifier(altered)
 
 
+def test_rejects_validly_signed_executor_self_review():
+    row = record()
+    row["executor_identity"] = row["verifier"]
+    private_key = Ed25519PrivateKey.generate()
+    public_bytes = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+    row["attestation"]["signature"] = private_key.sign(
+        attestation._signed_bytes(row, SERVICE, "test-v1")
+    ).hex()
+    verifier = attestation.Ed25519CertificationVerifier(
+        {SERVICE: {"test-v1": public_bytes}}
+    )
+    assert not verifier(row)
+
+
 def test_registry_projection_accepts_only_real_signed_current_artifacts(tmp_path):
     private_key = Ed25519PrivateKey.generate()
     public_bytes = private_key.public_key().public_bytes(
