@@ -131,6 +131,23 @@ def test_a17_boundary_check_rejects_null_error_and_forged_source():
     assert _run(forged, json.dumps(answer))["reason"] == "a17_boundary_oracle_source_mismatch"
 
 
+def test_a14_data_quality_check_rejects_false_pass_and_forged_source():
+    spec = challenge("role:normal", agent_id="a14", capability_id="responsibility.a14")
+    answer = {"duplicate_ids": [1], "negative_amount_ids": [2],
+              "duplicate_row_indices": [1], "negative_amount_row_indices": [2],
+              "source_mutated": False, "validation": "FAIL"}
+    observed = _run(spec, json.dumps(answer))
+    assert observed["state"] == "EXECUTED"
+    assert observed["case_review"] == "DATA_QUALITY_CHECK_PASS"
+    assert observed["certification"] == "UNVERIFIED"
+    assert "result" not in observed
+    failed = _run(spec, json.dumps({**answer, "validation": "PASS"}))
+    assert failed["case_review"] == "DATA_QUALITY_CHECK_FAIL"
+    assert "validation" in failed["review_errors"]
+    forged = {**spec, "request": {**spec["request"], "context": "different rows"}}
+    assert _run(forged, json.dumps(answer))["reason"] == "data_quality_oracle_source_mismatch"
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"

@@ -368,6 +368,16 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                     "the source does not establish one. No prose, markdown, date, or extra fields. "
                     "Do not claim actions were executed or certification was earned."
                 )
+            elif agent_id == "a14" and capability == "responsibility.a14" and not context:
+                objective = role_prefix + (
+                    "Return ONLY a strict JSON object with exactly duplicate_ids, "
+                    "negative_amount_ids, duplicate_row_indices, "
+                    "negative_amount_row_indices, source_mutated, and validation. "
+                    "Use zero-based row indices and integer ID arrays. Set validation to "
+                    "FAIL if any supplied row is duplicate or has a negative amount; "
+                    "otherwise PASS. Do not modify source rows, invent repairs, "
+                    "or claim certification."
+                )
             else:
                 objective = role_prefix + (
                     "Return observations, uncertainty, and a proposed output within this responsibility. "
@@ -427,6 +437,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_zero_boundary_oracle",)
         if agent_id == "a17" and capability == "responsibility.a17" and case_id == "role:normal" and not context:
             review += ("exact_a17_boundary_oracle",)
+        if agent_id == "a14" and capability == "responsibility.a14" and case_id == "role:normal" and not context:
+            review += ("exact_data_quality_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -446,7 +458,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a04", "responsibility.a04"),
                                               ("a12", "responsibility.a12"),
                                               ("a17", "responsibility.a17"),
-                                              ("a18", "responsibility.a18")} else {}),
+                                              ("a18", "responsibility.a18"),
+                                              ("a14", "responsibility.a14")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,
