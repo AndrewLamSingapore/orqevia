@@ -167,6 +167,42 @@ def test_a05_portfolio_check_rejects_both_projects_and_forged_source():
     assert _run(forged, json.dumps(answer))["reason"] == "portfolio_oracle_source_mismatch"
 
 
+def test_a21_cost_check_rejects_false_profit_and_forged_source_without_certifying():
+    spec = challenge("role:normal", agent_id="a21", capability_id="responsibility.a21")
+    answer = {"fixed_cost": 100, "variable_cost_per_unit": 3, "volume": 20,
+              "total_variable_cost": 60, "total_cost": 160,
+              "average_cost_per_unit": "8/1", "cost_at_next_unit": 163,
+              "incremental_cost_next_unit": 3, "revenue_known": False,
+              "profit_known": False}
+    observed = _run(spec, json.dumps(answer))
+    assert observed["state"] == "EXECUTED"
+    assert observed["case_review"] == "COST_CHECK_PASS"
+    assert observed["certification"] == "UNVERIFIED"
+    assert "result" not in observed
+    failed = _run(spec, json.dumps({**answer, "profit_known": True}))
+    assert failed["case_review"] == "COST_CHECK_FAIL"
+    assert "profit_known" in failed["review_errors"]
+    false_marginal = _run(spec, json.dumps({**answer, "incremental_cost_next_unit": 8}))
+    assert false_marginal["case_review"] == "COST_CHECK_FAIL"
+    assert "incremental_cost_next_unit" in false_marginal["review_errors"]
+    changed_source = {**spec, "request": {**spec["request"], "context": "different unit cost"}}
+    assert _run(changed_source, json.dumps(answer))["reason"] == "cost_oracle_source_mismatch"
+    changed_task = {**spec, "request": {**spec["request"], "objective": "different cost question"}}
+    assert _run(changed_task, json.dumps(answer))["reason"] == "cost_oracle_source_mismatch"
+    changed_case = {**spec, "case": "role:edge"}
+    assert _run(changed_case, json.dumps(answer))["reason"] == "cost_oracle_scope_mismatch"
+
+
+def test_a21_oracle_marker_cannot_be_borrowed_by_other_agent():
+    spec = challenge("role:normal", agent_id="a22", capability_id="responsibility.a22")
+    forged = {**spec, "independent_review": (*spec["independent_review"], "exact_cost_oracle")}
+    assert _run(forged, "{}") == {
+        "agent_id": "a22", "capability_id": "responsibility.a22", "case": "role:normal",
+        "certification": "UNVERIFIED", "job_id": JOB_ID, "state": "REJECTED",
+        "reason": "cost_oracle_scope_mismatch",
+    }
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"

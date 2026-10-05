@@ -21,6 +21,7 @@ from .agent_cert_boundary import review_zero_boundary_json
 from .agent_cert_a17_boundary import review_a17_boundary_json
 from .agent_cert_data_quality import review_data_quality_json
 from .agent_cert_portfolio import review_portfolio_json
+from .agent_cert_cost import review_cost_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
 
@@ -40,6 +41,7 @@ _A14_SOURCE = [{"id": 1, "amount": 5}, {"id": 1, "amount": 5},
                {"id": 2, "amount": -3}]
 _A05_SOURCE = {"available_slots": 1, "p_slots": 1, "q_slots": 1,
                "p_expected_value": 8, "q_expected_value": 5}
+_A21_SOURCE = {"fixed_cost": 100, "variable_cost_per_unit": 3, "volume": 20}
 
 
 def _time(value: object) -> datetime | None:
@@ -185,6 +187,16 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "portfolio_oracle_source_mismatch"}
                     valid, review_errors = review_portfolio_json(_A05_SOURCE, result)
                     review = "PORTFOLIO_CHECK_PASS" if valid else "PORTFOLIO_CHECK_FAIL"
+                if "exact_cost_oracle" in spec.get("independent_review", ()):
+                    if agent != "a21" or capability != "responsibility.a21" or spec.get("case") != "role:normal":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "cost_oracle_scope_mismatch"}
+                    if spec != challenge("role:normal", agent_id="a21",
+                                         capability_id="responsibility.a21"):
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "cost_oracle_source_mismatch"}
+                    valid, review_errors = review_cost_json(_A21_SOURCE, result)
+                    review = "COST_CHECK_PASS" if valid else "COST_CHECK_FAIL"
                 return {**base, "job_id": job_id, "state": "EXECUTED",
                         "provider": provider, "attempts": row["attempts"],
                         "started_at": began.isoformat(), "completed_at": ended.isoformat(),
