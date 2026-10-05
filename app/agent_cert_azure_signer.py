@@ -8,16 +8,76 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import base64
+import json
 from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib import error, request
 
 from .agent_cert_azure_es256 import (
-    AzureES256CertificationVerifier, azure_es256_signed_bytes,
+    AzureES256CertificationVerifier, _KEY_ID, azure_es256_signed_bytes,
     azure_es256_signing_digest,
 )
 from .agent_cert_ed25519 import _utc
 from .agent_registry import RegistryError, canonical_agent_id
+
+
+def key_vault_sign_digest(key_id: str, digest: bytes, *, access_token: str,
+                          opener=None) -> tuple[str, bytes]:
+    """Perform one bounded Key Vault ES256 sign using a protected OIDC token.
+
+    The caller must obtain the token inside the isolated verifier job. No
+    credential is stored, logged or returned by this function. This operation
+    alone is not an independent certification decision.
+    """
+    if not isinstance(key_id, str) or not _KEY_ID.fullmatch(key_id):
+        raise ValueError("versioned Azure Key Vault key ID required")
+    if not isinstance(digest, bytes) or len(digest) != 32:
+        raise ValueError("SHA-256 digest required")
+    if (not isinstance(access_token, str) or not access_token
+            or any(char in access_token for char in "\r\n")):
+        raise ValueError("protected access token required")
+    payload = json.dumps({
+        "alg": "ES256",
+        "value": base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii"),
+    }, separators=(",", ":")).encode("ascii")
+    operation = request.Request(
+        key_id + "/sign?api-version=7.4", data=payload, method="POST",
+        headers={"Authorization": "Bearer " + access_token,
+                 "Content-Type": "application/json"},
+    )
+    try:
+        with (opener or request.urlopen)(operation, timeout=15) as response:
+            raw = response.read(8193)
+    except (error.HTTPError, error.URLError, TimeoutError):
+        raise ValueError("Key Vault signing unavailable") from None
+    if len(raw) > 8192:
+        raise ValueError("Key Vault response exceeds limit")
+    try:
+        def unique(pairs):
+            result = {}
+            for name, value in pairs:
+                if name in result:
+                    raise ValueError("duplicate Key Vault response field")
+                result[name] = value
+            return result
+
+        body = json.loads(raw, object_pairs_hook=unique)
+        if not isinstance(body, dict) or body.get("kid") != key_id:
+            raise ValueError("Key Vault response key mismatch")
+        encoded = body.get("value")
+        if (not isinstance(encoded, str) or len(encoded) != 86
+                or any(char not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+                       for char in encoded)):
+            raise ValueError("invalid Key Vault signature")
+        signature = base64.urlsafe_b64decode(encoded + "==")
+        if (len(signature) != 64 or
+                base64.urlsafe_b64encode(signature).rstrip(b"=").decode("ascii") != encoded):
+            raise ValueError("noncanonical Key Vault signature")
+        return key_id, signature
+    except (UnicodeError, json.JSONDecodeError, TypeError):
+        raise ValueError("invalid Key Vault response") from None
 
 
 class ProtectedAzureES256Signer:

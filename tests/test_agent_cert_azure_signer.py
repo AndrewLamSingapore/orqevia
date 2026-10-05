@@ -1,6 +1,9 @@
 """Synthetic signing operation only; no Azure credential or live key is used."""
 import base64
 import hashlib
+import io
+import json
+from urllib import error
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -10,7 +13,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, utils
 from app.agent_cert_azure_es256 import (
     AzureES256CertificationVerifier, azure_es256_signed_bytes,
 )
-from app.agent_cert_azure_signer import ProtectedAzureES256Signer
+from app.agent_cert_azure_signer import ProtectedAzureES256Signer, key_vault_sign_digest
 
 
 SERVICE = "svc.cert-verifier.independent"
@@ -89,3 +92,63 @@ def test_wrong_key_response_fails_closed(tmp_path):
     with pytest.raises(ValueError, match="pinned public-key"):
         wrong.sign(row, approved_digest=digest, evidence_root=root,
                    source_revision=row["source_revision"], now=NOW)
+
+
+def test_key_vault_transport_posts_one_exact_digest_without_exposing_token():
+    digest = bytes(range(32))
+    signature = bytes(range(64))
+    expected = base64.urlsafe_b64encode(signature).rstrip(b"=").decode()
+    calls = []
+
+    def opener(operation, *, timeout):
+        calls.append((operation, timeout))
+        return io.BytesIO(json.dumps({"kid": KEY_ID, "value": expected}).encode())
+
+    assert key_vault_sign_digest(KEY_ID, digest, access_token="protected-test-token",
+                                 opener=opener) == (KEY_ID, signature)
+    assert len(calls) == 1
+    operation, timeout = calls[0]
+    assert operation.full_url == KEY_ID + "/sign?api-version=7.4"
+    assert timeout == 15
+    assert operation.get_method() == "POST"
+    assert operation.get_header("Authorization") == "Bearer protected-test-token"
+    assert json.loads(operation.data) == {
+        "alg": "ES256",
+        "value": base64.urlsafe_b64encode(digest).rstrip(b"=").decode(),
+    }
+
+
+@pytest.mark.parametrize("response", [
+    {"kid": KEY_ID[:-32] + "b" * 32, "value": "A" * 86},
+    {"kid": KEY_ID, "value": "A" * 85},
+    {"kid": KEY_ID, "value": "!" * 86},
+])
+def test_key_vault_transport_rejects_wrong_key_or_invalid_signature(response):
+    with pytest.raises(ValueError):
+        key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="protected-test-token",
+                              opener=lambda operation, timeout: io.BytesIO(json.dumps(response).encode()))
+
+
+def test_key_vault_transport_rejects_duplicate_fields_and_malformed_input():
+    with pytest.raises(ValueError, match="duplicate"):
+        key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="protected-test-token",
+                              opener=lambda operation, timeout: io.BytesIO(
+                                  ('{"kid":"' + KEY_ID + '","kid":"' + KEY_ID + '","value":"' +
+                                   base64.urlsafe_b64encode(b"s" * 64).rstrip(b"=").decode() + '"}').encode()))
+    with pytest.raises(ValueError, match="digest"):
+        key_vault_sign_digest(KEY_ID, b"x", access_token="protected-test-token")
+    with pytest.raises(ValueError, match="token"):
+        key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="unsafe\nheader")
+
+
+def test_key_vault_transport_redacts_remote_error_and_bounds_response():
+    def denied(operation, timeout):
+        raise error.HTTPError(operation.full_url, 403, "private upstream detail", {}, None)
+
+    with pytest.raises(ValueError, match="^Key Vault signing unavailable$") as failure:
+        key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="protected-test-token",
+                              opener=denied)
+    assert failure.value.__cause__ is None
+    with pytest.raises(ValueError, match="response exceeds limit"):
+        key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="protected-test-token",
+                              opener=lambda operation, timeout: io.BytesIO(b"x" * 8193))
