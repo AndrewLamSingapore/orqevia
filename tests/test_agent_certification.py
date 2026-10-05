@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.agent_certification import AgentCertificationRegistry, LEVEL_DIMENSIONS, REQUIRED_CASES, MAX_EVIDENCE_BYTES
+from app.agent_certification import (AgentCertificationRegistry, LEVEL_DIMENSIONS,
+                                     REQUIRED_CASES, LOGIC_SIGNALS, MAX_EVIDENCE_BYTES)
 from app.agent_registry import load_agent_registry
 
 
@@ -30,7 +31,9 @@ def fixture_rows(tmp_path, dimensions, *, agent_id="a17", capability_id="respons
                          "last_revalidated": NOW.isoformat(),
                          "expires_at": (NOW + timedelta(days=1)).isoformat(),
                          "source_revision": REVISION, "authority_scope": "restricted",
-                         "health": "HEALTHY", "failure_count": 0, "recovery_result": "PASS"})
+                         "health": "HEALTHY", "failure_count": 0, "recovery_result": "PASS",
+                         "logic_signals": {LOGIC_SIGNALS[test_case]: "PASS"}
+                         if dimension == "logic_quality" else {}})
     (agent_dir / "certification.json").write_text(json.dumps({"schema_version": "1.0", "records": rows}))
     return rows
 
@@ -152,6 +155,48 @@ def test_revoked_verifier_and_degraded_health_prevent_l6(tmp_path):
     degraded = projection(tmp_path)
     assert (degraded["level"], degraded["trust_state"], degraded["health"]) == (
         "L5", "CERTIFIED-DEGRADED", "UNKNOWN")
+
+
+@pytest.mark.parametrize("case,signal", LOGIC_SIGNALS.items())
+def test_missing_or_failed_logic_signal_blocks_highest_projection(tmp_path, case, signal):
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[-1])
+    target = next(row for row in rows if row["dimension"] == "logic_quality"
+                  and row["test_case"] == case)
+    manifest = tmp_path / "a17" / "certification.json"
+    for value in (None, "FAIL", "UNVERIFIED", "NOT_APPLICABLE"):
+        target["logic_signals"] = {} if value is None else {signal: value}
+        manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows}))
+        result = projection(tmp_path)
+        assert result["level"] == "L5"
+        assert "logic_quality" not in result["current_dimensions"]
+
+
+def test_latest_weak_logic_failure_requires_independent_revalidation(tmp_path):
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[-1])
+    original = next(row for row in rows if row["dimension"] == "logic_quality"
+                    and row["test_case"] == "counterevidence")
+    failed = dict(original, test_result="FAIL", failure_count=1,
+                  certified_at=(NOW + timedelta(hours=1)).isoformat(),
+                  last_revalidated=(NOW + timedelta(hours=1)).isoformat(),
+                  logic_signals={"counterexample_check": "FAIL"})
+    manifest = tmp_path / "a17" / "certification.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [failed]}))
+    current_time = NOW + timedelta(hours=2)
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                          verify_record=lambda row: row.get("verifier") == "a18")
+    result = registry.project("a17", "responsibility.a17", now=current_time)
+    assert (result["level"], result["trust_state"], result["failure_count"]) == (
+        "L5", "REVALIDATION-REQUIRED", 1)
+    repaired_payload = b"independently reviewed counterevidence repair"
+    (tmp_path / "a17" / "logic-quality-counterevidence-revalidated.txt").write_bytes(repaired_payload)
+    repaired = dict(original, certified_at=(NOW + timedelta(hours=3)).isoformat(),
+                    last_revalidated=(NOW + timedelta(hours=3)).isoformat(),
+                    evidence="logic-quality-counterevidence-revalidated.txt",
+                    evidence_sha256=hashlib.sha256(repaired_payload).hexdigest(),
+                    logic_signals={"counterexample_check": "PASS"})
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [failed, repaired]}))
+    result = registry.project("a17", "responsibility.a17", now=NOW + timedelta(hours=4))
+    assert result["level"] == "L6"
 
 
 def test_one_role_or_general_case_cannot_promote_whole_dimension(tmp_path):

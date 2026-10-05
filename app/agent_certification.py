@@ -22,7 +22,8 @@ LEVEL_DIMENSIONS = (
     ("baseline", "role", "general", "collaboration"),
     ("baseline", "role", "general", "collaboration", "recovery"),
     ("baseline", "role", "general", "collaboration", "recovery",
-     "authority", "tools", "models", "cross_verification", "fresh_challenge", "health"),
+     "authority", "tools", "models", "cross_verification", "fresh_challenge",
+     "logic_quality", "health"),
 )
 REQUIRED_CASES = {
     "baseline": ("identity", "initialization", "authorization", "objective", "instruction",
@@ -32,6 +33,16 @@ REQUIRED_CASES = {
     "general": ("analysis", "planning", "reasoning", "communication", "evidence",
                 "decomposition", "artifact_consume", "artifact_produce", "review",
                 "verification", "error_recognition", "handoff", "recovery"),
+    "logic_quality": ("unsupported_assumption", "contradiction", "counterevidence",
+                      "edge_case", "false_pass", "fact_vs_inference"),
+}
+LOGIC_SIGNALS = {
+    "unsupported_assumption": "evidence_support",
+    "contradiction": "logic_check",
+    "counterevidence": "counterexample_check",
+    "edge_case": "boundary_check",
+    "false_pass": "independent_review",
+    "fact_vs_inference": "conflict_status",
 }
 MAX_EVIDENCE_BYTES = 1024 * 1024
 
@@ -71,6 +82,12 @@ class AgentCertificationRegistry:
                 return False
             if row["dimension"] == "recovery" and row.get("recovery_result") != "PASS":
                 return False
+            if row["dimension"] == "logic_quality":
+                signal = LOGIC_SIGNALS.get(row.get("test_case"))
+                if signal is None or not isinstance(row.get("logic_signals"), dict):
+                    return False
+                if row["logic_signals"].get(signal) != "PASS":
+                    return False
             if _utc(row["certified_at"]) > _utc(row["last_revalidated"]) or _utc(row["last_revalidated"]) > now:
                 return False
             if _utc(row["expires_at"]) <= now:
