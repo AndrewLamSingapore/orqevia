@@ -174,7 +174,9 @@ def test_stream_terminal_releases_but_disconnect_retains_lease(tmp_path, backend
         client = httpx.AsyncClient(transport=httpx.MockTransport(lambda _: response))
         try:
             with patch('app.direct_stream.httpx.AsyncClient', return_value=client):
-                return await infer({'timeout_seconds': 1, 'prompt': 'fixture', 'ram_mb': 1024},
+                # Allow Windows CI time for SQLite and receipt setup; the
+                # assertion below tests lease completion, not a 1s deadline.
+                return await infer({'timeout_seconds': 10, 'prompt': 'fixture', 'ram_mb': 1024},
                                    provider, settings=settings, capacity=lambda _: None,
                                    options=lambda: {})
         finally:
