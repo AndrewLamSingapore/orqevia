@@ -1,5 +1,7 @@
 import json
+import os
 import sqlite3
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -88,3 +90,18 @@ def test_file_directory_shape_change_replays(tmp_path):
     capture_delta(base, final, package)
     replay_delta(base, package, restored, manifest_digest(package))
     assert _inventory(restored) == _inventory(final)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="NTFS junction regression requires Windows")
+def test_windows_junction_outside_fenced_tree_is_rejected(tmp_path):
+    base, final, outside, package = (tmp_path / name for name in ("base", "final", "outside", "delta"))
+    base.mkdir(); final.mkdir(); outside.mkdir()
+    (outside / "private.txt").write_text("outside the fenced snapshot")
+    junction = final / "escaped"
+    subprocess.run(["cmd.exe", "/d", "/s", "/c",
+                    f'mklink /J "{junction}" "{outside}"'],
+                   check=True, capture_output=True, text=True)
+    assert junction.is_junction() and not junction.is_symlink()
+    with pytest.raises(DeltaError, match="reparse"):
+        capture_delta(base, final, package)
+    assert not package.exists()

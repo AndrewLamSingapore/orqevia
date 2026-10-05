@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import sqlite3
 import threading
@@ -10,6 +11,7 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -227,7 +229,23 @@ class JobQueue:
     def estimate_cost(row: sqlite3.Row, provider: Provider) -> float:
         estimated_input=max(1,len(row["prompt"].encode())+16)
         estimated_output=provider.max_output_tokens
-        return (estimated_input*provider.input_cost_per_mtok + estimated_output*provider.output_cost_per_mtok)/1_000_000
+        try:
+            exact=(Decimal(estimated_input)*Decimal(str(provider.input_cost_per_mtok))
+                   +Decimal(estimated_output)*Decimal(str(provider.output_cost_per_mtok)))/Decimal(1_000_000)
+            if not exact.is_finite() or exact < 0:
+                return math.inf
+            reserved=float(exact)
+            if not math.isfinite(reserved):
+                return math.inf
+            # SQLite stores REAL. Persist an upper bound so the protected
+            # provider admission never sees less than the queue reserved.
+            if Decimal(str(reserved)) < exact:
+                reserved=math.nextafter(reserved, math.inf)
+            if Decimal(str(reserved)) < exact:
+                return math.inf
+            return reserved
+        except (InvalidOperation, ValueError, TypeError, OverflowError):
+            return math.inf
 
     def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider],
                *, local_unavailable: bool = False) -> tuple[Provider | None,str,float]:

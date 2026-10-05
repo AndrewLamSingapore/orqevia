@@ -1,8 +1,10 @@
 """No HF credential or external request is needed for admission tests."""
 import pytest
+from decimal import Decimal
 
 from app.compute_queue_api import SubmitJob
 from app.hf_admission import require_hf_admission
+from app.job_queue import JobQueue, Provider
 from app.provider_runtime import ProviderFailure
 
 
@@ -51,6 +53,17 @@ def test_selected_hf_cannot_fallback_to_another_cloud_provider():
     with pytest.raises(ProviderFailure, match='HF_FALLBACK_NOT_PERMITTED') as failure:
         require_hf_admission({**ENTRY, 'fallback_ids': ['other-cloud']}, JOB, 'hf-fixture')
     assert failure.value.pre_execution
+
+
+def test_queue_reservation_covers_exact_hf_admission_cost():
+    provider = Provider('hf-fixture', 'cloud', 'fixture-model', 0, 0, 1,
+                        input_cost_per_mtok=0.1, output_cost_per_mtok=0.5,
+                        max_output_tokens=64, explicit_selection_required=True)
+    reserved = JobQueue.estimate_cost({'prompt': 'hi'}, provider)
+    exact = (Decimal(18) * Decimal('0.1') + Decimal(64) * Decimal('0.5')) / Decimal(1_000_000)
+    assert Decimal(str(reserved)) >= exact
+    assert require_hf_admission(ENTRY, {**JOB, 'prompt': 'hi',
+                                        'estimated_cost_usd': reserved}, 'hf-fixture') is None
 
 
 def test_enabled_qualification_cannot_be_inferred_from_token_or_ci():

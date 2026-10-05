@@ -18,6 +18,13 @@ class DeltaError(ValueError):
     pass
 
 
+def _is_reparse(path: Path) -> bool:
+    # Windows junctions are not symlinks, but can escape the fenced tree.
+    if path.is_symlink() or path.is_junction():
+        return True
+    return bool(getattr(path.lstat(), "st_file_attributes", 0) & 0x400)
+
+
 def _digest(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -27,12 +34,12 @@ def _digest(path: Path) -> str:
 
 
 def _inventory(root: Path) -> dict[str, str]:
-    if not root.is_dir() or root.is_symlink():
+    if not root.is_dir() or _is_reparse(root):
         raise DeltaError("input must be a real directory")
     files: dict[str, str] = {}
     for path in root.rglob("*"):
-        if path.is_symlink():
-            raise DeltaError("links are not allowed in a rollback tree")
+        if _is_reparse(path):
+            raise DeltaError("links or reparse points are not allowed in a rollback tree")
         if path.is_file():
             files[path.relative_to(root).as_posix()] = _digest(path)
         elif not path.is_dir():
