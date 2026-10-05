@@ -20,19 +20,28 @@ def is_architecture_question(text: str)->bool:
     return any(re.search(pattern,text or '',re.I) for pattern in (*PATTERNS,*GOVERNANCE_PATTERNS,*PLATFORM_PATTERNS))
 
 def _governance_answer(question: str)->dict[str,Any]:
-    phase2=bool(re.search(r'phase.?2',question,re.I))
-    path=ROOT/'governance'/('phase2-state.json' if phase2 else 'golden-gen1-manifest.json')
+    # The old phase2-state.json describes an isolated pre-promotion candidate.
+    # It must not override the accepted Gen2 deployment record.
+    gen1=bool(re.search(r'(?:gen(?:eration)?[ -]?1|golden[ -]?1)',question,re.I))
+    path=ROOT/'governance'/('golden-gen1-manifest.json' if gen1 else 'golden-gen2-manifest.json')
     try:value=json.loads(path.read_text(encoding='utf-8'))
     except (OSError,ValueError,TypeError):
-        return {'status':'UNVERIFIED','provenance':'CANONICAL_GOVERNANCE_SSOT','text':'The requested governance state is UNVERIFIED because its canonical evidence is unavailable. Owner or model assertions cannot replace it.'}
-    if phase2:
-        status=value.get('production_status','UNVERIFIED'); verification=value.get('independent_verification','UNVERIFIED')
-        text=f"PHASE 2 PRODUCTION STATUS: {status}\nINDEPENDENT VERIFICATION: {verification}\nOwner statements are evidence of the Owner statement only; historical verification does not establish the current candidate."
-    else:
-        status=value.get('acceptance',{}).get('state','UNVERIFIED')
-        source=value.get('source',{}).get('accepted_commit','UNAVAILABLE')
-        text=f"PRIME GOLDEN GOVERNANCE STATUS: {status}\nSOURCE: {source}"
-    return {'status':status,'provenance':'CANONICAL_GOVERNANCE_SSOT','text':text}
+        return {'status':'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST','text':'The requested governance record is unavailable. Runtime or model assertions cannot replace it.'}
+    acceptance=value.get('acceptance',{}).get('state','UNVERIFIED')
+    source=value.get('source',{}).get('accepted_commit','UNAVAILABLE')
+    image=value.get('build',{}).get('image_id','UNAVAILABLE')
+    runtime=_runtime()
+    live=not gen1 and runtime=={'source_revision':source,'image_digest':image}
+    asks_all=bool(re.search(r'\ball\b',question,re.I))
+    scope='HISTORICAL GOLDEN GEN1 ROLLBACK' if gen1 else 'RECORDED GOLDEN GEN2 NON-AUDIO ACCEPTANCE'
+    text=(f"{scope}: {acceptance}\nRECORDED SOURCE: {source}\n"
+          f"CURRENT RUNTIME IDENTITY MATCH: {'PASS' if live else 'UNVERIFIED'}\n"
+          f"ALL CAPABILITIES ACCEPTED: {'NO' if not gen1 and asks_all else 'NOT ASSESSED'}\n"
+          f"RECORDED INDEPENDENT REVIEW: {value.get('qualification',{}).get('independent_review','UNAVAILABLE')}\n"
+          'CURRENT DELL ROUND-TRIP: UNVERIFIED\n'
+          'Audio remains excluded from the Gen2 acceptance. Historical acceptance alone does not prove current runtime health.')
+    return {'status':'VERIFIED' if live and not asks_all else 'UNVERIFIED',
+            'provenance':'GOVERNANCE_MANIFEST_AND_RUNTIME', 'text':text}
 
 def _runtime()->dict[str,Any]:
     source=os.getenv('PRIME_INTERFACE_RUNTIME_REVISION',os.getenv('PRIME_RUNTIME_REVISION','UNKNOWN')).strip().lower()
@@ -41,26 +50,28 @@ def _runtime()->dict[str,Any]:
     return {'source_revision':source,'image_digest':image}
 
 def _platform_answer()->dict[str,Any]:
-    path=ROOT/'governance'/'golden-gen1-manifest.json'
+    path=ROOT/'governance'/'golden-gen2-manifest.json'
     try:value=json.loads(path.read_text(encoding='utf-8'));registry=load_agent_registry()
     except (OSError,ValueError,TypeError,RegistryError):
-        return {'status':'UNAVAILABLE','provenance':'CANONICAL_GOVERNANCE_SSOT','text':f'Platform architecture is UNAVAILABLE because canonical evidence {path.name} or the agent registry could not be read. JARVIS will not infer it from model memory.'}
-    authority=value.get('authority',{});source=value.get('source',{});interface=value.get('interface',{});verification=value.get('independent_verification',{})
-    required=(authority.get('production_authority'),source.get('accepted_commit'),interface.get('exposure'),
-              verification.get('verdict'),verification.get('verification_id'))
+        return {'status':'UNAVAILABLE','provenance':'GOVERNANCE_MANIFEST_AND_AGENT_REGISTRY','text':f'Platform architecture is UNAVAILABLE because {path.name} or the agent registry could not be read. JARVIS will not infer it from model memory.'}
+    authority=value.get('authority',{});source=value.get('source',{});interface=value.get('interface',{});build=value.get('build',{})
+    required=(authority.get('production_authority'),source.get('accepted_commit'),
+              interface.get('exposure'),build.get('image_id'))
     if (not all(isinstance(item,str) and item.strip() for item in required)
             or not isinstance(value.get('generation'),int) or value.get('generation')<1
             or not re.fullmatch(r'[0-9a-f]{40}',source.get('accepted_commit',''))
-            or verification.get('verdict')!='PASS'
             or not registry.get('agents')):
-        return {'status':'UNVERIFIED','provenance':'CANONICAL_GOVERNANCE_SSOT_AND_REGISTRY','text':'Platform architecture is UNVERIFIED because mandatory canonical host, generation, source, exposure, registry, or accepted independent-verification bindings are incomplete. JARVIS will not infer them from model memory.'}
+        return {'status':'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST_AND_AGENT_REGISTRY','text':'Platform architecture is UNVERIFIED because required host, generation, source, image, exposure or registry bindings are incomplete. JARVIS will not infer them from model memory.'}
+    runtime=_runtime()
+    live=runtime=={'source_revision':source['accepted_commit'],'image_digest':build['image_id']}
     lines=[f"PRODUCTION AUTHORITY/HOST: {authority.get('production_authority','UNAVAILABLE')}",
            f"GOLDEN GENERATION: {value.get('generation','UNAVAILABLE')}",
-           f"ACCEPTED SOURCE: {source.get('accepted_commit','UNAVAILABLE')}",
+           f"RECORDED ACCEPTED SOURCE: {source.get('accepted_commit','UNAVAILABLE')}",
            f"REGISTERED AGENTS: {len(registry.get('agents',[]))}",
            f"INTERFACE EXPOSURE: {interface.get('exposure','UNAVAILABLE')}",
-           f"DELL INDEPENDENT VERIFICATION: {verification.get('verdict','UNAVAILABLE')} ({verification.get('verification_id','UNAVAILABLE')})"]
-    return {'status':'VERIFIED','provenance':'CANONICAL_GOVERNANCE_SSOT_AND_REGISTRY','text':'\n'.join(lines)}
+           f"CURRENT RUNTIME IDENTITY MATCH: {'PASS' if live else 'UNVERIFIED'}",
+           'Dell live peer verification requires a separate current round-trip.']
+    return {'status':'VERIFIED' if live else 'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST_AGENT_REGISTRY_AND_RUNTIME','text':'\n'.join(lines)}
 
 def architecture_answer(question: str)->dict[str,Any]:
     """Fail closed: registry/runtime absence becomes UNAVAILABLE, never model intuition."""

@@ -1,10 +1,10 @@
-# JARVIS / PRIME — Current Resume Checkpoint
+# JARVIS / PRIME — Recorded Resume Checkpoint
 
-> Generated machine mirror of recorded observations â€” not a status authority. Read STATUS.md and current PRIME main before resuming.
+> Generated mirror of dated PRIME observations, not a current-status authority. Read STATUS.md for portfolio status claims and each owning repository for product source.
 
-- Canonical source: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
-- Selected architecture release: `jarvis-prime-unified-2026-09-15`
-- Operational status: **STALE**
+- PRIME component reference: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
+- Recorded architecture release: `jarvis-prime-unified-2026-09-15`
+- Manifest snapshot state: **STALE** (dated, not a current runtime verdict)
 - Source observation: `2026-09-26T07:48:05Z`
 - Architecture: ABEX PRIME; Dell/PWA/voice clients; 21 agents; direct observed bounded work.
 - This applies to ChatGPT, Codex, Sol and Astra. Model memory and old chats are not current authority.
@@ -22,9 +22,9 @@
 | sky | `e0c4f4847a9e` | `e0c4f4847a9e` | `e0c4f4847a9e` | ALIGNED_VERIFIED |
 | velyqua | `4ecf65eec8dc` | `4ecf65eec8dc` | `4ecf65eec8dc` | ALIGNED_VERIFIED |
 
-Current PRIME runtime was independently accepted at source `17fad78d410dca5d9101483cb777a2b9b619bac3` and image `prime:sha-17fad78`. Historical Dell evidence is retained separately.
+This manifest records prior independent PRIME runtime acceptance at source `17fad78d410dca5d9101483cb777a2b9b619bac3` and image `prime:sha-17fad78`. This dated mirror does not establish current deployment; consult STATUS.md and live receipts. Historical Dell evidence is retained separately.
 
-## Current priorities
+## Priorities recorded in the manifest
 
 - Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.
 - Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.
@@ -38,4 +38,4 @@ Current PRIME runtime was independently accepted at source `17fad78d410dca5d9101
 
 ## Resume contract
 
-Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit. STATUS.md is the only current status authority; the immutable Golden manifest owns generation architecture identity. This mirror and the operational manifest it derives from are machine-readable component and observation references. system.manifest.json is a subordinate product manifest. No parallel status pointer is maintained. This is the only current generated mirror; earlier exports and installer bundles are superseded.
+Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit for shared PRIME references. STATUS.md records portfolio status claims; each product repository owns its source, configuration, contracts and domain records. The immutable Golden manifest records generation architecture identity. This mirror and its input operational manifest are dated component and observation references. system.manifest.json binds PRIME components. No parallel portfolio status pointer is maintained. Earlier exports and installer bundles remain historical evidence.

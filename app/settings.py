@@ -1,4 +1,4 @@
-"""Single source of truth for PRIME runtime configuration."""
+"""PRIME runtime configuration loader."""
 from __future__ import annotations
 
 import json

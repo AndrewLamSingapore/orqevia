@@ -1,4 +1,4 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> Portfolio status is recorded in [STATUS.md](../STATUS.md). This document describes this repository only; current runtime and deployment claims require evidence from their owning domains.
 
 # External integration candidate
 
