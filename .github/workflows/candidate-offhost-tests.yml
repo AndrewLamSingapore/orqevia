@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/prime-runtime-candidate-20261003
+      - feat/backend-admission-20261005
   workflow_dispatch:
 
 permissions:
