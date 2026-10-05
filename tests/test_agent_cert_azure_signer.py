@@ -3,7 +3,9 @@ import base64
 import hashlib
 import io
 import json
+from email.message import Message
 from urllib import error
+from urllib import request, response
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -13,7 +15,10 @@ from cryptography.hazmat.primitives.asymmetric import ec, utils
 from app.agent_cert_azure_es256 import (
     AzureES256CertificationVerifier, azure_es256_signed_bytes,
 )
-from app.agent_cert_azure_signer import ProtectedAzureES256Signer, key_vault_sign_digest
+from app.agent_cert_azure_signer import (
+    ProtectedAzureES256Signer, _NoRedirect, _NO_REDIRECT_OPENER,
+    key_vault_sign_digest,
+)
 
 
 SERVICE = "svc.cert-verifier.independent"
@@ -152,3 +157,23 @@ def test_key_vault_transport_redacts_remote_error_and_bounds_response():
     with pytest.raises(ValueError, match="response exceeds limit"):
         key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="protected-test-token",
                               opener=lambda operation, timeout: io.BytesIO(b"x" * 8193))
+
+
+def test_key_vault_transport_never_forwards_bearer_on_redirect():
+    assert any(isinstance(handler, _NoRedirect) for handler in _NO_REDIRECT_OPENER.handlers)
+    visited = []
+
+    class RedirectingHTTPS(request.HTTPSHandler):
+        def https_open(self, operation):
+            visited.append(operation.full_url)
+            headers = Message()
+            headers["Location"] = "https://example.org/capture"
+            reply = response.addinfourl(io.BytesIO(), headers, operation.full_url, code=302)
+            reply.msg = "Found"
+            return reply
+
+    isolated = request.build_opener(RedirectingHTTPS(), _NoRedirect())
+    with pytest.raises(ValueError, match="^Key Vault signing unavailable$"):
+        key_vault_sign_digest(KEY_ID, b"x" * 32, access_token="protected-test-token",
+                              opener=isolated.open)
+    assert visited == [KEY_ID + "/sign?api-version=7.4"]

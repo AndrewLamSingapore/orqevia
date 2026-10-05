@@ -23,6 +23,16 @@ from .agent_cert_ed25519 import _utc
 from .agent_registry import RegistryError, canonical_agent_id
 
 
+class _NoRedirect(request.HTTPRedirectHandler):
+    """A Key Vault bearer must never be forwarded to a redirect destination."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_NO_REDIRECT_OPENER = request.build_opener(_NoRedirect())
+
+
 def key_vault_sign_digest(key_id: str, digest: bytes, *, access_token: str,
                           opener=None) -> tuple[str, bytes]:
     """Perform one bounded Key Vault ES256 sign using a protected OIDC token.
@@ -48,7 +58,7 @@ def key_vault_sign_digest(key_id: str, digest: bytes, *, access_token: str,
                  "Content-Type": "application/json"},
     )
     try:
-        with (opener or request.urlopen)(operation, timeout=15) as response:
+        with (opener or _NO_REDIRECT_OPENER.open)(operation, timeout=15) as response:
             raw = response.read(8193)
     except (error.HTTPError, error.URLError, TimeoutError):
         raise ValueError("Key Vault signing unavailable") from None
