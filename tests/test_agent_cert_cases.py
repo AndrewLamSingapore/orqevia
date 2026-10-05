@@ -96,6 +96,14 @@ def test_a20_normal_case_is_discriminating_synthetic_margin_task():
     assert spec["certification"] == "UNVERIFIED"
 
 
+def test_a04_role_case_has_exact_tie_oracle():
+    spec = challenge("role:normal", agent_id="a04", capability_id="responsibility.a04")
+    assert spec["request"]["response_format"] == "strict_json"
+    assert "exact_weighted_oracle" in spec["independent_review"]
+    assert "reliability weight 2" in spec["request"]["context"]
+    assert "missing_tie_breaker" in spec["request"]["objective"]
+
+
 def test_a01_normal_case_separates_total_value_from_efficiency():
     spec = challenge("role:normal", agent_id="a01", capability_id="responsibility.a01")
     objective = spec["request"]["objective"]
