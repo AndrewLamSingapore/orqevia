@@ -32,7 +32,7 @@ ROLE_NORMAL_FIXTURES = {
         "SYNTHETIC: Alpha needs 3 engineer-days and yields 8 TOTAL estimated points; Beta needs 2 engineer-days and yields 6 TOTAL estimated points; only 3 days are available; no third project exists.",
         ("Alpha has 8 total points and Beta 6 total points", "Alpha's 8/3 points per day is LESS than Beta's 6/2", "Alpha maximizes total points if at most one project can be selected", "A decision trigger must use consistent units and a changed estimate")),
     "responsibility.a02": (
-        "Decompose the approved report objective into bounded tasks with acceptance criteria.",
+        "Decompose the approved report into three ordered, checkable tasks. Return ONLY strict JSON with exactly tasks, all_outputs_checkable, alerting_authorized, and configuration_change_authorized. Use the exact task identifiers validate_logs_and_service_map, synthesize_report, independent_review in dependency order; use literal JSON booleans. Do not invent approval to alert or change configuration.",
         "SYNTHETIC: deliver a read-only weekly incident report; inputs are logs and service map; no alerting or configuration change approved.",
         ("Separate input validation, synthesis, and review", "Every task has a checkable output", "No execution authority is invented")),
     "responsibility.a03": (
@@ -56,19 +56,19 @@ ROLE_NORMAL_FIXTURES = {
         "SYNTHETIC: task A uses 2 days for 7 points; B uses 1 day for 4 points; C uses 1 day for 2 points; capacity is 2 days.",
         ("Compare A=7 with B+C=6", "Respect indivisible capacity", "Do not schedule all three")),
     "responsibility.a06": (
-        "Frame a research question and sampling plan from an uncertain claim.",
+        "Frame a measurable comparison of the new and existing onboarding flows. Return ONLY strict JSON with exactly informal_comments, outcome_metric, comparison_groups, causal_effect_established, comments_are_exploratory, and cohort_data_available. Use completed_onboarding_over_started_onboarding and new_flow_and_existing_flow as the metric and groups. Do not turn comments into causal evidence.",
         "SYNTHETIC: claim is that a new onboarding flow reduces drop-off; only three informal comments exist; no cohort data.",
         ("Define observable drop-off and comparison groups", "Treat comments as exploratory", "Do not assert an effect")),
     "responsibility.a07": (
-        "Identify which supplied source supports the claim and which claim needs more evidence.",
+        "Attribute the small survey without generalizing to a population. Return ONLY strict JSON with exactly s1_positive, s1_responses, s1_support, s2_population_evidence, s2_provenance_check, and population_claim_proven. Use survey_sample_only for s1_support and verify_author_date_and_sampling for the provenance check. Use literal JSON booleans.",
         "SYNTHETIC: source S1 is a dated 10-user survey with 7 positives; S2 is an undated note saying everyone likes it.",
         ("Attribute 7/10 only to S1", "Do not promote S2 to population evidence", "Specify a provenance check")),
     "responsibility.a09": (
-        "Organize two source records without merging their distinct versions.",
+        "Preserve both policy versions and uncertainty about applicability. Return ONLY strict JSON with exactly records, current_applicability, missing_evidence, and source_versions_preserved. Each records entry has exactly version, day, retention_days, ordered v1 then v2. Use UNKNOWN and effective_date where appropriate. Do not choose a current policy without effective-date evidence.",
         "SYNTHETIC: policy v1 dated Monday says 7-day retention; policy v2 dated Friday says 14-day retention; applicability date is unknown.",
         ("Preserve both versions and dates", "Current applicability remains unknown", "Identify missing effective-date evidence")),
     "responsibility.a10": (
-        "Coordinate a metric request across two incompatible event definitions.",
+        "Reconcile incompatible request-count definitions without adding their headline counts. Return ONLY strict JSON with exactly team_a_reported_requests, team_b_reported_requests, definitions_comparable, combined_comparable_total, common_denominator, and reconciliation_owner_check. Use JSON null for unknown comparable total; use unique_initial_requests_excluding_retries and obtain_retry_counts_and_align_definitions for the named checks.",
         "SYNTHETIC: team A counts retries as requests; team B excludes retries; both report 100 requests; retry counts are unavailable.",
         ("Do not aggregate the two 100s as comparable", "Specify a common denominator", "Assign a source-owner reconciliation check")),
     "responsibility.a11": (
@@ -80,7 +80,7 @@ ROLE_NORMAL_FIXTURES = {
         "SYNTHETIC: week 1 has 10 failures in 100 requests; week 2 has 15 failures in 300 requests.",
         ("Rates are 10% and 5%", "Absolute failures rise while rate falls", "Do not infer cause")),
     "responsibility.a13": (
-        "Forecast one next period with a simple stated method and uncertainty.",
+        "Extrapolate one period by the last two equal increments. Return ONLY strict JSON with exactly weekly_units, last_two_increments, next_period_estimate, method, seasonality_evidence, and calibrated_confidence_bound_known. Use naive_linear_trend as method and literal JSON booleans. Do not fabricate a calibrated interval.",
         "SYNTHETIC: weekly units are 10, 12, 14; use the last two increments as a naive linear trend; no seasonality evidence.",
         ("Point estimate is 16", "Identify extrapolation assumption", "Do not claim calibrated confidence bounds")),
     "responsibility.a14": (
@@ -474,6 +474,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_risk_oracle",)
         if agent_id == "a29" and capability == "responsibility.a29" and case_id == "role:normal" and not context:
             review += ("exact_release_oracle",)
+        if agent_id in {"a02", "a06", "a07", "a09", "a10", "a13"} and case_id == "role:normal" and not context:
+            review += ("exact_role_g1_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -498,7 +500,13 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a05", "responsibility.a05"),
                                               ("a21", "responsibility.a21"),
                                               ("a28", "responsibility.a28"),
-                                              ("a29", "responsibility.a29")} else {}),
+                                              ("a29", "responsibility.a29"),
+                                              ("a02", "responsibility.a02"),
+                                              ("a06", "responsibility.a06"),
+                                              ("a07", "responsibility.a07"),
+                                              ("a09", "responsibility.a09"),
+                                              ("a10", "responsibility.a10"),
+                                              ("a13", "responsibility.a13")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,

@@ -24,6 +24,7 @@ from .agent_cert_portfolio import review_portfolio_json
 from .agent_cert_cost import review_cost_json
 from .agent_cert_risk import review_risk_json
 from .agent_cert_release import review_release_json
+from .agent_cert_role_g1 import SOURCES as ROLE_G1_SOURCES, review_role_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
 
@@ -88,6 +89,11 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
         raise ValueError("timeout must be bounded to 120 seconds")
     base = {"agent_id": agent, "capability_id": capability, "case": spec.get("case"),
             "certification": "UNVERIFIED"}
+    if agent in ROLE_G1_SOURCES and spec.get("case") == "role:normal":
+        canonical = challenge("role:normal", agent_id=agent, capability_id=capability)
+        if ("exact_role_g1_oracle" in spec.get("independent_review", ())
+                or request.get("context") == canonical["request"]["context"]) and spec != canonical:
+            return {**base, "state": "REJECTED", "reason": "role_g1_oracle_source_mismatch"}
     started = monotonic()
     try:
         reply = dispatch(request)
@@ -223,6 +229,15 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "release_oracle_source_mismatch"}
                     valid, review_errors = review_release_json(_A29_SOURCE, result)
                     review = "RELEASE_CHECK_PASS" if valid else "RELEASE_CHECK_FAIL"
+                if "exact_role_g1_oracle" in spec.get("independent_review", ()):
+                    if agent not in ROLE_G1_SOURCES or capability != f"responsibility.{agent}" or spec.get("case") != "role:normal":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "role_g1_oracle_scope_mismatch"}
+                    if spec != challenge("role:normal", agent_id=agent, capability_id=capability):
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "role_g1_oracle_source_mismatch"}
+                    valid, review_errors = review_role_json(agent, ROLE_G1_SOURCES[agent], result)
+                    review = "ROLE_G1_CHECK_PASS" if valid else "ROLE_G1_CHECK_FAIL"
                 return {**base, "job_id": job_id, "state": "EXECUTED",
                         "provider": provider, "attempts": row["attempts"],
                         "started_at": began.isoformat(), "completed_at": ended.isoformat(),
