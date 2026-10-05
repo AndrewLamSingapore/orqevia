@@ -66,6 +66,7 @@ def main():
     names.append('agent_cert_azure_es256')
     names.append('agent_cert_azure_signer')
     names.append('azure_verifier_live_canary')
+    names.append('azure_verifier_observation_canary')
     names.append('agent_cert_plan')
     names.append('agent_execution_probe')
     names.append('agent_execution_live')

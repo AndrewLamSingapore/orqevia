@@ -1,0 +1,28 @@
+{
+  "schema": "abex.agent_a18_negative_clarified_trial.v1",
+  "source_revision": "8bf13c5d6e79b2c671789d196ed9507226de372a",
+  "model": "Qwen/Qwen3-32B:deepinfra",
+  "official_case_executed": false,
+  "ephemeral_catalog_only": true,
+  "flawed_a17_json": "{\"accepted_range\":\"0 <= n <= 9\",\"float_error\":true,\"negative_one_error\":false,\"nine_result\":9,\"string_error\":false,\"ten_error\":true,\"tests_executed\":false,\"type_guard\":\"int\",\"zero_result\":0}",
+  "flawed_a17_sha256": "94dc1820421de62a1b6a6bb919bade1e19e0163f8b7d82d379aa0269ef10a8c5",
+  "expected_failed_fields": ["negative_one_error", "string_error", "type_guard"],
+  "reviewer": {
+    "agent": "a18",
+    "job_id": "3dd7b5f7-5bc2-46d7-8f0e-db17cb4429e0",
+    "provider": "hf-qwen32b-negative-trial",
+    "status": "completed",
+    "result": "\n\n{\"verdict\":\"FAIL\",\"failed_fields\":[\"negative_one_error\",\"string_error\",\"type_guard\"],\"tests_executed\":false}",
+    "result_sha256": "6e4e6af1a7a8da27a413ed166b803192d5be6e78a5a90bd741e16c51423c8c4c",
+    "input_tokens": 240,
+    "output_tokens": 358,
+    "estimated_cost_usd": 0.00011944
+  },
+  "consistency_check": {"pass": true, "errors": []},
+  "transport_requests": 1,
+  "ledger_agent_correlation": true,
+  "ledger_retries": [0],
+  "elapsed_ms": 17327,
+  "certification": "UNVERIFIED",
+  "signing": "NOT_ATTEMPTED"
+}
