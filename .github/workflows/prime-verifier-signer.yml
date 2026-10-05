@@ -1,0 +1,48 @@
+name: PRIME independent verifier signer
+
+# Callable only from the protected-main OIDC wrapper. No caller-supplied input,
+# source ref, signing payload, credential or artifact is accepted.
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  signer:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Require protected canonical caller
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          REF_PROTECTED: ${{ github.ref_protected }}
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          python - <<'PY'
+          import os
+
+          expected = "AndrewLamSingapore/prime/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
+          if not (
+              os.environ["REPOSITORY"] == "AndrewLamSingapore/prime"
+              and os.environ["REF"] == "refs/heads/main"
+              and os.environ["REF_PROTECTED"] == "true"
+              and os.environ["EVENT_NAME"] == "workflow_dispatch"
+              and os.environ["WORKFLOW_REF"] == expected
+          ):
+              raise SystemExit("Verifier signer denied: protected canonical caller required")
+          PY
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install bounded verifier dependency
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.2
+      - name: Protected Azure sign, public verification, tamper rejection
+        run: python -m scripts.azure_verifier_live_canary
