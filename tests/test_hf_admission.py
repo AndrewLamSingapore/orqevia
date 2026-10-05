@@ -39,5 +39,11 @@ def test_catalog_price_change_after_queue_claim_is_denied():
         require_hf_admission({**ENTRY, 'output_usd_million': '100'}, JOB, 'hf-fixture')
 
 
+def test_selected_hf_cannot_fallback_to_another_cloud_provider():
+    with pytest.raises(ProviderFailure, match='HF_FALLBACK_NOT_PERMITTED') as failure:
+        require_hf_admission({**ENTRY, 'fallback_ids': ['other-cloud']}, JOB, 'hf-fixture')
+    assert failure.value.pre_execution
+
+
 def test_non_hf_provider_has_no_new_restriction():
     assert require_hf_admission({'provider_kind': 'chat_completions'}, {}, 'other') is None
