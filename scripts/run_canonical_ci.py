@@ -79,6 +79,7 @@ def main():
     names.append('agent_cert_data_quality')
     names.append('agent_cert_portfolio')
     names.append('agent_cert_cost')
+    names.append('agent_cert_a28_risk')
     names.append('agent_cert_boundary')
     names.append('agent_cert_a17_boundary')
     names.append('agent_cert_execution')
