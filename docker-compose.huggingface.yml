@@ -1,0 +1,10 @@
+# Opt-in HF credential mount. The base Compose stack does not require this file.
+# PRIME_HF_TOKEN_FILE is a host path only; never put token bytes in Compose env.
+services:
+  prime:
+    secrets:
+      - hf_token
+
+secrets:
+  hf_token:
+    file: ${PRIME_HF_TOKEN_FILE:?Set PRIME_HF_TOKEN_FILE to the protected Owner-created token file}

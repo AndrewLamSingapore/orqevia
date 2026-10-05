@@ -5,7 +5,7 @@ import math
 import re
 from pathlib import Path
 from decimal import Decimal
-from .provider_runtime import ModelSpec
+from .provider_runtime import ModelSpec,HuggingFaceProvider
 from .tier_router import Tier, classify_for_cloud, CLASSIFICATIONS
 
 
@@ -52,7 +52,23 @@ def load_catalog(path=None):
         seen.add(item['id'])
         if item['tier'] not in Tier.__members__ or item['location'] not in ('local','cloud'):raise ValueError('Invalid model metadata')
         if item.get('enabled') and (not item.get('model') or not item.get('endpoint')):raise ValueError('Enabled model lacks endpoint/model')
-        if item['location']=='cloud' and item.get('enabled') and not item.get('secret_ref','').startswith('env:'):raise ValueError('Cloud secret reference unavailable')
+        if item['location']=='cloud' and item.get('enabled') and not (item.get('secret_ref','').startswith('env:') or item.get('secret_ref')=='file:HF_TOKEN'):raise ValueError('Cloud secret reference unavailable')
+        kind=item.get('provider_kind','chat_completions')
+        if kind not in ('chat_completions','huggingface'):raise ValueError('Unknown provider kind')
+        if item.get('secret_ref')=='file:HF_TOKEN' and kind!='huggingface':
+            raise ValueError('Hugging Face secret cannot be routed to another provider')
+        if kind=='huggingface':
+            if item['location']!='cloud' or item.get('endpoint')!=HuggingFaceProvider.ENDPOINT:
+                raise ValueError('Hugging Face endpoint/location must be fixed')
+            if item.get('secret_ref') not in ('env:HF_TOKEN','file:HF_TOKEN'):raise ValueError('Hugging Face credential reference must be HF_TOKEN')
+            model_id=item.get('model')
+            if not isinstance(model_id,str) or not HuggingFaceProvider._PINNED_MODEL.fullmatch(model_id):
+                raise ValueError('Hugging Face model must pin an explicit provider')
+            if item.get('enabled') and item.get('qualification_status')!='QUALIFIED':
+                raise ValueError('Unqualified Hugging Face model cannot be enabled')
+            if item.get('enabled') and any(item.get(field) is None for field in ('input_usd_million','output_usd_million')):
+                raise ValueError('Hugging Face model requires explicit current price limits')
+            if item.get('enabled'):model_spec(item)
         if not 1<=int(item['output_tokens'])<int(item['context_tokens']):raise ValueError('Invalid model context limits')
         for field in ('expected_seconds','expected_cost_usd'):
             if field in item and (not math.isfinite(float(item[field])) or float(item[field])<0):

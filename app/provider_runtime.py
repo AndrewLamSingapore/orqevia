@@ -5,6 +5,7 @@ from decimal import Decimal
 import json
 import os
 import math
+import re
 from typing import Protocol, AsyncIterator
 from urllib.parse import urlsplit
 import httpx
@@ -80,12 +81,17 @@ class ChatCompletionProvider:
         return {'readiness':'READY' if available else 'CREDENTIAL_UNAVAILABLE',
                 'provider_health':'UNMEASURED','network_probe_performed':False}
 
+    def request_body(self, model, messages, output_tokens):
+        return {'model':model.name,'messages':messages,'stream':True,
+                'stream_options':{'include_usage':True},
+                'max_completion_tokens':output_tokens,'store':False}
+
     async def stream(self, model, messages, output_tokens):
         try:key=self.resolve(self.secret_ref)
         except Exception:raise ProviderFailure('CREDENTIAL_UNAVAILABLE',pre_execution=True) from None
         if not isinstance(key,str) or not key or '\r' in key or '\n' in key:
             raise ProviderFailure('CREDENTIAL_UNAVAILABLE',pre_execution=True)
-        body={'model':model.name,'messages':messages,'stream':True,'stream_options':{'include_usage':True},'max_completion_tokens':output_tokens,'store':False}
+        body=self.request_body(model,messages,output_tokens)
         try:
             async with httpx.AsyncClient(transport=self.transport,timeout=30,follow_redirects=False) as client:
                 async with client.stream('POST',self.endpoint,headers={'Authorization':'Bearer '+key},json=body) as response:
@@ -115,7 +121,9 @@ class ChatCompletionProvider:
                         except ValueError:raise ProviderFailure('MALFORMED_STREAM') from None
                         if not isinstance(item,dict):raise ProviderFailure('MALFORMED_STREAM')
                         if item.get('error'):
-                            if capacity_rejection(item):raise ProviderFailure('CAPACITY',True,pre_execution=True)
+                            # A 200 streaming response has been admitted. Even if it
+                            # contains no visible tokens, execution may have occurred.
+                            if capacity_rejection(item):raise ProviderFailure('CAPACITY',pre_execution=False)
                             raise ProviderFailure('PROVIDER_STREAM_FAILURE')
                         usage=item.get('usage')
                         if usage is not None:
@@ -151,6 +159,30 @@ class ChatCompletionProvider:
         except httpx.TransportError:raise ProviderFailure('PROVIDER_TRANSPORT_FAILURE') from None
         except ProviderFailure:raise
         except Exception:raise ProviderFailure('PROVIDER_ADAPTER_FAILURE') from None
+
+
+class HuggingFaceProvider(ChatCompletionProvider):
+    """Pinned Hugging Face Inference Providers chat route; no browser credentials.
+
+    Tool calls, constrained output, embeddings and provider auto-selection are not
+    advertised by this text-only adapter. Catalog activation is a separate gate.
+    """
+    ENDPOINT='https://router.huggingface.co/v1/chat/completions'
+    _PINNED_MODEL=re.compile(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+:[A-Za-z0-9._-]+\Z')
+
+    def __init__(self, secret_ref='env:HF_TOKEN', *, secret_resolver=None, transport=None):
+        if secret_ref not in ('env:HF_TOKEN','file:HF_TOKEN'):
+            raise ValueError('Hugging Face requires the governed HF_TOKEN reference')
+        if secret_resolver is None:
+            from .secret_refs import resolve_secret
+            secret_resolver=resolve_secret
+        super().__init__(self.ENDPOINT,secret_ref,secret_resolver=secret_resolver,transport=transport)
+
+    def request_body(self, model, messages, output_tokens):
+        if not isinstance(model.name,str) or not self._PINNED_MODEL.fullmatch(model.name):
+            raise ProviderFailure('MODEL_PROVIDER_UNPINNED',pre_execution=True)
+        return {'model':model.name,'messages':messages,'stream':True,
+                'stream_options':{'include_usage':True},'max_tokens':output_tokens}
 
 
 async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=lambda:False,on_delta=lambda text:None,max_retries=1):
