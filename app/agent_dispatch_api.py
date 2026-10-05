@@ -96,6 +96,14 @@ def inference_prompt(body: AgentRequest, tier: Tier) -> str:
             body.objective+'\nContext:\n'+body.context)
 
 
+def input_budget_bytes(body: AgentRequest) -> int:
+    """Conservative byte preflight, not an exact provider token count."""
+    available = SETTINGS.context_tokens - SETTINGS.max_output_tokens
+    if available <= 0:
+        raise HTTPException(503, 'No configured input context remains after output reserve')
+    return min(available, 4096 if body.task_class == 'classification' else 16000)
+
+
 @router.post('/dispatch',status_code=202)
 def dispatch(body: AgentRequest, authorization: str | None = Header(default=None)):
     return dispatch_request(body, authorization)
@@ -164,6 +172,10 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     if route.state not in {'READY','QUEUED'}:
         raise HTTPException(409,{'state':route.state,'reason':route.reason})
     prompt = inference_prompt(body, tier)
+    prompt_bytes = len(prompt.encode('utf-8'))
+    budget_bytes = input_budget_bytes(body)
+    if prompt_bytes > budget_bytes:
+        raise HTTPException(413, 'Inference prompt exceeds configured input budget')
     from .compute_queue_api import queue
     task_id=str(uuid.uuid4())
     path = [actor] if record['can_delegate'] else [record['reports_to'],actor]
@@ -172,7 +184,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     action=ActionRecord(task_id,actor,'inference.enqueue','compute-queue',
         classification=body.classification,model_backend=route.backend.name,
         parent_agent=path[0] if len(path)>1 else None,
-        parameters_summary={'prompt_sha256':hashlib.sha256(prompt.encode()).hexdigest(),'prompt_length':len(prompt)})
+        parameters_summary={'prompt_sha256':hashlib.sha256(prompt.encode()).hexdigest(),
+                            'prompt_bytes':prompt_bytes,'input_budget_bytes':budget_bytes})
     job=DirectExecutor(ledger).execute(action,lambda:queue.submit(agent=actor,prompt=prompt,
         priority=body.priority,model_role='auto',model=route.backend.model,preferred_provider=route.backend.name,
         allow_cloud=route.backend.location=='cloud',data_classification=body.data_classification,task_class=body.task_class,
@@ -180,5 +193,6 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     return {'job':job,'correlation_id':task_id,'execution_model':'DIRECT_OBSERVED',
         'classification':body.classification,'agent_path':path,'registry_version':'1.0.0',
         'capability':body.capability,'tier':tier.name,'routing_ms':routing_ms,'model_selection_ms':model_selection_ms,
+        'input_budget_bytes':budget_bytes,'prompt_bytes':prompt_bytes,
         'dispatch_ms':(time.perf_counter()-started)*1000,'logging':ledger.status(),
         'result_contract':'Model text is a contribution; tool effects have separate action records'}
