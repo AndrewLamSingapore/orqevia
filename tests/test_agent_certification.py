@@ -140,6 +140,22 @@ def test_self_verification_missing_artifact_and_wrong_capability_cannot_certify(
     assert registry.project("a17", "responsibility.a18", now=NOW)["level"] == "L0"
 
 
+def test_reviewed_case_loses_projection_when_review_artifact_changes(tmp_path):
+    rows = fixture_rows(tmp_path, ("baseline",))
+    reviewed = rows[0]
+    review = tmp_path / "a17" / "independent-review.json"
+    review.write_bytes(b'{"decision":"PASS"}')
+    reviewed["review_evidence"] = review.name
+    reviewed["review_evidence_sha256"] = hashlib.sha256(review.read_bytes()).hexdigest()
+    manifest = tmp_path / "a17" / "certification.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows}))
+    assert projection(tmp_path)["level"] == "L1"
+    review.write_bytes(b'{"decision":"FAIL"}')
+    result = projection(tmp_path)
+    assert result["level"] == "L0"
+    assert result["trust_state"] == "REVALIDATION-REQUIRED"
+
+
 def test_revoked_verifier_and_degraded_health_prevent_l6(tmp_path):
     rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
     revoked = AgentCertificationRegistry(tmp_path, source_revision=REVISION,

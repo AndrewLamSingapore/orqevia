@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import base64
 import json
+import re
 from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,6 +32,36 @@ class _NoRedirect(request.HTTPRedirectHandler):
 
 
 _NO_REDIRECT_OPENER = request.build_opener(_NoRedirect())
+
+
+def _read_subject_artifact(subject_dir: Path, name: object) -> bytes:
+    """Read one bounded artifact without traversing a link or leaving its owner."""
+    if not isinstance(name, str) or not name or "\\" in name:
+        raise ValueError("invalid subject artifact path")
+    relative = Path(name)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ValueError("artifact path escapes subject directory")
+    if subject_dir.parent.is_symlink() or subject_dir.is_symlink():
+        raise ValueError("symlink in artifact path")
+    cursor = subject_dir
+    for part in relative.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise ValueError("symlink in artifact path")
+    if not cursor.resolve().is_relative_to(subject_dir.resolve()):
+        raise ValueError("artifact path escapes subject directory")
+    if not cursor.is_file() or cursor.stat().st_size > 1024 * 1024:
+        raise ValueError("artifact missing or oversized")
+    return cursor.read_bytes()
+
+
+def _unique_fields(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate review field")
+        result[key] = value
+    return result
 
 
 def key_vault_sign_digest(key_id: str, digest: bytes, *, access_token: str,
@@ -91,17 +122,19 @@ def key_vault_sign_digest(key_id: str, digest: bytes, *, access_token: str,
 
 
 class ProtectedAzureES256Signer:
-    """Sign an exact independently approved, current, artifact-backed PASS.
+    """Sign bounded artifact-backed cases inside a protected verifier job.
 
-    ``approved_digest`` is an in-process decision of the isolated reviewer,
-    not a value accepted from an agent or its evidence record. ``sign_digest``
-    must perform Key Vault ``sign(ES256, digest)`` and return the response's
-    exact versioned key ID and 64-byte JOSE R||S signature.
+    ``sign_reviewed`` requires a protected case-specific oracle and a distinct
+    provenance-bound review artifact. Legacy digest-only ``sign`` is for
+    non-certifying synthetic canaries, not L7. ``sign_digest`` must perform Key
+    Vault ``sign(ES256, digest)`` and return the response's exact versioned key
+    ID and 64-byte JOSE R||S signature.
     """
 
     def __init__(self, service_identity: str, key_id: str,
                  public_jwk: Mapping[str, str],
-                 sign_digest: Callable[[bytes], tuple[str, bytes]]):
+                 sign_digest: Callable[[bytes], tuple[str, bytes]],
+                 review_case: Callable[[dict, bytes, bytes], bool] | None = None):
         if not callable(sign_digest):
             raise TypeError("protected sign operation required")
         self._verifier = AzureES256CertificationVerifier(
@@ -109,9 +142,84 @@ class ProtectedAzureES256Signer:
         self._service = service_identity
         self._key_id = key_id
         self._sign_digest = sign_digest
+        # This callback must be fixed code in the protected verifier job, never
+        # supplied by the executing agent or taken from its result artifact.
+        self._review_case = review_case
+
+    def sign_reviewed(self, row: dict, *, evidence_root: Path,
+                      source_revision: str, now: datetime) -> dict:
+        """Bind a distinct reviewed artifact to one exact case before signing.
+
+        This is a source contract, not a claim that a live protected reviewer
+        has run. The trusted job must supply a substantive case-specific oracle.
+        The older digest-only ``sign`` path is retained for synthetic canaries;
+        it is insufficient by itself for L7 certification.
+        """
+        if self._review_case is None or not isinstance(row, dict):
+            raise ValueError("protected case reviewer required")
+        if row.get("source_revision") != source_revision:
+            raise ValueError("review source mismatch")
+        reviewer = row.get("verifier")
+        if (not isinstance(reviewer, str) or reviewer in {
+                row.get("agent_id"), row.get("executor_identity")}):
+            raise ValueError("independent reviewer required")
+        for field in ("review_run_id", "review_test_version"):
+            value = row.get(field)
+            if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,100}", value):
+                raise ValueError("review provenance required")
+        if row.get("review_source_revision") != source_revision:
+            raise ValueError("review source mismatch")
+        subject = row.get("agent_id")
+        if not isinstance(subject, str):
+            raise ValueError("review subject required")
+        subject_dir = Path(evidence_root) / subject
+        primary = _read_subject_artifact(subject_dir, row.get("evidence"))
+        review = _read_subject_artifact(subject_dir, row.get("review_evidence"))
+        if row.get("evidence") == row.get("review_evidence"):
+            raise ValueError("review artifact must be distinct")
+        if (hashlib.sha256(primary).hexdigest() != row.get("evidence_sha256")
+                or hashlib.sha256(review).hexdigest() != row.get("review_evidence_sha256")):
+            raise ValueError("review or execution artifact digest mismatch")
+        try:
+            envelope = json.loads(review, object_pairs_hook=_unique_fields)
+        except (UnicodeError, json.JSONDecodeError, TypeError) as exc:
+            raise ValueError("invalid review artifact") from exc
+        expected = {
+            "schema_version": "prime.agent-certification.review.v1",
+            "reviewer_identity": reviewer,
+            "review_run_id": row["review_run_id"],
+            "source_revision": source_revision,
+            "agent_id": subject,
+            "capability_id": row.get("capability_id"),
+            "dimension": row.get("dimension"),
+            "test_case": row.get("test_case"),
+            "execution_evidence_sha256": row["evidence_sha256"],
+            "test_result": "PASS",
+            "review_test_version": row["review_test_version"],
+        }
+        if (not isinstance(envelope, dict) or set(envelope) != set(expected) | {"observations"}
+                or any(envelope.get(field) != value for field, value in expected.items())
+                or not isinstance(envelope.get("observations"), dict)
+                or not envelope["observations"]):
+            raise ValueError("review provenance or decision mismatch")
+        if self._review_case(dict(row), primary, review) is not True:
+            raise ValueError("protected case review rejected")
+        approved_digest = hashlib.sha256(
+            azure_es256_signed_bytes(row, self._service, self._key_id)).hexdigest()
+        return self._sign_checked(row, approved_digest=approved_digest,
+                                  evidence_root=evidence_root,
+                                  source_revision=source_revision, now=now)
 
     def sign(self, row: dict, *, approved_digest: str, evidence_root: Path,
              source_revision: str, now: datetime) -> dict:
+        if isinstance(row, dict) and any(field.startswith("review_") for field in row):
+            raise ValueError("reviewed case requires protected review path")
+        return self._sign_checked(row, approved_digest=approved_digest,
+                                  evidence_root=evidence_root,
+                                  source_revision=source_revision, now=now)
+
+    def _sign_checked(self, row: dict, *, approved_digest: str, evidence_root: Path,
+                      source_revision: str, now: datetime) -> dict:
         if not isinstance(row, dict) or "attestation" in row:
             raise ValueError("unsigned certification record required")
         if not isinstance(now, datetime) or now.tzinfo is None:

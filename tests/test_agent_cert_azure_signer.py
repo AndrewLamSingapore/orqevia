@@ -63,6 +63,23 @@ def _fixture(tmp_path):
     return signer, public, calls, root, row, digest
 
 
+def _review_payload(row):
+    return json.dumps({
+        "schema_version": "prime.agent-certification.review.v1",
+        "reviewer_identity": row["verifier"],
+        "review_run_id": "protected-run-123",
+        "source_revision": row["source_revision"],
+        "agent_id": row["agent_id"],
+        "capability_id": row["capability_id"],
+        "dimension": row["dimension"],
+        "test_case": row["test_case"],
+        "execution_evidence_sha256": row["evidence_sha256"],
+        "test_result": "PASS",
+        "review_test_version": "oracle.1",
+        "observations": {"finding": "checked"},
+    }, sort_keys=True, separators=(",", ":")).encode()
+
+
 def test_protected_azure_signer_round_trip_and_tamper(tmp_path):
     signer, public, calls, root, row, digest = _fixture(tmp_path)
     signed = signer.sign(row, approved_digest=digest, evidence_root=root,
@@ -92,6 +109,98 @@ def test_executor_self_review_never_calls_key_vault(tmp_path):
     with pytest.raises(ValueError, match="independent reviewer"):
         signer.sign(row, approved_digest=approved, evidence_root=root,
                     source_revision=row["source_revision"], now=NOW)
+    assert calls == []
+
+
+def test_protected_review_binds_two_artifacts_and_exact_provenance(tmp_path):
+    signer, public, calls, root, row, _ = _fixture(tmp_path)
+    review = _review_payload(row)
+    (root / "a17" / "review.json").write_bytes(review)
+    row.update({
+        "review_evidence": "review.json",
+        "review_evidence_sha256": hashlib.sha256(review).hexdigest(),
+        "review_run_id": "protected-run-123",
+        "review_source_revision": row["source_revision"],
+        "review_test_version": "oracle.1",
+    })
+    checked = []
+
+    def oracle(record, result_bytes, review_bytes):
+        checked.append((record["source_revision"], result_bytes, review_bytes))
+        return (result_bytes == b"independently checked result"
+                and json.loads(review_bytes)["observations"] == {"finding": "checked"})
+
+    reviewed = ProtectedAzureES256Signer(SERVICE, KEY_ID, public,
+                                          signer._sign_digest, review_case=oracle)
+    signed = reviewed.sign_reviewed(row, evidence_root=root,
+                                     source_revision=row["source_revision"], now=NOW)
+    assert checked == [(row["source_revision"], b"independently checked result", review)]
+    assert len(calls) == 1
+    assert AzureES256CertificationVerifier({SERVICE: {KEY_ID: public}})(signed)
+    signed["review_run_id"] = "other-run"
+    assert not AzureES256CertificationVerifier({SERVICE: {KEY_ID: public}})(signed)
+    digest = hashlib.sha256(azure_es256_signed_bytes(row, SERVICE, KEY_ID)).hexdigest()
+    with pytest.raises(ValueError, match="protected review path"):
+        reviewed.sign(row, approved_digest=digest, evidence_root=root,
+                      source_revision=row["source_revision"], now=NOW)
+    assert len(calls) == 1
+
+
+def test_protected_review_rejects_forged_or_missing_review_before_signing(tmp_path):
+    signer, public, calls, root, row, _ = _fixture(tmp_path)
+    review = _review_payload(row)
+    (root / "a17" / "review.json").write_bytes(review)
+    row.update({
+        "review_evidence": "review.json",
+        "review_evidence_sha256": hashlib.sha256(review).hexdigest(),
+        "review_run_id": "protected-run-123",
+        "review_source_revision": row["source_revision"],
+        "review_test_version": "oracle.1",
+    })
+    reviewed = ProtectedAzureES256Signer(SERVICE, KEY_ID, public,
+                                          signer._sign_digest,
+                                          review_case=lambda record, result, receipt: False)
+    with pytest.raises(ValueError, match="review rejected"):
+        reviewed.sign_reviewed(row, evidence_root=root,
+                               source_revision=row["source_revision"], now=NOW)
+    assert calls == []
+    reviewed = ProtectedAzureES256Signer(SERVICE, KEY_ID, public,
+                                          signer._sign_digest,
+                                          review_case=lambda record, result, receipt: True)
+    for change, message in [
+        ({"review_evidence_sha256": "0" * 64}, "artifact digest"),
+        ({"review_evidence": "result.txt"}, "must be distinct"),
+        ({"review_source_revision": "b" * 40}, "review source"),
+        ({"verifier": "a17"}, "independent reviewer"),
+        ({"review_run_id": ""}, "review provenance"),
+        ({"review_run_id": "forged-run"}, "review provenance"),
+        ({"review_test_version": "oracle.2"}, "review provenance"),
+    ]:
+        forged = dict(row, **change)
+        with pytest.raises(ValueError, match=message):
+            reviewed.sign_reviewed(forged, evidence_root=root,
+                                   source_revision=row["source_revision"], now=NOW)
+    assert calls == []
+
+
+def test_duplicate_review_field_cannot_reach_signing(tmp_path):
+    signer, public, calls, root, row, _ = _fixture(tmp_path)
+    review = _review_payload(row).replace(b'"test_result":"PASS"',
+                                          b'"test_result":"FAIL","test_result":"PASS"')
+    (root / "a17" / "review.json").write_bytes(review)
+    row.update({
+        "review_evidence": "review.json",
+        "review_evidence_sha256": hashlib.sha256(review).hexdigest(),
+        "review_run_id": "protected-run-123",
+        "review_source_revision": row["source_revision"],
+        "review_test_version": "oracle.1",
+    })
+    reviewed = ProtectedAzureES256Signer(SERVICE, KEY_ID, public,
+                                          signer._sign_digest,
+                                          review_case=lambda record, result, receipt: True)
+    with pytest.raises(ValueError, match="duplicate review field"):
+        reviewed.sign_reviewed(row, evidence_root=root,
+                               source_revision=row["source_revision"], now=NOW)
     assert calls == []
 
 
