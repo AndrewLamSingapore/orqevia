@@ -86,6 +86,39 @@ def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend)
     assert q.claim('two', [LOCAL])['id'] == next_job['id']
 
 
+def test_pending_demand_is_rechecked_at_dispatch(tmp_path, backend):
+    receipt(backend, available=12000)
+    c = admission.transaction(str(tmp_path / 'pending.db'))
+    try:
+        admission.reserve(c, ENDPOINT, 'pending', 6000)
+        c.commit()
+        receipt(backend, available=3000)
+        with pytest.raises(PermissionError):
+            admission.check(c, ENDPOINT, 'pending')
+        with pytest.raises(PermissionError):
+            admission.dispatch(c, ENDPOINT, 'pending')
+        assert c.execute('SELECT state,demand_mib FROM backend_admission').fetchone() == ('pending', 6000)
+    finally:
+        c.close()
+
+
+def test_legacy_pending_lease_without_demand_stays_held(tmp_path, backend):
+    receipt(backend)
+    db = tmp_path / 'legacy.db'
+    with sqlite3.connect(db) as c:
+        c.execute('''CREATE TABLE backend_admission (endpoint TEXT PRIMARY KEY,job_id TEXT,
+                     instance TEXT,boot_id TEXT,state TEXT,refresh_after REAL DEFAULT 0)''')
+        c.execute("INSERT INTO backend_admission(endpoint,job_id,instance,boot_id,state) VALUES(?,?,?,?,?)",
+                  (ENDPOINT, 'legacy', 'backend-1', 'vm-1', 'pending'))
+    c = admission.transaction(str(db))
+    try:
+        with pytest.raises(PermissionError, match='pending memory demand'):
+            admission.dispatch(c, ENDPOINT, 'legacy')
+        assert c.execute('SELECT state FROM backend_admission').fetchone() == ('pending',)
+    finally:
+        c.close()
+
+
 def test_stream_terminal_releases_but_disconnect_retains_lease(tmp_path, backend, monkeypatch):
     monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'direct.db'))
     receipt(backend)
@@ -112,3 +145,27 @@ def test_stream_terminal_releases_but_disconnect_retains_lease(tmp_path, backend
     receipt(backend)
     with pytest.raises(PermissionError, match='occupied'):
         asyncio.run(call(good))
+
+
+def test_nonboolean_stream_done_retains_uncertain_lease(tmp_path, backend, monkeypatch):
+    db = tmp_path / 'malformed.db'
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(db))
+    receipt(backend)
+    settings = SimpleNamespace(ollama_base_url=ENDPOINT, keep_alive=0,
+                               context_tokens=128, max_output_tokens=8)
+    provider = SimpleNamespace(model='gemma3:1b')
+
+    async def call():
+        response = httpx.Response(200, text='{"done":"false","message":{"content":"partial"}}\n')
+        client = httpx.AsyncClient(transport=httpx.MockTransport(lambda _: response))
+        try:
+            with patch('app.direct_stream.httpx.AsyncClient', return_value=client):
+                with pytest.raises(RuntimeError, match='Malformed model completion'):
+                    await infer({'id': 'job', 'timeout_seconds': 1, 'prompt': 'fixture', 'ram_mb': 1024},
+                                provider, settings=settings, capacity=lambda _: None, options=lambda: {})
+        finally:
+            await client.aclose()
+
+    asyncio.run(call())
+    with sqlite3.connect(db) as c:
+        assert c.execute('SELECT state FROM backend_admission').fetchone() == ('uncertain',)

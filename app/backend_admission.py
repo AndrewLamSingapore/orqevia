@@ -46,9 +46,14 @@ def observation(endpoint: str, *, now: float | None = None) -> dict:
 def init(c: sqlite3.Connection) -> None:
     c.execute('''CREATE TABLE IF NOT EXISTS backend_admission (
         endpoint TEXT PRIMARY KEY, job_id TEXT NOT NULL, instance TEXT NOT NULL,
-        boot_id TEXT NOT NULL, state TEXT NOT NULL, refresh_after REAL NOT NULL DEFAULT 0)''')
+        boot_id TEXT NOT NULL, state TEXT NOT NULL, demand_mib INTEGER NOT NULL,
+        refresh_after REAL NOT NULL DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS backend_admission_refresh (
         endpoint TEXT PRIMARY KEY, captured_after REAL NOT NULL)''')
+    # Pre-release databases may contain leases without a recorded peak. Leave
+    # those leases in place and fail closed rather than inventing their demand.
+    if 'demand_mib' not in {row[1] for row in c.execute('PRAGMA table_info(backend_admission)')}:
+        c.execute('ALTER TABLE backend_admission ADD COLUMN demand_mib INTEGER')
 
 
 def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int,
@@ -64,21 +69,27 @@ def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int,
         raise PermissionError('new backend observation required after completion')
     if demand_mib > min(sample['capacity_mib'], sample['available_mib']) - RESERVE_MIB:
         raise PermissionError('insufficient backend memory')
-    c.execute('INSERT INTO backend_admission(endpoint,job_id,instance,boot_id,state) VALUES(?,?,?,?,?)',
-              (endpoint, job_id, sample['instance'], sample['boot_id'], 'pending'))
+    c.execute('INSERT INTO backend_admission(endpoint,job_id,instance,boot_id,state,demand_mib) VALUES(?,?,?,?,?,?)',
+              (endpoint, job_id, sample['instance'], sample['boot_id'], 'pending', demand_mib))
 
 
 def check(c: sqlite3.Connection, endpoint: str, job_id: str, sample: dict | None = None) -> None:
     sample = observation(endpoint) if sample is None else sample
-    row = c.execute('SELECT job_id,instance,boot_id,state FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone()
+    row = c.execute('SELECT job_id,instance,boot_id,state,demand_mib FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone()
     if not row or tuple(row[:3]) != (job_id, sample['instance'], sample['boot_id']) or row[3] not in ('pending', 'running'):
         raise PermissionError('backend inference lease or instance mismatch')
-    # During streaming the observation already reflects resident allocation.
-    if sample['available_mib'] < RESERVE_MIB:
+    # Pending demand has not become resident. Once dispatched, the backend's
+    # free-memory observation already includes it, so do not subtract twice.
+    if row[3] == 'pending' and (type(row[4]) is not int or row[4] <= 0):
+        raise PermissionError('verified pending memory demand required')
+    required = RESERVE_MIB + (row[4] if row[3] == 'pending' else 0)
+    if sample['available_mib'] < required:
         raise PermissionError('backend memory reserve reached')
 
 
 def dispatch(c: sqlite3.Connection, endpoint: str, job_id: str) -> None:
+    # Recheck a fresh observation at the transition, not only at reservation.
+    check(c, endpoint, job_id)
     changed = c.execute("UPDATE backend_admission SET state='running' WHERE endpoint=? AND job_id=? AND state='pending'",
                         (endpoint, job_id))
     if changed.rowcount != 1:

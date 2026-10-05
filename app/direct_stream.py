@@ -46,9 +46,15 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                         capacity(provider.model)
                         lease(backend_admission.check)
                         item=json.loads(line)
+                        if not isinstance(item,dict):raise RuntimeError('Malformed model response')
                         if item.get('error'):raise RuntimeError(item['error'])
-                        parts.append(item.get('message',{}).get('content',''))
-                        if item.get('done'):final=item
+                        message=item.get('message',{})
+                        if not isinstance(message,dict) or not isinstance(message.get('content',''),str):
+                            raise RuntimeError('Malformed model response')
+                        if 'done' in item and type(item['done']) is not bool:
+                            raise RuntimeError('Malformed model completion')
+                        parts.append(message.get('content',''))
+                        if item.get('done') is True:final=item
                     if final is None or not ''.join(parts).strip():raise RuntimeError('Incomplete or empty model response')
                     result = {'result':''.join(parts),'input_tokens':int(final.get('prompt_eval_count',0)),
                         'output_tokens':int(final.get('eval_count',0)),'actual_cost_usd':0,
