@@ -73,7 +73,30 @@ jobs:
             python:3.12-alpine python /fixture/fake_ollama.py
       - name: Create persistent data volume
         run: docker volume create prime-acceptance-data
-      - name: Boot PRIME
+      - name: Verify current production entrypoint and authentication
+        run: |
+          docker run -d --name prime-current --network prime-acceptance \
+            -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
+          trap 'docker rm -f prime-current >/dev/null 2>&1 || true' EXIT
+          docker run --rm -i --network container:prime-current python:3.12-slim python - <<'PY'
+          import json, time, urllib.error, urllib.request
+          base='http://127.0.0.1:8000'
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen(base+'/health', timeout=2) as response:
+                      assert response.status==200 and json.load(response)=={'ok':True}
+                  break
+              except Exception: time.sleep(1)
+          else: raise SystemExit('current production entrypoint never became ready')
+          try:
+              urllib.request.urlopen(base+'/control', timeout=5)
+              raise AssertionError('unauthenticated control unexpectedly allowed')
+          except urllib.error.HTTPError as error: assert error.code==401
+          operation=urllib.request.Request(base+'/control', headers={'Authorization':'Bearer acceptance-secret'})
+          with urllib.request.urlopen(operation, timeout=5) as response:
+              assert response.status==200 and b'JARVIS' in response.read()
+          PY
+      - name: Boot legacy cognitive compatibility fixture
         run: |
           docker run -d --name prime-acceptance \
             --network prime-acceptance \
@@ -88,8 +111,8 @@ jobs:
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
             -e PORTAL_BASE_URL= \
-            prime:acceptance
-      - name: Verify health, Control Surface and protected read paths
+            prime:acceptance uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-proxy-headers
+      - name: Verify legacy cognitive compatibility and protected read paths
         run: |
           # Exercise the accepted image's loopback boundary inside its network
           # namespace. Docker's bridge gateway is intentionally denied by PRIME.
@@ -161,7 +184,7 @@ jobs:
           stages={item['stage'] for item in compute['events']}
           assert {'local_ai','answer_evaluation','specialist_critique','specialist_synthesis'} <= stages
           PY
-      - name: Execute the 50-case endpoint benchmark
+      - name: Execute the 50-case legacy cognitive endpoint benchmark
         run: |
           docker run --rm --network container:prime-acceptance \
             --mount "type=bind,source=$GITHUB_WORKSPACE/benchmarks,target=/benchmarks,readonly" \
@@ -183,7 +206,7 @@ jobs:
             -e PRIME_SPINE_DB=/data/prime-spine.db \
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
             -e PORTAL_BASE_URL= \
-            prime:acceptance
+            prime:acceptance uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-proxy-headers
           docker run --rm -i --network container:prime-acceptance python:3.12-slim python - <<'PY'
           import json, time, urllib.request
           base='http://127.0.0.1:8000'
