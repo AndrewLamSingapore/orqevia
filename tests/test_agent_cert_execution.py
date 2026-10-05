@@ -194,10 +194,10 @@ def test_a21_cost_check_rejects_false_profit_and_forged_source_without_certifyin
 
 
 def test_a21_oracle_marker_cannot_be_borrowed_by_other_agent():
-    spec = challenge("role:normal", agent_id="a22", capability_id="responsibility.a22")
+    spec = challenge("role:normal", agent_id="a26", capability_id="responsibility.a26")
     forged = {**spec, "independent_review": (*spec["independent_review"], "exact_cost_oracle")}
     assert _run(forged, "{}") == {
-        "agent_id": "a22", "capability_id": "responsibility.a22", "case": "role:normal",
+        "agent_id": "a26", "capability_id": "responsibility.a26", "case": "role:normal",
         "certification": "UNVERIFIED", "job_id": JOB_ID, "state": "REJECTED",
         "reason": "cost_oracle_scope_mismatch",
     }
