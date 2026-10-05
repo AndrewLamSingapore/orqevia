@@ -96,6 +96,24 @@ def test_a04_weighted_tie_case_rejects_false_winner_and_never_certifies():
     assert _run(forged, json.dumps(answer))["reason"] == "weighted_oracle_source_mismatch"
 
 
+def test_a18_zero_boundary_case_preserves_failure_repair_and_unverified_status():
+    spec = challenge("role:normal", agent_id="a18", capability_id="responsibility.a18")
+    answer = {"required_zero_result": True, "buggy_zero_result": False,
+              "corrected_zero_result": True, "negative_one_result": False,
+              "positive_one_result": True, "corrected_condition": "n >= 0",
+              "discriminating_assertion": "assert is_nonnegative(0) is True",
+              "tests_executed": False}
+    corrected = _run(spec, json.dumps(answer))
+    assert corrected["case_review"] == "BOUNDARY_CHECK_PASS"
+    assert corrected["certification"] == "UNVERIFIED"
+    inverted = _run(spec, json.dumps({**answer,
+                                      "discriminating_assertion": "assert is_nonnegative(0) is False"}))
+    assert inverted["case_review"] == "BOUNDARY_CHECK_FAIL"
+    assert "discriminating_assertion" in inverted["review_errors"]
+    forged = {**spec, "request": {**spec["request"], "context": "different requirement"}}
+    assert _run(forged, json.dumps(answer))["reason"] == "boundary_oracle_source_mismatch"
+
+
 def test_wrong_agent_or_worker_receipt_fails_closed():
     spec = challenge("role:normal", agent_id="a01")
     assert _run(spec, "text", reply_changes={"job": {"id": JOB_ID, "agent": "a26"}})["state"] == "REJECTED"

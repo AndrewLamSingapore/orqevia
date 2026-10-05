@@ -308,9 +308,15 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":
             objective = (
                 "Review the synthetic function against the stated requirement. Identify the concrete "
-                "boundary defect, propose the minimal correction and one discriminating test. "
-                "Derive each expected test value from the requirement, not the buggy implementation; "
-                "check the test against the proposed correction. Do not claim tests ran."
+                "boundary defect. Return ONLY a strict JSON object with required_zero_result, "
+                "buggy_zero_result, corrected_zero_result, negative_one_result, "
+                "positive_one_result, corrected_condition, discriminating_assertion, and "
+                "tests_executed. Use JSON booleans for result fields and tests_executed; "
+                "corrected_condition must be the Python condition for the requirement. "
+                "discriminating_assertion must be one Python assertion that fails against "
+                "the buggy function and passes against the correction. Derive each "
+                "expected test value from the requirement, including zero, not the buggy implementation. "
+                "Do not claim tests ran."
             )
             if not context:
                 discriminants = ("Zero must return True under the requirement",
@@ -401,6 +407,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_rate_oracle",)
         if agent_id == "a04" and capability == "responsibility.a04" and case_id == "role:normal" and not context:
             review += ("exact_weighted_oracle",)
+        if agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal" and not context:
+            review += ("exact_zero_boundary_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -418,7 +426,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             **({"response_format": "strict_json"} if case_id == "role:normal" and not context
                and (agent_id, capability) in {("a01", "responsibility.a01"),
                                               ("a04", "responsibility.a04"),
-                                              ("a12", "responsibility.a12")} else {}),
+                                              ("a12", "responsibility.a12"),
+                                              ("a18", "responsibility.a18")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,
