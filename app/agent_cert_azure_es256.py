@@ -112,6 +112,7 @@ class AzureES256CertificationVerifier:
             if (not all(isinstance(value, str) for value in (subject, reviewer, executor))
                     or canonical_agent_id(subject) != subject
                     or canonical_agent_id(reviewer) != reviewer or subject == reviewer
+                    or reviewer == executor
                     or not _EXECUTOR_ID.fullmatch(executor)
                     or service in {subject, reviewer, executor}):
                 return False

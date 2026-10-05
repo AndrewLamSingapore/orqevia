@@ -103,6 +103,15 @@ def test_rejects_der_signature_self_review_and_unversioned_key():
         AzureES256CertificationVerifier({SERVICE: {KID[:-33]: _jwk(private)}})
 
 
+def test_rejects_validly_signed_executor_self_review():
+    private = ec.generate_private_key(ec.SECP256R1())
+    row = _row()
+    row["executor_identity"] = row["verifier"]
+    proof = _signed(private, row)
+    verifier = AzureES256CertificationVerifier({SERVICE: {KID: _jwk(private)}})
+    assert not verifier(proof)
+
+
 def test_rejects_wrong_curve_or_public_point_and_oversized_record():
     private = ec.generate_private_key(ec.SECP256R1())
     jwk = _jwk(private)
