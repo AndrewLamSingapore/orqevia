@@ -74,8 +74,8 @@ jobs:
         run: |
           docker run -d --name prime-acceptance \
             --network prime-acceptance \
-            -p 18000:8000 \
             -v prime-acceptance-data:/data \
+            -v "${{ github.workspace }}/benchmarks:/benchmark:ro" \
             -e OLLAMA_BASE_URL=http://ollama:11434 \
             -e PRIME_FAST_MODEL=gemma3:1b \
             -e PRIME_DEEP_MODEL=gemma3:1b \
@@ -88,9 +88,9 @@ jobs:
             prime:acceptance
       - name: Verify health, Control Surface and protected read paths
         run: |
-          python - <<'PY'
+          docker exec -i prime-acceptance python - <<'PY'
           import json, time, urllib.error, urllib.request
-          base='http://127.0.0.1:18000'
+          base='http://127.0.0.1:8000'
           token='acceptance-secret'
           headers={'Authorization':f'Bearer {token}','Content-Type':'application/json'}
           def request(path, method='GET', body=None, headers_override=None):
@@ -157,14 +157,14 @@ jobs:
           assert {'local_ai','answer_evaluation','specialist_critique','specialist_synthesis'} <= stages
           PY
       - name: Execute the 50-case endpoint benchmark
-        run: python benchmarks/run_endpoint.py --base-url http://127.0.0.1:18000 --token acceptance-secret --minimum-pass-rate 1.0
+        run: docker exec prime-acceptance python /benchmark/run_endpoint.py --base-url http://127.0.0.1:8000 --token acceptance-secret --minimum-pass-rate 1.0
       - name: Verify persistence across restart
         run: |
           docker rm -f prime-acceptance
           docker run -d --name prime-acceptance \
             --network prime-acceptance \
-            -p 18000:8000 \
             -v prime-acceptance-data:/data \
+            -v "${{ github.workspace }}/benchmarks:/benchmark:ro" \
             -e OLLAMA_BASE_URL=http://ollama:11434 \
             -e PRIME_FAST_MODEL=gemma3:1b \
             -e PRIME_DEEP_MODEL=gemma3:1b \
@@ -175,9 +175,9 @@ jobs:
             -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
             -e PORTAL_BASE_URL= \
             prime:acceptance
-          python - <<'PY'
+          docker exec -i prime-acceptance python - <<'PY'
           import json, time, urllib.request
-          base='http://127.0.0.1:18000'
+          base='http://127.0.0.1:8000'
           headers={'Authorization':'Bearer acceptance-secret'}
           for _ in range(30):
               try:
