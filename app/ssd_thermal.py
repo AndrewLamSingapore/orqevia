@@ -17,7 +17,8 @@ from pathlib import Path
 
 POLICY_SCHEMA = 'prime.ssd-thermal-policy.v1'
 RECEIPT_SCHEMA = 'prime.ssd-temperature.v1'
-SENSOR = 'MSFT_StorageReliabilityCounter.Temperature'
+SENSOR = 'NVMe.SMART.HealthLog0x02.CompositeAndTemperatureSensors'
+SOURCE = 'Windows.IOCTL_STORAGE_QUERY_PROPERTY.NVMeSmartHealthLog0x02'
 MAX_AGE_SECONDS = 30
 HEADROOM_C = 5
 # Fixed conservative exemption for explicitly bounded light local work. A
@@ -60,10 +61,13 @@ def policy() -> dict:
         value = _unique_json(raw)
     except (OSError, UnicodeError, ValueError) as exc:
         raise PermissionError('SSD thermal policy unavailable or invalid') from exc
-    identity = ('host', 'device_id', 'serial_number', 'friendly_name', 'limit_source')
+    identity = ('host', 'device_id', 'serial_number', 'friendly_name', 'limit_source', 'reader_sha256')
     if (value.get('schema') != POLICY_SCHEMA or
             any(not isinstance(value.get(key), str) or not value[key] for key in identity) or
             value.get('sensor') != SENSOR or
+            value.get('required_sensor_numbers') != [1, 2] or
+            len(value['reader_sha256']) != 64 or
+            any(c not in '0123456789abcdef' for c in value['reader_sha256']) or
             type(value.get('heavy_demand_mib')) is not int or value['heavy_demand_mib'] < LIGHT_DEMAND_MIB or
             type(value.get('max_operating_c')) not in (int, float) or
             not math.isfinite(value['max_operating_c']) or
@@ -79,22 +83,39 @@ def observation(thermal_policy: dict, *, now: float | None = None) -> dict:
     except (OSError, UnicodeError, ValueError) as exc:
         raise PermissionError('SSD temperature receipt unavailable') from exc
     now = time.time() if now is None else now
-    identity = ('host', 'device_id', 'serial_number', 'friendly_name', 'sensor')
+    identity = ('host', 'device_id', 'serial_number', 'friendly_name', 'sensor', 'reader_sha256')
     if (sample.get('schema') != RECEIPT_SCHEMA or
             any(sample.get(key) != thermal_policy.get(key) for key in identity) or
-            sample.get('unit') != 'C' or sample.get('source') != 'Windows.StorageReliabilityCounter' or
+            sample.get('unit') != 'C' or sample.get('source') != SOURCE or
             not isinstance(sample.get('collector_id'), str) or not sample['collector_id'] or
             not isinstance(sample.get('boot_id'), str) or not sample['boot_id'] or
-            sample.get('read_ok') is not True):
+            sample.get('read_ok') is not True or
+            type(sample.get('critical_warning_bits')) is not int or
+            sample['critical_warning_bits'] != 0):
         raise PermissionError('SSD temperature receipt scope or sensor mismatch')
     captured = sample.get('captured_at')
-    temperature = sample.get('temperature_c')
+    composite = sample.get('composite_temperature_c')
+    sensors = sample.get('temperature_sensors')
     if (type(now) not in (int, float) or not math.isfinite(now) or
             type(captured) not in (int, float) or not math.isfinite(captured) or
             not 0 <= now - captured <= MAX_AGE_SECONDS or
-            type(temperature) not in (int, float) or not math.isfinite(temperature) or
-            not 0 < temperature <= 150):
+            type(composite) not in (int, float) or not math.isfinite(composite) or
+            not 0 < composite <= 150 or not isinstance(sensors, list) or len(sensors) != 2):
         raise PermissionError('SSD temperature receipt stale or unsupported')
+    numbers = []
+    temperatures = [composite]
+    for sensor in sensors:
+        if not isinstance(sensor, dict) or set(sensor) != {'number', 'celsius'}:
+            raise PermissionError('NVMe temperature sensor malformed')
+        number, value = sensor['number'], sensor['celsius']
+        if (type(number) is not int or type(value) not in (int, float) or
+                not math.isfinite(value) or not 0 < value <= 150):
+            raise PermissionError('NVMe temperature sensor unsupported')
+        numbers.append(number)
+        temperatures.append(value)
+    if numbers != thermal_policy['required_sensor_numbers']:
+        raise PermissionError('NVMe temperature sensor identity mismatch')
+    sample['hottest_temperature_c'] = max(temperatures)
     return sample
 
 
@@ -118,5 +139,5 @@ def require_for_demand(demand_mib: int) -> None:
     if demand_mib <= thermal_policy['heavy_demand_mib']:
         return
     sample = observation(thermal_policy)
-    if sample['temperature_c'] >= thermal_policy['max_operating_c'] - HEADROOM_C:
+    if sample['hottest_temperature_c'] >= thermal_policy['max_operating_c'] - HEADROOM_C:
         raise PermissionError('SSD thermal headroom insufficient for heavy local inference')
