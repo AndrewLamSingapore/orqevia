@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import time
 from pathlib import Path
 
@@ -68,7 +69,6 @@ def policy() -> dict:
             value.get('required_sensor_numbers') != [1, 2] or
             len(value['reader_sha256']) != 64 or
             any(c not in '0123456789abcdef' for c in value['reader_sha256']) or
-            type(value.get('heavy_demand_mib')) is not int or value['heavy_demand_mib'] < LIGHT_DEMAND_MIB or
             type(value.get('max_operating_c')) not in (int, float) or
             not math.isfinite(value['max_operating_c']) or
             not 0 < value['max_operating_c'] <= 150):
@@ -93,6 +93,10 @@ def observation(thermal_policy: dict, *, now: float | None = None) -> dict:
             type(sample.get('critical_warning_bits')) is not int or
             sample['critical_warning_bits'] != 0):
         raise PermissionError('SSD temperature receipt scope or sensor mismatch')
+    for key in ('media_data_integrity_errors', 'error_log_entries'):
+        value = sample.get(key)
+        if not isinstance(value, str) or not re.fullmatch(r'(?:0|[1-9][0-9]*)', value) or value != '0':
+            raise PermissionError('NVMe SMART storage error or missing error evidence')
     captured = sample.get('captured_at')
     composite = sample.get('composite_temperature_c')
     sensors = sample.get('temperature_sensors')
@@ -136,8 +140,6 @@ def require_for_demand(demand_mib: int) -> None:
     if demand_mib <= LIGHT_DEMAND_MIB:
         return
     thermal_policy = policy()
-    if demand_mib <= thermal_policy['heavy_demand_mib']:
-        return
     sample = observation(thermal_policy)
     if sample['hottest_temperature_c'] >= thermal_policy['max_operating_c'] - HEADROOM_C:
         raise PermissionError('SSD thermal headroom insufficient for heavy local inference')
