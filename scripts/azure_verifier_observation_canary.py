@@ -15,10 +15,6 @@ from pathlib import Path
 import re
 
 from app.agent_cert_a17_boundary import review_a17_boundary_json, review_a17_cross_review_json
-from app.agent_cert_azure_es256 import _KEY_ID
-from app.agent_cert_azure_signer import key_vault_sign_digest
-from scripts.azure_verifier_live_canary import (_azure_token, _oidc, _public_key,
-                                                _unique, verify)
 
 
 FIXTURE = Path("tests/fixtures/a18-negative-clarified-observation.json")
@@ -27,6 +23,15 @@ JOB_ID = "3dd7b5f7-5bc2-46d7-8f0e-db17cb4429e0"
 FLAWED_SHA256 = "94dc1820421de62a1b6a6bb919bade1e19e0163f8b7d82d379aa0269ef10a8c5"
 RESULT_SHA256 = "6e4e6af1a7a8da27a413ed166b803192d5be6e78a5a90bd741e16c51423c8c4c"
 DOMAIN = "prime.independent-verifier.agent-observation-canary.v1"
+
+
+def _unique(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate field")
+        result[key] = value
+    return result
 
 
 def reviewed_message(raw: bytes, *, revision: str, run_id: str) -> bytes:
@@ -108,23 +113,24 @@ def reviewed_message(raw: bytes, *, revision: str, run_id: str) -> bytes:
 
 
 def run(pin: dict) -> None:
+    # Only the protected signer job needs the Azure/cryptography dependency.
+    from scripts.azure_verifier_live_canary import (KEY_PREFIX, _azure_token, _oidc,
+                                                    _public, _sign, verify)
     if (os.environ.get("GITHUB_REPOSITORY") != "AndrewLamSingapore/prime"
             or os.environ.get("GITHUB_REF") != "refs/heads/main"
             or os.environ.get("GITHUB_REF_PROTECTED") != "true"
             or os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"):
         raise ValueError("protected main required")
     key_id = pin["key_id"]
-    if (not isinstance(key_id, str) or not _KEY_ID.fullmatch(key_id)
-            or not key_id.startswith(
-                "https://abexprimeverify26.vault.azure.net/keys/prime-agent-cert-verifier/")):
+    if (not isinstance(key_id, str)
+            or not re.fullmatch(re.escape(KEY_PREFIX) + r"[0-9a-f]{32}", key_id)):
         raise ValueError("unexpected verifier key")
-    public = _public_key(pin["jwk"])
+    public = _public(pin["jwk"])
     message = reviewed_message(FIXTURE.read_bytes(), revision=os.environ["GITHUB_SHA"],
                                run_id=os.environ["GITHUB_RUN_ID"])
     bearer = _azure_token(_oidc())
-    observed_key, signature = key_vault_sign_digest(
-        key_id, hashlib.sha256(message).digest(), access_token=bearer)
-    if observed_key != key_id or not verify(public, message, signature):
+    signature = _sign(key_id, hashlib.sha256(message).digest(), bearer)
+    if not verify(public, message, signature):
         raise ValueError("observation signature invalid")
     if verify(public, message + b"!", signature):
         raise ValueError("tampered observation verified")

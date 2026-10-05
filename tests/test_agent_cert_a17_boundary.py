@@ -23,6 +23,9 @@ def test_source_bound_case_is_prepared_not_certified():
     assert spec["certification"] == "UNVERIFIED"
     assert spec["request"]["response_format"] == "strict_json"
     assert "exact_a17_boundary_oracle" in spec["independent_review"]
+
+
+def test_exact_oracle_accepts_correct_synthetic_response_without_certifying():
     assert review_a17_boundary_json(json.dumps(CORRECT)) == (True, ())
 
 
