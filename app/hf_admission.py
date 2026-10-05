@@ -14,6 +14,8 @@ def require_hf_admission(entry, job, provider_name):
         return
     if not entry.get('enabled') or entry.get('qualification_status') != 'QUALIFIED':
         raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
+    if entry.get('fallback_ids'):
+        raise ProviderFailure('HF_FALLBACK_NOT_PERMITTED', pre_execution=True)
     # HF never becomes an implicit fallback for an agent's generic cloud request.
     if job.get('preferred_provider') != provider_name or job.get('allow_cloud') != 1:
         raise ProviderFailure('HF_EXPLICIT_SELECTION_REQUIRED', pre_execution=True)

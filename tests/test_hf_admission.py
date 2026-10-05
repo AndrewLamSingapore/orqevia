@@ -47,6 +47,12 @@ def test_catalog_price_change_after_queue_claim_is_denied():
         require_hf_admission(entry, JOB, 'hf-fixture')
 
 
+def test_selected_hf_cannot_fallback_to_another_cloud_provider():
+    with pytest.raises(ProviderFailure, match='HF_FALLBACK_NOT_PERMITTED') as failure:
+        require_hf_admission({**ENTRY, 'fallback_ids': ['other-cloud']}, JOB, 'hf-fixture')
+    assert failure.value.pre_execution
+
+
 def test_enabled_qualification_cannot_be_inferred_from_token_or_ci():
     for change in ({'enabled': False}, {'qualification_status': 'UNMEASURED'}):
         with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):

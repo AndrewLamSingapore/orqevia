@@ -201,11 +201,24 @@ def test_agent_dispatch_reaches_hf_through_governed_queue(monkeypatch, tmp_path)
     app.include_router(dispatch.router)
     close_ledgers()
     try:
-        response = TestClient(app).post('/api/agents/dispatch',
+        implicit = TestClient(app).post('/api/agents/dispatch',
             headers={'Authorization': 'Bearer fixture-owner'},
             json={'capability': 'responsibility.a17', 'objective': 'Write a concise note',
                   'task_class': 'coding', 'data_classification': 'CLOUD_PERMITTED',
                   'max_cost_usd': 0.01})
+        assert implicit.status_code == 409
+        assert compute.queue.list(limit=10) == []
+        no_cost = TestClient(app).post('/api/agents/dispatch',
+            headers={'Authorization': 'Bearer fixture-owner'},
+            json={'capability': 'responsibility.a17', 'objective': 'Write a concise note',
+                  'task_class': 'coding', 'data_classification': 'CLOUD_PERMITTED',
+                  'preferred_provider': 'hf-agent-fixture', 'max_cost_usd': 0})
+        assert no_cost.status_code == 422
+        response = TestClient(app).post('/api/agents/dispatch',
+            headers={'Authorization': 'Bearer fixture-owner'},
+            json={'capability': 'responsibility.a17', 'objective': 'Write a concise note',
+                  'task_class': 'coding', 'data_classification': 'CLOUD_PERMITTED',
+                  'preferred_provider': 'hf-agent-fixture', 'max_cost_usd': 0.01})
         assert response.status_code == 202, response.text
         routed = response.json()
         job = routed['job']
