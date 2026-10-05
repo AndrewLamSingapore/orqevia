@@ -62,6 +62,8 @@ def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int,
     # Injected samples are only for tests; production always uses observation().
     if type(demand_mib) is not int or demand_mib <= 0:
         raise PermissionError('verified peak memory demand required')
+    from .ssd_thermal import require_for_demand
+    require_for_demand(demand_mib)
     if c.execute('SELECT 1 FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone():
         raise PermissionError('backend inference lease occupied')
     prior = c.execute('SELECT captured_after FROM backend_admission_refresh WHERE endpoint=?', (endpoint,)).fetchone()
@@ -93,6 +95,8 @@ def check(c: sqlite3.Connection, endpoint: str, job_id: str, sample: dict | None
     row = c.execute('SELECT job_id,instance,boot_id,state,demand_mib FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone()
     if not row or tuple(row[:3]) != (job_id, sample['instance'], sample['boot_id']) or row[3] not in ('pending', 'running'):
         raise PermissionError('backend inference lease or instance mismatch')
+    from .ssd_thermal import require_for_demand
+    require_for_demand(row[4])
     # Pending demand has not become resident. Once dispatched, the backend's
     # free-memory observation already includes it, so do not subtract twice.
     if row[3] == 'pending' and (type(row[4]) is not int or row[4] <= 0):
