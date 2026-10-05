@@ -83,6 +83,8 @@ def main():
     names.append('agent_cert_a29_release')
     names.append('agent_cert_role_g1')
     names.append('agent_cert_role_group_two')
+    names.append('multi_invocation')
+    names.append('ssd_thermal')
     names.append('agent_cert_boundary')
     names.append('agent_cert_a17_boundary')
     names.append('agent_cert_execution')
