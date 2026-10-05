@@ -59,6 +59,27 @@ CERTIFICATION_WAVES = (
 MAX_EVIDENCE_BYTES = 1024 * 1024
 
 
+def _artifact_digest_ok(agent_dir: Path, name: object, expected: object) -> bool:
+    if not isinstance(name, str) or not name or "\\" in name:
+        return False
+    if not isinstance(expected, str) or len(expected) != 64:
+        return False
+    evidence = Path(name)
+    if evidence.is_absolute() or ".." in evidence.parts:
+        return False
+    cursor = agent_dir
+    for part in evidence.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            return False
+    artifact = cursor.resolve()
+    if not artifact.is_relative_to(agent_dir.resolve()) or not artifact.is_file():
+        return False
+    if artifact.stat().st_size > MAX_EVIDENCE_BYTES:
+        return False
+    return hashlib.sha256(artifact.read_bytes()).hexdigest() == expected
+
+
 def _utc(value: str) -> datetime:
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
@@ -98,20 +119,14 @@ class AgentCertificationRegistry:
                 return False
             if _utc(row["expires_at"]) <= now:
                 return False
-            evidence = Path(row["evidence"])
-            if evidence.is_absolute() or ".." in evidence.parts:
+            if not _artifact_digest_ok(agent_dir, row["evidence"], row["evidence_sha256"]):
                 return False
-            cursor = agent_dir
-            for part in evidence.parts:
-                cursor = cursor / part
-                if cursor.is_symlink():
+            if any(field in row for field in ("review_evidence", "review_evidence_sha256")):
+                if (row.get("review_evidence") == row["evidence"]
+                        or not _artifact_digest_ok(agent_dir, row.get("review_evidence"),
+                                                   row.get("review_evidence_sha256"))):
                     return False
-            artifact = (agent_dir / evidence).resolve()
-            if not artifact.is_relative_to(agent_dir.resolve()) or not artifact.is_file():
-                return False
-            if artifact.stat().st_size > MAX_EVIDENCE_BYTES:
-                return False
-            return hashlib.sha256(artifact.read_bytes()).hexdigest() == row["evidence_sha256"]
+            return True
         except Exception:
             return False
 
