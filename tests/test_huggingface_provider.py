@@ -183,7 +183,7 @@ def test_agent_dispatch_does_not_auto_select_hf(monkeypatch, tmp_path):
                                                           'max_cost_usd': 0}), 'Bearer fixture-owner')
     assert unpriced.value.status_code == 422
     queued = []
-    monkeypatch.setattr(dispatch, 'action_ledger', lambda: object())
+    monkeypatch.setattr(dispatch, 'action_ledger', lambda: SimpleNamespace(status=lambda: {'ready': True}))
     monkeypatch.setattr(dispatch, 'DirectExecutor', lambda ledger: SimpleNamespace(
         execute=lambda action, operation: operation()))
     monkeypatch.setattr(compute_queue_api, 'queue', SimpleNamespace(submit=lambda **job: queued.append(job) or job))
