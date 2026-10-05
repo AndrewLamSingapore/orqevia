@@ -323,9 +323,10 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 discriminants = ("Zero must return True under the requirement",
                                  "The n > 0 implementation is defective at zero",
                                  "Reject an inverted assertion even if it passes buggy code")
-        elif agent_id == "a17" and capability == "responsibility.a17" and case_id == "role:normal":
+        elif agent_id == "a17" and capability == "responsibility.a17" and case_id == "role:normal" and not context:
             objective = (
-                "For the supplied synthetic parser contract, return ONLY strict JSON with exactly: "
+                f"For a bounded synthetic {responsibility['description']} exercise, "
+                "use the supplied parser contract and return ONLY strict JSON with exactly: "
                 "type_guard, accepted_range, zero_result, nine_result, negative_one_error, "
                 "ten_error, string_error, float_error, tests_executed. "
                 "Use the Python expressions 'type(n) is int' and '0 <= n <= 9' for the first two "
