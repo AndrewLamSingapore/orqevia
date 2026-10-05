@@ -8,6 +8,7 @@ from .meta_review import MetaReviewer
 from .evaluation import evaluate
 from .release_gate import release_gates
 from .runtime import memory, ledger, events, orchestrator, multi, authority
+from .multi_invocation import Depth, InvocationBudget, MultiInvocationRuntime, local_gateway_invoker
 
 router=APIRouter(prefix="/api/cognitive",tags=["cognitive"])
 reviewer=MetaReviewer()
@@ -20,6 +21,9 @@ class ExecuteRequest(PlanRequest): deep:bool=False
 class EventRequest(StrictRequest):
     schema_version:str=Field(pattern=r"^1\.0\.0$"); event_id:str; event_type:str; source:str; occurred_at:str; evidence_level:str; correlation_id:str; subject_id:str|None=None; provenance:list[str]=Field(min_length=1); payload:dict[str,Any]
 class MultiRequest(StrictRequest): intent:str; context:str=""; evidence:str=""; deep:bool=False
+class MultiInvocationRequest(StrictRequest):
+    objective:str=Field(min_length=1,max_length=12000)
+    depth:Depth=Depth.STANDARD
 class EvalRequest(StrictRequest): answer:str; evidence_terms:list[str]=Field(default_factory=list); required_terms:list[str]=Field(default_factory=list); executed_external_action:bool=False
 
 def require_token(authorization:str|None)->None:
@@ -54,6 +58,21 @@ def cognitive_reason(request:ExecuteRequest,authorization:str|None=Header(defaul
 def multi_reason(request:MultiRequest,authorization:str|None=Header(default=None)):
     require_token(authorization)
     try:return {"ok":True,**multi.run(**request.model_dump())}
+    except RuntimeError as e:raise HTTPException(status_code=503,detail=str(e)) from e
+@router.post("/multi-invoke")
+def multi_invoke(request:MultiInvocationRequest,authorization:str|None=Header(default=None)):
+    require_token(authorization)
+    # Explicit experimental opt-in. No frontend exposure, cloud routing or
+    # production behavior change until normal admission and promotion gates.
+    if os.getenv("PRIME_MULTI_INVOCATION_ENABLED", "") != "1":
+        raise HTTPException(status_code=503,detail="Multi-invocation candidate is disabled")
+    try:
+        max_calls=min(64,max(4,int(os.getenv("PRIME_MULTI_INVOCATION_MAX_CALLS","8"))))
+        budget=InvocationBudget(max_calls=max_calls,max_parallel=1,max_elapsed_seconds=180)
+        runtime=MultiInvocationRuntime(local_gateway_invoker(orchestrator.gateway))
+        return {"ok":True,**runtime.run(objective=request.objective,depth=request.depth,
+                                       budget=budget,permitted_parallel=1)}
+    except ValueError as e:raise HTTPException(status_code=422,detail=str(e)) from e
     except RuntimeError as e:raise HTTPException(status_code=503,detail=str(e)) from e
 @router.post("/events")
 def ingest_event(request:EventRequest,authorization:str|None=Header(default=None)):
