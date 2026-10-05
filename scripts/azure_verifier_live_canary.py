@@ -87,6 +87,8 @@ def _oidc():
         "repository_id": "1345668764", "repository_owner_id": "313231443",
         "ref": "refs/heads/main", "ref_protected": "true",
         "workflow_ref": CALLER, "job_workflow_ref": SIGNER,
+        "workflow_sha": os.environ["GITHUB_SHA"],
+        "job_workflow_sha": os.environ["GITHUB_SHA"],
         "event_name": "workflow_dispatch",
     }
     if any(str(claims.get(name)).lower() != value.lower()
