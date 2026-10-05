@@ -156,6 +156,26 @@ def test_reviewed_case_loses_projection_when_review_artifact_changes(tmp_path):
     assert result["trust_state"] == "REVALIDATION-REQUIRED"
 
 
+def test_azure_digest_only_canary_cannot_project_as_certification(tmp_path):
+    rows = fixture_rows(tmp_path, ("baseline",))
+    for row in rows:
+        row["attestation"] = {"algorithm": "ES256"}
+    manifest = tmp_path / "a17" / "certification.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows}))
+    # Even a mocked verifier approval cannot turn a digest-only signer canary
+    # into an independently reviewed case.
+    assert projection(tmp_path)["level"] == "L0"
+    for row in rows:
+        review = tmp_path / "a17" / (row["evidence"] + ".review")
+        review.write_bytes(b'{"decision":"PASS"}')
+        row.update({"review_evidence": review.name,
+                    "review_evidence_sha256": hashlib.sha256(review.read_bytes()).hexdigest(),
+                    "review_run_id": "protected-run-123", "review_test_version": "oracle.1",
+                    "review_source_revision": REVISION})
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows}))
+    assert projection(tmp_path)["level"] == "L1"
+
+
 def test_revoked_verifier_and_degraded_health_prevent_l6(tmp_path):
     rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
     revoked = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
