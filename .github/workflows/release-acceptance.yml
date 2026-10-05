@@ -78,6 +78,7 @@ jobs:
           docker volume create prime-current-data
           docker run -d --name prime-current --network prime-acceptance \
             -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
+            -e PRIME_REGISTRY_V1_ENABLED=1 \
             -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
           trap 'docker rm -f prime-current >/dev/null 2>&1 || true' EXIT
           receipt=$(docker run --rm -i --network container:prime-current python:3.12-slim python - <<'PY'
@@ -118,6 +119,7 @@ jobs:
           docker rm -f prime-current
           docker run -d --name prime-current --network prime-acceptance \
             -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
+            -e PRIME_REGISTRY_V1_ENABLED=1 \
             -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
           docker run --rm -i --network container:prime-current \
             -e TASK_ID="$task_id" -e ARTIFACT_ID="$artifact_id" python:3.12-slim python - <<'PY'
