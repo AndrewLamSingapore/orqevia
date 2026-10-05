@@ -44,9 +44,15 @@ jobs:
           }
           if ($allErrors.Count) { $allErrors -join "`n" | Write-Error }
       - name: Validate canonical Compose
+        env:
+          OLLAMA_IMAGE: ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532
+          CADDY_IMAGE: caddy@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e
+          CLOUDFLARED_IMAGE: cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4
+          PRIME_HF_TOKEN_FILE: /tmp/placeholder-not-a-token
         run: |
           docker compose -f docker-compose.yml config --quiet
           docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.huggingface.yml config --quiet
 
   docker-acceptance:
     runs-on: ubuntu-latest

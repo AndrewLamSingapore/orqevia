@@ -1,7 +1,7 @@
 """Deterministic product/security checks in isolated data directories only."""
 import os,sys,uuid
 from pathlib import Path
-from validate_ssot import ROOT,validate
+from validate_canonical import ROOT,validate
 
 def main():
     validate()
@@ -15,9 +15,9 @@ def main():
         @pytest.fixture
         def tmp_path(self):
             path=data/('test-'+uuid.uuid4().hex);path.mkdir();return path
-    names=['canonical_state','operational_manifest','registry_v1','dell_node_sync','truth_reconciler','agent_registry','task_continuation','interface_contract','pwa_sessions',
+    names=['status_authority','canonical_state','operational_manifest','registry_v1','dell_node_sync','truth_reconciler','agent_registry','task_continuation','interface_contract','pwa_sessions',
            'product_handoff','operational_workflows','workflow_objective_integration',
-           'cloud_capacity_recovery','production_compatibility','public_task_errors',
+           'cloud_capacity_recovery','huggingface_provider','hf_file_secret','production_compatibility','public_task_errors',
            'interface_server','consequential_intent','stable_spine','sink_guard',
            'provider_failure_boundaries','interface_cloud_policy',
            'direct_execution','connector_sdk']
@@ -57,6 +57,7 @@ def main():
     names.append('competence_frontier_evaluation')
     names.append('portfolio_reconciliation')
     names.append('evidence_lens_qualification_receipt')
+    names.append('agent_dispatch_api')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

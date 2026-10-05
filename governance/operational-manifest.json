@@ -353,7 +353,7 @@
   },
   "truth_reconciliation": {
     "version": "1.0.0",
-    "authority_boundary": "Dell independently verifies; this manifest remains the sole operational SSOT and ABEX remains the sole PRIME authority.",
+    "authority_boundary": "STATUS.md alone owns current status; this manifest records component and observation references. Dell may independently verify; ABEX remains the PRIME runtime authority.",
     "result_contract": "contracts/truth-reconciliation-v1.schema.json",
     "execution_record_contract": "contracts/prime-execution-record-v1.schema.json",
     "repository_registry": "governance/repository-registry.json",
@@ -373,7 +373,7 @@
       "RED"
     ],
     "pass_rule": "A PASS is VERIFIED only when its provenance and referenced evidence hashes independently verify; missing evidence is never promoted.",
-    "provenance_chain": "task -> executor -> repository -> base SHA -> change -> result SHA -> tests -> artifacts -> hashes -> GitHub remote SHA -> SSOT record -> Dell verification"
+    "provenance_chain": "task -> executor -> repository -> base SHA -> change -> result SHA -> tests -> artifacts -> hashes -> GitHub remote SHA -> STATUS.md claim -> independent verification when performed"
   },
   "safety_boundaries": {
     "prime_public_exposure": false,

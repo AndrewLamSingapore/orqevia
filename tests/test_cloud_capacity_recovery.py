@@ -14,7 +14,17 @@ def test_explicit_capacity_is_rejected_admission(stream):
     response=httpx.Response(200,text='data: '+json.dumps(message)+'\n\n') if stream else httpx.Response(503,json=message)
     adapter=ChatCompletionProvider('https://fixture.invalid/chat','ref',secret_resolver=lambda _:'mock-value',transport=httpx.MockTransport(lambda _:response))
     with pytest.raises(ProviderFailure) as caught:asyncio.run(complete(adapter,MODEL,[],output_tokens=4,max_retries=0))
-    assert caught.value.code=='CAPACITY' and caught.value.pre_execution
+    assert caught.value.code=='CAPACITY' and caught.value.pre_execution is (not stream)
+
+def test_stream_capacity_does_not_replay_after_accepted_http_200():
+    calls=[]
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200,text='data: '+json.dumps({'error':{'message':'Selected model is at capacity. Please try a different model.'}})+'\n\n')
+    adapter=ChatCompletionProvider('https://fixture.invalid/chat','ref',secret_resolver=lambda _:'mock-value',transport=httpx.MockTransport(handler))
+    with pytest.raises(ProviderFailure,match='CAPACITY'):
+        asyncio.run(complete(adapter,MODEL,[],output_tokens=4,max_retries=2))
+    assert len(calls)==1
 
 def fixture(monkeypatch,tmp_path,*,tier='FLAGSHIP',rate='1',qualified=True,partial=False):
     from app import cloud_execution as cloud

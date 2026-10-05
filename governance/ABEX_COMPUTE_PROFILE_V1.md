@@ -1,4 +1,4 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> Status authority: [STATUS.md](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md). The [operational manifest](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) is a component and observation reference. This document describes this repository only; it cannot establish live deployment status.
 
 # ABEX Compute Profile v1 — Commissioning Record
 
