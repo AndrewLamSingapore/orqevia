@@ -67,8 +67,25 @@ def test_exact_versioned_key_and_record_signature_round_trip():
     altered = copy.deepcopy(proof)
     altered["attestation"]["signature"] = "0" * 128
     assert not verifier(altered)
+    altered = copy.deepcopy(proof)
+    altered["attestation"]["algorithm"] = "Ed25519"
+    assert not verifier(altered)
+    altered = copy.deepcopy(proof)
+    altered["attestation"]["verifier_identity"] = "svc.cert-verifier.other"
+    assert not verifier(altered)
+    altered = copy.deepcopy(proof)
+    altered["test_case"] = "edge"
+    assert not verifier(altered)
     assert azure_es256_signing_digest(_row(), SERVICE, KID) == __import__("hashlib").sha256(
         azure_es256_signed_bytes(_row(), SERVICE, KID)).digest()
+
+
+def test_revoked_version_and_wrong_pinned_key_fail_closed():
+    private = ec.generate_private_key(ec.SECP256R1())
+    proof = _signed(private, _row())
+    assert not AzureES256CertificationVerifier({SERVICE: {}})(proof)
+    replacement = ec.generate_private_key(ec.SECP256R1())
+    assert not AzureES256CertificationVerifier({SERVICE: {KID: _jwk(replacement)}})(proof)
 
 
 def test_rejects_der_signature_self_review_and_unversioned_key():

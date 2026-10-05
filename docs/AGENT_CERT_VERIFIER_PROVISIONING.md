@@ -1,38 +1,46 @@
 # Independent agent certification verifier (candidate)
 
-The proposed verifier identity is `svc.cert-verifier.independent`. It is a
+The separately provisioned verifier identity is `svc.cert-verifier.independent`. It is a
 service principal, separate from every registered agent, reviewer, and worker.
-The public-key pin set is `governance/agent-cert-verifier-pins.json`. Its empty
-`keys` object deliberately rejects every attestation. This repository does not
-contain a private key, active public-key pin, or live certification claim.
+The legacy Ed25519 public-key pin set is
+`governance/agent-cert-verifier-pins.json`. Its empty `keys` object deliberately
+rejects every Ed25519 attestation. This repository does not contain a private
+key, active Azure public-key pin, or live certification claim. The approved
+verifier key is the non-exportable Azure Key Vault P-256 key documented in
+`AGENT_CERT_AZURE_ES256_CANDIDATE.md`; do not create an additional exportable
+Ed25519 key for this deployment.
 
-To activate this design, an operator must first establish a separate verifier
-principal on a confirmed host or isolation boundary that executing agents
-cannot access. Generate an Ed25519 key under that principal, retain its private
-half in that principal's protected key store outside PRIME, and give the agent
-runtime only the 32-byte raw public key. Record a unique key ID, raw public key
-hex, and SHA-256 of those raw bytes in the pin file. The repository change and
-host key custody must be reviewed together; a fingerprint in the same file does
-not authenticate a malicious replacement of that file. Remove revoked keys
-from the deployed pin set and restart the verifier when rotating keys.
+For the selected Azure path, the protected reviewer must remain inaccessible to
+executing agents. It uses the exact versioned Key Vault key ID and independently
+reviewed P-256 public JWK as a trusted pin, never a key supplied by an agent
+record or fetched opportunistically during verification. The protected-main
+GitHub OIDC principal has key-scoped sign-only access; that setup alone proves
+neither a successful token exchange nor a signed certification result. Review
+pin changes with the corresponding Key Vault key version and remove revoked
+versions from the trusted pin map. An empty map must keep certification at L0.
+
+The Ed25519 signer and pin loader remain isolated legacy candidate code; their
+in-process key-generation procedure is not the provisioning route for the
+approved Azure verifier.
 
 The protected verifier process independently inspects the exact case challenge,
-runtime identity, worker result, case-specific oracle, and artifact bytes. It
-computes the SHA-256 of `_signed_bytes(row, service_identity, key_id)` only after
-deciding PASS and passes that digest to `ProtectedCertificationSigner.sign` in
-the same protected process. The signer checks the record revision, result,
-artifact path and bytes, review digest, timestamps, and public verification
-contract before returning a signature. Workers and agents must have no access
-to the private key or the signer process. A digest supplied by a worker is not
-an independent review decision.
+runtime identity, worker result, case-specific oracle, and artifact bytes. For
+Azure it approves the SHA-256 of `azure_es256_signed_bytes(row,
+service_identity, key_id)` only after deciding PASS. `ProtectedAzureES256Signer`
+checks that exact approval, source revision, timestamps and artifact digest
+before invoking the injected Key Vault `sign(ES256, digest)` operation. It
+checks the returned versioned key ID and independently verifies the signature
+against the pinned P-256 public key. Workers and agents must have no access to
+that operation. A digest supplied by a worker is not an independent review
+decision.
 
-`verifier_from_pin_file` loads the public pins for registry projection. Both an
-empty pin set and an unavailable verifier callback leave certification at L0.
-Only a real independent review of every missing case, a signed evidence record,
-and a current registry projection can support an L7 claim. Candidate tests use
-synthetic in-memory keys and cannot establish live verifier custody.
+`AzureES256CertificationVerifier` is the public-only callback for registry
+projection when supplied with a trusted exact-version pin map. Both an empty
+map and an unavailable verifier callback leave certification at L0. A real
+independent review of every missing case, signed evidence, and a clean-room
+audit are still required for L7; synthetic tests cannot establish those facts.
 
-## Azure Key Vault ES256 option
+## Selected Azure Key Vault ES256 path
 
 `ProtectedAzureES256Signer` is an alternative protected-process boundary for
 the separately provisioned non-exportable P-256 Key Vault key. It consumes the
