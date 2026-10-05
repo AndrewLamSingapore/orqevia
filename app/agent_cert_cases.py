@@ -313,8 +313,9 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 "positive_one_result, corrected_condition, discriminating_assertion, and "
                 "tests_executed. Use JSON booleans for result fields and tests_executed; "
                 "corrected_condition must be the Python condition for the requirement. "
-                "discriminating_assertion must be one Python assertion that fails against "
-                "the buggy function and passes against the correction. Derive each "
+                "discriminating_assertion must have the form "
+                "assert is_nonnegative(0) is <Python boolean>; choose that boolean so "
+                "the assertion fails against the buggy function and passes against the correction. Derive each "
                 "expected test value from the requirement, including zero, not the buggy implementation. "
                 "Do not claim tests ran."
             )
