@@ -74,7 +74,6 @@ jobs:
             -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
             -e PRIME_REGISTRY_V1_ENABLED=1 \
             -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
-          trap 'docker rm -f prime-current >/dev/null 2>&1 || true' EXIT
           receipt=$(docker run --rm -i --network container:prime-current python:3.12-slim python - <<'PY'
           import hashlib, json, time, urllib.error, urllib.request
           base='http://127.0.0.1:8000'
@@ -140,3 +139,9 @@ jobs:
         if: failure()
         run: |
           docker logs prime-current || true
+      - name: Remove disposable acceptance resources
+        if: always()
+        run: |
+          docker rm -f prime-current 2>/dev/null || true
+          docker volume rm prime-current-data 2>/dev/null || true
+          docker network rm prime-acceptance 2>/dev/null || true
