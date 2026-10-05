@@ -11,6 +11,7 @@ from .tier_router import Tier
 from .outcome_metrics import OutcomeMetrics
 from .action_records import ActionRecord,DirectExecutor,action_ledger
 from .reasoning_budgets import select_budget,verify_reserved_cost
+from .hf_admission import require_hf_admission
 
 
 def adapter_for(entry):
@@ -44,8 +45,7 @@ def execute_cloud(job,provider,data,cancelled):
     entries=[x for x in catalog if x['id']==provider.name and x.get('enabled')]
     if not entries:raise ProviderFailure('PROVIDER_UNAVAILABLE')
     entry=entries[0]
-    if entry.get('provider_kind')=='huggingface' and entry.get('qualification_status')!='QUALIFIED':
-        raise ProviderFailure('PROVIDER_UNQUALIFIED',pre_execution=True)
+    require_hf_admission(entry,job,provider.name)
     spec=model_spec(entry);metrics=OutcomeMetrics(data/'compute-ledger.db')
     started=time.monotonic();answer=None;failure=None;selected=entry;failure_retries=0;failure_routes=[]
     def operation():
@@ -64,6 +64,7 @@ def execute_cloud(job,provider,data,cancelled):
                 matches=[x for x in catalog if x['id']==name and x.get('enabled') and x.get('location')=='cloud']
                 if len(matches)!=1:raise ProviderFailure('FALLBACK_CONFIGURATION_INVALID',pre_execution=True)
                 if matches[0].get('qualification_status')!='QUALIFIED':raise ProviderFailure('FALLBACK_UNQUALIFIED',pre_execution=True)
+                require_hf_admission(matches[0],job,matches[0]['id'])
                 candidates.append(matches[0])
             budgets={x['id']:select_budget(x,job,model_spec(x)) for x in candidates}
             specs={key:value.model for key,value in budgets.items()}

@@ -81,6 +81,7 @@ class AgentRequest(BaseModel):
     priority: Literal['background','low','normal','high','critical'] = 'normal'
     task_class: Literal['auto','classification','conversation','research','planning','writing','coding','architecture','complex_reasoning'] = 'auto'
     max_cost_usd: float = Field(default=0,ge=0,le=100)
+    preferred_provider: str | None = Field(default=None,min_length=1,max_length=100)
     deterministic_operation: Literal['sha256','json_format','json_validate'] | None = None
 
 
@@ -156,12 +157,25 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     from .compute_catalog import load_catalog,task_tier,choose
     from .compute_queue_api import providers
     configured=load_catalog();available={p.name for p in providers()}
+    selected=next((x for x in configured if x['id']==body.preferred_provider),None) if body.preferred_provider else None
+    if body.preferred_provider and (selected is None or not selected.get('enabled') or selected['id'] not in available):
+        raise HTTPException(422,'Selected provider is unavailable')
+    if selected and selected.get('provider_kind')=='huggingface' and (
+        body.data_classification!='CLOUD_PERMITTED' or body.max_cost_usd<=0
+    ):
+        raise HTTPException(422,'Hugging Face requires explicit disclosure and cost opt-in')
     tier=max(Tier[body.minimum_tier],task_tier(body.objective,body.task_class),required_tier(body.objective,body.context))
-    backends=local_model_backends()+tuple(Backend(x['id'],x['model'],Tier[x['tier']],x['location']) for x in configured if x.get('enabled') and x['id'] in available)
+    backends=local_model_backends()+tuple(Backend(x['id'],x['model'],Tier[x['tier']],x['location']) for x in configured
+        if x.get('enabled') and x['id'] in available and
+        (x.get('provider_kind')!='huggingface' or x['id']==body.preferred_provider))
+    if body.preferred_provider:
+        backends=tuple(x for x in backends if x.name==body.preferred_provider)
     route = select_direct_route(backends,
                          minimum_tier=tier,classification=body.data_classification,
                          text=body.objective+'\n'+body.context)
-    measured=choose([x for x in configured if x['id'] in available and x.get('measurement_evidence') and x.get('expected_seconds') is not None],tier,body.data_classification,body.objective+'\n'+body.context)
+    measured=choose([x for x in configured if x['id'] in available and x.get('measurement_evidence') and x.get('expected_seconds') is not None
+        and (x.get('provider_kind')!='huggingface' or x['id']==body.preferred_provider)
+        and (not body.preferred_provider or x['id']==body.preferred_provider)],tier,body.data_classification,body.objective+'\n'+body.context)
     # Use a measured alternative only when every eligible available backend is
     # measured. Unknown performance is never treated as slower by assumption.
     eligible={b.name for b in backends if b.tier>=tier and (b.location=='local' or body.data_classification=='CLOUD_PERMITTED')}

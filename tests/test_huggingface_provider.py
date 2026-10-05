@@ -129,3 +129,66 @@ def test_qualified_hf_route_flows_through_governed_queue_and_outcome(monkeypatch
         details = json.loads(db.execute('SELECT details FROM reasoning_attempts').fetchone()[0])
     assert details['success'] is True and details['provider'] == 'hf-fixture'
     assert details['model'] == MODEL.name and details['agent_id'] == 'a10'
+
+
+def test_hf_queue_never_claims_implicit_cloud_fallback(monkeypatch, tmp_path):
+    from app import compute_catalog, compute_queue_api
+    from app.job_queue import JobQueue, QueuePolicy
+
+    entry = {'id': 'hf-fixture', 'provider_kind': 'huggingface', 'enabled': True,
+             'qualification_status': 'QUALIFIED', 'location': 'cloud', 'tier': 'MINI',
+             'model': MODEL.name, 'endpoint': HuggingFaceProvider.ENDPOINT,
+             'secret_ref': 'env:HF_TOKEN', 'context_tokens': 4096, 'output_tokens': 64,
+             'input_usd_million': '0.1', 'output_usd_million': '0.5'}
+    monkeypatch.setattr(compute_catalog, 'load_catalog', lambda: [entry])
+    provider = next(p for p in compute_queue_api.providers() if p.name == 'hf-fixture')
+    assert provider.explicit_selection_required
+    queue = JobQueue(tmp_path / 'queue.db', QueuePolicy(cloud_wait_seconds=0))
+    implicit = queue.submit(agent='a10', prompt='Synthetic cloud task', allow_cloud=True,
+                            data_classification='CLOUD_PERMITTED', max_cost_usd=.01)
+    assert queue.claim('fixture-worker', [provider]) is None
+    assert queue.get(implicit['id'])['status'] == 'queued'
+    queue.cancel(implicit['id'])
+    explicit = queue.submit(agent='a10', prompt='Synthetic HF task', preferred_provider='hf-fixture',
+                            allow_cloud=True, data_classification='CLOUD_PERMITTED', max_cost_usd=.01)
+    claimed = queue.claim('fixture-worker', [provider])
+    assert claimed and claimed['id'] == explicit['id']
+
+
+def test_agent_dispatch_does_not_auto_select_hf(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+    from fastapi import HTTPException
+    from app import agent_dispatch_api as dispatch, compute_catalog, compute_queue_api
+    from app.job_queue import Provider
+
+    entry = {'id': 'hf-fixture', 'provider_kind': 'huggingface', 'enabled': True,
+             'qualification_status': 'QUALIFIED', 'location': 'cloud', 'tier': 'FLAGSHIP',
+             'model': MODEL.name, 'endpoint': HuggingFaceProvider.ENDPOINT,
+             'secret_ref': 'env:HF_TOKEN', 'context_tokens': 4096, 'output_tokens': 64,
+             'input_usd_million': '0.1', 'output_usd_million': '0.5'}
+    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-owner')
+    monkeypatch.setattr(compute_catalog, 'load_catalog', lambda: [entry])
+    monkeypatch.setattr(compute_queue_api, 'providers', lambda: [
+        Provider('hf-fixture', 'cloud', MODEL.name, 0, 0, 1, .1, .5, 64,
+                 explicit_selection_required=True)])
+    body = dispatch.AgentRequest(capability='responsibility.a17', objective='Write a concise note',
+                                 task_class='coding', data_classification='CLOUD_PERMITTED',
+                                 max_cost_usd=.01)
+    with pytest.raises(HTTPException) as denied:
+        dispatch.dispatch_request(body, 'Bearer fixture-owner')
+    assert denied.value.status_code == 409
+    with pytest.raises(HTTPException) as unpriced:
+        dispatch.dispatch_request(body.model_copy(update={'preferred_provider': 'hf-fixture',
+                                                          'max_cost_usd': 0}), 'Bearer fixture-owner')
+    assert unpriced.value.status_code == 422
+    queued = []
+    monkeypatch.setattr(dispatch, 'action_ledger', lambda: object())
+    monkeypatch.setattr(dispatch, 'DirectExecutor', lambda ledger: SimpleNamespace(
+        execute=lambda action, operation: operation()))
+    monkeypatch.setattr(compute_queue_api, 'queue', SimpleNamespace(submit=lambda **job: queued.append(job) or job))
+    selected = dispatch.dispatch_request(body.model_copy(update={'preferred_provider': 'hf-fixture'}),
+                                         'Bearer fixture-owner')
+    assert selected['job']['preferred_provider'] == 'hf-fixture'
+    assert selected['job']['allow_cloud'] is True
+    assert len(queued) == 1

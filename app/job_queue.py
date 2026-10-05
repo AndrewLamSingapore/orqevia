@@ -75,6 +75,7 @@ class Provider:
     input_cost_per_mtok: float = 0.0
     output_cost_per_mtok: float = 0.0
     max_output_tokens: int = 4096
+    explicit_selection_required: bool = False
 
 
 class JobQueue:
@@ -249,6 +250,7 @@ class JobQueue:
         if not hard_need and waited<self.policy.cloud_wait_seconds:return None,"waiting for local capacity before cloud fallback",0
         for p in providers:
             if p.kind!="cloud":continue
+            if p.explicit_selection_required and row['preferred_provider']!=p.name:continue
             if sum(1 for x in active if x["provider"]==p.name)>=p.concurrency:continue
             if row["model"] and row["model"]!=p.model:continue
             if not row["model"] and row["model_role"] not in {"auto","deep"}:continue
