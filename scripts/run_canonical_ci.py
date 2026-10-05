@@ -73,6 +73,7 @@ def main():
     names.append('agent_cert_numeric')
     names.append('agent_cert_numeric_boundaries')
     names.append('agent_cert_rates')
+    names.append('agent_cert_weighted')
     names.append('agent_cert_execution')
     names.append('hf_admission')
     names.append('system_architecture')
