@@ -98,9 +98,10 @@ def test_windows_junction_outside_fenced_tree_is_rejected(tmp_path):
     base.mkdir(); final.mkdir(); outside.mkdir()
     (outside / "private.txt").write_text("outside the fenced snapshot")
     junction = final / "escaped"
-    subprocess.run(["cmd.exe", "/d", "/s", "/c",
-                    f'mklink /J "{junction}" "{outside}"'],
-                   check=True, capture_output=True, text=True)
+    created = subprocess.run(["cmd.exe", "/d", "/c", "mklink", "/J",
+                              str(junction), str(outside)],
+                             capture_output=True, text=True)
+    assert created.returncode == 0, (created.stdout + created.stderr).strip()
     assert junction.is_junction() and not junction.is_symlink()
     with pytest.raises(DeltaError, match="reparse"):
         capture_delta(base, final, package)
