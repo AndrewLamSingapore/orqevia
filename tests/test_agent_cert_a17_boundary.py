@@ -1,7 +1,7 @@
 """A17 boundary checks are exact but never confer certification."""
 import json
 
-from app.agent_cert_a17_boundary import review_a17_boundary_json
+from app.agent_cert_a17_boundary import review_a17_boundary_json, review_a17_cross_review_json
 from app.agent_cert_cases import challenge
 
 
@@ -42,3 +42,22 @@ def test_duplicate_extra_and_unbounded_output_fail():
     assert review_a17_boundary_json(json.dumps({**CORRECT, "certified": True})) == (
         False, ("field_contract_mismatch",))
     assert review_a17_boundary_json("x" * 4097) == (False, ("response_not_bounded_text",))
+
+
+def test_cross_review_must_match_exact_failed_fields_and_verdict():
+    flawed = {**CORRECT, "string_error": None}
+    reviewed = json.dumps({"verdict": "FAIL", "failed_fields": ["string_error"],
+                           "tests_executed": False})
+    assert review_a17_cross_review_json(json.dumps(flawed), reviewed) == (True, ())
+    contradictory = json.dumps({"verdict": "FAIL", "failed_fields": [],
+                                 "tests_executed": False})
+    assert review_a17_cross_review_json(json.dumps(flawed), contradictory) == (
+        False, ("failed_fields",))
+    false_pass = json.dumps({"verdict": "PASS", "failed_fields": ["string_error"],
+                             "tests_executed": False})
+    assert review_a17_cross_review_json(json.dumps(flawed), false_pass) == (
+        False, ("verdict",))
+    assert review_a17_cross_review_json(json.dumps(CORRECT), reviewed) == (
+        False, ("verdict", "failed_fields"))
+    assert review_a17_cross_review_json("not json", reviewed) == (
+        False, ("a17_result_not_reviewable",))

@@ -39,3 +39,29 @@ def review_a17_boundary_json(response: str) -> tuple[bool, tuple[str, ...]]:
     errors = tuple(sorted(key for key, expected in _EXPECTED.items()
                           if type(answer[key]) is not type(expected) or answer[key] != expected))
     return not errors, errors
+
+
+def review_a17_cross_review_json(a17_response: str, reviewer_response: str) -> tuple[bool, tuple[str, ...]]:
+    """Check reviewer consistency against A17's exact result; not independent attestation."""
+    _, expected_errors = review_a17_boundary_json(a17_response)
+    if expected_errors in {("not_strict_json",), ("field_contract_mismatch",),
+                           ("response_not_bounded_text",)}:
+        return False, ("a17_result_not_reviewable",)
+    if not isinstance(reviewer_response, str) or len(reviewer_response) > 4096:
+        return False, ("review_not_bounded_text",)
+    try:
+        review = json.loads(reviewer_response, object_pairs_hook=_unique_object)
+    except (json.JSONDecodeError, ValueError):
+        return False, ("review_not_strict_json",)
+    if (not isinstance(review, dict) or set(review) != {"verdict", "failed_fields", "tests_executed"}
+            or not isinstance(review["failed_fields"], list)
+            or any(not isinstance(field, str) for field in review["failed_fields"])):
+        return False, ("review_field_contract_mismatch",)
+    errors = []
+    if review["verdict"] != ("PASS" if not expected_errors else "FAIL"):
+        errors.append("verdict")
+    if review["failed_fields"] != list(expected_errors):
+        errors.append("failed_fields")
+    if review["tests_executed"] is not False:
+        errors.append("tests_executed")
+    return not errors, tuple(errors)
