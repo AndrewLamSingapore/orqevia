@@ -31,10 +31,13 @@ def no_gate(*args,**kwargs):raise AssertionError('Legacy authority gate called')
 @pytest.fixture
 def api(monkeypatch,tmp_path):
     from app import compute_queue_api as compute
+    from app import backend_admission
     from app.action_harness import ActionHarness
     from app.agent_runtime import AgentAuthorityRuntime
     from app.job_queue import JobQueue
     monkeypatch.setattr(compute,'queue',JobQueue(str(tmp_path/'queue.db'),compute.POLICY))
+    # This fixture tests authenticated routing, not measured model admission.
+    monkeypatch.setattr(backend_admission,'reserve_model',lambda *_args,**_kw:None)
     monkeypatch.setattr(compute,'_validate_job_lease',no_gate)
     monkeypatch.setattr(ActionHarness,'authorize',no_gate)
     monkeypatch.setattr(AgentAuthorityRuntime,'begin_path',no_gate)

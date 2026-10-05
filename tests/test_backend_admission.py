@@ -1,5 +1,6 @@
 """Local-only admission checks with a synthetic operator receipt; no model calls."""
 import asyncio
+import hashlib
 import json
 import sqlite3
 import time
@@ -10,6 +11,7 @@ import httpx
 import pytest
 
 from app import backend_admission as admission
+from app import compute_profile
 from app.direct_stream import infer
 from app.job_queue import JobQueue, Provider, QueuePolicy
 
@@ -31,7 +33,18 @@ def backend(tmp_path, monkeypatch):
     path = tmp_path / 'backend-receipt.json'
     monkeypatch.setenv('PRIME_BACKEND_MEMORY_RECEIPT', str(path))
     monkeypatch.setenv('OLLAMA_BASE_URL', ENDPOINT)
-    return path
+    raw = json.dumps({'schema':'abex.measured-compute.v1','normal_concurrency':1,
+                      'minimum_available_mib':1,'context_tokens':128,'output_limit':8,
+                      'models':{'gemma3:1b':{'peak_mib':1024}}}).encode()
+    profile = tmp_path / 'measured-profile.json'
+    profile.write_bytes(raw)
+    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE',str(profile))
+    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
+    compute_profile.load_compute_profile.cache_clear()
+    compute_profile.runtime_compute_profile.cache_clear()
+    yield path
+    compute_profile.load_compute_profile.cache_clear()
+    compute_profile.runtime_compute_profile.cache_clear()
 
 
 def queue(tmp_path):
@@ -47,6 +60,37 @@ def test_missing_incomplete_and_mismatched_receipts_hold_claim(tmp_path, backend
     receipt(backend, instance='backend-2')
     # A valid identity and complete scope admit small declared work.
     assert q.claim('one', [LOCAL]) is not None
+
+
+def test_queue_uses_measured_peak_not_underdeclared_job_ram(tmp_path, backend, monkeypatch):
+    profile = tmp_path / 'measured-profile.json'
+    value = json.loads(profile.read_text(encoding='utf-8'))
+    value['models']['gemma3:1b']['peak_mib'] = 6000
+    raw = json.dumps(value).encode()
+    profile.write_bytes(raw)
+    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
+    compute_profile.load_compute_profile.cache_clear()
+    compute_profile.runtime_compute_profile.cache_clear()
+    q = queue(tmp_path)
+    job = q.submit(agent='planner', prompt='underdeclared', ram_mb=1024)
+    receipt(backend, available=7000)
+    assert q.claim('one', [LOCAL]) is None
+    assert q.get(job['id'])['status'] == 'queued'
+    receipt(backend, available=9000)
+    assert q.claim('one', [LOCAL])['id'] == job['id']
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute('SELECT demand_mib FROM backend_admission').fetchone() == (6000,)
+
+
+def test_missing_measured_peak_holds_local_claim(tmp_path, backend):
+    receipt(backend)
+    (tmp_path / 'measured-profile.json').unlink()
+    compute_profile.load_compute_profile.cache_clear()
+    compute_profile.runtime_compute_profile.cache_clear()
+    q = queue(tmp_path)
+    job = q.submit(agent='planner', prompt='no measured peak', ram_mb=1024)
+    assert q.claim('one', [LOCAL]) is None
+    assert q.get(job['id'])['status'] == 'queued'
 
 
 def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend):

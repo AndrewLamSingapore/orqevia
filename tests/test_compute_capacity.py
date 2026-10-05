@@ -7,13 +7,13 @@ from unittest.mock import patch
 from app.compute_ledger import ComputeLedger
 from app.model_gateway import ModelGateway
 from app import compute_profile
-from app.settings import PrimeSettings, SETTINGS
+from app.settings import PrimeSettings
 from tests.backend_receipt_fixture import install as install_backend_receipt
 
 
 def settings(**overrides):
     values = dict(
-        ollama_base_url=SETTINGS.ollama_base_url, fast_model="fast:1", deep_model="deep:1",
+        ollama_base_url="http://ollama.test", fast_model="fast:1", deep_model="deep:1",
         evaluator_model="evaluator:1", embedding_model="embed:1", compute_profile="balanced",
         multi_specialist_workers=3, context_tokens=16384, max_output_tokens=4096, keep_alive="10m",
     )
@@ -24,7 +24,7 @@ def settings(**overrides):
 def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
     with tempfile.TemporaryDirectory() as directory:
         monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', os.path.join(directory, 'queue.db'))
-        install_backend_receipt(monkeypatch,tmp_path,SETTINGS.ollama_base_url)
+        install_backend_receipt(monkeypatch,tmp_path,'http://ollama.test')
         # The gateway requires an independently measured peak, even when the
         # operator memory receipt itself is valid.
         raw = json.dumps({'schema':'abex.measured-compute.v1',

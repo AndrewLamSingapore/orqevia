@@ -338,7 +338,8 @@ class JobQueue:
                     # The SQLite write transaction makes this reservation atomic
                     # with the scheduler claim across workers and processes.
                     try:
-                        backend_admission.reserve(c,self.backend_endpoint,row['id'],row['ram_mb'])
+                        backend_admission.reserve_model(c,self.backend_endpoint,row['id'],
+                                                        provider.model,row['ram_mb'])
                     except PermissionError:
                         provider,reason,estimate=self._route(c,row,providers,local_unavailable=True)
                         if not provider:

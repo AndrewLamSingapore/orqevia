@@ -73,6 +73,21 @@ def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int,
               (endpoint, job_id, sample['instance'], sample['boot_id'], 'pending', demand_mib))
 
 
+def reserve_model(c: sqlite3.Connection, endpoint: str, job_id: str,
+                  model: str, requested_mib: int) -> None:
+    """Reserve at least the measured peak; an untrusted job estimate cannot lower it."""
+    from .compute_profile import runtime_compute_profile
+
+    profile = runtime_compute_profile()
+    details = profile.get('models', {}).get(model) if profile else None
+    peak = details.get('peak_mib') if isinstance(details, dict) else None
+    if type(peak) is not int or peak <= 0:
+        raise PermissionError('verified model peak memory demand required')
+    if type(requested_mib) is not int or requested_mib < 0:
+        raise PermissionError('invalid requested memory demand')
+    reserve(c, endpoint, job_id, max(peak, requested_mib))
+
+
 def check(c: sqlite3.Connection, endpoint: str, job_id: str, sample: dict | None = None) -> None:
     sample = observation(endpoint) if sample is None else sample
     row = c.execute('SELECT job_id,instance,boot_id,state,demand_mib FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone()

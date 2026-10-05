@@ -95,7 +95,7 @@ class ModelGateway:
               task_id: str | None = None, stage: str = "local_ai", timeout: float = 120.0) -> ModelResult:
         task_id = task_id or str(uuid.uuid4())
         model = self.local_evaluator if role == "evaluator" else (self.local_deep if deep else self.local_fast)
-        require_compute_capacity(model)
+        require_compute_capacity(model, self.ollama_url)
         profile = runtime_compute_profile()
         demand = profile.get('models', {}).get(model, {}).get('peak_mib') if profile else None
         lease_id = str(uuid.uuid4())

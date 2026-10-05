@@ -8,7 +8,7 @@ from app.job_queue import JobQueue, Provider, QueuePolicy
 def scheduler_only_without_backend_allocation(monkeypatch):
     # These tests prove queue order/budgets, including hypothetical N>1 policy.
     # Backend allocation is separately exercised by test_backend_admission.
-    monkeypatch.setattr(backend_admission, 'reserve', lambda *_args, **_kw: None)
+    monkeypatch.setattr(backend_admission, 'reserve_model', lambda *_args, **_kw: None)
 
 LOCAL=Provider("ollama","local","fast",8192,4096,2)
 CLOUD=Provider("gpu-cloud","cloud","large",131072,81920,4,1.0,2.0)

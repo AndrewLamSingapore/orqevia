@@ -30,7 +30,7 @@ class QueueParallelCandidateTests(unittest.TestCase):
     def setUp(self):
         # Exercise scheduler overlap with a fake executor; admission is N=1
         # until a measured backend authorizes more than one local generation.
-        guard = mock.patch('app.job_queue.backend_admission.reserve')
+        guard = mock.patch('app.job_queue.backend_admission.reserve_model')
         guard.start()
         self.addCleanup(guard.stop)
 

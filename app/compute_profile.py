@@ -76,14 +76,14 @@ def generation_options():
     return dict(profile.get('generation_options',{})) if profile else {}
 
 
-def require_compute_capacity(model):
+def require_compute_capacity(model, endpoint=None):
     profile=runtime_compute_profile()
     if profile and model not in profile['models']:
         raise PermissionError('Model is outside measured Compute Profile')
     # Optional performance profiles cannot waive the mandatory backend scope.
     from .backend_admission import observation, RESERVE_MIB
     from .settings import SETTINGS
-    sample=observation(SETTINGS.ollama_base_url)
+    sample=observation(endpoint or SETTINGS.ollama_base_url)
     if sample['available_mib'] < RESERVE_MIB:
         raise PermissionError('Backend memory reserve reached; local inference held')
     if profile:
