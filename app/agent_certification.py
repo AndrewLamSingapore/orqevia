@@ -113,6 +113,17 @@ class AgentCertificationRegistry:
                 return False
             if row["authority_scope"] != agent_record(agent_id)["authority"]:
                 return False
+            # The protected Azure signer retains a legacy digest-only canary
+            # path. Its signature proves key custody, not independent case
+            # review, so it must never promote a certification projection.
+            attestation = row.get("attestation")
+            if isinstance(attestation, dict) and attestation.get("algorithm") == "ES256":
+                if (not all(isinstance(row.get(field), str) and row[field]
+                            for field in ("review_evidence", "review_evidence_sha256",
+                                          "review_run_id", "review_test_version",
+                                          "review_source_revision"))
+                        or row["review_source_revision"] != row["source_revision"]):
+                    return False
             if row["dimension"] == "recovery" and row.get("recovery_result") != "PASS":
                 return False
             if _utc(row["certified_at"]) > _utc(row["last_revalidated"]) or _utc(row["last_revalidated"]) > now:
