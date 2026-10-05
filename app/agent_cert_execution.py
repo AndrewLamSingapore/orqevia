@@ -192,8 +192,8 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                     if agent != "a28" or capability != "responsibility.a28" or spec.get("case") != "role:normal":
                         return {**base, "job_id": job_id, "state": "REJECTED",
                                 "reason": "risk_oracle_scope_mismatch"}
-                    if request != challenge("role:normal", agent_id="a28",
-                                            capability_id="responsibility.a28")["request"]:
+                    if spec != challenge("role:normal", agent_id="a28",
+                                         capability_id="responsibility.a28"):
                         return {**base, "job_id": job_id, "state": "REJECTED",
                                 "reason": "risk_oracle_source_mismatch"}
                     valid, review_errors = review_risk_json(_A28_SOURCE, result)
