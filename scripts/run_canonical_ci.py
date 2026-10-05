@@ -59,6 +59,7 @@ def main():
     names.append('evidence_lens_qualification_receipt')
     names.append('compute_queue_parallel_candidate')
     names.append('measured_compute_profile')
+    names.append('agent_dispatch_api')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]
