@@ -1,5 +1,6 @@
 """Small numerical proof of the governed local MLP candidate path."""
 import copy
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -141,6 +142,19 @@ class MLPCapabilityTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_artifact(path)
         approved = self.approve(candidate)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "ambiguous.json"
+            payload = json.dumps(approved, sort_keys=True, separators=(",", ":"))
+            path.write_text(payload.replace('"approval_state":"APPROVED"',
+                                            '"approval_state":"CANDIDATE","approval_state":"APPROVED"'),
+                            encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate model artifact field"):
+                load_artifact(path)
+            path.write_text(payload.replace('"reviewer":"fixture-reviewer"',
+                                            '"reviewer":"untrusted","reviewer":"fixture-reviewer"'),
+                            encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate model artifact field"):
+                load_artifact(path)
         for field, value in (("version", "latest"), ("dataset_hash", "not-sha256"),
                              ("created_at", "yesterday"), ("training_configuration", {"seed": 1})):
             bad = copy.deepcopy(approved)

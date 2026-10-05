@@ -39,6 +39,15 @@ def _digest(value: Any) -> str:
     return hashlib.sha256(_canonical(value)).hexdigest()
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate model artifact field")
+        result[key] = value
+    return result
+
+
 def _number(value: Any) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         raise ValueError("features and labels must be finite numbers")
@@ -412,7 +421,7 @@ def save_artifact(path: Path, artifact: dict[str, Any]) -> None:
 def load_artifact(path: Path) -> dict[str, Any]:
     if path.stat().st_size > MAX_ARTIFACT_BYTES:
         raise ValueError("model artifact exceeds size limit")
-    artifact = json.loads(path.read_text(encoding="utf-8"))
+    artifact = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_json_object)
     validate_artifact(artifact)
     return artifact
 
