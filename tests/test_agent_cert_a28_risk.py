@@ -63,6 +63,19 @@ def test_a28_rejects_duplicate_keys_and_forged_source():
     assert _run(forged, json.dumps(risk_facts(SOURCE)))["reason"] == "risk_oracle_source_mismatch"
 
 
+@pytest.mark.parametrize("changes", [
+    {"expected_discriminants": ("invented risk finding",)},
+    {"independent_review": ("exact_risk_oracle", "fabricated_independent_signer")},
+    {"extra_claim": "already certified"},
+])
+def test_a28_rejects_forged_non_request_case_metadata(changes):
+    spec = challenge("role:normal", agent_id="a28")
+    forged = {**spec, **changes}
+    observed = _run(forged, json.dumps(risk_facts(SOURCE)))
+    assert observed["state"] == "REJECTED"
+    assert observed["reason"] == "risk_oracle_source_mismatch"
+
+
 def test_a28_oracle_distinguishes_b_priority_and_tie_without_probabilities():
     b_first = {**SOURCE, "a_likelihood": 1}
     tied = {**SOURCE, "b_likelihood": 5}
