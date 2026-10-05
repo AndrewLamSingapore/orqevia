@@ -17,7 +17,6 @@ def configured(tmp_path, monkeypatch):
         'sensor': ssd_thermal.SENSOR, 'max_operating_c': 80,
         'limit_source': 'synthetic-test-fixture:not-a-manufacturer-claim',
         'reader_sha256': 'a' * 64, 'required_sensor_numbers': [1, 2],
-        'heavy_demand_mib': 2048,
     }
     policy_path = tmp_path / 'policy.json'
     raw = json.dumps(policy).encode()
@@ -38,6 +37,7 @@ def reading(policy, *, temperature=52, captured=None):
             'temperature_sensors': [{'number': 1, 'celsius': temperature},
                                     {'number': 2, 'celsius': temperature + 7}],
             'critical_warning_bits': 0,
+            'media_data_integrity_errors': '0', 'error_log_entries': '0',
             'captured_at': time.time() if captured is None else captured,
             'collector_id': 'independent-test-collector', 'boot_id': 'boot-1', 'read_ok': True}
 
@@ -53,6 +53,8 @@ def test_heavy_requires_fresh_exact_sensor_and_scope(tmp_path, monkeypatch):
         {'serial_number': 'other-drive'}, {'device_id': '1'},
         {'sensor': 'unverified-hotspot'}, {'unit': 'F'}, {'read_ok': 'true'},
         {'reader_sha256': 'b' * 64}, {'critical_warning_bits': 1},
+        {'media_data_integrity_errors': '1'}, {'error_log_entries': '2'},
+        {'media_data_integrity_errors': 0}, {'error_log_entries': '00'},
         {'composite_temperature_c': 0}, {'captured_at': time.time() - 31},
         {'captured_at': time.time() + 1}, {'composite_temperature_c': 75},
         {'temperature_sensors': [{'number': 1, 'celsius': 52}]},
@@ -85,6 +87,29 @@ def test_hottest_smart_sensor_controls_admission(tmp_path, monkeypatch):
     receipt_path.write_text(json.dumps(sample))
     with pytest.raises(PermissionError, match='thermal headroom'):
         ssd_thermal.require_for_demand(6000)
+
+
+def test_optional_profile_field_cannot_exempt_heavy_work(tmp_path, monkeypatch):
+    policy, _ = configured(tmp_path, monkeypatch)
+    policy['heavy_demand_mib'] = 1000000
+    raw = json.dumps(policy).encode()
+    (tmp_path / 'policy.json').write_bytes(raw)
+    monkeypatch.setenv('PRIME_SSD_THERMAL_POLICY_SHA256', hashlib.sha256(raw).hexdigest())
+    with pytest.raises(PermissionError):
+        ssd_thermal.require_for_demand(1025)
+
+
+def test_privileged_wrapper_has_no_caller_supplied_paths_or_commands():
+    from pathlib import Path
+    script = Path(__file__).resolve().parents[1] / 'scripts' / 'collect-ssd-temperature.ps1'
+    source = script.read_text(encoding='utf-8')
+    assert 'param(' not in source.lower()
+    assert "$args.Count -ne 0" in source
+    assert "$Root = 'C:\\ProgramData\\ABEX\\PrimeThermal'" in source
+    assert '$ReaderScript = Join-Path $Root' in source
+    assert '$RawEvidencePath = Join-Path $RawDirectory' in source
+    assert '$OutputPath = Join-Path $OutputDirectory' in source
+    assert '[IO.FileAttributes]::ReparsePoint' in source
 
 
 def test_tampered_policy_and_duplicate_receipt_rejected(tmp_path, monkeypatch):

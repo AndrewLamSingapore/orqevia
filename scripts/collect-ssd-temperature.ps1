@@ -1,20 +1,30 @@
-# Source-only projection around the already proven read-only NVMe SMART reader.
-# Runs only in a separately provisioned minimal-privilege broker; never as PRIME.
-# No scheduled task, ACL or production mount is installed by this file.
-param(
-    [Parameter(Mandatory=$true)][string]$ReaderScript,
-    [Parameter(Mandatory=$true)][string]$ReaderSha256,
-    [Parameter(Mandatory=$true)][string]$ExpectedSerial,
-    [Parameter(Mandatory=$true)][string]$RawEvidencePath,
-    [Parameter(Mandatory=$true)][string]$OutputPath
-)
+# Source-only projection around the proven read-only NVMe SMART reader.
+# No caller-controlled command, path, disk identity or output filename is
+# accepted. All directories and this script require a protected broker-write
+# ACL; PRIME must have read-only access only to the projected receipt.
 $ErrorActionPreference = 'Stop'
-$paths = @($ReaderScript, $RawEvidencePath, $OutputPath)
-if (@($paths | Where-Object { -not [System.IO.Path]::IsPathRooted($_) }).Count -ne 0) {
-    throw 'Absolute paths required'
+if ($args.Count -ne 0) { throw 'Collector accepts no caller arguments' }
+$Root = 'C:\ProgramData\ABEX\PrimeThermal'
+$ReaderScript = Join-Path $Root 'reader\Read-NvmeHealth-ReadOnly.ps1'
+$ReaderSha256 = 'E72418020F5B9E900B165B350E8E45A7561D75288F7A11A63B6F792B222826D2'
+$ExpectedSerial = '0000_0006_2506_1915_CAF2_5B02_3703_0900.'
+$RawDirectory = Join-Path $Root 'raw'
+$OutputDirectory = Join-Path $Root 'receipt'
+$OutputPath = Join-Path $OutputDirectory 'temperature.json'
+$RawEvidencePath = Join-Path $RawDirectory (([DateTimeOffset]::UtcNow.ToString('yyyyMMddTHHmmss')) + '-' + [Guid]::NewGuid().ToString('N') + '.json')
+foreach ($path in @($Root, (Join-Path $Root 'reader'), $RawDirectory, $OutputDirectory)) {
+    $item = Get-Item -LiteralPath $path -ErrorAction Stop
+    if (-not $item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        throw 'Protected broker directory invalid'
+    }
 }
-if ($RawEvidencePath -eq $OutputPath -or [System.IO.File]::Exists($RawEvidencePath)) {
-    throw 'Distinct, unused raw evidence path required'
+if ((Get-Item -LiteralPath $ReaderScript).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+    throw 'Reader reparse point forbidden'
+}
+if (Test-Path -LiteralPath $OutputPath) {
+    if ((Get-Item -LiteralPath $OutputPath).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+        throw 'Receipt reparse point forbidden'
+    }
 }
 if ($ReaderSha256 -notmatch '^[0-9A-Fa-f]{64}$' -or
     (Get-FileHash -Algorithm SHA256 -LiteralPath $ReaderScript).Hash -ne $ReaderSha256) {
@@ -40,6 +50,11 @@ if ($raw.device -ne 'Lexar SSD NM610 PRO 1TB / PhysicalDrive0' -or
     [int]$raw.temperature_sensors[1].number -ne 2) {
     throw 'NVMe SMART identity/sensor layout mismatch'
 }
+foreach ($field in @('media_data_integrity_errors', 'error_log_entries')) {
+    if ([string]$raw.$field -cnotmatch '^(0|[1-9][0-9]*)$') {
+        throw 'NVMe SMART storage error field malformed'
+    }
+}
 $temperatures = @([double]$raw.composite_temperature_c,
                   [double]$raw.temperature_sensors[0].celsius,
                   [double]$raw.temperature_sensors[1].celsius)
@@ -64,6 +79,8 @@ $receipt = [ordered]@{
         [ordered]@{ number = 2; celsius = $temperatures[2] }
     )
     critical_warning_bits = [int]$raw.critical_warning_bits
+    media_data_integrity_errors = [string]$raw.media_data_integrity_errors
+    error_log_entries = [string]$raw.error_log_entries
     captured_at = $observed
     boot_id = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToUniversalTime().ToString('o')
     collector_id = 'abex-nvme-smart-projection-v1'
