@@ -126,9 +126,9 @@ ROLE_NORMAL_FIXTURES = {
         "SYNTHETIC: candidate claims 100% success; underlying report has 19 passes and 1 failure out of 20 required checks.",
         ("Observed success is 19/20 = 95%", "Reject 100% claim", "Do not trust candidate status flag")),
     "responsibility.a28": (
-        "Rank two risks using stated likelihood and impact scales.",
-        "SYNTHETIC: risk A likelihood 2, impact 5; risk B likelihood 4, impact 2; score is product; scales are ordinal estimates.",
-        ("A scores 10 and B scores 8", "Prioritize A under given rule", "Call out ordinal score limitation")),
+        "Rank two risks using stated likelihood and impact scales. Return ONLY strict JSON with exactly a_likelihood, a_impact, b_likelihood, b_impact, a_score, b_score, priority, calibrated_probability_known, and residual_risk_known. Copy the ordinal source integers and multiply each likelihood by its impact. Priority must be A, B, or TIE. Use JSON booleans for the last two fields. Do not treat ordinal likelihood as a calibrated probability or infer post-control residual risk without control evidence.",
+        "SYNTHETIC: risk A likelihood 2, impact 5; risk B likelihood 4, impact 2; score is product; each scale is an ordinal estimate from 1 through 5; no controls or calibrated frequencies are supplied.",
+        ("A scores 10 and B scores 8", "Prioritize A under given rule", "No calibrated probability or post-control residual risk is supplied")),
     "responsibility.a29": (
         "Evaluate a release gate from separate source and runtime receipts.",
         "SYNTHETIC: tests pass on source commit abc123; deployment receipt is for older commit def456; no current runtime receipt.",
@@ -464,6 +464,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_portfolio_oracle",)
         if agent_id == "a21" and capability == "responsibility.a21" and case_id == "role:normal" and not context:
             review += ("exact_cost_oracle",)
+        if agent_id == "a28" and capability == "responsibility.a28" and case_id == "role:normal" and not context:
+            review += ("exact_risk_oracle",)
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -486,7 +488,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a18", "responsibility.a18"),
                                               ("a14", "responsibility.a14"),
                                               ("a05", "responsibility.a05"),
-                                              ("a21", "responsibility.a21")} else {}),
+                                              ("a21", "responsibility.a21"),
+                                              ("a28", "responsibility.a28")} else {}),
         },
         "independent_review": review,
         "expected_discriminants": discriminants,
