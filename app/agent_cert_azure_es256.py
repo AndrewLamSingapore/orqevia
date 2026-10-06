@@ -152,7 +152,8 @@ class AzureES256CertificationVerifier:
 
 
 def verifier_from_azure_es256_pin_file(
-    path: Path, expected_sha256: str, *, untrusted_roots: tuple[Path, ...] = ()
+    path: Path, expected_sha256: str, *, untrusted_roots: tuple[Path, ...] = (),
+    normalize_crlf: bool = False,
 ) -> AzureES256CertificationVerifier:
     """Load an exact public pin from protected deployment configuration.
 
@@ -173,7 +174,11 @@ def verifier_from_azure_es256_pin_file(
         raw = stream.read(_MAX_PIN_BYTES + 1)
     if len(raw) > _MAX_PIN_BYTES:
         raise ValueError("public pin file exceeds limit")
-    if not hmac.compare_digest(hashlib.sha256(raw).hexdigest(), expected_sha256):
+    # The source-controlled pin has an LF Git blob; an existing Windows
+    # checkout may still hold the identical JSON with CRLF. External pins use
+    # exact raw bytes and do not take this compatibility path.
+    pinned_bytes = raw.replace(b"\r\n", b"\n") if normalize_crlf else raw
+    if not hmac.compare_digest(hashlib.sha256(pinned_bytes).hexdigest(), expected_sha256):
         raise ValueError("public pin file digest mismatch")
 
     def unique_fields(pairs):
