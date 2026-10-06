@@ -48,6 +48,9 @@ def test_authenticated_materialize_read_deduplicate_and_no_model_text(client,tmp
     assert 'independent_claim_verification' in result['proof']['unproven']
     assert 'production_acceptance' in result['proof']['unproven']
     assert 'source_revision_binding' in result['proof']['unproven']
+    assert result['proof']['currentness_basis']=='OBJECTIVE_SNAPSHOT_EQUALITY'
+    assert result['proof']['time_freshness']=='UNKNOWN'
+    assert 'time_freshness' in result['proof']['unproven']
     assert 'REGISTERED AGENTS: 21' not in first.text  # Digest/reference, not copied content.
     assert client.get(path).json()==result
     assert client.post(path,headers={'Origin':ORIGIN}).json()==result
@@ -152,6 +155,7 @@ def test_owner_control_exposes_explicit_capture_and_read_only_proof(client):
     assert 'innerHTML' not in script.text
     assert 'Evidence producer:' in script.text
     assert 'Not proven:' in script.text
+    assert 'Time freshness:' in script.text
     source=Path(production_entry.__file__).with_name('production_control.js').read_text(encoding='utf-8')
     assert "method==='record' ? {method:'POST'" in source
     assert "method==='happened' ? 'objectives/' : 'evidence/from-objective/'" in source

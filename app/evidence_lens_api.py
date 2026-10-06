@@ -60,7 +60,7 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
     observed = observations[0]["value"]
     current = _snapshot(task)
     runtime = observed.get("runtime") or {}
-    unproven = ["independent_claim_verification", "production_acceptance"]
+    unproven = ["independent_claim_verification", "production_acceptance", "time_freshness"]
     if runtime.get("source_revision") in (None, "UNKNOWN"):
         unproven.append("source_revision_binding")
     if not runtime.get("image_digest"):
@@ -73,6 +73,8 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
             "proof": {"producer": observations[0].get("source", "UNKNOWN"),
                       "captured_at": observations[0].get("observed_at"),
                       "completed_at": observed.get("completed_at"),
+                      "currentness_basis": "OBJECTIVE_SNAPSHOT_EQUALITY",
+                      "time_freshness": "UNKNOWN",
                       "runtime": runtime,
                       "unproven": unproven}}
 

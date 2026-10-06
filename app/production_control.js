@@ -64,6 +64,8 @@ async function lens(method) {
         'Execution: '+(value.result_state || 'UNKNOWN'),
         'Ledger integrity: '+(value.integrity || 'UNKNOWN'),
         'Currentness: '+(value.currentness || 'UNKNOWN'),
+        'Currentness basis: '+(proof.currentness_basis || 'UNKNOWN'),
+        'Time freshness: '+(proof.time_freshness || 'UNKNOWN'),
         'Independent verification: '+(value.verification || 'UNKNOWN'),
         'Claim verification at capture: '+(observed.claim_verification || 'UNKNOWN'),
         'Evidence producer: '+(proof.producer || 'UNKNOWN'),
