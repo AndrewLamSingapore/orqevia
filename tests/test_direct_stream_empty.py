@@ -23,10 +23,13 @@ def test_completion_marker_requires_actual_text(content,ok,monkeypatch,tmp_path)
             with pytest.raises(RuntimeError,match='Incomplete or empty'):asyncio.run(call)
 
 
-@pytest.mark.parametrize('response_format,expected_format', [
-    ('text', None), ('strict_json', 'json'),
+@pytest.mark.parametrize('response_format,generation,expected_format,expected_think', [
+    ('text', {}, None, None),
+    ('strict_json', {}, 'json', None),
+    ('strict_json', {'temperature': 0, 'think': False}, 'json', False),
 ])
-def test_persisted_response_format_reaches_ollama(response_format, expected_format,
+def test_persisted_response_format_reaches_ollama(response_format, generation,
+                                                  expected_format, expected_think,
                                                   monkeypatch, tmp_path):
     import json
     install_backend_receipt(monkeypatch, tmp_path, 'http://fixture')
@@ -47,9 +50,13 @@ def test_persisted_response_format_reaches_ollama(response_format, expected_form
         }, SimpleNamespace(model='fixture'), settings=SimpleNamespace(
             ollama_base_url='http://fixture', keep_alive=0,
             context_tokens=128, max_output_tokens=8),
-            capacity=lambda _: None, options=lambda: {}))
+            capacity=lambda _: None, options=lambda: generation))
     assert result['result'] == '{"ok":true}'
     assert payloads[0].get('format') == expected_format
+    assert payloads[0].get('think') == expected_think
+    assert 'think' not in payloads[0]['options']
+    if generation:
+        assert payloads[0]['options']['temperature'] == 0
 
 
 def test_tampered_persisted_response_format_is_rejected_before_http():

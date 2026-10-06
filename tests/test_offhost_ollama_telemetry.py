@@ -61,7 +61,9 @@ class OffhostTelemetryTests(unittest.TestCase):
                      "peak_mib": 150, "hard_cap_mib": 6144}
             second = {**first, "peak_mib": 1200}
             digest = "a" * 64
-            with (patch.object(collector, "_runner_only"),
+            trial_model = "qwen3:1.7b"
+            with (patch.object(collector, "MODEL", trial_model),
+                  patch.object(collector, "_runner_only"),
                   patch.object(collector, "_require_loopback_binding"),
                   patch.object(collector, "_backend", side_effect=[first, second]),
                   patch.object(collector, "_model_identity", return_value=("0.34.2", digest)),
@@ -70,16 +72,17 @@ class OffhostTelemetryTests(unittest.TestCase):
             self.assertEqual(api.call_args_list[0].args[2]["keep_alive"], 0)
             self.assertEqual(api.call_args_list[1].args[1], "/api/ps")
             profile = json.loads((directory / "profile.json").read_text())
-            self.assertEqual(profile["models"][collector.MODEL]["peak_mib"], 1500)
+            self.assertEqual(profile["models"][trial_model]["peak_mib"], 1500)
             self.assertEqual(result["reserved_peak_mib"], 1500)
             self.assertEqual(profile["measurement"]["observed_mib"], 1200)
+            self.assertEqual(profile["generation_options"], {"temperature": 0, "think": False})
             with patch.dict("os.environ", {
                 "PRIME_MEASURED_COMPUTE_PROFILE": str(directory / "profile.json"),
                 "PRIME_MEASURED_COMPUTE_PROFILE_SHA256": result["profile_sha256"],
             }):
                 load_compute_profile.cache_clear()
                 try:
-                    self.assertEqual(load_compute_profile()["models"][collector.MODEL]["digest"], digest)
+                    self.assertEqual(load_compute_profile()["models"][trial_model]["digest"], digest)
                 finally:
                     load_compute_profile.cache_clear()
 

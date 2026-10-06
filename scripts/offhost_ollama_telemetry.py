@@ -270,6 +270,8 @@ def prepare(container: str, directory: Path, endpoint: str) -> dict:
         "schema": PROFILE_SCHEMA, "normal_concurrency": 1,
         "minimum_available_mib": RESERVE_MIB,
         "context_tokens": CONTEXT_TOKENS, "output_limit": OUTPUT_TOKENS,
+        "generation_options": ({"temperature": 0, "think": False}
+                               if MODEL == "qwen3:1.7b" else {}),
         "runtime_version": version,
         "models": {MODEL: {"digest": digest, "peak_mib": demand}},
         "measurement": {"kind": "cgroup_v2_memory_peak_one_synthetic_calibration",
