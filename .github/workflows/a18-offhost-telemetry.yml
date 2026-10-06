@@ -77,7 +77,11 @@ jobs:
           assert profile['measurement']['boot_id'] == receipt['boot_id']
           assert receipt['scope_complete'] is True
           assert 0 <= time.time() - receipt['captured_at'] < 10
-          assert receipt['available_mib'] > profile['minimum_available_mib']
+          demand = profile['models']['gemma3:1b']['peak_mib']
+          required = demand + profile['minimum_available_mib']
+          assert receipt['available_mib'] >= required, (
+              f"runner admission headroom unavailable: available={receipt['available_mib']}MiB "
+              f"required={required}MiB")
           print('bounded runner telemetry/profile identity and freshness: PASS')
           PY
           evidence_dir="$RUNNER_TEMP/a18-evidence"

@@ -217,11 +217,17 @@ def prepare(container: str, directory: Path, endpoint: str) -> dict:
     # Exactly one bounded synthetic calibration; not an A18 task or PASS.
     response = _api(endpoint, "/api/generate", {
         "model": MODEL, "prompt": "synthetic runner memory calibration",
-        "stream": False, "keep_alive": "5m",
+        # Release the calibration model before the queue reserves its full
+        # measured demand. Otherwise resident memory is counted twice.
+        "stream": False, "keep_alive": 0,
         "options": {"num_ctx": CONTEXT_TOKENS, "num_predict": OUTPUT_TOKENS},
     })
     if response.get("done") is not True:
         raise EvidenceError("calibration did not complete")
+    loaded = _api(endpoint, "/api/ps").get("models")
+    if not isinstance(loaded, list) or any(
+            isinstance(row, dict) and row.get("name") == MODEL for row in loaded):
+        raise EvidenceError("calibration model did not unload")
     second = _backend(container)
     if (first["instance"], first["boot_id"]) != (second["instance"], second["boot_id"]):
         raise EvidenceError("backend restarted during calibration")

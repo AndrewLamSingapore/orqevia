@@ -65,8 +65,10 @@ class OffhostTelemetryTests(unittest.TestCase):
                   patch.object(collector, "_require_loopback_binding"),
                   patch.object(collector, "_backend", side_effect=[first, second]),
                   patch.object(collector, "_model_identity", return_value=("0.34.2", digest)),
-                  patch.object(collector, "_api", return_value={"done": True})):
+                  patch.object(collector, "_api", side_effect=[{"done": True}, {"models": []}]) as api):
                 result = collector.prepare("ollama", directory, "http://127.0.0.1:11434")
+            self.assertEqual(api.call_args_list[0].args[2]["keep_alive"], 0)
+            self.assertEqual(api.call_args_list[1].args[1], "/api/ps")
             profile = json.loads((directory / "profile.json").read_text())
             self.assertEqual(profile["models"][collector.MODEL]["peak_mib"], 1500)
             self.assertEqual(result["reserved_peak_mib"], 1500)
@@ -91,8 +93,24 @@ class OffhostTelemetryTests(unittest.TestCase):
                   patch.object(collector, "_require_loopback_binding"),
                   patch.object(collector, "_backend", return_value=sample),
                   patch.object(collector, "_model_identity", return_value=("0.34.2", "a" * 64)),
-                  patch.object(collector, "_api", return_value={"done": True})):
+                  patch.object(collector, "_api", side_effect=[{"done": True}, {"models": []}])):
                 with self.assertRaisesRegex(collector.EvidenceError, "lacks enforced memory reserve"):
+                    collector.prepare("ollama", directory, "http://127.0.0.1:11434")
+            self.assertFalse((directory / "profile.json").exists())
+
+    def test_resident_calibration_model_does_not_publish_profile(self):
+        with tempfile.TemporaryDirectory() as name:
+            directory = Path(name) / "profile"
+            sample = {"instance": "container@start", "boot_id": "boot",
+                      "capacity_mib": 6144, "available_mib": 5000,
+                      "peak_mib": 1200, "hard_cap_mib": 6144}
+            with (patch.object(collector, "_runner_only"),
+                  patch.object(collector, "_require_loopback_binding"),
+                  patch.object(collector, "_backend", return_value=sample),
+                  patch.object(collector, "_model_identity", return_value=("0.34.2", "a" * 64)),
+                  patch.object(collector, "_api", side_effect=[
+                      {"done": True}, {"models": [{"name": collector.MODEL}]}])):
+                with self.assertRaisesRegex(collector.EvidenceError, "did not unload"):
                     collector.prepare("ollama", directory, "http://127.0.0.1:11434")
             self.assertFalse((directory / "profile.json").exists())
 
