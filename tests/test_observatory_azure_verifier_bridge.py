@@ -40,9 +40,11 @@ def _sign(private, row):
 
 @pytest.fixture
 def bridge(tmp_path, monkeypatch):
+    data_root = tmp_path / "data"
+    monkeypatch.setenv("PRIME_DATA_DIR", str(data_root))
+    monkeypatch.setenv("PRIME_COMPUTE_QUEUE_DB", str(data_root / "queue.db"))
     from app import production_entry as entry
 
-    data_root = tmp_path / "data"
     subject = data_root / "agent-certification" / "a17"
     subject.mkdir(parents=True)
     evidence = b"synthetic independently reviewed execution"
@@ -75,7 +77,6 @@ def bridge(tmp_path, monkeypatch):
                             encoding="utf-8")
 
     write_record(_sign(private, row))
-    monkeypatch.setenv("PRIME_DATA_DIR", str(data_root))
     monkeypatch.setenv("PRIME_SPINE_TOKEN", "fixture-owner-secret")
     monkeypatch.setenv("PRIME_RUNTIME_REVISION", SOURCE)
     monkeypatch.delenv("PRIME_INTERFACE_RUNTIME_REVISION", raising=False)
