@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      A18_OFFHOST_MODEL: qwen2.5:3b
+      A18_OFFHOST_MODEL: qwen3:1.7b
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -47,8 +47,9 @@ jobs:
           test "$RUNNER_OS" = Linux
           test -f /sys/fs/cgroup/cgroup.controllers
           receipt_dir="/dev/shm/prime-a18-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          # The previous 6 GiB cap could not hold the measured 3B demand plus
-          # the unchanged 2 GiB reserve. This remains a disposable, capped VM.
+          # The 3B model required 6375 MiB but the measured 7 GiB runner had
+          # only 5691 MiB available. Retry the previously measured 1.7B model
+          # with the unchanged 2 GiB reserve on this disposable, capped VM.
           test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 6291456
           docker run -d --name prime-a18-ollama --memory=7g --cpus=2 \
             --publish 127.0.0.1:11434:11434 \
