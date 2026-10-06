@@ -36,7 +36,7 @@ jobs:
           test "$RUNNER_OS" = Linux
           test -f /sys/fs/cgroup/cgroup.controllers
           receipt_dir="/dev/shm/prime-a18-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          docker run -d --name prime-a18-ollama --memory=5g --cpus=2 \
+          docker run -d --name prime-a18-ollama --memory=6g --cpus=2 \
             --publish 127.0.0.1:11434:11434 \
             --env OLLAMA_NUM_PARALLEL=1 --env OLLAMA_MAX_LOADED_MODELS=1 \
             ollama/ollama:0.12.10
