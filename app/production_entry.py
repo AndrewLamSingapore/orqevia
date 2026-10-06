@@ -3,6 +3,7 @@
 Run with proxy-header processing disabled: trust the transport peer, not forwarded
 headers. The shell owns no scheduler, task store, or execution policy.
 """
+import hmac
 import ipaddress
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from . import direct_entry, objective_api, agent_dispatch_api, compute_queue_api, artifact_delivery, evidence_lens_api
 from .agent_capability_observatory import project_capability_observatory
+from .agent_cert_azure_es256 import verifier_from_azure_es256_pin_file
 from .agent_certification import AgentCertificationRegistry
 from .operational_workflows import router as operational_workflows
 from .pwa_sessions import owner_router as pwa_owner_router
@@ -57,8 +59,38 @@ def local_authorization(request: Request):
     return 'Bearer ' + token
 
 
+def local_verifier_authorization(request: Request):
+    """Keep certification projections behind explicit local bearer access."""
+    expected = local_authorization(request)
+    supplied = request.headers.getlist('authorization')
+    if len(supplied) != 1 or not hmac.compare_digest(supplied[0], expected):
+        raise HTTPException(401, 'Owner authorization required')
+    return expected
+
+
 app = FastAPI(title='PRIME local control', lifespan=direct_entry.lifespan,
               docs_url=None, redoc_url=None, openapi_url=None)
+
+_AZURE_CERT_PIN = Path(__file__).resolve().parent.parent / 'governance' / 'agent-cert-verifier-azure-pins.json'
+_AZURE_CERT_PIN_SHA256 = '62d6db94df99f662fef944bf31009628068ab703e95d07ebf36fbf2b8f00decc'
+
+
+def _certification_verifier(data_root: Path):
+    if os.getenv('PRIME_AGENT_CERT_AZURE_ES256_ENABLED') != '1':
+        return None
+    override_path = os.getenv('PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE')
+    override_sha256 = os.getenv('PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256')
+    if override_path is not None or override_sha256 is not None:
+        if not override_path or not override_sha256:
+            return None
+        pin_path, pin_sha256 = Path(override_path), override_sha256
+    else:
+        pin_path, pin_sha256 = _AZURE_CERT_PIN, _AZURE_CERT_PIN_SHA256
+    try:
+        return verifier_from_azure_es256_pin_file(
+            pin_path, pin_sha256, untrusted_roots=(data_root,))
+    except (OSError, ValueError, TypeError, UnicodeError, RuntimeError):
+        return None
 
 
 @app.middleware('http')
@@ -132,18 +164,18 @@ def jobs(status: str | None = None, limit: int = 30, authorization=Depends(local
 
 
 @app.get('/control/api/agent-capabilities')
-def agent_capabilities(authorization=Depends(local_authorization)):
-    # Existing loopback control boundary, not an Owner PWA-session endpoint.
+def agent_capabilities(authorization=Depends(local_verifier_authorization)):
+    # Explicit bearer plus loopback control boundary, not a PWA-session endpoint.
     source = objective_api.runtime_snapshot()['source_revision']
     if source == 'UNKNOWN':
         raise HTTPException(503, 'Runtime source revision is unverified')
-    # No independently provisioned verifier is available in this process.
-    # The local view may show declared capabilities and missing cases, but it
-    # cannot turn a certification record into a proven or measured claim.
-    root = Path(os.getenv('PRIME_DATA_DIR', '/data')) / 'agent-certification'
-    certification = AgentCertificationRegistry(root, source_revision=source)
+    data_root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+    verifier = _certification_verifier(data_root)
+    certification = AgentCertificationRegistry(
+        data_root / 'agent-certification', source_revision=source,
+        verify_record=verifier)
     return {'reported_source_revision': source,
-            'independent_verifier': 'UNCONFIGURED',
+            'independent_verifier': 'CONFIGURED' if verifier else 'UNCONFIGURED',
             'agents': project_capability_observatory(certification)}
 
 
