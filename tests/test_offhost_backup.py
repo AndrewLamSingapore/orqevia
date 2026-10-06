@@ -79,6 +79,9 @@ def test_encrypted_round_trip_keeps_owner_member_and_artifact(tmp_path):
     assert (restored / "empty").is_dir()
     assert (restored / "artifacts" / "proof.json").read_bytes() == b'{"owner_write":true}'
     assert (restored / "action-records.jsonl").read_bytes() == b'{"event":"created"}\n'
+    if os.name != "nt":
+        assert all(path.stat().st_mode & 0o077 == 0 for path in
+                   (restored, restored / "artifacts", restored / "artifacts/proof.json"))
     with sqlite3.connect(restored / "pwa-sessions.db") as db:
         assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
         assert db.execute("SELECT role FROM devices ORDER BY role").fetchall() == [("MEMBER",), ("OWNER",)]

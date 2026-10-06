@@ -414,7 +414,7 @@ def restore_tree(ciphertext: Path, private_key: Path, output: Path, expected_sha
     with tempfile.TemporaryDirectory(prefix=".prime-restore-", dir=output.parent) as temporary:
         _private_dir(Path(temporary))
         staged = Path(temporary) / "data"
-        staged.mkdir()
+        staged.mkdir(mode=0o700)
         _private_dir(staged)
         seen_dirs, seen_files = set(), set()
         with ciphertext.open("rb") as stream:
@@ -431,13 +431,14 @@ def restore_tree(ciphertext: Path, private_key: Path, output: Path, expected_sha
                     name = _safe_name(member.name.removeprefix("payload/").removesuffix("/"))
                     target = staged / Path(name)
                     if member.isdir() and name in dirs and name not in seen_dirs:
-                        target.mkdir(parents=True, exist_ok=True)
+                        target.mkdir(mode=0o700, parents=True, exist_ok=True)
                         seen_dirs.add(name)
                     elif member.isfile() and name in files and name not in seen_files and member.size == files[name]["size"]:
-                        target.parent.mkdir(parents=True, exist_ok=True)
+                        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                         digest = hashlib.sha256()
                         size = 0
-                        with target.open("xb") as destination:
+                        with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                                               getattr(os, "O_BINARY", 0), 0o600), "wb") as destination:
                             member_stream = archive.extractfile(member)
                             while block := member_stream.read(CHUNK):
                                 size += len(block)
