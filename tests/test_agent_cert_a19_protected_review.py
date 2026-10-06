@@ -7,7 +7,8 @@ import pytest
 
 from app.agent_cert_a19_protected_review import review_a19_role_receipt
 from app.agent_cert_a19_a26_review import (
-    REVIEW_TEST_VERSION, build_a19_a26_review_artifact,
+    EXPECTED_A26_RESULT, REVIEW_TEST_VERSION, a26_review_prompt, a26_review_request,
+    build_a19_a26_review_artifact,
 )
 from app.agent_cert_role_group_two import role_case
 from scripts import run_a19_protected_review_job as protected_job
@@ -51,7 +52,7 @@ def _payload():
         "correlation_id": CORRELATION,
         "queue_job": {
             "id": JOB, "agent": "a19", "status": "completed",
-            "provider": "ollama-deep", "allow_cloud": False, "attempts": 1,
+            "provider": "ollama-deep", "allow_cloud": 0, "attempts": 1,
             "result": RESULT, "started_at": "2026-10-06T05:00:00+00:00",
             "completed_at": "2026-10-06T05:00:01+00:00",
         },
@@ -117,6 +118,7 @@ def test_feature_or_untrusted_run_cannot_reach_review(change):
     lambda item: item["queue_job"].update(result="forged"),
     lambda item: item["queue_job"].update(agent="a18"),
     lambda item: item["queue_job"].update(allow_cloud=True),
+    lambda item: item["queue_job"].update(allow_cloud="0"),
     lambda item: item["queue_job"].update(provider="ollama-fast"),
     lambda item: item["queue_job"].update(attempts=2),
     lambda item: item["queue_job"].update(completed_at="2026-10-06T05:00:03+00:00"),
@@ -169,14 +171,15 @@ def _a26_receipt(execution_raw):
     checked = review_a19_role_receipt(
         execution_raw, profile_raw=PROFILE, source_revision=SOURCE,
         trusted_run=_trusted(execution_raw))
+    request = a26_review_request(json.loads(execution_raw), checked,
+                                 source_revision=SOURCE)
+    prompt = a26_review_prompt(request)
+    prompt_sha = hashlib.sha256(prompt.encode()).hexdigest()
     job_id = "33333333-3333-4333-8333-333333333333"
     correlation = "44444444-4444-4444-8444-444444444444"
-    decision = {"decision": "PASS",
-                "execution_receipt_sha256": checked["execution_receipt_sha256"],
-                "case_spec_sha256": checked["case_spec_sha256"],
-                "result_sha256": checked["result_sha256"]}
     events = [{"task_id": task, "agent_id": "a26", "action_type": action,
-               "phase": phase, "success": phase == "completed"}
+               "phase": phase, "success": phase == "completed",
+               "parameters_summary": {"prompt_sha256": prompt_sha} if action == "inference.enqueue" else {}}
               for task, action in ((job_id, "inference.run"),
                                    (correlation, "inference.enqueue"))
               for phase in ("started", "completed")]
@@ -189,8 +192,11 @@ def _a26_receipt(execution_raw):
             "case_spec_sha256": checked["case_spec_sha256"],
             "result_sha256": checked["result_sha256"], "decision": "PASS",
             "queue_job": {"id": job_id, "agent": "a26", "status": "completed",
-                          "provider": "ollama-deep", "allow_cloud": False,
-                          "attempts": 1, "result": json.dumps(decision),
+                          "provider": "ollama-deep", "allow_cloud": 0,
+                          "classification": "R0", "data_classification": "LOCAL_ONLY",
+                          "max_cost_usd": 0.0, "attempts": 1,
+                          "result": json.dumps(EXPECTED_A26_RESULT),
+                          "prompt": prompt,
                           "started_at": "2026-10-06T05:02:00+00:00",
                           "completed_at": "2026-10-06T05:02:01+00:00"},
             "correlation_id": correlation, "action_events": events}
@@ -228,11 +234,19 @@ def test_distinct_protected_a26_execution_produces_unsigned_review_envelope():
     lambda item: item.update(reviewer_agent_id="a19"),
     lambda item: item.update(decision="FAIL"),
     lambda item: item.update(execution_receipt_sha256="0" * 64),
+    lambda item: item.update(case_spec_sha256="0" * 64),
+    lambda item: item.update(result_sha256="0" * 64),
     lambda item: item["queue_job"].update(agent="a19"),
+    lambda item: item["queue_job"].update(id=JOB),
     lambda item: item["queue_job"].update(status="LOCAL_EXECUTION_FAILED"),
+    lambda item: item["queue_job"].update(started_at="2026-10-06T04:59:59+00:00"),
+    lambda item: item["queue_job"].update(allow_cloud="0"),
+    lambda item: item["queue_job"].update(allow_cloud=1),
     lambda item: item["queue_job"].update(result='{"decision":"PASS"}'),
+    lambda item: item["queue_job"].update(prompt="not the reviewed A19 result"),
     lambda item: item["action_events"].pop(),
     lambda item: item["action_events"][1].update(success=False),
+    lambda item: item["action_events"][2]["parameters_summary"].update(prompt_sha256="0" * 64),
 ])
 def test_a26_label_or_claim_cannot_replace_independent_execution(mutate):
     execution = _payload()

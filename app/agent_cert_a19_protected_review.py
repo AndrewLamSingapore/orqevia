@@ -63,6 +63,11 @@ def _uuid(value: object) -> bool:
         return False
 
 
+def _local_only(value: object) -> bool:
+    """Accept the queue's persisted integer zero or an in-memory JSON false."""
+    return value is False or (type(value) is int and value == 0)
+
+
 def review_a19_role_receipt(raw: bytes, *, profile_raw: bytes,
                             source_revision: str,
                             trusted_run: Mapping[str, object]) -> dict[str, str]:
@@ -149,7 +154,7 @@ def review_a19_role_receipt(raw: bytes, *, profile_raw: bytes,
             or observed.get("review_errors") != []
             or job.get("id") != job_id or job.get("agent") != "a19"
             or job.get("status") != "completed" or job.get("provider") != "ollama-deep"
-            or job.get("allow_cloud") is not False
+            or not _local_only(job.get("allow_cloud"))
             or type(job.get("attempts")) is not int or job["attempts"] != 1
             or not isinstance(result, str) or not result
             or hashlib.sha256(result.encode()).hexdigest() != observed.get("result_sha256")):
