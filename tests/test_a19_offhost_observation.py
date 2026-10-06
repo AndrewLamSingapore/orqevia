@@ -3,7 +3,9 @@ import hashlib
 import json
 
 from app.agent_cert_role_group_two import role_case
-from scripts.run_a19_offhost_observation import _case_digest, _verify_lineage
+from scripts.run_a19_offhost_observation import (
+    _case_digest, _require_deterministic_profile, _verify_lineage,
+)
 
 
 JOB_ID = "11111111-1111-4111-8111-111111111111"
@@ -61,6 +63,18 @@ def test_offhost_a19_case_names_exact_time_and_read_only_token():
     assert "10:01Z" in request["context"]
     assert "Copy the latest check time exactly" in request["objective"]
     assert "literal token sample_trend" in request["objective"]
+
+
+def test_offhost_a19_generation_profile_requires_hash_bound_greedy_decoding():
+    _require_deterministic_profile({"generation_options": {"temperature": 0}})
+    for profile in (None, {}, {"generation_options": {"temperature": 0.8}},
+                    {"generation_options": {"temperature": 0, "seed": 1}}):
+        try:
+            _require_deterministic_profile(profile)
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError("non-exact generation profile was accepted")
 
 
 def test_offhost_a19_lineage_does_not_infer_oracle_pass_or_certification():

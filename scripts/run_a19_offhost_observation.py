@@ -30,6 +30,11 @@ def _case_digest(spec: dict) -> str:
                                      separators=(",", ":")).encode()).hexdigest()
 
 
+def _require_deterministic_profile(profile: dict | None) -> None:
+    if not isinstance(profile, dict) or profile.get("generation_options") != {"temperature": 0}:
+        raise RuntimeError("hash-bound deterministic generation options required")
+
+
 def _verify_lineage(spec: dict, observation: dict, job: dict,
                     events: list[dict], correlation_id: str | None) -> tuple[bool, tuple[str, ...]]:
     """Check identity and provenance independently of the role oracle verdict."""
@@ -115,6 +120,7 @@ def main() -> int:
     from app.backend_admission import observation as backend_observation
 
     profile = load_compute_profile()
+    _require_deterministic_profile(profile)
     details = profile.get("models", {}).get(model)
     if not isinstance(details, dict) or type(details.get("peak_mib")) is not int:
         raise RuntimeError("hash-pinned model peak required")
