@@ -1,0 +1,75 @@
+name: Protected independent A19 review artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      a19_run_id:
+        description: Exact successful A19 protected-main observation run ID
+        required: true
+        type: string
+      a19_artifact_id:
+        description: Exact immutable A19 observation artifact ID
+        required: true
+        type: string
+      a26_run_id:
+        description: Distinct successful A26 protected-main observation run ID
+        required: true
+        type: string
+      a26_artifact_id:
+        description: Exact immutable A26 observation artifact ID
+        required: true
+        type: string
+
+# No OIDC token, Azure permission, signing key, or certification write is used.
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: a19-protected-review-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unsigned-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PRIME_REVIEW_WORKFLOW_REF: ${{ github.workflow_ref }}
+      PRIME_A19_RUN_ID: ${{ inputs.a19_run_id }}
+      PRIME_A19_ARTIFACT_ID: ${{ inputs.a19_artifact_id }}
+      PRIME_A26_RUN_ID: ${{ inputs.a26_run_id }}
+      PRIME_A26_ARTIFACT_ID: ${{ inputs.a26_artifact_id }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Refuse unprotected or noncanonical source before artifact retrieval
+        run: python -B scripts/run_a19_protected_review_job.py --preflight
+      - name: Retrieve exact A19 execution artifact, not executable source
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ inputs.a19_artifact_id }}
+          run-id: ${{ inputs.a19_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/a19-execution
+      - name: Retrieve exact separate A26 execution artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ inputs.a26_artifact_id }}
+          run-id: ${{ inputs.a26_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/a26-observation
+      - name: Authenticate provenance and recompute case before emitting review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -B scripts/run_a19_protected_review_job.py --build
+      - name: Retain only separate unsigned review evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a19-a26-unsigned-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/a19-review/a19-review.json
+          if-no-files-found: error
+          retention-days: 7

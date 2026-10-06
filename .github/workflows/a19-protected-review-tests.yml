@@ -1,0 +1,23 @@
+name: A19 protected review candidate tests
+
+on:
+  push:
+    branches:
+      - feat/l7-a19-protected-review-stack-20261006
+    paths:
+      - .github/workflows/a19-protected-review-tests.yml
+      - .github/workflows/a19-protected-review.yml
+      - app/agent_cert_a19_protected_review.py
+      - app/agent_cert_a19_a26_review.py
+      - app/agent_cert_role_group_two.py
+      - scripts/run_a19_protected_review_job.py
+      - scripts/run_canonical_ci.py
+      - tests/test_agent_cert_a19_protected_review.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-source:
+    uses: ./.github/workflows/ci.yml
