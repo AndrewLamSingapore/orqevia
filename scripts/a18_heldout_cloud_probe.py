@@ -23,6 +23,18 @@ FLAWED = {
 EXPECTED_ERRORS = ("float_error", "ten_error", "zero_result")
 
 
+def ledger_bound(rows: list[tuple[str, dict]], job_id: str) -> bool:
+    """Require the one attempt to belong to the claimed job and agent."""
+    if len(rows) != 1 or not isinstance(job_id, str) or not job_id:
+        return False
+    task_id, details = rows[0]
+    return (task_id == job_id and isinstance(details, dict)
+            and details.get("agent_id") == "a18"
+            and details.get("success") is True
+            and type(details.get("retries")) is int
+            and details["retries"] == 0)
+
+
 def main() -> int:
     sys.path.insert(0, "/candidate")
     os.environ.update(PRIME_DATA_DIR="/tmp/a18-heldout",
@@ -110,10 +122,9 @@ def main() -> int:
         review_pass, review_errors = review_a17_cross_review_json(
             flawed_json, execution["result"])
         with sqlite3.connect(root / "compute-ledger.db") as db:
-            ledger = [json.loads(row[0]) for row in db.execute(
-                "SELECT details FROM reasoning_attempts ORDER BY rowid")]
-        correlated = (len(ledger) == 1 and ledger[0]["agent_id"] == "a18"
-                      and ledger[0]["success"] is True and ledger[0]["retries"] == 0)
+            ledger = [(task_id, json.loads(details)) for task_id, details in db.execute(
+                "SELECT task_id, details FROM reasoning_attempts ORDER BY rowid")]
+        correlated = ledger_bound(ledger, job["id"])
         evidence = {
             "schema": "abex.agent_a18_heldout_cloud_trial.v1",
             "source_revision": SOURCE, "model": MODEL,
@@ -132,7 +143,8 @@ def main() -> int:
                          "estimated_cost_usd": execution["actual_cost_usd"]},
             "consistency_check": {"pass": review_pass, "errors": list(review_errors)},
             "transport_requests": requests["count"], "ledger_agent_correlation": correlated,
-            "ledger_retries": [row["retries"] for row in ledger],
+            "ledger_task_ids": [task_id for task_id, _ in ledger],
+            "ledger_retries": [details.get("retries") for _, details in ledger],
             "elapsed_ms": round((time.monotonic() - started) * 1000),
             "certification": "UNVERIFIED", "signing": "NOT_ATTEMPTED",
         }
