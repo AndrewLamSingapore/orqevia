@@ -77,6 +77,20 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # The 6 October interpretation changed only the opening date and scope
+    # paragraphs. Require those exact bytes before restoring the 4 October
+    # opening, so any unaccounted edit still fails the frozen history proof.
+    title = "# STATUS.md — Portfolio status record\n\n"
+    interpretation = (
+        "Interpretation updated: 6 October 2026. Dated observations below retain their original dates.\n\n"
+        "STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.\n\n"
+        "STATUS.md records current portfolio status claims and their evidence classification. Each product owns its source, configuration, contracts, and domain records in its repository.\n\n"
+    )
+    prior_scope = (
+        "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
+    )
+    assert after.startswith(title + interpretation)
+    after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
     # This dated, agent-reported update is new; preserve the original historical
     # byte proof by removing only this known addition before comparing it.
     authority_start = after.index("## Status authority — 3 October 2026")
@@ -91,7 +105,7 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     # still match the original digest exactly.
     after = after.replace("# STATUS.md — Portfolio status record", "# STATUS.md — Single source of truth", 1)
     after = after.replace(
-        "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records.",
+        prior_scope,
         "**This file replaces and supersedes every previous SSOT document — technical, course-study, and job-search alike.** Any older SSOT file (on ABEX, in a repo, or elsewhere) is now historical only. Do not treat any prior SSOT document as current once this file exists. Archive or delete the old ones once this file is confirmed good — do not maintain both in parallel.",
         1,
     )
