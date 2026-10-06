@@ -104,7 +104,8 @@ jobs:
             --mount "type=bind,source=$PWD/scripts,target=/app/scripts,readonly" \
             --mount "type=bind,source=$receipt_dir,target=/telemetry,readonly" \
             --mount "type=bind,source=$evidence_dir,target=/runner-temp/data" \
-            --env GITHUB_ACTIONS=true --env RUNNER_TEMP=/runner-temp \
+            --env GITHUB_ACTIONS=true --env PYTHONPATH=/app \
+            --env RUNNER_TEMP=/runner-temp \
             --env PRIME_DATA_DIR=/runner-temp/data \
             --env PRIME_A18_OBSERVATION_OUTPUT=/runner-temp/data/a18-observation.json \
             --env PRIME_BACKEND_MEMORY_RECEIPT=/telemetry/backend-memory.json \
