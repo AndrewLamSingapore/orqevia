@@ -6,8 +6,9 @@ from tests.test_harness_api import HarnessApiTests
 from app.agent_registry import registered_agent_ids
 from app import compute_queue_api
 from app.agent_dispatch_api import AgentRequest, inference_prompt, local_model_backends, _baseline_probe_slot
+from app.agent_cert_cases import challenge
 from app import agent_dispatch_api
-from app.tier_router import Tier
+from app.tier_router import Backend, Tier
 from app.settings import PrimeSettings
 
 
@@ -19,6 +20,24 @@ class AgentDispatchTests(HarnessApiTests):
     def tearDown(self):
         os.environ.pop('PRIME_REGISTRY_V1_ENABLED',None)
         super().tearDown()
+
+    def test_a18_invalid_artifact_authenticated_dispatch_uses_local_nano_and_denies_cloud_only(self):
+        request = challenge('adversarial:invalid_artifact', agent_id='a18')['request']
+        with patch('app.compute_catalog.load_catalog', return_value=[]):
+            denied = self.client.post('/api/agents/dispatch', json=request)
+            assert denied.status_code == 401
+            local = self.client.post('/api/agents/dispatch', headers=self.headers, json=request)
+            assert local.status_code == 202, local.text
+            assert local.json()['tier'] == 'NANO'
+            row = compute_queue_api.queue.get(local.json()['job']['id'])
+            assert row['agent'] == 'a18'
+            assert not row['allow_cloud']
+            with patch('app.agent_dispatch_api.local_model_backends', return_value=(
+                Backend('cloud-only', 'synthetic', Tier.NANO, 'cloud'),
+            )):
+                unavailable = self.client.post('/api/agents/dispatch', headers=self.headers,
+                                               json=request)
+            assert unavailable.status_code == 409
 
     def test_baseline_probe_is_authenticated_bounded_and_non_certifying(self):
         payload={'agent_id':'a19','capability_id':'responsibility.a19','timeout_seconds':5}

@@ -140,6 +140,11 @@ def test_a18_official_invalid_artifact_oracle_rejects_forged_pass_and_source():
         False, ("not_strict_json",))
     forged = {**spec, "request": {**spec["request"], "context": "SYNTHETIC different artifact"}}
     assert _run(forged, raw)["reason"] == "invalid_artifact_oracle_source_mismatch"
+    dispatched = []
+    denied = observe_cert_case(forged, dispatch=lambda request: dispatched.append(request),
+                               get_job=lambda job_id: None, timeout_seconds=1)
+    assert denied["reason"] == "invalid_artifact_oracle_source_mismatch"
+    assert dispatched == []
 
 
 def test_a17_boundary_check_rejects_null_error_and_forged_source():

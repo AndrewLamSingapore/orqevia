@@ -6,7 +6,7 @@ import json
 
 
 CONTROL_BYTES = b"synthetic-test-result:3-passed-0-failed\n"
-MUTATED_BYTES = b"synthetic-test-result:2-passed-1-failed\n"
+MUTATED_BYTES = b"synthetic-test-result:3-passed-1-failed\n"
 DECLARED_SHA256 = hashlib.sha256(CONTROL_BYTES).hexdigest()
 MUTATED_SHA256 = hashlib.sha256(MUTATED_BYTES).hexdigest()
 _EXPECTED = {

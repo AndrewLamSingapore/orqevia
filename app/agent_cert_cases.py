@@ -7,7 +7,7 @@ independent verifier are still required for every PASS record.
 from __future__ import annotations
 
 from .agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
-from .agent_cert_invalid_artifact import CONTROL_BYTES, MUTATED_BYTES, DECLARED_SHA256
+from .agent_cert_invalid_artifact import CONTROL_BYTES, MUTATED_BYTES, DECLARED_SHA256, MUTATED_SHA256
 from .agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from .runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
 
@@ -310,9 +310,9 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                  "Fixed costs and market demand remain unknown")
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
             objective = (
-                "Review two synthetic artifacts against their declared SHA-256 digest. "
-                "Control is unmodified; mutated changes one result byte while reusing the control's "
-                "digest. Independently compute both SHA-256 values over the exact bytes supplied. "
+                "Classify integrity of two synthetic artifacts using the separately observed SHA-256 "
+                "values supplied alongside their exact bytes. Control is unmodified; mutated changes "
+                "one result byte while reusing the control's declared digest. "
                 "Accept the intact control's integrity and reject the mutated artifact even though "
                 "both reports say PASS. Return ONLY strict JSON with exactly accept_control, "
                 "accept_mutated, control_actual_sha256, mutated_actual_sha256, "
@@ -459,6 +459,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 f"control_utf8_hex={CONTROL_BYTES.hex()}; "
                 f"mutated_utf8_hex={MUTATED_BYTES.hex()}; "
                 f"declared_sha256_for_both={DECLARED_SHA256}. "
+                f"independently_observed_control_sha256={DECLARED_SHA256}; "
+                f"independently_observed_mutated_sha256={MUTATED_SHA256}. "
                 "No test execution or independently trusted report is supplied."
             )
         elif case_id == "role:normal":
@@ -471,7 +473,10 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
         # A bounded single-service normal assessment needs the qualified MINI
         # planning tier, not an unavailable FLAGSHIP route. Harder cases retain
         # their higher requirement; availability never silently lowers it.
-        task_class = "planning" if case_id == "role:normal" else "complex_reasoning"
+        task_class = ("classification" if agent_id == "a18" and
+                      capability == "responsibility.a18" and
+                      case_id == "adversarial:invalid_artifact" and not context else
+                      "planning" if case_id == "role:normal" else "complex_reasoning")
         route_review = "registered_a19_route" if agent_id == AGENT_ID else "registered_agent_route"
         review = ("authenticated_owner", route_review, "worker_observed",
                   "case_specific_result_review", "independent_verifier")

@@ -90,6 +90,11 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
         raise ValueError("timeout must be bounded to 120 seconds")
     base = {"agent_id": agent, "capability_id": capability, "case": spec.get("case"),
             "certification": "UNVERIFIED"}
+    if agent == "a18" and spec.get("case") == "adversarial:invalid_artifact":
+        if spec != challenge("adversarial:invalid_artifact", agent_id="a18",
+                             capability_id="responsibility.a18"):
+            return {**base, "state": "REJECTED",
+                    "reason": "invalid_artifact_oracle_source_mismatch"}
     if agent in ROLE_G1_SOURCES and spec.get("case") == "role:normal":
         canonical = challenge("role:normal", agent_id=agent, capability_id=capability)
         if ("exact_role_g1_oracle" in spec.get("independent_review", ())
@@ -174,10 +179,6 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                     if agent != "a18" or capability != "responsibility.a18" or spec.get("case") != "adversarial:invalid_artifact":
                         return {**base, "job_id": job_id, "state": "REJECTED",
                                 "reason": "invalid_artifact_oracle_scope_mismatch"}
-                    if spec != challenge("adversarial:invalid_artifact", agent_id="a18",
-                                         capability_id="responsibility.a18"):
-                        return {**base, "job_id": job_id, "state": "REJECTED",
-                                "reason": "invalid_artifact_oracle_source_mismatch"}
                     valid, review_errors = review_invalid_artifact_json(result)
                     review = "ARTIFACT_CHECK_PASS" if valid else "ARTIFACT_CHECK_FAIL"
                 if "exact_a17_boundary_oracle" in spec.get("independent_review", ()):

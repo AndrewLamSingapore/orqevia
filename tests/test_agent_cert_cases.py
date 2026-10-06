@@ -7,6 +7,8 @@ from app.agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
 from app.agent_dispatch_api import AgentRequest
 from app.agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from app.runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
+from app.compute_catalog import task_tier
+from app.tier_router import Backend, Tier, required_tier, select_direct_route
 
 
 def test_a19_catalog_exactly_covers_l7_matrix_with_dispatchable_bounded_requests():
@@ -52,10 +54,23 @@ def test_a18_official_invalid_artifact_challenge_is_local_bounded_and_unverified
     assert request.minimum_tier == "NANO"
     assert request.max_cost_usd == 0
     assert request.response_format == "strict_json"
+    assert request.task_class == "classification"
     assert "exact_invalid_artifact_oracle" in spec["independent_review"]
     assert "control_utf8_hex=" in request.context
     assert "mutated_utf8_hex=" in request.context
     assert "declared_sha256_for_both=" in request.context
+    tier = max(Tier[request.minimum_tier], task_tier(request.objective, request.task_class),
+               required_tier(request.objective, request.context))
+    assert tier == Tier.NANO
+    local = Backend("ollama-fast", "synthetic-nano", Tier.NANO, "local")
+    cloud = Backend("cloud-nano", "synthetic-cloud", Tier.NANO, "cloud")
+    text = request.objective + "\n" + request.context
+    assert select_direct_route((local, cloud), minimum_tier=tier,
+                               classification=request.data_classification,
+                               text=text).backend == local
+    assert select_direct_route((cloud,), minimum_tier=tier,
+                               classification=request.data_classification,
+                               text=text).state == "UNAVAILABLE"
 
 
 def test_unseen_challenge_accepts_held_out_context_without_recording_a_pass():
