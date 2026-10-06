@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import json
 import re
 from collections.abc import Mapping
+from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
@@ -29,6 +31,9 @@ _KEY_ID = re.compile(
 _SIGNATURE = re.compile(r"[0-9a-f]{128}\Z")
 _EXECUTOR_ID = re.compile(r"[A-Za-z0-9._:-]{1,80}\Z")
 _MAX_SIGNED_BYTES = 64 * 1024
+_MAX_PIN_BYTES = 16 * 1024
+_PIN_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+_PIN_SERVICE = "svc.cert-verifier.independent"
 
 
 def _public_coordinate(value: object) -> int:
@@ -144,3 +149,45 @@ class AzureES256CertificationVerifier:
         except (InvalidSignature, KeyError, TypeError, ValueError, OverflowError,
                 RecursionError, RegistryError):
             return False
+
+
+def verifier_from_azure_es256_pin_file(
+    path: Path, expected_sha256: str, *, untrusted_roots: tuple[Path, ...] = ()
+) -> AzureES256CertificationVerifier:
+    """Load an exact public pin from protected deployment configuration.
+
+    The file and its expected digest are supplied by the deployer, never by a
+    record. A new verifier is built on each call so removing a pin takes effect
+    on the next projection. Missing, empty, or malformed configuration raises.
+    """
+    path = Path(path)
+    if (not path.is_absolute() or not isinstance(expected_sha256, str)
+            or not _PIN_SHA256.fullmatch(expected_sha256)):
+        raise ValueError("absolute pin path and SHA-256 required")
+    if any(part.is_symlink() for part in (path, *path.parents)):
+        raise ValueError("pin path may not contain a symlink")
+    resolved = path.resolve(strict=True)
+    if any(resolved.is_relative_to(Path(root).resolve()) for root in untrusted_roots):
+        raise ValueError("pin path is inside an untrusted data root")
+    with path.open("rb") as stream:
+        raw = stream.read(_MAX_PIN_BYTES + 1)
+    if len(raw) > _MAX_PIN_BYTES:
+        raise ValueError("public pin file exceeds limit")
+    if not hmac.compare_digest(hashlib.sha256(raw).hexdigest(), expected_sha256):
+        raise ValueError("public pin file digest mismatch")
+
+    def unique_fields(pairs):
+        result = {}
+        for name, value in pairs:
+            if name in result:
+                raise ValueError("duplicate public pin field")
+            result[name] = value
+        return result
+
+    data = json.loads(raw, object_pairs_hook=unique_fields)
+    if (not isinstance(data, dict) or set(data) != {"key_id", "jwk"}
+            or not isinstance(data["key_id"], str)
+            or not isinstance(data["jwk"], dict)):
+        raise ValueError("invalid Azure ES256 public pin file")
+    return AzureES256CertificationVerifier(
+        {_PIN_SERVICE: {data["key_id"]: data["jwk"]}})
