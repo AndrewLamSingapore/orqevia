@@ -56,6 +56,13 @@ def test_offhost_a19_role_case_binds_exact_spec_job_result_and_actions():
                                CORRELATION_ID)[0]
 
 
+def test_offhost_a19_case_names_exact_time_and_read_only_token():
+    request = role_case("a19")["request"]
+    assert "10:01Z" in request["context"]
+    assert "Copy the latest check time exactly" in request["objective"]
+    assert "literal token sample_trend" in request["objective"]
+
+
 def test_offhost_a19_lineage_does_not_infer_oracle_pass_or_certification():
     spec, observed, job, events = _sample()
     failed_role = {**observed, "case_review": "ROLE_CHECK_FAIL"}
