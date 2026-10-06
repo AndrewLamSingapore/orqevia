@@ -12,7 +12,6 @@ import os
 from pathlib import Path
 import re
 import secrets
-import subprocess
 import sys
 from datetime import datetime, timezone
 from urllib.request import urlopen
@@ -24,6 +23,11 @@ def _required_absolute(name: str) -> Path:
     if not raw or not path.is_absolute():
         raise RuntimeError(f"{name} absolute path required")
     return path
+
+
+def _require_read_only_mount(path: Path) -> None:
+    if not path.exists() or not (os.statvfs(path).f_flag & os.ST_RDONLY):
+        raise RuntimeError("operator-owned read-only mount required")
 
 
 def _model_digest(endpoint: str, model: str) -> str:
@@ -74,13 +78,21 @@ def _verify_lineage(observation: dict, job: dict, events: list[dict],
 def main() -> int:
     if os.name != "posix" or os.getenv("GITHUB_ACTIONS") != "true":
         raise RuntimeError("disposable GitHub Linux runner required")
+    if Path("/var/run/docker.sock").exists() or Path("/run/docker.sock").exists():
+        raise RuntimeError("Docker socket must not be available to PRIME consumer")
     output = _required_absolute("PRIME_A18_OBSERVATION_OUTPUT")
     data_dir = _required_absolute("PRIME_DATA_DIR")
     runner_temp = _required_absolute("RUNNER_TEMP").resolve()
     if not data_dir.resolve().is_relative_to(runner_temp) or not output.resolve().is_relative_to(runner_temp):
         raise RuntimeError("runner-temp-only evidence boundary required")
-    _required_absolute("PRIME_BACKEND_MEMORY_RECEIPT")
-    _required_absolute("PRIME_MEASURED_COMPUTE_PROFILE")
+    backend_receipt = _required_absolute("PRIME_BACKEND_MEMORY_RECEIPT")
+    compute_profile = _required_absolute("PRIME_MEASURED_COMPUTE_PROFILE")
+    _require_read_only_mount(backend_receipt)
+    _require_read_only_mount(compute_profile)
+    _require_read_only_mount(Path(__file__).resolve())
+    source_revision = os.getenv("PRIME_A18_SOURCE_REVISION", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", source_revision):
+        raise RuntimeError("exact checked-out source revision required")
     endpoint = os.environ["OLLAMA_BASE_URL"].rstrip("/")
     if endpoint != "http://127.0.0.1:11434":
         raise RuntimeError("runner-local Ollama endpoint required")
@@ -144,8 +156,7 @@ def main() -> int:
     receipt = {
         "schema": "prime.a18.offhost-invalid-artifact-observation.v1",
         "captured_at": datetime.now(timezone.utc).isoformat(),
-        "source_revision": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True).strip(),
+        "source_revision": source_revision,
         "model": model, "model_digest": expected_digest,
         "profile_sha256": os.environ.get("PRIME_MEASURED_COMPUTE_PROFILE_SHA256"),
         "case": spec["case"], "challenge": spec, "observation": observed,
