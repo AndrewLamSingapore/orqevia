@@ -162,7 +162,7 @@ def main() -> int:
         "lineage_pass": lineage_pass, "lineage_errors": lineage_errors,
         "role_review_pass": role_review_pass,
         "certification": "UNVERIFIED",
-        "scope": "off-host branch execution; independent protected review and current-main binding outstanding",
+        "scope": "off-host execution; independent protected review and current-source binding outstanding",
     }
     serialized = json.dumps(receipt, sort_keys=True, indent=2)
     if ephemeral_token in serialized:

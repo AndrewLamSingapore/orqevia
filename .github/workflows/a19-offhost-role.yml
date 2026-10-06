@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PRIME_OFFHOST_MODEL: qwen2.5:3b
+      PRIME_OFFHOST_MODEL: qwen2.5:1.5b
       PRIME_OFFHOST_FAST_MODEL: gemma3:1b
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
@@ -67,10 +67,10 @@ jobs:
           done
           test "$ready" = true
           timeout 600 docker exec prime-a19-ollama ollama pull "$PRIME_OFFHOST_FAST_MODEL"
-          timeout 600 docker exec prime-a19-ollama ollama pull "$PRIME_OFFHOST_MODEL"
           PRIME_OFFHOST_MODEL="$PRIME_OFFHOST_FAST_MODEL" \
             python -B scripts/offhost_ollama_telemetry.py prepare \
               --container prime-a19-ollama --directory "$fast_receipt_dir"
+          timeout 600 docker exec prime-a19-ollama ollama pull "$PRIME_OFFHOST_MODEL"
           python -B scripts/offhost_ollama_telemetry.py prepare \
             --container prime-a19-ollama --directory "$receipt_dir"
           python -B - "$fast_receipt_dir" "$receipt_dir" <<'PY'

@@ -92,6 +92,7 @@ def main():
     names.append('agent_cert_a17_boundary')
     names.append('agent_cert_execution')
     names.append('a18_offhost_observation')
+    names.append('a19_offhost_observation')
     names.append('offhost_ollama_telemetry')
     names.append('mlp_fabric')
     names.append('hf_admission')
