@@ -4,7 +4,7 @@ import pytest
 
 from app.agent_cert_cases import AGENT_ID, CAPABILITY_ID, ROLE_NORMAL_FIXTURES, case_ids, challenge
 from app.agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
-from app.agent_dispatch_api import AgentRequest
+from app.agent_dispatch_api import AgentRequest, inference_prompt
 from app.agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from app.runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
 from app.compute_catalog import task_tier
@@ -59,6 +59,11 @@ def test_a18_official_invalid_artifact_challenge_is_local_bounded_and_unverified
     assert "control_utf8_hex=" in request.context
     assert "mutated_utf8_hex=" in request.context
     assert "declared_sha256_for_both=" in request.context
+    assert "DIGEST_MISMATCH iff the observed mutated SHA-256 differs" in request.objective
+    # The off-host profile allocates 2048 context units and 256 output units;
+    # dispatch currently enforces the remaining 1792 as a UTF-8 byte cap.
+    # Keep headroom so this official case reaches the backend, not HTTP 413.
+    assert len(inference_prompt(request, Tier.NANO).encode("utf-8")) <= 1750
     tier = max(Tier[request.minimum_tier], task_tier(request.objective, request.task_class),
                required_tier(request.objective, request.context))
     assert tier == Tier.NANO

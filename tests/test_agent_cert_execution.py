@@ -147,6 +147,22 @@ def test_a18_official_invalid_artifact_oracle_rejects_forged_pass_and_source():
     assert dispatched == []
 
 
+def test_a18_dispatch_failure_preserves_only_redacted_class_and_status():
+    from fastapi import HTTPException
+    spec = challenge("adversarial:invalid_artifact", agent_id="a18")
+
+    def denied(_request):
+        raise HTTPException(413, "Bearer secret must never enter receipt")
+
+    observed = observe_cert_case(spec, dispatch=denied,
+                                 get_job=lambda _job_id: None, timeout_seconds=1)
+    assert observed["state"] == "INCOMPLETE"
+    assert observed["reason"] == "dependency_failed"
+    assert observed["dependency_class"] == "HTTPException"
+    assert observed["dependency_http_status"] == 413
+    assert "secret" not in json.dumps(observed)
+
+
 def test_a17_boundary_check_rejects_null_error_and_forged_source():
     spec = challenge("role:normal", agent_id="a17", capability_id="responsibility.a17")
     answer = {"type_guard": "type(n) is int", "accepted_range": "0 <= n <= 9",
