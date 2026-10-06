@@ -173,8 +173,11 @@ def select_capabilities(objective: str) -> list[str]:
     return selected or ['responsibility.a02']
 
 
-def connect():
+def connect(*, read_only=False):
     path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'objectives.db'
+    if read_only:
+        if not path.is_file():raise HTTPException(404,'Objective not found')
+        return sqlite3.connect(path.resolve().as_uri()+'?mode=ro',timeout=15,uri=True)
     path.parent.mkdir(parents=True,exist_ok=True)
     db=sqlite3.connect(path,timeout=15)
     # Keep the original tables byte-for-byte compatible with the rollback image.
@@ -273,10 +276,9 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         db.close()
 
 
-@router.get('/{task_id}')
-def get(task_id: str,authorization: str | None=Header(default=None)):
+def _get(task_id: str,authorization: str | None,*,read_only=False):
     authenticate_owner(authorization)
-    db=connect()
+    db=connect(read_only=True) if read_only else connect()
     try:
         row=db.execute('SELECT state,steps_json FROM objectives WHERE id=?',(task_id,)).fetchone()
         turns=db.execute('SELECT revision,state,steps_json FROM objective_turns WHERE task=? ORDER BY revision',(task_id,)).fetchall()
@@ -348,6 +350,15 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
             'epistemic_status':'GENERATED_CLAIM','verification_status':'VERIFY_REQUIRED',
             'may_update_truth_plane':False,'contradictions':contradictions} if content else None,
         'synthesis':'Source-labelled advisory contributions; model content is not execution metadata'})
+
+
+@router.get('/{task_id}')
+def get(task_id: str,authorization: str | None=Header(default=None)):
+    return _get(task_id,authorization,read_only=False)
+
+
+def get_read_only(task_id: str,authorization: str | None):
+    return _get(task_id,authorization,read_only=True)
 
 
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):

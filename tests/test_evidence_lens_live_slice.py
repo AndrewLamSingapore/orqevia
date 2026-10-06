@@ -2,6 +2,8 @@
 import json
 import sqlite3
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -66,6 +68,18 @@ def test_tamper_and_source_drift_never_appear_current(client,tmp_path):
     assert client.post(path,headers={'Origin':ORIGIN}).status_code==409
 
 
+def test_deleted_entire_event_chain_is_invalid_not_current(client,tmp_path):
+    task_id=_objective(client)
+    path=f'/control/api/evidence/from-objective/{task_id}'
+    assert client.post(path,headers={'Origin':ORIGIN}).status_code==201
+    with sqlite3.connect(tmp_path/'evidence-lens.db') as db:
+        db.execute('delete from evidence_events')
+    missing_chain=client.get(path).json()
+    assert missing_chain['integrity']=='INVALID'
+    assert missing_chain['currentness']=='UNKNOWN'
+    assert client.post(path,headers={'Origin':ORIGIN}).status_code==409
+
+
 def test_failed_execution_remains_failed_in_ledger(client,tmp_path):
     task_id=str(uuid.uuid4())
     with objective_api.connect() as db:
@@ -84,9 +98,50 @@ def test_failed_execution_remains_failed_in_ledger(client,tmp_path):
     assert envelope['verification']['state']=='UNVERIFIED'
 
 
+def test_parallel_duplicate_capture_is_one_logical_record(client,tmp_path):
+    task_id=_objective(client)
+    path=f'/control/api/evidence/from-objective/{task_id}'
+    def capture(_):
+        worker=TestClient(production_entry.app,base_url=ORIGIN,client=('127.0.0.1',43000))
+        return worker.post(path,headers={'Origin':ORIGIN})
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        responses=list(pool.map(capture,range(4)))
+    assert [response.status_code for response in responses]==[201]*4
+    assert all(response.json()['integrity']=='VALID' for response in responses)
+    with sqlite3.connect(tmp_path/'evidence-lens.db') as db:
+        assert db.execute('select count(*) from evidence_actions').fetchone()[0]==1
+        assert db.execute('select count(*) from evidence_events').fetchone()[0]==2
+
+
 def test_untrusted_peer_and_invalid_task_are_rejected(client):
     assert client.get('/control/api/evidence/from-objective/not-a-uuid').status_code==404
     remote=TestClient(production_entry.app,base_url=ORIGIN,client=('192.0.2.10',43000))
     assert remote.get('/control/api/evidence/from-objective/not-a-uuid').status_code==403
     assert remote.post('/control/api/evidence/from-objective/not-a-uuid',
                        headers={'Origin':ORIGIN}).status_code==403
+
+
+def test_unknown_read_does_not_initialize_objective_or_lens_storage(client,tmp_path):
+    unknown=str(uuid.uuid4())
+    response=client.get('/control/api/evidence/from-objective/'+unknown)
+    assert response.status_code==404
+    assert not (tmp_path/'objectives.db').exists()
+    assert not (tmp_path/'evidence-lens.db').exists()
+
+
+def test_owner_control_exposes_explicit_capture_and_read_only_proof(client):
+    page=client.get('/control')
+    script=client.get('/control/app.js')
+    assert page.status_code==200 and script.status_code==200
+    assert 'id="what-happened"' in page.text
+    assert 'id="record-proof"' in page.text
+    assert 'id="prove-it"' in page.text
+    assert 'Record proof explicitly' in script.text
+    assert "response.status===404 && method==='prove'" in script.text
+    assert "'Objective not found.'" in script.text
+    assert "el('record-proof').onclick=()=>lens('record')" in script.text
+    assert "el('prove-it').onclick=()=>lens('prove')" in script.text
+    assert 'innerHTML' not in script.text
+    source=Path(production_entry.__file__).with_name('production_control.js').read_text(encoding='utf-8')
+    assert "method==='record' ? {method:'POST'" in source
+    assert "method==='happened' ? 'objectives/' : 'evidence/from-objective/'" in source

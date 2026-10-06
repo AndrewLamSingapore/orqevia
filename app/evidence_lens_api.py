@@ -13,13 +13,13 @@ from .evidence_product import EvidenceLedger, canonical_bytes, content_digest
 NAMESPACE = "prime-objective"
 
 
-def _task(task_id: str, authorization: str):
+def _task(task_id: str, authorization: str, *, read_only=False):
     try:
         if str(UUID(task_id)) != task_id:
             raise ValueError("noncanonical task id")
     except ValueError:
         raise HTTPException(404, "Objective not found") from None
-    return objective_api.get(task_id, authorization)
+    return objective_api.get_read_only(task_id, authorization) if read_only else objective_api.get(task_id, authorization)
 
 
 def _ledger():
@@ -75,12 +75,6 @@ def materialize(task_id: str, authorization: str) -> dict:
         raise HTTPException(409, "Objective metadata is not bound")
     ledger = _ledger()
     record_id = f"objective:{task_id}:r{task['revision']}"
-    ledger.create(namespace=NAMESPACE, objective=f"Objective result {task_id}",
-                  actor={"type": "SYSTEM", "id": "PRIME_OBJECTIVE_STORE"},
-                  authority={"scope": "objective.result.projection", "source": "PRIME_OBJECTIVE_STORE"},
-                  inputs=[{"task_id": task_id, "revision": task["revision"]}],
-                  action_id=record_id, idempotency_key=f"lens:create:{record_id}")
-
     def bind(envelope):
         envelope["observations"].append({"observation_id": f"obs:{record_id}",
             "source": "PRIME_OBJECTIVE_STORE", "value": _snapshot(task),
@@ -90,6 +84,11 @@ def materialize(task_id: str, authorization: str) -> dict:
         envelope["completed_at"] = objective_api.utcnow()
 
     try:
+        ledger.create(namespace=NAMESPACE, objective=f"Objective result {task_id}",
+                      actor={"type": "SYSTEM", "id": "PRIME_OBJECTIVE_STORE"},
+                      authority={"scope": "objective.result.projection", "source": "PRIME_OBJECTIVE_STORE"},
+                      inputs=[{"task_id": task_id, "revision": task["revision"]}],
+                      action_id=record_id, idempotency_key=f"lens:create:{record_id}")
         ledger.mutate(record_id, namespace=NAMESPACE, event_type="OBJECTIVE_RESULT_OBSERVED",
                       idempotency_key=f"lens:observe:{record_id}", apply=bind)
     except ValueError as exc:
@@ -100,7 +99,7 @@ def materialize(task_id: str, authorization: str) -> dict:
 
 
 def read(task_id: str, authorization: str) -> dict:
-    task = _task(task_id, authorization)
+    task = _task(task_id, authorization, read_only=True)
     if not _ledger_path().is_file():
         raise HTTPException(404, "Evidence projection not found")
     return _read(EvidenceLedger(_ledger_path(), read_only=True), task)
