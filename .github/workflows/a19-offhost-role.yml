@@ -96,6 +96,9 @@ jobs:
               if fast['measurement'][field] != deep['measurement'][field]:
                   raise SystemExit('backend identity changed between calibrations')
           deep['models'][fast_model] = fast['models'][fast_model]
+          # Exact JSON extraction uses deterministic decoding; this option is
+          # hash-bound in the measured profile consumed by the queue.
+          deep['generation_options'] = {'temperature': 0}
           deep['measurement']['fast_calibration_profile_sha256'] = __import__('hashlib').sha256(
               (Path(sys.argv[1]) / 'profile.json').read_bytes()).hexdigest()
           _atomic_json(deep_path, deep)
@@ -172,6 +175,11 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: a19-offhost-observation-${{ github.run_id }}
-          path: ${{ runner.temp }}/a19-evidence/
+          path: |
+            ${{ runner.temp }}/a19-evidence/a19-observation.json
+            ${{ runner.temp }}/a19-evidence/backend-memory.json
+            ${{ runner.temp }}/a19-evidence/profile.json
+            ${{ runner.temp }}/a19-evidence/fast-profile.json
+            ${{ runner.temp }}/a19-evidence/action-records.jsonl
           if-no-files-found: ignore
           retention-days: 7
