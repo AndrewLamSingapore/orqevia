@@ -12,6 +12,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from . import direct_entry, objective_api, agent_dispatch_api, compute_queue_api, artifact_delivery, evidence_lens_api
+from .agent_capability_observatory import project_capability_observatory
+from .agent_certification import AgentCertificationRegistry
 from .operational_workflows import router as operational_workflows
 from .pwa_sessions import owner_router as pwa_owner_router
 from .production_survival import build_router as build_survival_router
@@ -127,6 +129,22 @@ def dispatch(body: agent_dispatch_api.AgentRequest, authorization=Depends(local_
 @app.get('/control/api/jobs')
 def jobs(status: str | None = None, limit: int = 30, authorization=Depends(local_authorization)):
     return compute_queue_api.list_jobs(status, limit, authorization)
+
+
+@app.get('/control/api/agent-capabilities')
+def agent_capabilities(authorization=Depends(local_authorization)):
+    # Existing loopback control boundary, not an Owner PWA-session endpoint.
+    source = objective_api.runtime_snapshot()['source_revision']
+    if source == 'UNKNOWN':
+        raise HTTPException(503, 'Runtime source revision is unverified')
+    # No independently provisioned verifier is available in this process.
+    # The local view may show declared capabilities and missing cases, but it
+    # cannot turn a certification record into a proven or measured claim.
+    root = Path(os.getenv('PRIME_DATA_DIR', '/data')) / 'agent-certification'
+    certification = AgentCertificationRegistry(root, source_revision=source)
+    return {'reported_source_revision': source,
+            'independent_verifier': 'UNCONFIGURED',
+            'agents': project_capability_observatory(certification)}
 
 
 @app.get('/control/api/jobs/{job_id}')

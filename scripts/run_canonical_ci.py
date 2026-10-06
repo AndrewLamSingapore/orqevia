@@ -74,6 +74,7 @@ def main():
     names.append('agent_execution_live')
     names.append('agent_dispatch_api')
     names.append('agent_cert_cases')
+    names.append('agent_capability_observatory')
     names.append('agent_cert_numeric')
     names.append('agent_cert_numeric_boundaries')
     names.append('agent_cert_rates')
