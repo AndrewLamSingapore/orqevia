@@ -134,6 +134,9 @@ class JobQueue:
               id TEXT PRIMARY KEY, job_id TEXT, event_type TEXT NOT NULL,
               details_json TEXT NOT NULL, created_at TEXT NOT NULL);
             """)
+            # executescript commits implicitly; keep the admission key migration
+            # and subsequent column upgrades in one SQLite write transaction.
+            c.execute("BEGIN IMMEDIATE")
             backend_admission.init(c)
 
             if 'classification' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:

@@ -32,13 +32,15 @@ def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
         raw = json.dumps({'schema':'abex.measured-compute.v1',
                           'normal_concurrency':1,'minimum_available_mib':1,
                           'context_tokens':16384,'output_limit':4096,
-                          'models':{'evaluator:1':{'peak_mib':1024}}}).encode()
+                          'runtime_version':'fixture-ollama',
+                          'models':{'evaluator:1':{'peak_mib':1024,'digest':'a'*64}}}).encode()
         profile = tmp_path / 'measured-profile.json'
         profile.write_bytes(raw)
         monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE', str(profile))
         monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
         compute_profile.load_compute_profile.cache_clear()
         compute_profile.runtime_compute_profile.cache_clear()
+        monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_, **__: None)
         ledger = ComputeLedger(os.path.join(directory, "compute.db"))
         gateway = ModelGateway(ledger=ledger, settings=settings())
         captured = {}
