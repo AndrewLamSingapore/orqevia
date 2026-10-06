@@ -43,7 +43,7 @@ jobs:
           test -f /sys/fs/cgroup/cgroup.controllers
           receipt_dir="/dev/shm/prime-a19-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           fast_receipt_dir="/dev/shm/prime-a19-fast-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          docker run -d --name prime-a19-ollama --memory=6g --cpus=2 \
+          docker run -d --name prime-a19-ollama --memory=8g --cpus=2 \
             --publish 127.0.0.1:11434:11434 \
             --env OLLAMA_NUM_PARALLEL=1 --env OLLAMA_MAX_LOADED_MODELS=1 \
             ollama/ollama:0.12.10
