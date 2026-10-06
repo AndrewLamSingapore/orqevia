@@ -40,6 +40,8 @@ def test_minimal_health_and_static_no_secrets(shell, monkeypatch):
 def test_capability_observatory_is_owner_only_and_fails_closed(shell, monkeypatch, tmp_path):
     _, client = shell
     path = '/control/api/agent-capabilities'
+    monkeypatch.delenv('PRIME_RUNTIME_REVISION', raising=False)
+    monkeypatch.delenv('PRIME_INTERFACE_RUNTIME_REVISION', raising=False)
     assert client.get(path).status_code == 503  # No exact runtime source binding.
     monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'a' * 40)
     agent_dir = tmp_path / 'agent-certification' / 'a17'
