@@ -25,6 +25,9 @@ def load_compute_profile():
         raise RuntimeError('Invalid measured Compute Profile models')
     if not isinstance(profile.get('generation_options',{}),dict):
         raise RuntimeError('Invalid measured Compute Profile generation options')
+    if ('think' in profile.get('generation_options',{}) and
+            type(profile['generation_options']['think']) is not bool):
+        raise RuntimeError('Invalid measured Compute Profile thinking option')
     if profile.get('runtime_version'):
         if (not isinstance(profile['runtime_version'],str) or
                 any(not isinstance(details.get('digest'),str) or not details['digest']
@@ -74,6 +77,17 @@ def validate_configuration(settings,queue_policy):
 def generation_options():
     profile=runtime_compute_profile()
     return dict(profile.get('generation_options',{})) if profile else {}
+
+
+def ollama_generation_parameters(options: dict) -> tuple[dict, bool | None]:
+    """Keep Ollama's top-level thinking switch out of sampling options."""
+    if not isinstance(options, dict):
+        raise RuntimeError('Invalid model generation options')
+    model_options = dict(options)
+    think = model_options.pop('think', None)
+    if think is not None and type(think) is not bool:
+        raise RuntimeError('Invalid model thinking option')
+    return model_options, think
 
 
 def require_compute_capacity(model, endpoint=None):
