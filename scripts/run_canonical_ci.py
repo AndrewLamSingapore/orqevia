@@ -88,6 +88,7 @@ def main():
     names.append('rollback_delta')
     names.append('agent_cert_boundary')
     names.append('agent_cert_a17_boundary')
+    names.append('a18_heldout_cloud_probe')
     names.append('agent_cert_execution')
     names.append('mlp_fabric')
     names.append('hf_admission')
