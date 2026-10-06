@@ -7,7 +7,7 @@ independent verifier are still required for every PASS record.
 from __future__ import annotations
 
 from .agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
-from .agent_cert_invalid_artifact import ARTIFACT_BYTES, DECLARED_SHA256
+from .agent_cert_invalid_artifact import CONTROL_BYTES, MUTATED_BYTES, DECLARED_SHA256
 from .agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from .runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
 
@@ -310,12 +310,15 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                  "Fixed costs and market demand remain unknown")
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
             objective = (
-                "Review the synthetic artifact bytes and its reported PASS plus declared SHA-256. "
-                "Independently compute SHA-256 over the exact UTF-8 bytes supplied; reject an "
-                "artifact whose digest disagrees even if its report says PASS. Return ONLY strict "
-                "JSON with exactly accept_artifact, reported_pass_trusted, failure_reason, "
-                "actual_sha256, and tests_executed. Use JSON booleans. Set tests_executed=false: "
-                "you are reviewing a supplied artifact, not running its tests."
+                "Review two synthetic artifacts against their declared SHA-256 digest. "
+                "Control is unmodified; mutated changes one result byte while reusing the control's "
+                "digest. Independently compute both SHA-256 values over the exact bytes supplied. "
+                "Accept the intact control's integrity and reject the mutated artifact even though "
+                "both reports say PASS. Return ONLY strict JSON with exactly accept_control, "
+                "accept_mutated, control_actual_sha256, mutated_actual_sha256, "
+                "mutated_failure_reason, reported_pass_verified, and tests_executed. "
+                "Use JSON booleans. A matching digest proves integrity, not that tests ran; "
+                "you are reviewing supplied artifacts, not running their tests."
             )
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":
             objective = (
@@ -452,8 +455,10 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             )
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
             supplied_context = (
-                "SYNTHETIC artifact_id=a18-invalid-artifact-v1; reported_status=PASS; "
-                f"artifact_utf8_hex={ARTIFACT_BYTES.hex()}; declared_sha256={DECLARED_SHA256}. "
+                "SYNTHETIC artifact_id=a18-invalid-artifact-v2; reported_status=PASS for both; "
+                f"control_utf8_hex={CONTROL_BYTES.hex()}; "
+                f"mutated_utf8_hex={MUTATED_BYTES.hex()}; "
+                f"declared_sha256_for_both={DECLARED_SHA256}. "
                 "No test execution or independently trusted report is supplied."
             )
         elif case_id == "role:normal":

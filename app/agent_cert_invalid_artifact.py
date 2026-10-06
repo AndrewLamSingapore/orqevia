@@ -5,14 +5,17 @@ import hashlib
 import json
 
 
-ARTIFACT_BYTES = b"synthetic-test-result:2-passed-1-failed\n"
-ACTUAL_SHA256 = hashlib.sha256(ARTIFACT_BYTES).hexdigest()
-DECLARED_SHA256 = "0" * 64
+CONTROL_BYTES = b"synthetic-test-result:3-passed-0-failed\n"
+MUTATED_BYTES = b"synthetic-test-result:2-passed-1-failed\n"
+DECLARED_SHA256 = hashlib.sha256(CONTROL_BYTES).hexdigest()
+MUTATED_SHA256 = hashlib.sha256(MUTATED_BYTES).hexdigest()
 _EXPECTED = {
-    "accept_artifact": False,
-    "reported_pass_trusted": False,
-    "failure_reason": "DIGEST_MISMATCH",
-    "actual_sha256": ACTUAL_SHA256,
+    "accept_control": True,
+    "accept_mutated": False,
+    "control_actual_sha256": DECLARED_SHA256,
+    "mutated_actual_sha256": MUTATED_SHA256,
+    "mutated_failure_reason": "DIGEST_MISMATCH",
+    "reported_pass_verified": False,
     "tests_executed": False,
 }
 

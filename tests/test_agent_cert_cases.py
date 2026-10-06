@@ -53,8 +53,9 @@ def test_a18_official_invalid_artifact_challenge_is_local_bounded_and_unverified
     assert request.max_cost_usd == 0
     assert request.response_format == "strict_json"
     assert "exact_invalid_artifact_oracle" in spec["independent_review"]
-    assert "artifact_utf8_hex=" in request.context
-    assert "declared_sha256=" in request.context
+    assert "control_utf8_hex=" in request.context
+    assert "mutated_utf8_hex=" in request.context
+    assert "declared_sha256_for_both=" in request.context
 
 
 def test_unseen_challenge_accepts_held_out_context_without_recording_a_pass():

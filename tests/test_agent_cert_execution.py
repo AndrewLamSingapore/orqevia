@@ -6,7 +6,7 @@ import pytest
 
 from app.agent_cert_cases import challenge
 from app.agent_cert_execution import observe_cert_case
-from app.agent_cert_invalid_artifact import ACTUAL_SHA256, review_invalid_artifact_json
+from app.agent_cert_invalid_artifact import DECLARED_SHA256, MUTATED_SHA256, review_invalid_artifact_json
 
 
 JOB_ID = "11111111-1111-4111-8111-111111111111"
@@ -117,9 +117,11 @@ def test_a18_zero_boundary_case_preserves_failure_repair_and_unverified_status()
 
 def test_a18_official_invalid_artifact_oracle_rejects_forged_pass_and_source():
     spec = challenge("adversarial:invalid_artifact", agent_id="a18")
-    answer = {"accept_artifact": False, "reported_pass_trusted": False,
-              "failure_reason": "DIGEST_MISMATCH", "actual_sha256": ACTUAL_SHA256,
-              "tests_executed": False}
+    answer = {"accept_control": True, "accept_mutated": False,
+              "control_actual_sha256": DECLARED_SHA256,
+              "mutated_actual_sha256": MUTATED_SHA256,
+              "mutated_failure_reason": "DIGEST_MISMATCH",
+              "reported_pass_verified": False, "tests_executed": False}
     raw = json.dumps(answer)
     observed = _run(spec, raw)
     assert observed["state"] == "EXECUTED"
@@ -127,12 +129,14 @@ def test_a18_official_invalid_artifact_oracle_rejects_forged_pass_and_source():
     assert observed["certification"] == "UNVERIFIED"
     assert observed["result_sha256"] == hashlib.sha256(raw.encode()).hexdigest()
     assert "result" not in observed
-    for changed in ({"accept_artifact": True}, {"reported_pass_trusted": True},
-                    {"actual_sha256": "0" * 64}, {"tests_executed": True}):
+    for changed in ({"accept_control": False}, {"accept_mutated": True},
+                    {"control_actual_sha256": MUTATED_SHA256},
+                    {"mutated_actual_sha256": DECLARED_SHA256},
+                    {"reported_pass_verified": True}, {"tests_executed": True}):
         failed = _run(spec, json.dumps({**answer, **changed}))
         assert failed["case_review"] == "ARTIFACT_CHECK_FAIL"
         assert set(changed).issubset(failed["review_errors"])
-    assert review_invalid_artifact_json(raw[:-1] + ',"accept_artifact":false}') == (
+    assert review_invalid_artifact_json(raw[:-1] + ',"accept_control":false}') == (
         False, ("not_strict_json",))
     forged = {**spec, "request": {**spec["request"], "context": "SYNTHETIC different artifact"}}
     assert _run(forged, raw)["reason"] == "invalid_artifact_oracle_source_mismatch"
