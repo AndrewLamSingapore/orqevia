@@ -165,7 +165,15 @@ class ProtectedAzureES256Signer:
             raise ValueError("independent reviewer required")
         for field in ("review_run_id", "review_test_version"):
             value = row.get(field)
-            if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,100}", value):
+            # The A19/A26 protected review has one literal version whose
+            # punctuation is not part of the legacy provenance token grammar.
+            # It is compared to the artifact envelope below and signed as data;
+            # no path, URL or Key Vault identifier is derived from it.
+            exact_a19_review = (field == "review_test_version"
+                                and value == "a19-role-exact+a26-independent/v1")
+            if (not isinstance(value, str)
+                    or not (exact_a19_review
+                            or re.fullmatch(r"[A-Za-z0-9._:-]{1,100}", value))):
                 raise ValueError("review provenance required")
         if row.get("review_source_revision") != source_revision:
             raise ValueError("review source mismatch")

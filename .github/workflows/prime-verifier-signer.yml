@@ -1,9 +1,29 @@
 name: PRIME independent verifier signer
 
-# A reusable protected-code boundary. The caller may not supply code, secrets,
-# signing payloads, or parameters. This canary does not certify an agent.
+# A reusable protected-code boundary. The caller may supply only six exact
+# run/artifact identifiers, never code, secrets, or signing payloads. No-input
+# invocations retain the non-certifying canaries.
 on:
   workflow_call:
+    inputs:
+      a19_run_id:
+        required: false
+        type: string
+      a19_artifact_id:
+        required: false
+        type: string
+      a26_run_id:
+        required: false
+        type: string
+      a26_artifact_id:
+        required: false
+        type: string
+      review_run_id:
+        required: false
+        type: string
+      review_artifact_id:
+        required: false
+        type: string
 
 permissions: {}
 
@@ -13,6 +33,15 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
+    env:
+      PRIME_SIGNER_CALLER_REF: ${{ github.workflow_ref }}
+      PRIME_A19_RUN_ID: ${{ inputs.a19_run_id }}
+      PRIME_A19_ARTIFACT_ID: ${{ inputs.a19_artifact_id }}
+      PRIME_A26_RUN_ID: ${{ inputs.a26_run_id }}
+      PRIME_A26_ARTIFACT_ID: ${{ inputs.a26_artifact_id }}
+      PRIME_REVIEW_RUN_ID: ${{ inputs.review_run_id }}
+      PRIME_REVIEW_ARTIFACT_ID: ${{ inputs.review_artifact_id }}
     steps:
       - name: Require protected canonical caller
         env:
@@ -46,7 +75,48 @@ jobs:
           python-version: '3.12'
       - name: Install bounded verification dependency
         run: python -m pip install --disable-pip-version-check cryptography==50.0.2
+      - name: Require complete, distinct attestation IDs before any retrieval
+        run: python -B scripts/run_a19_protected_attestation.py --preflight
       - name: Protected Azure sign, public verification, tamper rejection
+        if: inputs.a19_run_id == ''
         run: python -m scripts.azure_verifier_live_canary
       - name: Sign reviewed non-certifying A18 observation
+        if: inputs.a19_run_id == ''
         run: python -m scripts.azure_verifier_observation_canary
+      - name: Retrieve exact A19 execution artifact
+        if: inputs.a19_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ inputs.a19_artifact_id }}
+          run-id: ${{ inputs.a19_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/a19-execution
+      - name: Retrieve exact distinct A26 execution artifact
+        if: inputs.a19_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ inputs.a26_artifact_id }}
+          run-id: ${{ inputs.a26_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/a26-observation
+      - name: Retrieve exact unsigned independent review artifact
+        if: inputs.a19_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ inputs.review_artifact_id }}
+          run-id: ${{ inputs.review_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/a19-review
+      - name: Sign only recomputed A19 role case and A26 review
+        if: inputs.a19_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -B scripts/run_a19_protected_attestation.py --sign
+      - name: Retain self-contained single-case signed evidence
+        if: inputs.a19_run_id != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a19-role-normal-signed-${{ github.run_id }}
+          path: ${{ runner.temp }}/a19-attestation/a19/
+          if-no-files-found: error
+          retention-days: 90

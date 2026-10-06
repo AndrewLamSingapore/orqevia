@@ -3,6 +3,31 @@ name: PRIME independent verifier OIDC preflight
 # No pull-request or feature-ref execution is permitted.
 on:
   workflow_dispatch:
+    inputs:
+      a19_run_id:
+        description: Exact protected-main A19 run ID for optional single-case attestation
+        required: false
+        type: string
+      a19_artifact_id:
+        description: Exact A19 observation artifact ID
+        required: false
+        type: string
+      a26_run_id:
+        description: Exact independent protected-main A26 run ID
+        required: false
+        type: string
+      a26_artifact_id:
+        description: Exact A26 observation artifact ID
+        required: false
+        type: string
+      review_run_id:
+        description: Exact protected-main independent review run ID
+        required: false
+        type: string
+      review_artifact_id:
+        description: Exact independent review artifact ID
+        required: false
+        type: string
 
 permissions: {}
 
@@ -48,3 +73,11 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
+    with:
+      a19_run_id: ${{ inputs.a19_run_id }}
+      a19_artifact_id: ${{ inputs.a19_artifact_id }}
+      a26_run_id: ${{ inputs.a26_run_id }}
+      a26_artifact_id: ${{ inputs.a26_artifact_id }}
+      review_run_id: ${{ inputs.review_run_id }}
+      review_artifact_id: ${{ inputs.review_artifact_id }}
