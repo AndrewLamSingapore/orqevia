@@ -19,7 +19,7 @@ CORRELATION = "22222222-2222-4222-8222-222222222222"
 RESULT = ('{"initial_check_pass":false,"retry_check_pass":true,'
           '"continuous_health_proven":false,"restart_authorized":false,'
           '"latest_check_time":"10:01Z","next_read_only_check":"sample_trend"}')
-PROFILE = (json.dumps({"models": {"qwen3:1.7b": {"digest": "b" * 64}}},
+PROFILE = (json.dumps({"models": {"qwen2.5:1.5b": {"digest": "b" * 64}}},
                       sort_keys=True) + "\n").encode()
 
 
@@ -37,7 +37,7 @@ def _payload():
         "captured_at": "2026-10-06T05:00:02+00:00",
         "source_revision": SOURCE,
         "github_run_id": "12345", "github_run_attempt": "1",
-        "model": "qwen3:1.7b", "model_digest": "b" * 64,
+        "model": "qwen2.5:1.5b", "model_digest": "b" * 64,
         "profile_sha256": hashlib.sha256(PROFILE).hexdigest(),
         "case": "role:normal", "challenge": spec,
         "case_spec_sha256": case_digest,
@@ -111,7 +111,7 @@ def test_feature_or_untrusted_run_cannot_reach_review(change):
     lambda item: item.update(source_revision="d" * 40),
     lambda item: item.update(certification="L7"),
     lambda item: item.update(role_review_pass=False),
-    lambda item: item.update(model="qwen2.5:1.5b"),
+    lambda item: item.update(model="qwen3:1.7b"),
     lambda item: item["observation"].update(case_review="ROLE_CHECK_FAIL"),
     lambda item: item["observation"].update(result_sha256="0" * 64),
     lambda item: item["queue_job"].update(result="forged"),
@@ -132,6 +132,18 @@ def test_claimed_pass_does_not_survive_independent_tamper_checks(mutate):
         _review(item)
 
 
+@pytest.mark.parametrize("observed_time", ["10:00Z", "2023-10-05T10:01Z"])
+def test_observed_wrong_latest_time_fails_even_with_matching_result_digest(observed_time):
+    item = _payload()
+    answer = json.loads(item["queue_job"]["result"])
+    answer["latest_check_time"] = observed_time
+    raw_result = json.dumps(answer, separators=(",", ":"))
+    item["queue_job"]["result"] = raw_result
+    item["observation"]["result_sha256"] = hashlib.sha256(raw_result.encode()).hexdigest()
+    with pytest.raises(ValueError, match="independent A19 role oracle"):
+        _review(item)
+
+
 def test_duplicate_json_fields_and_oversize_are_rejected():
     raw = _raw(_payload()).replace(b'"schema": ', b'"schema": "forged", "schema": ', 1)
     with pytest.raises(ValueError, match="duplicate"):
@@ -147,7 +159,7 @@ def test_missing_or_tampered_measured_profile_is_rejected():
     with pytest.raises(ValueError, match="measured model profile"):
         review_a19_role_receipt(raw, profile_raw=b"{}", source_revision=SOURCE,
                                 trusted_run=_trusted(raw))
-    wrong = PROFILE.replace(b"qwen3:1.7b", b"qwen2.5:1.5b")
+    wrong = PROFILE.replace(b"qwen2.5:1.5b", b"qwen3:1.7b")
     with pytest.raises(ValueError, match="measured model profile"):
         review_a19_role_receipt(raw, profile_raw=wrong, source_revision=SOURCE,
                                 trusted_run=_trusted(raw))
