@@ -8,6 +8,13 @@ on:
       - .github/workflows/a18-offhost-telemetry.yml
       - scripts/offhost_ollama_telemetry.py
       - tests/test_offhost_ollama_telemetry.py
+      - app/agent_dispatch_api.py
+      - app/compute_queue_api.py
+      - app/direct_stream.py
+      - app/job_queue.py
+      - tests/test_agent_dispatch_api.py
+      - tests/test_direct_stream_empty.py
+      - tests/test_job_queue.py
   workflow_dispatch:
 
 permissions:
@@ -18,6 +25,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  canonical-source:
+    uses: ./.github/workflows/ci.yml
   bounded-calibration:
     runs-on: ubuntu-latest
     timeout-minutes: 20
