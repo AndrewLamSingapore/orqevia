@@ -162,6 +162,35 @@ def test_eligible_job_after_thousand_blocked_jobs_in_same_lane(tmp_path):
     assert q.claim("w", [LOCAL])["id"] == eligible["id"]
 
 
+def test_mutating_earlier_rows_does_not_skip_candidate_across_fetch_boundary(tmp_path):
+    q = queue(tmp_path)
+    retired = q.submit(agent="a02", prompt="retired", model="missing", priority="critical")
+    blocked = q.submit(agent="a02", prompt="blocked", model="missing", priority="critical")
+    eligible = q.submit(agent="a02", prompt="eligible", model="fast", priority="critical")
+    with q.connect() as db:
+        db.executemany(
+            """INSERT INTO compute_jobs
+               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                external_execution,status,approval_status,created_at,updated_at)
+               SELECT ?,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                      timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                      external_execution,status,approval_status,created_at,updated_at
+               FROM compute_jobs WHERE id=?""",
+            ((f"blocked-{index}", blocked["id"]) for index in range(999)),
+        )
+        db.execute("UPDATE compute_jobs SET agent='A10',created_at=datetime('now','-120 seconds') WHERE id=?",
+                   (retired["id"],))
+        db.execute("UPDATE compute_jobs SET created_at=datetime('now','-60 seconds') WHERE model='missing' AND id<>?",
+                   (retired["id"],))
+    claimed = q.claim("w", [LOCAL])
+    assert claimed["id"] == eligible["id"]
+    assert q.get(retired["id"])["status"] == "failed"
+    assert q.get(eligible["id"])["attempts"] == 1
+    q.finish(eligible["id"], result="done")
+    assert q.claim("w2", [LOCAL]) is None
+
+
 def test_aged_background_after_thousand_high_jobs_keeps_owner_cap(tmp_path):
     policy = QueuePolicy(global_concurrency=1, per_agent_concurrency=1,
                          local_ram_mb=8192, local_vram_mb=4096,
