@@ -12,7 +12,6 @@ from typing import Any
 from .compute_ledger import ComputeLedger
 from .settings import SETTINGS, PrimeSettings
 from .compute_profile import require_compute_capacity, generation_options
-from .compute_profile import runtime_compute_profile
 from . import backend_admission
 
 
@@ -96,13 +95,11 @@ class ModelGateway:
         task_id = task_id or str(uuid.uuid4())
         model = self.local_evaluator if role == "evaluator" else (self.local_deep if deep else self.local_fast)
         require_compute_capacity(model, self.ollama_url)
-        profile = runtime_compute_profile()
-        demand = profile.get('models', {}).get(model, {}).get('peak_mib') if profile else None
         lease_id = str(uuid.uuid4())
         endpoint = self.ollama_url.rstrip('/')
         c = backend_admission.transaction()
         try:
-            backend_admission.reserve(c, endpoint, lease_id, demand)
+            backend_admission.reserve_model(c, endpoint, lease_id, model, 0, global_concurrency=1)
             c.commit()
         except BaseException:
             c.rollback()

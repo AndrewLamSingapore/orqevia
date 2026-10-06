@@ -121,6 +121,48 @@ def test_golden_n1_rejects_heavy_and_n2_without_measured_telemetry(tmp_path, mon
     assert n2.claim('one', [LOCAL]) is None
 
 
+def test_golden_n1_rejects_underdeclared_unobserved_model(tmp_path, monkeypatch):
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    monkeypatch.setenv('OLLAMA_BASE_URL', ENDPOINT)
+    q = queue(tmp_path)
+    job = q.submit(agent='planner', prompt='underdeclared', model_role='deep', ram_mb=1024)
+    unobserved = Provider('ollama-deep', 'local', 'qwen3:14b', 32768, 0, 1)
+    assert q.claim('one', [unobserved]) is None
+    assert q.get(job['id'])['status'] == 'queued'
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute('SELECT COUNT(*) FROM backend_admission').fetchone() == (0,)
+
+
+@pytest.mark.parametrize('model', sorted(admission.GOLDEN_MODELS))
+def test_golden_n1_accepts_only_observed_model_names(tmp_path, monkeypatch, model):
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    c = admission.transaction(str(tmp_path / 'models.db'))
+    try:
+        admission.reserve_model(c, ENDPOINT, 'one', model, 1024)
+        assert c.execute('SELECT demand_mib FROM backend_admission').fetchone() == (1024,)
+    finally:
+        c.close()
+
+
+def test_golden_n1_refuses_unidentified_direct_reservation(tmp_path, monkeypatch):
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    c = admission.transaction(str(tmp_path / 'unidentified.db'))
+    try:
+        with pytest.raises(PermissionError, match='requires measured'):
+            admission.reserve(c, ENDPOINT, 'one', 1024)
+    finally:
+        c.close()
+
+
 def test_invalid_mode_fails_closed(monkeypatch):
     monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'invalid')
     with pytest.raises(PermissionError, match='invalid local inference admission mode'):

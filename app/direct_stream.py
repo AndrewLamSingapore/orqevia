@@ -25,6 +25,7 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
             c.close()
 
     async def run():
+        backend_admission.require_model(provider.model)
         capacity(provider.model)
         if db_path:
             lease(backend_admission.check)

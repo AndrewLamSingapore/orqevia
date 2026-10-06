@@ -172,7 +172,7 @@ def test_direct_stream_without_lease(monkeypatch,tmp_path):
         def stream(self,*args,**kwargs):return Response()
     monkeypatch.setattr(stream.httpx,'AsyncClient',Client)
     settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive='1m',context_tokens=128,max_output_tokens=4)
-    result=asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='test'),settings=settings,capacity=lambda m:None,options=lambda:{}))
+    result=asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{}))
     assert result['result']=='actual'
 
 
@@ -220,7 +220,7 @@ def test_stream_cancel_closes_silent_connection(monkeypatch):
     def cancel():checks.append(1);return len(checks)>1
     settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive='1m',context_tokens=128,max_output_tokens=4)
     with pytest.raises(RuntimeError,match='cancelled'):
-        asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='test'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=cancel))
+        asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=cancel))
     assert closed
 
 

@@ -19,6 +19,7 @@ SCHEMA = 'prime.backend-memory.v1'
 MAX_AGE_SECONDS = 2.0
 RESERVE_MIB = 2048
 BASELINE_MAX_DEMAND_MIB = 1024
+GOLDEN_MODELS = frozenset(('gemma3:1b', 'gemma3:4b', 'embeddinggemma:300m-qat-q4_0'))
 
 
 def admission_mode() -> str:
@@ -31,6 +32,11 @@ def admission_mode() -> str:
             'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE')):
         raise PermissionError('measured admission settings require measured mode')
     return mode
+
+
+def require_model(model: str) -> None:
+    if admission_mode() == 'golden_n1' and (type(model) is not str or model not in GOLDEN_MODELS):
+        raise PermissionError('model requires measured local inference admission')
 
 
 def observation(endpoint: str, *, now: float | None = None) -> dict:
@@ -71,17 +77,19 @@ def init(c: sqlite3.Connection) -> None:
 
 
 def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int | None,
-            sample: dict | None = None) -> None:
+            sample: dict | None = None, *, model: str | None = None) -> None:
     mode = admission_mode()
     if mode == 'golden_n1':
+        require_model(model)
         if sample is not None:
             raise PermissionError('measured backend sample requires measured admission')
         # Empty identity fields mean no backend identity was observed. The
         # endpoint row is still one atomic lease shared by every local caller.
+        # This caps declared demand, not the observed memory use of a model.
         if demand_mib is None:
             demand_mib = 0  # ModelGateway has no caller-declared demand.
         if type(demand_mib) is not int or not 0 <= demand_mib <= BASELINE_MAX_DEMAND_MIB:
-            raise PermissionError('heavy local inference requires measured admission')
+            raise PermissionError('declared memory demand requires measured admission')
         if c.execute('SELECT 1 FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone():
             raise PermissionError('backend inference lease occupied')
         c.execute('INSERT INTO backend_admission(endpoint,job_id,instance,boot_id,state,demand_mib) VALUES(?,?,?,?,?,?)',
@@ -110,7 +118,7 @@ def reserve_model(c: sqlite3.Connection, endpoint: str, job_id: str,
     if admission_mode() == 'golden_n1':
         if global_concurrency != 1:
             raise PermissionError('N>1 local inference requires measured admission')
-        return reserve(c, endpoint, job_id, requested_mib)
+        return reserve(c, endpoint, job_id, requested_mib, model=model)
     from .compute_profile import runtime_compute_profile
 
     profile = runtime_compute_profile()

@@ -3,6 +3,7 @@ import tempfile
 import hashlib
 import json
 from unittest.mock import patch
+import pytest
 
 from app.compute_ledger import ComputeLedger
 from app.model_gateway import ModelGateway
@@ -67,9 +68,45 @@ def test_golden_gateway_local_inference_needs_no_measured_telemetry(monkeypatch,
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
     gateway = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'ledger.db')),
-                           settings=settings())
+                           settings=settings(fast_model='gemma3:1b'))
     gateway._post = lambda *_args: {'response': 'baseline answer', 'done': True}
     assert gateway.local(prompt='fixture').text == 'baseline answer'
+
+
+def test_golden_gateway_keeps_one_shared_local_slot(monkeypatch,tmp_path):
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    golden_settings = settings(fast_model='gemma3:1b')
+    first = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'first-ledger.db')),
+                         settings=golden_settings)
+    second = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'second-ledger.db')),
+                          settings=golden_settings)
+    second._post = lambda *_args: {'response': 'second answer', 'done': True}
+
+    def first_post(*_args):
+        with pytest.raises(PermissionError, match='occupied'):
+            second.local(prompt='overlapping')
+        return {'response': 'first answer', 'done': True}
+
+    first._post = first_post
+    assert first.local(prompt='first').text == 'first answer'
+    assert second.local(prompt='after completion').text == 'second answer'
+
+
+def test_golden_gateway_rejects_unobserved_deep_model(monkeypatch,tmp_path):
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    gateway = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'ledger.db')),
+                           settings=settings(fast_model='gemma3:1b', deep_model='qwen3:14b'))
+    gateway._post = lambda *_args: (_ for _ in ()).throw(AssertionError('backend contacted'))
+    with pytest.raises(PermissionError, match='requires measured'):
+        gateway.local(prompt='fixture', deep=True)
 
 
 def test_max_profile_defaults_are_bounded():
