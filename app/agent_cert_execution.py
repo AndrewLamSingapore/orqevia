@@ -264,6 +264,10 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
             pause(min(0.25, max(0.0, timeout_seconds - (monotonic() - started))))
         return {**base, "job_id": job_id, "state": "INCOMPLETE",
                 "reason": "bounded_timeout"}
-    except Exception:
-        # Dependency exceptions may embed bearer credentials or model text.
-        return {**base, "state": "INCOMPLETE", "reason": "dependency_failed"}
+    except Exception as exc:
+        # Never include the exception message: it may contain bearer material
+        # or model text. The class and HTTP status are safe diagnostic codes.
+        status = getattr(exc, "status_code", None)
+        return {**base, "state": "INCOMPLETE", "reason": "dependency_failed",
+                "dependency_class": type(exc).__name__,
+                "dependency_http_status": status if type(status) is int else None}

@@ -262,11 +262,17 @@ def prepare(container: str, directory: Path, endpoint: str) -> dict:
     margin = max(256, math.ceil(observed / 4))
     demand = observed + margin
     if demand > second["hard_cap_mib"] - RESERVE_MIB:
-        raise EvidenceError("measured model demand lacks enforced memory reserve")
+        raise EvidenceError(
+            "measured model demand lacks enforced memory reserve: "
+            f"observed={observed}MiB demand={demand}MiB "
+            f"hard_cap={second['hard_cap_mib']}MiB reserve={RESERVE_MIB}MiB"
+        )
     profile = {
         "schema": PROFILE_SCHEMA, "normal_concurrency": 1,
         "minimum_available_mib": RESERVE_MIB,
         "context_tokens": CONTEXT_TOKENS, "output_limit": OUTPUT_TOKENS,
+        "generation_options": ({"temperature": 0, "think": False}
+                               if MODEL == "qwen3:1.7b" else {}),
         "runtime_version": version,
         "models": {MODEL: {"digest": digest, "peak_mib": demand}},
         "measurement": {"kind": "cgroup_v2_memory_peak_one_synthetic_calibration",

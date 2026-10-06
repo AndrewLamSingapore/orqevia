@@ -310,14 +310,15 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                  "Fixed costs and market demand remain unknown")
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
             objective = (
-                "Classify integrity of two synthetic artifacts using the separately observed SHA-256 "
-                "values supplied alongside their exact bytes. Control is unmodified; mutated changes "
-                "one result byte while reusing the control's declared digest. "
+                "Classify two synthetic artifacts from exact bytes and separately observed SHA-256 values. "
+                "Control is intact; mutated changes one result byte but reuses control's declared digest. "
                 "Accept the intact control's integrity and reject the mutated artifact even though "
                 "both reports say PASS. Return ONLY strict JSON with exactly accept_control, "
                 "accept_mutated, control_actual_sha256, mutated_actual_sha256, "
                 "mutated_failure_reason, reported_pass_verified, and tests_executed. "
-                "Use JSON booleans. A matching digest proves integrity, not that tests ran; "
+                "Use JSON booleans. Set mutated_failure_reason to DIGEST_MISMATCH "
+                "iff the observed mutated SHA-256 differs from declared; else null. "
+                "A matching digest proves integrity, not that tests ran; "
                 "you are reviewing supplied artifacts, not running their tests."
             )
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":

@@ -7,11 +7,18 @@ on:
     paths:
       - .github/workflows/a18-offhost-telemetry.yml
       - scripts/offhost_ollama_telemetry.py
+      - scripts/run_a18_offhost_observation.py
       - tests/test_offhost_ollama_telemetry.py
+      - tests/test_a18_offhost_observation.py
+      - app/agent_cert_cases.py
+      - app/agent_cert_invalid_artifact.py
+      - app/compute_profile.py
       - app/agent_dispatch_api.py
       - app/compute_queue_api.py
       - app/direct_stream.py
+      - app/model_gateway.py
       - app/job_queue.py
+      - tests/test_agent_cert_cases.py
       - tests/test_agent_dispatch_api.py
       - tests/test_direct_stream_empty.py
       - tests/test_job_queue.py
@@ -31,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      A18_OFFHOST_MODEL: qwen2.5:3b
+      A18_OFFHOST_MODEL: qwen3:1.7b
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -47,7 +54,11 @@ jobs:
           test "$RUNNER_OS" = Linux
           test -f /sys/fs/cgroup/cgroup.controllers
           receipt_dir="/dev/shm/prime-a18-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          docker run -d --name prime-a18-ollama --memory=6g --cpus=2 \
+          # The 3B model required 6375 MiB but the measured 7 GiB runner had
+          # only 5691 MiB available. Retry the previously measured 1.7B model
+          # with the unchanged 2 GiB reserve on this disposable, capped VM.
+          test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 6291456
+          docker run -d --name prime-a18-ollama --memory=7g --cpus=2 \
             --publish 127.0.0.1:11434:11434 \
             --env OLLAMA_NUM_PARALLEL=1 --env OLLAMA_MAX_LOADED_MODELS=1 \
             ollama/ollama:0.12.10

@@ -5,6 +5,7 @@ import httpx
 import uuid
 
 from . import backend_admission
+from .compute_profile import ollama_generation_parameters
 
 
 async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False):
@@ -38,12 +39,14 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
         try:
             lease(backend_admission.dispatch)
             dispatched = True
+            model_options, think = ollama_generation_parameters(options())
             async with httpx.AsyncClient(timeout=float(job['timeout_seconds'])) as client:
                 async with client.stream('POST',settings.ollama_base_url+'/api/chat',json={
                 'model':provider.model,'messages':[{'role':'user','content':job['prompt']}],
                 'stream':True,'keep_alive':settings.keep_alive,'options':{
-                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()},
-                **({'format':'json'} if response_format == 'strict_json' else {})}) as response:
+                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**model_options},
+                **({'format':'json'} if response_format == 'strict_json' else {}),
+                **({'think':think} if think is not None else {})}) as response:
                     response.raise_for_status();parts=[];final=None
                     async for line in response.aiter_lines():
                         if not line:continue

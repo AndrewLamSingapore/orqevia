@@ -11,7 +11,7 @@ from typing import Any
 
 from .compute_ledger import ComputeLedger
 from .settings import SETTINGS, PrimeSettings
-from .compute_profile import require_compute_capacity, generation_options
+from .compute_profile import require_compute_capacity, generation_options, ollama_generation_parameters
 from .compute_profile import runtime_compute_profile
 from . import backend_admission
 
@@ -117,12 +117,14 @@ class ModelGateway:
                 c.commit()
             finally:
                 c.close()
+            model_options, think = ollama_generation_parameters(generation_options())
             data = self._post(
                 f"{self.ollama_url}/api/generate",
                 {
                     "model": model, "prompt": prompt, "stream": False,
                     "keep_alive": self.settings.keep_alive,
-                    "options": {"num_ctx": self.settings.context_tokens, "num_predict": self.settings.max_output_tokens,**generation_options()},
+                    "options": {"num_ctx": self.settings.context_tokens, "num_predict": self.settings.max_output_tokens,**model_options},
+                    **({"think": think} if think is not None else {}),
                 }, {}, timeout,
             )
             latency = int((time.monotonic() - started) * 1000)
