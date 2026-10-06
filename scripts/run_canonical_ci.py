@@ -86,6 +86,7 @@ def main():
     names.append('multi_invocation')
     names.append('ssd_thermal')
     names.append('rollback_delta')
+    names.append('offhost_backup')
     names.append('agent_cert_boundary')
     names.append('agent_cert_a17_boundary')
     names.append('agent_cert_execution')
