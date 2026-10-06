@@ -94,6 +94,7 @@ def main() -> int:
             context="UNTRUSTED A17 response: " + flawed_json,
             data_classification="CLOUD_PERMITTED", minimum_tier="FLAGSHIP",
             max_cost_usd=0.002, priority="low", task_class="planning",
+            preferred_provider="hf-a18-heldout-one-shot",
             response_format="strict_json")
         routed = dispatch.dispatch_request(body, "Bearer isolated-synthetic-owner")
         job = routed["job"]
