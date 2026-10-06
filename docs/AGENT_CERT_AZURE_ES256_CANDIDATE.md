@@ -26,7 +26,9 @@ set and L0 projection are unchanged.
 The candidate image copies only the reviewed public file
 `governance/agent-cert-verifier-azure-pins.json`. The Observatory route uses it
 only when `PRIME_AGENT_CERT_AZURE_ES256_ENABLED=1`; its SHA-256 is fixed in the
-runtime source. A missing file, a changed digest, or a malformed JWK reports
+runtime source. The source pin uses the LF Git blob hash, with CRLF normalized
+for an existing Windows checkout; mounted overrides use exact raw-file hashes.
+A missing file, a changed digest, or a malformed JWK reports
 `UNCONFIGURED` and projects every case as unproven. The verifier rereads the pin
 on each request; a changed file fails its digest check. Disable the feature or
 restart with a reviewed new mount to revoke or rotate a bind-mounted pin. No

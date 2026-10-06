@@ -72,7 +72,7 @@ app = FastAPI(title='PRIME local control', lifespan=direct_entry.lifespan,
               docs_url=None, redoc_url=None, openapi_url=None)
 
 _AZURE_CERT_PIN = Path(__file__).resolve().parent.parent / 'governance' / 'agent-cert-verifier-azure-pins.json'
-_AZURE_CERT_PIN_SHA256 = '62d6db94df99f662fef944bf31009628068ab703e95d07ebf36fbf2b8f00decc'
+_AZURE_CERT_PIN_SHA256 = '6cc238c7da9152519410a4cd731abd6e0e584d2cbd84c3c0863ca55b4e771bb0'
 
 
 def _certification_verifier(data_root: Path):
@@ -80,6 +80,7 @@ def _certification_verifier(data_root: Path):
         return None
     override_path = os.getenv('PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE')
     override_sha256 = os.getenv('PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256')
+    source_pin = override_path is None and override_sha256 is None
     if override_path is not None or override_sha256 is not None:
         if not override_path or not override_sha256:
             return None
@@ -88,7 +89,8 @@ def _certification_verifier(data_root: Path):
         pin_path, pin_sha256 = _AZURE_CERT_PIN, _AZURE_CERT_PIN_SHA256
     try:
         return verifier_from_azure_es256_pin_file(
-            pin_path, pin_sha256, untrusted_roots=(data_root,))
+            pin_path, pin_sha256, untrusted_roots=(data_root,),
+            normalize_crlf=source_pin)
     except (OSError, ValueError, TypeError, UnicodeError, RuntimeError):
         return None
 
