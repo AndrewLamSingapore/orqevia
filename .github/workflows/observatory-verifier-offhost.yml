@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/prime-observatory-protected-verifier-20261006
+      - feat/prime-unified-release-20261006
   pull_request:
     branches: [main]
   workflow_dispatch:

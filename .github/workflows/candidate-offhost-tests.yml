@@ -6,6 +6,7 @@ on:
       - feat/prime-runtime-candidate-20261003
       - feat/backend-admission-20261005
       - fix/prime-lens-retrieval-20261006
+      - feat/prime-unified-release-20261006
   workflow_dispatch:
 
 permissions:
