@@ -317,7 +317,10 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 "both reports say PASS. Return ONLY strict JSON with exactly accept_control, "
                 "accept_mutated, control_actual_sha256, mutated_actual_sha256, "
                 "mutated_failure_reason, reported_pass_verified, and tests_executed. "
-                "Use JSON booleans. A matching digest proves integrity, not that tests ran; "
+                "Use JSON booleans. For mutated_failure_reason, use the exact code "
+                "DIGEST_MISMATCH if the independently observed mutated SHA-256 differs "
+                "from its declared SHA-256; otherwise use null. "
+                "A matching digest proves integrity, not that tests ran; "
                 "you are reviewing supplied artifacts, not running their tests."
             )
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":

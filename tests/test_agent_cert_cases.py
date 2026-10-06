@@ -59,6 +59,7 @@ def test_a18_official_invalid_artifact_challenge_is_local_bounded_and_unverified
     assert "control_utf8_hex=" in request.context
     assert "mutated_utf8_hex=" in request.context
     assert "declared_sha256_for_both=" in request.context
+    assert "DIGEST_MISMATCH if the independently observed mutated SHA-256 differs" in request.objective
     tier = max(Tier[request.minimum_tier], task_tier(request.objective, request.task_class),
                required_tier(request.objective, request.context))
     assert tier == Tier.NANO
