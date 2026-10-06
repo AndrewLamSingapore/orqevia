@@ -63,7 +63,8 @@ def _uuid(value: object) -> bool:
         return False
 
 
-def review_a19_role_receipt(raw: bytes, *, source_revision: str,
+def review_a19_role_receipt(raw: bytes, *, profile_raw: bytes,
+                            source_revision: str,
                             trusted_run: Mapping[str, object]) -> dict[str, str]:
     """Recompute A19's role verdict and lineage; reject feature-run provenance.
 
@@ -74,6 +75,8 @@ def review_a19_role_receipt(raw: bytes, *, source_revision: str,
     """
     if not isinstance(raw, bytes) or not 0 < len(raw) <= 1024 * 1024:
         raise ValueError("bounded execution artifact required")
+    if not isinstance(profile_raw, bytes) or not 0 < len(profile_raw) <= 1024 * 1024:
+        raise ValueError("bounded measured profile required")
     if not isinstance(source_revision, str) or not _REVISION.fullmatch(source_revision):
         raise ValueError("exact source revision required")
     if not isinstance(trusted_run, Mapping) or set(trusted_run) != _RUN_FIELDS:
@@ -100,13 +103,24 @@ def review_a19_role_receipt(raw: bytes, *, source_revision: str,
         raise ValueError("invalid execution artifact") from exc
     if not isinstance(item, dict) or set(item) != _FIELDS:
         raise ValueError("execution artifact schema mismatch")
+    try:
+        profile = json.loads(profile_raw, object_pairs_hook=_unique)
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("invalid measured profile") from exc
+    models = profile.get("models") if isinstance(profile, dict) else None
+    model = item["model"]
+    details = models.get(model) if isinstance(models, dict) and isinstance(model, str) else None
+    if (not isinstance(model, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{1,99}", model)
+            or not isinstance(details, dict)
+            or details.get("digest") != item["model_digest"]
+            or hashlib.sha256(profile_raw).hexdigest() != item["profile_sha256"]):
+        raise ValueError("measured model profile mismatch")
     if (item["schema"] != _SCHEMA or item["source_revision"] != source_revision
             or item["github_run_id"] != trusted_run["run_id"]
             or item["github_run_attempt"] != trusted_run["run_attempt"]
             or item["case"] != "role:normal" or item["certification"] != "UNVERIFIED"
             or item["lineage_pass"] is not True or item["lineage_errors"] != []
             or item["role_review_pass"] is not True
-            or item["model"] != "qwen3:1.7b"
             or not isinstance(item["model_digest"], str)
             or not _SHA256.fullmatch(item["model_digest"])
             or not isinstance(item["profile_sha256"], str)

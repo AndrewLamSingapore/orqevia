@@ -15,6 +15,8 @@ CORRELATION = "22222222-2222-4222-8222-222222222222"
 RESULT = ('{"initial_check_pass":false,"retry_check_pass":true,'
           '"continuous_health_proven":false,"restart_authorized":false,'
           '"latest_check_time":"10:01Z","next_read_only_check":"sample_trend"}')
+PROFILE = (json.dumps({"models": {"qwen3:1.7b": {"digest": "b" * 64}}},
+                      sort_keys=True) + "\n").encode()
 
 
 def _payload():
@@ -32,7 +34,7 @@ def _payload():
         "source_revision": SOURCE,
         "github_run_id": "12345", "github_run_attempt": "1",
         "model": "qwen3:1.7b", "model_digest": "b" * 64,
-        "profile_sha256": "c" * 64,
+        "profile_sha256": hashlib.sha256(PROFILE).hexdigest(),
         "case": "role:normal", "challenge": spec,
         "case_spec_sha256": case_digest,
         "observation": {
@@ -72,7 +74,7 @@ def _trusted(raw):
 
 def _review(item, *, provenance=None):
     raw = _raw(item)
-    return review_a19_role_receipt(raw, source_revision=SOURCE,
+    return review_a19_role_receipt(raw, profile_raw=PROFILE, source_revision=SOURCE,
                                    trusted_run=provenance or _trusted(raw))
 
 
@@ -129,7 +131,19 @@ def test_claimed_pass_does_not_survive_independent_tamper_checks(mutate):
 def test_duplicate_json_fields_and_oversize_are_rejected():
     raw = _raw(_payload()).replace(b'"schema": ', b'"schema": "forged", "schema": ', 1)
     with pytest.raises(ValueError, match="duplicate"):
-        review_a19_role_receipt(raw, source_revision=SOURCE, trusted_run=_trusted(raw))
+        review_a19_role_receipt(raw, profile_raw=PROFILE, source_revision=SOURCE, trusted_run=_trusted(raw))
     with pytest.raises(ValueError, match="bounded"):
-        review_a19_role_receipt(b"x" * (1024 * 1024 + 1), source_revision=SOURCE,
+        review_a19_role_receipt(b"x" * (1024 * 1024 + 1), profile_raw=PROFILE, source_revision=SOURCE,
                                 trusted_run=_trusted(b"x" * (1024 * 1024 + 1)))
+
+
+def test_missing_or_tampered_measured_profile_is_rejected():
+    item = _payload()
+    raw = _raw(item)
+    with pytest.raises(ValueError, match="measured model profile"):
+        review_a19_role_receipt(raw, profile_raw=b"{}", source_revision=SOURCE,
+                                trusted_run=_trusted(raw))
+    wrong = PROFILE.replace(b"qwen3:1.7b", b"qwen2.5:1.5b")
+    with pytest.raises(ValueError, match="measured model profile"):
+        review_a19_role_receipt(raw, profile_raw=wrong, source_revision=SOURCE,
+                                trusted_run=_trusted(raw))
