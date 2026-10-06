@@ -23,6 +23,25 @@ $pythonExe = Read-Host 'Full path to verified task-local python.exe'
 Get-Clipboard -Raw | & $pythonExe -B scripts/offhost_blob_transport.py canary
 ```
 
+To retrieve a previously uploaded encrypted bundle, use its independently
+pinned SHA-256 and exact known blob name. The destination is an absolute path
+to a **new** isolated directory; the helper creates it and places only the
+verified ciphertext there:
+
+```powershell
+$digest = Read-Host 'Pinned ciphertext SHA-256'
+$blobName = "encrypted/$digest.primebkp"
+$newDir = Read-Host 'Absolute path to a NEW isolated directory'
+Get-Clipboard -Raw | & $pythonExe -B scripts/offhost_blob_transport.py download-ciphertext $newDir --blob-name $blobName --expected-sha256 $digest
+```
+
+The download streams at most 4 MiB per chunk and refuses ciphertext above
+16 GiB. It publishes the final file only after the downloaded bytes match the
+pinned hash and format prefix; an existing directory or final file is never
+overwritten. Interrupted runs may leave an unverified temporary ciphertext
+file, never a success receipt. Decryption and isolated restore are separate
+operations on a recovery device, with their own validation gate.
+
 For a protected local file, pipe its contents into stdin instead; the helper
 does not validate that file's ACL, so the operator must establish protection
 before use. Never put the SAS in a command argument, URL, environment variable,

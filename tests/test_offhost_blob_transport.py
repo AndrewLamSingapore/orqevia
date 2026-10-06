@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+import stat
 import sys
 import tempfile
 import types
@@ -11,7 +12,7 @@ from pathlib import Path
 
 from scripts.offhost_blob_transport import (
     ACCOUNT_URL, CONTAINER, MAGIC, TransportError, _blob_client, canary, encrypted_file,
-    validate_sas,
+    download_ciphertext, validate_sas,
 )
 
 
@@ -46,6 +47,22 @@ class FakeBlob:
         data = self.data + b"x" if self.tamper else self.data
         yield data[:7]
         yield data[7:]
+
+
+class FakeDownloadBlob:
+    def __init__(self, chunks, on_download=None):
+        self.data_chunks = chunks
+        self.on_download = on_download
+        self.download_kwargs = None
+
+    def download_blob(self, **kwargs):
+        self.download_kwargs = kwargs
+        return self
+
+    def chunks(self):
+        if self.on_download:
+            self.on_download()
+        yield from self.data_chunks
 
 
 class BlobTransportTests(unittest.TestCase):
@@ -171,6 +188,109 @@ class BlobTransportTests(unittest.TestCase):
         self.assertEqual(recorded["blob_name"], "canary/fixed.bin")
         self.assertEqual(recorded["credential"], sas())
         self.assertNotIn("sig", recorded["account_url"])
+        self.assertEqual(recorded["max_single_get_size"], 4 * 1024 * 1024)
+        self.assertEqual(recorded["max_chunk_get_size"], 4 * 1024 * 1024)
+
+    def test_download_ciphertext_new_isolated_directory_and_hash(self):
+        from unittest.mock import patch
+        payload = MAGIC + b"synthetic-ciphertext-bytes"
+        expected = hashlib.sha256(payload).hexdigest()
+        blob_name = f"encrypted/{expected}.primebkp"
+        fake = FakeDownloadBlob([payload[:3], payload[3:]])
+        with tempfile.TemporaryDirectory() as directory:
+            isolated = Path(directory) / "new-isolated-dir"
+            with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                result = download_ciphertext(sas(), blob_name, expected, isolated,
+                                             client_factory=lambda _token, _name: fake)
+            self.assertEqual(Path(result["path"]).read_bytes(), payload)
+            self.assertEqual(result["verification"], "CIPHERTEXT_DOWNLOAD_SHA256_MATCH")
+            self.assertEqual(result["bytes"], len(payload))
+            self.assertEqual(fake.download_kwargs, {"max_concurrency": 1})
+            self.assertEqual(list(isolated.iterdir()), [Path(result["path"])])
+
+    def test_download_mismatch_and_oversize_chunk_leave_no_success_file(self):
+        from unittest.mock import patch
+        payload = MAGIC + b"synthetic-ciphertext-bytes"
+        expected = hashlib.sha256(payload).hexdigest()
+        blob_name = f"encrypted/{expected}.primebkp"
+        with tempfile.TemporaryDirectory() as directory:
+            for label, fake in (
+                ("tampered", FakeDownloadBlob([payload + b"tampered"])),
+                ("oversize", FakeDownloadBlob([payload])),
+                ("total-limit", FakeDownloadBlob([payload[:8], payload[8:]])),
+            ):
+                isolated = Path(directory) / label
+                with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                    with patch("scripts.offhost_blob_transport.MAX_DOWNLOAD_CHUNK", 10 if label == "oversize" else 4 * 1024 * 1024):
+                        with patch("scripts.offhost_blob_transport.MAX_CIPHERTEXT_BYTES", 10 if label == "total-limit" else 16 * 1024 * 1024 * 1024):
+                            with self.assertRaises(TransportError):
+                                download_ciphertext(sas(), blob_name, expected, isolated,
+                                                    client_factory=lambda _token, _name: fake)
+                self.assertFalse(isolated.exists())
+
+    def test_download_sdk_failure_sanitizes_exception_and_removes_stage(self):
+        from unittest.mock import patch
+        payload = MAGIC + b"synthetic-ciphertext-bytes"
+        expected = hashlib.sha256(payload).hexdigest()
+        blob_name = f"encrypted/{expected}.primebkp"
+
+        class FailingBlob(FakeDownloadBlob):
+            def download_blob(self, **_kwargs):
+                raise RuntimeError("fake%2Bsignature")
+
+        with tempfile.TemporaryDirectory() as directory:
+            isolated = Path(directory) / "new"
+            with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                with self.assertRaises(TransportError) as failure:
+                    download_ciphertext(sas(), blob_name, expected, isolated,
+                                        client_factory=lambda _token, _name: FailingBlob([]))
+            self.assertNotIn("fake%2Bsignature", str(failure.exception))
+            self.assertFalse(isolated.exists())
+
+    def test_download_existing_directory_is_preserved_and_no_clobber(self):
+        from unittest.mock import patch
+        payload = MAGIC + b"synthetic-ciphertext-bytes"
+        expected = hashlib.sha256(payload).hexdigest()
+        blob_name = f"encrypted/{expected}.primebkp"
+        with tempfile.TemporaryDirectory() as directory:
+            existing = Path(directory) / "existing"
+            existing.mkdir()
+            with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                with self.assertRaises(TransportError):
+                    download_ciphertext(sas(), blob_name, expected, existing,
+                                        client_factory=lambda _token, _name: FakeDownloadBlob([payload]))
+            self.assertTrue(existing.is_dir())
+            isolated = Path(directory) / "new"
+            final = isolated / f"{expected}.primebkp"
+            fake = FakeDownloadBlob([payload], on_download=lambda: final.write_bytes(b"existing-data"))
+            with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                with self.assertRaises(TransportError):
+                    download_ciphertext(sas(), blob_name, expected, isolated,
+                                        client_factory=lambda _token, _name: fake)
+            self.assertEqual(final.read_bytes(), b"existing-data")
+            self.assertEqual(list(isolated.iterdir()), [final])
+
+    def test_download_rejects_wrong_blob_and_linked_parent(self):
+        from unittest.mock import patch
+        payload = MAGIC + b"synthetic-ciphertext-bytes"
+        expected = hashlib.sha256(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "new"
+            with self.assertRaises(TransportError):
+                download_ciphertext(sas(), "encrypted/other.primebkp", expected, target,
+                                    client_factory=lambda _token, _name: FakeDownloadBlob([payload]))
+            link = Path(directory) / "linked"
+            link.mkdir()
+            real_lstat = Path.lstat
+
+            def simulated_link(path):
+                return types.SimpleNamespace(st_mode=stat.S_IFLNK) if path == link else real_lstat(path)
+
+            with patch.object(Path, "lstat", simulated_link):
+                with self.assertRaises(TransportError):
+                    download_ciphertext(sas(), f"encrypted/{expected}.primebkp", expected, link / "new",
+                                        client_factory=lambda _token, _name: FakeDownloadBlob([payload]))
+            self.assertFalse(target.exists())
 
 
 if __name__ == "__main__":

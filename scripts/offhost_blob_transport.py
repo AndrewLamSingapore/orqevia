@@ -15,6 +15,7 @@ import re
 import secrets
 import stat
 import sys
+import tempfile
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,6 +30,8 @@ CANARY_BYTES = 64 * 1024
 MAX_SAS_CHARS = 4096
 MIN_REMAINING = timedelta(minutes=5)
 MAX_REMAINING = timedelta(hours=1)
+MAX_DOWNLOAD_CHUNK = 4 * 1024 * 1024
+MAX_CIPHERTEXT_BYTES = 16 * 1024 * 1024 * 1024
 
 
 class TransportError(ValueError):
@@ -82,6 +85,8 @@ def _blob_client(token: str, name: str):
     return BlobClient(
         account_url=ACCOUNT_URL, container_name=CONTAINER,
         blob_name=name, credential=token,
+        max_single_get_size=MAX_DOWNLOAD_CHUNK,
+        max_chunk_get_size=MAX_DOWNLOAD_CHUNK,
     )
 
 
@@ -101,6 +106,10 @@ def _transfer(client, source, size: int, expected_sha256: str, name: str) -> dic
         actual = hashlib.sha256()
         count = 0
         for chunk in client.download_blob().chunks():
+            if not isinstance(chunk, (bytes, bytearray, memoryview)) or not 0 < len(chunk) <= MAX_DOWNLOAD_CHUNK:
+                raise TransportError("Azure returned an invalid readback chunk")
+            if count + len(chunk) > size:
+                raise TransportError("Azure readback exceeded uploaded ciphertext size")
             actual.update(chunk)
             count += len(chunk)
     except Exception:
@@ -141,8 +150,8 @@ def encrypted_file(token: str, path: Path, expected_sha256: str, *, client_facto
         with path.open("rb") as stream:
             before = os.fstat(stream.fileno())
             identity = _file_identity(before)
-            if not stat.S_ISREG(before.st_mode) or before.st_size <= len(MAGIC):
-                raise TransportError("Ciphertext must be a nonempty regular file")
+            if (not stat.S_ISREG(before.st_mode) or not len(MAGIC) < before.st_size <= MAX_CIPHERTEXT_BYTES):
+                raise TransportError("Ciphertext must be a bounded nonempty regular file")
             if os.name == "nt" and before.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
                 raise TransportError("Ciphertext path must not be a reparse point")
             if not _same_open_file(path, stream, identity):
@@ -167,23 +176,137 @@ def encrypted_file(token: str, path: Path, expected_sha256: str, *, client_facto
         raise TransportError("Ciphertext file could not be read") from None
 
 
+def _check_real_directory_chain(directory: Path) -> None:
+    if not directory.is_absolute() or ".." in directory.parts:
+        raise TransportError("Isolated directory must be an absolute, direct path")
+    try:
+        for part in (directory, *directory.parents):
+            info = part.lstat()
+            if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode)
+                    or (os.name == "nt" and info.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)):
+                raise TransportError("Isolated directory chain contains a link or reparse point")
+    except OSError:
+        raise TransportError("Isolated directory chain is unavailable") from None
+
+
+def _same_isolated_directory(directory: Path, created) -> bool:
+    if created is None:
+        return False
+    try:
+        _check_real_directory_chain(directory)
+        current = directory.lstat()
+        return (current.st_dev, current.st_ino) == (created.st_dev, created.st_ino)
+    except (OSError, TransportError):
+        return False
+
+
+def download_ciphertext(token: str, blob_name: str, expected_sha256: str, new_directory: Path,
+                        *, client_factory=_blob_client) -> dict:
+    """Download pinned ciphertext into a new directory, publishing only after hash verification."""
+    if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+        raise TransportError("Expected ciphertext SHA-256 is required")
+    if blob_name != f"encrypted/{expected_sha256}.primebkp":
+        raise TransportError("Blob name must match the pinned ciphertext SHA-256")
+    new_directory = Path(new_directory)
+    _check_real_directory_chain(new_directory.parent)
+    client = _client(client_factory, token, blob_name)
+    staged = None
+    staged_identity = None
+    created_directory = False
+    created = None
+    published = False
+    try:
+        os.mkdir(new_directory, 0o700)  # exclusive: this run owns the isolated directory
+        created_directory = True
+        created = new_directory.lstat()
+        _check_real_directory_chain(new_directory)
+        final = new_directory / f"{expected_sha256}.primebkp"
+        digest = hashlib.sha256()
+        prefix = bytearray()
+        count = 0
+        with tempfile.NamedTemporaryFile(mode="wb", prefix=".prime-ciphertext-", dir=new_directory,
+                                         delete=False) as output:
+            staged = Path(output.name)
+            for chunk in client.download_blob(max_concurrency=1).chunks():
+                if not isinstance(chunk, (bytes, bytearray, memoryview)) or not 0 < len(chunk) <= MAX_DOWNLOAD_CHUNK:
+                    raise TransportError("Azure returned an invalid ciphertext chunk")
+                count += len(chunk)
+                if count > MAX_CIPHERTEXT_BYTES:
+                    raise TransportError("Ciphertext exceeds the bounded download limit")
+                if len(prefix) < len(MAGIC):
+                    prefix.extend(chunk[:len(MAGIC) - len(prefix)])
+                digest.update(chunk)
+                if output.write(chunk) != len(chunk):
+                    raise TransportError("Ciphertext staging write was incomplete")
+            output.flush()
+            os.fsync(output.fileno())
+            stage_stat = os.fstat(output.fileno())
+            staged_identity = (stage_stat.st_dev, stage_stat.st_ino)
+            if stage_stat.st_size != count:
+                raise TransportError("Staged ciphertext size does not match download")
+        if count <= len(MAGIC) or bytes(prefix) != MAGIC or digest.hexdigest() != expected_sha256:
+            raise TransportError("Downloaded ciphertext failed format or SHA-256 verification")
+        if not _same_isolated_directory(new_directory, created):
+            raise TransportError("Isolated directory changed during download")
+        staged_info = staged.lstat()
+        if ((staged_info.st_dev, staged_info.st_ino) != staged_identity
+                or staged_info.st_size != count
+                or not stat.S_ISREG(staged_info.st_mode)
+                or (os.name == "nt" and staged_info.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)):
+            raise TransportError("Temporary ciphertext path changed before publication")
+        os.link(staged, final)  # atomic no-clobber; rename could replace on POSIX
+        published = True
+        staged.unlink()
+        staged = None
+        return {
+            "account": ACCOUNT, "container": CONTAINER, "blob": blob_name,
+            "bytes": count, "sha256": expected_sha256, "path": str(final),
+            "verification": "CIPHERTEXT_DOWNLOAD_SHA256_MATCH",
+        }
+    except TransportError:
+        raise
+    except Exception:
+        # Never forward SDK exceptions: a request URL may include the SAS.
+        raise TransportError("Azure ciphertext download or publication failed") from None
+    finally:
+        same_directory = created_directory and _same_isolated_directory(new_directory, created)
+        if same_directory and staged is not None:
+            try:
+                staged.unlink(missing_ok=True)
+            except OSError:
+                pass  # only an unverified ciphertext stage may remain
+        if same_directory and not published:
+            try:
+                new_directory.rmdir()  # remove only this run's empty directory
+            except OSError:
+                pass
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Upload and independently read back a synthetic canary or PRIME ciphertext")
-    parser.add_argument("mode", choices=("canary", "encrypted-file"))
-    parser.add_argument("path", nargs="?", type=Path, help="PRIMEBKP1 ciphertext path (encrypted-file only)")
-    parser.add_argument("--expected-sha256", help="Previously pinned ciphertext digest (encrypted-file only)")
+    parser = argparse.ArgumentParser(description="Transport a synthetic canary or pinned PRIME ciphertext")
+    parser.add_argument("mode", choices=("canary", "encrypted-file", "download-ciphertext"))
+    parser.add_argument("path", nargs="?", type=Path, help="ciphertext file or NEW isolated download directory")
+    parser.add_argument("--expected-sha256", help="Previously pinned ciphertext digest")
+    parser.add_argument("--blob-name", help="Known encrypted/<sha256>.primebkp name for download")
     args = parser.parse_args()
-    if args.mode == "canary" and (args.path is not None or args.expected_sha256 is not None):
-        parser.error("canary takes no file or digest")
-    if args.mode == "encrypted-file" and (args.path is None or args.expected_sha256 is None):
+    if args.mode == "canary" and (args.path is not None or args.expected_sha256 is not None or args.blob_name is not None):
+        parser.error("canary takes no file, blob name, or digest")
+    if args.mode == "encrypted-file" and (args.path is None or args.expected_sha256 is None or args.blob_name is not None):
         parser.error("encrypted-file requires a path and previously pinned SHA-256")
+    if args.mode == "download-ciphertext" and (args.path is None or args.expected_sha256 is None or args.blob_name is None):
+        parser.error("download-ciphertext requires a NEW directory, blob name, and pinned SHA-256")
     if sys.stdin.isatty():
         raise SystemExit("SAS must arrive on stdin from a local clipboard pipeline")
     try:
         token = sys.stdin.read(MAX_SAS_CHARS + 2)
         if len(token) > MAX_SAS_CHARS + 1:
             raise TransportError("SAS input is too long")
-        result = canary(token) if args.mode == "canary" else encrypted_file(token, args.path, args.expected_sha256)
+        if args.mode == "canary":
+            result = canary(token)
+        elif args.mode == "encrypted-file":
+            result = encrypted_file(token, args.path, args.expected_sha256)
+        else:
+            result = download_ciphertext(token, args.blob_name, args.expected_sha256, args.path)
         print(json.dumps(result, sort_keys=True))
         return 0
     except Exception:
