@@ -50,6 +50,7 @@ jobs:
           import json
           import os
           from pathlib import Path
+          import yaml
 
           config = json.loads((Path(os.environ["RUNNER_TEMP"]) / "observatory-verifier" / "compose.json").read_text())
           prime = config["services"]["prime"]
@@ -57,7 +58,10 @@ jobs:
           assert prime["environment"]["PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE"] == "/run/prime-cert-verifier-pin.json"
           mounts = [item for item in prime["volumes"] if item["target"] == "/run/prime-cert-verifier-pin.json"]
           assert len(mounts) == 1 and mounts[0]["read_only"] is True
-          assert mounts[0]["bind"]["create_host_path"] is False
+          assert mounts[0].get("bind", {}).get("create_host_path") is not True
+          override = yaml.safe_load(Path("deploy/observatory-verifier-pin.override.yml").read_text())
+          requested = override["services"]["prime"]["volumes"]
+          assert len(requested) == 1 and requested[0]["bind"]["create_host_path"] is False
           PY
       - name: Build disposable runtime image with only reviewed public pin
         run: docker build --tag prime:observatory-verifier-candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
