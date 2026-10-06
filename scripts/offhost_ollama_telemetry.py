@@ -206,6 +206,31 @@ def _atomic_json(path: Path, value: dict) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _model_resident(endpoint: str) -> bool:
+    loaded = _api(endpoint, "/api/ps").get("models")
+    if not isinstance(loaded, list) or any(
+            not isinstance(row, dict) or not isinstance(row.get("name"), str)
+            for row in loaded):
+        raise EvidenceError("loaded-model inventory unavailable")
+    return any(row["name"] == MODEL for row in loaded)
+
+
+def _require_calibration_unloaded(endpoint: str) -> None:
+    if not _model_resident(endpoint):
+        return
+    response = _api(endpoint, "/api/generate", {
+        "model": MODEL, "prompt": "", "stream": False, "keep_alive": 0,
+    })
+    if response.get("done") is not True:
+        raise EvidenceError("explicit calibration unload did not complete")
+    # Bounded observation, never an unbounded retry or admission bypass.
+    for _ in range(40):
+        if not _model_resident(endpoint):
+            return
+        time.sleep(0.25)
+    raise EvidenceError("calibration model did not unload")
+
+
 def prepare(container: str, directory: Path, endpoint: str) -> dict:
     _runner_only(directory)
     if endpoint != "http://127.0.0.1:11434":
@@ -224,10 +249,7 @@ def prepare(container: str, directory: Path, endpoint: str) -> dict:
     })
     if response.get("done") is not True:
         raise EvidenceError("calibration did not complete")
-    loaded = _api(endpoint, "/api/ps").get("models")
-    if not isinstance(loaded, list) or any(
-            isinstance(row, dict) and row.get("name") == MODEL for row in loaded):
-        raise EvidenceError("calibration model did not unload")
+    _require_calibration_unloaded(endpoint)
     second = _backend(container)
     if (first["instance"], first["boot_id"]) != (second["instance"], second["boot_id"]):
         raise EvidenceError("backend restarted during calibration")
