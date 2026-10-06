@@ -59,6 +59,7 @@ def main():
     names.append('evidence_lens_qualification_receipt')
     names.append('lens_claim_authority_current')
     names.append('evidence_lens_live_slice')
+    names.append('job_queue')
     names.append('agent_role_contract_matrix')
     names.append('agent_certification')
     names.append('agent_capability_route')
