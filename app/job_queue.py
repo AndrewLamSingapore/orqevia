@@ -313,24 +313,22 @@ class JobQueue:
     def claim(self, worker_id: str, providers: list[Provider]) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
-            # Consider the oldest job in every agent/priority lane. A thousand
-            # blocked jobs for one agent must not hide a ready Owner or another
-            # agent, while one agent's same-priority jobs remain FIFO.
-            rows=c.execute("""SELECT * FROM (
-                SELECT compute_jobs.*,ROW_NUMBER() OVER (
-                    PARTITION BY agent,priority ORDER BY created_at,id) AS lane_rank
-                FROM compute_jobs WHERE status='queued'
-            ) WHERE lane_rank=1 ORDER BY priority DESC,created_at,id LIMIT 1000""").fetchall()
             claim_time = time.time()
-            rows=sorted(
-                rows,
-                key=lambda row: (
-                    -self._effective_priority(row, claim_time),
-                    -int(row["priority"]),
-                    row["created_at"],
+            c.create_function(
+                "effective_priority", 2,
+                lambda priority, created_at: self._effective_priority(
+                    {"priority": priority, "created_at": created_at}, claim_time
                 ),
             )
-            for row in rows:
+            # Rank the complete queue, then stream rows to bound Python memory.
+            # A blocked oldest job must not conceal eligible work in its lane.
+            cursor=c.execute("""SELECT * FROM compute_jobs WHERE status='queued'
+                ORDER BY effective_priority(priority,created_at) DESC,
+                         priority DESC,created_at,id""")
+            def candidates():
+                while rows := cursor.fetchmany(1000):
+                    yield from rows
+            for row in candidates():
                 # Revalidate persisted identities under the current registry before
                 # admission. Never reinterpret a retired legacy ID as a new role.
                 try:
