@@ -198,3 +198,25 @@ def test_owner_control_exposes_explicit_capture_and_read_only_proof(client):
     source=Path(production_entry.__file__).with_name('production_control.js').read_text(encoding='utf-8')
     assert "method==='record' ? {method:'POST'" in source
     assert "method==='happened' ? 'objectives/' : 'evidence/from-objective/'" in source
+
+
+def test_one_shot_live_canary_records_only_unverified_synthetic_proof(client, monkeypatch):
+    from scripts import lens_live_canary
+
+    def local_transport(base, method, path, *, payload=None, origin=None):
+        assert base == ORIGIN
+        headers = {'Origin': origin} if origin else {}
+        response = client.request(method, path, json=payload, headers=headers)
+        return response.status_code, response.content
+
+    monkeypatch.setattr(lens_live_canary, '_request', local_transport)
+    result = lens_live_canary.run(ORIGIN)
+    assert result['integrity'] == 'VALID'
+    assert result['currentness'] == 'CURRENT'
+    assert result['verification'] == 'UNVERIFIED'
+    assert result['model_invoked'] is False
+    assert result['scope'] == 'ONE_DETERMINISTIC_LOCAL_SYNTHETIC_OBJECTIVE'
+    readback = client.get('/control/api/evidence/from-objective/' + result['task_id'])
+    assert readback.status_code == 200
+    assert readback.json()['record_id'] == result['record_id']
+    assert readback.json()['proof']['time_freshness'] == 'UNKNOWN'
