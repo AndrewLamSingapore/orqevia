@@ -59,11 +59,22 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
                 "verification": "UNVERIFIED"}
     observed = observations[0]["value"]
     current = _snapshot(task)
+    runtime = observed.get("runtime") or {}
+    unproven = ["independent_claim_verification", "production_acceptance"]
+    if runtime.get("source_revision") in (None, "UNKNOWN"):
+        unproven.append("source_revision_binding")
+    if not runtime.get("image_digest"):
+        unproven.append("runtime_image_binding")
     return {"record_id": record_id, "task_id": task["id"], "revision": task["revision"],
             "integrity": "VALID", "currentness": "CURRENT" if observed == current else "STALE",
             "verification": "UNVERIFIED", "source": "PRIME_OBJECTIVE_STORE",
             "result_state": observed["execution_state"], "observed": observed,
-            "ledger_head": integrity["head"]}
+            "ledger_head": integrity["head"],
+            "proof": {"producer": observations[0].get("source", "UNKNOWN"),
+                      "captured_at": observations[0].get("observed_at"),
+                      "completed_at": observed.get("completed_at"),
+                      "runtime": runtime,
+                      "unproven": unproven}}
 
 
 def materialize(task_id: str, authorization: str) -> dict:

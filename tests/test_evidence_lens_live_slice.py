@@ -42,6 +42,12 @@ def test_authenticated_materialize_read_deduplicate_and_no_model_text(client,tmp
     assert result['result_state']=='COMPLETED'
     assert result['observed']['runtime']['source_revision']=='UNKNOWN'
     assert result['observed']['claim_verification']=='VERIFIED'
+    assert result['proof']['producer']=='PRIME_OBJECTIVE_STORE'
+    assert result['proof']['captured_at']
+    assert result['proof']['runtime']==result['observed']['runtime']
+    assert 'independent_claim_verification' in result['proof']['unproven']
+    assert 'production_acceptance' in result['proof']['unproven']
+    assert 'source_revision_binding' in result['proof']['unproven']
     assert 'REGISTERED AGENTS: 21' not in first.text  # Digest/reference, not copied content.
     assert client.get(path).json()==result
     assert client.post(path,headers={'Origin':ORIGIN}).json()==result
@@ -92,6 +98,8 @@ def test_failed_execution_remains_failed_in_ledger(client,tmp_path):
     response=client.post(path,headers={'Origin':ORIGIN})
     assert response.status_code==201, response.text
     assert response.json()['result_state']=='COMPLETED_WITH_FAILURES'
+    assert response.json()['verification']=='UNVERIFIED'
+    assert 'production_acceptance' in response.json()['proof']['unproven']
     with sqlite3.connect(tmp_path/'evidence-lens.db') as db:
         envelope=json.loads(db.execute('select envelope_json from evidence_actions').fetchone()[0])
     assert envelope['status']=='FAILED'
@@ -142,6 +150,8 @@ def test_owner_control_exposes_explicit_capture_and_read_only_proof(client):
     assert "el('record-proof').onclick=()=>lens('record')" in script.text
     assert "el('prove-it').onclick=()=>lens('prove')" in script.text
     assert 'innerHTML' not in script.text
+    assert 'Evidence producer:' in script.text
+    assert 'Not proven:' in script.text
     source=Path(production_entry.__file__).with_name('production_control.js').read_text(encoding='utf-8')
     assert "method==='record' ? {method:'POST'" in source
     assert "method==='happened' ? 'objectives/' : 'evidence/from-objective/'" in source
