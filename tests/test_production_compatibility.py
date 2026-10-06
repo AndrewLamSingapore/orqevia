@@ -1,5 +1,6 @@
 """Local shell security and actual deterministic API roundtrip; no providers run."""
 import hashlib
+import json
 from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
@@ -34,6 +35,33 @@ def test_minimal_health_and_static_no_secrets(shell, monkeypatch):
     assert client.get('/health').status_code == 503
     assert client.get('/health').json() == {'ok': False}
     assert client.get('/control').status_code == 503
+
+
+def test_capability_observatory_is_owner_only_and_fails_closed(shell, monkeypatch, tmp_path):
+    _, client = shell
+    path = '/control/api/agent-capabilities'
+    assert client.get(path).status_code == 503  # No exact runtime source binding.
+    monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'a' * 40)
+    agent_dir = tmp_path / 'agent-certification' / 'a17'
+    agent_dir.mkdir(parents=True)
+    (agent_dir / 'certification.json').write_text(json.dumps({
+        'schema_version': '1.0',
+        'records': [{'agent_id': 'a17', 'capability_id': 'responsibility.a17',
+                     'test_result': 'PASS', 'verifier': 'a18'}],
+    }), encoding='utf-8')
+    response = client.get(path)
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    body = response.json()
+    assert body['reported_source_revision'] == 'a' * 40
+    assert body['independent_verifier'] == 'UNCONFIGURED'
+    assert len(body['agents']) == 21
+    assert all(row['proven']['level'] == 'L0' and row['quality'] == 'UNKNOWN'
+               and row['runtime_activation'] == 'UNVERIFIED'
+               for row in body['agents'])
+    assert client.get(path, headers={'Host': 'evil.example'}).status_code == 403
+    monkeypatch.delenv('PRIME_SPINE_TOKEN')
+    assert client.get(path).status_code == 503
 
 
 def test_phone_pairing_only_local_same_origin(shell):
