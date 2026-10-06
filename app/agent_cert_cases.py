@@ -7,6 +7,7 @@ independent verifier are still required for every PASS record.
 from __future__ import annotations
 
 from .agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
+from .agent_cert_invalid_artifact import ARTIFACT_BYTES, DECLARED_SHA256
 from .agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from .runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
 
@@ -307,6 +308,15 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 discriminants = ("Revenue is 2000 and variable cost is 1200",
                                  "Gross margin is 800, or 40% of revenue",
                                  "Fixed costs and market demand remain unknown")
+        elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
+            objective = (
+                "Review the synthetic artifact bytes and its reported PASS plus declared SHA-256. "
+                "Independently compute SHA-256 over the exact UTF-8 bytes supplied; reject an "
+                "artifact whose digest disagrees even if its report says PASS. Return ONLY strict "
+                "JSON with exactly accept_artifact, reported_pass_trusted, failure_reason, "
+                "actual_sha256, and tests_executed. Use JSON booleans. Set tests_executed=false: "
+                "you are reviewing a supplied artifact, not running its tests."
+            )
         elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal":
             objective = (
                 "Review the synthetic function against the stated requirement. Identify the concrete "
@@ -440,6 +450,12 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                 "Proposed Python implementation: def is_nonnegative(n): return n > 0. "
                 "No test results are supplied."
             )
+        elif agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
+            supplied_context = (
+                "SYNTHETIC artifact_id=a18-invalid-artifact-v1; reported_status=PASS; "
+                f"artifact_utf8_hex={ARTIFACT_BYTES.hex()}; declared_sha256={DECLARED_SHA256}. "
+                "No test execution or independently trusted report is supplied."
+            )
         elif case_id == "role:normal":
             supplied_context = context or ROLE_NORMAL_FIXTURES[capability][1]
         elif agent_id != AGENT_ID or capability != CAPABILITY_ID:
@@ -462,6 +478,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_weighted_oracle",)
         if agent_id == "a18" and capability == "responsibility.a18" and case_id == "role:normal" and not context:
             review += ("exact_zero_boundary_oracle",)
+        if agent_id == "a18" and capability == "responsibility.a18" and case_id == "adversarial:invalid_artifact" and not context:
+            review += ("exact_invalid_artifact_oracle",)
         if agent_id == "a17" and capability == "responsibility.a17" and case_id == "role:normal" and not context:
             review += ("exact_a17_boundary_oracle",)
         if agent_id == "a14" and capability == "responsibility.a14" and case_id == "role:normal" and not context:
@@ -490,7 +508,8 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             "priority": "low",
             "task_class": task_class,
             "max_cost_usd": 0,
-            **({"response_format": "strict_json"} if case_id == "role:normal" and not context
+            **({"response_format": "strict_json"} if (case_id == "role:normal" or
+                 (agent_id == "a18" and case_id == "adversarial:invalid_artifact")) and not context
                and (agent_id, capability) in {("a01", "responsibility.a01"),
                                               ("a04", "responsibility.a04"),
                                               ("a12", "responsibility.a12"),

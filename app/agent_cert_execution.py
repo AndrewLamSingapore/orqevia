@@ -19,6 +19,7 @@ from .agent_cert_rates import review_rate_json
 from .agent_cert_weighted import review_weighted_json
 from .agent_cert_boundary import review_zero_boundary_json
 from .agent_cert_a17_boundary import review_a17_boundary_json
+from .agent_cert_invalid_artifact import review_invalid_artifact_json
 from .agent_cert_data_quality import review_data_quality_json
 from .agent_cert_portfolio import review_portfolio_json
 from .agent_cert_cost import review_cost_json
@@ -169,6 +170,16 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "boundary_oracle_source_mismatch"}
                     valid, review_errors = review_zero_boundary_json(result)
                     review = "BOUNDARY_CHECK_PASS" if valid else "BOUNDARY_CHECK_FAIL"
+                if "exact_invalid_artifact_oracle" in spec.get("independent_review", ()):
+                    if agent != "a18" or capability != "responsibility.a18" or spec.get("case") != "adversarial:invalid_artifact":
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "invalid_artifact_oracle_scope_mismatch"}
+                    if spec != challenge("adversarial:invalid_artifact", agent_id="a18",
+                                         capability_id="responsibility.a18"):
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "invalid_artifact_oracle_source_mismatch"}
+                    valid, review_errors = review_invalid_artifact_json(result)
+                    review = "ARTIFACT_CHECK_PASS" if valid else "ARTIFACT_CHECK_FAIL"
                 if "exact_a17_boundary_oracle" in spec.get("independent_review", ()):
                     if agent != "a17" or capability != "responsibility.a17" or spec.get("case") != "role:normal":
                         return {**base, "job_id": job_id, "state": "REJECTED",

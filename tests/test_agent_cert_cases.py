@@ -43,6 +43,20 @@ def test_normal_role_case_uses_available_mini_tier_without_downgrading_hard_case
     assert challenge("role:difficult")["request"]["task_class"] == "complex_reasoning"
 
 
+def test_a18_official_invalid_artifact_challenge_is_local_bounded_and_unverified():
+    spec = challenge("adversarial:invalid_artifact", agent_id="a18")
+    request = AgentRequest(**spec["request"])
+    assert spec["case"] == "adversarial:invalid_artifact"
+    assert spec["certification"] == "UNVERIFIED"
+    assert request.data_classification == "LOCAL_ONLY"
+    assert request.minimum_tier == "NANO"
+    assert request.max_cost_usd == 0
+    assert request.response_format == "strict_json"
+    assert "exact_invalid_artifact_oracle" in spec["independent_review"]
+    assert "artifact_utf8_hex=" in request.context
+    assert "declared_sha256=" in request.context
+
+
 def test_unseen_challenge_accepts_held_out_context_without_recording_a_pass():
     held_out = "SYNTHETIC source=auditor; service=unseen-queue; health=unknown"
     spec = challenge("unseen_task:complete", context=held_out)
