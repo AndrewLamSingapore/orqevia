@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_optional_runtime_features_and_profile_default_off():
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     assert "PRIME_QUEUE_CONCURRENCY: ${PRIME_QUEUE_CONCURRENCY:-1}" in compose
+    assert "PRIME_LOCAL_ADMISSION_MODE: ${PRIME_LOCAL_ADMISSION_MODE:-golden_n1}" in compose
     assert "OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}" in compose
     assert "PRIME_CONTEXT_PACKS_ENABLED: ${PRIME_CONTEXT_PACKS_ENABLED:-0}" in compose
     assert "PRIME_SKILL_PACKS_ENABLED: ${PRIME_SKILL_PACKS_ENABLED:-0}" in compose

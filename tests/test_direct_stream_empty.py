@@ -4,13 +4,15 @@ from unittest.mock import patch
 import httpx
 import pytest
 from app.direct_stream import infer
-from tests.backend_receipt_fixture import install as install_backend_receipt
 
 
 @pytest.mark.parametrize('content,ok',[('',False),('verified fixture',True)])
 def test_completion_marker_requires_actual_text(content,ok,monkeypatch,tmp_path):
     import json
-    install_backend_receipt(monkeypatch,tmp_path,'http://fixture')
+    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_BACKEND_MEMORY_RECEIPT',
+                 'PRIME_MEASURED_COMPUTE_PROFILE', 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
     transport=httpx.MockTransport(lambda request:httpx.Response(200,text=json.dumps({
         'done':True,'message':{'content':content},'prompt_eval_count':2,'eval_count':3})+'\n'))

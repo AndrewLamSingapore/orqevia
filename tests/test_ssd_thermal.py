@@ -10,6 +10,7 @@ from app import backend_admission, ssd_thermal
 
 
 def configured(tmp_path, monkeypatch):
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'measured')
     policy = {
         'schema': ssd_thermal.POLICY_SCHEMA,
         'host': 'DESKTOP-27LKJ2V', 'device_id': '0',

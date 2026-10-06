@@ -29,7 +29,7 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
         if db_path:
             lease(backend_admission.check)
         else:
-            lease(backend_admission.reserve, job.get('ram_mb', 0))
+            lease(backend_admission.reserve_model, provider.model, job.get('ram_mb', 0))
         dispatched = False
         complete = False
         try:

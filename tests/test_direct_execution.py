@@ -10,7 +10,6 @@ from fastapi.testclient import TestClient
 
 from app.action_records import ActionRecord,ActionLedger,DirectExecutor,action_ledger,close_ledgers
 from app.connector_sdk import ConnectorRegistry,Sink
-from tests.backend_receipt_fixture import install as install_backend_receipt
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +19,10 @@ def isolated(monkeypatch,tmp_path):
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
     monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
     monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
-    install_backend_receipt(monkeypatch,tmp_path,'http://fixture')
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE','golden_n1')
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
     yield
     close_ledgers()
 

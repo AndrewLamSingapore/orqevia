@@ -1,8 +1,9 @@
-"""Durable N=1 admission for one observed local backend endpoint.
+"""Durable N=1 admission for one local backend endpoint.
 
-The receipt is produced outside PRIME by a trusted operator-side collector. A
-path alone is not an attestation: deployment must make it atomic and read-only
-to PRIME, and the producer must verify effective ancestor and VM limits.
+Golden N=1 uses only an atomic lease. Measured admission additionally requires
+an operator-side receipt produced outside PRIME. A path alone is not an
+attestation: deployment must make it atomic and read-only to PRIME, and the
+producer must verify effective ancestor and VM limits.
 """
 from __future__ import annotations
 
@@ -17,6 +18,19 @@ from pathlib import Path
 SCHEMA = 'prime.backend-memory.v1'
 MAX_AGE_SECONDS = 2.0
 RESERVE_MIB = 2048
+BASELINE_MAX_DEMAND_MIB = 1024
+
+
+def admission_mode() -> str:
+    """Require an explicit opt-in for measured guards and reject mixed modes."""
+    mode = os.getenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    if mode not in ('golden_n1', 'measured'):
+        raise PermissionError('invalid local inference admission mode')
+    if mode == 'golden_n1' and any(os.getenv(name, '').strip() for name in (
+            'PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+            'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE')):
+        raise PermissionError('measured admission settings require measured mode')
+    return mode
 
 
 def observation(endpoint: str, *, now: float | None = None) -> dict:
@@ -56,8 +70,23 @@ def init(c: sqlite3.Connection) -> None:
         c.execute('ALTER TABLE backend_admission ADD COLUMN demand_mib INTEGER')
 
 
-def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int,
+def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int | None,
             sample: dict | None = None) -> None:
+    mode = admission_mode()
+    if mode == 'golden_n1':
+        if sample is not None:
+            raise PermissionError('measured backend sample requires measured admission')
+        # Empty identity fields mean no backend identity was observed. The
+        # endpoint row is still one atomic lease shared by every local caller.
+        if demand_mib is None:
+            demand_mib = 0  # ModelGateway has no caller-declared demand.
+        if type(demand_mib) is not int or not 0 <= demand_mib <= BASELINE_MAX_DEMAND_MIB:
+            raise PermissionError('heavy local inference requires measured admission')
+        if c.execute('SELECT 1 FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone():
+            raise PermissionError('backend inference lease occupied')
+        c.execute('INSERT INTO backend_admission(endpoint,job_id,instance,boot_id,state,demand_mib) VALUES(?,?,?,?,?,?)',
+                  (endpoint, job_id, '', '', 'pending', demand_mib))
+        return
     sample = observation(endpoint) if sample is None else sample
     # Injected samples are only for tests; production always uses observation().
     if type(demand_mib) is not int or demand_mib <= 0:
@@ -76,8 +105,12 @@ def reserve(c: sqlite3.Connection, endpoint: str, job_id: str, demand_mib: int,
 
 
 def reserve_model(c: sqlite3.Connection, endpoint: str, job_id: str,
-                  model: str, requested_mib: int) -> None:
+                  model: str, requested_mib: int, *, global_concurrency: int = 1) -> None:
     """Reserve at least the measured peak; an untrusted job estimate cannot lower it."""
+    if admission_mode() == 'golden_n1':
+        if global_concurrency != 1:
+            raise PermissionError('N>1 local inference requires measured admission')
+        return reserve(c, endpoint, job_id, requested_mib)
     from .compute_profile import runtime_compute_profile
 
     profile = runtime_compute_profile()
@@ -91,6 +124,13 @@ def reserve_model(c: sqlite3.Connection, endpoint: str, job_id: str,
 
 
 def check(c: sqlite3.Connection, endpoint: str, job_id: str, sample: dict | None = None) -> None:
+    if admission_mode() == 'golden_n1':
+        row = c.execute('SELECT job_id,instance,boot_id,state,demand_mib FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone()
+        if (not row or row[0] != job_id or row[1:3] != ('', '') or
+                row[3] not in ('pending', 'running') or
+                type(row[4]) is not int or not 0 <= row[4] <= BASELINE_MAX_DEMAND_MIB):
+            raise PermissionError('backend inference lease or mode mismatch')
+        return
     sample = observation(endpoint) if sample is None else sample
     row = c.execute('SELECT job_id,instance,boot_id,state,demand_mib FROM backend_admission WHERE endpoint=?', (endpoint,)).fetchone()
     if not row or tuple(row[:3]) != (job_id, sample['instance'], sample['boot_id']) or row[3] not in ('pending', 'running'):

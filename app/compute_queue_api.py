@@ -25,6 +25,8 @@ def candidate_global_concurrency(environment: dict[str, str], profile: dict | No
     The production default stays at one; unsupported or malformed overrides
     fail closed to one. Per-agent concurrency is separately fixed at one.
     """
+    if environment.get('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1') != 'measured':
+        return 1
     requested = environment.get("PRIME_QUEUE_CONCURRENCY")
     if requested not in {"2", "3"}:
         return 1

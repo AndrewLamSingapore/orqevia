@@ -50,7 +50,11 @@ def runtime_compute_profile():
 
 
 def validate_configuration(settings,queue_policy):
+    from .backend_admission import admission_mode
+    mode=admission_mode()
     profile=runtime_compute_profile()
+    if mode=='measured' and not profile:
+        raise RuntimeError('Measured local inference admission requires a valid Compute Profile')
     if not profile:return
     if queue_policy.global_concurrency>profile['normal_concurrency']:
         raise RuntimeError('Queue concurrency exceeds measured envelope')
@@ -77,7 +81,12 @@ def generation_options():
 
 
 def require_compute_capacity(model, endpoint=None):
+    from .backend_admission import admission_mode
+    mode=admission_mode()
     profile=runtime_compute_profile()
+    if mode=='golden_n1':return
+    if not profile:
+        raise PermissionError('Measured local inference admission requires a valid Compute Profile')
     if profile and model not in profile['models']:
         raise PermissionError('Model is outside measured Compute Profile')
     # Optional performance profiles cannot waive the mandatory backend scope.

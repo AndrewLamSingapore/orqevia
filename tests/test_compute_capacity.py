@@ -22,6 +22,7 @@ def settings(**overrides):
 
 
 def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'measured')
     with tempfile.TemporaryDirectory() as directory:
         monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', os.path.join(directory, 'queue.db'))
         install_backend_receipt(monkeypatch,tmp_path,'http://ollama.test')
@@ -57,6 +58,18 @@ def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
         assert summary["groups"][0]["average_output_tokens_per_second"] == 10.0
         compute_profile.load_compute_profile.cache_clear()
         compute_profile.runtime_compute_profile.cache_clear()
+
+
+def test_golden_gateway_local_inference_needs_no_measured_telemetry(monkeypatch,tmp_path):
+    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_BACKEND_MEMORY_RECEIPT',
+                 'PRIME_MEASURED_COMPUTE_PROFILE', 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    gateway = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'ledger.db')),
+                           settings=settings())
+    gateway._post = lambda *_args: {'response': 'baseline answer', 'done': True}
+    assert gateway.local(prompt='fixture').text == 'baseline answer'
 
 
 def test_max_profile_defaults_are_bounded():

@@ -28,8 +28,20 @@ def receipt(path, *, available=12000, instance='backend-1', scope=True, captured
     return value
 
 
+def receipt_after_completion(path, db):
+    with sqlite3.connect(db) as c:
+        completed_at = c.execute('SELECT captured_after FROM backend_admission_refresh WHERE endpoint=?',
+                                 (ENDPOINT,)).fetchone()[0]
+    # Windows time.time() can return the same tick as completion. A measured
+    # admission requires a strictly newer sample, not an equal timestamp.
+    while time.time() <= completed_at:
+        time.sleep(0.001)
+    receipt(path)
+
+
 @pytest.fixture
 def backend(tmp_path, monkeypatch):
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'measured')
     path = tmp_path / 'backend-receipt.json'
     monkeypatch.setenv('PRIME_BACKEND_MEMORY_RECEIPT', str(path))
     monkeypatch.setenv('OLLAMA_BASE_URL', ENDPOINT)
@@ -60,6 +72,70 @@ def test_missing_incomplete_and_mismatched_receipts_hold_claim(tmp_path, backend
     receipt(backend, instance='backend-2')
     # A valid identity and complete scope admit small declared work.
     assert q.claim('one', [LOCAL]) is not None
+
+
+def test_stale_receipt_holds_measured_claim(tmp_path, backend):
+    q = queue(tmp_path)
+    q.submit(agent='planner', prompt='fixture', ram_mb=1024)
+    receipt(backend, captured=time.time() - admission.MAX_AGE_SECONDS - 1)
+    assert q.claim('one', [LOCAL]) is None
+
+
+def test_golden_n1_runs_without_telemetry_and_retains_one_lease(tmp_path, monkeypatch):
+    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_BACKEND_MEMORY_RECEIPT',
+                 'PRIME_MEASURED_COMPUTE_PROFILE', 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('OLLAMA_BASE_URL', ENDPOINT)
+    q = queue(tmp_path)
+    first = q.submit(agent='planner', prompt='baseline', ram_mb=1024)
+    assert q.claim('one', [LOCAL])['id'] == first['id']
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute('SELECT instance,boot_id,state,demand_mib FROM backend_admission').fetchone() == ('', '', 'pending', 1024)
+    second = q.submit(agent='critic', prompt='waiting', ram_mb=1024)
+    assert q.claim('two', [LOCAL]) is None
+    c = admission.transaction(q.db_path)
+    try:
+        admission.dispatch(c, ENDPOINT, first['id'])
+        admission.check(c, ENDPOINT, first['id'])
+        admission.completed(c, ENDPOINT, first['id'])
+        c.commit()
+    finally:
+        c.close()
+    q.finish(first['id'], result='ok')
+    assert q.claim('two', [LOCAL])['id'] == second['id']
+
+
+def test_golden_n1_rejects_heavy_and_n2_without_measured_telemetry(tmp_path, monkeypatch):
+    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_BACKEND_MEMORY_RECEIPT',
+                 'PRIME_MEASURED_COMPUTE_PROFILE', 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv('OLLAMA_BASE_URL', ENDPOINT)
+    q = queue(tmp_path)
+    heavy = q.submit(agent='planner', prompt='heavy', ram_mb=1025)
+    assert q.claim('one', [LOCAL]) is None
+    assert q.get(heavy['id'])['status'] == 'queued'
+    n2 = JobQueue(tmp_path / 'n2.db', QueuePolicy(global_concurrency=2, local_ram_mb=32768))
+    n2.submit(agent='planner', prompt='n2', ram_mb=1024)
+    assert n2.claim('one', [LOCAL]) is None
+
+
+def test_invalid_mode_fails_closed(monkeypatch):
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'invalid')
+    with pytest.raises(PermissionError, match='invalid local inference admission mode'):
+        admission.admission_mode()
+
+
+@pytest.mark.parametrize('guard', ('PRIME_BACKEND_MEMORY_RECEIPT',
+                                   'PRIME_MEASURED_COMPUTE_PROFILE',
+                                   'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
+                                   'PRIME_SSD_THERMAL_ENFORCE'))
+def test_golden_mode_refuses_explicit_measured_guard(monkeypatch, guard):
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
+    monkeypatch.setenv(guard, '1')
+    with pytest.raises(PermissionError, match='measured admission settings'):
+        admission.admission_mode()
 
 
 def test_queue_uses_measured_peak_not_underdeclared_job_ram(tmp_path, backend, monkeypatch):
@@ -184,7 +260,7 @@ def test_stream_terminal_releases_but_disconnect_retains_lease(tmp_path, backend
 
     good = httpx.Response(200, text='{"done":true,"message":{"content":"ok"}}\n')
     assert asyncio.run(call(good))['result'] == 'ok'
-    receipt(backend)
+    receipt_after_completion(backend, tmp_path / 'direct.db')
     broken = httpx.Response(200, text='{"message":{"content":"partial"}}\n')
     with pytest.raises(RuntimeError, match='Incomplete'):
         asyncio.run(call(broken))

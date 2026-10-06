@@ -8,6 +8,7 @@ from tests.backend_receipt_fixture import install as install_backend_receipt
 
 @pytest.fixture
 def measured(tmp_path,monkeypatch):
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'measured')
     install_backend_receipt(monkeypatch,tmp_path,SETTINGS.ollama_base_url)
     raw=json.dumps({'schema':'abex.measured-compute.v1','normal_concurrency':1,'minimum_available_mib':8192,'context_tokens':8192,'output_limit':512,'models':{'gemma3:1b':{}}}).encode()
     path=tmp_path/'profile.json';path.write_bytes(raw)
@@ -25,14 +26,16 @@ def test_changed_profile_fails_closed(measured):
     with pytest.raises(RuntimeError,match='integrity'):cp.load_compute_profile()
 
 
-def test_malformed_optional_profile_keeps_runtime_available_at_baseline(measured):
+def test_malformed_requested_profile_blocks_measured_runtime(measured):
     measured.write_text('{}')
     assert cp.runtime_compute_profile() is None
     settings=SimpleNamespace(multi_specialist_workers=1,context_tokens=8192,
                              max_output_tokens=512,required_models=['gemma3:1b'])
-    cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))
+    with pytest.raises(RuntimeError,match='requires a valid Compute Profile'):
+        cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))
     assert cp.generation_options()=={}
-    cp.require_compute_capacity('gemma3:1b')
+    with pytest.raises(PermissionError,match='requires a valid Compute Profile'):
+        cp.require_compute_capacity('gemma3:1b')
 
 
 def test_missing_optional_profile_keeps_runtime_available_at_baseline(measured):
@@ -41,7 +44,7 @@ def test_missing_optional_profile_keeps_runtime_available_at_baseline(measured):
 
 
 @pytest.mark.parametrize('missing', ['context_tokens','output_limit','models'])
-def test_hash_pinned_incomplete_profile_falls_back_to_baseline(measured,monkeypatch,missing):
+def test_hash_pinned_incomplete_requested_profile_fails_closed(measured,monkeypatch,missing):
     profile=json.loads(measured.read_text())
     del profile[missing]
     raw=json.dumps(profile).encode()
@@ -52,7 +55,8 @@ def test_hash_pinned_incomplete_profile_falls_back_to_baseline(measured,monkeypa
     assert cp.runtime_compute_profile() is None
     settings=SimpleNamespace(multi_specialist_workers=1,context_tokens=8192,
                              max_output_tokens=512,required_models=['gemma3:1b'])
-    cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))
+    with pytest.raises(RuntimeError,match='requires a valid Compute Profile'):
+        cp.validate_configuration(settings,SimpleNamespace(global_concurrency=1))
 
 
 def test_profile_cannot_expand_scheduler_or_models(measured):
