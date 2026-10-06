@@ -1,0 +1,176 @@
+name: A19 off-host role observation
+
+on:
+  push:
+    branches:
+      - feat/prime-a19-offhost-role-20261006
+    paths:
+      - .github/workflows/a19-offhost-role.yml
+      - scripts/run_a19_offhost_observation.py
+      - scripts/offhost_ollama_telemetry.py
+      - tests/test_a19_offhost_observation.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: a19-offhost-role-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canonical-source:
+    uses: ./.github/workflows/ci.yml
+  bounded-observation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PRIME_OFFHOST_MODEL: qwen2.5:3b
+      PRIME_OFFHOST_FAST_MODEL: gemma3:1b
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Measure one disposable runner backend without ABEX data
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$RUNNER_OS" = Linux
+          test -f /sys/fs/cgroup/cgroup.controllers
+          receipt_dir="/dev/shm/prime-a19-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          fast_receipt_dir="/dev/shm/prime-a19-fast-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker run -d --name prime-a19-ollama --memory=6g --cpus=2 \
+            --publish 127.0.0.1:11434:11434 \
+            --env OLLAMA_NUM_PARALLEL=1 --env OLLAMA_MAX_LOADED_MODELS=1 \
+            ollama/ollama:0.12.10
+          cleanup() {
+            if test -n "${collector_pid:-}"; then
+              kill "$collector_pid" 2>/dev/null || true
+              wait "$collector_pid" 2>/dev/null || true
+            fi
+            docker rm -f prime-a19-consumer >/dev/null 2>&1 || true
+            docker rm -f prime-a19-ollama >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          ready=false
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error --max-time 2 \
+                http://127.0.0.1:11434/api/version -o /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = true
+          timeout 600 docker exec prime-a19-ollama ollama pull "$PRIME_OFFHOST_FAST_MODEL"
+          timeout 600 docker exec prime-a19-ollama ollama pull "$PRIME_OFFHOST_MODEL"
+          PRIME_OFFHOST_MODEL="$PRIME_OFFHOST_FAST_MODEL" \
+            python -B scripts/offhost_ollama_telemetry.py prepare \
+              --container prime-a19-ollama --directory "$fast_receipt_dir"
+          python -B scripts/offhost_ollama_telemetry.py prepare \
+            --container prime-a19-ollama --directory "$receipt_dir"
+          python -B - "$fast_receipt_dir" "$receipt_dir" <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import sys
+          from scripts.offhost_ollama_telemetry import _atomic_json
+
+          fast = json.loads((Path(sys.argv[1]) / 'profile.json').read_text())
+          deep_path = Path(sys.argv[2]) / 'profile.json'
+          deep = json.loads(deep_path.read_text())
+          fast_model = os.environ['PRIME_OFFHOST_FAST_MODEL']
+          deep_model = os.environ['PRIME_OFFHOST_MODEL']
+          if fast_model == deep_model or set(fast['models']) != {fast_model} or set(deep['models']) != {deep_model}:
+              raise SystemExit('distinct measured fast and deep models required')
+          for field in ('schema', 'runtime_version', 'normal_concurrency',
+                        'minimum_available_mib', 'context_tokens', 'output_limit'):
+              if fast[field] != deep[field]:
+                  raise SystemExit('calibration profile contract changed')
+          for field in ('backend_instance', 'boot_id', 'hard_cap_mib'):
+              if fast['measurement'][field] != deep['measurement'][field]:
+                  raise SystemExit('backend identity changed between calibrations')
+          deep['models'][fast_model] = fast['models'][fast_model]
+          deep['measurement']['fast_calibration_profile_sha256'] = __import__('hashlib').sha256(
+              (Path(sys.argv[1]) / 'profile.json').read_bytes()).hexdigest()
+          _atomic_json(deep_path, deep)
+          PY
+          python -B scripts/offhost_ollama_telemetry.py collect \
+            --container prime-a19-ollama --directory "$receipt_dir" --seconds 5
+          python -B - "$receipt_dir" <<'PY'
+          import json
+          import os
+          import pathlib
+          import sys
+          import time
+
+          root = pathlib.Path(sys.argv[1])
+          profile = json.loads((root / 'profile.json').read_text())
+          receipt = json.loads((root / 'backend-memory.json').read_text())
+          assert profile['measurement']['backend_instance'] == receipt['instance']
+          assert profile['measurement']['boot_id'] == receipt['boot_id']
+          assert receipt['scope_complete'] is True
+          assert 0 <= time.time() - receipt['captured_at'] < 10
+          demand = profile['models'][os.environ['PRIME_OFFHOST_MODEL']]['peak_mib']
+          required = demand + profile['minimum_available_mib']
+          assert receipt['available_mib'] >= required, (
+              f"runner admission headroom unavailable: available={receipt['available_mib']}MiB "
+              f"required={required}MiB")
+          print('bounded runner telemetry/profile identity and freshness: PASS')
+          PY
+          evidence_dir="$RUNNER_TEMP/a19-evidence"
+          mkdir -p "$evidence_dir"
+          cp "$fast_receipt_dir/profile.json" "$evidence_dir/fast-profile.json"
+          cp "$receipt_dir/profile.json" "$evidence_dir/profile.json"
+          cp "$receipt_dir/backend-memory.json" "$evidence_dir/backend-memory.json"
+          profile_sha=$(sha256sum "$receipt_dir/profile.json" | cut -d ' ' -f 1)
+          model_digest=$(python - "$receipt_dir/profile.json" <<'PY'
+          import json
+          import os
+          import pathlib
+          import sys
+          print(json.loads(pathlib.Path(sys.argv[1]).read_text())['models'][os.environ['PRIME_OFFHOST_MODEL']]['digest'])
+          PY
+          )
+          docker build --tag prime:a19-offhost \
+            --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+          python -B scripts/offhost_ollama_telemetry.py collect \
+            --container prime-a19-ollama --directory "$receipt_dir" --seconds 180 &
+          collector_pid=$!
+          timeout 180 docker run --rm --name prime-a19-consumer \
+            --network host --memory=768m --cpus=1 --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user "$(id -u):$(id -g)" --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            --mount "type=bind,source=$PWD/scripts,target=/app/scripts,readonly" \
+            --mount "type=bind,source=$receipt_dir,target=/telemetry,readonly" \
+            --mount "type=bind,source=$evidence_dir,target=/runner-temp/data" \
+            --env GITHUB_ACTIONS=true --env PYTHONPATH=/app \
+            --env GITHUB_SHA="$GITHUB_SHA" \
+            --env GITHUB_RUN_ID="$GITHUB_RUN_ID" \
+            --env GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" \
+            --env RUNNER_TEMP=/runner-temp \
+            --env PRIME_DATA_DIR=/runner-temp/data \
+            --env PRIME_A19_OBSERVATION_OUTPUT=/runner-temp/data/a19-observation.json \
+            --env PRIME_BACKEND_MEMORY_RECEIPT=/telemetry/backend-memory.json \
+            --env PRIME_MEASURED_COMPUTE_PROFILE=/telemetry/profile.json \
+            --env PRIME_MEASURED_COMPUTE_PROFILE_SHA256="$profile_sha" \
+            --env PRIME_A19_SOURCE_REVISION="$GITHUB_SHA" \
+            --env PRIME_FAST_MODEL="$PRIME_OFFHOST_FAST_MODEL" \
+            --env PRIME_DEEP_MODEL="$PRIME_OFFHOST_MODEL" \
+            --env PRIME_A19_EXPECTED_MODEL_DIGEST="$model_digest" \
+            --env OLLAMA_BASE_URL=http://127.0.0.1:11434 \
+            prime:a19-offhost python -B /app/scripts/run_a19_offhost_observation.py
+          kill "$collector_pid" 2>/dev/null || true
+          wait "$collector_pid" 2>/dev/null || true
+      - name: Preserve official case observation for independent review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a19-offhost-observation-${{ github.run_id }}
+          path: ${{ runner.temp }}/a19-evidence/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -21,7 +21,7 @@ import uuid
 
 
 MIB = 1024 * 1024
-MODEL = os.getenv("A18_OFFHOST_MODEL", "gemma3:1b")
+MODEL = os.getenv("PRIME_OFFHOST_MODEL", os.getenv("A18_OFFHOST_MODEL", "gemma3:1b"))
 if MODEL not in {"gemma3:1b", "qwen3:1.7b", "qwen2.5:1.5b", "qwen2.5:3b"}:
     raise RuntimeError("unsupported bounded off-host model")
 SCHEMA = "prime.backend-memory.v1"
@@ -42,7 +42,8 @@ def _runner_only(directory: Path) -> None:
             or os.getenv("RUNNER_ENVIRONMENT") != "github-hosted"):
         raise EvidenceError("requires an isolated GitHub-hosted Linux runner")
     resolved = directory.resolve()
-    if resolved.parent != Path("/dev/shm") or not resolved.name.startswith("prime-a18-"):
+    if (resolved.parent != Path("/dev/shm") or
+            not resolved.name.startswith(("prime-a18-", "prime-a19-"))):
         raise EvidenceError("telemetry must remain in dedicated runner tmpfs")
     if not Path("/sys/fs/cgroup/cgroup.controllers").is_file():
         raise EvidenceError("cgroup v2 is required for complete memory scope")
