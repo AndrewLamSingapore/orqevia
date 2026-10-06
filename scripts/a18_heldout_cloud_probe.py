@@ -8,6 +8,7 @@ from pathlib import Path
 import sqlite3
 import sys
 import time
+from datetime import datetime, timezone
 
 SOURCE = "8cd60544b35783a1929a90b1f1264bf48dc89e6d"
 MODEL = "Qwen/Qwen3-32B:deepinfra"
@@ -115,6 +116,8 @@ def main() -> int:
         evidence = {
             "schema": "abex.agent_a18_heldout_cloud_trial.v1",
             "source_revision": SOURCE, "model": MODEL,
+            "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            "observed_at_utc": datetime.now(timezone.utc).isoformat(),
             "official_case_executed": False, "ephemeral_catalog_only": True,
             "flawed_a17_json": flawed_json,
             "flawed_a17_sha256": hashlib.sha256(flawed_json.encode()).hexdigest(),
