@@ -79,7 +79,7 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
     compute_profile.load_compute_profile.cache_clear()
     compute_profile.runtime_compute_profile.cache_clear()
-    monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_: None)
+    monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_, **__: None)
     yield path
     compute_profile.load_compute_profile.cache_clear()
     compute_profile.runtime_compute_profile.cache_clear()
@@ -239,13 +239,16 @@ def test_missing_measured_peak_holds_local_claim(tmp_path, backend):
 
 def test_measured_claim_rechecks_live_runtime_identity(tmp_path, backend, monkeypatch):
     receipt(backend)
-    def changed_runtime(*_args):
+    def changed_runtime(*_args, **kwargs):
+        assert kwargs['timeout'] == 1
         raise RuntimeError('Model digest differs from measured envelope')
     monkeypatch.setattr(compute_profile, 'verify_runtime_identity', changed_runtime)
     q = queue(tmp_path)
     job = q.submit(agent='planner', prompt='identity drift', ram_mb=1024)
     assert q.claim('one', [LOCAL]) is None
     assert q.get(job['id'])['status'] == 'queued'
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute('SELECT COUNT(*) FROM backend_admission').fetchone() == (0,)
 
 
 def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend):

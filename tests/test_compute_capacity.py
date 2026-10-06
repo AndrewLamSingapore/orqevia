@@ -40,7 +40,7 @@ def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
         monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
         compute_profile.load_compute_profile.cache_clear()
         compute_profile.runtime_compute_profile.cache_clear()
-        monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_: None)
+        monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_, **__: None)
         ledger = ComputeLedger(os.path.join(directory, "compute.db"))
         gateway = ModelGateway(ledger=ledger, settings=settings())
         captured = {}

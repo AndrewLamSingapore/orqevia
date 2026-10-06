@@ -50,13 +50,13 @@ def runtime_compute_profile():
         return None
 
 
-def verify_runtime_identity(profile, endpoint):
+def verify_runtime_identity(profile, endpoint, *, timeout=10):
     """Bind a measured admission to the live Ollama version and model bytes."""
     import urllib.request
     try:
-        with urllib.request.urlopen(endpoint.rstrip('/')+'/api/version',timeout=10) as r:
+        with urllib.request.urlopen(endpoint.rstrip('/')+'/api/version',timeout=timeout) as r:
             version=json.load(r)['version']
-        with urllib.request.urlopen(endpoint.rstrip('/')+'/api/tags',timeout=10) as r:
+        with urllib.request.urlopen(endpoint.rstrip('/')+'/api/tags',timeout=timeout) as r:
             installed={m['name']:m['digest'] for m in json.load(r)['models']}
     except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
         raise RuntimeError('Model runtime identity unavailable') from exc

@@ -116,6 +116,17 @@ def test_live_runtime_and_digest_mismatch_block_measured_start(measured, monkeyp
         cp.validate_configuration(settings,policy)
 
 
+def test_claim_probe_timeout_is_bounded_and_fails_closed(measured, monkeypatch):
+    observed = []
+    def stalled(_url, timeout):
+        observed.append(timeout)
+        raise TimeoutError('fixture backend stalled')
+    monkeypatch.setattr(urllib.request, 'urlopen', stalled)
+    with pytest.raises(RuntimeError, match='identity unavailable'):
+        cp.verify_runtime_identity(cp.load_compute_profile(), 'http://fixture', timeout=1)
+    assert observed == [1]
+
+
 def test_low_memory_holds_inference_without_authority_change(measured,monkeypatch):
     import psutil
     monkeypatch.setattr(psutil,'virtual_memory',lambda:SimpleNamespace(available=8192*1048576-1))

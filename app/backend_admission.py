@@ -230,7 +230,8 @@ def reserve_model(c: sqlite3.Connection, endpoint: str, job_id: str,
         if parallel < global_concurrency:
             raise PermissionError('backend parallel limit below measured admission')
     try:
-        verify_runtime_identity(profile, endpoint)
+        # Claim holds SQLite's write lock; bound both live identity probes.
+        verify_runtime_identity(profile, endpoint, timeout=1)
     except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:
         raise PermissionError('measured backend runtime identity unavailable or mismatched') from exc
     reserve(c, endpoint, job_id, max(peak, requested_mib), max_leases=global_concurrency)
