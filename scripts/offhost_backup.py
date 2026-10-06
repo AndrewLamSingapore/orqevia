@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import ctypes
 import getpass
 import hashlib
 import io
@@ -18,6 +19,7 @@ import os
 import re
 import stat
 import struct
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -59,22 +61,95 @@ def _safe_name(name: str) -> str:
     parts = name.split("/")
     if any(not part or part in (".", "..") or part[-1] in ". " or
            re.search(r'[<>"|?*\x00-\x1f]', part) or
-           part.split(".")[0].upper() in {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+           part.split(".")[0].upper() in {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10)), *(f"COM{i}" for i in "¹²³"), *(f"LPT{i}" for i in "¹²³")}
            for part in parts):
         raise BackupError("unsafe archive path")
     return name
 
 
 def _real_dir(path: Path) -> Path:
-    if not path.is_dir() or path.is_symlink() or path.is_junction() or (path.lstat().st_file_attributes if os.name == "nt" else 0) & REPARSE:
+    if not path.is_dir():
         raise BackupError("expected a real directory")
+    for part in (path.absolute(), *path.absolute().parents):
+        if part.is_symlink() or part.is_junction() or getattr(part.lstat(), "st_file_attributes", 0) & REPARSE:
+            raise BackupError("directory or ancestor is a link")
     return path.resolve()
 
 
-def _inventory(root: Path) -> tuple[list[str], dict[str, dict]]:
+def _private_dir(path: Path) -> None:
+    resolved = _real_dir(path)
+    if os.name == "nt":
+        # Use .NET's security descriptor API, never localized icacls text.
+        script = r"""
+$ErrorActionPreference = 'Stop'
+$acl = Get-Acl -LiteralPath $env:PRIME_RESTORE_PRIVATE_DIR
+$me = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$allowed = @($me, 'S-1-5-18', 'S-1-5-32-544')
+if ($acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value -notin $allowed) { exit 2 }
+$allowed += 'S-1-3-4' # OWNER RIGHTS is restricted to the validated owner.
+$allowCount = 0
+foreach ($rule in $acl.Access) {
+    if ($rule.AccessControlType -ne [System.Security.AccessControl.AccessControlType]::Allow) { continue }
+    $allowCount++
+    $sid = $rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value
+    if ($sid -notin $allowed) { exit 2 }
+}
+if ($allowCount -eq 0) { exit 2 } # Also reject a null/unrestricted DACL.
+"""
+        environment = os.environ.copy()
+        environment["PRIME_RESTORE_PRIVATE_DIR"] = str(resolved)
+        powershell = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+        environment["PSModulePath"] = str(powershell.parent / "Modules")
+        try:
+            result = subprocess.run([str(powershell), "-NoProfile", "-NonInteractive", "-Command", script],
+                                    env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                    check=False, timeout=15)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise BackupError("private restore ACL could not be verified") from exc
+        if result.returncode:
+            raise BackupError("private restore ACL could not be verified")
+    else:
+        info = resolved.stat()
+        if info.st_uid != os.geteuid() or info.st_mode & 0o077:
+            raise BackupError("private restore permissions required")
+
+
+def _recipient(public_key: Path) -> tuple[x25519.X25519PublicKey, str]:
+    key = serialization.load_pem_public_key(Path(public_key).read_bytes())
+    if not isinstance(key, x25519.X25519PublicKey):
+        raise BackupError("recipient must be an X25519 public key")
+    canonical = key.public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+    return key, hashlib.sha256(canonical).hexdigest()
+
+
+def _publish_new(staged: Path, output: Path, directory: bool) -> None:
+    if not directory:
+        os.link(staged, output)  # Fails atomically if the destination appeared.
+    elif os.name == "nt":
+        os.rename(staged, output)  # Windows rename never replaces an existing destination.
+    else:
+        # Linux renameat2(RENAME_NOREPLACE); unsupported platforms fail closed.
+        libc = ctypes.CDLL(None, use_errno=True)
+        renameat2 = getattr(libc, "renameat2", None)
+        if renameat2 is None:
+            raise BackupError("no atomic no-replace directory publication")
+        renameat2.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+        renameat2.restype = ctypes.c_int
+        if renameat2(-100, os.fsencode(staged), -100, os.fsencode(output), 1):
+            raise OSError(ctypes.get_errno(), "atomic restore publication failed")
+
+
+def _identity(info: os.stat_result) -> tuple[int, int, int, int, int, int]:
+    # Windows fstat() reports mtime as ctime, unlike lstat(); exclude ctime there.
+    return (info.st_dev, info.st_ino, info.st_nlink, info.st_size,
+            info.st_mtime_ns, info.st_ctime_ns if os.name != "nt" else 0)
+
+
+def _inventory(root: Path) -> tuple[list[str], dict[str, dict], dict[str, tuple]]:
     _real_dir(root)
     dirs: list[str] = []
     files: dict[str, dict] = {}
+    identities: dict[str, tuple] = {}
     folded: set[str] = set()
 
     def visit(folder: Path, prefix: str = "") -> None:
@@ -83,35 +158,48 @@ def _inventory(root: Path) -> tuple[list[str], dict[str, dict]]:
             if name.casefold() in folded:
                 raise BackupError("case-colliding archive path")
             folded.add(name.casefold())
-            info = entry.stat(follow_symlinks=False)
+            info = Path(entry.path).lstat()  # DirEntry.stat omits file IDs/link counts on Windows.
             if entry.is_symlink() or getattr(info, "st_file_attributes", 0) & REPARSE:
                 raise BackupError("links and reparse points are forbidden")
             if stat.S_ISDIR(info.st_mode):
                 dirs.append(name)
                 visit(Path(entry.path), name)
             elif stat.S_ISREG(info.st_mode):
+                if info.st_nlink != 1:
+                    raise BackupError("hardlinked source file")
                 digest = hashlib.sha256()
-                with open(entry.path, "rb") as stream:
+                flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+                with os.fdopen(os.open(entry.path, flags), "rb") as stream:
                     opened = os.fstat(stream.fileno())
-                    if opened.st_size != info.st_size or (info.st_ino and opened.st_ino != info.st_ino):
+                    if _identity(opened) != _identity(info):
                         raise BackupError("source changed during inventory")
                     for block in iter(lambda: stream.read(CHUNK), b""):
                         digest.update(block)
+                    if _identity(os.fstat(stream.fileno())) != _identity(info):
+                        raise BackupError("source changed during inventory")
+                if _identity(Path(entry.path).lstat()) != _identity(info):
+                    raise BackupError("source changed during inventory")
                 files[name] = {"size": info.st_size, "sha256": digest.hexdigest()}
+                identities[name] = _identity(info)
             else:
                 raise BackupError("unsupported archive entry")
 
     visit(root)
-    return sorted(dirs), dict(sorted(files.items()))
+    return sorted(dirs), dict(sorted(files.items())), dict(sorted(identities.items()))
 
 
 class _VerifiedFile:
-    def __init__(self, path: Path, expected: dict):
-        self.stream = path.open("rb")
+    def __init__(self, path: Path, expected: dict, identity: tuple):
+        before = path.lstat()
+        if not stat.S_ISREG(before.st_mode) or getattr(before, "st_file_attributes", 0) & REPARSE or _identity(before) != identity:
+            raise BackupError("source changed before archive")
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        self.stream = os.fdopen(os.open(path, flags), "rb")
         self.expected = expected
+        self.identity = identity
         self.digest = hashlib.sha256()
         self.count = 0
-        if os.fstat(self.stream.fileno()).st_size != expected["size"]:
+        if _identity(os.fstat(self.stream.fileno())) != identity or _identity(path.lstat()) != identity:
             self.stream.close()
             raise BackupError("source changed before archive")
 
@@ -123,8 +211,10 @@ class _VerifiedFile:
 
     def finish(self) -> None:
         extra = self.stream.read(1)
+        unchanged = _identity(os.fstat(self.stream.fileno())) == self.identity
         self.stream.close()
-        if extra or self.count != self.expected["size"] or self.digest.hexdigest() != self.expected["sha256"]:
+        if (extra or self.count != self.expected["size"] or self.digest.hexdigest() != self.expected["sha256"]
+                or not unchanged):
             raise BackupError("source changed during archive")
 
 
@@ -239,16 +329,16 @@ class _CipherReader:
         return block
 
 
-def encrypt_tree(source: Path, public_key: Path, output: Path) -> str:
+def encrypt_tree(source: Path, public_key: Path, output: Path, expected_recipient_sha256: str) -> str:
     source, output = Path(source), Path(output)
     _real_dir(source)
     _real_dir(output.parent)
     if output.exists() or output.resolve().is_relative_to(source.resolve()):
         raise BackupError("output must be new and outside source")
-    key = serialization.load_pem_public_key(Path(public_key).read_bytes())
-    if not isinstance(key, x25519.X25519PublicKey):
-        raise BackupError("recipient must be an X25519 public key")
-    dirs, files = _inventory(source)
+    key, fingerprint = _recipient(public_key)
+    if not HEX_SHA256.fullmatch(expected_recipient_sha256) or fingerprint != expected_recipient_sha256:
+        raise BackupError("recipient key differs from pinned fingerprint")
+    dirs, files, identities = _inventory(source)
     manifest = _json({"version": 1, "directories": dirs, "files": files})
     if len(manifest) > MAX_MANIFEST:
         raise BackupError("manifest too large")
@@ -267,18 +357,16 @@ def encrypt_tree(source: Path, public_key: Path, output: Path) -> str:
                 for name, expected in files.items():
                     info = tarfile.TarInfo("payload/" + name)
                     info.size = expected["size"]
-                    reader = _VerifiedFile(source / Path(name), expected)
+                    reader = _VerifiedFile(source / Path(name), expected, identities[name])
                     try:
                         archive.addfile(info, reader)
                         reader.finish()
                     finally:
                         reader.stream.close()
             digest = writer.finish()
-        if _inventory(source) != (dirs, files):
+        if _inventory(source) != (dirs, files, identities):
             raise BackupError("source tree changed during archive")
-        if output.exists():
-            raise BackupError("output appeared during encryption")
-        staged.rename(output)
+        _publish_new(staged, output, directory=False)
     return digest
 
 
@@ -307,11 +395,13 @@ def _validate_manifest(value: object) -> tuple[set[str], dict[str, dict]]:
     return set(dirs), files
 
 
-def restore_tree(ciphertext: Path, private_key: Path, output: Path, expected_sha256: str, password: bytes | None = None) -> int:
+def restore_tree(ciphertext: Path, private_key: Path, output: Path, expected_sha256: str, password: bytes) -> int:
     ciphertext, output = Path(ciphertext), Path(output)
     if not HEX_SHA256.fullmatch(expected_sha256) or output.exists():
         raise BackupError("expected digest or new output required")
-    _real_dir(output.parent)
+    _private_dir(output.parent)
+    if not password:
+        raise BackupError("encrypted private key passphrase required")
     digest = hashlib.sha256()
     with ciphertext.open("rb") as stream:
         for block in iter(lambda: stream.read(CHUNK), b""):
@@ -322,8 +412,10 @@ def restore_tree(ciphertext: Path, private_key: Path, output: Path, expected_sha
     if not isinstance(key, x25519.X25519PrivateKey):
         raise BackupError("recovery key must be X25519")
     with tempfile.TemporaryDirectory(prefix=".prime-restore-", dir=output.parent) as temporary:
+        _private_dir(Path(temporary))
         staged = Path(temporary) / "data"
         staged.mkdir()
+        _private_dir(staged)
         seen_dirs, seen_files = set(), set()
         with ciphertext.open("rb") as stream:
             reader = _CipherReader(stream, key)
@@ -359,9 +451,10 @@ def restore_tree(ciphertext: Path, private_key: Path, output: Path, expected_sha
             while reader.read(CHUNK):
                 pass
         if (reader.cipher_hash.hexdigest() != expected_sha256 or seen_dirs != dirs
-                or seen_files != set(files) or output.exists()):
+                or seen_files != set(files)):
             raise BackupError("incomplete restore")
-        staged.rename(output)
+        _private_dir(staged)
+        _publish_new(staged, output, directory=True)
     return len(seen_files)
 
 
@@ -372,18 +465,23 @@ def main(argv: list[str] | None = None) -> int:
     encrypt.add_argument("source", type=Path)
     encrypt.add_argument("recipient_public_key", type=Path)
     encrypt.add_argument("ciphertext", type=Path)
+    encrypt.add_argument("expected_recipient_sha256")
+    fingerprint = sub.add_parser("fingerprint", help="Run on offline device; pin the canonical public-key digest")
+    fingerprint.add_argument("recipient_public_key", type=Path)
     restore = sub.add_parser("restore")
     restore.add_argument("ciphertext", type=Path)
     restore.add_argument("offline_private_key", type=Path)
     restore.add_argument("destination", type=Path)
     restore.add_argument("expected_sha256")
-    restore.add_argument("--ask-passphrase", action="store_true")
     args = parser.parse_args(argv)
     try:
-        if args.command == "encrypt":
-            print("ciphertext_sha256=" + encrypt_tree(args.source, args.recipient_public_key, args.ciphertext))
+        if args.command == "fingerprint":
+            print("recipient_sha256=" + _recipient(args.recipient_public_key)[1])
+        elif args.command == "encrypt":
+            print("ciphertext_sha256=" + encrypt_tree(args.source, args.recipient_public_key, args.ciphertext,
+                                                      args.expected_recipient_sha256))
         else:
-            password = getpass.getpass("Offline key passphrase: ").encode() if args.ask_passphrase else None
+            password = getpass.getpass("Offline key passphrase: ").encode()
             print("restored_files=" + str(restore_tree(args.ciphertext, args.offline_private_key, args.destination, args.expected_sha256, password)))
         return 0
     except Exception:
