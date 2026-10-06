@@ -40,7 +40,15 @@ jobs:
             --publish 127.0.0.1:11434:11434 \
             --env OLLAMA_NUM_PARALLEL=1 --env OLLAMA_MAX_LOADED_MODELS=1 \
             ollama/ollama:0.12.10
-          trap 'docker rm -f prime-a18-ollama >/dev/null 2>&1 || true' EXIT
+          cleanup() {
+            if test -n "${collector_pid:-}"; then
+              kill "$collector_pid" 2>/dev/null || true
+              wait "$collector_pid" 2>/dev/null || true
+            fi
+            docker rm -f prime-a18-consumer >/dev/null 2>&1 || true
+            docker rm -f prime-a18-ollama >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
           ready=false
           for attempt in {1..30}; do
             if curl --fail --silent --show-error --max-time 2 \
@@ -72,3 +80,48 @@ jobs:
           assert receipt['available_mib'] > profile['minimum_available_mib']
           print('bounded runner telemetry/profile identity and freshness: PASS')
           PY
+          evidence_dir="$RUNNER_TEMP/a18-evidence"
+          mkdir -p "$evidence_dir"
+          cp "$receipt_dir/profile.json" "$evidence_dir/profile.json"
+          cp "$receipt_dir/backend-memory.json" "$evidence_dir/backend-memory.json"
+          profile_sha=$(sha256sum "$receipt_dir/profile.json" | cut -d ' ' -f 1)
+          model_digest=$(python - "$receipt_dir/profile.json" <<'PY'
+          import json
+          import pathlib
+          import sys
+          print(json.loads(pathlib.Path(sys.argv[1]).read_text())['models']['gemma3:1b']['digest'])
+          PY
+          )
+          docker build --tag prime:a18-offhost \
+            --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+          python -B scripts/offhost_ollama_telemetry.py collect \
+            --container prime-a18-ollama --directory "$receipt_dir" --seconds 180 &
+          collector_pid=$!
+          timeout 180 docker run --rm --name prime-a18-consumer \
+            --network host --memory=768m --cpus=1 --read-only \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --user "$(id -u):$(id -g)" --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            --mount "type=bind,source=$PWD/scripts,target=/app/scripts,readonly" \
+            --mount "type=bind,source=$receipt_dir,target=/telemetry,readonly" \
+            --mount "type=bind,source=$evidence_dir,target=/runner-temp/data" \
+            --env GITHUB_ACTIONS=true --env RUNNER_TEMP=/runner-temp \
+            --env PRIME_DATA_DIR=/runner-temp/data \
+            --env PRIME_A18_OBSERVATION_OUTPUT=/runner-temp/data/a18-observation.json \
+            --env PRIME_BACKEND_MEMORY_RECEIPT=/telemetry/backend-memory.json \
+            --env PRIME_MEASURED_COMPUTE_PROFILE=/telemetry/profile.json \
+            --env PRIME_MEASURED_COMPUTE_PROFILE_SHA256="$profile_sha" \
+            --env PRIME_A18_SOURCE_REVISION="$GITHUB_SHA" \
+            --env PRIME_FAST_MODEL=gemma3:1b \
+            --env PRIME_A18_EXPECTED_MODEL_DIGEST="$model_digest" \
+            --env OLLAMA_BASE_URL=http://127.0.0.1:11434 \
+            prime:a18-offhost python -B /app/scripts/run_a18_offhost_observation.py
+          kill "$collector_pid" 2>/dev/null || true
+          wait "$collector_pid" 2>/dev/null || true
+      - name: Preserve synthetic runner evidence for independent review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a18-offhost-observation-${{ github.run_id }}
+          path: ${{ runner.temp }}/a18-evidence/
+          if-no-files-found: ignore
+          retention-days: 7
