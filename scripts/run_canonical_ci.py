@@ -89,6 +89,7 @@ def main():
     names.append('agent_cert_boundary')
     names.append('agent_cert_a17_boundary')
     names.append('agent_cert_execution')
+    names.append('a18_offhost_observation')
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('system_architecture')
