@@ -7,11 +7,18 @@ on:
     paths:
       - .github/workflows/a18-offhost-telemetry.yml
       - scripts/offhost_ollama_telemetry.py
+      - scripts/run_a18_offhost_observation.py
       - tests/test_offhost_ollama_telemetry.py
+      - tests/test_a18_offhost_observation.py
+      - app/agent_cert_cases.py
+      - app/agent_cert_invalid_artifact.py
+      - app/compute_profile.py
       - app/agent_dispatch_api.py
       - app/compute_queue_api.py
       - app/direct_stream.py
+      - app/model_gateway.py
       - app/job_queue.py
+      - tests/test_agent_cert_cases.py
       - tests/test_agent_dispatch_api.py
       - tests/test_direct_stream_empty.py
       - tests/test_job_queue.py
