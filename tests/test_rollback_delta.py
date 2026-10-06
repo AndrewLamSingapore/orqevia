@@ -92,6 +92,38 @@ def test_file_directory_shape_change_replays(tmp_path):
     assert _inventory(restored) == _inventory(final)
 
 
+def test_file_replaced_by_directory_replays(tmp_path):
+    base, final, package, restored = (tmp_path / name for name in ("base", "final", "delta", "restored"))
+    base.mkdir(); (base / "parent").write_text("before")
+    (final / "parent").mkdir(parents=True)
+    (final / "parent" / "child").write_text("after")
+    capture_delta(base, final, package)
+    replay_delta(base, package, restored, manifest_digest(package))
+    assert _inventory(restored) == _inventory(final)
+    assert (restored / "parent").is_dir()
+
+
+def test_file_replaced_by_empty_directory_replays(tmp_path):
+    base, final, package, restored = (tmp_path / name for name in ("base", "final", "delta", "restored"))
+    base.mkdir(); (base / "parent").write_text("before")
+    (final / "parent").mkdir(parents=True)
+    capture_delta(base, final, package)
+    replay_delta(base, package, restored, manifest_digest(package))
+    assert (restored / "parent").is_dir()
+    assert list((restored / "parent").iterdir()) == []
+
+
+def test_empty_directory_shape_change_rejects_changed_snapshot(tmp_path):
+    base, final, package, restored = (tmp_path / name for name in ("base", "final", "delta", "restored"))
+    (base / "empty").mkdir(parents=True)
+    final.mkdir()
+    capture_delta(base, final, package)
+    (base / "empty").rmdir()
+    with pytest.raises(DeltaError, match="snapshot differs"):
+        replay_delta(base, package, restored, manifest_digest(package))
+    assert not restored.exists()
+
+
 @pytest.mark.skipif(os.name != "nt", reason="NTFS junction regression requires Windows")
 def test_windows_junction_outside_fenced_tree_is_rejected(tmp_path):
     base, final, outside, package = (tmp_path / name for name in ("base", "final", "outside", "delta"))
