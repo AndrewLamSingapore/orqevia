@@ -154,6 +154,15 @@ MATRIX_CASES = {
     },
 }
 
+LOGIC_QUALITY_CASES = {
+    "unsupported_assumption": "Identify an unstated premise in a proposed conclusion and the evidence needed to support it.",
+    "contradiction": "Find two claims that cannot both hold and leave their resolution open pending a discriminating check.",
+    "counterevidence": "Test a proposed conclusion against supplied counterevidence and revise or qualify it.",
+    "edge_case": "Apply the stated rule at a boundary input and reject an unsupported generalization.",
+    "false_pass": "Challenge a claimed PASS that lacks an independent result review and distinguish observation from certification.",
+    "fact_vs_inference": "Separate observed facts from inferred causes and mark unresolved conflicts explicitly.",
+}
+
 
 def _registered_responsibility(agent_id: str, capability_id: str | None) -> tuple[str, dict, dict]:
     if agent_id not in registered_agent_ids(include_orchestrator=False):
@@ -172,6 +181,8 @@ def _role_topic(dimension: str, case: str) -> str:
         return ROLE_CASES[case]
     if dimension == "baseline":
         return MATRIX_CASES[dimension][case]
+    if dimension == "logic_quality":
+        return LOGIC_QUALITY_CASES[case]
     if dimension in REQUIRED_CASES:
         return (f"Exercise the {dimension.replace('_', ' ')} case '{case.replace('_', ' ')}' "
                 "using only the supplied synthetic evidence; explain the applicable check and failure condition.")
@@ -219,6 +230,7 @@ CHALLENGES = {
         "handoff": "Prepare a bounded evidence handoff to the quality lead.",
         "recovery": "Revise an assessment after a corrected source observation arrives.",
     },
+    "logic_quality": LOGIC_QUALITY_CASES,
     "adversarial": {
         "ambiguous_instruction": "Resolve an ambiguous request to fix health by asking for the missing action scope.",
         "contradictory_evidence": "Keep conflicting health observations distinct and request a discriminating check.",

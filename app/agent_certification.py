@@ -22,9 +22,11 @@ LEVEL_DIMENSIONS = (
     ("baseline", "role", "general", "collaboration"),
     ("baseline", "role", "general", "collaboration", "recovery"),
     ("baseline", "role", "general", "collaboration", "recovery",
-     "authority", "tools", "models", "cross_verification", "fresh_challenge", "health"),
+     "authority", "tools", "models", "cross_verification", "fresh_challenge",
+     "logic_quality", "health"),
     ("baseline", "role", "general", "collaboration", "recovery",
      "authority", "tools", "models", "cross_verification", "fresh_challenge", "health",
+     "logic_quality",
      "broad_transfer", "unseen_task", "adversarial", "context_integrity",
      "conflict_resolution", "injection_resistance", "unauthorized_rejection",
      "model_substitution", "tool_recovery", "handoff_recovery",
@@ -39,6 +41,8 @@ REQUIRED_CASES = {
     "general": ("analysis", "planning", "reasoning", "communication", "evidence",
                 "decomposition", "artifact_consume", "artifact_produce", "review",
                 "verification", "error_recognition", "handoff", "recovery"),
+    "logic_quality": ("unsupported_assumption", "contradiction", "counterevidence",
+                      "edge_case", "false_pass", "fact_vs_inference"),
     "adversarial": ("ambiguous_instruction", "contradictory_evidence", "stale_information",
                     "invalid_artifact", "malformed_input", "missing_dependency",
                     "false_completion", "unauthorized_action", "injection_attempt"),
@@ -46,12 +50,20 @@ REQUIRED_CASES = {
     "tool_recovery": ("tool_failure", "bounded_response"),
     "handoff_recovery": ("agent_failure", "bounded_response"),
 }
+LOGIC_SIGNALS = {
+    "unsupported_assumption": "evidence_support",
+    "contradiction": "logic_check",
+    "counterevidence": "counterexample_check",
+    "edge_case": "boundary_check",
+    "false_pass": "independent_review",
+    "fact_vs_inference": "conflict_status",
+}
 CERTIFICATION_WAVES = (
     ("baseline",),
     ("role", "general", "tools", "models", "broad_transfer"),
     ("collaboration", "cross_verification", "cross_agent_conflict"),
     ("recovery", "tool_recovery", "handoff_recovery", "graceful_degradation"),
-    ("authority", "adversarial", "context_integrity", "conflict_resolution",
+    ("authority", "logic_quality", "adversarial", "context_integrity", "conflict_resolution",
      "injection_resistance", "unauthorized_rejection", "evidence_integrity"),
     ("fresh_challenge", "unseen_task", "model_substitution"),
     ("independent_verification", "clean_room_audit", "continuous_revalidation", "health"),
@@ -126,6 +138,11 @@ class AgentCertificationRegistry:
                     return False
             if row["dimension"] == "recovery" and row.get("recovery_result") != "PASS":
                 return False
+            if row["dimension"] == "logic_quality":
+                signal = LOGIC_SIGNALS.get(row.get("test_case"))
+                signals = row.get("logic_signals")
+                if signal is None or not isinstance(signals, dict) or signals.get(signal) != "PASS":
+                    return False
             if _utc(row["certified_at"]) > _utc(row["last_revalidated"]) or _utc(row["last_revalidated"]) > now:
                 return False
             if _utc(row["expires_at"]) <= now:

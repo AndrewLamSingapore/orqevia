@@ -5,7 +5,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.agent_certification import (AgentCertificationRegistry, CERTIFICATION_WAVES,
-                                     LEVEL_DIMENSIONS, REQUIRED_CASES, MAX_EVIDENCE_BYTES)
+                                     LEVEL_DIMENSIONS, REQUIRED_CASES, LOGIC_SIGNALS,
+                                     MAX_EVIDENCE_BYTES)
 from app.agent_registry import load_agent_registry
 
 
@@ -31,7 +32,9 @@ def fixture_rows(tmp_path, dimensions, *, agent_id="a17", capability_id="respons
                          "last_revalidated": NOW.isoformat(),
                          "expires_at": (NOW + timedelta(days=1)).isoformat(),
                          "source_revision": REVISION, "authority_scope": "restricted",
-                         "health": "HEALTHY", "failure_count": 0, "recovery_result": "PASS"})
+                         "health": "HEALTHY", "failure_count": 0, "recovery_result": "PASS",
+                         "logic_signals": {LOGIC_SIGNALS[test_case]: "PASS"}
+                         if dimension == "logic_quality" else {}})
     (agent_dir / "certification.json").write_text(json.dumps({"schema_version": "1.0", "records": rows}))
     return rows
 
@@ -51,6 +54,13 @@ def test_all_21_default_to_l0_without_domain_evidence(tmp_path):
             result = registry.project(agent["id"], capability, now=NOW)
             assert result["level"] == "L0"
             assert result["trust_state"] == "UNPROVEN"
+
+
+def test_logic_quality_is_required_monotonically_from_l6_through_l7():
+    assert all(set(lower).issubset(higher)
+               for lower, higher in zip(LEVEL_DIMENSIONS, LEVEL_DIMENSIONS[1:]))
+    assert "logic_quality" in LEVEL_DIMENSIONS[6]
+    assert "logic_quality" in LEVEL_DIMENSIONS[7]
 
 
 def test_current_independent_artifacts_can_project_ladder_without_granting_authority(tmp_path):
@@ -192,6 +202,62 @@ def test_revoked_verifier_and_degraded_health_prevent_l6(tmp_path):
     assert "health:complete" in degraded["missing_cases"]
 
 
+@pytest.mark.parametrize("case,signal", LOGIC_SIGNALS.items())
+@pytest.mark.parametrize("value", [None, "FAIL", "UNVERIFIED", "NOT_APPLICABLE"])
+def test_missing_or_failed_logic_signal_blocks_l6_and_l7(tmp_path, case, signal, value):
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
+    target = next(row for row in rows if row["dimension"] == "logic_quality"
+                  and row["test_case"] == case)
+    target["logic_signals"] = {} if value is None else {signal: value}
+    (tmp_path / "a17" / "certification.json").write_text(
+        json.dumps({"schema_version": "1.0", "records": rows}))
+    result = projection(tmp_path)
+    assert (result["level"], result["trust_state"]) == ("L5", "REVALIDATION-REQUIRED")
+    assert "logic_quality" not in result["current_dimensions"]
+    assert f"logic_quality:{case}" in result["missing_cases"]
+
+
+@pytest.mark.parametrize("test_result", ["FAIL", "UNVERIFIED"])
+def test_logic_signal_pass_cannot_override_nonpassing_case_result(tmp_path, test_result):
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
+    target = next(row for row in rows if row["dimension"] == "logic_quality"
+                  and row["test_case"] == "false_pass")
+    target["test_result"] = test_result
+    (tmp_path / "a17" / "certification.json").write_text(
+        json.dumps({"schema_version": "1.0", "records": rows}))
+    assert projection(tmp_path)["level"] == "L5"
+
+
+def test_later_weak_logic_failure_requires_new_independent_revalidation(tmp_path):
+    rows = fixture_rows(tmp_path, LEVEL_DIMENSIONS[6])
+    original = next(row for row in rows if row["dimension"] == "logic_quality"
+                    and row["test_case"] == "counterevidence")
+    failed = dict(original, test_result="FAIL", failure_count=1,
+                  certified_at=(NOW + timedelta(hours=1)).isoformat(),
+                  last_revalidated=(NOW + timedelta(hours=1)).isoformat(),
+                  logic_signals={"counterexample_check": "FAIL"})
+    manifest = tmp_path / "a17" / "certification.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [failed]}))
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                          verify_record=lambda row: row.get("verifier") == "a18")
+    result = registry.project("a17", "responsibility.a17", now=NOW + timedelta(hours=2))
+    assert (result["level"], result["trust_state"], result["failure_count"]) == (
+        "L5", "REVALIDATION-REQUIRED", 1)
+    assert "logic_quality:counterevidence" in result["missing_cases"]
+
+    repaired_payload = b"synthetic independently reviewed counterevidence repair"
+    repaired_name = "logic-quality-counterevidence-revalidated.txt"
+    (tmp_path / "a17" / repaired_name).write_bytes(repaired_payload)
+    repaired = dict(original, certified_at=(NOW + timedelta(hours=3)).isoformat(),
+                    last_revalidated=(NOW + timedelta(hours=3)).isoformat(),
+                    evidence=repaired_name,
+                    evidence_sha256=hashlib.sha256(repaired_payload).hexdigest())
+    manifest.write_text(json.dumps({"schema_version": "1.0", "records": rows + [failed, repaired]}))
+    result = registry.project("a17", "responsibility.a17", now=NOW + timedelta(hours=4))
+    assert (result["level"], result["trust_state"]) == ("L6", "CERTIFIED-HEALTHY")
+    assert "logic_quality:counterevidence" not in result["missing_cases"]
+
+
 def test_one_role_or_general_case_cannot_promote_whole_dimension(tmp_path):
     rows = fixture_rows(tmp_path, ("baseline", "role", "general"))
     partial = [row for row in rows if row["dimension"] == "baseline" or row["test_case"] == "normal"]
@@ -303,6 +369,20 @@ def test_pending_waves_skip_existing_verified_cases_not_whole_agent(tmp_path):
                for case in row["missing"]["responsibility.a17"])
     assert not any(task["agent_id"] == "a17" and task["capability_id"] == "responsibility.a17"
                    for task in registry.pending_waves(now=NOW)[0])
+
+
+def test_logic_quality_cases_are_planned_in_reasoning_wave(tmp_path):
+    fixture_rows(tmp_path, ("baseline", "role", "general", "collaboration", "recovery",
+                            "authority", "tools", "models", "cross_verification",
+                            "fresh_challenge", "health"))
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION,
+                                          verify_record=lambda row: row.get("verifier") == "a18")
+    rows = registry.pending_waves(now=NOW)
+    planned = [item["case"] for item in rows[4]
+               if item["agent_id"] == "a17" and item["capability_id"] == "responsibility.a17"]
+    assert {f"logic_quality:{case}" for case in LOGIC_SIGNALS}.issubset(planned)
+    assert not any(item["case"].startswith("logic_quality:") for wave in rows[:4] + rows[5:]
+                   for item in wave)
 
 
 def test_matrix_preserves_l6_when_l7_work_is_outstanding(tmp_path):

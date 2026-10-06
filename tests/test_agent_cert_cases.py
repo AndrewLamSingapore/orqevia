@@ -2,8 +2,9 @@
 
 import pytest
 
-from app.agent_cert_cases import AGENT_ID, CAPABILITY_ID, ROLE_NORMAL_FIXTURES, case_ids, challenge
-from app.agent_certification import LEVEL_DIMENSIONS, REQUIRED_CASES
+from app.agent_cert_cases import (AGENT_ID, CAPABILITY_ID, LOGIC_QUALITY_CASES,
+                                  ROLE_NORMAL_FIXTURES, case_ids, challenge)
+from app.agent_certification import LEVEL_DIMENSIONS, LOGIC_SIGNALS, REQUIRED_CASES
 from app.agent_dispatch_api import AgentRequest
 from app.agent_registry import agent_record, registered_agent_ids, responsibility_owner
 from app.runtime_status import OBJECTIVE as RUNTIME_STATUS_OBJECTIVE
@@ -49,6 +50,20 @@ def test_unseen_challenge_accepts_held_out_context_without_recording_a_pass():
     assert spec["request"]["context"] == held_out
     assert "worker_observed" in spec["independent_review"]
     assert spec["certification"] == "UNVERIFIED"
+
+
+def test_six_weak_logic_challenges_are_distinct_and_uncertified():
+    assert set(LOGIC_QUALITY_CASES) == set(LOGIC_SIGNALS)
+    assert len(set(LOGIC_QUALITY_CASES.values())) == 6
+    for case, topic in LOGIC_QUALITY_CASES.items():
+        case_id = f"logic_quality:{case}"
+        assert case_id in case_ids()
+        for agent_id in ("a17", "a19"):
+            spec = challenge(case_id, agent_id=agent_id,
+                             context="SYNTHETIC source=held-out-logic-exercise")
+            assert topic in spec["request"]["objective"]
+            assert spec["certification"] == "UNVERIFIED"
+            assert "independent_verifier" in spec["independent_review"]
 
 
 def test_unknown_case_fails_closed():
