@@ -68,9 +68,13 @@ def test_offhost_a19_case_names_exact_time_and_read_only_token():
 
 
 def test_offhost_a19_generation_profile_requires_hash_bound_greedy_decoding():
-    _require_deterministic_profile({"generation_options": {"temperature": 0}})
+    _require_deterministic_profile({"generation_options": {"temperature": 0,
+                                                            "think": False}})
     for profile in (None, {}, {"generation_options": {"temperature": 0.8}},
-                    {"generation_options": {"temperature": 0, "seed": 1}}):
+                    {"generation_options": {"temperature": 0}},
+                    {"generation_options": {"temperature": 0, "think": True}},
+                    {"generation_options": {"temperature": 0, "think": False,
+                                            "seed": 1}}):
         try:
             _require_deterministic_profile(profile)
         except RuntimeError:

@@ -31,8 +31,9 @@ def _case_digest(spec: dict) -> str:
 
 
 def _require_deterministic_profile(profile: dict | None) -> None:
-    if not isinstance(profile, dict) or profile.get("generation_options") != {"temperature": 0}:
-        raise RuntimeError("hash-bound deterministic generation options required")
+    if (not isinstance(profile, dict) or
+            profile.get("generation_options") != {"temperature": 0, "think": False}):
+        raise RuntimeError("hash-bound deterministic non-thinking generation options required")
 
 
 def _verify_lineage(spec: dict, observation: dict, job: dict,
