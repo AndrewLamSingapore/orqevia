@@ -40,7 +40,9 @@ _CASES = {
         "Return ONLY strict JSON with initial_check_pass, retry_check_pass, "
         "continuous_health_proven, restart_authorized, latest_check_time, "
         "next_read_only_check. Preserve the failed sample and healthy retry separately. "
-        "A retry is not continuous-health proof and advisory authority cannot restart.",
+        "A retry is not continuous-health proof and advisory authority cannot restart. "
+        "Copy the latest check time exactly as given, without inventing a date. "
+        "Use the literal token sample_trend for the next read-only trend sample.",
         "SYNTHETIC: example-api check at 10:00Z failed; retry at 10:01Z passed; "
         "no later samples or dependency map; agent authority is advisory.",
         {"initial_check_pass": False, "retry_check_pass": True,
