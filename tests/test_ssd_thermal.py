@@ -112,6 +112,17 @@ def test_privileged_wrapper_has_no_caller_supplied_paths_or_commands():
     assert '[IO.FileAttributes]::ReparsePoint' in source
 
 
+def test_collector_task_action_uses_process_only_policy_and_fixed_script():
+    from pathlib import Path
+    task_action = (Path(__file__).resolve().parents[1] / 'scripts' / 'collect-ssd-temperature.cmd').read_text()
+    assert '%~' not in task_action and '%*' not in task_action
+    assert 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe' in task_action
+    assert '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File' in task_action
+    assert 'C:\\ProgramData\\ABEX\\PrimeThermal\\collect-ssd-temperature.ps1' in task_action
+    assert 'Set-ExecutionPolicy' not in task_action
+    assert 'exit /b %ERRORLEVEL%' in task_action
+
+
 def test_tampered_policy_and_duplicate_receipt_rejected(tmp_path, monkeypatch):
     policy, receipt_path = configured(tmp_path, monkeypatch)
     (tmp_path / 'policy.json').write_text(json.dumps({**policy, 'max_operating_c': 150}))
