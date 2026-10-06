@@ -106,7 +106,7 @@ def review_a19_role_receipt(raw: bytes, *, source_revision: str,
             or item["case"] != "role:normal" or item["certification"] != "UNVERIFIED"
             or item["lineage_pass"] is not True or item["lineage_errors"] != []
             or item["role_review_pass"] is not True
-            or item["model"] != "qwen2.5:1.5b"
+            or item["model"] != "qwen3:1.7b"
             or not isinstance(item["model_digest"], str)
             or not _SHA256.fullmatch(item["model_digest"])
             or not isinstance(item["profile_sha256"], str)
