@@ -144,6 +144,7 @@ def main() -> int:
     except Exception as error:
         print(json.dumps({"state": "INCOMPLETE", "requests": requests["count"],
                           "error_type": type(error).__name__,
+                          "error_status": getattr(error, "status_code", None),
                           "error_code": getattr(error, "code", None),
                           "evidence_written": DEST.exists()}))
         return 5
