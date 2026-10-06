@@ -30,6 +30,8 @@ jobs:
   bounded-calibration:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      A18_OFFHOST_MODEL: qwen3:1.7b
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -68,13 +70,14 @@ jobs:
             sleep 1
           done
           test "$ready" = true
-          timeout 600 docker exec prime-a18-ollama ollama pull gemma3:1b
+          timeout 600 docker exec prime-a18-ollama ollama pull "$A18_OFFHOST_MODEL"
           python -B scripts/offhost_ollama_telemetry.py prepare \
             --container prime-a18-ollama --directory "$receipt_dir"
           python -B scripts/offhost_ollama_telemetry.py collect \
             --container prime-a18-ollama --directory "$receipt_dir" --seconds 5
           python -B - "$receipt_dir" <<'PY'
           import json
+          import os
           import pathlib
           import sys
           import time
@@ -86,7 +89,7 @@ jobs:
           assert profile['measurement']['boot_id'] == receipt['boot_id']
           assert receipt['scope_complete'] is True
           assert 0 <= time.time() - receipt['captured_at'] < 10
-          demand = profile['models']['gemma3:1b']['peak_mib']
+          demand = profile['models'][os.environ['A18_OFFHOST_MODEL']]['peak_mib']
           required = demand + profile['minimum_available_mib']
           assert receipt['available_mib'] >= required, (
               f"runner admission headroom unavailable: available={receipt['available_mib']}MiB "
@@ -100,9 +103,10 @@ jobs:
           profile_sha=$(sha256sum "$receipt_dir/profile.json" | cut -d ' ' -f 1)
           model_digest=$(python - "$receipt_dir/profile.json" <<'PY'
           import json
+          import os
           import pathlib
           import sys
-          print(json.loads(pathlib.Path(sys.argv[1]).read_text())['models']['gemma3:1b']['digest'])
+          print(json.loads(pathlib.Path(sys.argv[1]).read_text())['models'][os.environ['A18_OFFHOST_MODEL']]['digest'])
           PY
           )
           docker build --tag prime:a18-offhost \
@@ -125,7 +129,8 @@ jobs:
             --env PRIME_MEASURED_COMPUTE_PROFILE=/telemetry/profile.json \
             --env PRIME_MEASURED_COMPUTE_PROFILE_SHA256="$profile_sha" \
             --env PRIME_A18_SOURCE_REVISION="$GITHUB_SHA" \
-            --env PRIME_FAST_MODEL=gemma3:1b \
+            --env PRIME_FAST_MODEL="$A18_OFFHOST_MODEL" \
+            --env A18_OFFHOST_MODEL="$A18_OFFHOST_MODEL" \
             --env PRIME_A18_EXPECTED_MODEL_DIGEST="$model_digest" \
             --env OLLAMA_BASE_URL=http://127.0.0.1:11434 \
             prime:a18-offhost python -B /app/scripts/run_a18_offhost_observation.py

@@ -21,7 +21,9 @@ import uuid
 
 
 MIB = 1024 * 1024
-MODEL = "gemma3:1b"
+MODEL = os.getenv("A18_OFFHOST_MODEL", "gemma3:1b")
+if MODEL not in {"gemma3:1b", "qwen3:1.7b"}:
+    raise RuntimeError("unsupported bounded off-host model")
 SCHEMA = "prime.backend-memory.v1"
 PROFILE_SCHEMA = "abex.measured-compute.v1"
 RESERVE_MIB = 2048
