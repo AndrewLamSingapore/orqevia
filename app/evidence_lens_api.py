@@ -60,11 +60,10 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
     observed = observations[0]["value"]
     current = _snapshot(task)
     runtime = observed.get("runtime") or {}
-    unproven = ["independent_claim_verification", "production_acceptance", "time_freshness"]
-    if runtime.get("source_revision") in (None, "UNKNOWN"):
-        unproven.append("source_revision_binding")
-    if not runtime.get("image_digest"):
-        unproven.append("runtime_image_binding")
+    # Runtime fields are captured from the Objective Store, which obtains them
+    # from environment metadata. Presence is not independent deployment proof.
+    unproven = ["independent_claim_verification", "production_acceptance",
+                "time_freshness", "source_revision_binding", "runtime_image_binding"]
     return {"record_id": record_id, "task_id": task["id"], "revision": task["revision"],
             "integrity": "VALID", "currentness": "CURRENT" if observed == current else "STALE",
             "verification": "UNVERIFIED", "source": "PRIME_OBJECTIVE_STORE",

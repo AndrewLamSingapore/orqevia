@@ -73,8 +73,8 @@ async function lens(method) {
         'Completed: '+(proof.completed_at || 'UNKNOWN'),
         'Result SHA-256: '+(observed.result_digest?.value || 'UNKNOWN'),
         'Metadata SHA-256: '+(observed.metadata_digest?.value || 'UNKNOWN'),
-        'Source revision: '+(observed.runtime?.source_revision || 'UNKNOWN'),
-        'Runtime image: '+(observed.runtime?.image_digest || 'UNKNOWN'),
+        'Reported source revision: '+(observed.runtime?.source_revision || 'UNKNOWN'),
+        'Reported runtime image: '+(observed.runtime?.image_digest || 'UNKNOWN'),
         'Not proven: '+(proof.unproven || []).join(', '),
         'Ledger head: '+(value.ledger_head || 'UNKNOWN')
       ].join('\n');

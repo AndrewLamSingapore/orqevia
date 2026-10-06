@@ -77,6 +77,19 @@ def test_tamper_and_source_drift_never_appear_current(client,tmp_path):
     assert client.post(path,headers={'Origin':ORIGIN}).status_code==409
 
 
+def test_reported_runtime_identifiers_are_not_independent_binding(client,monkeypatch):
+    monkeypatch.setenv('PRIME_RUNTIME_REVISION','a'*40)
+    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST','sha256:'+'b'*64)
+    task_id=_objective(client)
+    response=client.post(f'/control/api/evidence/from-objective/{task_id}',headers={'Origin':ORIGIN})
+    assert response.status_code==201, response.text
+    result=response.json()
+    assert result['observed']['runtime']['source_revision']=='a'*40
+    assert result['observed']['runtime']['image_digest']=='sha256:'+'b'*64
+    assert {'source_revision_binding','runtime_image_binding'} <= set(result['proof']['unproven'])
+    assert result['verification']=='UNVERIFIED'
+
+
 def test_deleted_entire_event_chain_is_invalid_not_current(client,tmp_path):
     task_id=_objective(client)
     path=f'/control/api/evidence/from-objective/{task_id}'
