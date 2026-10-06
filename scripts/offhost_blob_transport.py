@@ -121,6 +121,16 @@ def canary(token: str, *, client_factory=_blob_client, payload: bytes | None = N
     return _transfer(_client(client_factory, token, name), data, len(data), hashlib.sha256(data).hexdigest(), name)
 
 
+def _file_identity(info) -> tuple[int, int, int, int, int]:
+    # Reading may update atime; it is not a change to ciphertext identity.
+    return (info.st_dev, info.st_ino, info.st_mode, info.st_size, info.st_mtime_ns)
+
+
+def _same_open_file(path: Path, stream, expected: tuple[int, int, int, int, int]) -> bool:
+    return (not path.is_symlink() and _file_identity(os.fstat(stream.fileno())) == expected
+            and _file_identity(path.stat()) == expected)
+
+
 def encrypted_file(token: str, path: Path, expected_sha256: str, *, client_factory=_blob_client) -> dict:
     """Upload only an already encrypted PRIME bundle, then read it back."""
     if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
@@ -128,28 +138,31 @@ def encrypted_file(token: str, path: Path, expected_sha256: str, *, client_facto
     if path.is_symlink():
         raise TransportError("Ciphertext path must not be a link")
     try:
-        before = path.stat()
-        if not stat.S_ISREG(before.st_mode) or before.st_size <= len(MAGIC):
-            raise TransportError("Ciphertext must be a nonempty regular file")
-        if os.name == "nt" and before.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
-            raise TransportError("Ciphertext path must not be a reparse point")
-        digest = hashlib.sha256()
         with path.open("rb") as stream:
+            before = os.fstat(stream.fileno())
+            identity = _file_identity(before)
+            if not stat.S_ISREG(before.st_mode) or before.st_size <= len(MAGIC):
+                raise TransportError("Ciphertext must be a nonempty regular file")
+            if os.name == "nt" and before.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+                raise TransportError("Ciphertext path must not be a reparse point")
+            if not _same_open_file(path, stream, identity):
+                raise TransportError("Ciphertext path changed before preflight")
+            digest = hashlib.sha256()
             if stream.read(len(MAGIC)) != MAGIC:
                 raise TransportError("Input is not a PRIME encrypted bundle")
             stream.seek(0)
             for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                 digest.update(chunk)
-        if digest.hexdigest() != expected_sha256:
-            raise TransportError("Ciphertext does not match the pinned SHA-256")
-        if path.stat() != before:
-            raise TransportError("Ciphertext changed during preflight")
-        name = f"encrypted/{expected_sha256}.primebkp"
-        with path.open("rb") as stream:
+            if digest.hexdigest() != expected_sha256:
+                raise TransportError("Ciphertext does not match the pinned SHA-256")
+            if not _same_open_file(path, stream, identity):
+                raise TransportError("Ciphertext changed during preflight")
+            stream.seek(0)
+            name = f"encrypted/{expected_sha256}.primebkp"
             result = _transfer(_client(client_factory, token, name), stream, before.st_size, expected_sha256, name)
-        if path.stat() != before:
-            raise TransportError("Ciphertext changed during transfer")
-        return result
+            if not _same_open_file(path, stream, identity):
+                raise TransportError("Ciphertext changed during transfer")
+            return result
     except OSError:
         raise TransportError("Ciphertext file could not be read") from None
 

@@ -13,10 +13,14 @@ the destination to `abexrecovery20261006/abex-recovery` and accepts only a
 container SAS (`sr=c`) with exactly `sp=rcw`, `spr=https`, and an expiry 5–60
 minutes away. It rejects account SAS and stored access policy identifiers.
 
-Provide the SAS query on stdin, for example from the local Windows clipboard:
+Provide the SAS query on stdin, for example from the local Windows clipboard.
+First set `$pythonExe` to the full path of a verified task-local Python runtime
+(Codex reports its bundled path through workspace dependencies); do not rely on
+the Microsoft Store `python` PATH alias on ABEX:
 
 ```powershell
-Get-Clipboard -Raw | python -B scripts/offhost_blob_transport.py canary
+$pythonExe = Read-Host 'Full path to verified task-local python.exe'
+Get-Clipboard -Raw | & $pythonExe -B scripts/offhost_blob_transport.py canary
 ```
 
 For a protected local file, pipe its contents into stdin instead; the helper

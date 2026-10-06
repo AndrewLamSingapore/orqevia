@@ -1,6 +1,7 @@
 """No Azure credentials or network: a fake BlobClient is the entire transport."""
 
 import hashlib
+import os
 import sys
 import tempfile
 import types
@@ -106,6 +107,40 @@ class BlobTransportTests(unittest.TestCase):
                 source.write_bytes(MAGIC + b"different")
                 with self.assertRaises(TransportError):
                     encrypted_file(sas(), source, expected, client_factory=lambda _token, _name: FakeBlob())
+
+    def test_encrypted_read_atime_update_is_not_a_false_change(self):
+        from unittest.mock import patch
+
+        class AtimeUpdatingBlob(FakeBlob):
+            def upload_blob(self, source, **kwargs):
+                super().upload_blob(source, **kwargs)
+                info = os.stat(source.name)
+                os.utime(source.name, ns=(info.st_atime_ns + 60_000_000_000, info.st_mtime_ns))
+
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "ciphertext.bin"
+            source.write_bytes(MAGIC + b"synthetic-ciphertext-bytes")
+            expected = hashlib.sha256(source.read_bytes()).hexdigest()
+            with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                result = encrypted_file(sas(), source, expected, client_factory=lambda _token, _name: AtimeUpdatingBlob())
+            self.assertEqual(result["verification"], "DOWNLOAD_SHA256_MATCH")
+
+    def test_encrypted_mtime_change_during_upload_fails_closed(self):
+        from unittest.mock import patch
+
+        class MtimeUpdatingBlob(FakeBlob):
+            def upload_blob(self, source, **kwargs):
+                super().upload_blob(source, **kwargs)
+                info = os.stat(source.name)
+                os.utime(source.name, ns=(info.st_atime_ns, info.st_mtime_ns + 60_000_000_000))
+
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "ciphertext.bin"
+            source.write_bytes(MAGIC + b"synthetic-ciphertext-bytes")
+            expected = hashlib.sha256(source.read_bytes()).hexdigest()
+            with patch("scripts.offhost_blob_transport.validate_sas", side_effect=lambda token: validate_sas(token, now=NOW)):
+                with self.assertRaisesRegex(TransportError, "changed during transfer"):
+                    encrypted_file(sas(), source, expected, client_factory=lambda _token, _name: MtimeUpdatingBlob())
 
     def test_constructor_exception_cannot_leak_sas(self):
         from unittest.mock import patch
