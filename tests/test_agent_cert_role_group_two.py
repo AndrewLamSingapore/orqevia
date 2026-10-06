@@ -58,6 +58,7 @@ def test_distinct_registered_bounded_case_and_exact_answer(agent):
     ("a16", "write_authorized", True),
     ("a19", "continuous_health_proven", True),
     ("a19", "restart_authorized", True),
+    ("a19", "latest_check_time", "10:00Z"),
     ("a20", "contribution_margin_percent", 800),
     ("a20", "net_profit_known", True),
     ("a20", "optimal_price_proven", True),

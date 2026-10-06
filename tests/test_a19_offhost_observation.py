@@ -61,7 +61,9 @@ def test_offhost_a19_role_case_binds_exact_spec_job_result_and_actions():
 def test_offhost_a19_case_names_exact_time_and_read_only_token():
     request = role_case("a19")["request"]
     assert "10:01Z" in request["context"]
-    assert "Copy the latest check time exactly" in request["objective"]
+    assert "the latest check" in request["context"]
+    assert "a retry at 10:01Z" in request["context"]
+    assert "For latest_check_time, copy the retry check's time" in request["objective"]
     assert "literal token sample_trend" in request["objective"]
 
 
