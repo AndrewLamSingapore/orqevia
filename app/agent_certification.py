@@ -141,6 +141,31 @@ class AgentCertificationRegistry:
         except Exception:
             return False
 
+    def _manifest_rows(self, agent_id: str) -> list[dict]:
+        """Read one bounded manifest snapshot; never cache across projections."""
+        agent_dir = self.root / agent_id
+        try:
+            if self.root.is_symlink() or agent_dir.is_symlink():
+                raise ValueError("certification root or agent directory is a symlink")
+            if not agent_dir.resolve().is_relative_to(self.root.resolve()):
+                raise ValueError("agent directory escapes certification root")
+            manifest = agent_dir / "certification.json"
+            if manifest.is_symlink():
+                raise ValueError("certification manifest is a symlink")
+            with manifest.open("rb") as stream:
+                raw = stream.read(MAX_EVIDENCE_BYTES + 1)
+            if len(raw) > MAX_EVIDENCE_BYTES:
+                raise ValueError("certification manifest exceeds size limit")
+            data = json.loads(raw.decode("utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("certification manifest must be an object")
+            rows = data["records"] if data.get("schema_version") == "1.0" else []
+            if not isinstance(rows, list):
+                return []
+            return rows
+        except (OSError, ValueError, TypeError, KeyError):
+            return []
+
     def project(self, agent_id: str, capability_id: str, *, now: datetime | None = None) -> dict:
         agent_id = canonical_agent_id(agent_id)
         if agent_id == orchestrator_id():
@@ -154,25 +179,12 @@ class AgentCertificationRegistry:
         now = now or datetime.now(timezone.utc)
         if now.tzinfo is None:
             raise ValueError("projection time requires timezone")
+        return self._project_from_rows(agent_id, capability_id, now,
+                                       self._manifest_rows(agent_id), record)
+
+    def _project_from_rows(self, agent_id: str, capability_id: str, now: datetime,
+                           rows: list[dict], record: dict) -> dict:
         agent_dir = self.root / agent_id
-        try:
-            if self.root.is_symlink() or agent_dir.is_symlink():
-                raise ValueError("certification root or agent directory is a symlink")
-            if not agent_dir.resolve().is_relative_to(self.root.resolve()):
-                raise ValueError("agent directory escapes certification root")
-            manifest = agent_dir / "certification.json"
-            if manifest.is_symlink():
-                raise ValueError("certification manifest is a symlink")
-            if manifest.stat().st_size > MAX_EVIDENCE_BYTES:
-                raise ValueError("certification manifest exceeds size limit")
-            data = json.loads(manifest.read_text(encoding="utf-8"))
-            if not isinstance(data, dict):
-                raise ValueError("certification manifest must be an object")
-            rows = data["records"] if data.get("schema_version") == "1.0" else []
-            if not isinstance(rows, list):
-                rows = []
-        except (OSError, ValueError, TypeError, KeyError):
-            rows = []
         matching = [row for row in rows if isinstance(row, dict)
                     and row.get("agent_id") == agent_id and row.get("capability_id") == capability_id]
         latest = {}
@@ -251,9 +263,16 @@ class AgentCertificationRegistry:
         from .agent_registry import load_agent_registry
 
         now = now or datetime.now(timezone.utc)
+        if now.tzinfo is None:
+            raise ValueError("projection time requires timezone")
         rows = []
         for agent in load_agent_registry()["agents"]:
-            capabilities = [self.project(agent["id"], capability, now=now)
+            # A single request sees one bounded, internally consistent manifest
+            # snapshot per agent. A later request rereads it, so revocations are
+            # not hidden behind a process-wide cache.
+            manifest_rows = self._manifest_rows(agent["id"])
+            capabilities = [self._project_from_rows(agent["id"], capability, now,
+                                                    manifest_rows, agent)
                             for capability in agent["capability_requirements"]]
             level = min(int(item["level"][1:]) for item in capabilities)
             missing = {item["capability_id"]: item["missing_cases"] for item in capabilities

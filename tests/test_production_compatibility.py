@@ -37,7 +37,7 @@ def test_minimal_health_and_static_no_secrets(shell, monkeypatch):
     assert client.get('/control').status_code == 503
 
 
-def test_capability_observatory_is_owner_only_and_fails_closed(shell, monkeypatch, tmp_path):
+def test_capability_observatory_is_local_control_only_and_fails_closed(shell, monkeypatch, tmp_path):
     _, client = shell
     path = '/control/api/agent-capabilities'
     monkeypatch.delenv('PRIME_RUNTIME_REVISION', raising=False)

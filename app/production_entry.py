@@ -123,6 +123,7 @@ def jobs(status: str | None = None, limit: int = 30, authorization=Depends(local
 
 @app.get('/control/api/agent-capabilities')
 def agent_capabilities(authorization=Depends(local_authorization)):
+    # Existing loopback control boundary, not an Owner PWA-session endpoint.
     source = objective_api.runtime_snapshot()['source_revision']
     if source == 'UNKNOWN':
         raise HTTPException(503, 'Runtime source revision is unverified')
