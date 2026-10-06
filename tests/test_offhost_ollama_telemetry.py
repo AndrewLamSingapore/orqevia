@@ -33,6 +33,21 @@ class OffhostTelemetryTests(unittest.TestCase):
                                                proc_root=proc, cgroup_root=cg)
             self.assertEqual((cap // collector.MIB, free // collector.MIB,
                               peak // collector.MIB), (5120, 3072, 1500))
+            (cg / "memory.max").unlink()
+            (cg / "memory.current").unlink()
+            self.assertEqual(collector._scope(77, 6 * 1024 * collector.MIB,
+                                              proc_root=proc, cgroup_root=cg),
+                             (cap, free, peak))
+            _write(cg / "memory.max", "max\n")
+            with self.assertRaisesRegex(collector.EvidenceError, "scope incomplete"):
+                collector._scope(77, 6 * 1024 * collector.MIB,
+                                 proc_root=proc, cgroup_root=cg)
+            (cg / "memory.max").unlink()
+            (cg / "parent/memory.current").unlink()
+            with self.assertRaisesRegex(collector.EvidenceError, "scope incomplete"):
+                collector._scope(77, 6 * 1024 * collector.MIB,
+                                 proc_root=proc, cgroup_root=cg)
+            _write(cg / "parent/memory.current", str(2 * 1024 * collector.MIB))
             _write(cg / "parent/backend/memory.max", "max\n")
             with self.assertRaisesRegex(collector.EvidenceError, "scope incomplete"):
                 collector._scope(77, 6 * 1024 * collector.MIB,

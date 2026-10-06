@@ -122,16 +122,24 @@ def _scope(pid: int, hard_limit: int, *,
     found_docker_cap = False
     node = leaf
     while True:
-        bound = _bytes_file(node / "memory.max")
-        used = _bytes_file(node / "memory.current")
-        if used is None:
-            raise EvidenceError("cgroup current memory unavailable")
-        if bound is not None:
-            if used > bound:
-                raise EvidenceError("cgroup memory exceeds bound")
-            capacity = min(capacity, bound)
-            available = min(available, bound - used)
-            found_docker_cap |= bound == hard_limit
+        max_path, current_path = node / "memory.max", node / "memory.current"
+        # cgroup v2's hierarchy root can omit memory files. The host VM is
+        # still bounded above by /proc/meminfo; no non-root scope may be skipped.
+        if node == root and not max_path.exists() and not current_path.exists():
+            pass
+        else:
+            if not max_path.is_file() or not current_path.is_file():
+                raise EvidenceError("cgroup memory scope incomplete")
+            bound = _bytes_file(max_path)
+            used = _bytes_file(current_path)
+            if used is None:
+                raise EvidenceError("cgroup current memory unavailable")
+            if bound is not None:
+                if used > bound:
+                    raise EvidenceError("cgroup memory exceeds bound")
+                capacity = min(capacity, bound)
+                available = min(available, bound - used)
+                found_docker_cap |= bound == hard_limit
         if node == root:
             break
         node = node.parent
