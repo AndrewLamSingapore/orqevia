@@ -94,7 +94,9 @@ class OffhostTelemetryTests(unittest.TestCase):
                   patch.object(collector, "_backend", return_value=sample),
                   patch.object(collector, "_model_identity", return_value=("0.34.2", "a" * 64)),
                   patch.object(collector, "_api", side_effect=[{"done": True}, {"models": []}])):
-                with self.assertRaisesRegex(collector.EvidenceError, "lacks enforced memory reserve"):
+                with self.assertRaisesRegex(
+                        collector.EvidenceError,
+                        "observed=2000MiB demand=2500MiB hard_cap=4096MiB reserve=2048MiB"):
                     collector.prepare("ollama", directory, "http://127.0.0.1:11434")
             self.assertFalse((directory / "profile.json").exists())
 

@@ -47,7 +47,10 @@ jobs:
           test "$RUNNER_OS" = Linux
           test -f /sys/fs/cgroup/cgroup.controllers
           receipt_dir="/dev/shm/prime-a18-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          docker run -d --name prime-a18-ollama --memory=6g --cpus=2 \
+          # The previous 6 GiB cap could not hold the measured 3B demand plus
+          # the unchanged 2 GiB reserve. This remains a disposable, capped VM.
+          test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 6291456
+          docker run -d --name prime-a18-ollama --memory=7g --cpus=2 \
             --publish 127.0.0.1:11434:11434 \
             --env OLLAMA_NUM_PARALLEL=1 --env OLLAMA_MAX_LOADED_MODELS=1 \
             ollama/ollama:0.12.10
