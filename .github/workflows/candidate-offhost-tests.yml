@@ -73,12 +73,17 @@ jobs:
         run: |
           docker run --rm -i --entrypoint python prime:candidate - <<'PY'
           import json
+          import hashlib
           from pathlib import Path
           from app import system_architecture
 
           root = Path('/app/governance')
-          gen1 = json.loads((root / 'golden-gen1-manifest.json').read_text(encoding='utf-8'))
-          gen2 = json.loads((root / 'golden-gen2-manifest.json').read_text(encoding='utf-8'))
+          gen1_bytes = (root / 'golden-gen1-manifest.json').read_bytes()
+          gen2_bytes = (root / 'golden-gen2-manifest.json').read_bytes()
+          assert hashlib.sha256(gen1_bytes).hexdigest() == 'f2cad4bcf6ba7d00d9640796e1bc250d2018b1a1d335aef929dbf552330c9275'
+          assert hashlib.sha256(gen2_bytes).hexdigest() == '8c013e913e4a75df737346ea98bfdd531afcb9a39bd21bdb1c9c406d64b2fbc0'
+          gen1 = json.loads(gen1_bytes)
+          gen2 = json.loads(gen2_bytes)
           assert gen1['generation'] == 1 and gen2['generation'] == 2
           assert gen2['rollback']['former_golden_baseline'] == gen1['golden_baseline_id']
           historic = system_architecture.architecture_answer('Is JARVIS PRIME Golden Gen1 accepted?')
