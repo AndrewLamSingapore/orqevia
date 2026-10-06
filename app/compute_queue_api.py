@@ -99,6 +99,26 @@ def _validate_job_lease(job: dict) -> None:
         raise PermissionError(decision.reason)
 
 
+def _validated_local_result(job: dict, result: dict) -> dict:
+    response_format = job.get('response_format', 'text')
+    if response_format not in ('text', 'strict_json'):
+        raise PermissionError('invalid persisted response format')
+    if response_format == 'text':
+        return result
+    from .structured_output import MAX_PAYLOAD_BYTES, StructuredOutputError, parse_json
+
+    raw = result.get('result')
+    if not isinstance(raw, str) or len(raw.encode('utf-8')) > MAX_PAYLOAD_BYTES:
+        raise ValueError('invalid strict JSON model response')
+    try:
+        value, _ = parse_json(raw, allow_fence_normalization=False)
+    except StructuredOutputError as exc:
+        raise ValueError('invalid strict JSON model response') from exc
+    if not isinstance(value, dict):
+        raise ValueError('strict JSON response must be an object')
+    return result
+
+
 def _execute(job: dict, provider: Provider) -> dict:
     import asyncio
     from .direct_stream import infer
@@ -108,9 +128,10 @@ def _execute(job: dict, provider: Provider) -> dict:
         return execute_cloud(job,provider,DATA,lambda:queue.get(job['id'])['status']=='cancelled')
     record=ActionRecord(job['id'],job['agent'],'inference.run','ollama',
         classification=job.get('classification','R0'),model_backend=provider.model)
-    return DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
-        settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
-        cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+    return DirectExecutor(action_ledger()).execute(record,lambda:_validated_local_result(job,
+        asyncio.run(infer(job,provider,
+            settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
+            cancelled=lambda:queue.get(job['id'])['status']=='cancelled'))))
 
 
 pool=WorkerPool(queue,providers(),_execute)
@@ -136,6 +157,7 @@ class SubmitJob(BaseModel):
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
     preferred_provider: str|None=None
+    response_format: str='text'
 
 
 class Approval(BaseModel):

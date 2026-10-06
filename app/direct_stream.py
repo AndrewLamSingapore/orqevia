@@ -9,6 +9,9 @@ from . import backend_admission
 
 async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False):
     endpoint = settings.ollama_base_url.rstrip('/')
+    response_format = job.get('response_format', 'text')
+    if response_format not in ('text', 'strict_json'):
+        raise PermissionError('invalid persisted response format')
     lease_id = str(job.get('id') or uuid.uuid4())
     db_path = job.get('_admission_db')
 
@@ -39,7 +42,8 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                 async with client.stream('POST',settings.ollama_base_url+'/api/chat',json={
                 'model':provider.model,'messages':[{'role':'user','content':job['prompt']}],
                 'stream':True,'keep_alive':settings.keep_alive,'options':{
-                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()}}) as response:
+                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()},
+                **({'format':'json'} if response_format == 'strict_json' else {})}) as response:
                     response.raise_for_status();parts=[];final=None
                     async for line in response.aiter_lines():
                         if not line:continue

@@ -116,6 +116,7 @@ class JobQueue:
             CREATE TABLE IF NOT EXISTS compute_jobs(
               id TEXT PRIMARY KEY, agent TEXT NOT NULL, prompt TEXT NOT NULL,
               priority INTEGER NOT NULL, model_role TEXT NOT NULL, model TEXT,
+              response_format TEXT NOT NULL DEFAULT 'text',
               ram_mb INTEGER NOT NULL, vram_mb INTEGER NOT NULL,
               timeout_seconds INTEGER NOT NULL, max_retries INTEGER NOT NULL,
               attempts INTEGER NOT NULL DEFAULT 0, max_cost_usd REAL NOT NULL,
@@ -141,7 +142,8 @@ class JobQueue:
             if 'harness_envelope' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
                 c.execute('ALTER TABLE compute_jobs ADD COLUMN harness_envelope TEXT')
             columns={r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}
-            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'")]:
+            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'"),
+                                    ('response_format',"TEXT NOT NULL DEFAULT 'text'")]:
                 if name not in columns:c.execute(f'ALTER TABLE compute_jobs ADD COLUMN {name} {definition}')
 
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
@@ -152,7 +154,7 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto') -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text') -> dict:
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         try:
             canonical_agent = canonical_agent_id(agent)
@@ -161,6 +163,7 @@ class JobQueue:
         p = PRIORITIES.get(priority, 50) if isinstance(priority, str) else max(0, min(100, int(priority)))
         role = model_role.lower()
         if role not in {"auto", "fast", "deep", "embedding", "evaluator"}: raise ValueError("invalid model_role")
+        if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')
         job_cap = min(max(0.0, float(max_cost_usd)), self.policy.max_job_cost_usd)
         status = "queued"
         approval = "not_required"  # retained database column; never a prerequisite
@@ -175,7 +178,8 @@ class JobQueue:
                int(allow_cloud),int(external_execution),status,approval,ts,ts))
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
             c.execute('UPDATE compute_jobs SET classification=? WHERE id=?',(classification,jid))
-            c.execute('UPDATE compute_jobs SET preferred_provider=?,data_classification=?,task_class=? WHERE id=?',(preferred_provider,data_classification,task_class,jid))
+            c.execute('UPDATE compute_jobs SET preferred_provider=?,data_classification=?,task_class=?,response_format=? WHERE id=?',
+                      (preferred_provider,data_classification,task_class,response_format,jid))
             if harness_envelope is not None:
                 c.execute('UPDATE compute_jobs SET harness_envelope=? WHERE id=?',
                           (json.dumps(harness_envelope,sort_keys=True),jid))

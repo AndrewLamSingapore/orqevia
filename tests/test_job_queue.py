@@ -38,6 +38,17 @@ def test_unknown_agent_is_rejected(tmp_path):
     else:
         raise AssertionError("unregistered compute agent must fail closed")
 
+
+def test_response_format_persists_and_invalid_value_fails_closed(tmp_path):
+    q = queue(tmp_path)
+    structured = q.submit(agent="a18", prompt="bounded JSON", response_format="strict_json")
+    assert structured["response_format"] == "strict_json"
+    reopened = JobQueue(q.db_path, q.policy)
+    assert reopened.get(structured["id"])["response_format"] == "strict_json"
+    assert reopened.claim("worker", [LOCAL])["response_format"] == "strict_json"
+    with pytest.raises(ValueError, match="response_format"):
+        q.submit(agent="a18", prompt="bad", response_format="json_or_text")
+
 def test_cloud_is_direct_and_only_fallback(tmp_path):
     q=queue(tmp_path)
     job=q.submit(agent="analyst",prompt="large",model="large",vram_mb=8000,allow_cloud=True,

@@ -12,6 +12,27 @@ from app.tier_router import Backend, Tier
 from app.settings import PrimeSettings
 
 
+def test_strict_json_local_completion_rejects_fences_duplicates_and_wrong_shape():
+    validate = compute_queue_api._validated_local_result
+    job = {'response_format': 'strict_json'}
+    assert validate(job, {'result': '{"ok":true}'})['result'] == '{"ok":true}'
+    for raw in ('```json\n{"ok":true}\n```', '{"ok":true,"ok":false}', '[1,2]',
+                '{"ok":NaN}'):
+        try:
+            validate(job, {'result': raw})
+        except ValueError:
+            pass
+        else:
+            raise AssertionError('strict JSON job accepted malformed or non-object output')
+    assert validate({'response_format': 'text'}, {'result': 'plain text'})['result'] == 'plain text'
+    try:
+        validate({'response_format': None}, {'result': '{"ok":true}'})
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError('tampered persisted format was accepted')
+
+
 class AgentDispatchTests(HarnessApiTests):
     def setUp(self):
         super().setUp()
@@ -32,6 +53,7 @@ class AgentDispatchTests(HarnessApiTests):
             row = compute_queue_api.queue.get(local.json()['job']['id'])
             assert row['agent'] == 'a18'
             assert not row['allow_cloud']
+            assert row['response_format'] == 'strict_json'
             with patch('app.agent_dispatch_api.local_model_backends', return_value=(
                 Backend('cloud-only', 'synthetic', Tier.NANO, 'cloud'),
             )):
