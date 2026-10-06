@@ -54,16 +54,38 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
         raise HTTPException(404, "Evidence projection not found") from None
     integrity = ledger.verify_chain(record_id, namespace=NAMESPACE)
     observations = envelope.get("observations", [])
-    if integrity["verdict"] != "VALID" or len(observations) != 1:
+    expected_actor = {"type": "SYSTEM", "id": "PRIME_OBJECTIVE_STORE"}
+    expected_authority = {"scope": "objective.result.projection", "source": "PRIME_OBJECTIVE_STORE"}
+    expected_inputs = [{"task_id": task["id"], "revision": task["revision"]}]
+    bound = (envelope.get("action_id") == record_id
+             and envelope.get("actor") == expected_actor
+             and envelope.get("authority") == expected_authority
+             and envelope.get("inputs") == expected_inputs
+             and len(observations) == 1
+             and observations[0].get("observation_id") == f"obs:{record_id}"
+             and observations[0].get("source") == "PRIME_OBJECTIVE_STORE")
+    if integrity["verdict"] != "VALID" or not bound:
         return {"record_id": record_id, "integrity": "INVALID", "currentness": "UNKNOWN",
                 "verification": "UNVERIFIED"}
     observed = observations[0]["value"]
     current = _snapshot(task)
+    runtime = observed.get("runtime") or {}
+    # Runtime fields are captured from the Objective Store, which obtains them
+    # from environment metadata. Presence is not independent deployment proof.
+    unproven = ["independent_claim_verification", "production_acceptance",
+                "time_freshness", "source_revision_binding", "runtime_image_binding"]
     return {"record_id": record_id, "task_id": task["id"], "revision": task["revision"],
             "integrity": "VALID", "currentness": "CURRENT" if observed == current else "STALE",
             "verification": "UNVERIFIED", "source": "PRIME_OBJECTIVE_STORE",
             "result_state": observed["execution_state"], "observed": observed,
-            "ledger_head": integrity["head"]}
+            "ledger_head": integrity["head"],
+            "proof": {"producer": observations[0].get("source", "UNKNOWN"),
+                      "captured_at": observations[0].get("observed_at"),
+                      "completed_at": observed.get("completed_at"),
+                      "currentness_basis": "OBJECTIVE_SNAPSHOT_EQUALITY",
+                      "time_freshness": "UNKNOWN",
+                      "runtime": runtime,
+                      "unproven": unproven}}
 
 
 def materialize(task_id: str, authorization: str) -> dict:

@@ -58,16 +58,24 @@ async function lens(method) {
       ].join('\n');
     } else {
       const observed=value.observed || {};
+      const proof=value.proof || {};
       el('proof').textContent=[
         'Record: '+(value.record_id || 'UNKNOWN'),
         'Execution: '+(value.result_state || 'UNKNOWN'),
         'Ledger integrity: '+(value.integrity || 'UNKNOWN'),
         'Currentness: '+(value.currentness || 'UNKNOWN'),
+        'Currentness basis: '+(proof.currentness_basis || 'UNKNOWN'),
+        'Time freshness: '+(proof.time_freshness || 'UNKNOWN'),
         'Independent verification: '+(value.verification || 'UNKNOWN'),
         'Claim verification at capture: '+(observed.claim_verification || 'UNKNOWN'),
+        'Evidence producer: '+(proof.producer || 'UNKNOWN'),
+        'Captured: '+(proof.captured_at || 'UNKNOWN'),
+        'Completed: '+(proof.completed_at || 'UNKNOWN'),
         'Result SHA-256: '+(observed.result_digest?.value || 'UNKNOWN'),
         'Metadata SHA-256: '+(observed.metadata_digest?.value || 'UNKNOWN'),
-        'Source revision: '+(observed.runtime?.source_revision || 'UNKNOWN'),
+        'Reported source revision: '+(observed.runtime?.source_revision || 'UNKNOWN'),
+        'Reported runtime image: '+(observed.runtime?.image_digest || 'UNKNOWN'),
+        'Not proven: '+(proof.unproven || []).join(', '),
         'Ledger head: '+(value.ledger_head || 'UNKNOWN')
       ].join('\n');
     }

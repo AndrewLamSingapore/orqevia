@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from app import objective_api, production_entry
+from app import evidence_lens_api, objective_api, production_entry
 
 ORIGIN = 'http://127.0.0.1:8000'
 
@@ -42,6 +42,15 @@ def test_authenticated_materialize_read_deduplicate_and_no_model_text(client,tmp
     assert result['result_state']=='COMPLETED'
     assert result['observed']['runtime']['source_revision']=='UNKNOWN'
     assert result['observed']['claim_verification']=='VERIFIED'
+    assert result['proof']['producer']=='PRIME_OBJECTIVE_STORE'
+    assert result['proof']['captured_at']
+    assert result['proof']['runtime']==result['observed']['runtime']
+    assert 'independent_claim_verification' in result['proof']['unproven']
+    assert 'production_acceptance' in result['proof']['unproven']
+    assert 'source_revision_binding' in result['proof']['unproven']
+    assert result['proof']['currentness_basis']=='OBJECTIVE_SNAPSHOT_EQUALITY'
+    assert result['proof']['time_freshness']=='UNKNOWN'
+    assert 'time_freshness' in result['proof']['unproven']
     assert 'REGISTERED AGENTS: 21' not in first.text  # Digest/reference, not copied content.
     assert client.get(path).json()==result
     assert client.post(path,headers={'Origin':ORIGIN}).json()==result
@@ -68,6 +77,19 @@ def test_tamper_and_source_drift_never_appear_current(client,tmp_path):
     assert client.post(path,headers={'Origin':ORIGIN}).status_code==409
 
 
+def test_reported_runtime_identifiers_are_not_independent_binding(client,monkeypatch):
+    monkeypatch.setenv('PRIME_RUNTIME_REVISION','a'*40)
+    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST','sha256:'+'b'*64)
+    task_id=_objective(client)
+    response=client.post(f'/control/api/evidence/from-objective/{task_id}',headers={'Origin':ORIGIN})
+    assert response.status_code==201, response.text
+    result=response.json()
+    assert result['observed']['runtime']['source_revision']=='a'*40
+    assert result['observed']['runtime']['image_digest']=='sha256:'+'b'*64
+    assert {'source_revision_binding','runtime_image_binding'} <= set(result['proof']['unproven'])
+    assert result['verification']=='UNVERIFIED'
+
+
 def test_deleted_entire_event_chain_is_invalid_not_current(client,tmp_path):
     task_id=_objective(client)
     path=f'/control/api/evidence/from-objective/{task_id}'
@@ -78,6 +100,32 @@ def test_deleted_entire_event_chain_is_invalid_not_current(client,tmp_path):
     assert missing_chain['integrity']=='INVALID'
     assert missing_chain['currentness']=='UNKNOWN'
     assert client.post(path,headers={'Origin':ORIGIN}).status_code==409
+
+
+@pytest.mark.parametrize('field,value',[
+    ('observation_source','OTHER_SYSTEM'),
+    ('actor',{'type':'SYSTEM','id':'OTHER_SYSTEM'}),
+    ('authority',{'scope':'objective.result.projection','source':'OTHER_SYSTEM'}),
+    ('inputs',[{'task_id':'wrong-task','revision':0}]),
+])
+def test_valid_internal_chain_cannot_launder_wrong_producer(client,field,value):
+    task_id=_objective(client)
+    path=f'/control/api/evidence/from-objective/{task_id}'
+    assert client.post(path,headers={'Origin':ORIGIN}).status_code==201
+    record_id=f'objective:{task_id}:r0'
+    ledger=evidence_lens_api._ledger()
+    def change(envelope):
+        if field=='observation_source':
+            envelope['observations'][0]['source']=value
+        else:
+            envelope[field]=value
+    ledger.mutate(record_id,namespace=evidence_lens_api.NAMESPACE,
+                  event_type='TEST_WRONG_PROVENANCE',idempotency_key=f'test:{field}:{task_id}',apply=change)
+    assert ledger.verify_chain(record_id,namespace=evidence_lens_api.NAMESPACE)['verdict']=='VALID'
+    result=client.get(path).json()
+    assert result['integrity']=='INVALID'
+    assert result['currentness']=='UNKNOWN'
+    assert 'source' not in result
 
 
 def test_failed_execution_remains_failed_in_ledger(client,tmp_path):
@@ -92,6 +140,8 @@ def test_failed_execution_remains_failed_in_ledger(client,tmp_path):
     response=client.post(path,headers={'Origin':ORIGIN})
     assert response.status_code==201, response.text
     assert response.json()['result_state']=='COMPLETED_WITH_FAILURES'
+    assert response.json()['verification']=='UNVERIFIED'
+    assert 'production_acceptance' in response.json()['proof']['unproven']
     with sqlite3.connect(tmp_path/'evidence-lens.db') as db:
         envelope=json.loads(db.execute('select envelope_json from evidence_actions').fetchone()[0])
     assert envelope['status']=='FAILED'
@@ -142,6 +192,9 @@ def test_owner_control_exposes_explicit_capture_and_read_only_proof(client):
     assert "el('record-proof').onclick=()=>lens('record')" in script.text
     assert "el('prove-it').onclick=()=>lens('prove')" in script.text
     assert 'innerHTML' not in script.text
+    assert 'Evidence producer:' in script.text
+    assert 'Not proven:' in script.text
+    assert 'Time freshness:' in script.text
     source=Path(production_entry.__file__).with_name('production_control.js').read_text(encoding='utf-8')
     assert "method==='record' ? {method:'POST'" in source
     assert "method==='happened' ? 'objectives/' : 'evidence/from-objective/'" in source
