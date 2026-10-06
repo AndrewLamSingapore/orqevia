@@ -127,11 +127,20 @@ def safe_shell_navigation(request):
             and request.headers.get('sec-fetch-mode')=='navigate'
             and request.headers.get('sec-fetch-dest')=='document')
 
+def pwa_origins():
+    primary=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')
+    try:parsed=urlsplit(primary)
+    except ValueError:return ()
+    if parsed.scheme!='https' or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:return ()
+    additional=os.getenv('PRIME_PWA_ADDITIONAL_ORIGINS','')
+    # The public hostname is an explicit, single-origin opt-in, not a general host allowlist.
+    if additional not in {'','https://jarvis.lamjarvis.com'}:return ()
+    return (primary,additional) if additional else (primary,)
+
+
 def origin_valid(request,write=False):
-    expected=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')
-    parsed=urlsplit(expected)
-    if parsed.scheme!='https' or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:return False
-    if request.url.scheme!='https' or str(request.base_url).rstrip('/')!=expected:return False
+    expected=str(request.base_url).rstrip('/')
+    if request.url.scheme!='https' or expected not in pwa_origins():return False
     origin=request.headers.get('origin')
     if origin is not None and origin!=expected:return False
     site=request.headers.get('sec-fetch-site')

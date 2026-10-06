@@ -124,6 +124,7 @@ services:
       PRIME_INTERFACE_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
       PRIME_INTERFACE_CANDIDATE_STATUS: ${PRIME_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}
       PRIME_PWA_ORIGIN: ${PRIME_PWA_ORIGIN:-}
+      PRIME_PWA_ADDITIONAL_ORIGINS: ${PRIME_PWA_ADDITIONAL_ORIGINS:-}
       PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}
       PRIME_PWA_DATA_CLASSIFICATION: ${PRIME_PWA_DATA_CLASSIFICATION:-LOCAL_ONLY}
       PRIME_PWA_MAX_COST_USD: ${PRIME_PWA_MAX_COST_USD:-0}
@@ -254,9 +255,13 @@ services:
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     command: tunnel --no-autoupdate --loglevel info --metrics 0.0.0.0:2000 run
-    depends_on:
-      integration-gateway:
-        condition: service_started
+    volumes:
+      - type: bind
+        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
+        target: /run/prime-tls/ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
     restart: unless-stopped
     stop_grace_period: 15s
     logging:
