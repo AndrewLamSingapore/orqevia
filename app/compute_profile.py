@@ -1,6 +1,6 @@
 """Optional measured machine envelope, independent of Registry and TAP."""
 from functools import lru_cache
-import hashlib,json,logging,os
+import hashlib,json,logging,os,re
 from pathlib import Path
 
 
@@ -25,11 +25,12 @@ def load_compute_profile():
         raise RuntimeError('Invalid measured Compute Profile models')
     if not isinstance(profile.get('generation_options',{}),dict):
         raise RuntimeError('Invalid measured Compute Profile generation options')
-    if profile.get('runtime_version'):
-        if (not isinstance(profile['runtime_version'],str) or
-                any(not isinstance(details.get('digest'),str) or not details['digest']
-                    for details in models.values())):
-            raise RuntimeError('Invalid measured Compute Profile runtime identity')
+    if (not isinstance(profile.get('runtime_version'),str) or
+            not profile['runtime_version'].strip() or
+            any(not isinstance(details.get('digest'),str) or
+                re.fullmatch(r'[0-9a-fA-F]{64}', details['digest']) is None
+                for details in models.values())):
+        raise RuntimeError('Invalid measured Compute Profile runtime identity')
     return profile
 
 
@@ -49,6 +50,22 @@ def runtime_compute_profile():
         return None
 
 
+def verify_runtime_identity(profile, endpoint):
+    """Bind a measured admission to the live Ollama version and model bytes."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(endpoint.rstrip('/')+'/api/version',timeout=10) as r:
+            version=json.load(r)['version']
+        with urllib.request.urlopen(endpoint.rstrip('/')+'/api/tags',timeout=10) as r:
+            installed={m['name']:m['digest'] for m in json.load(r)['models']}
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        raise RuntimeError('Model runtime identity unavailable') from exc
+    if version!=profile['runtime_version']:
+        raise RuntimeError('Model runtime differs from measured envelope')
+    if any(installed.get(name)!=details['digest'] for name,details in profile['models'].items()):
+        raise RuntimeError('Model digest differs from measured envelope')
+
+
 def validate_configuration(settings,queue_policy):
     from .backend_admission import admission_mode
     mode=admission_mode()
@@ -64,15 +81,7 @@ def validate_configuration(settings,queue_policy):
         raise RuntimeError('Configured inference context/output exceeds measured envelope')
     if not set(settings.required_models).issubset(profile['models']):
         raise RuntimeError('Configured model is outside measured envelope')
-    if profile.get('runtime_version'):
-        import urllib.request
-        with urllib.request.urlopen(settings.ollama_base_url+'/api/version',timeout=10) as r:
-            if json.load(r).get('version')!=profile['runtime_version']:
-                raise RuntimeError('Model runtime differs from measured envelope')
-        with urllib.request.urlopen(settings.ollama_base_url+'/api/tags',timeout=10) as r:
-            installed={m['name']:m['digest'] for m in json.load(r)['models']}
-        if any(installed.get(name)!=details['digest'] for name,details in profile['models'].items()):
-            raise RuntimeError('Model digest differs from measured envelope')
+    verify_runtime_identity(profile,settings.ollama_base_url)
 
 
 def generation_options():

@@ -1,8 +1,10 @@
 """Local-only admission checks with a synthetic operator receipt; no model calls."""
 import asyncio
+import concurrent.futures
 import hashlib
 import json
 import sqlite3
+import threading
 import time
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -28,6 +30,28 @@ def receipt(path, *, available=12000, instance='backend-1', scope=True, captured
     return value
 
 
+def parallel_receipt(path, *, residents=(), version='fixture-ollama', digests=None,
+                     **kwargs):
+    value = receipt(path, **kwargs)
+    value.update(schema=admission.PARALLEL_SCHEMA, resident_leases=list(residents),
+                 runtime_version=version,
+                 model_digests={'gemma3:1b': 'a' * 64} if digests is None else digests)
+    path.write_text(json.dumps(value), encoding='utf-8')
+    return value
+
+
+def measured_slots(tmp_path, monkeypatch, slots):
+    profile = tmp_path / 'measured-profile.json'
+    value = json.loads(profile.read_text(encoding='utf-8'))
+    value['normal_concurrency'] = slots
+    raw = json.dumps(value).encode()
+    profile.write_bytes(raw)
+    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('OLLAMA_NUM_PARALLEL', str(slots))
+    compute_profile.load_compute_profile.cache_clear()
+    compute_profile.runtime_compute_profile.cache_clear()
+
+
 def receipt_after_completion(path, db):
     with sqlite3.connect(db) as c:
         completed_at = c.execute('SELECT captured_after FROM backend_admission_refresh WHERE endpoint=?',
@@ -47,13 +71,15 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.setenv('OLLAMA_BASE_URL', ENDPOINT)
     raw = json.dumps({'schema':'abex.measured-compute.v1','normal_concurrency':1,
                       'minimum_available_mib':1,'context_tokens':128,'output_limit':8,
-                      'models':{'gemma3:1b':{'peak_mib':1024}}}).encode()
+                      'runtime_version':'fixture-ollama',
+                      'models':{'gemma3:1b':{'peak_mib':1024,'digest':'a'*64}}}).encode()
     profile = tmp_path / 'measured-profile.json'
     profile.write_bytes(raw)
     monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE',str(profile))
     monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
     compute_profile.load_compute_profile.cache_clear()
     compute_profile.runtime_compute_profile.cache_clear()
+    monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_: None)
     yield path
     compute_profile.load_compute_profile.cache_clear()
     compute_profile.runtime_compute_profile.cache_clear()
@@ -211,6 +237,17 @@ def test_missing_measured_peak_holds_local_claim(tmp_path, backend):
     assert q.get(job['id'])['status'] == 'queued'
 
 
+def test_measured_claim_rechecks_live_runtime_identity(tmp_path, backend, monkeypatch):
+    receipt(backend)
+    def changed_runtime(*_args):
+        raise RuntimeError('Model digest differs from measured envelope')
+    monkeypatch.setattr(compute_profile, 'verify_runtime_identity', changed_runtime)
+    q = queue(tmp_path)
+    job = q.submit(agent='planner', prompt='identity drift', ram_mb=1024)
+    assert q.claim('one', [LOCAL]) is None
+    assert q.get(job['id'])['status'] == 'queued'
+
+
 def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend):
     receipt(backend)
     q = queue(tmp_path)
@@ -248,6 +285,186 @@ def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend)
     assert q.claim('two', [LOCAL])['id'] == next_job['id']
 
 
+@pytest.mark.parametrize('slots', [2, 3])
+def test_measured_queue_claims_exact_parallel_slots_atomically(tmp_path, backend, monkeypatch, slots):
+    measured_slots(tmp_path, monkeypatch, slots)
+    parallel_receipt(backend, available=11000)
+    q = JobQueue(tmp_path / 'parallel.db', QueuePolicy(global_concurrency=slots,
+                                                      local_ram_mb=32768))
+    provider = Provider('ollama-fast', 'local', 'gemma3:1b', 32768, 0, slots)
+    jobs = [q.submit(agent=agent, prompt=agent, ram_mb=2500)
+            for agent in ('planner', 'critic', 'research')[:slots]]
+    claimed = [q.claim(f'worker-{index}', [provider]) for index in range(slots)]
+    assert {job['id'] for job in claimed} == {job['id'] for job in jobs}
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute('SELECT COUNT(*),SUM(demand_mib) FROM backend_admission').fetchone() == (slots, slots * 2500)
+    c = admission.transaction(q.db_path)
+    try:
+        with pytest.raises(PermissionError, match='occupied'):
+            admission.reserve(c, ENDPOINT, 'extra', 2500,
+                              max_leases=slots)
+        c.rollback()
+    finally:
+        c.close()
+
+
+def test_independent_sqlite_claimers_cannot_exceed_measured_n2(tmp_path, backend, monkeypatch):
+    measured_slots(tmp_path, monkeypatch, 2)
+    parallel_receipt(backend, available=11000)
+    policy = QueuePolicy(global_concurrency=2, local_ram_mb=32768)
+    db = tmp_path / 'atomic.db'
+    queues = [JobQueue(db, policy) for _ in range(3)]
+    provider = Provider('ollama-fast', 'local', 'gemma3:1b', 32768, 0, 3)
+    jobs = [queues[0].submit(agent=agent, prompt=agent, ram_mb=2500)
+            for agent in ('planner', 'critic', 'research')]
+    gate = threading.Barrier(3)
+    def claim(index):
+        gate.wait(timeout=5)
+        return queues[index].claim(f'worker-{index}', [provider])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+        claims = list(pool.map(claim, range(3)))
+    assert sum(job is not None for job in claims) == 2
+    with sqlite3.connect(db) as c:
+        assert c.execute('SELECT COUNT(*) FROM backend_admission').fetchone() == (2,)
+        assert c.execute("SELECT COUNT(*) FROM compute_jobs WHERE status='running'").fetchone() == (2,)
+    assert len({job['id'] for job in claims if job}) == 2
+    assert {job['id'] for job in claims if job}.issubset({job['id'] for job in jobs})
+
+
+def test_parallel_pending_demands_accumulate_before_backend_allocation(tmp_path, backend, monkeypatch):
+    measured_slots(tmp_path, monkeypatch, 2)
+    parallel_receipt(backend, available=7000)
+    q = JobQueue(tmp_path / 'pending-sum.db', QueuePolicy(global_concurrency=2,
+                                                         local_ram_mb=32768))
+    provider = Provider('ollama-fast', 'local', 'gemma3:1b', 32768, 0, 2)
+    first = q.submit(agent='planner', prompt='first', ram_mb=4000)
+    second = q.submit(agent='critic', prompt='second', ram_mb=4000)
+    assert q.claim('one', [provider])['id'] == first['id']
+    assert q.claim('two', [provider]) is None
+    assert q.get(second['id'])['status'] == 'queued'
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute('SELECT COUNT(*) FROM backend_admission').fetchone() == (1,)
+
+
+def test_parallel_receipt_credits_only_confirmed_residents_and_retains_cancelled_lease(tmp_path, backend, monkeypatch):
+    measured_slots(tmp_path, monkeypatch, 2)
+    parallel_receipt(backend, available=11000)
+    q = JobQueue(tmp_path / 'resident.db', QueuePolicy(global_concurrency=2,
+                                                      local_ram_mb=32768))
+    provider = Provider('ollama-fast', 'local', 'gemma3:1b', 32768, 0, 2)
+    first = q.submit(agent='planner', prompt='first', ram_mb=4000)
+    second = q.submit(agent='critic', prompt='second', ram_mb=4000)
+    assert q.claim('one', [provider])['id'] == first['id']
+    assert q.claim('two', [provider])['id'] == second['id']
+    c = admission.transaction(q.db_path)
+    try:
+        admission.dispatch(c, ENDPOINT, first['id'])
+        c.commit()
+    finally:
+        c.close()
+    # A marker captured before dispatch cannot make its allocation disappear.
+    with sqlite3.connect(q.db_path) as db:
+        dispatched_at = db.execute('SELECT dispatched_at FROM backend_admission WHERE job_id=?',
+                                   (first['id'],)).fetchone()[0]
+    parallel_receipt(backend, residents=[first['id']], available=7000,
+                     captured=dispatched_at)
+    c = admission.transaction(q.db_path)
+    try:
+        with pytest.raises(PermissionError, match='reserve reached'):
+            admission.check(c, ENDPOINT, second['id'])
+        c.rollback()
+    finally:
+        c.close()
+    parallel_receipt(backend, residents=[], available=7000)
+    c = admission.transaction(q.db_path)
+    try:
+        with pytest.raises(PermissionError, match='reserve reached'):
+            admission.check(c, ENDPOINT, second['id'])
+        c.rollback()
+    finally:
+        c.close()
+    parallel_receipt(backend, residents=[first['id']], available=7000)
+    c = admission.transaction(q.db_path)
+    try:
+        admission.check(c, ENDPOINT, second['id'])
+        admission.dispatch(c, ENDPOINT, second['id'])
+        c.commit()
+    finally:
+        c.close()
+    parallel_receipt(backend, residents=[first['id'], second['id']], available=3000)
+    c = admission.transaction(q.db_path)
+    try:
+        admission.check(c, ENDPOINT, first['id'])
+        admission.check(c, ENDPOINT, second['id'])
+        c.commit()
+    finally:
+        c.close()
+    q.cancel(first['id'])
+    third = q.submit(agent='research', prompt='third', ram_mb=4000)
+    assert q.claim('three', [provider]) is None
+    with sqlite3.connect(q.db_path) as c:
+        assert c.execute("SELECT state FROM backend_admission WHERE job_id=?", (first['id'],)).fetchone() == ('uncertain',)
+    c = admission.transaction(q.db_path)
+    try:
+        admission.completed(c, ENDPOINT, first['id'])
+        c.commit()
+    finally:
+        c.close()
+    assert q.claim('three', [provider]) is None  # receipt predates completion
+    receipt_after = parallel_receipt(backend, residents=[second['id']], available=7000)
+    with sqlite3.connect(q.db_path) as c:
+        completed_at = c.execute('SELECT captured_after FROM backend_admission_refresh').fetchone()[0]
+    if receipt_after['captured_at'] <= completed_at:
+        while time.time() <= completed_at:
+            time.sleep(0.001)
+        parallel_receipt(backend, residents=[second['id']], available=7000)
+    assert q.claim('three', [provider])['id'] == third['id']
+
+
+@pytest.mark.parametrize('mutation', [
+    {'resident_leases': ['duplicate', 'duplicate']},
+    {'resident_leases': 'not-a-list'},
+    {'runtime_version': 'wrong-version'},
+    {'model_digests': {'gemma3:1b': 'b' * 64}},
+    {'scope_complete': False},
+    {'captured_at': 0},
+])
+def test_parallel_claim_fails_closed_on_bad_receipt(tmp_path, backend, monkeypatch, mutation):
+    measured_slots(tmp_path, monkeypatch, 2)
+    value = parallel_receipt(backend)
+    value.update(mutation)
+    backend.write_text(json.dumps(value), encoding='utf-8')
+    q = JobQueue(tmp_path / 'bad-parallel.db', QueuePolicy(global_concurrency=2,
+                                                          local_ram_mb=32768))
+    job = q.submit(agent='planner', prompt='held', ram_mb=1024)
+    assert q.claim('one', [Provider('ollama-fast', 'local', 'gemma3:1b', 32768, 0, 2)]) is None
+    assert q.get(job['id'])['status'] == 'queued'
+
+
+def test_parallel_duplicate_json_field_is_rejected(tmp_path, backend, monkeypatch):
+    measured_slots(tmp_path, monkeypatch, 2)
+    value = parallel_receipt(backend)
+    backend.write_text(json.dumps(value)[:-1] + ',"resident_leases":[]}', encoding='utf-8')
+    with pytest.raises(PermissionError, match='receipt unavailable'):
+        admission.observation(ENDPOINT)
+
+
+def test_v1_receipt_keeps_measured_n1_but_cannot_admit_parallel(tmp_path, backend, monkeypatch):
+    measured_slots(tmp_path, monkeypatch, 2)
+    receipt(backend)
+    q = JobQueue(tmp_path / 'v1.db', QueuePolicy(global_concurrency=2, local_ram_mb=32768))
+    job = q.submit(agent='planner', prompt='parallel held', ram_mb=1024)
+    assert q.claim('one', [Provider('ollama-fast', 'local', 'gemma3:1b', 32768, 0, 2)]) is None
+    assert q.get(job['id'])['status'] == 'queued'
+    direct = admission.transaction(str(tmp_path / 'v1-direct.db'))
+    try:
+        admission.reserve_model(direct, ENDPOINT, 'single', 'gemma3:1b', 1024)
+        admission.dispatch(direct, ENDPOINT, 'single')
+        direct.commit()
+    finally:
+        direct.close()
+
+
 def test_pending_demand_is_rechecked_at_dispatch(tmp_path, backend):
     receipt(backend, available=12000)
     c = admission.transaction(str(tmp_path / 'pending.db'))
@@ -274,6 +491,8 @@ def test_legacy_pending_lease_without_demand_stays_held(tmp_path, backend):
                   (ENDPOINT, 'legacy', 'backend-1', 'vm-1', 'pending'))
     c = admission.transaction(str(db))
     try:
+        assert {row[1]: row[5] for row in c.execute('PRAGMA table_info(backend_admission)')}['job_id'] == 2
+        assert c.execute('SELECT job_id FROM backend_admission').fetchone() == ('legacy',)
         with pytest.raises(PermissionError, match='pending memory demand'):
             admission.dispatch(c, ENDPOINT, 'legacy')
         assert c.execute('SELECT state FROM backend_admission').fetchone() == ('pending',)
