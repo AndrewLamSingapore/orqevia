@@ -11,6 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 COPY config ./config
+# The deterministic architecture lookup reads these frozen records at /app/governance.
+# Keep the image scope narrow; other governance files are not runtime inputs.
+COPY governance/golden-gen1-manifest.json governance/golden-gen2-manifest.json ./governance/
 COPY clients/pwa/index.html clients/pwa/recovery.js clients/pwa/release.mjs clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/storage.mjs clients/pwa/style.css clients/pwa/sw.js clients/pwa/voice.mjs clients/pwa/manifest.webmanifest ./app/pwa_static/
 COPY clients/pwa/icons ./app/pwa_static/icons
 

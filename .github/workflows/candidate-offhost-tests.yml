@@ -5,6 +5,7 @@ on:
     branches:
       - feat/prime-runtime-candidate-20261003
       - feat/backend-admission-20261005
+      - fix/prime-lens-retrieval-20261006
   workflow_dispatch:
 
 permissions:
@@ -67,6 +68,28 @@ jobs:
         run: docker build --tag prime:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Verify packaged runtime and PWA without production data
         run: docker run --rm --entrypoint python prime:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
+      - name: Verify packaged Golden records are readable by the deterministic lookup
+        shell: bash
+        run: |
+          docker run --rm -i --entrypoint python prime:candidate - <<'PY'
+          import json
+          from pathlib import Path
+          from app import system_architecture
+
+          root = Path('/app/governance')
+          gen1 = json.loads((root / 'golden-gen1-manifest.json').read_text(encoding='utf-8'))
+          gen2 = json.loads((root / 'golden-gen2-manifest.json').read_text(encoding='utf-8'))
+          assert gen1['generation'] == 1 and gen2['generation'] == 2
+          assert gen2['rollback']['former_golden_baseline'] == gen1['golden_baseline_id']
+          historic = system_architecture.architecture_answer('Is JARVIS PRIME Golden Gen1 accepted?')
+          platform = system_architecture.architecture_answer('Explain the ABEX and Dell architecture relationship')
+          assert historic['status'] == 'UNVERIFIED'
+          assert 'HISTORICAL GOLDEN GEN1 ROLLBACK' in historic['text']
+          assert gen1['source']['accepted_commit'] in historic['text']
+          assert platform['status'] == 'UNVERIFIED'
+          assert 'PRODUCTION AUTHORITY/HOST: ABEX' in platform['text']
+          assert 'Dell live peer verification requires a separate current round-trip.' in platform['text']
+          PY
       - name: Smoke isolated TLS startup and unauthenticated denial
         shell: bash
         run: |
