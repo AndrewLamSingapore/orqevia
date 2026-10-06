@@ -57,6 +57,8 @@ def main():
     names.append('competence_frontier_evaluation')
     names.append('portfolio_reconciliation')
     names.append('evidence_lens_qualification_receipt')
+    names.append('lens_claim_authority_current')
+    names.append('evidence_lens_live_slice')
     names.append('agent_role_contract_matrix')
     names.append('agent_certification')
     names.append('agent_capability_route')

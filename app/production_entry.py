@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from . import direct_entry, objective_api, agent_dispatch_api, compute_queue_api, artifact_delivery
+from . import direct_entry, objective_api, agent_dispatch_api, compute_queue_api, artifact_delivery, evidence_lens_api
 from .operational_workflows import router as operational_workflows
 from .pwa_sessions import owner_router as pwa_owner_router
 from .production_survival import build_router as build_survival_router
@@ -107,6 +107,16 @@ async def pwa_pairing(request: Request, authorization=Depends(local_authorizatio
 @app.get('/control/api/objectives/{task_id}')
 def objective(task_id: str, authorization=Depends(local_authorization)):
     return objective_api.get(task_id, authorization)
+
+
+@app.post('/control/api/evidence/from-objective/{task_id}', status_code=201)
+def materialize_evidence(task_id: str, authorization=Depends(local_authorization)):
+    return evidence_lens_api.materialize(task_id, authorization)
+
+
+@app.get('/control/api/evidence/from-objective/{task_id}')
+def objective_evidence(task_id: str, authorization=Depends(local_authorization)):
+    return evidence_lens_api.read(task_id, authorization)
 
 
 @app.post('/control/api/dispatch', status_code=202)

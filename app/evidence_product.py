@@ -163,10 +163,14 @@ def validate_receipt(receipt: dict[str, Any], *, artifact_bytes: dict[str, bytes
 class EvidenceLedger:
     """SQLite reference ledger: append-only events with a per-action hash chain."""
 
-    def __init__(self, path: str | Path):
+    def __init__(self, path: str | Path, *, read_only: bool = False):
         self.path = str(path)
-        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
+        self.read_only = read_only
         self._lock = threading.RLock()
+        if read_only:
+            if not Path(self.path).is_file(): raise FileNotFoundError(self.path)
+            return
+        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as db:
             db.executescript("""
             create table if not exists evidence_actions(
@@ -182,7 +186,8 @@ class EvidenceLedger:
             """)
 
     def _connect(self) -> sqlite3.Connection:
-        db = sqlite3.connect(self.path, timeout=10)
+        target = Path(self.path).resolve().as_uri() + "?mode=ro" if self.read_only else self.path
+        db = sqlite3.connect(target, timeout=10, uri=self.read_only)
         db.row_factory = sqlite3.Row
         db.execute("pragma foreign_keys=on")
         db.execute("pragma busy_timeout=10000")
