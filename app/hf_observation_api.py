@@ -186,7 +186,7 @@ def _lens(value, task_id, pairs, hf_ids, now):
             'runtime_binding': 'UNVERIFIED', 'production_acceptance': 'UNVERIFIED'}
 
 
-def inspect_hf(authorization, task_id=None):
+def inspect_hf(authorization, task_id=None, *, lens_observation=None):
     """No network probe, model invocation, materialization, or credential export."""
     authenticate_owner(authorization)
     if task_id is not None:
@@ -247,7 +247,10 @@ def inspect_hf(authorization, task_id=None):
         pairs, hf_ids = set(), set()
     if task_id is not None:
         try:
-            report['objective_evidence'] = _lens(_read_lens(task_id, authorization), task_id, pairs, hf_ids, now)
+            # Internal dashboard callers may reuse the exact bounded Lens read.
+            # This is not an HTTP parameter and never bypasses domain validation.
+            evidence = _read_lens(task_id, authorization) if lens_observation is None else lens_observation
+            report['objective_evidence'] = _lens(evidence, task_id, pairs, hf_ids, now)
         except HTTPException as exc:
             if exc.status_code in {401, 403}:
                 raise

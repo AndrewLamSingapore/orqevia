@@ -1,0 +1,5 @@
+# Optional isolated Semantic Fabric; no HTTP, JavaScript or Oxigraph extras.
+# Compatible released metadata checked at the pinned upstream PyPI releases.
+rdflib==7.6.0
+pyshacl==0.40.1
+owlrl==7.6.2

@@ -7,6 +7,7 @@ on:
       - feat/backend-admission-20261005
       - fix/prime-lens-retrieval-20261006
       - feat/prime-unified-release-20261006
+      - feat/prime-gods-eye-semantic-20261007
   workflow_dispatch:
 
 permissions:
@@ -47,6 +48,10 @@ jobs:
           tests/test_measured_compute_profile.py
       - name: Python regression suite
         run: python -B -m pytest -q -p no:cacheprovider
+      - name: Require actual formal semantic engines and checks
+        run: |
+          python -B -c "from app.semantic_fabric import _engines; _engines()"
+          python -B -m pytest -q -p no:cacheprovider tests/test_semantic_fabric.py
       - name: PWA regression suite
         shell: pwsh
         run: |
@@ -56,6 +61,7 @@ jobs:
           node clients/pwa/candidate-tests.mjs
           node clients/pwa/followup-tests.mjs
           node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
+          node --test tests/test_gods_eye_ui.js
 
   image-smoke:
     needs: tests
@@ -69,6 +75,14 @@ jobs:
         run: docker build --tag prime:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Verify packaged runtime and PWA without production data
         run: docker run --rm --entrypoint python prime:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
+      - name: Verify packaged formal semantics and read-only God's Eye routes
+        shell: bash
+        run: |
+          docker run --rm --network none --read-only --memory 512m --memory-swap 512m --cpus 1 \
+            --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/scripts/smoke_gods_eye_image.py,target=/run/prime-ci/smoke_gods_eye_image.py,readonly" \
+            --entrypoint python prime:candidate -B /run/prime-ci/smoke_gods_eye_image.py \
+            --expected-source "$GITHUB_SHA"
       - name: Verify packaged Golden records are readable by the deterministic lookup
         shell: bash
         run: |

@@ -196,3 +196,104 @@ def test_caller_cancellation_propagates_and_never_becomes_provider_fault():
 def test_model_and_credential_scope_cannot_be_redirected(kwargs):
     with pytest.raises(ValueError):
         HFServerlessQA(**kwargs)
+
+
+_AMBIGUOUS_REJECTIONS = [
+    {'error': {'code': 'model_at_capacity', 'usage': {'total_tokens': 1}}},
+    {'error': {'code': 'model_at_capacity', 'content': 'already generated'}},
+    {'error': {'code': 'model_at_capacity'}, 'text': 'already generated'},
+    {'error': {'code': 'model_at_capacity'}, 'delta': {'content': 'already generated'}},
+    {'error': {'code': 'model_at_capacity'}, 'total_tokens': 1},
+    {'error': {'code': 'model_at_capacity', 'details': {'answer': 'already generated'}}},
+    {'error': {'code': 'model_at_capacity', 'request_id': ['malformed']}},
+    {'error': {'code': 'model_at_capacity', 'message': {'private': 'fixture'}}},
+    {'error': {'code': 'model_at_capacity'}, 'status': True},
+    {'error': {'code': 'model_at_capacity'}, 'retry_after': float('nan')},
+    {'error': {'code': 'model_at_capacity'}, 'retry_after': float('inf')},
+]
+
+
+@pytest.mark.parametrize('status', [429, 503])
+@pytest.mark.parametrize('body', _AMBIGUOUS_REJECTIONS)
+def test_ambiguous_rejected_admission_never_claims_pre_execution(status, body):
+    provider, calls = adapter(httpx.Response(status, content=json.dumps(body).encode()))
+    with pytest.raises(ProviderFailure, match='^PROVIDER_HTTP_FAILURE$') as failure:
+        run(provider)
+    assert failure.value.pre_execution is False and len(calls) == 1
+    assert 'already generated' not in str(failure.value) and 'fixture' not in str(failure.value)
+
+
+@pytest.mark.parametrize('status', [429, 503])
+@pytest.mark.parametrize('raw', [
+    b'{"error":{"code":"model_at_capacity","code":"capacity_exceeded"}}',
+    b'{"error":{"code":"model_at_capacity","c\\u006fde":"capacity_exceeded"}}',
+    b'{"error":{"code":"model_at_capacity"},"message":"a","message":"b"}',
+    b'{"error":{"code":"model_at_capacity"},"retry_after":1e9999}',
+    b'{"error":{"code":"model_at_capacity"},"status":NaN}',
+    b'{"error":{"code":"model_at_capacity"},"retry_after":Infinity}',
+])
+def test_duplicate_and_nonfinite_rejected_admission_is_ambiguous(status, raw):
+    provider, calls = adapter(httpx.Response(status, content=raw))
+    with pytest.raises(ProviderFailure, match='^PROVIDER_HTTP_FAILURE$') as failure:
+        run(provider)
+    assert failure.value.pre_execution is False and len(calls) == 1
+
+
+@pytest.mark.parametrize('status,code', [(429, 'RATE_LIMIT'), (503, 'CAPACITY')])
+def test_clean_typed_rejected_admission_preserves_explicit_capacity_and_rate_limit(status, code):
+    body = {'error': {'code': 'model_at_capacity', 'message': 'capacity',
+        'request_id': 'public-fixture'}, 'status': status, 'retry_after': 1.5}
+    provider, calls = adapter(httpx.Response(status, json=body))
+    with pytest.raises(ProviderFailure, match='^' + code + '$') as failure:
+        run(provider)
+    assert failure.value.pre_execution is True and len(calls) == 1
+
+
+@pytest.mark.parametrize('status,code,pre_execution', [(429, 'RATE_LIMIT', True),
+    (503, 'PROVIDER_HTTP_FAILURE', False)])
+def test_empty_rate_rejection_is_not_empty_ambiguous_server_failure(status, code, pre_execution):
+    provider, calls = adapter(httpx.Response(status, content=b''))
+    with pytest.raises(ProviderFailure, match='^' + code + '$') as failure:
+        run(provider)
+    assert failure.value.pre_execution is pre_execution and len(calls) == 1
+
+
+@pytest.mark.parametrize('raw', [
+    b'{"answer":"Clara","score":0.97,"start":11,"end":16,"diagnostic":NaN}',
+    b'{"answer":"Clara","score":0.97,"start":11,"end":16,"diagnostic":Infinity}',
+    b'{"answer":"Clara","score":0.97,"start":11,"end":16,"diagnostic":1e9999}',
+])
+def test_success_body_nonfinite_unknown_fields_fail_closed(raw):
+    provider, calls = adapter(httpx.Response(200, content=raw))
+    with pytest.raises(ProviderFailure, match='^MALFORMED_QA_RESPONSE$') as failure:
+        run(provider)
+    assert failure.value.pre_execution is False and len(calls) == 1
+
+
+@pytest.mark.parametrize('status', [429, 503])
+def test_ambiguous_rejected_admission_cannot_dispatch_qa_router_fallback(monkeypatch, status):
+    import hashlib
+    from app.hf_qa_execution import QAReservation, execute_direct_qa
+    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'only-offline-owner-fixture')
+    provider, calls = adapter(httpx.Response(status, json=_AMBIGUOUS_REJECTIONS[0]))
+    router_calls = []
+
+    def admit(binding, previous, phase):
+        return QAReservation(reservation_id='0f0f204b-5bcd-4e64-82d0-8309d7ca9941',
+            binding_sha256=hashlib.sha256(json.dumps(binding, sort_keys=True,
+                separators=(',', ':')).encode()).hexdigest(),
+            price_contract_sha256='a' * 64, expires_monotonic=200.0,
+            direct_maximum_charge_usd='.001', router_maximum_charge_usd='.001',
+            hf_router_provider_id='hf-router-approved',
+            hf_router_model='google/gemma-3-4b-it:deepinfra')
+
+    def forbidden_router(**kwargs):
+        router_calls.append(True)
+        raise AssertionError('ambiguous direct execution cannot replay')
+
+    with pytest.raises(ProviderFailure, match='^PROVIDER_HTTP_FAILURE$') as failure:
+        execute_direct_qa(authorization='Bearer only-offline-owner-fixture', agent_id='a18',
+            task_id='b3c60f03-e8e5-4f19-a0b4-c085ffbb0a01', context=CONTEXT, question=QUESTION,
+            data_classification='CLOUD_PERMITTED', max_cost_usd='.01', admit=admit,
+            execute_hf_router=forbidden_router, qa=provider, clock=lambda: 100.0)
+    assert failure.value.pre_execution is False and len(calls) == 1 and router_calls == []

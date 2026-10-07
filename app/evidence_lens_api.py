@@ -8,7 +8,8 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from . import objective_api
-from .evidence_product import EvidenceLedger, canonical_bytes, content_digest
+from .evidence_product import (EvidenceLedger, canonical_bytes, content_digest,
+    OBSERVATION_PAYLOAD_BYTES, ObservationBudgetExceeded, observation_remaining)
 
 NAMESPACE = "prime-objective"
 
@@ -55,6 +56,15 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
     except KeyError:
         raise HTTPException(404, "Evidence projection not found") from None
     integrity = ledger.verify_chain(record_id, namespace=NAMESPACE)
+    if ledger.observation_deadline is not None:
+        observation_remaining(ledger.observation_deadline)
+        if (type(envelope) is not dict or integrity.get('envelope_digest') != content_digest(canonical_bytes(envelope))['value']
+                or type(envelope.get('observations')) is not list
+                or len(envelope['observations']) != 1
+                or type(envelope['observations'][0]) is not dict
+                or type(envelope['observations'][0].get('value')) is not dict):
+            return {'record_id': record_id, 'integrity': 'INVALID', 'currentness': 'UNKNOWN',
+                    'verification': 'UNVERIFIED'}
     observations = envelope.get("observations", [])
     expected_actor = {"type": "SYSTEM", "id": "PRIME_OBJECTIVE_STORE"}
     expected_authority = {"scope": "objective.result.projection", "source": "PRIME_OBJECTIVE_STORE"}
@@ -122,8 +132,32 @@ def materialize(task_id: str, authorization: str) -> dict:
     return _read(ledger, task)
 
 
-def read(task_id: str, authorization: str) -> dict:
-    task = _task(task_id, authorization, read_only=True)
+def read(task_id: str, authorization: str, *, observation_deadline=None, task=None) -> dict:
+    if observation_deadline is None:
+        if task is not None:raise ValueError('OBSERVATION_TASK_REQUIRES_BUDGET')
+        task = _task(task_id, authorization, read_only=True)
+    else:
+        from .client_auth import authenticate_owner
+        authenticate_owner(authorization)
+        observation_remaining(observation_deadline)
+        try:
+            canonical = str(UUID(task_id)) == task_id
+        except (ValueError, TypeError, AttributeError):
+            canonical = False
+        if not canonical:raise HTTPException(404, 'Objective not found')
+        if task is None:
+            task = objective_api.get_read_only(task_id, authorization, observation_deadline=observation_deadline)
+        metadata = task.get('execution_metadata') if type(task) is dict else None
+        if (type(task) is not dict or task.get('id') != task_id or type(task.get('revision')) is not int
+                or type(metadata) is not dict or metadata.get('task_id') != task_id
+                or type(metadata.get('revision')) is not int or metadata['revision'] != task['revision']
+                or metadata.get('authoritative') is not True):
+            raise ObservationBudgetExceeded('OBSERVATION_TASK_BINDING_INVALID')
+        if len(canonical_bytes(task)) > OBSERVATION_PAYLOAD_BYTES:
+            raise ObservationBudgetExceeded('OBSERVATION_TASK_PAYLOAD_EXCEEDED')
+        observation_remaining(observation_deadline)
     if not _ledger_path().is_file():
         raise HTTPException(404, "Evidence projection not found")
-    return _read(EvidenceLedger(_ledger_path(), read_only=True), task)
+    result = _read(EvidenceLedger(_ledger_path(), read_only=True, observation_deadline=observation_deadline), task)
+    if observation_deadline is not None:observation_remaining(observation_deadline)
+    return result

@@ -8,3 +8,4 @@ pandas==2.3.1
 psutil==7.2.2
 wasmtime==48.0.0
 cryptography==50.0.2
+-r requirements-semantic.txt

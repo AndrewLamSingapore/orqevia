@@ -3,18 +3,33 @@ import argparse,hashlib,json,shutil,subprocess
 from pathlib import Path
 from validate_canonical import ROOT,validate
 
+PUBLIC_RUNTIME_GOVERNANCE = frozenset({
+    'governance/golden-gen1-manifest.json',
+    'governance/golden-gen2-manifest.json',
+    'governance/agent-cert-verifier-azure-pins.json',
+})
+
+def runtime_source_file(name):
+    """Only the three frozen public runtime inputs, never governance wholesale."""
+    return (name.startswith(('app/','config/','contracts/','docs/','deploy/')) or
+            name in PUBLIC_RUNTIME_GOVERNANCE or
+            name in {'requirements.txt','requirements-semantic.txt','system.manifest.json'})
+
 def build(output):
     validate()
     output=Path(output).resolve()
     if output.exists() or output.is_relative_to(ROOT):raise ValueError('New external output directory required')
     revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip())
+    if any(not (ROOT/name).is_file() or (ROOT/name).is_symlink()
+           for name in PUBLIC_RUNTIME_GOVERNANCE):
+        raise ValueError('Required frozen public runtime governance input unavailable')
     output.mkdir(parents=True)
     files=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard'],cwd=ROOT,text=True).splitlines()
     for name in sorted(set(files)):
         source=ROOT/name
         if not source.is_file():continue
-        if name.startswith(('app/','config/','contracts/','docs/','deploy/')) or name in {'requirements.txt','system.manifest.json'}:
+        if runtime_source_file(name):
             target=output/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
         if name.startswith('clients/pwa/') and source.name not in {'tests.mjs','followup-tests.mjs','revision-tests.mjs','make-icons.mjs','README.md'}:
             target=output/'app/pwa_static'/source.relative_to(ROOT/'clients/pwa');target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)

@@ -1,0 +1,42 @@
+@prefix p: <urn:prime:semantic:> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+p:ontology a owl:Ontology ; owl:versionInfo "0.1.0" ;
+    dct:description "Fixed small OWL 2 RL subset: class hierarchy and typed relationships. No evidence, authority, capability or certification uplift." .
+p:Agent a owl:Class .
+p:PermanentPrimeAgent a owl:Class ; rdfs:subClassOf p:Agent .
+p:PrimeOrchestrator a owl:Class ; rdfs:subClassOf p:Agent ; owl:disjointWith p:PermanentPrimeAgent .
+p:Capability a owl:Class .
+p:DeclaredCapability a owl:Class ; rdfs:subClassOf p:Capability .
+p:Task a owl:Class ; rdfs:subClassOf prov:Activity .
+p:Objective a owl:Class ; rdfs:subClassOf p:Task .
+p:Result a owl:Class ; rdfs:subClassOf prov:Entity .
+p:EvidenceReference a owl:Class ; rdfs:subClassOf prov:Entity .
+p:Metric a owl:Class ; rdfs:subClassOf prov:Entity .
+p:MemoryReference a owl:Class ; rdfs:subClassOf prov:Entity .
+p:Model a owl:Class .
+p:Tool a owl:Class .
+p:Version a owl:Class .
+p:Environment a owl:Class .
+p:CertificationReference a owl:Class .
+p:declaredCapability a owl:ObjectProperty ; rdfs:domain p:PermanentPrimeAgent ; rdfs:range p:DeclaredCapability .
+p:producer a owl:ObjectProperty ; rdfs:domain p:Result ; rdfs:range p:PermanentPrimeAgent ; rdfs:subPropertyOf prov:wasAttributedTo .
+p:metricAgent a owl:ObjectProperty ; rdfs:domain p:Metric ; rdfs:range p:PermanentPrimeAgent ; rdfs:subPropertyOf prov:wasAttributedTo .
+p:task a owl:ObjectProperty ; rdfs:domain p:Result ; rdfs:range p:Task ; rdfs:subPropertyOf prov:wasGeneratedBy .
+p:derivedFrom a owl:ObjectProperty ; rdfs:domain p:Metric ; rdfs:range p:Result ; rdfs:subPropertyOf prov:wasDerivedFrom .
+# These vocabulary terms exist to validate prohibited promotions, not to derive them.
+p:hasVerifiedCapability a owl:ObjectProperty .
+p:hasL7Certification a owl:ObjectProperty .
+p:origin a owl:DatatypeProperty .
+p:version a owl:DatatypeProperty .
+p:sourceRevision a owl:DatatypeProperty .
+p:environment a owl:DatatypeProperty .
+p:currentness a owl:DatatypeProperty .
+p:verification a owl:DatatypeProperty .
+p:integrity a owl:DatatypeProperty .
+p:evidenceRef a owl:DatatypeProperty .
+p:resultDigest a owl:DatatypeProperty .

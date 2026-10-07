@@ -1,0 +1,30 @@
+@prefix p: <urn:prime:semantic:> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+p:PermanentAgentShape a sh:NodeShape ; sh:targetClass p:PermanentPrimeAgent ;
+    sh:property [ sh:path p:id ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^a[0-9]{2}$" ] ;
+    sh:property [ sh:path p:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path p:role ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path p:version ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path p:hasVerifiedCapability ; sh:maxCount 0 ] ;
+    sh:property [ sh:path p:hasL7Certification ; sh:maxCount 0 ] .
+
+p:ResultShape a sh:NodeShape ; sh:targetClass p:Result ;
+    sh:property [ sh:path p:id ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path p:producer ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class p:PermanentPrimeAgent ] ;
+    sh:property [ sh:path p:task ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class p:Task ] ;
+    sh:property [ sh:path p:sourceRevision ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{40}$" ] ;
+    sh:property [ sh:path p:environment ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "ISOLATED" "CI" "RELEASE" "GOLDEN" "PRODUCTION" ) ] ;
+    sh:property [ sh:path p:integrity ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "VALID" ) ] ;
+    sh:property [ sh:path p:currentness ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "CURRENT" ) ] ;
+    sh:property [ sh:path p:verification ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "UNVERIFIED" "PARTIAL" "VERIFIED" "UNKNOWN" ) ] ;
+    sh:property [ sh:path p:evidenceRef ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path p:resultDigest ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ] ;
+    sh:property [ sh:path p:origin ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "DOMAIN_ASSERTED" ) ] .
+
+p:MetricShape a sh:NodeShape ; sh:targetClass p:Metric ;
+    sh:property [ sh:path p:id ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path p:metricAgent ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class p:PermanentPrimeAgent ] ;
+    sh:property [ sh:path p:derivedFrom ; sh:minCount 1 ; sh:class p:Result ] ;
+    sh:property [ sh:path p:origin ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "DOMAIN_ASSERTED" ) ] .

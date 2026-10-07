@@ -38,6 +38,42 @@ If you are an AI agent updating this file:
 
 ## HF runtime hardening — 7 October 2026
 
+### New scoped runtime observation — 7 October 2026
+
+- Agent-reported acceptance: PR #200 merged as
+  `bf1a3d5ed0e5a8ace4931762e7b11e2f768bda26`; its tree equals the tested d249
+  image/source tree. The bounded HF classification backend now serves from
+  `d249e5f99589f1593a38fd675315308a42deeeb2`, image
+  `sha256:5ebdbc6aff6ca8b197799f80b18f5d31098031a75ca2f091a86c4cfb3b15d5ce`.
+  A20 completed one real cloud parity canary; its completed result, all 83 queue
+  rows and unsigned Lens observation survived a backend restart. A 68.062-second
+  low-load observation and independent read-only review passed the scoped
+  acceptance. Interface, Ollama, local N=1 and the exact Golden rollback image
+  were retained. This is not host qualification, long soak, Windows reboot,
+  Owner/iPhone proof or L7. Per-agent L7 remains 0/21.
+- Public receipt paths on ABEX:
+  `recovery-records/host-current-20261007/HF-BACKEND-D249-CUTOVER.json` and
+  `HF-BACKEND-D249-CUTOVER-INDEPENDENT-ACTUAL-REVIEW.json`; independent receipt
+  SHA-256 `ff87790094744ac62616f517b8f200a63b3033c0685ac16c1318406c90bafaa6`.
+- New God’s Eye / Semantic Fabric source is isolated from that accepted backend.
+  See `docs/GODS_EYE_SEMANTIC_CANDIDATE_20261007.md`. Source checks are not live
+  acceptance; no certification or deployment promotion is inferred.
+- Candidate HF visibility now separates registration/readiness, dated evidence,
+  process-local circuits, unmeasured role quality and agent certification. The
+  integrated read-only path first passed 140 focused Python checks and 33
+  frontend checks; two first-run error-contract failures were preserved then
+  repaired. A subsequent explicit-bearer isolation repair passed 248 combined
+  source checks; ordinary browser views retain UNKNOWN for protected fields.
+  An independent scoped HF guard/profile review passed 344 checks. Full exact
+  candidate off-host CI, actual packaged formal-engine behavior and separately
+  gated deployment remain pending. No additional HF mode or MLP live acceptance
+  is claimed.
+- The source-only MLP execution wrapper passed 46 writer checks and eight
+  independent adversarial checks after repairing two stale-readiness defects.
+  Current authority/approval callbacks, durable artifact loading and live
+  invocation remain separate integration gates. The three public bounded HF
+  MINI text oracles passed 77 synthetic checks; no real text trial is implied.
+
 ### Claimed, not independently checked
 
 - The isolated PR #200 candidate adds explicit, versioned HF fallback consent,

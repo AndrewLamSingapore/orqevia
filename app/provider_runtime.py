@@ -226,7 +226,9 @@ class HuggingFaceProvider(ChatCompletionProvider):
     advertised by this text-only adapter. Catalog activation is a separate gate.
     """
     ENDPOINT='https://router.huggingface.co/v1/chat/completions'
-    _PINNED_MODEL=re.compile(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+:[A-Za-z0-9._-]+\Z')
+    # HF policy suffixes select providers dynamically and cannot bind the
+    # prepared disclosure/cost/fallback contract to a specific provider.
+    _PINNED_MODEL=re.compile(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+:(?!(?i:auto|fastest|cheapest|preferred)\Z)[A-Za-z0-9._-]+\Z')
 
     def __init__(self, secret_ref='env:HF_TOKEN', *, secret_resolver=None, transport=None):
         if secret_ref not in ('env:HF_TOKEN','file:HF_TOKEN'):

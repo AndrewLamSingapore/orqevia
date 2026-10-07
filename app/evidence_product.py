@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import mimetypes
 import sqlite3
 import threading
@@ -22,6 +23,40 @@ CLAIM_STATES = {"SYSTEM_VERIFIED", "OBSERVED", "SOURCE_SUPPORTED", "CALCULATED",
 VERIFICATION_STATES = {"VERIFIED", "PARTIAL", "UNVERIFIED", "FAILED", "CONTRADICTED", "NOT_APPLICABLE"}
 RELATIONS = {"SUPERSEDES", "CORRECTS", "INVALIDATES", "REPLACES", "RELATED_TO"}
 ACTION_STATES = {"REQUESTED", "INVOKED", "COMPLETED", "FAILED", "CANCELLED"}
+
+OBSERVATION_PAYLOAD_BYTES = 196608
+OBSERVATION_EVENTS = 64
+
+
+class ObservationBudgetExceeded(RuntimeError):
+    """Fixed internal failure: unavailable observation, never partial VALID."""
+
+
+def observation_remaining(deadline: float) -> float:
+    if type(deadline) not in (int, float) or not math.isfinite(deadline):
+        raise ObservationBudgetExceeded('OBSERVATION_DEADLINE_INVALID')
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise ObservationBudgetExceeded('OBSERVATION_DEADLINE_EXCEEDED')
+    return remaining
+
+
+def observation_connection(path: str | Path, deadline: float) -> sqlite3.Connection:
+    """Existing live SQLite read, not immutable: honor locks and WAL visibility."""
+    remaining = observation_remaining(deadline)
+    target = Path(path)
+    if not target.is_file() or target.is_symlink():
+        raise FileNotFoundError('OBSERVATION_STORE_UNAVAILABLE')
+    db = sqlite3.connect(target.resolve().as_uri() + '?mode=ro', uri=True,
+                         timeout=min(0.05, remaining))
+    try:
+        db.execute('PRAGMA query_only=ON')
+        db.execute('PRAGMA busy_timeout=' + str(max(0, int(min(0.05, observation_remaining(deadline)) * 1000))))
+        db.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
+        return db
+    except BaseException:
+        db.close()
+        raise
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -163,9 +198,15 @@ def validate_receipt(receipt: dict[str, Any], *, artifact_bytes: dict[str, bytes
 class EvidenceLedger:
     """SQLite reference ledger: append-only events with a per-action hash chain."""
 
-    def __init__(self, path: str | Path, *, read_only: bool = False):
+    def __init__(self, path: str | Path, *, read_only: bool = False,
+                 observation_deadline: float | None = None):
         self.path = str(path)
         self.read_only = read_only
+        self.observation_deadline = observation_deadline
+        if observation_deadline is not None:
+            if not read_only:
+                raise ValueError('OBSERVATION_REQUIRES_READ_ONLY')
+            observation_remaining(observation_deadline)
         self._lock = threading.RLock()
         if read_only:
             if not Path(self.path).is_file(): raise FileNotFoundError(self.path)
@@ -186,12 +227,60 @@ class EvidenceLedger:
             """)
 
     def _connect(self) -> sqlite3.Connection:
+        if self.observation_deadline is not None:
+            db = observation_connection(self.path, self.observation_deadline)
+            db.row_factory = sqlite3.Row
+            return db
         target = Path(self.path).resolve().as_uri() + "?mode=ro" if self.read_only else self.path
         db = sqlite3.connect(target, timeout=10, uri=self.read_only)
         db.row_factory = sqlite3.Row
         db.execute("pragma foreign_keys=on")
         db.execute("pragma busy_timeout=10000")
         return db
+
+    @contextmanager
+    def _reading(self):
+        db = self._connect()
+        try:
+            with db:
+                if self.observation_deadline is not None:
+                    db.execute('BEGIN')
+                yield db
+                if self.observation_deadline is not None:
+                    observation_remaining(self.observation_deadline)
+        finally:
+            db.close()
+
+    def _bounded_action(self, db, action_id, namespace):
+        if self.observation_deadline is not None:
+            observation_remaining(self.observation_deadline)
+            size = db.execute('SELECT length(CAST(envelope_json AS BLOB))+'
+                              'COALESCE(length(CAST(envelope_digest AS BLOB)),0)+'
+                              'COALESCE(length(CAST(revision AS BLOB)),0) FROM evidence_actions '
+                              'WHERE action_id=? AND namespace=?', (action_id, namespace)).fetchone()
+            if size is None:
+                raise KeyError('UNKNOWN_ACTION')
+            if type(size[0]) is not int or not 0 <= size[0] <= OBSERVATION_PAYLOAD_BYTES:
+                raise ObservationBudgetExceeded('OBSERVATION_PAYLOAD_EXCEEDED')
+        return db.execute('SELECT envelope_json,envelope_digest,revision FROM evidence_actions '
+                          'WHERE action_id=? AND namespace=?', (action_id, namespace)).fetchone()
+
+    def _bounded_events(self, db, action_id, envelope_bytes=0):
+        if self.observation_deadline is not None:
+            sizes = db.execute('SELECT length(CAST(payload_json AS BLOB))+'
+                'length(CAST(event_id AS BLOB))+length(CAST(idempotency_key AS BLOB))+'
+                'length(CAST(action_id AS BLOB))+length(CAST(event_type AS BLOB))+'
+                'length(CAST(created_at AS BLOB))+COALESCE(length(CAST(previous_digest AS BLOB)),0)+'
+                'length(CAST(event_digest AS BLOB)) FROM evidence_events WHERE action_id=? '
+                'ORDER BY sequence LIMIT ?', (action_id, OBSERVATION_EVENTS + 1)).fetchall()
+            if (len(sizes) > OBSERVATION_EVENTS or any(type(r[0]) is not int or r[0] < 0 for r in sizes)
+                    or envelope_bytes + sum(r[0] for r in sizes) > OBSERVATION_PAYLOAD_BYTES):
+                raise ObservationBudgetExceeded('OBSERVATION_CHAIN_BUDGET_EXCEEDED')
+            observation_remaining(self.observation_deadline)
+            return [dict(r) for r in db.execute('SELECT * FROM evidence_events WHERE action_id=? '
+                    'ORDER BY sequence LIMIT ?', (action_id, OBSERVATION_EVENTS + 1))]
+        return [dict(r) for r in db.execute('SELECT * FROM evidence_events WHERE action_id=? '
+                                          'ORDER BY sequence', (action_id,))]
 
     def create(self, *, namespace: str, objective: str, actor: dict[str, str], authority: dict[str, str],
                inputs: list[Any] | None = None, action_id: str | None = None,
@@ -231,8 +320,8 @@ class EvidenceLedger:
                     content_digest(canonical_bytes(protected))["value"], created_at))
 
     def get(self, action_id: str, *, namespace: str) -> dict[str, Any]:
-        with self._connect() as db:
-            row = db.execute("select * from evidence_actions where action_id=? and namespace=?", (action_id, namespace)).fetchone()
+        with self._reading() as db:
+            row = self._bounded_action(db, action_id, namespace)
         if row is None: raise KeyError("UNKNOWN_ACTION")
         return json.loads(row["envelope_json"])
 
@@ -258,22 +347,30 @@ class EvidenceLedger:
         return envelope
 
     def events(self, action_id: str, *, namespace: str) -> list[dict[str, Any]]:
-        self.get(action_id, namespace=namespace)
-        with self._connect() as db:
-            return [dict(row) for row in db.execute("select * from evidence_events where action_id=? order by sequence", (action_id,))]
+        if self.observation_deadline is None:
+            self.get(action_id, namespace=namespace)
+            with self._reading() as db:
+                return self._bounded_events(db, action_id)
+        with self._reading() as db:
+            row = self._bounded_action(db, action_id, namespace)
+            if row is None: raise KeyError('UNKNOWN_ACTION')
+            return self._bounded_events(db, action_id, len(row['envelope_json'].encode()))
 
     def verify_chain(self, action_id: str, *, namespace: str) -> dict[str, Any]:
         # Read the event chain and head from one SQLite snapshot. Separate
         # connections could observe opposite sides of a concurrent append.
-        with self._connect() as db:
-            db.execute("begin")
-            action_row=db.execute("select envelope_json,envelope_digest,revision from evidence_actions where action_id=? and namespace=?",(action_id,namespace)).fetchone()
+        with self._reading() as db:
+            if self.observation_deadline is None:
+                db.execute("begin")
+            action_row=self._bounded_action(db, action_id, namespace)
             if action_row is None: raise KeyError("UNKNOWN_ACTION")
-            events=[dict(row) for row in db.execute("select * from evidence_events where action_id=? order by sequence",(action_id,))]
+            events=self._bounded_events(db, action_id, len(action_row['envelope_json'].encode()))
         previous = None; errors = []
         if not events or events[0]["event_type"] != "ACTION_CREATED":
             errors.append("LEDGER_INTEGRITY:missing_creation_event")
         for event in events:
+            if self.observation_deadline is not None:
+                observation_remaining(self.observation_deadline)
             payload = json.loads(event["payload_json"])
             protected = {"event_id": event["event_id"], "idempotency_key": event["idempotency_key"],
                          "action_id": event["action_id"], "event_type": event["event_type"],
@@ -287,12 +384,23 @@ class EvidenceLedger:
             final_payload=json.loads(events[-1]["payload_json"])
             if final_payload.get("envelope_digest")!=action_row["envelope_digest"] or final_payload.get("revision")!=action_row["revision"]:
                 errors.append("LEDGER_INTEGRITY:envelope_head_binding")
-        return {"verdict": "VALID" if not errors else "INVALID", "errors": errors, "events": len(events), "head": previous}
+        result={"verdict": "VALID" if not errors else "INVALID", "errors": errors, "events": len(events), "head": previous}
+        if self.observation_deadline is not None:
+            observation_remaining(self.observation_deadline)
+            result['envelope_digest']=actual
+        return result
 
     def query(self, *, namespace: str, actor_id: str | None = None,
               verification_state: str | None = None) -> list[dict[str, Any]]:
-        with self._connect() as db:
-            rows = db.execute("select envelope_json from evidence_actions where namespace=? order by created_at", (namespace,)).fetchall()
+        with self._reading() as db:
+            if self.observation_deadline is not None:
+                sizes=db.execute('SELECT length(CAST(envelope_json AS BLOB)) FROM evidence_actions '
+                    'WHERE namespace=? ORDER BY created_at LIMIT 65',(namespace,)).fetchall()
+                if len(sizes)>64 or any(type(r[0]) is not int or r[0]<0 for r in sizes) or sum(r[0] for r in sizes)>OBSERVATION_PAYLOAD_BYTES:
+                    raise ObservationBudgetExceeded('OBSERVATION_QUERY_PAYLOAD_EXCEEDED')
+                observation_remaining(self.observation_deadline)
+            rows = db.execute("select envelope_json from evidence_actions where namespace=? order by created_at"+
+                              (' LIMIT 65' if self.observation_deadline is not None else ''), (namespace,)).fetchall()
         values = [json.loads(row[0]) for row in rows]
         if actor_id: values = [item for item in values if item["actor"]["id"] == actor_id]
         if verification_state: values = [item for item in values if item["verification"]["state"] == verification_state]

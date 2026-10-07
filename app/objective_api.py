@@ -1,5 +1,6 @@
 """Bounded logical orchestration over the single shared inference scheduler."""
 from datetime import datetime, timezone
+from contextlib import closing
 import hashlib
 import json
 import math
@@ -18,6 +19,8 @@ from .agent_runtime import DOMAIN_CHILDREN
 from . import compute_queue_api
 from .client_auth import authenticate_owner
 from .ready_work import WorkItem, run_ready_work
+from .evidence_product import (ObservationBudgetExceeded, OBSERVATION_PAYLOAD_BYTES,
+                               observation_connection, observation_remaining)
 
 router=APIRouter(prefix='/api/agents/objectives',tags=['governed-objectives'])
 
@@ -48,7 +51,7 @@ _INFERENCE_DETAILS = frozenset(('agent_id', 'provider', 'model', 'cached_tokens'
     'requested_model', 'fallback_route', 'error_classifications'))
 
 
-def inference_attempt_projection(jobs):
+def inference_attempt_projection(jobs, *, observation_deadline=None):
     """Bounded read-only projection of owned compute attempts, not attestation.
 
     Attempt task_id is the QUEUE JOB id, not the enclosing objective UUID.
@@ -108,7 +111,19 @@ def inference_attempt_projection(jobs):
         pairs={(entry['id'],entry['model']) for entry in load_catalog()}
         pairs.update((entry.name,entry.model) for entry in local_model_backends())
         placeholders=','.join('?' for _ in bound)
-        with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as db:
+        connection = (observation_connection(path, observation_deadline) if observation_deadline is not None
+                      else sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2))
+        with closing(connection) as db:
+            if observation_deadline is not None:
+                db.execute('BEGIN')
+                sizes=db.execute('SELECT length(CAST(details AS BLOB))+length(CAST(id AS BLOB))+'
+                    'length(CAST(task_id AS BLOB))+length(CAST(tier AS BLOB))+'
+                    'COALESCE(length(CAST(seconds AS BLOB)),0)+COALESCE(length(CAST(tokens AS BLOB)),0)+'
+                    'COALESCE(length(CAST(cost AS BLOB)),0) FROM reasoning_attempts WHERE task_id IN ('+
+                    placeholders+') ORDER BY task_id,id LIMIT 65',tuple(bound)).fetchall()
+                if len(sizes)>64 or any(type(r[0]) is not int or r[0]<0 for r in sizes) or sum(r[0] for r in sizes)>OBSERVATION_PAYLOAD_BYTES:
+                    raise ObservationBudgetExceeded('OBSERVATION_COMPUTE_PAYLOAD_EXCEEDED')
+                observation_remaining(observation_deadline)
             rows=db.execute('SELECT id,task_id,tier,seconds,tokens,cost,length(details),'
                 'substr(details,1,32769) FROM reasoning_attempts WHERE task_id IN ('+
                 placeholders+') ORDER BY task_id,id LIMIT 65',tuple(bound)).fetchall()
@@ -116,8 +131,13 @@ def inference_attempt_projection(jobs):
         return {**result, 'status':'UNAVAILABLE', 'reason':'COMPUTE_LEDGER_OR_REGISTRY_UNAVAILABLE'}
     try:
         if len(rows)>64:raise ValueError()
+        if observation_deadline is not None:
+            observation_remaining(observation_deadline)
+            if sum(r[6] for r in rows if type(r[6]) is int) > OBSERVATION_PAYLOAD_BYTES:
+                raise ObservationBudgetExceeded('OBSERVATION_COMPUTE_PAYLOAD_EXCEEDED')
         seen=set();covered=set();attempts=[]
         for aid,jid,tier,seconds,tokens,cost,detail_size,raw in rows:
+            if observation_deadline is not None:observation_remaining(observation_deadline)
             if not isinstance(aid,str) or not re.fullmatch('[0-9a-f]{32}',aid) or aid in seen:raise ValueError()
             seen.add(aid)
             if jid not in bound or tier not in {'NANO','MINI','FLAGSHIP'}:raise ValueError()
@@ -321,11 +341,13 @@ def select_capabilities(objective: str) -> list[str]:
     return selected or ['responsibility.a02']
 
 
-def connect(*, read_only=False):
+def connect(*, read_only=False, observation_deadline=None):
     path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'objectives.db'
     if read_only:
         if not path.is_file():raise HTTPException(404,'Objective not found')
+        if observation_deadline is not None:return observation_connection(path, observation_deadline)
         return sqlite3.connect(path.resolve().as_uri()+'?mode=ro',timeout=15,uri=True)
+    if observation_deadline is not None:raise ValueError('OBSERVATION_REQUIRES_READ_ONLY')
     path.parent.mkdir(parents=True,exist_ok=True)
     db=sqlite3.connect(path,timeout=15)
     # Keep the original tables byte-for-byte compatible with the rollback image.
@@ -424,16 +446,43 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         db.close()
 
 
-def _get(task_id: str,authorization: str | None,*,read_only=False):
+def _get(task_id: str,authorization: str | None,*,read_only=False,observation_deadline=None):
     authenticate_owner(authorization)
-    db=connect(read_only=True) if read_only else connect()
+    bounded=observation_deadline is not None
+    db=(connect(read_only=True,observation_deadline=observation_deadline) if bounded else connect(read_only=True)) if read_only else connect()
+    payload_bytes=0
     try:
+        if bounded:
+            # Two-phase length checks occur in the same SQLite read snapshot.
+            # No partial history is represented as an authoritative current task.
+            db.execute('BEGIN')
+            base_size=db.execute('SELECT length(CAST(steps_json AS BLOB))+length(CAST(state AS BLOB)) FROM objectives WHERE id=?',(task_id,)).fetchone()
+            turn_sizes=db.execute('SELECT revision,length(CAST(steps_json AS BLOB))+length(CAST(state AS BLOB)) FROM objective_turns '
+                                  'WHERE task=? ORDER BY revision LIMIT 25',(task_id,)).fetchall()
+            timing_sizes=db.execute('SELECT COALESCE(length(CAST(created_at AS BLOB)),0)+'
+                'COALESCE(length(CAST(updated_at AS BLOB)),0) FROM objective_metadata WHERE task=? LIMIT 26',(task_id,)).fetchall()
+            runtime_sizes=db.execute('SELECT COALESCE(length(CAST(host_id AS BLOB)),0)+'
+                'COALESCE(length(CAST(source_revision AS BLOB)),0)+COALESCE(length(CAST(version AS BLOB)),0)+'
+                'COALESCE(length(CAST(image_digest AS BLOB)),0) FROM objective_runtime WHERE task=? LIMIT 26',(task_id,)).fetchall()
+            sizes=([base_size[0]] if base_size else [])+[r[1] for r in turn_sizes]+[r[0] for r in timing_sizes+runtime_sizes]
+            if (len(turn_sizes)>24 or any(type(n) is not int or n<0 for n in sizes)
+                    or len(timing_sizes)>25 or len(runtime_sizes)>25
+                    or sum(sizes)>OBSERVATION_PAYLOAD_BYTES):
+                raise ObservationBudgetExceeded('OBSERVATION_OBJECTIVE_HISTORY_EXCEEDED')
+            payload_bytes=sum(sizes)
         row=db.execute('SELECT state,steps_json FROM objectives WHERE id=?',(task_id,)).fetchone()
-        turns=db.execute('SELECT revision,state,steps_json FROM objective_turns WHERE task=? ORDER BY revision',(task_id,)).fetchall()
+        turns=db.execute('SELECT revision,state,steps_json FROM objective_turns WHERE task=? ORDER BY revision'+
+                         (' LIMIT 25' if bounded else ''),(task_id,)).fetchall()
         timing={item[0]:(item[1],item[2]) for item in db.execute(
-            'SELECT revision,created_at,updated_at FROM objective_metadata WHERE task=?',(task_id,)).fetchall()}
+            'SELECT revision,created_at,updated_at FROM objective_metadata WHERE task=?'+
+            (' LIMIT 26' if bounded else ''),(task_id,)).fetchall()}
         runtime_rows={item[0]:{'host_id':item[1],'source_revision':item[2],'version':item[3],'image_digest':item[4]}
-            for item in db.execute('SELECT revision,host_id,source_revision,version,image_digest FROM objective_runtime WHERE task=?',(task_id,)).fetchall()}
+            for item in db.execute('SELECT revision,host_id,source_revision,version,image_digest FROM objective_runtime WHERE task=?'+
+            (' LIMIT 26' if bounded else ''),(task_id,)).fetchall()}
+        if bounded:
+            if len(timing)>25 or len(runtime_rows)>25:
+                raise ObservationBudgetExceeded('OBSERVATION_OBJECTIVE_HISTORY_EXCEEDED')
+            observation_remaining(observation_deadline)
     finally:
         db.close()
     if row is None:
@@ -442,16 +491,46 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
         return {'id':task_id,'state':'reconciliation_required','reason':'Dispatch was interrupted; do not automatically replay'}
     revision=turns[-1][0] if turns else 0
     steps=json.loads(row[1])
+    if bounded and (type(steps) is not list or len(steps)>6 or any(type(s) is not dict for s in steps)):
+        raise ObservationBudgetExceeded('OBSERVATION_OBJECTIVE_SHAPE_INVALID')
     for step in steps:step['revision']=0
     for turn_revision,turn_state,turn_steps in turns:
-        for step in json.loads(turn_steps):
+        decoded=json.loads(turn_steps)
+        if bounded and (type(decoded) is not list or len(decoded)>6 or any(type(s) is not dict for s in decoded)):
+            raise ObservationBudgetExceeded('OBSERVATION_OBJECTIVE_SHAPE_INVALID')
+        for step in decoded:
             step['revision']=turn_revision
             steps.append(step)
+    bounded_jobs={}
     for step in steps:
+        if bounded:observation_remaining(observation_deadline)
         if 'dispatch' in step and step['dispatch'].get('state')=='COMPLETED':
             step['state']='completed'
         elif 'job' in step.get('dispatch',{}):
-            job=compute_queue_api.queue.get(step['dispatch']['job']['id'])
+            job_id=step['dispatch']['job']['id']
+            if bounded:
+                if job_id not in bounded_jobs:
+                    # Reuse queue-owned rows without its ordinary 15-second getter.
+                    with closing(observation_connection(compute_queue_api.queue.db_path, observation_deadline)) as queue_db:
+                        queue_db.row_factory=sqlite3.Row
+                        queue_db.execute('BEGIN')
+                        size=queue_db.execute('SELECT COALESCE(length(CAST(result AS BLOB)),0)+'
+                            'COALESCE(length(CAST(error AS BLOB)),0)+length(CAST(id AS BLOB))+'
+                            'length(CAST(agent AS BLOB))+COALESCE(length(CAST(model AS BLOB)),0)+'
+                            'COALESCE(length(CAST(provider AS BLOB)),0)+length(CAST(status AS BLOB))+'
+                            'COALESCE(length(CAST(created_at AS BLOB)),0)+COALESCE(length(CAST(started_at AS BLOB)),0)+'
+                            'COALESCE(length(CAST(completed_at AS BLOB)),0) FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
+                        if size is None:raise KeyError(job_id)
+                        if type(size[0]) is not int or size[0]<0 or payload_bytes+size[0]>OBSERVATION_PAYLOAD_BYTES:
+                            raise ObservationBudgetExceeded('OBSERVATION_QUEUE_PAYLOAD_EXCEEDED')
+                        job_row=queue_db.execute('SELECT id,agent,model,provider,status,result,error,created_at,started_at,completed_at '
+                                                 'FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
+                        bounded_jobs[job_id]=dict(job_row)
+                        payload_bytes+=size[0]
+                    observation_remaining(observation_deadline)
+                job=bounded_jobs[job_id]
+            else:
+                job=compute_queue_api.queue.get(job_id)
             step['job']={key:job.get(key) for key in ('id','agent','model','provider','status','result','error','created_at','started_at','completed_at')}
     states=[step.get('job',{}).get('status',step.get('state','unknown')) for step in steps if step['revision']==revision]
     state='RUNNING' if 'running' in states else 'WAITING FOR RESOURCE' if 'queued' in states else 'COMPLETED' if states and all(value=='completed' for value in states) else 'COMPLETED_WITH_FAILURES'
@@ -483,7 +562,8 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
             'state':job.get('status'),'created_at':job.get('created_at'),
             'started_at':job.get('started_at'),'completed_at':job.get('completed_at')} for job in jobs],
         'agent_execution':[agent_execution_metadata(step) for step in current_steps if step.get('job')],
-        'inference_attempts':inference_attempt_projection(jobs),
+        'inference_attempts':(inference_attempt_projection(jobs,observation_deadline=observation_deadline)
+                              if bounded else inference_attempt_projection(jobs)),
         'provenance':{'task_id':'DATABASE','state':'QUEUE','timestamps':'QUEUE','jobs':'QUEUE',
             'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER','runtime':runtime_provenance},
         'closed_world_policy':'UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE',
@@ -492,6 +572,7 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
     }
     content=model_content(steps,revision)
     contradictions=metadata_contradictions(content,metadata)
+    if bounded:observation_remaining(observation_deadline)
     from .public_task_errors import public_task
     return public_task({'id':task_id,'revision':revision,'state':state,'steps':steps,
         'execution_metadata':metadata,'updated_at':updated_at,
@@ -506,8 +587,8 @@ def get(task_id: str,authorization: str | None=Header(default=None)):
     return _get(task_id,authorization,read_only=False)
 
 
-def get_read_only(task_id: str,authorization: str | None):
-    return _get(task_id,authorization,read_only=True)
+def get_read_only(task_id: str,authorization: str | None,*,observation_deadline=None):
+    return _get(task_id,authorization,read_only=True,observation_deadline=observation_deadline)
 
 
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):

@@ -9,13 +9,13 @@ The model ID is allowlisted, not an immutable remote weights/version assertion.
 from __future__ import annotations
 
 import asyncio
-import json
 import math
 import time
 
 import httpx
 
-from .provider_runtime import ProviderFailure, capacity_rejection
+from .provider_runtime import (ProviderFailure, capacity_rejection,
+                               _decode_wire_json, _clean_rejected_admission)
 from .provider_circuit import CircuitRejected, ProviderCircuits
 from .secret_refs import resolve_secret
 from .tier_router import classify_for_cloud
@@ -63,16 +63,11 @@ class HFServerlessQA:
 
     @staticmethod
     def _decode(raw):
-        def unique_keys(pairs):
-            result = {}
-            for key, value in pairs:
-                if key in result:
-                    raise ValueError()
-                result[key] = value
-            return result
         try:
-            return json.loads(raw.decode('utf-8'), object_pairs_hook=unique_keys)
-        except (ValueError, UnicodeError, RecursionError):
+            # Same strict uniquely decoded, finite wire contract as HF chat.
+            # Unknown fields cannot conceal contradictory or non-JSON values.
+            return _decode_wire_json(raw)
+        except (ValueError, UnicodeError, RecursionError, TypeError):
             raise ProviderFailure('MALFORMED_QA_RESPONSE') from None
 
     @staticmethod
@@ -210,14 +205,13 @@ class HFServerlessQA:
                                 raise ProviderFailure('AUTHENTICATION')
                             if response.status_code in (429, 503):
                                 try:
-                                    fault = self._decode(raw)
-                                    # Contradictory output/usage or malformed
-                                    # bodies cannot prove rejected admission.
-                                    clean_rejection = (isinstance(fault, dict)
-                                        and not any(key in fault for key in (
-                                            'answer', 'score', 'start', 'end',
-                                            'usage', 'choices', 'generated_text',
-                                            'output', 'outputs', 'result')))
+                                    fault = self._decode(raw) if raw else None
+                                    # Only supported scalar error envelopes prove
+                                    # rejected admission. Nested/unknown output
+                                    # or usage may indicate prior execution, so
+                                    # never authorize replay from a blacklist.
+                                    clean_rejection = ((not raw and response.status_code == 429) or
+                                        _clean_rejected_admission(fault, response.status_code))
                                     rejected = clean_rejection and capacity_rejection(fault)
                                 except ProviderFailure:
                                     clean_rejection = False

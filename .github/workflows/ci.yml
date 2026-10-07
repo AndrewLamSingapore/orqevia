@@ -33,6 +33,8 @@ jobs:
           export PRIME_COMPUTE_QUEUE_DB="$PRIME_DATA_DIR/queue.db"
           python scripts/check_canonical_state.py
           python scripts/run_canonical_ci.py
+      - name: Require real RDF SHACL and OWL engines
+        run: python -B -c "from app.semantic_fabric import _engines; _engines()"
       - name: Parse opt-in HF Compose secret mount without credential
         env:
           OLLAMA_IMAGE: ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532
@@ -47,6 +49,7 @@ jobs:
           node clients/pwa/followup-tests.mjs
           node clients/pwa/revision-tests.mjs
           node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
+          node --test tests/test_gods_eye_ui.js
       - name: Dell canonical-source package and archive regression tests
         run: python -B -m unittest discover -s clients/dell/tools -p test_package_client.py
       - name: Reproducible source package

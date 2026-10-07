@@ -96,6 +96,25 @@ def test_readiness_is_not_health_and_no_secret_endpoint_or_store(setup):
         assert forbidden not in encoded
 
 
+def test_cached_bounded_lens_is_validated_without_reopening_store(setup, monkeypatch):
+    task, evidence, _ = _lens_fixture()
+    monkeypatch.setattr(observation, '_read_lens', lambda *_: pytest.fail('must reuse bounded read'))
+    report = observation.inspect_hf(AUTH, task, lens_observation=evidence)
+    assert report['objective_evidence']['integrity'] == 'VALID'
+    assert report['objective_evidence']['independent_signature'] == 'UNVERIFIED'
+    evidence['task_id'] = str(uuid.uuid4())
+    report = observation.inspect_hf(AUTH, task, lens_observation=evidence)
+    assert report['objective_evidence']['status'] == 'INVALID'
+
+
+def test_cached_lens_never_bypasses_owner_authentication(setup, monkeypatch):
+    task, evidence, _ = _lens_fixture()
+    monkeypatch.setattr(observation, 'load_catalog', lambda: pytest.fail('auth must precede inspection'))
+    with pytest.raises(HTTPException) as failure:
+        observation.inspect_hf('Bearer wrong', task, lens_observation=evidence)
+    assert failure.value.status_code == 401
+
+
 def test_disabled_and_non_hf_entries_do_not_resolve_credentials(setup):
     entries, _, calls, root = setup
     entries[0]['enabled'] = False

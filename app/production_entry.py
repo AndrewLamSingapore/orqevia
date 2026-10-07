@@ -125,6 +125,56 @@ def control_script():
     return Response(Path(__file__).with_name('production_control.js').read_text(encoding='utf-8'), media_type='text/javascript')
 
 
+@app.get('/control/gods-eye', dependencies=[Depends(local_authorization)])
+def gods_eye():
+    return HTMLResponse(Path(__file__).with_name('gods_eye.html').read_text(encoding='utf-8'))
+
+
+@app.get('/control/gods-eye.js', dependencies=[Depends(local_authorization)])
+def gods_eye_script():
+    from fastapi.responses import Response
+    return Response(Path(__file__).with_name('gods_eye.js').read_text(encoding='utf-8'), media_type='text/javascript')
+
+
+@app.get('/control/gods-eye.css', dependencies=[Depends(local_authorization)])
+def gods_eye_style():
+    from fastapi.responses import Response
+    return Response(Path(__file__).with_name('gods_eye.css').read_text(encoding='utf-8'), media_type='text/css')
+
+
+@app.get('/control/api/gods-eye')
+def gods_eye_snapshot(request: Request, authorization=Depends(local_authorization)):
+    from .gods_eye_api import snapshot
+    data_root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+    protected = bool(request.headers.getlist('authorization'))
+    if protected:
+        local_verifier_authorization(request)
+    return snapshot(authorization, verifier=_certification_verifier(data_root) if protected else None,
+                    protected_domains=protected)
+
+
+@app.get('/control/api/gods-eye/why')
+def gods_eye_why(request: Request, agent_id: str, authorization=Depends(local_authorization)):
+    from .gods_eye_api import drilldown
+    data_root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+    protected = bool(request.headers.getlist('authorization'))
+    if protected:
+        local_verifier_authorization(request)
+    return drilldown(authorization, 'why', agent_id, verifier=_certification_verifier(data_root) if protected else None,
+                    protected_domains=protected)
+
+
+@app.get('/control/api/gods-eye/dependencies')
+def gods_eye_dependencies(request: Request, subject: str, authorization=Depends(local_authorization)):
+    from .gods_eye_api import drilldown
+    data_root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+    protected = bool(request.headers.getlist('authorization'))
+    if protected:
+        local_verifier_authorization(request)
+    return drilldown(authorization, 'depends_on', subject, verifier=_certification_verifier(data_root) if protected else None,
+                    protected_domains=protected)
+
+
 @app.post('/control/api/objectives', status_code=202)
 def submit_objective(body: objective_api.ObjectiveRequest, authorization=Depends(local_authorization)):
     return objective_api.submit(body, authorization)
