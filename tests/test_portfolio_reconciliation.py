@@ -99,6 +99,18 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     hf_title = "## HF runtime hardening — 7 October 2026"
     assert after.count(hf_title) == 1
     hf_start = after.index(hf_title)
+    # The exact reviewed 7 October runtime/source observation is additive. Bind
+    # it separately before removing it; retain the original 871-byte HF block
+    # and the original whole-history digest below without replacing either pin.
+    observation_title = "### New scoped runtime observation — 7 October 2026"
+    assert after.count(observation_title) == 1
+    observation_start = hf_start + len(hf_title) + len("\n\n")
+    assert after.startswith(observation_title, observation_start)
+    observation_end = after.index("### Claimed, not independently checked", observation_start)
+    observation = after[observation_start:observation_end].encode("utf-8")
+    assert len(observation) == 2426
+    assert hashlib.sha256(observation).hexdigest() == "da0c6666682a72fdb6953dfa24b743a59e06cf3a73a56d60f70cf524452df9de"
+    after = after[:observation_start] + after[observation_end:]
     hf_end = after.index("## Status authority — 3 October 2026", hf_start)
     hf_update = after[hf_start:hf_end].encode("utf-8")
     assert len(hf_update) == 871
@@ -133,6 +145,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
 @pytest.mark.parametrize("original,replacement", [
     ("## Course study", "## Course study — unaccounted history edit"),
     ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
+    ("### New scoped runtime observation — 7 October 2026", "### Altered new runtime observation — 7 October 2026"),
+    ("Per-agent L7 remains 0/21.", "Per-agent L7 remains 21/21."),
+    ("Full exact\n  candidate off-host CI", "Full exact\n  candidate off-host CI claims PASS"),
 ])
 def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
