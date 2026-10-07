@@ -3,6 +3,7 @@ import os
 import re
 import time
 import threading
+import json
 from typing import Literal
 
 from fastapi import APIRouter, Header, HTTPException
@@ -85,7 +86,134 @@ class AgentRequest(BaseModel):
     max_cost_usd: float = Field(default=0,ge=0,le=100)
     preferred_provider: str | None = Field(default=None,min_length=1,max_length=100)
     response_format: Literal['text','strict_json'] = 'text'
-    deterministic_operation: Literal['sha256','json_format','json_validate'] | None = None
+    deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review'] | None = None
+
+
+ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
+
+
+def joined_role_review(body, authorization, *, actor, task_id, runtime):
+    """Review through actual owned objective/queue state, not submitted flags.
+
+    The result is advisory case-quality evidence. It neither signs a record nor
+    changes certification. Subject source/image come from immutable objective
+    runtime metadata; input hashes by themselves are never authority.
+    """
+    from .agent_cert_review_tool import execute_role_review
+    from .objective_api import get_read_only
+    from .compute_queue_api import queue
+    from datetime import datetime, timezone
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value: raise ValueError()
+            value[key] = item
+        return value
+    def canonical(value):
+        return json.dumps(value, sort_keys=True, separators=(',', ':'),
+                          ensure_ascii=False, allow_nan=False).encode('utf-8')
+    try:
+        if (body.objective != ROLE_REVIEW_OBJECTIVE or body.classification != 'R0'
+                or body.data_classification != 'LOCAL_ONLY' or body.max_cost_usd != 0
+                or body.priority != 'low'):
+            raise ValueError()
+        envelope = json.loads(body.context, object_pairs_hook=unique,
+            parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+        if type(envelope) is not dict or set(envelope) != {
+                'execution', 'expected_execution_sha256', 'expected_source_revision',
+                'review_nonce', 'subject_objective_id'}:
+            raise ValueError()
+        objective_id = envelope.pop('subject_objective_id')
+        if type(objective_id) is not str or str(uuid.UUID(objective_id)) != objective_id:
+            raise ValueError()
+        execution = envelope['execution']
+        if type(execution) is not dict or type(execution.get('job')) is not dict:
+            raise ValueError()
+        subject_job = execution['job']
+        job_id = subject_job['id']
+        if type(job_id) is not str or str(uuid.UUID(job_id)) != job_id:
+            raise ValueError()
+        actual = queue.get(job_id)
+        joined = {key: actual.get(key) for key in
+            ('id','agent','status','result','provider','attempts','started_at','completed_at','error')}
+        submitted = {key: subject_job.get(key) for key in joined}
+        if (canonical(joined) != canonical(submitted)
+                or joined['status'] != 'completed'
+                or joined['agent'] != execution.get('agent_id')
+                or type(joined['result']) is not str
+                or hashlib.sha256(joined['result'].encode()).hexdigest() != subject_job.get('result_sha256')):
+            raise ValueError()
+        objective = get_read_only(objective_id, authorization)
+        metadata = objective['execution_metadata']
+        if (objective['state'] != 'COMPLETED' or metadata.get('task_id') != objective_id
+                or metadata.get('provenance', {}).get('runtime') != 'IMMUTABLE_OBJECTIVE_RUNTIME'
+                or canonical(metadata.get('runtime')) != canonical(runtime)
+                or execution.get('source_revision') != runtime.get('source_revision')
+                or execution.get('runtime_image_id') != runtime.get('image_digest')):
+            raise ValueError()
+        steps = [step for step in objective['steps']
+                 if step.get('revision') == objective['revision']
+                 and step.get('capability') == execution.get('capability_id')
+                 and step.get('job', {}).get('id') == job_id]
+        if len(steps) != 1 or steps[0]['job'].get('agent') != execution['agent_id']:
+            raise ValueError()
+        # A correct answer to unrelated work is not this certification case.
+        # Rebuild the existing dispatch prompt from the owned step correlation
+        # and canonical source, not from a submitted expected prompt/hash.
+        from .agent_cert_role_review import canonical_role_spec
+        spec = canonical_role_spec(execution['agent_id'], execution['capability_id'])
+        original = AgentRequest(**spec['request'])
+        correlation = steps[0]['dispatch'].get('correlation_id')
+        if type(correlation) is not str or str(uuid.UUID(correlation)) != correlation:
+            raise ValueError()
+        from .compute_catalog import task_tier
+        tier = max(Tier[original.minimum_tier], task_tier(original.objective, original.task_class),
+                   required_tier(original.objective, original.context))
+        skills = None
+        if os.getenv('PRIME_SKILL_PACKS_ENABLED', '0') == '1':
+            from .skill_router import select_skill_pack
+            skills = select_skill_pack(execution['agent_id'], original.task_class, tier)
+        prompt = packed_inference_prompt(original, tier, execution['agent_id'], correlation, skills)
+        if (actual.get('prompt') != prompt or actual.get('classification') != original.classification
+                or actual.get('task_class') != original.task_class
+                or type(actual.get('max_retries')) is not int or actual['max_retries'] != 0
+                or type(actual.get('allow_cloud')) is not int or actual['allow_cloud'] not in (0, 1)):
+            raise ValueError()
+        locality = 'CLOUD' if actual['allow_cloud'] else 'LOCAL'
+        from .compute_queue_api import providers
+        backend = next((provider for provider in providers() if provider.name == joined['provider']), None)
+        if (backend is None or backend.kind != ('cloud' if locality == 'CLOUD' else 'local')
+                or actual.get('model') != backend.model
+                or execution.get('transport', {}).get('provider_locality') != locality
+                or actual.get('data_classification') != ('CLOUD_PERMITTED' if locality == 'CLOUD' else 'LOCAL_ONLY')):
+            raise ValueError()
+        if locality == 'CLOUD':
+            proof = execution.get('cloud_transport')
+            if type(proof) is not dict or type(proof.get('queue_route')) is not dict:
+                raise ValueError()
+            route = proof['queue_route']
+            actual_route = {key: actual.get(key) for key in route if key != 'prompt_sha256'}
+            actual_route['prompt_sha256'] = hashlib.sha256(prompt.encode()).hexdigest()
+            if canonical(route) != canonical(actual_route):
+                raise ValueError()
+        result = execute_role_review(canonical(envelope).decode(), reviewer_id=actor,
+            capability_id=body.capability, source_revision=runtime['source_revision'], task_id=task_id)
+        # The pure oracle returns a tuple; the owned artifact contract is JSON.
+        # Normalize that field before strict serialization round-trip checking.
+        result['review_errors'] = list(result['review_errors'])
+        result['subject_execution_verification'] = 'QUEUE_AND_OBJECTIVE_JOINED'
+        result['subject_domain_join'] = {
+            'objective_id': objective_id, 'objective_revision': objective['revision'],
+            'job_id': job_id, 'runtime': runtime,
+            'observed_at': datetime.now(timezone.utc).isoformat(),
+            'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(),
+            'case_spec_sha256': hashlib.sha256(canonical(spec)).hexdigest(),
+            'execution_metadata_sha256': hashlib.sha256(canonical(metadata)).hexdigest()}
+        return result
+    except Exception:
+        # Submitted result text, filesystem paths and upstream errors are not
+        # API diagnostics. A rejection cannot create a review artifact.
+        raise HTTPException(422, 'Independent role review requires current joined execution evidence') from None
 
 
 class BaselineProbeRequest(BaseModel):
@@ -217,18 +345,32 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         import json
         task_id=parent_task_id or str(uuid.uuid4())
         root=Path(os.getenv('PRIME_DATA_DIR','/data'))
+        from .objective_api import runtime_snapshot
+        runtime = runtime_snapshot()
         try:
-            data=build_report(task_id,root) if runtime_status else deterministic_ops.execute(body.deterministic_operation,body.context.encode())
+            if body.deterministic_operation == 'certification_role_review':
+                data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+            else:
+                data=build_report(task_id,root) if runtime_status else deterministic_ops.execute(body.deterministic_operation,body.context.encode())
         except (ValueError, UnicodeError):
             raise HTTPException(422,'Invalid input for deterministic operation') from None
         factory=ArtifactFactory(root/'artifacts')
+        # Bind the observed artifact to the same runtime revision used by the
+        # objective/evidence domain. UNKNOWN remains UNKNOWN; a status report
+        # cannot establish deployment identity merely by being generated.
+        runtime_revision = runtime['source_revision']
         def create_artifact():
-            return factory.create(kind='json',content=json.dumps(data),task_id=task_id,creator=actor,provenance='Deterministic computation; zero model calls')
-        if runtime_status:
-            action=ActionRecord(task_id,actor,'runtime.status.artifact','artifact-factory',
+            return factory.create(kind='json',content=json.dumps(data),task_id=task_id,
+                creator=actor,provenance='Deterministic computation; zero model calls',
+                runtime_revision=runtime_revision)
+        role_review = body.deterministic_operation == 'certification_role_review'
+        review_ledger = None
+        if runtime_status or role_review:
+            action=ActionRecord(task_id,actor,'agent.certification.role.review' if role_review else 'runtime.status.artifact','artifact-factory',
                 classification=body.classification,model_backend='deterministic',
                 parameters_summary={'schema_version':data['schema_version'],'read_only_observations':True})
-            artifact=DirectExecutor(action_ledger()).execute(action,create_artifact)
+            review_ledger = action_ledger()
+            artifact=DirectExecutor(review_ledger).execute(action,create_artifact)
         else:artifact=create_artifact()
         _,raw=factory.retrieve(artifact['artifact_id'])
         if json.loads(raw)!=data:raise RuntimeError('Deterministic artifact roundtrip mismatch')
@@ -238,7 +380,17 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             task_class='runtime_status' if runtime_status else body.deterministic_operation,tier='DETERMINISTIC',seconds=time.perf_counter()-started,
             input_tokens=0,output_tokens=0,cost=0,verified=True,success=True,
             artifact_id=artifact['artifact_id'],artifact_validation='PASS',agent_id=actor,human_interventions=0)
-        return {'task_id':task_id,'state':'COMPLETED','artifact':artifact,'model_calls':0,'execution_model':'DETERMINISTIC'}
+        result={'task_id':task_id,'state':'COMPLETED','artifact':artifact,'model_calls':0,
+            'execution_model':'DETERMINISTIC','agent_id':actor,
+            'capability':'responsibility.a19' if runtime_status else body.capability,
+            'runtime_source_revision':runtime_revision}
+        if role_review:
+            # Buffered audit delivery is not durable evidence. Review callers
+            # must reject this operation for attestation when flush is false.
+            result['review_action_id']=action.action_id
+            result['review_action_durable']=review_ledger.flush(timeout=1) is True
+            result['certification']='UNVERIFIED'
+        return result
     # This deployment admits one measured NANO model. Larger tiers are not
     # inferred from agent identity or from an unqualified installed model.
     selection_started=time.perf_counter()

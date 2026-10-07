@@ -8,11 +8,13 @@ cannot sign evidence or grant L1-L7 status.
 from __future__ import annotations
 
 import hashlib
+import json
+import math
 import re
 import time
 import uuid
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .agent_cert_numeric import review_priority_json
 from .agent_cert_rates import review_rate_json
@@ -27,6 +29,7 @@ from .agent_cert_release import review_release_json
 from .agent_cert_role_g1 import SOURCES as ROLE_G1_SOURCES, review_role_json
 from .agent_cert_cases import challenge
 from .agent_registry import agent_record, responsibility_owner
+from .agent_cert_transport import CertificationTransport, validate_cloud_binding
 
 
 _PROVIDER = re.compile(r"[A-Za-z0-9_-]{1,80}\Z")
@@ -61,10 +64,199 @@ def _time(value: object) -> datetime | None:
         return None
 
 
+def _unique_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("duplicate report key")
+        value[key] = item
+    return value
+
+
+def _canonical(value) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"),
+                      allow_nan=False).encode("utf-8")
+
+
+def _runtime_identity(value, source_revision):
+    if not isinstance(value, dict):
+        return None
+    identity = {key: value.get(key) for key in
+                ("host_id", "source_revision", "version", "image_digest")}
+    if (identity["source_revision"] != source_revision
+            or not isinstance(identity["host_id"], str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}", identity["host_id"])
+            or identity["host_id"] == "UNKNOWN"
+            or not isinstance(identity["version"], str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}", identity["version"])
+            or identity["version"] == "UNKNOWN"
+            or not isinstance(identity["image_digest"], str)
+            or not re.fullmatch(r"sha256:[0-9a-f]{64}", identity["image_digest"])):
+        return None
+    return identity
+
+
+def _cloud_job_binding(row, receipt, *, completed=False):
+    """Bind authenticated queue observations, never manufacture admission.
+
+    The outer queue timeout can exceed the catalog's 35-second execution cap;
+    it is not evidence of the provider's effective deadline. Catalog limits and
+    current price/reservation admission remain the protected caller's contract.
+    """
+    if not isinstance(row, dict):
+        return None
+    cost = row.get("max_cost_usd")
+    prompt = row.get("prompt")
+    if (row.get("preferred_provider") != receipt["provider_id"]
+            or row.get("model") != receipt["model"]
+            or type(row.get("allow_cloud")) is not int or row["allow_cloud"] != 1
+            or row.get("data_classification") != "CLOUD_PERMITTED"
+            or row.get("task_class") != receipt["task_class"]
+            or row.get("classification") != "R0"
+            or type(row.get("max_retries")) is not int or row["max_retries"] != 0
+            or type(cost) not in (int, float) or not math.isfinite(cost)
+            or not 0 < cost <= receipt["limits"]["max_cost_usd"]
+            or type(prompt) is not str or not prompt or len(prompt) > 80_000):
+        return None
+    if row.get("status") in {"running", "completed"} and row.get("provider") != receipt["provider_id"]:
+        return None
+    if completed:
+        if row.get("provider") != receipt["provider_id"] or type(row.get("attempts")) is not int or row["attempts"] != 1:
+            return None
+        for field in ("input_tokens", "output_tokens"):
+            value = row.get(field)
+            if value is not None and (type(value) is not int or value < 0):
+                return None
+        output = row.get("output_tokens")
+        if output is not None and output > receipt["limits"]["output_tokens"]:
+            return None
+        actual = row.get("actual_cost_usd")
+        if actual is not None and (type(actual) not in (int, float)
+                or not math.isfinite(actual) or not 0 <= actual <= cost):
+            return None
+    return {"preferred_provider": row["preferred_provider"], "model": row["model"],
+            "allow_cloud": row["allow_cloud"],
+            "data_classification": row["data_classification"],
+            "task_class": row["task_class"], "classification": row["classification"],
+            "max_retries": row["max_retries"], "max_cost_usd": cost,
+            "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest()}
+
+
+def _observe_runtime_artifact(spec, base, *, dispatch, get_artifact, get_runtime,
+                              expected_source_revision, expected_registry_sha256,
+                              started, timeout_seconds, monotonic, wall_clock):
+    """Join the existing zero-model artifact path, not a manufactured queue row.
+
+    Dependencies must be authenticated domain reads supplied by the caller.
+    The source is an observed runtime binding, not independent deployment or
+    certification attestation. Raw artifact sections never leave this observer.
+    """
+    if spec != challenge("baseline:identity", agent_id="a19",
+                         capability_id="responsibility.a19"):
+        return {**base, "state": "REJECTED", "reason": "runtime_case_source_mismatch"}
+    if (not callable(get_artifact) or not callable(get_runtime)
+            or not isinstance(expected_source_revision, str)
+            or not re.fullmatch(r"[0-9a-f]{40}", expected_source_revision)
+            or not isinstance(expected_registry_sha256, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", expected_registry_sha256)):
+        return {**base, "state": "REJECTED", "reason": "runtime_evidence_reader_missing"}
+    began = wall_clock()
+    if not isinstance(began, datetime) or began.tzinfo is None:
+        return {**base, "state": "REJECTED", "reason": "observation_time_missing"}
+    before = _runtime_identity(get_runtime(), expected_source_revision)
+    if before is None:
+        return {**base, "state": "REJECTED", "reason": "runtime_identity_missing"}
+    reply = dispatch(spec["request"])
+    if (not isinstance(reply, dict) or set(reply) != {
+            "task_id", "state", "artifact", "model_calls", "execution_model",
+            "agent_id", "capability", "runtime_source_revision"}
+            or reply.get("state") != "COMPLETED"
+            or reply.get("execution_model") != "DETERMINISTIC"
+            or reply.get("agent_id") != "a19"
+            or reply.get("capability") != "responsibility.a19"
+            or reply.get("runtime_source_revision") != expected_source_revision
+            or type(reply.get("model_calls")) is not int or reply["model_calls"] != 0):
+        return {**base, "state": "REJECTED", "reason": "deterministic_dispatch_invalid"}
+    task_id, declared = reply.get("task_id"), reply.get("artifact")
+    if (not isinstance(task_id, str)
+            or not re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", task_id)
+            or not isinstance(declared, dict)):
+        return {**base, "state": "REJECTED", "reason": "artifact_identity_mismatch"}
+    artifact_id = declared.get("artifact_id")
+    if not isinstance(artifact_id, str) or not re.fullmatch(r"[0-9a-f]{32}", artifact_id):
+        return {**base, "state": "REJECTED", "reason": "artifact_identity_mismatch"}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, "state": "INCOMPLETE", "reason": "bounded_timeout"}
+    retrieved = get_artifact(artifact_id)
+    if (not isinstance(retrieved, tuple) or len(retrieved) != 2
+            or not isinstance(retrieved[0], dict) or type(retrieved[1]) is not bytes):
+        return {**base, "state": "REJECTED", "reason": "artifact_read_invalid"}
+    metadata, raw = retrieved
+    if (len(raw) == 0 or len(raw) > 200_000
+            or len(_canonical(metadata)) > 16_384
+            or _canonical(metadata) != _canonical(declared)
+            or metadata.get("artifact_id") != artifact_id
+            or metadata.get("task_id") != task_id
+            or metadata.get("creator_agents") != ["a19"]
+            or metadata.get("type") != "json"
+            or metadata.get("runtime_revision") != expected_source_revision
+            or metadata.get("validation_state") != "STRUCTURE_VALIDATED"
+            or metadata.get("delivery_state") != "AVAILABLE"
+            or metadata.get("location") != "artifact.json"
+            or type(metadata.get("bytes")) is not int or metadata["bytes"] != len(raw)
+            or metadata.get("sha256") != hashlib.sha256(raw).hexdigest()):
+        return {**base, "state": "REJECTED", "reason": "artifact_binding_mismatch"}
+    report = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object,
+                        parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite report")))
+    from .runtime_status import validate_report
+    validate_report(report)
+    captured, artifact_time = _time(report.get("captured_at")), _time(metadata.get("timestamp"))
+    registry = report.get("registry", {})
+    if (report.get("task_id") != task_id
+            or captured is None or artifact_time is None or captured < began
+            or artifact_time < captured
+            or registry.get("status") != "OBSERVED"
+            or type(registry.get("agent_count")) is not int or registry["agent_count"] != 21
+            or registry.get("source_sha256") != expected_registry_sha256
+            or report.get("execution") != {
+                "model_calls": 0, "input_tokens": 0, "output_tokens": 0,
+                "method": "DETERMINISTIC_READ_ONLY", "fresh_inference_performed": False}
+            or any(type(report["execution"].get(key)) is not int
+                   for key in ("model_calls", "input_tokens", "output_tokens"))
+            or type(report["execution"].get("fresh_inference_performed")) is not bool):
+        return {**base, "state": "REJECTED", "reason": "runtime_report_binding_mismatch"}
+    after = _runtime_identity(get_runtime(), expected_source_revision)
+    ended = wall_clock()
+    if after is None or _canonical(before) != _canonical(after):
+        return {**base, "state": "REJECTED", "reason": "runtime_identity_changed"}
+    if not isinstance(ended, datetime) or ended.tzinfo is None or artifact_time > ended:
+        return {**base, "state": "REJECTED", "reason": "observation_time_invalid"}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, "state": "INCOMPLETE", "reason": "bounded_timeout"}
+    return {**base, "state": "EXECUTED", "execution_model": "DETERMINISTIC",
+            "task_id": task_id, "artifact_id": artifact_id, "model_calls": 0,
+            "source_revision": expected_source_revision,
+            "registry_sha256": expected_registry_sha256,
+            "runtime_identity_sha256": hashlib.sha256(_canonical(before)).hexdigest(),
+            "result_sha256": metadata["sha256"], "artifact_metadata_sha256":
+            hashlib.sha256(_canonical(metadata)).hexdigest(),
+            "started_at": began.isoformat(), "completed_at": ended.isoformat(),
+            "captured_at": captured.isoformat(),
+            "case_review": "RUNTIME_STATUS_ARTIFACT_CHECK_PASS", "review_errors": ()}
+
+
 def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                       get_job: Callable[[str], dict], timeout_seconds: float = 60,
                       monotonic: Callable[[], float] = time.monotonic,
-                      pause: Callable[[float], None] = time.sleep) -> dict:
+                      pause: Callable[[float], None] = time.sleep,
+                      get_artifact: Callable[[str], tuple[dict, bytes]] | None = None,
+                      get_runtime: Callable[[], dict] | None = None,
+                      expected_source_revision: str | None = None,
+                      expected_registry_sha256: str | None = None,
+                      cloud_binding: CertificationTransport | None = None,
+                      cloud_policy: dict | None = None,
+                      expected_owner_policy_sha256: str | None = None,
+                      wall_clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc)) -> dict:
     """Observe one prepared case through the existing authenticated queue.
 
     Execution evidence and a local numeric verdict are deliberately distinct
@@ -89,6 +281,28 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
         raise ValueError("timeout must be bounded to 120 seconds")
     base = {"agent_id": agent, "capability_id": capability, "case": spec.get("case"),
             "certification": "UNVERIFIED"}
+    execution_request = request
+    cloud_receipt = None
+    if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+        try:
+            binding = validate_cloud_binding(
+                spec, cloud_policy, cloud_binding,
+                expected_source_revision=expected_source_revision,
+                expected_policy_sha256=expected_owner_policy_sha256)
+            cloud_receipt = binding.receipt()
+            execution_request = binding.request()
+        except (ValueError, TypeError, KeyError, AttributeError):
+            return {**base, "state": "REJECTED", "reason": "cloud_binding_invalid"}
+        if not callable(get_runtime):
+            return {**base, "state": "REJECTED", "reason": "cloud_runtime_reader_missing"}
+        # Only bounded metadata is returned; neither prompt nor policy body is
+        # disclosed to the executing agent or included in the observation.
+        base = {**base, "cloud_transport": cloud_receipt,
+                "source_revision": expected_source_revision,
+                "case_spec_sha256": cloud_receipt["canonical_spec_sha256"],
+                "execution_request_sha256": cloud_receipt["execution_request_sha256"],
+                "execution_data_classification": "CLOUD_PERMITTED"}
+        timeout_seconds = min(timeout_seconds, cloud_receipt["limits"]["timeout_seconds"])
     if agent in ROLE_G1_SOURCES and spec.get("case") == "role:normal":
         canonical = challenge("role:normal", agent_id=agent, capability_id=capability)
         if ("exact_role_g1_oracle" in spec.get("independent_review", ())
@@ -96,7 +310,26 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
             return {**base, "state": "REJECTED", "reason": "role_g1_oracle_source_mismatch"}
     started = monotonic()
     try:
-        reply = dispatch(request)
+        cloud_runtime = None
+        if cloud_receipt is not None:
+            cloud_runtime = _runtime_identity(get_runtime(), expected_source_revision)
+            if cloud_runtime is None:
+                return {**base, "state": "REJECTED", "reason": "cloud_runtime_identity_missing"}
+            if monotonic() - started >= timeout_seconds:
+                return {**base, "state": "INCOMPLETE", "reason": "bounded_timeout"}
+            # Revalidate pinned mutable policy immediately before dispatch; no
+            # consent change may widen the already prepared transport.
+            validate_cloud_binding(spec, cloud_policy, cloud_binding,
+                expected_source_revision=expected_source_revision,
+                expected_policy_sha256=expected_owner_policy_sha256)
+        if (agent, capability, spec.get("case")) == (
+                "a19", "responsibility.a19", "baseline:identity"):
+            return _observe_runtime_artifact(
+                spec, base, dispatch=dispatch, get_artifact=get_artifact,
+                get_runtime=get_runtime, expected_source_revision=expected_source_revision,
+                expected_registry_sha256=expected_registry_sha256, started=started,
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
+        reply = dispatch(execution_request)
         job = reply.get("job") if isinstance(reply, dict) else None
         if (not isinstance(job, dict) or reply.get("capability") != capability
                 or job.get("agent") != agent):
@@ -108,6 +341,15 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
             valid_job_id = False
         if not valid_job_id:
             return {**base, "state": "REJECTED", "reason": "job_id_missing"}
+        cloud_job = None
+        if cloud_receipt is not None:
+            cloud_job = _cloud_job_binding(job, cloud_receipt)
+            if cloud_job is None or reply.get("tier") != cloud_receipt["minimum_tier"]:
+                return {**base, "job_id": job_id, "state": "REJECTED",
+                        "reason": "cloud_dispatch_binding_mismatch"}
+            base = {**base, "queue_prompt_sha256": cloud_job["prompt_sha256"],
+                    "queue_route_binding_sha256": hashlib.sha256(_canonical(cloud_job)).hexdigest(),
+                    "runtime_identity_sha256": hashlib.sha256(_canonical(cloud_runtime)).hexdigest()}
         while monotonic() - started < timeout_seconds:
             row = get_job(job_id)
             if (not isinstance(row, dict) or row.get("id") != job_id
@@ -115,6 +357,12 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 return {**base, "job_id": job_id, "state": "REJECTED",
                         "reason": "job_identity_mismatch"}
             status = row.get("status")
+            if cloud_receipt is not None:
+                observed_binding = _cloud_job_binding(row, cloud_receipt,
+                                                      completed=status == "completed")
+                if observed_binding is None or _canonical(observed_binding) != _canonical(cloud_job):
+                    return {**base, "job_id": job_id, "state": "REJECTED",
+                            "reason": "cloud_job_binding_mismatch"}
             if status == "completed":
                 result = row.get("result")
                 began = _time(row.get("started_at"))
@@ -127,6 +375,17 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                         or row.get("error")):
                     return {**base, "job_id": job_id, "state": "REJECTED",
                             "reason": "worker_evidence_missing"}
+                if cloud_receipt is not None:
+                    after = _runtime_identity(get_runtime(), expected_source_revision)
+                    if after is None or _canonical(after) != _canonical(cloud_runtime):
+                        return {**base, "job_id": job_id, "state": "REJECTED",
+                                "reason": "cloud_runtime_identity_changed"}
+                    validate_cloud_binding(spec, cloud_policy, cloud_binding,
+                        expected_source_revision=expected_source_revision,
+                        expected_policy_sha256=expected_owner_policy_sha256)
+                    if monotonic() - started >= timeout_seconds:
+                        return {**base, "job_id": job_id, "state": "INCOMPLETE",
+                                "reason": "bounded_timeout"}
                 review = "UNREVIEWED"
                 review_errors: tuple[str, ...] = ()
                 if "exact_numeric_oracle" in spec.get("independent_review", ()):

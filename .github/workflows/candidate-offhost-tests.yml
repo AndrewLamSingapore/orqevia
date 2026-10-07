@@ -7,6 +7,7 @@ on:
       - feat/backend-admission-20261005
       - fix/prime-lens-retrieval-20261006
       - feat/prime-unified-release-20261006
+      - feat/prime-agent-l7-20261007
   workflow_dispatch:
 
 permissions:

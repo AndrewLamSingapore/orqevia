@@ -1,0 +1,447 @@
+"""One protected, artifact-bound role case; never an L7 award or Azure login.
+
+The protected caller owns the independently reviewed artifact hashes, exact
+runtime identity and public key pin. None may be obtained from an executing
+agent's submission. Only that caller may inject the existing Key Vault signing
+operation. This module performs no network, credential loading or file writes.
+Execution source and reviewed source remain distinct from reviewer code source.
+"""
+from __future__ import annotations
+
+from datetime import datetime
+import hashlib
+import json
+import math
+from pathlib import Path
+import re
+import uuid
+
+from app.agent_cert_azure_es256 import AzureES256CertificationVerifier
+from app.agent_cert_azure_signer import ProtectedAzureES256Signer, _read_subject_artifact
+from app.agent_cert_ed25519 import _REQUIRED_RECORD_FIELDS
+from app.agent_cert_role_group_two import _CASES as GROUP_TWO_CASES
+from app.agent_cert_role_review import canonical_role_spec, review_role_output
+from app.agent_registry import agent_record, canonical_agent_id
+
+
+SERVICE = 'svc.cert-verifier.independent'
+_REV = re.compile(r'[0-9a-f]{40}\Z')
+_SHA = re.compile(r'[0-9a-f]{64}\Z')
+_IMAGE = re.compile(r'sha256:[0-9a-f]{64}\Z')
+_PROVIDER = re.compile(r'[A-Za-z0-9_-]{1,80}\Z')
+_EXECUTION_FIELDS = {'schema_version', 'agent_id', 'capability_id', 'dimension',
+                     'test_case', 'source_revision', 'runtime_image_id',
+                     'environment', 'executor_identity', 'case_spec', 'dispatch',
+                     'job', 'transport'}
+_JOB_FIELDS = {'id', 'agent', 'status', 'result', 'result_sha256', 'provider',
+               'attempts', 'started_at', 'completed_at', 'error'}
+_RECORD_FIELDS = set(_REQUIRED_RECORD_FIELDS) | {
+    'review_evidence', 'review_evidence_sha256', 'review_run_id',
+    'review_test_version', 'review_source_revision', 'reviewer_code_revision',
+}
+
+
+class CertificationReviewError(ValueError):
+    """A fixed public code; never interpolate model, credential or error text."""
+
+
+def _deny(code):
+    raise CertificationReviewError(code) from None
+
+
+def _canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(',', ':'),
+                      ensure_ascii=False, allow_nan=False).encode('utf-8')
+
+
+def _sha(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def _unique(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            _deny('DUPLICATE_FIELD')
+        result[key] = value
+    return result
+
+
+def _finite(value):
+    result = float(value)
+    if not math.isfinite(result):
+        _deny('NONFINITE_NUMBER')
+    return result
+
+
+def _json(raw):
+    if type(raw) is not bytes or not 1 <= len(raw) <= 1024 * 1024:
+        _deny('ARTIFACT_SIZE_INVALID')
+    try:
+        result = json.loads(raw, object_pairs_hook=_unique, parse_float=_finite,
+                            parse_constant=lambda _: _deny('NONFINITE_NUMBER'))
+        if type(result) is not dict:
+            _deny('ARTIFACT_OBJECT_REQUIRED')
+        return result
+    except CertificationReviewError:
+        raise
+    except (ValueError, TypeError, UnicodeError, RecursionError, OverflowError):
+        _deny('ARTIFACT_JSON_INVALID')
+
+
+def _utc(value):
+    if type(value) is not str or not 1 <= len(value) <= 40:
+        _deny('EXECUTION_TIME_INVALID')
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError()
+        return parsed
+    except ValueError:
+        _deny('EXECUTION_TIME_INVALID')
+
+
+def _role_oracle(agent, result):
+    # Reuse the actual domain oracles and their exact supplied facts. No
+    # generic pass fixture, fence stripping or model self-assessment is allowed.
+    valid, errors = review_role_output(agent, f'responsibility.{agent}', result)
+    if valid is not True or errors:
+        _deny('CASE_ORACLE_FAILED')
+
+
+def _role_spec(agent):
+    # Group two defines a distinct strict-json request. It is not interchangeable
+    # with challenge()'s older generic prompt for the same registered role.
+    return canonical_role_spec(agent, f'responsibility.{agent}')
+
+
+def _oracle_id(agent):
+    return 'group_two_exact_role_oracle/v1' if agent in GROUP_TWO_CASES else 'existing.role-normal.v1'
+
+
+def _review_version(agent):
+    # Official oracle IDs may contain '/'; the protected signer's provenance
+    # grammar deliberately does not. Keep the domain oracle identity intact in
+    # observations and bind a separate, fixed signing-provenance version.
+    return 'group_two_exact_role_oracle.v1' if agent in GROUP_TWO_CASES else None
+
+
+def _uuid(value):
+    try:
+        return type(value) is str and str(uuid.UUID(value)) == value
+    except ValueError:
+        return False
+
+
+def _review_action_chain(raw_events, *, dispatch, metadata, reviewed_at, certified_at):
+    if type(raw_events) is not list or not 2 <= len(raw_events) <= 128:
+        _deny('REVIEW_ACTION_CHAIN_REQUIRED')
+    events = []
+    previous = None
+    for raw in raw_events:
+        if type(raw) is not str or not 1 <= len(raw.encode('utf-8')) <= 64 * 1024:
+            _deny('REVIEW_ACTION_CHAIN_INVALID')
+        event = _json(raw.encode('utf-8'))
+        if (type(event.get('sequence')) is not int or not 1 <= event['sequence'] < 2 ** 63 or
+                type(event.get('sha256')) is not str or not _SHA.fullmatch(event['sha256']) or
+                type(event.get('previous_sha256')) is not str or not _SHA.fullmatch(event['previous_sha256']) or
+                _sha(_canonical({key: value for key, value in event.items() if key != 'sha256'})) != event['sha256']):
+            _deny('REVIEW_ACTION_CHAIN_INVALID')
+        if previous is not None and (event['sequence'] != previous['sequence'] + 1 or
+                                     event['previous_sha256'] != previous['sha256']):
+            _deny('REVIEW_ACTION_CHAIN_INVALID')
+        events.append(event)
+        previous = event
+    action_id = dispatch['review_action_id']
+    owned = [event for event in events if event.get('action_id') == action_id]
+    if len(owned) != 2 or owned[0] is not events[0] or owned[1] is not events[-1]:
+        _deny('REVIEW_ACTION_CHAIN_INVALID')
+    base = {
+        'task_id': dispatch['task_id'], 'agent_id': dispatch['agent_id'],
+        'action_type': 'agent.certification.role.review', 'tool': 'artifact-factory',
+        'target': '', 'classification': 'R0',
+        'parameters_summary': {'schema_version': 'prime.agent-cert-role-review.v1',
+                               'read_only_observations': True},
+        'model_backend': 'deterministic', 'execution_location': 'local',
+        'parent_agent': None, 'workflow_id': None, 'action_id': action_id,
+    }
+    common = set(base) | {'phase', 'timestamp', 'sequence', 'previous_sha256', 'sha256'}
+    start, completed = owned
+    if (set(start) != common or set(completed) != common | {'success', 'duration_ms', 'result_summary'} or
+            any(_canonical(event.get(key)) != _canonical(value)
+                for event in owned for key, value in base.items()) or
+            start['phase'] != 'started' or completed['phase'] != 'completed' or
+            completed['success'] is not True or
+            type(completed['duration_ms']) not in {int, float} or
+            not math.isfinite(completed['duration_ms']) or not 0 <= completed['duration_ms'] <= 120_000 or
+            _canonical(completed['result_summary']) != _canonical({
+                'type': 'dict', 'artifact_id': metadata['artifact_id'],
+                'sha256': metadata['sha256'], 'location': 'artifact.json'}) or
+            not reviewed_at <= _utc(start['timestamp']) <= _utc(metadata['timestamp']) <=
+                _utc(completed['timestamp']) <= certified_at):
+        _deny('REVIEW_ACTION_BINDING_INVALID')
+
+
+def _cloud_execution(execution, *, spec, cloud_binding, cloud_policy,
+                     expected_owner_policy_sha256, source_revision):
+    from app.agent_cert_transport import validate_cloud_binding
+    try:
+        checked = validate_cloud_binding(spec, cloud_policy, cloud_binding,
+            expected_source_revision=source_revision,
+            expected_policy_sha256=expected_owner_policy_sha256)
+    except (ValueError, TypeError, KeyError, AttributeError):
+        _deny('PROTECTED_CLOUD_POLICY_REQUIRED')
+    prepared = checked.receipt()
+    proof = execution.get('cloud_transport')
+    if (type(proof) is not dict or set(proof) != {'binding', 'queue_route'} or
+            _canonical(proof['binding']) != _canonical(prepared)):
+        _deny('CLOUD_TRANSPORT_BINDING_INVALID')
+    route = proof['queue_route']
+    if type(route) is not dict or set(route) != {
+            'preferred_provider', 'model', 'allow_cloud', 'data_classification', 'task_class',
+            'classification', 'max_retries', 'max_cost_usd', 'prompt_sha256',
+            'input_tokens', 'output_tokens', 'actual_cost_usd'}:
+        _deny('CLOUD_QUEUE_BINDING_INVALID')
+    fixed = {'preferred_provider': prepared['provider_id'], 'model': prepared['model'],
+             'allow_cloud': 1, 'data_classification': 'CLOUD_PERMITTED',
+             'task_class': prepared['task_class'], 'classification': 'R0', 'max_retries': 0,
+             'max_cost_usd': checked.request()['max_cost_usd']}
+    if (any(_canonical(route.get(key)) != _canonical(value) for key, value in fixed.items()) or
+            type(route['prompt_sha256']) is not str or not _SHA.fullmatch(route['prompt_sha256']) or
+            type(route['input_tokens']) is not int or not 0 <= route['input_tokens'] <= prepared['limits']['context_tokens'] or
+            type(route['output_tokens']) is not int or not 0 <= route['output_tokens'] <= prepared['limits']['output_tokens'] or
+            type(route['actual_cost_usd']) not in {int, float} or not math.isfinite(route['actual_cost_usd']) or
+            not 0 <= route['actual_cost_usd'] <= prepared['limits']['max_cost_usd'] or
+            execution['job']['provider'] != prepared['provider_id'] or execution['job']['attempts'] != 1):
+        _deny('CLOUD_QUEUE_BINDING_INVALID')
+    return route['prompt_sha256']
+
+
+def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
+                        source_revision, runtime_image_id, now, queue_prompt_sha256=None):
+    """Bind a real registered review artifact; a reviewer label is not execution."""
+    if type(proof) is not dict or set(proof) != {
+            'dispatch', 'artifact_content_utf8', 'transport', 'action_records'}:
+        _deny('REGISTERED_REVIEW_EXECUTION_REQUIRED')
+    subject = row['agent_id']
+    actor = 'a18' if subject == 'a26' else 'a26'
+    capability = 'responsibility.a27' if subject == 'a26' else 'responsibility.a26'
+    dispatch = proof['dispatch']
+    if (type(dispatch) is not dict or set(dispatch) != {
+            'task_id', 'state', 'artifact', 'model_calls', 'execution_model', 'agent_id',
+            'capability', 'runtime_source_revision', 'review_action_id',
+            'review_action_durable', 'certification'} or
+            row['verifier'] != actor or dispatch['agent_id'] != actor or
+            dispatch['capability'] != capability or not _uuid(dispatch['task_id']) or
+            dispatch['task_id'] == job['id'] or not _uuid(dispatch['review_action_id']) or
+            dispatch['state'] != 'COMPLETED' or type(dispatch['model_calls']) is not int or
+            dispatch['model_calls'] != 0 or dispatch['execution_model'] != 'DETERMINISTIC' or
+            dispatch['runtime_source_revision'] != source_revision or
+            dispatch['review_action_durable'] is not True or dispatch['certification'] != 'UNVERIFIED'):
+        _deny('REGISTERED_REVIEW_DISPATCH_INVALID')
+    transport = {'authentication': 'OWNER_AUTHENTICATED', 'dispatch_http_status': 202,
+                 'artifact_http_status': 200, 'runtime_source_revision': source_revision,
+                 'actual_runtime_image': runtime_image_id}
+    if _canonical(proof['transport']) != _canonical(transport):
+        _deny('REGISTERED_REVIEW_TRANSPORT_INVALID')
+    raw = proof['artifact_content_utf8']
+    if type(raw) is not str or not 1 <= len(raw.encode('utf-8')) <= 64 * 1024:
+        _deny('REGISTERED_REVIEW_ARTIFACT_INVALID')
+    content = _json(raw.encode('utf-8'))
+    metadata = dispatch['artifact']
+    if (type(metadata) is not dict or set(metadata) != {
+            'artifact_id', 'task_id', 'type', 'creator_agents', 'timestamp', 'version',
+            'provenance', 'runtime_revision', 'validation_state', 'content_validation',
+            'location', 'sha256', 'bytes', 'delivery_state'} or
+            type(metadata['artifact_id']) is not str or not re.fullmatch(r'[0-9a-f]{32}', metadata['artifact_id']) or
+            metadata['task_id'] != dispatch['task_id'] or metadata['creator_agents'] != [actor] or
+            metadata['type'] != 'json' or metadata['version'] != '1.0.0' or
+            metadata['provenance'] != 'Deterministic computation; zero model calls' or
+            metadata['runtime_revision'] != source_revision or metadata['validation_state'] != 'STRUCTURE_VALIDATED' or
+            metadata['content_validation'] != 'Not independently established by structural validation' or
+            metadata['location'] != 'artifact.json' or metadata['sha256'] != _sha(raw.encode('utf-8')) or
+            type(metadata['bytes']) is not int or metadata['bytes'] != len(raw.encode('utf-8')) or
+            metadata['delivery_state'] != 'AVAILABLE'):
+        _deny('REGISTERED_REVIEW_ARTIFACT_INVALID')
+    expected = {
+        'schema_version': 'prime.agent-cert-role-review.v1', 'task_id': dispatch['task_id'],
+        'reviewer_id': actor, 'reviewer_capability_id': capability,
+        'subject_agent_id': subject, 'subject_capability_id': row['capability_id'],
+        'dimension': 'role', 'test_case': 'normal', 'source_revision': source_revision,
+        'runtime_image_id': runtime_image_id, 'subject_job_id': job['id'],
+        'execution_evidence_sha256': execution_sha256, 'case_spec_sha256': _sha(_canonical(spec)),
+        'result_sha256': job['result_sha256'], 'oracle_id': _oracle_id(subject),
+        'test_result': 'PASS', 'review_errors': [], 'model_calls': 0,
+        'execution_model': 'DETERMINISTIC', 'subject_execution_verification': 'QUEUE_AND_OBJECTIVE_JOINED',
+        'certification': 'UNVERIFIED',
+    }
+    if (set(content) != set(expected) | {'review_nonce', 'reviewed_at', 'subject_domain_join'} or
+            any(_canonical(content.get(key)) != _canonical(value) for key, value in expected.items()) or
+            not _uuid(content['review_nonce'])):
+        _deny('REGISTERED_REVIEW_CONTENT_INVALID')
+    join = content['subject_domain_join']
+    if (type(join) is not dict or set(join) != {
+            'objective_id', 'objective_revision', 'job_id', 'runtime', 'observed_at',
+            'execution_metadata_sha256', 'prompt_sha256', 'case_spec_sha256'} or not _uuid(join['objective_id']) or
+            join['objective_id'] in {job['id'], dispatch['task_id']} or join['job_id'] != job['id'] or
+            type(join['objective_revision']) is not int or not 0 <= join['objective_revision'] <= 10_000 or
+            type(join['execution_metadata_sha256']) is not str or not _SHA.fullmatch(join['execution_metadata_sha256']) or
+            type(join['prompt_sha256']) is not str or not _SHA.fullmatch(join['prompt_sha256']) or
+            (queue_prompt_sha256 is not None and join['prompt_sha256'] != queue_prompt_sha256) or
+            join['case_spec_sha256'] != _sha(_canonical(spec))):
+        _deny('REGISTERED_REVIEW_DOMAIN_JOIN_INVALID')
+    runtime = join['runtime']
+    if (type(runtime) is not dict or set(runtime) != {'host_id', 'source_revision', 'version', 'image_digest'} or
+            runtime['source_revision'] != source_revision or runtime['image_digest'] != runtime_image_id or
+            any(type(runtime[key]) is not str or runtime[key] == 'UNKNOWN' or
+                not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', runtime[key])
+                for key in ('host_id', 'version'))):
+        _deny('REGISTERED_REVIEW_DOMAIN_JOIN_INVALID')
+    reviewed_at, observed_at = _utc(content['reviewed_at']), _utc(join['observed_at'])
+    certified_at = _utc(row['certified_at'])
+    if not (_utc(job['completed_at']) <= reviewed_at <= observed_at <= _utc(metadata['timestamp']) <= certified_at <= now):
+        _deny('REGISTERED_REVIEW_TIME_INVALID')
+    _review_action_chain(proof['action_records'], dispatch=dispatch, metadata=metadata,
+                         reviewed_at=reviewed_at, certified_at=certified_at)
+
+
+def _review(row, primary, review, *, source_revision, runtime_image_id,
+            reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
+            expected_owner_policy_sha256=None):
+    execution = _json(primary)
+    envelope = _json(review)
+    cloud_requested = any(value is not None for value in (
+        cloud_binding, cloud_policy, expected_owner_policy_sha256))
+    if set(execution) != _EXECUTION_FIELDS | ({'cloud_transport'} if cloud_requested else set()):
+        _deny('EXECUTION_FIELDS_INVALID')
+    agent = row.get('agent_id')
+    reviewer = row.get('verifier')
+    if (type(agent) is not str or canonical_agent_id(agent) != agent or
+            type(reviewer) is not str or canonical_agent_id(reviewer) != reviewer or
+            reviewer == agent or row.get('executor_identity') != agent or
+            row.get('capability_id') != f'responsibility.{agent}' or
+            row.get('dimension') != 'role' or row.get('test_case') != 'normal' or
+            row.get('test_result') != 'PASS' or
+            row.get('source_revision') != source_revision or
+            row.get('review_source_revision') != source_revision or
+            row.get('reviewer_code_revision') != reviewer_code_revision or
+            row.get('authority_scope') != agent_record(agent)['authority'] or
+            any(type(row.get(key)) is not str or not 1 <= len(row[key]) <= 100 for key in
+                ('certification_test', 'test_version', 'review_run_id', 'review_test_version'))):
+        _deny('RECORD_BINDING_INVALID')
+    if agent in GROUP_TWO_CASES and row['review_test_version'] != _review_version(agent):
+        _deny('REVIEW_ORACLE_VERSION_INVALID')
+    spec = _role_spec(agent)
+    expected = {'schema_version': 'prime.agent-certification.execution.v1',
+                'agent_id': agent, 'capability_id': row['capability_id'],
+                'dimension': 'role', 'test_case': 'normal',
+                'source_revision': source_revision, 'runtime_image_id': runtime_image_id,
+                'environment': 'LIVE_RUNTIME', 'executor_identity': row.get('executor_identity'),
+                'case_spec': spec}
+    if any(_canonical(execution.get(key)) != _canonical(value) for key, value in expected.items()):
+        _deny('EXECUTION_BINDING_INVALID')
+    # The official challenge is LOCAL_ONLY. Cloud trial evidence cannot be
+    # silently promoted into this case by changing a label or its prompt.
+    transport = {'authentication': 'OWNER_AUTHENTICATED', 'dispatch_http_status': 202,
+                 'job_http_status': 200, 'provider_locality': 'CLOUD' if cloud_requested else 'LOCAL',
+                 'runtime_source_revision': source_revision,
+                 'actual_runtime_image': runtime_image_id}
+    if _canonical(execution['transport']) != _canonical(transport):
+        _deny('LIVE_AUTHORIZED_TRANSPORT_REQUIRED')
+    job = execution['job']
+    if (type(job) is not dict or set(job) != _JOB_FIELDS or
+            type(job['id']) is not str or str(uuid.UUID(job['id'])) != job['id'] or
+            job['agent'] != agent or job['status'] != 'completed' or job['error'] is not None or
+            type(job['attempts']) is not int or not 1 <= job['attempts'] <= 3 or
+            type(job['provider']) is not str or not _PROVIDER.fullmatch(job['provider']) or
+            type(job['result']) is not str or not 1 <= len(job['result'].encode('utf-8')) <= 64 * 1024 or
+            job['result_sha256'] != _sha(job['result'].encode('utf-8'))):
+        _deny('COMPLETED_EXECUTION_INVALID')
+    dispatch = {'capability': row['capability_id'], 'job': {'id': job['id'], 'agent': agent}}
+    if _canonical(execution['dispatch']) != _canonical(dispatch):
+        _deny('DISPATCH_JOB_MISMATCH')
+    if not (_utc(job['started_at']) <= _utc(job['completed_at']) <=
+            _utc(row.get('certified_at')) <= _utc(row.get('last_revalidated')) <= now <
+            _utc(row.get('expires_at'))):
+        _deny('EXECUTION_TIME_INVALID')
+    observations = {
+        'execution_job_id': job['id'], 'result_sha256': job['result_sha256'],
+        'case_spec_sha256': _sha(_canonical(spec)), 'runtime_image_id': runtime_image_id,
+        'reviewer_code_revision': reviewer_code_revision,
+        'oracle_id': _oracle_id(agent), 'oracle_pass': True,
+    }
+    supplied = envelope.get('observations')
+    if (type(supplied) is not dict or set(supplied) != set(observations) | {'reviewer_execution'} or
+            any(_canonical(supplied.get(key)) != _canonical(value) for key, value in observations.items())):
+        _deny('REVIEW_OBSERVATIONS_INVALID')
+    queue_prompt = _cloud_execution(execution, spec=spec, cloud_binding=cloud_binding,
+        cloud_policy=cloud_policy, expected_owner_policy_sha256=expected_owner_policy_sha256,
+        source_revision=source_revision) if cloud_requested else None
+    _reviewer_execution(supplied['reviewer_execution'], row=row, job=job, spec=spec,
+                        execution_sha256=_sha(primary), source_revision=source_revision,
+                        runtime_image_id=runtime_image_id, now=now,
+                        queue_prompt_sha256=queue_prompt)
+    _role_oracle(agent, job['result'])
+    return True
+
+
+def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
+                       review_sha256: str, execution_source_revision: str,
+                       runtime_image_id: str, reviewer_code_revision: str,
+                       public_pin: dict, sign_digest, now: datetime,
+                       cloud_binding=None, cloud_policy=None,
+                       expected_owner_policy_sha256: str | None = None) -> dict:
+    """Validate and sign ONE approved case using the existing protected signer.
+
+    Hash bindings and revisions are trusted caller inputs from protected reviewed
+    source, not portable approvals or request parameters. A cryptographic PASS
+    authenticates this case only; the registry still owns full L7 projection.
+    """
+    try:
+        if (type(row) is not dict or set(row) != _RECORD_FIELDS or not callable(sign_digest) or
+                type(execution_sha256) is not str or not _SHA.fullmatch(execution_sha256) or
+                type(review_sha256) is not str or not _SHA.fullmatch(review_sha256) or
+                execution_sha256 == review_sha256 or
+                type(execution_source_revision) is not str or not _REV.fullmatch(execution_source_revision) or
+                type(reviewer_code_revision) is not str or not _REV.fullmatch(reviewer_code_revision) or
+                type(runtime_image_id) is not str or not _IMAGE.fullmatch(runtime_image_id) or
+                type(now) is not datetime or now.tzinfo is None or
+                type(public_pin) is not dict or set(public_pin) != {'key_id', 'jwk'}):
+            _deny('PROTECTED_BINDINGS_REQUIRED')
+        candidate = _json(_canonical(row))
+        if (candidate.get('evidence_sha256') != execution_sha256 or
+                candidate.get('review_evidence_sha256') != review_sha256 or
+                'attestation' in candidate):
+            _deny('APPROVED_ARTIFACT_MISMATCH')
+        root = Path(evidence_root)
+        if not root.is_absolute() or any(path.is_symlink() for path in (root, *root.parents)):
+            _deny('PROTECTED_EVIDENCE_ROOT_REQUIRED')
+        subject = candidate.get('agent_id')
+        if type(subject) is not str or canonical_agent_id(subject) != subject:
+            _deny('REGISTERED_SUBJECT_REQUIRED')
+        primary = _read_subject_artifact(root / subject, candidate.get('evidence'))
+        review = _read_subject_artifact(root / subject, candidate.get('review_evidence'))
+        if _sha(primary) != execution_sha256 or _sha(review) != review_sha256:
+            _deny('APPROVED_ARTIFACT_MISMATCH')
+        callback = lambda record, execution, reviewed: _review(record, execution, reviewed,
+            source_revision=execution_source_revision, runtime_image_id=runtime_image_id,
+            reviewer_code_revision=reviewer_code_revision, now=now,
+            cloud_binding=cloud_binding, cloud_policy=cloud_policy,
+            expected_owner_policy_sha256=expected_owner_policy_sha256)
+        # Review once before constructing any signing operation. sign_reviewed
+        # separately repeats review and artifact binding immediately before sign.
+        callback(candidate, primary, review)
+        signer = ProtectedAzureES256Signer(SERVICE, public_pin['key_id'], public_pin['jwk'],
+                                           sign_digest, review_case=callback)
+        signed = signer.sign_reviewed(candidate, evidence_root=root,
+                                       source_revision=execution_source_revision, now=now)
+        verifier = AzureES256CertificationVerifier({SERVICE: {public_pin['key_id']: public_pin['jwk']}})
+        changed = dict(signed, test_case='different-case')
+        if verifier(signed) is not True or verifier(changed) is not False:
+            _deny('SIGNATURE_VERIFICATION_FAILED')
+        return signed
+    except CertificationReviewError:
+        raise
+    except Exception:
+        # Never forward result text, path, provider exception or injected bearer.
+        _deny('REVIEWED_CASE_SIGNING_REJECTED')
