@@ -9,7 +9,6 @@ import pytest
 from fastapi import HTTPException
 
 from app import agent_dispatch_api as dispatch
-from app import compute_queue_api, objective_api
 from app.action_records import ActionLedger
 from app.artifact_factory import ArtifactFactory
 from app.agent_cert_role_group_two import _CASES
@@ -23,6 +22,7 @@ JOB = '11111111-1111-4111-8111-111111111111'
 OBJECTIVE = '22222222-2222-4222-8222-222222222222'
 NONCE = '33333333-3333-4333-8333-333333333333'
 CORRELATION = '44444444-4444-4444-8444-444444444444'
+compute_queue_api = objective_api = None
 
 
 def canonical(value):
@@ -36,14 +36,20 @@ def digest(value):
 
 @pytest.fixture
 def configured(tmp_path, monkeypatch):
+    global compute_queue_api, objective_api
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
     monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'fixture-queue.db'))
     monkeypatch.setenv('PRIME_RUNTIME_REVISION', SOURCE)
     monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', IMAGE)
     monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', 'ABEX')
     monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_VERSION', 'fixture-v1')
     monkeypatch.delenv('PRIME_CONTEXT_PACKS_ENABLED', raising=False)
     monkeypatch.delenv('PRIME_SKILL_PACKS_ENABLED', raising=False)
+    # Queue construction is an import side effect. Import only after this
+    # fixture owns an explicit temporary data/queue path, never /data at
+    # collection time on an unprivileged off-host runner.
+    from app import compute_queue_api, objective_api
     calls = []
     def authenticate(value):
         calls.append(value)
