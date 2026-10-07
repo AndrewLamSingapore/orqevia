@@ -1,5 +1,6 @@
 """Local shell security and actual deterministic API roundtrip; no providers run."""
 import hashlib
+import json
 from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
@@ -36,6 +37,36 @@ def test_minimal_health_and_static_no_secrets(shell, monkeypatch):
     assert client.get('/control').status_code == 503
 
 
+def test_capability_observatory_is_local_control_only_and_fails_closed(shell, monkeypatch, tmp_path):
+    _, client = shell
+    path = '/control/api/agent-capabilities'
+    headers = {'Authorization': 'Bearer fixture-owner-secret'}
+    monkeypatch.delenv('PRIME_RUNTIME_REVISION', raising=False)
+    monkeypatch.delenv('PRIME_INTERFACE_RUNTIME_REVISION', raising=False)
+    assert client.get(path, headers=headers).status_code == 503  # No exact runtime source binding.
+    monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'a' * 40)
+    agent_dir = tmp_path / 'agent-certification' / 'a17'
+    agent_dir.mkdir(parents=True)
+    (agent_dir / 'certification.json').write_text(json.dumps({
+        'schema_version': '1.0',
+        'records': [{'agent_id': 'a17', 'capability_id': 'responsibility.a17',
+                     'test_result': 'PASS', 'verifier': 'a18'}],
+    }), encoding='utf-8')
+    response = client.get(path, headers=headers)
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    body = response.json()
+    assert body['reported_source_revision'] == 'a' * 40
+    assert body['independent_verifier'] == 'UNCONFIGURED'
+    assert len(body['agents']) == 21
+    assert all(row['proven']['level'] == 'L0' and row['quality'] == 'UNKNOWN'
+               and row['runtime_activation'] == 'UNVERIFIED'
+               for row in body['agents'])
+    assert client.get(path, headers={**headers, 'Host': 'evil.example'}).status_code == 403
+    monkeypatch.delenv('PRIME_SPINE_TOKEN')
+    assert client.get(path).status_code == 503
+
+
 def test_phone_pairing_only_local_same_origin(shell):
     entry, client = shell
     assert client.post('/control/api/pwa-pairing').status_code == 403
@@ -46,6 +77,28 @@ def test_phone_pairing_only_local_same_origin(shell):
     assert result.json()['role'] == 'MEMBER'
     assert result.headers['cache-control'] == 'no-store'
     assert 'fixture-owner-secret' not in result.text
+
+
+def test_hf_inspection_requires_explicit_owner_and_same_origin(shell, monkeypatch):
+    _, client = shell
+    from app import hf_observation_api
+    calls = []
+    def inspect(authorization, task_id=None):
+        calls.append((authorization, task_id))
+        return {'schema_version': 'jarvis.hf-observation.v1', 'status': 'UNVERIFIED'}
+    monkeypatch.setattr(hf_observation_api, 'inspect_hf', inspect)
+    path = '/control/api/hf-observation'
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers={'Authorization': 'Bearer wrong'}).status_code == 401
+    assert client.get(path, headers={'Authorization': 'Bearer fixture-owner-secret',
+                                    'Host': 'evil.example'}).status_code == 403
+    assert calls == []
+    result = client.get(path, params={'task_id': 'fixture-task'},
+                        headers={'Authorization': 'Bearer fixture-owner-secret'})
+    assert result.status_code == 200
+    assert result.headers['cache-control'] == 'no-store'
+    assert result.json()['status'] == 'UNVERIFIED'
+    assert calls == [('Bearer fixture-owner-secret', 'fixture-task')]
 
 
 @pytest.mark.parametrize('headers', [

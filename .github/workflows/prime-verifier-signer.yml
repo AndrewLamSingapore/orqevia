@@ -14,7 +14,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Require protected canonical main caller
+      - name: Require protected canonical caller
         env:
           REPOSITORY: ${{ github.repository }}
           REF: ${{ github.ref }}

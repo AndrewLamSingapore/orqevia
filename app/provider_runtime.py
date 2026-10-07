@@ -9,6 +9,7 @@ import re
 from typing import Protocol, AsyncIterator
 from urllib.parse import urlsplit
 import httpx
+from .provider_circuit import CircuitRejected
 
 
 @dataclass(frozen=True)
@@ -57,7 +58,53 @@ def capacity_rejection(value):
     if not isinstance(value,dict):return False
     error=value.get('error',value)
     if not isinstance(error,dict):return False
-    return error.get('code') in {'model_at_capacity','model_capacity_exceeded','capacity_exceeded'} or error.get('message','').strip().lower()=='selected model is at capacity. please try a different model.'
+    code=error.get('code');message=error.get('message')
+    return (isinstance(code,str) and code in {'model_at_capacity','model_capacity_exceeded','capacity_exceeded'}) or (isinstance(message,str) and message.strip().lower()=='selected model is at capacity. please try a different model.')
+
+
+def _decode_wire_json(raw):
+    """Duplicate keys/non-JSON constants cannot conceal upstream execution."""
+    def unique_keys(pairs):
+        result={}
+        for key,value in pairs:
+            if key in result:raise ValueError('Duplicate provider JSON key')
+            result[key]=value
+        return result
+    def invalid_constant(_):raise ValueError('Non-JSON provider constant')
+    def finite_float(value):
+        parsed=float(value)
+        if not math.isfinite(parsed):raise ValueError('Nonfinite provider number')
+        return parsed
+    if isinstance(raw,bytes):raw=raw.decode('utf-8')
+    return json.loads(raw,object_pairs_hook=unique_keys,parse_constant=invalid_constant,parse_float=finite_float)
+
+
+def _clean_rejected_admission(value,status):
+    """An error mixed with output/usage is not proof that work was rejected.
+
+    Only the supported scalar error envelope is admitted. Unknown containers or
+    payload fields cannot be interpreted as rejection merely because a capacity
+    code is also present; this avoids relying on an exhaustive output blacklist.
+    """
+    if not isinstance(value,dict):return False
+    error=value.get('error',value)
+    if not isinstance(error,(dict,str)):return False
+    allowed={'code','message','type','param','status','status_code','request_id',
+        'requestId','retry_after','retry_after_seconds'}
+    if set(value)-allowed-{'error'}:return False
+    envelopes=[{key:item for key,item in value.items() if key!='error'}]
+    if isinstance(error,dict) and error is not value:envelopes.append(error)
+    for envelope in envelopes:
+        if set(envelope)-allowed:return False
+        for key,item in envelope.items():
+            if key in {'status','status_code'}:
+                if type(item) is not int or item!=status:return False
+            elif key in {'retry_after','retry_after_seconds'}:
+                if type(item) not in (int,float) or not math.isfinite(item) or item<0:return False
+            elif key=='param':
+                if item is not None and not isinstance(item,str):return False
+            elif not isinstance(item,str):return False
+    return True
 
 
 class ModelProvider(Protocol):
@@ -100,25 +147,36 @@ class ChatCompletionProvider:
                         except ValueError:delay=0
                         if not math.isfinite(delay):delay=0
                         code='RATE_LIMIT' if response.status_code==429 else 'AUTHENTICATION' if response.status_code in (401,403) else 'PROVIDER_HTTP_FAILURE'
-                        if response.status_code==503:
-                            raw=bytearray()
+                        if response.status_code in (429,503):
+                            raw=bytearray();oversized=False
                             async for chunk in response.aiter_bytes():
+                                if len(raw)+len(chunk)>65536:
+                                    oversized=True;break
                                 raw.extend(chunk)
-                                if len(raw)>65536:break
-                            try:rejected=len(raw)<=65536 and capacity_rejection(json.loads(raw))
-                            except (ValueError,UnicodeError):rejected=False
+                            try:
+                                # Empty 429 is an explicit status-only rejection;
+                                # empty 503 remains ambiguous. Nonempty bodies
+                                # must prove clean, uniquely decoded admission.
+                                fault=_decode_wire_json(bytes(raw)) if raw else None
+                                clean=not oversized and ((not raw and response.status_code==429) or _clean_rejected_admission(fault,response.status_code))
+                                rejected=clean and capacity_rejection(fault)
+                            except (ValueError,UnicodeError,RecursionError,TypeError):
+                                clean=False;rejected=False
+                            if response.status_code==429 and clean:
+                                raise ProviderFailure('RATE_LIMIT',True,delay,pre_execution=True)
                             if rejected:raise ProviderFailure('CAPACITY',True,delay,pre_execution=True)
-                        # 429 explicitly rejects admission. A 5xx can follow execution;
-                        # absence of visible tokens does not make replay safe.
-                        raise ProviderFailure(code,response.status_code==429,delay,pre_execution=response.status_code==429)
+                            raise ProviderFailure('PROVIDER_HTTP_FAILURE')
+                        # Other HTTP faults do not prove rejected execution;
+                        # absence of visible tokens cannot authorize replay.
+                        raise ProviderFailure(code)
                     ended=False;finished=False
                     async for line in response.aiter_lines():
                         if len(line)>1_000_000:raise ProviderFailure('STREAM_SIZE_EXCEEDED')
                         if not line.startswith('data:'):continue
                         value=line[5:].strip()
                         if value=='[DONE]':ended=True;break
-                        try:item=json.loads(value)
-                        except ValueError:raise ProviderFailure('MALFORMED_STREAM') from None
+                        try:item=_decode_wire_json(value)
+                        except (ValueError,UnicodeError,RecursionError,TypeError):raise ProviderFailure('MALFORMED_STREAM') from None
                         if not isinstance(item,dict):raise ProviderFailure('MALFORMED_STREAM')
                         if item.get('error'):
                             # A 200 streaming response has been admitted. Even if it
@@ -185,7 +243,7 @@ class HuggingFaceProvider(ChatCompletionProvider):
                 'stream_options':{'include_usage':True},'max_tokens':output_tokens}
 
 
-async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=lambda:False,on_delta=lambda text:None,max_retries=1):
+async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=lambda:False,on_delta=lambda text:None,max_retries=1,circuits=None):
     if not isinstance(messages,list) or any(not isinstance(x,dict) or not isinstance(x.get('content',''),str) for x in messages):
         raise ProviderFailure('INVALID_MESSAGES',pre_execution=True)
     if type(max_retries) is not int or not 0<=max_retries<=2:raise ProviderFailure('INVALID_RETRY_LIMIT',pre_execution=True)
@@ -198,7 +256,12 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
         retry_errors=[]
         for attempt in range(max_retries+1):
             parts=[];usage=Usage();done=False;saw_usage=False;output_bytes=0
+            permit=None
             try:
+                if circuits is not None:
+                    try:permit=circuits.acquire(model.provider)
+                    except CircuitRejected as exc:
+                        raise ProviderFailure(exc.code,pre_execution=True) from None
                 async for chunk in provider.stream(model,messages,output_tokens):
                     if not isinstance(chunk,Chunk) or not isinstance(chunk.text,str) or type(chunk.complete) is not bool:
                         raise ProviderFailure('MALFORMED_STREAM')
@@ -215,16 +278,25 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
                         usage=chunk.usage;saw_usage=True
                     done=done or chunk.complete
                 if not done or not ''.join(parts).strip():raise ProviderFailure('EMPTY_OR_INCOMPLETE_RESPONSE')
-                return {'text':''.join(parts),'usage':usage,'cost_usd':usage.cost(model),'retries':attempt,'retry_errors':retry_errors}
+                result={'text':''.join(parts),'usage':usage,'cost_usd':usage.cost(model),'retries':attempt,'retry_errors':retry_errors}
+                if permit is not None:
+                    circuits.succeed(permit);permit=None
+                return result
             except ProviderFailure as exc:
                 exc.retry_count=attempt
                 # Never replay a request after visible output; avoid duplicated work and unaccounted retries.
                 if parts or saw_usage:
                     exc.pre_execution=False
+                if permit is not None:
+                    circuits.fail(permit,exc.code,pre_execution=exc.pre_execution is True);permit=None
                 if parts or saw_usage or not exc.pre_execution or not exc.retryable or attempt>=max_retries:raise
                 retry_errors.append(exc.code)
                 await asyncio.sleep(max(exc.retry_after,min(2**attempt,4)))
             except Exception:raise ProviderFailure('PROVIDER_ADAPTER_FAILURE') from None
+            finally:
+                # Includes cancellation and consumer-side validation failures:
+                # exhausted/terminal stream alone never claims recovery.
+                if permit is not None:circuits.abandon(permit)
     task=asyncio.create_task(run())
     try:
         async with asyncio.timeout(timeout):
@@ -270,7 +342,7 @@ async def complete_with_fallback(candidates,messages,*,authorize_candidate,outpu
             total_retries+=getattr(exc,'retry_count',0)
             exc.retry_count=total_retries
             exc.fallback_failures=list(failures)
-            if not exc.pre_execution or exc.code not in {'CREDENTIAL_UNAVAILABLE','RATE_LIMIT','CAPACITY'}:raise
+            if not exc.pre_execution or exc.code not in {'CREDENTIAL_UNAVAILABLE','RATE_LIMIT','CAPACITY','PROVIDER_CIRCUIT_OPEN'}:raise
             failures.append({'provider':model.provider,'code':exc.code})
     error=ProviderFailure('FALLBACK_EXHAUSTED',pre_execution=True)
     error.retry_count=total_retries;error.fallback_failures=failures

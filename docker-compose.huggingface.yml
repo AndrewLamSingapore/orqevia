@@ -2,6 +2,13 @@
 # PRIME_HF_TOKEN_FILE is a host path only; never put token bytes in Compose env.
 services:
   prime:
+    environment:
+      PRIME_PROVIDER_CATALOG: /run/prime-models/huggingface.json
+    volumes:
+      - type: bind
+        source: ${PRIME_HF_PROVIDER_CATALOG_FILE:-./config/provider-catalog.huggingface.example.json}
+        target: /run/prime-models/huggingface.json
+        read_only: true
     secrets:
       - hf_token
 

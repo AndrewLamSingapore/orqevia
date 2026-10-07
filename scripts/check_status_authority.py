@@ -1,4 +1,4 @@
-"""Check that STATUS.md is the sole current status authority."""
+"""Check that portfolio status and component authority stay distinct."""
 import json
 from pathlib import Path
 
@@ -10,8 +10,10 @@ SOURCE_URL = 'https://github.com/AndrewLamSingapore/prime/blob/main/governance/o
 def validate_status_authority(root: Path = ROOT) -> None:
     assert not (root / 'SSOT.json').exists(), 'retired SSOT.json must not be maintained'
     status = (root / 'STATUS.md').read_text(encoding='utf-8')
-    assert status.startswith('# STATUS.md'), 'STATUS.md is missing its authority heading'
-    assert 'replaces and supersedes every previous SSOT document' in status
+    assert status.startswith('# STATUS.md — Portfolio status record'), 'STATUS.md is missing its scoped heading'
+    assert 'STATUS.md records current portfolio status claims and their evidence classification.' in status
+    assert 'Each product owns its source, configuration, contracts, and domain records in its repository.' in status
+    assert 'replaces and supersedes every previous SSOT document' not in status
 
     manifest = json.loads((root / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
     assert manifest['status_authority'] == STATUS_URL
@@ -24,8 +26,12 @@ def validate_status_authority(root: Path = ROOT) -> None:
                  'governance/CHANNEL_CONTRACT.md',
                  'governance/JARVIS_Resume_Checkpoint.generated.md'):
         content = (root / name).read_text(encoding='utf-8')
-        assert SOURCE_URL in content, f'{name} must identify the canonical component reference'
+        assert SOURCE_URL in content, f'{name} must identify the PRIME component reference'
         assert 'STATUS.md' in content, f'{name} must identify the status authority'
+    channel = (root / 'governance/CHANNEL_CONTRACT.md').read_text(encoding='utf-8')
+    assert 'each product repository owns its own source' in channel
+    mirror = (root / 'governance/JARVIS_Resume_Checkpoint.generated.md').read_text(encoding='utf-8')
+    assert 'This dated mirror does not establish current deployment' in mirror
     for name in ('governance/golden-gen2-manifest.json',
                  'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md'):
         assert (root / name).is_file(), f'Golden reference missing: {name}'
@@ -33,4 +39,4 @@ def validate_status_authority(root: Path = ROOT) -> None:
 
 if __name__ == '__main__':
     validate_status_authority()
-    print('STATUS authority: PASS; runtime freshness is independently assessed')
+    print('Portfolio status scope: PASS; runtime freshness is independently assessed')

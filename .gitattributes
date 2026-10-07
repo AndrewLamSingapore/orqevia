@@ -2,4 +2,18 @@
 clients/dell/** text eol=lf
 tests/fixtures/historical-agent-registry-29.json text eol=lf
 governance/JARVIS_Resume_Checkpoint.generated.md text eol=lf
+governance/golden-gen1-manifest.json text eol=lf
+governance/golden-gen2-manifest.json text eol=lf
+governance/agent-cert-verifier-azure-pins.json text eol=lf
 docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json -text
+# Preserve exact-byte Golden verification inputs on Windows. The Gen 1
+# runtime receipt's accepted checkout form is historically CRLF.
+docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md -text
+docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json text eol=crlf
+docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json -text
+docs/evidence/PHASE2_RUNTIME_RECEIPT_B171253_20260927.json -text
+docs/evidence/IOS_PWA_AUDIO_OUTPUT_NOT_PHYSICALLY_VERIFIED.md -text
+# Preserve the original LF bytes of dated, independently hash-bound HF receipts.
+docs/evidence/HF_B920_ISOLATED_EXECUTION_MILESTONE_20261007.json -text
+docs/evidence/HF_B920_NORMAL_WORKER_INDEPENDENT_REVIEW_20261007.json -text
+docs/evidence/HF_TASK_SCOPE_CANDIDATE_INDEPENDENT_REVIEW_20261007.json -text

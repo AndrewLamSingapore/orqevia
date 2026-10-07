@@ -18,6 +18,11 @@ def isolated(monkeypatch,tmp_path):
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
     monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
+    monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
+    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE','golden_n1')
+    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name, raising=False)
     yield
     close_ledgers()
 
@@ -28,10 +33,13 @@ def no_gate(*args,**kwargs):raise AssertionError('Legacy authority gate called')
 @pytest.fixture
 def api(monkeypatch,tmp_path):
     from app import compute_queue_api as compute
+    from app import backend_admission
     from app.action_harness import ActionHarness
     from app.agent_runtime import AgentAuthorityRuntime
     from app.job_queue import JobQueue
     monkeypatch.setattr(compute,'queue',JobQueue(str(tmp_path/'queue.db'),compute.POLICY))
+    # This fixture tests authenticated routing, not measured model admission.
+    monkeypatch.setattr(backend_admission,'reserve_model',lambda *_args,**_kw:None)
     monkeypatch.setattr(compute,'_validate_job_lease',no_gate)
     monkeypatch.setattr(ActionHarness,'authorize',no_gate)
     monkeypatch.setattr(AgentAuthorityRuntime,'begin_path',no_gate)
@@ -112,7 +120,7 @@ def test_secrets_redacted(tmp_path):
 def test_direct_sandbox_and_containment(api,monkeypatch):
     client,_=api
     import app.engineering_api as engineering
-    monkeypatch.setattr(engineering,'require_compute_capacity',lambda *a:None)
+    monkeypatch.setattr(engineering,'require_bounded_work_capacity',lambda:None)
     headers={'Authorization':'Bearer isolated-test-owner'}
     for role in ('A12 Builder','A13 Test Engineer'):
         result=client.post('/api/agents/engineering/wasm',headers=headers,json={
@@ -150,7 +158,7 @@ def test_cancellation_is_operational(api):
     assert compute.queue.finish(job['id'],result='late result')['status']=='cancelled'
 
 
-def test_direct_stream_without_lease(monkeypatch):
+def test_direct_stream_without_lease(monkeypatch,tmp_path):
     from app.direct_stream import infer
     import app.direct_stream as stream
     class Response:
@@ -163,8 +171,8 @@ def test_direct_stream_without_lease(monkeypatch):
         def __init__(self,*args,**kwargs):pass
         def stream(self,*args,**kwargs):return Response()
     monkeypatch.setattr(stream.httpx,'AsyncClient',Client)
-    settings=SimpleNamespace(ollama_base_url='http://unused',keep_alive='1m',context_tokens=128,max_output_tokens=4)
-    result=asyncio.run(infer({'prompt':'test','timeout_seconds':1},SimpleNamespace(model='test'),settings=settings,capacity=lambda m:None,options=lambda:{}))
+    settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive='1m',context_tokens=128,max_output_tokens=4)
+    result=asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{}))
     assert result['result']=='actual'
 
 
@@ -210,9 +218,9 @@ def test_stream_cancel_closes_silent_connection(monkeypatch):
     monkeypatch.setattr(stream.httpx,'AsyncClient',Client)
     checks=[]
     def cancel():checks.append(1);return len(checks)>1
-    settings=SimpleNamespace(ollama_base_url='http://unused',keep_alive='1m',context_tokens=128,max_output_tokens=4)
+    settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive='1m',context_tokens=128,max_output_tokens=4)
     with pytest.raises(RuntimeError,match='cancelled'):
-        asyncio.run(infer({'prompt':'test','timeout_seconds':1},SimpleNamespace(model='test'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=cancel))
+        asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=cancel))
     assert closed
 
 

@@ -1,8 +1,10 @@
-# STATUS.md — Single source of truth
+# STATUS.md — Portfolio status record
 
-Last updated: 3 October 2026
+Interpretation updated: 6 October 2026. Dated observations below retain their original dates.
 
-**This file replaces and supersedes every previous SSOT document — technical, course-study, and job-search alike.** Any older SSOT file (on ABEX, in a repo, or elsewhere) is now historical only. Do not treat any prior SSOT document as current once this file exists. Archive or delete the old ones once this file is confirmed good — do not maintain both in parallel.
+STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.
+
+STATUS.md records current portfolio status claims and their evidence classification. Each product owns its source, configuration, contracts, and domain records in its repository.
 
 ## How to use this file
 
@@ -33,6 +35,21 @@ If you are an AI agent updating this file:
 - Commit and push every legitimate update.
 
 ---
+
+## HF runtime hardening — 7 October 2026
+
+### Claimed, not independently checked
+
+- The isolated PR #200 candidate adds explicit, versioned HF fallback consent,
+  fresh catalog binding before alternate dispatch, bounded process-local provider
+  circuits, and a task-scoped HF-owned serverless question-answering adapter.
+  Objective/Evidence Lens projections now distinguish requested and actually
+  selected inference routes without asserting independent attestation.
+- Executed focused regression: 284 passed, 1 skipped. Initial fixture-state
+  failures and two genuine stale-catalog consent/endpoint defects were preserved
+  and repaired. Full exact-revision off-host CI and real canaries remain separate
+  acceptance work. No Golden deployment, general chat qualification, God's Eye
+  acceptance, host stability pass or L7 certification is claimed by these tests.
 
 ## Status authority — 3 October 2026
 

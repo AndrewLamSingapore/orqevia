@@ -1,0 +1,154 @@
+name: Candidate off-host tests
+
+on:
+  push:
+    branches:
+      - feat/prime-runtime-candidate-20261003
+      - feat/backend-admission-20261005
+      - fix/prime-lens-retrieval-20261006
+      - feat/prime-unified-release-20261006
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: candidate-offhost-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install test dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt pytest
+      - name: Backend admission independent-boundary regressions
+        run: python -B -m pytest -q -p no:cacheprovider tests/test_backend_admission.py
+      - name: Backend admission legacy integration regressions
+        run: >-
+          python -B -m pytest -q -p no:cacheprovider
+          tests/test_compute_capacity.py
+          tests/test_compute_queue_parallel_candidate.py
+          tests/test_direct_execution.py
+          tests/test_direct_stream_empty.py
+          tests/test_job_queue.py
+          tests/test_live_lease_enforcement.py
+          tests/test_measured_compute_profile.py
+      - name: Python regression suite
+        run: python -B -m pytest -q -p no:cacheprovider
+      - name: PWA regression suite
+        shell: pwsh
+        run: |
+          node clients/pwa/tests.mjs
+          node clients/pwa/voice-tests.mjs
+          node clients/pwa/revision-tests.mjs
+          node clients/pwa/candidate-tests.mjs
+          node clients/pwa/followup-tests.mjs
+          node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
+
+  image-smoke:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build disposable candidate image
+        run: docker build --tag prime:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+      - name: Verify packaged runtime and PWA without production data
+        run: docker run --rm --entrypoint python prime:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
+      - name: Verify packaged Golden records are readable by the deterministic lookup
+        shell: bash
+        run: |
+          docker run --rm -i --entrypoint python prime:candidate - <<'PY'
+          import json
+          import hashlib
+          from pathlib import Path
+          from app import system_architecture
+
+          root = Path('/app/governance')
+          gen1_bytes = (root / 'golden-gen1-manifest.json').read_bytes()
+          gen2_bytes = (root / 'golden-gen2-manifest.json').read_bytes()
+          assert hashlib.sha256(gen1_bytes).hexdigest() == 'f2cad4bcf6ba7d00d9640796e1bc250d2018b1a1d335aef929dbf552330c9275'
+          assert hashlib.sha256(gen2_bytes).hexdigest() == '8c013e913e4a75df737346ea98bfdd531afcb9a39bd21bdb1c9c406d64b2fbc0'
+          gen1 = json.loads(gen1_bytes)
+          gen2 = json.loads(gen2_bytes)
+          assert gen1['generation'] == 1 and gen2['generation'] == 2
+          assert gen2['rollback']['former_golden_baseline'] == gen1['golden_baseline_id']
+          historic = system_architecture.architecture_answer('Is JARVIS PRIME Golden Gen1 accepted?')
+          platform = system_architecture.architecture_answer('Explain the ABEX and Dell architecture relationship')
+          assert historic['status'] == 'UNVERIFIED'
+          assert 'HISTORICAL GOLDEN GEN1 ROLLBACK' in historic['text']
+          assert gen1['source']['accepted_commit'] in historic['text']
+          assert platform['status'] == 'UNVERIFIED'
+          assert 'PRODUCTION AUTHORITY/HOST: ABEX' in platform['text']
+          assert 'Dell live peer verification requires a separate current round-trip.' in platform['text']
+          PY
+      - name: Smoke isolated TLS startup and unauthenticated denial
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/prime-ci-tls"
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout "$RUNNER_TEMP/prime-ci-tls/server.key" \
+            -out "$RUNNER_TEMP/prime-ci-tls/server.crt" \
+            -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1' >/dev/null 2>&1
+          cp "$RUNNER_TEMP/prime-ci-tls/server.crt" "$RUNNER_TEMP/prime-ci-tls/ca.crt"
+          docker run -d --name prime-ci-tls --publish 127.0.0.1:18443:8443 \
+            --env PRIME_PWA_ORIGIN=https://127.0.0.1:18443 \
+            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.crt,target=/run/prime-tls/server.crt,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.key,target=/run/prime-tls/server.key,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/ca.crt,target=/run/prime-tls/ca.crt,readonly" \
+            prime:candidate uvicorn app.interface_server:app --host 0.0.0.0 --port 8443 \
+              --no-proxy-headers --ssl-keyfile /run/prime-tls/server.key \
+              --ssl-certfile /run/prime-tls/server.crt
+          trap 'docker rm -f prime-ci-tls >/dev/null 2>&1 || true' EXIT
+          docker exec prime-ci-tls sh -c 'test ! -e /run/prime-tls/ca.key'
+          ready=false
+          for attempt in {1..20}; do
+            if curl -fsS --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
+                https://127.0.0.1:18443/pwa/ -o /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = true
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
+            https://127.0.0.1:18443/interface/v1/health)
+          test "$status" = 401
+      - name: Export exact tested candidate image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/prime-image"
+          docker image inspect prime:candidate --format '{{json .}}' > "$RUNNER_TEMP/prime-image/image-inspect.json"
+          python - "$RUNNER_TEMP/prime-image/image-inspect.json" "$GITHUB_SHA" <<'PY'
+          import json, sys
+          image = json.load(open(sys.argv[1]))
+          assert image['Config']['Labels']['org.opencontainers.image.revision'] == sys.argv[2]
+          PY
+          docker save prime:candidate | gzip -1 > "$RUNNER_TEMP/prime-image/prime-candidate.tar.gz"
+          (cd "$RUNNER_TEMP/prime-image" && sha256sum prime-candidate.tar.gz image-inspect.json > SHA256SUMS)
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/prime-image/SOURCE_REVISION"
+      - name: Preserve image for separately gated deployment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: prime-candidate-image-${{ github.sha }}
+          path: ${{ runner.temp }}/prime-image/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

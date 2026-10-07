@@ -55,7 +55,7 @@ def load_catalog(path=None):
         if item['location']=='cloud' and item.get('enabled') and not (item.get('secret_ref','').startswith('env:') or item.get('secret_ref')=='file:HF_TOKEN'):raise ValueError('Cloud secret reference unavailable')
         kind=item.get('provider_kind','chat_completions')
         if kind not in ('chat_completions','huggingface'):raise ValueError('Unknown provider kind')
-        if item.get('secret_ref')=='file:HF_TOKEN' and kind!='huggingface':
+        if item.get('secret_ref') in ('file:HF_TOKEN','env:HF_TOKEN') and kind!='huggingface':
             raise ValueError('Hugging Face secret cannot be routed to another provider')
         if kind=='huggingface':
             if item['location']!='cloud' or item.get('endpoint')!=HuggingFaceProvider.ENDPOINT:

@@ -134,6 +134,11 @@ def client_policy(client_id):
         raise HTTPException(503,'Client policy unavailable') from None
 
 
+def dispatch_priority(policy):
+    """Only a server-issued OWNER role receives the interactive queue lane."""
+    return 'critical' if policy.get('role')=='OWNER' else 'normal'
+
+
 def client_identity(client_id: str | None,authorization: str | None,capability: str) -> str:
     policy=client_policy(client_id)
     supplied=authorization[7:] if authorization and authorization.startswith('Bearer ') else ''
@@ -223,7 +228,8 @@ def submit(body: Objective,x_client_id: str | None=Header(None),authorization: s
         result=objective_api.submit(objective_api.ObjectiveRequest(objective=body.objective,context=body.context,
             deterministic_operation=body.deterministic_operation,
             data_classification=policy.get('data_classification','LOCAL_ONLY'),
-            max_cost_usd=policy.get('max_cost_usd',0)),owner_transport())
+            max_cost_usd=policy.get('max_cost_usd',0),
+            priority=dispatch_priority(policy)),owner_transport())
         db.execute('UPDATE requests SET task=? WHERE client=? AND key=?',(result['id'],client,body.idempotency_key))
         db.commit()
         return {'task_id':result['id'],'state':'ROUTED','idempotent_replay':False}

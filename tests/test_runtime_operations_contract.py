@@ -66,6 +66,15 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         example = (ROOT / ".env.example").read_text(encoding="utf-8")
         self.assertIn("PRIME_REGISTRY_V1_ENABLED=1", example)
 
+    def test_hf_overlay_mounts_only_governed_read_only_inputs_to_prime(self):
+        overlay = (ROOT / "docker-compose.huggingface.yml").read_text(encoding="utf-8")
+        self.assertIn("PRIME_PROVIDER_CATALOG: /run/prime-models/huggingface.json", overlay)
+        self.assertIn("PRIME_HF_PROVIDER_CATALOG_FILE:-./config/provider-catalog.huggingface.example.json", overlay)
+        self.assertIn("read_only: true", overlay)
+        self.assertIn("PRIME_HF_TOKEN_FILE", overlay)
+        self.assertNotIn("interface:", overlay)
+        self.assertNotIn("HF_TOKEN:", overlay)  # No raw credential environment interpolation.
+
     def test_survival_probes_and_executor_are_explicitly_wired(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         for name in ("PRIME_SURVIVAL_NETWORK_PROBE_URL", "PRIME_SURVIVAL_CLOUD_PROBE_URL",

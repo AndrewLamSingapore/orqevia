@@ -1,6 +1,7 @@
 import pytest
 
 from app.agent_dispatch_api import AgentRequest,JARVIS_IDENTITY_CONTRACT,inference_prompt,user_facing_contract,requested_response_language
+from app.agent_registry import load_agent_registry
 from app.tier_router import Tier
 
 
@@ -22,7 +23,20 @@ def test_cloud_prompt_preserves_identity_contract():
     body=AgentRequest(capability='responsibility.a19',objective='Write an agenda.')
     prompt=inference_prompt(body,Tier.MINI)
     assert prompt.startswith(JARVIS_IDENTITY_CONTRACT)
-    assert 'Provide an advisory answer within this responsibility: responsibility.a19.' in prompt
+    assert 'Provide an advisory answer for this role: Operational resilience evaluation.' in prompt
+    assert 'responsibility.a19' not in prompt
+
+
+@pytest.mark.parametrize('agent',load_agent_registry()['agents'],ids=lambda agent: agent['id'])
+def test_contextual_prompt_uses_registered_role_and_expected_contribution(agent):
+    for responsibility in agent['responsibilities']:
+        prompt=inference_prompt(AgentRequest(
+            capability=responsibility['id'],objective='Explain the supplied evidence.',context='Fixture evidence.'
+        ),Tier.NANO)
+        assert responsibility['description'] in prompt
+        assert responsibility['output'] in prompt
+        assert responsibility['id'] not in prompt
+        assert prompt.endswith('Context:\nFixture evidence.')
 
 
 @pytest.mark.parametrize('tier',[Tier.NANO,Tier.MINI,Tier.FLAGSHIP])

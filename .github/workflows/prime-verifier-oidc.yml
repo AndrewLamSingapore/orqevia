@@ -1,7 +1,6 @@
 name: PRIME independent verifier OIDC preflight
 
-# This workflow is intentionally unavailable to pull requests and feature refs.
-# It observes GitHub's actual OIDC claims; it does not sign a certification case.
+# No pull-request or feature-ref execution is permitted.
 on:
   workflow_dispatch:
 

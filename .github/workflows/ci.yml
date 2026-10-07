@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.12'
@@ -45,6 +46,7 @@ jobs:
           node clients/pwa/tests.mjs
           node clients/pwa/followup-tests.mjs
           node clients/pwa/revision-tests.mjs
+          node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
       - name: Dell canonical-source package and archive regression tests
         run: python -B -m unittest discover -s clients/dell/tools -p test_package_client.py
       - name: Reproducible source package

@@ -8,12 +8,14 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 ORIGIN='https://192.168.1.23:8443'
+PUBLIC_ORIGIN='https://jarvis.lamjarvis.com'
 HEADERS={'Origin':ORIGIN,'X-Jarvis-PWA':'1'}
 
 @pytest.fixture
 def setup(monkeypatch,tmp_path):
     root=tmp_path/'pwa-fixture';root.mkdir()
     monkeypatch.setenv('PRIME_DATA_DIR',str(root));monkeypatch.setenv('PRIME_PWA_ORIGIN',ORIGIN)
+    monkeypatch.delenv('PRIME_PWA_ADDITIONAL_ORIGINS',raising=False)
     monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
     app=FastAPI();app.include_router(pwa.router);app.include_router(pwa.owner_router);app.include_router(interface_contract.router)
@@ -55,6 +57,80 @@ def test_csrf_host_spoof_and_caller_identity_rejected(setup):
         assert client.get('/pwa/api/session',headers={'Host':'evil.invalid'}).status_code==403
         assert client.get('/interface/v1/health',headers={'Authorization':'Bearer spoof'}).status_code==400
         assert client.get('/interface/v1/health',headers={'X-Jarvis-Client-Id':'dell:spoof'}).status_code==400
+
+def test_exact_public_origin_opt_in_preserves_lan_and_authentication(setup,monkeypatch):
+    root,pwa,app,node=setup
+    public_headers={'Origin':PUBLIC_ORIGIN,'X-Jarvis-PWA':'1'}
+    with TestClient(app,base_url=ORIGIN) as lan,TestClient(app,base_url=PUBLIC_ORIGIN) as public:
+        assert lan.get('/pwa/').status_code==200
+        assert public.get('/pwa/').status_code==403
+        monkeypatch.setenv('PRIME_PWA_ADDITIONAL_ORIGINS',PUBLIC_ORIGIN)
+        assert lan.get('/pwa/').status_code==200
+        assert public.get('/pwa/').status_code==200
+        navigation={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate','Sec-Fetch-Dest':'document'}
+        assert public.get('/pwa/',headers=navigation).status_code==200
+        assert public.get('/pwa/api/session',headers=navigation).status_code==403
+        assert public.get('/pwa/api/session').json()['authenticated'] is False
+        assert public.get('/interface/v1/health').status_code==401
+        code=secrets.token_urlsafe(16)
+        with pwa.database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used) VALUES(?,?,0)',(pwa.digest(code),time.time()+300))
+        enrolled=public.post('/pwa/api/enroll',headers=public_headers,json={'code':code})
+        assert enrolled.status_code==200 and enrolled.json()['role']=='MEMBER'
+        assert 'Secure' in enrolled.headers['set-cookie'] and 'Domain=' not in enrolled.headers['set-cookie']
+        assert public.get('/pwa/api/session').json()['authenticated'] is True
+        assert public.get(ORIGIN+'/pwa/api/session').json()['authenticated'] is False
+        assert lan.get('/pwa/api/session').json()['authenticated'] is False
+        assert public.post('/pwa/api/owner-authority-check',headers=public_headers).status_code==403
+        assert public.post('/pwa/api/logout',headers=public_headers).status_code==200
+        assert public.get('/pwa/api/session').json()['authenticated'] is False
+        enroll(pwa,lan)
+        assert lan.get('/pwa/api/session').json()['authenticated'] is True
+
+
+def test_public_origin_rejects_host_origin_csrf_proxy_and_identity_spoofs(setup,monkeypatch):
+    root,pwa,app,node=setup
+    monkeypatch.setenv('PRIME_PWA_ADDITIONAL_ORIGINS',PUBLIC_ORIGIN)
+    public_headers={'Origin':PUBLIC_ORIGIN,'X-Jarvis-PWA':'1'}
+    with TestClient(app,base_url=PUBLIC_ORIGIN) as public,TestClient(app,base_url=ORIGIN) as lan:
+        assert public.get('/pwa/',headers={'Host':'evil.invalid'}).status_code==403
+        assert public.get('/pwa/',headers={'Origin':ORIGIN}).status_code==403
+        assert lan.get('/pwa/',headers={'Origin':PUBLIC_ORIGIN}).status_code==403
+        assert public.post('/pwa/api/logout').status_code==403
+        assert public.post('/pwa/api/logout',headers={'Origin':PUBLIC_ORIGIN}).status_code==403
+        assert public.post('/pwa/api/logout',headers={**public_headers,'Origin':ORIGIN}).status_code==403
+        assert public.post('/pwa/api/logout',headers={**public_headers,'X-Jarvis-PWA':'0'}).status_code==403
+        assert public.get('/pwa/api/session',headers={'Sec-Fetch-Site':'cross-site'}).status_code==403
+        assert public.options('/pwa/api/session',headers=public_headers).status_code==405
+        assert public.post('/pwa/api/uploads',headers={**public_headers,'X-Filename':'note.txt'},content=b'text').status_code==401
+        code=secrets.token_urlsafe(16)
+        with pwa.database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used) VALUES(?,?,0)',(pwa.digest(code),time.time()+300))
+        assert public.post('/pwa/api/enroll',headers=public_headers,json={'code':code}).status_code==200
+        assert public.post('/pwa/api/logout').status_code==403
+        assert public.post('/pwa/api/logout',headers={'Origin':PUBLIC_ORIGIN}).status_code==403
+        assert public.get('/pwa/api/session').json()['authenticated'] is True
+        assert public.get('/interface/v1/health',headers={'X-Jarvis-Client-Id':'dell:spoof'}).status_code==400
+        assert public.get('/interface/v1/health',headers={'Authorization':'Bearer spoof'}).status_code==400
+        assert public.get('/interface/v1/health',headers={'Origin':ORIGIN}).status_code==403
+        assert public.post('/interface/v1/objectives',headers={'Origin':PUBLIC_ORIGIN},json={'objective':'Not dispatched'}).status_code==403
+        assert public.get('/interface/v1/health',headers={'Host':'evil.invalid','X-Forwarded-Host':'jarvis.lamjarvis.com'}).status_code==403
+    with TestClient(app,base_url='https://evil.invalid') as spoofed:
+        assert spoofed.get('/pwa/',headers={'X-Forwarded-Host':'jarvis.lamjarvis.com'}).status_code==403
+    with TestClient(app,base_url='http://jarvis.lamjarvis.com') as insecure:
+        assert insecure.get('/pwa/',headers={'X-Forwarded-Proto':'https'}).status_code==403
+
+
+@pytest.mark.parametrize('invalid',[
+    'http://jarvis.lamjarvis.com','https://jarvis.lamjarvis.com/',
+    'https://jarvis.lamjarvis.com:443','https://jarvis.lamjarvis.com.evil.invalid','https://*.lamjarvis.com',
+    'https://jarvis.lamjarvis.com,https://evil.invalid',' https://jarvis.lamjarvis.com',
+])
+def test_invalid_additional_origin_configuration_fails_closed(setup,monkeypatch,invalid):
+    root,pwa,app,node=setup
+    monkeypatch.setenv('PRIME_PWA_ADDITIONAL_ORIGINS',invalid)
+    with TestClient(app,base_url=ORIGIN) as lan,TestClient(app,base_url=PUBLIC_ORIGIN) as public:
+        assert lan.get('/pwa/').status_code==403
+        assert public.get('/pwa/').status_code==403
+
 
 def test_cross_site_top_level_navigation_can_load_only_the_unauthenticated_shell(setup):
     root,pwa,app,node=setup

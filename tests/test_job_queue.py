@@ -1,5 +1,14 @@
 import time
+import pytest
+from app import backend_admission
 from app.job_queue import JobQueue, Provider, QueuePolicy
+
+
+@pytest.fixture(autouse=True)
+def scheduler_only_without_backend_allocation(monkeypatch):
+    # These tests prove queue order/budgets, including hypothetical N>1 policy.
+    # Backend allocation is separately exercised by test_backend_admission.
+    monkeypatch.setattr(backend_admission, 'reserve_model', lambda *_args, **_kw: None)
 
 LOCAL=Provider("ollama","local","fast",8192,4096,2)
 CLOUD=Provider("gpu-cloud","cloud","large",131072,81920,4,1.0,2.0)
@@ -95,7 +104,7 @@ def test_old_low_priority_job_ages_out_of_starvation(tmp_path):
     )
     q = JobQueue(tmp_path / "fair.db", policy)
     old = q.submit(agent="planner", prompt="old", priority="background")
-    urgent = q.submit(agent="critic", prompt="new", priority="critical")
+    urgent = q.submit(agent="critic", prompt="new", priority="high")
     with q.connect() as db:
         db.execute(
             "UPDATE compute_jobs SET created_at=datetime('now','-20 seconds') WHERE id=?",
@@ -103,3 +112,167 @@ def test_old_low_priority_job_ages_out_of_starvation(tmp_path):
         )
     assert q.claim("w", [LOCAL])["id"] == old["id"]
     assert q.get(urgent["id"])["status"] == "queued"
+
+
+def test_aged_background_never_overtakes_owner_critical(tmp_path):
+    q = queue(tmp_path, **{"global": 1})
+    old = q.submit(agent="planner", prompt="old", priority="background")
+    owner = q.submit(agent="critic", prompt="owner", priority="critical")
+    with q.connect() as db:
+        db.execute("UPDATE compute_jobs SET created_at=datetime('now','-10000 seconds') WHERE id=?",
+                   (old["id"],))
+    assert q.claim("owner-worker", [LOCAL])["id"] == owner["id"]
+
+
+def test_owner_critical_is_visible_after_large_background_backlog(tmp_path):
+    q = queue(tmp_path, **{"global": 1})
+    for index in range(1001):
+        q.submit(agent="planner", prompt=f"background-{index}", priority="background")
+    owner = q.submit(agent="critic", prompt="owner", priority="critical")
+    assert q.claim("owner-worker", [LOCAL])["id"] == owner["id"]
+
+
+def test_blocked_same_agent_critical_backlog_does_not_hide_other_agent(tmp_path):
+    q = queue(tmp_path)
+    first = q.submit(agent="a02", prompt="first", priority="critical")
+    assert q.claim("w1", [LOCAL])["id"] == first["id"]
+    for index in range(1001):
+        q.submit(agent="a02", prompt=f"blocked-{index}", priority="critical")
+    another = q.submit(agent="a26", prompt="independent-owner-work", priority="critical")
+    assert q.claim("w2", [LOCAL])["id"] == another["id"]
+
+
+def test_eligible_job_after_thousand_blocked_jobs_in_same_lane(tmp_path):
+    q = queue(tmp_path)
+    blocked = q.submit(agent="a02", prompt="unavailable model", model="missing", priority="critical")
+    eligible = q.submit(agent="a02", prompt="available model", model="fast", priority="critical")
+    with q.connect() as db:
+        db.executemany(
+            """INSERT INTO compute_jobs
+               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                external_execution,status,approval_status,created_at,updated_at)
+               SELECT ?,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                      timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                      external_execution,status,approval_status,created_at,updated_at
+               FROM compute_jobs WHERE id=?""",
+            ((f"blocked-{index}", blocked["id"]) for index in range(1000)),
+        )
+        db.execute("UPDATE compute_jobs SET created_at=datetime('now','-60 seconds') WHERE model='missing'")
+    assert q.claim("w", [LOCAL])["id"] == eligible["id"]
+
+
+def test_mutating_earlier_rows_does_not_skip_candidate_across_fetch_boundary(tmp_path):
+    q = queue(tmp_path)
+    retired = q.submit(agent="a02", prompt="retired", model="missing", priority="critical")
+    blocked = q.submit(agent="a02", prompt="blocked", model="missing", priority="critical")
+    eligible = q.submit(agent="a02", prompt="eligible", model="fast", priority="critical")
+    with q.connect() as db:
+        db.executemany(
+            """INSERT INTO compute_jobs
+               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                external_execution,status,approval_status,created_at,updated_at)
+               SELECT ?,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                      timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                      external_execution,status,approval_status,created_at,updated_at
+               FROM compute_jobs WHERE id=?""",
+            ((f"blocked-{index}", blocked["id"]) for index in range(999)),
+        )
+        db.execute("UPDATE compute_jobs SET agent='A10',created_at=datetime('now','-120 seconds') WHERE id=?",
+                   (retired["id"],))
+        db.execute("UPDATE compute_jobs SET created_at=datetime('now','-60 seconds') WHERE model='missing' AND id<>?",
+                   (retired["id"],))
+    claimed = q.claim("w", [LOCAL])
+    assert claimed["id"] == eligible["id"]
+    assert q.get(retired["id"])["status"] == "failed"
+    assert q.get(eligible["id"])["attempts"] == 1
+    q.finish(eligible["id"], result="done")
+    assert q.claim("w2", [LOCAL]) is None
+
+
+def test_aged_background_after_thousand_high_jobs_keeps_owner_cap(tmp_path):
+    policy = QueuePolicy(global_concurrency=1, per_agent_concurrency=1,
+                         local_ram_mb=8192, local_vram_mb=4096,
+                         starvation_interval_seconds=1,
+                         starvation_boost_per_interval=10,
+                         starvation_boost_cap=100)
+    q = JobQueue(tmp_path / "aged-backlog.db", policy)
+    old = q.submit(agent="a01", prompt="aged", priority="background")
+    high = q.submit(agent="a02", prompt="high", priority="high")
+    with q.connect() as db:
+        db.executemany(
+            """INSERT INTO compute_jobs
+               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                external_execution,status,approval_status,created_at,updated_at)
+               SELECT ?,agent,prompt,priority,model_role,model,ram_mb,vram_mb,
+                      timeout_seconds,max_retries,max_cost_usd,allow_cloud,
+                      external_execution,status,approval_status,created_at,updated_at
+               FROM compute_jobs WHERE id=?""",
+            ((f"high-{index}", high["id"]) for index in range(1000)),
+        )
+        db.execute("UPDATE compute_jobs SET created_at=datetime('now','-60 seconds') WHERE id=?", (old["id"],))
+    assert q.claim("w", [LOCAL])["id"] == old["id"]
+
+
+def test_background_reserve_keeps_one_local_slot_for_arriving_owner(tmp_path):
+    policy = QueuePolicy(global_concurrency=3, per_agent_concurrency=1,
+                         background_concurrency=2, local_ram_mb=8192,
+                         local_vram_mb=4096)
+    q = JobQueue(tmp_path / "owner-reserve.db", policy)
+    backend = Provider("ollama", "local", "fast", 8192, 4096, 3)
+    first = q.submit(agent="a01", prompt="background-1", priority="background")
+    second = q.submit(agent="a02", prompt="background-2", priority="background")
+    third = q.submit(agent="a04", prompt="background-3", priority="background")
+    assert q.claim("w1", [backend])["id"] == first["id"]
+    assert q.claim("w2", [backend])["id"] == second["id"]
+    assert q.claim("w3", [backend]) is None
+    owner = q.submit(agent="a26", prompt="owner", priority="critical")
+    assert q.claim("w3", [backend])["id"] == owner["id"]
+    assert q.get(third["id"])["status"] == "queued"
+    q.finish(first["id"], result="done")
+    assert q.claim("w1", [backend])["id"] == third["id"]
+
+
+def test_background_reserve_counts_mixed_local_and_cloud_jobs(tmp_path):
+    policy = QueuePolicy(global_concurrency=3, per_agent_concurrency=1,
+                         background_concurrency=2, local_ram_mb=8192,
+                         local_vram_mb=4096, cloud_wait_seconds=0,
+                         max_job_cost_usd=2, daily_cost_ceiling_usd=3)
+    q = JobQueue(tmp_path / "mixed-owner-reserve.db", policy)
+    backend = Provider("ollama", "local", "fast", 8192, 4096, 3)
+    providers = [backend, CLOUD]
+    local = q.submit(agent="a01", prompt="local", priority="background")
+    cloud = q.submit(agent="a02", prompt="cloud", priority="background",
+                     model="large", vram_mb=8000, allow_cloud=True,
+                     data_classification="CLOUD_PERMITTED", max_cost_usd=1)
+    extra = q.submit(agent="a04", prompt="extra cloud", priority="background",
+                     model="large", vram_mb=8000, allow_cloud=True,
+                     data_classification="CLOUD_PERMITTED", max_cost_usd=1)
+    assert q.claim("w1", providers)["id"] == local["id"]
+    assert q.claim("w2", providers)["id"] == cloud["id"]
+    assert q.get(cloud["id"])["provider"] == "gpu-cloud"
+    assert q.claim("w3", providers) is None
+    assert q.get(extra["id"])["status"] == "queued"
+    owner = q.submit(agent="a26", prompt="owner", priority="critical")
+    assert q.claim("w3", providers)["id"] == owner["id"]
+    assert q.get(owner["id"])["provider"] == "ollama"
+    q.finish(cloud["id"], result="done")
+    assert q.claim("w2", providers)["id"] == extra["id"]
+
+
+def test_n1_baseline_has_no_background_reserve(tmp_path):
+    policy = QueuePolicy(global_concurrency=1, per_agent_concurrency=1,
+                         background_concurrency=0, local_ram_mb=8192,
+                         local_vram_mb=4096, cloud_wait_seconds=0,
+                         max_job_cost_usd=2, daily_cost_ceiling_usd=3)
+    q = JobQueue(tmp_path / "n1-reserve.db", policy)
+    background = q.submit(agent="a01", prompt="cloud", priority="background",
+                          model="large", vram_mb=8000, allow_cloud=True,
+                          data_classification="CLOUD_PERMITTED", max_cost_usd=1)
+    assert q.claim("w1", [LOCAL, CLOUD])["id"] == background["id"]
+    owner = q.submit(agent="a26", prompt="owner", priority="critical")
+    assert q.claim("w2", [LOCAL, CLOUD]) is None
+    q.finish(background["id"], result="done")
+    assert q.claim("w1", [LOCAL, CLOUD])["id"] == owner["id"]

@@ -15,13 +15,40 @@ from pydantic import BaseModel, Field
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 from .settings import SETTINGS
-from .compute_profile import validate_configuration, require_compute_capacity, generation_options
+from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
+def candidate_global_concurrency(environment: dict[str, str], profile: dict | None) -> int:
+    """Allow at most three slots with explicit backend and measured-envelope support.
+
+    The production default stays at one; unsupported or malformed overrides
+    fail closed to one. Per-agent concurrency is separately fixed at one.
+    """
+    if environment.get('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1') != 'measured':
+        return 1
+    requested = environment.get("PRIME_QUEUE_CONCURRENCY")
+    if requested not in {"2", "3"}:
+        return 1
+    try:
+        backend_parallel = int(environment.get("OLLAMA_NUM_PARALLEL", ""))
+    except ValueError:
+        return 1
+    if backend_parallel < int(requested) or not isinstance(profile, dict):
+        return 1
+    measured = profile.get("normal_concurrency")
+    if isinstance(measured, bool) or not isinstance(measured, int) or measured < int(requested):
+        return 1
+    return int(requested)
+
+
 POLICY = QueuePolicy.from_env()
-# Preserve the measured ABEX one-slot compute envelope, independent of authority.
-POLICY = replace(POLICY, global_concurrency=1, per_agent_concurrency=1)
+# Additional slots are candidates only, requiring explicit backend and hash-pinned
+# measured-profile support. It is never inferred merely from spare host CPU.
+_candidate_slots = candidate_global_concurrency(os.environ, runtime_compute_profile())
+POLICY = replace(POLICY, global_concurrency=_candidate_slots,
+                 per_agent_concurrency=1,
+                 background_concurrency=(_candidate_slots - 1 if _candidate_slots > 1 else 0))
 validate_configuration(SETTINGS,POLICY)
 queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 
@@ -45,7 +72,8 @@ def providers() -> list[Provider]:
         spec=model_spec(entry)
         # Unpriced external calls cannot enter automatic budgeted execution.
         if spec.input_usd_million is None or spec.output_usd_million is None:continue
-        result.append(Provider(entry['id'],'cloud',entry['model'],0,0,int(entry.get('concurrency',1)),float(spec.input_usd_million),float(spec.output_usd_million),spec.output_tokens))
+        result.append(Provider(entry['id'],'cloud',entry['model'],0,0,int(entry.get('concurrency',1)),float(spec.input_usd_million),float(spec.output_usd_million),spec.output_tokens,
+                               explicit_selection_required=entry.get('provider_kind')=='huggingface'))
     return result
 
 
@@ -109,6 +137,7 @@ class SubmitJob(BaseModel):
     allow_cloud: bool=False
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
+    preferred_provider: str|None=None
 
 
 class Approval(BaseModel):
@@ -124,6 +153,13 @@ def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
         from .tier_router import classify_for_cloud
         if not classify_for_cloud(body.data_classification,body.prompt):raise HTTPException(422,'Data locality excludes cloud')
         if not any(p.kind=='cloud' for p in providers()):raise HTTPException(503,'No configured cloud provider')
+    if body.preferred_provider:
+        from .compute_catalog import load_catalog
+        candidate=next((x for x in load_catalog() if x['id']==body.preferred_provider),None)
+        if candidate and candidate.get('provider_kind')=='huggingface' and (
+            not body.allow_cloud or body.data_classification!='CLOUD_PERMITTED' or body.max_cost_usd<=0
+        ):
+            raise HTTPException(422,'Hugging Face requires explicit cloud, disclosure, and cost opt-in')
     try:
         canonical = canonical_agent_id(body.agent)
     except RegistryError:

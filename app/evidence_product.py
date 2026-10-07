@@ -163,10 +163,14 @@ def validate_receipt(receipt: dict[str, Any], *, artifact_bytes: dict[str, bytes
 class EvidenceLedger:
     """SQLite reference ledger: append-only events with a per-action hash chain."""
 
-    def __init__(self, path: str | Path):
+    def __init__(self, path: str | Path, *, read_only: bool = False):
         self.path = str(path)
-        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
+        self.read_only = read_only
         self._lock = threading.RLock()
+        if read_only:
+            if not Path(self.path).is_file(): raise FileNotFoundError(self.path)
+            return
+        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as db:
             db.executescript("""
             create table if not exists evidence_actions(
@@ -182,7 +186,8 @@ class EvidenceLedger:
             """)
 
     def _connect(self) -> sqlite3.Connection:
-        db = sqlite3.connect(self.path, timeout=10)
+        target = Path(self.path).resolve().as_uri() + "?mode=ro" if self.read_only else self.path
+        db = sqlite3.connect(target, timeout=10, uri=self.read_only)
         db.row_factory = sqlite3.Row
         db.execute("pragma foreign_keys=on")
         db.execute("pragma busy_timeout=10000")
@@ -199,9 +204,14 @@ class EvidenceLedger:
                     "verification": {"state": "UNVERIFIED", "evidence": []},
                     "provenance": {"record_owner": "HOST_SYSTEM", "namespace": namespace}, "relations": []}
         with self._lock, self._connect() as db:
+            # The lock is per instance; SQLite must serialize duplicate requests
+            # arriving through distinct API workers before the idempotency read.
+            db.execute("begin immediate")
             existing = db.execute("select action_id from evidence_events where idempotency_key=?",
                                   (idempotency_key or f"create:{action_id}",)).fetchone()
             if existing: return self.get(existing["action_id"], namespace=namespace)
+            if db.execute("select 1 from evidence_actions where action_id=?", (action_id,)).fetchone():
+                raise ValueError("LEDGER_INTEGRITY:missing_creation_event")
             envelope_digest=content_digest(canonical_bytes(envelope))["value"]
             db.execute("insert into evidence_actions values(?,?,?,?,?,?,?)",
                        (action_id, namespace, canonical_bytes(envelope).decode(), envelope_digest, 1, envelope["started_at"], envelope["started_at"]))
@@ -231,6 +241,7 @@ class EvidenceLedger:
         if self.verify_chain(action_id, namespace=namespace)["verdict"] != "VALID":
             raise ValueError("LEDGER_INTEGRITY:mutation_denied")
         with self._lock, self._connect() as db:
+            db.execute("begin immediate")
             duplicate = db.execute("select action_id from evidence_events where idempotency_key=?", (idempotency_key,)).fetchone()
             if duplicate:
                 if duplicate["action_id"] != action_id: raise ValueError("INVALID_REFERENCE:idempotency_collision")
@@ -252,7 +263,16 @@ class EvidenceLedger:
             return [dict(row) for row in db.execute("select * from evidence_events where action_id=? order by sequence", (action_id,))]
 
     def verify_chain(self, action_id: str, *, namespace: str) -> dict[str, Any]:
-        events = self.events(action_id, namespace=namespace); previous = None; errors = []
+        # Read the event chain and head from one SQLite snapshot. Separate
+        # connections could observe opposite sides of a concurrent append.
+        with self._connect() as db:
+            db.execute("begin")
+            action_row=db.execute("select envelope_json,envelope_digest,revision from evidence_actions where action_id=? and namespace=?",(action_id,namespace)).fetchone()
+            if action_row is None: raise KeyError("UNKNOWN_ACTION")
+            events=[dict(row) for row in db.execute("select * from evidence_events where action_id=? order by sequence",(action_id,))]
+        previous = None; errors = []
+        if not events or events[0]["event_type"] != "ACTION_CREATED":
+            errors.append("LEDGER_INTEGRITY:missing_creation_event")
         for event in events:
             payload = json.loads(event["payload_json"])
             protected = {"event_id": event["event_id"], "idempotency_key": event["idempotency_key"],
@@ -261,8 +281,6 @@ class EvidenceLedger:
             if event["previous_digest"] != previous or event["event_digest"] != content_digest(canonical_bytes(protected))["value"]:
                 errors.append("LEDGER_INTEGRITY:" + event["event_id"])
             previous = event["event_digest"]
-        with self._connect() as db:
-            action_row=db.execute("select envelope_json,envelope_digest,revision from evidence_actions where action_id=? and namespace=?",(action_id,namespace)).fetchone()
         actual=content_digest(action_row["envelope_json"].encode())["value"]
         if actual!=action_row["envelope_digest"]: errors.append("LEDGER_INTEGRITY:envelope_digest")
         if events:

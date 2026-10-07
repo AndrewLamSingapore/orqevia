@@ -40,6 +40,7 @@ def _unique(pairs):
 
 
 def _read_json(operation, *, limit=8192):
+    # No bearer may follow a redirect, including to a different origin.
     try:
         with _OPENER.open(operation, timeout=15) as response:
             raw = response.read(limit + 1)
@@ -188,6 +189,7 @@ def main():
             pin = json.load(stream, object_pairs_hook=_unique)
         run(pin)
     except Exception:
+        # Never print assertion, bearer, upstream body or exception chain.
         raise SystemExit("protected Azure signing canary unavailable") from None
 
 

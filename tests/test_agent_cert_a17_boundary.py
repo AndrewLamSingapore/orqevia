@@ -2,6 +2,7 @@
 import json
 
 from app.agent_cert_a17_boundary import review_a17_boundary_json, review_a17_cross_review_json
+from app.agent_cert_cases import challenge
 
 
 CORRECT = {
@@ -15,6 +16,13 @@ CORRECT = {
     "float_error": True,
     "tests_executed": False,
 }
+
+
+def test_source_bound_case_is_prepared_not_certified():
+    spec = challenge("role:normal", agent_id="a17", capability_id="responsibility.a17")
+    assert spec["certification"] == "UNVERIFIED"
+    assert spec["request"]["response_format"] == "strict_json"
+    assert "exact_a17_boundary_oracle" in spec["independent_review"]
 
 
 def test_exact_oracle_accepts_correct_synthetic_response_without_certifying():

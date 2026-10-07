@@ -6,6 +6,8 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PORTFOLIO = ROOT / "docs" / "portfolio"
@@ -77,6 +79,31 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # The 6 October interpretation changed only the opening date and scope
+    # paragraphs. Require those exact bytes before restoring the 4 October
+    # opening, so any unaccounted edit still fails the frozen history proof.
+    title = "# STATUS.md — Portfolio status record\n\n"
+    interpretation = (
+        "Interpretation updated: 6 October 2026. Dated observations below retain their original dates.\n\n"
+        "STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.\n\n"
+        "STATUS.md records current portfolio status claims and their evidence classification. Each product owns its source, configuration, contracts, and domain records in its repository.\n\n"
+    )
+    prior_scope = (
+        "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
+    )
+    assert after.startswith(title + interpretation)
+    after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # The reviewed 7 October candidate observation is an addition, not a change
+    # to frozen history. Remove only its exact recorded bytes; neither arbitrary
+    # new text nor an altered acceptance claim may bypass the history proof.
+    hf_title = "## HF runtime hardening — 7 October 2026"
+    assert after.count(hf_title) == 1
+    hf_start = after.index(hf_title)
+    hf_end = after.index("## Status authority — 3 October 2026", hf_start)
+    hf_update = after[hf_start:hf_end].encode("utf-8")
+    assert len(hf_update) == 871
+    assert hashlib.sha256(hf_update).hexdigest() == "5d8e92014422f868399bb5f05a3dc93d6ee5bfbc8d8c900589ee545df0e32f8a"
+    after = after[:hf_start] + after[hf_end:]
     # This dated, agent-reported update is new; preserve the original historical
     # byte proof by removing only this known addition before comparing it.
     authority_start = after.index("## Status authority — 3 October 2026")
@@ -85,13 +112,39 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert "### Claimed, not independently checked" in authority_update
     assert "PRIME PR #149 merged" in authority_update
     after = after[:authority_start] + after[authority_end:]
-    after = after.replace("Last updated: 3 October 2026", "Last updated: 27 September 2026", 1)
+    after = after.replace("Last updated: 4 October 2026", "Last updated: 27 September 2026", 1)
+    # Reconstruct only the known 4 October status-scope correction before
+    # comparing the frozen 27 September bytes; all other historical text must
+    # still match the original digest exactly.
+    after = after.replace("# STATUS.md — Portfolio status record", "# STATUS.md — Single source of truth", 1)
+    after = after.replace(
+        prior_scope,
+        "**This file replaces and supersedes every previous SSOT document — technical, course-study, and job-search alike.** Any older SSOT file (on ABEX, in a repo, or elsewhere) is now historical only. Do not treat any prior SSOT document as current once this file exists. Archive or delete the old ones once this file is confirmed good — do not maintain both in parallel.",
+        1,
+    )
     start = after.index("## Portfolio current observation — 27 September 2026")
     end = after.index("## PRIME / VELYQUA / ABEX", start)
     preserved = (after[:start] + after[end:]).encode("utf-8")
     baseline = INDEX["status_before_insertion"]
     assert len(preserved) == baseline["bytes"]
     assert hashlib.sha256(preserved).hexdigest() == baseline["sha256"]
+
+
+@pytest.mark.parametrize("original,replacement", [
+    ("## Course study", "## Course study — unaccounted history edit"),
+    ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
+])
+def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
+    status_path = ROOT / "STATUS.md"
+    read_text = Path.read_text
+    status = read_text(status_path, encoding="utf-8")
+    assert status.count(original) == 1
+    changed = status.replace(original, replacement, 1)
+    def altered_read(path, *args, **kwargs):
+        return changed if path == status_path else read_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_text", altered_read)
+    with pytest.raises(AssertionError):
+        test_status_insertion_preserves_all_existing_sections_and_history()
 
 
 def test_public_deployment_identity_is_not_physical_or_commercial_proof():

@@ -1,6 +1,8 @@
 name: Release Acceptance
 
 on:
+  push:
+    branches: [feat/prime-unified-release-20261006]
   workflow_dispatch:
   workflow_call:
 
@@ -12,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
@@ -30,6 +35,8 @@ jobs:
           git diff --exit-code -- benchmarks/portfolio-v2.json
       - name: Verify approval-gated and runtime operations contracts
         run: python -m unittest tests.test_control_surface_contract tests.test_runtime_operations_contract
+      - name: Verify Workbench approval and health rendering
+        run: node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
       - name: Parse every PowerShell operator
         shell: pwsh
         run: |
@@ -58,137 +65,87 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
       - name: Build production image
         run: docker build -t prime:acceptance .
-      - name: Start deterministic Ollama acceptance fixture
+      - name: Create isolated acceptance network
+        run: docker network create prime-acceptance
+      - name: Verify current production entrypoint, artifact, and restart
         run: |
-          docker network create prime-acceptance
-          docker run -d --name fake-ollama --network prime-acceptance --network-alias ollama \
-            -v "${{ github.workspace }}/tests:/fixture:ro" \
-            python:3.12-alpine python /fixture/fake_ollama.py
-      - name: Create persistent data volume
-        run: docker volume create prime-acceptance-data
-      - name: Boot PRIME
-        run: |
-          docker run -d --name prime-acceptance \
-            --network prime-acceptance \
-            -p 18000:8000 \
-            -v prime-acceptance-data:/data \
-            -e OLLAMA_BASE_URL=http://ollama:11434 \
-            -e PRIME_FAST_MODEL=gemma3:1b \
-            -e PRIME_DEEP_MODEL=gemma3:1b \
-            -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
-            -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
-            -e PRIME_SPINE_TOKEN=acceptance-secret \
-            -e PRIME_SPINE_DB=/data/prime-spine.db \
-            -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
-            -e PORTAL_BASE_URL= \
-            prime:acceptance
-      - name: Verify health, Control Surface and protected read paths
-        run: |
-          python - <<'PY'
-          import json, time, urllib.error, urllib.request
-          base='http://127.0.0.1:18000'
-          token='acceptance-secret'
-          headers={'Authorization':f'Bearer {token}','Content-Type':'application/json'}
-          def request(path, method='GET', body=None, headers_override=None):
-              data=None if body is None else json.dumps(body).encode()
-              req=urllib.request.Request(base+path, data=data, method=method, headers=headers if headers_override is None else headers_override)
-              with urllib.request.urlopen(req, timeout=10) as r:
-                  raw=r.read().decode(); return r.status, json.loads(raw) if raw else {}
+          docker volume create prime-current-data
+          docker run -d --name prime-current --network prime-acceptance \
+            -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
+            -e PRIME_REGISTRY_V1_ENABLED=1 \
+            -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
+          receipt=$(docker run --rm -i --network container:prime-current python:3.12-slim python - <<'PY'
+          import hashlib, json, time, urllib.error, urllib.request
+          base='http://127.0.0.1:8000'
           for _ in range(30):
               try:
-                  with urllib.request.urlopen(base+'/health', timeout=2) as r:
-                      health=json.loads(r.read().decode())
-                      assert r.status == 200 and health['ok'] and health['integrity']=='ok'
+                  with urllib.request.urlopen(base+'/health', timeout=2) as response:
+                      assert response.status==200 and json.load(response)=={'ok':True}
                   break
               except Exception: time.sleep(1)
-          else: raise SystemExit('PRIME never became healthy')
-          with urllib.request.urlopen(base+'/control', timeout=5) as r:
-              html=r.read().decode(); assert r.status==200 and 'APPROVAL-GATED CONTROL SURFACE' in html
-          status, manifest=request('/api/control-surface/manifest')
-          assert status==200 and manifest['mode']=='approval-gated'
-          assert manifest['boundaries']['approval_decision'] is True
-          assert manifest['boundaries']['approval_executes_action'] is False
-          assert manifest['boundaries']['autonomous_actions'] is False
-          assert manifest['boundaries']['memory_write'] is False
-          assert manifest['boundaries']['runtime_mutation'] is False
-          assert manifest['boundaries']['velyqua_dependency'] is False
-          assert manifest['boundaries']['physical_actuation'] is False
-          assert set(manifest['views'])=={'overview','conversation','evidence','memory','system','actions','audit'}
-          assert manifest['owner_workspace']['version']=='2.0.0'
-          assert manifest['owner_workspace']['server_side_writes']=='approval-decisions-only'
-          assert manifest['owner_workspace']['executes_actions'] is False
-          assert set(manifest['memory_classes'])=={'working','episodic','semantic','procedural','protected'}
-          assert manifest['routing_policy']['version']=='1.0.0'
-          assert manifest['routing_policy']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
-          assert manifest['routing_policy']['executes_models'] is False
-          assert manifest['routing_policy']['executes_actions'] is False
+          else: raise SystemExit('current production entrypoint never became ready')
+          with urllib.request.urlopen(base+'/control', timeout=5) as response:
+              assert response.status==200 and b'JARVIS' in response.read()
           try:
-              request('/api/cognitive/episodes', headers_override={})
-              raise AssertionError('protected episodes unexpectedly readable without auth')
-          except urllib.error.HTTPError as error: assert error.code==401
-          status, _=request('/api/cognitive/episodes', method='POST', body={'event_type':'acceptance','content':{'fact':'release acceptance memory'},'source':'ci','salience':1.0,'durable_kind':'semantic','durable_key':'acceptance.release'})
-          assert status==200
-          status, consolidated=request('/api/cognitive/consolidate', method='POST')
-          assert status==200 and consolidated['promoted']>=1
-          status, plan=request('/api/cognitive/plan', method='POST', body={'intent':'Research release acceptance architecture and send an external message','department':'engineering','context':'This would be an external consequential action.'})
-          assert status==200 and plan['plan']['needs_approval'] is True
-          assert plan['plan']['proposed_action']['action']=='external.action.proposal'
-          assert plan['plan']['reasoning_route']['sequence']==['deterministic','local_ai','confidence_gate','frontier_ai']
-          assert plan['plan']['reasoning_route']['approval_required'] is True
-          status, reason=request('/api/cognitive/reason', method='POST', body={'intent':'Review release acceptance architecture','department':'engineering','context':'Use the saved release acceptance evidence.'})
-          assert status==200 and reason['result'] and reason['evaluation']['released'] is True
-          assert reason['confidence_hold']['held'] is False
-          assert reason['executed_external_action'] is False
-          status, multi=request('/api/cognitive/multi-reason', method='POST', body={'intent':'Evaluate the bounded release design','context':'Container acceptance','evidence':'Deterministic fixture'})
-          assert status==200 and multi['workers']==2 and len(multi['specialists'])==6
-          assert multi['critic']['stage']=='specialist_critique' and multi['synthesis']['stage']=='specialist_synthesis'
-          status, event=request('/api/cognitive/events', method='POST', body={'schema_version':'1.0.0','event_id':'acceptance-event-0001','event_type':'game.simulation.completed','source':'game-platform','occurred_at':'2026-09-01T00:00:00Z','correlation_id':'acceptance-run-0001','evidence_level':'E2','provenance':['acceptance:seed-1'],'payload':{'simulation_id':'acceptance-sim','scenario':'bounded'}})
-          assert status==200 and event['inserted'] and event['projected']
-          status, reviews=request('/api/cognitive/event-reviews')
-          assert status==200 and any(item['event_id']=='acceptance-event-0001' and item['status']=='pending' for item in reviews['reviews'])
-          status, graph=request('/api/cognitive/semantic-graph')
-          assert status==200 and any(item['last_event_id']=='acceptance-event-0001' for item in graph['nodes'])
-          status, compute=request('/api/cognitive/compute')
-          stages={item['stage'] for item in compute['events']}
-          assert {'local_ai','answer_evaluation','specialist_critique','specialist_synthesis'} <= stages
+              urllib.request.urlopen(urllib.request.Request(base+'/control',headers={'Host':'evil.example'}),timeout=5)
+              raise AssertionError('untrusted Host was accepted')
+          except urllib.error.HTTPError as error: assert error.code==403
+          body=json.dumps({'objective':'Hash supplied text','context':'hello',
+                           'capability':'responsibility.a02','deterministic_operation':'sha256'}).encode()
+          operation=urllib.request.Request(base+'/control/api/objectives',data=body,method='POST',
+                      headers={'Origin':base,'Content-Type':'application/json'})
+          with urllib.request.urlopen(operation,timeout=10) as response:
+              assert response.status==202
+              task_id=json.load(response)['id']
+          with urllib.request.urlopen(base+'/control/api/objectives/'+task_id,timeout=10) as response:
+              result=json.load(response)
+          assert result['state']=='COMPLETED'
+          artifact_id=result['steps'][0]['dispatch']['artifact']['artifact_id']
+          with urllib.request.urlopen(base+'/control/api/artifacts/'+artifact_id,timeout=10) as response:
+              assert hashlib.sha256(b'hello').hexdigest().encode() in response.read()
+          print(task_id+'|'+artifact_id)
           PY
-      - name: Execute the 50-case endpoint benchmark
-        run: python benchmarks/run_endpoint.py --base-url http://127.0.0.1:18000 --token acceptance-secret --minimum-pass-rate 1.0
-      - name: Verify persistence across restart
-        run: |
-          docker rm -f prime-acceptance
-          docker run -d --name prime-acceptance \
-            --network prime-acceptance \
-            -p 18000:8000 \
-            -v prime-acceptance-data:/data \
-            -e OLLAMA_BASE_URL=http://ollama:11434 \
-            -e PRIME_FAST_MODEL=gemma3:1b \
-            -e PRIME_DEEP_MODEL=gemma3:1b \
-            -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
-            -e PRIME_MULTI_SPECIALIST_WORKERS=2 \
-            -e PRIME_SPINE_TOKEN=acceptance-secret \
-            -e PRIME_SPINE_DB=/data/prime-spine.db \
-            -e PRIME_MEMORY_DB=/data/jarvis-memory.db \
-            -e PORTAL_BASE_URL= \
-            prime:acceptance
-          python - <<'PY'
-          import json, time, urllib.request
-          base='http://127.0.0.1:18000'
-          headers={'Authorization':'Bearer acceptance-secret'}
+          )
+          task_id=${receipt%%|*}
+          artifact_id=${receipt#*|}
+          test -n "$task_id" && test -n "$artifact_id"
+          docker rm -f prime-current
+          docker run -d --name prime-current --network prime-acceptance \
+            -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
+            -e PRIME_REGISTRY_V1_ENABLED=1 \
+            -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
+          docker run --rm -i --network container:prime-current \
+            -e TASK_ID="$task_id" -e ARTIFACT_ID="$artifact_id" python:3.12-slim python - <<'PY'
+          import hashlib, json, os, time, urllib.request
+          base='http://127.0.0.1:8000'
           for _ in range(30):
               try:
-                  req=urllib.request.Request(base+'/api/cognitive/memory/search?q=release%20acceptance&limit=5',headers=headers)
-                  with urllib.request.urlopen(req, timeout=2) as response:
-                      assert json.loads(response.read().decode())['results']
-                  print('persistent memory verified')
+                  with urllib.request.urlopen(base+'/control/api/objectives/'+os.environ['TASK_ID'],timeout=2) as response:
+                      result=json.load(response)
+                  assert result['state']=='COMPLETED'
                   break
               except Exception: time.sleep(1)
-          else: raise SystemExit('persistent memory was not available after restart')
+          else: raise SystemExit('current objective was not durable after restart')
+          with urllib.request.urlopen(base+'/control/api/artifacts/'+os.environ['ARTIFACT_ID'],timeout=10) as response:
+              assert hashlib.sha256(b'hello').hexdigest().encode() in response.read()
+          print('current entrypoint objective/artifact persistence verified')
           PY
+      - name: Benchmark 50 current production deterministic HTTP cases
+        run: |
+          docker run --rm --network container:prime-current \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/benchmarks,target=/benchmarks,readonly" \
+            python:3.12-slim python /benchmarks/run_production_entrypoint.py --cases 50
       - name: Container logs on failure
         if: failure()
         run: |
-          docker logs prime-acceptance || true
-          docker logs fake-ollama || true
+          docker logs prime-current || true
+      - name: Remove disposable acceptance resources
+        if: always()
+        run: |
+          docker rm -f prime-current 2>/dev/null || true
+          docker volume rm prime-current-data 2>/dev/null || true
+          docker network rm prime-acceptance 2>/dev/null || true

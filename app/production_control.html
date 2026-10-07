@@ -13,6 +13,9 @@
 <h2>Inspect work</h2><label>Objective or job ID <input id="work-id"></label>
 <button id="task">Read objective</button> <button id="job">Read job</button> <button id="jobs">Refresh queue</button> <button id="artifact">Create objective artifact</button>
 <label>Artifact ID <input id="artifact-id"></label><button id="download">Download artifact</button>
+<h2>Evidence Lens</h2><p>Capture is on demand, not automatic. Objective Store remains authoritative for execution. A proof record is a separate, unverified projection of its current result; ledger integrity alone does not verify a claim.</p>
+<button id="what-happened" type="button">What happened?</button> <button id="record-proof" type="button">Record proof</button> <button id="prove-it" type="button">Prove it</button>
+<pre id="proof" aria-live="polite">Enter an objective ID above.</pre>
 <h2>Connect your phone</h2><p>Create a one-use pairing code for your JARVIS PWA. It expires after five minutes.</p>
 <label>Phone role <select id="pair-role"><option value="OWNER">Owner</option><option value="MEMBER">Member</option></select></label>
 <button id="pair-phone" type="button">Create phone pairing code</button>
