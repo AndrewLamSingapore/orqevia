@@ -1,0 +1,139 @@
+{
+  "schema": "prime.normal-worker-b920-independent-executed-review.v1",
+  "status": "PASS_SCOPED_INDEPENDENT_NORMAL_WORKER_REVIEW",
+  "reviewed_at_utc": "2026-10-07 03:24:19 UTC",
+  "source": "b9205b0a671e2ae7e3825e6ed969382b24177747",
+  "image": "sha256:3334fdfb6a19d4cb546b59efe00ebde856a2b1ec279924373bbab288099e8aed",
+  "public_operator_receipt": "HF-NORMAL-WORKER-OPERATOR-two.json",
+  "public_operator_sha256": "407516c19392a9a8a6afca4652cde0c7b45c1dd8b76ad11c84672b15e77b9917",
+  "private_raw_receipt": "HF-NORMAL-WORKER-RAW-two.json",
+  "raw_sha256": "e50a6b508baaa5c68184856400870a9fb2b7276a99391b9ae7c126f6f8d547a0",
+  "harness_sha256": "af99d9b848f690462aeb2f25530d38815b2bd23d13bc1211cba8d70584f78ddf",
+  "image_binding_sha256": "67c3776af49f0d1fd32d0630364efdee3bf96aa0e92ae7ea4fdd675b92525be0",
+  "source_pin_receipt_sha256": "25fe4cb8709213ac7ddbb014bcfe744e2fafc07b1ea71f02bb154d37235b3234",
+  "executed_receipt_checks": {
+    "attempt_hash_recomputed": true,
+    "exact_raw_hash": true,
+    "harness_hash": true,
+    "http_gates": true,
+    "lens_digest_domain_contract": true,
+    "no_broad_pass_claim": true,
+    "one_agent_route_binding": true,
+    "one_normal_worker_job": true,
+    "original_failure_preserved_not_replayed": true,
+    "poll_bound": true,
+    "source_content_exact": true,
+    "source_image_pins": true,
+    "strict_result_oracle": true,
+    "usage_estimate_bounds": true
+  },
+  "clone_read_only_metadata": {
+    "id": "7172afb8ac4e90715efde1305d6d9e5646a2f7b0ee2883643840d4f9f6eb50a1",
+    "image": "sha256:3334fdfb6a19d4cb546b59efe00ebde856a2b1ec279924373bbab288099e8aed",
+    "state": "exited",
+    "exit_code": 0,
+    "oom": false,
+    "restart_count": 0,
+    "memory_bytes": 536870912,
+    "nano_cpus": 500000000,
+    "readonly_rootfs": true,
+    "host_ports_present": false,
+    "command": [
+      "uvicorn",
+      "app.production_entry:app",
+      "--host",
+      "0.0.0.0",
+      "--port",
+      "8000",
+      "--no-proxy-headers"
+    ],
+    "mount_targets": [
+      {
+        "destination": "/run/hf-worker-catalog.json",
+        "writable": false
+      },
+      {
+        "destination": "/run/hf_normal_worker_http_canary.py",
+        "writable": false
+      },
+      {
+        "destination": "/run/post-ci-source-pins.json",
+        "writable": false
+      },
+      {
+        "destination": "/run/secrets/hf_token",
+        "writable": false
+      }
+    ]
+  },
+  "actual_scope": {
+    "objective_id": "8992ac88-c077-40ce-b409-6fe981862611",
+    "queue_job_id": "83138ef0-2a75-4a2d-9a41-d9fe8c2494cd",
+    "agent": "a20",
+    "submitted_objectives": 1,
+    "fresh_queue_before": 0,
+    "settled_completed_jobs_after": 1,
+    "normal_production_entrypoint_and_lifespan": true,
+    "normal_worker_started_by": "app.production_entry uses direct_entry.lifespan, which invokes start_compute_queue()",
+    "no_asgi_or_manual_claim_finish_in_harness": true,
+    "explicit_provider": "hf-gemma-nano",
+    "model": "google/gemma-3-4b-it:deepinfra",
+    "observed_inference_attempts": 1,
+    "observed_retries": 0,
+    "fallback_route": [],
+    "maximum_possible_upstream_attempts": 1,
+    "upstream_transport_count_directly_instrumented": false,
+    "worker_poll_seconds": 2.04502,
+    "input_tokens": 141,
+    "output_tokens": 4,
+    "catalog_estimated_cost_usd": "0.00000745",
+    "actual_billing_usd": null,
+    "reserved_estimate_usd": "0.0000419",
+    "maximum_cost_usd": "0.0005",
+    "raw_output_sha256": "3a8a50a1919ead10f308be2583f43ec855620630b196da2ddc6cbe47c0cd74eb",
+    "canonical_output_sha256": "ca60f1b27e0ab789535d857bca0432db5b4850fcdcc20ccbb1aacaa950ed89f7",
+    "strict_oracle": "Only ODD or ODD with a single LF/CRLF; observed bytes bind ODD plus one LF",
+    "recomputed_attempt_sha256": "0253a0d1af290cd688057da5ed312bb755ca5d0532b4dd057a49db86cc023178",
+    "http_gates": 25,
+    "auth_negative_gates": "401 for missing/wrong Owner bearer; 403 for foreign control Origin/Host and PWA pairing Origin",
+    "lens_integrity": "VALID",
+    "lens_verification": "UNVERIFIED",
+    "lens_domain_digest_contract": "Exact {algorithm: sha256, value: digest} objects over sorted unescaped UTF-8 JSON, as in app/evidence_product.py",
+    "result_metadata_agent_runtime_and_inference_projection_checks": true
+  },
+  "original_failure": {
+    "public_operator_receipt": "HF-NORMAL-WORKER-OPERATOR-one.json",
+    "public_operator_sha256": "726d150041610e9f707f62ba727897591f330d41743904ec506ff20050e932b2",
+    "raw_sha256": "16eb88e3825b6b8e0a2c7344ef9d6cdc42e065bcb39d347a1ba85bc5f3404fcf",
+    "status": "FAIL_PRESERVED_NO_RETRY",
+    "code": "OBJECTIVE_LENS_HASH_PROVENANCE_FAILED",
+    "objective_id": "ea08a092-160d-4a64-b383-cecd35800ecb",
+    "queue_job_id": "53dfb595-59fc-4e09-8357-6161541662b2",
+    "observed_terminal_status": "completed",
+    "original_observation_still": "PENDING_NOT_ACCEPTED",
+    "overwritten_or_replayed": false,
+    "repair_scope": "Recovery harness digest-object serialization/provenance oracle only; product source and strict quality/accounting/auth guards unchanged.",
+    "rerun_scope": "One separately authorized fresh synthetic job, not an automatic replay of the prior completed job."
+  },
+  "reviewer_check_correction": {
+    "initial_independent_strict_output_check_failed_due_to": "Reviewer inline Python literal escaped LF as backslash+n",
+    "corrected_discriminating_check": "Explicit byte sequence 79,68,68,10",
+    "corrected_check_passed": true,
+    "product_output_or_receipts_modified": false
+  },
+  "limitations": [
+    "One isolated NANO arithmetic classification proves the normal worker path, not broad model quality or an agent role matrix.",
+    "No production deployment, representative soak, Owner/iPhone path, DIRECT QA, non-HF route, automatic failover, local inference or L7 certification acceptance.",
+    "No independent signature or invoice/billing validation.",
+    "Attempt and HF-attempt-list digests were independently recomputed. Full objective/Lens preimages were not exported in the redacted receipt; those digest-object and agent/runtime equalities are bound executed-harness observations under the reviewed domain contract.",
+    "Golden unchanged remains the operator before/after assertion; this review independently inspected only the stopped isolated clone.",
+    "Host thermal/stability qualification remains separate."
+  ],
+  "actions_by_reviewer": {
+    "model_calls": 0,
+    "container_starts": 0,
+    "production_mutations": 0,
+    "secret_or_private_key_values_read": 0,
+    "docker_inspect_scope": "Explicit safe --format fields only; no full inspection/environment"
+  }
+}

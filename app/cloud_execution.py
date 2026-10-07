@@ -23,7 +23,7 @@ def _dispatch_binding(entry):
     fields=('id','provider_kind','location','tier','model','endpoint','secret_ref',
         'enabled','qualification_status','context_tokens','output_tokens',
         'input_usd_million','output_usd_million','cached_usd_million',
-        'task_budgets','fallback_ids','hf_fallback_policy','max_retries')
+        'task_budgets','allowed_task_classes','fallback_ids','hf_fallback_policy','max_retries')
     return deepcopy({field:entry.get(field) for field in fields})
 
 

@@ -236,6 +236,28 @@ def test_unchanged_fresh_catalog_allows_bound_fallback(monkeypatch, tmp_path):
     assert metrics()['success'] is True
 
 
+@pytest.mark.parametrize('target', ['primary', 'alternate'])
+@pytest.mark.parametrize('mutation', ['widen', 'remove', 'narrow', 'malformed'])
+def test_task_scope_cannot_change_between_prepared_hf_routes(monkeypatch, tmp_path, target, mutation):
+    run, calls, refs, actions, primary, alternate, job, metrics = setup_chain(monkeypatch, tmp_path)
+    primary['allowed_task_classes'] = ['conversation']
+    alternate['allowed_task_classes'] = ['conversation']
+    entry = primary if target == 'primary' else alternate
+    def change_scope():
+        if mutation == 'remove':
+            entry.pop('allowed_task_classes')
+        else:
+            entry['allowed_task_classes'] = {
+                'widen': ['conversation', 'research'],
+                'narrow': ['classification'], 'malformed': None,
+            }[mutation]
+    run.before_failure.append(change_scope)
+    with pytest.raises(ProviderFailure, match='FALLBACK_POLICY_DENIED'):
+        run()
+    assert calls == ['hf-primary'] and refs == ['env:HF_TOKEN']
+    assert metrics()['success'] is False
+
+
 @pytest.mark.parametrize('ref', ['env:HF_TOKEN', 'file:HF_TOKEN'])
 def test_hf_secret_reference_cannot_enter_non_hf_host(monkeypatch, tmp_path, ref):
     run, calls, refs, actions, primary, alternate, job, metrics = setup_chain(monkeypatch, tmp_path, non_hf=True)

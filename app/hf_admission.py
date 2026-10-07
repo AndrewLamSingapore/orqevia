@@ -10,6 +10,25 @@ from .tier_router import classify_for_cloud
 
 
 HF_FALLBACK_POLICY_VERSION = 'hf-fallback.v1'
+_TASK_CLASSES = frozenset(('auto', 'classification', 'conversation', 'research',
+                          'planning', 'writing', 'coding', 'architecture', 'complex_reasoning'))
+
+
+def require_hf_task_scope(entry, job):
+    """Enforce an operator's bounded qualification, not a quality certificate.
+
+    Existing broadly qualified catalogs need not add a new policy. If a narrow
+    allowlist is supplied, malformed or missing job classes cannot bypass it.
+    Task labels restrict admission; they do not establish substantive quality.
+    """
+    if 'allowed_task_classes' not in entry:
+        return
+    allowed = entry['allowed_task_classes']
+    if (not isinstance(allowed, list) or not 1 <= len(allowed) <= len(_TASK_CLASSES) or
+            any(type(value) is not str or value not in _TASK_CLASSES for value in allowed) or
+            len(set(allowed)) != len(allowed) or
+            type(job.get('task_class')) is not str or job['task_class'] not in allowed):
+        raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
 
 
 def require_hf_fallback_policy(primary, job, target=None):
@@ -23,6 +42,7 @@ def require_hf_fallback_policy(primary, job, target=None):
         raise ProviderFailure('HF_FALLBACK_NOT_PERMITTED', pre_execution=True)
     if not primary.get('enabled') or primary.get('qualification_status') != 'QUALIFIED':
         raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
+    require_hf_task_scope(primary, job)
     if job.get('preferred_provider') != primary.get('id') or job.get('allow_cloud') != 1:
         raise ProviderFailure('HF_EXPLICIT_SELECTION_REQUIRED', pre_execution=True)
     if not classify_for_cloud(job.get('data_classification'), job.get('prompt', '')):
@@ -55,6 +75,7 @@ def require_hf_admission(entry, job, provider_name, *, primary=None):
         return
     if not entry.get('enabled') or entry.get('qualification_status') != 'QUALIFIED':
         raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
+    require_hf_task_scope(entry, job)
     if primary is not None:
         require_hf_fallback_policy(primary, job, entry)
     elif entry.get('fallback_ids'):

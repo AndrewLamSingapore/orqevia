@@ -1,0 +1,51 @@
+{
+  "schema": "prime.hf-task-scope-independent-review.v1",
+  "status": "PASS_SCOPED_INDEPENDENT_SOFTWARE_REVIEW",
+  "reviewed_at_utc": "2026-10-07 03:31:37 UTC",
+  "canonical_main_read": "a265693034a87961c73e9e47cf7dcaa78e872b09",
+  "candidate_state": "UNCOMMITTED_ISOLATED_REPAIR_OVER_B920",
+  "base_commit": "b9205b0a671e2ae7e3825e6ed969382b24177747",
+  "independent_tests_sha256": "e1674fdaf9bbdc6c4979e5a87cebdec092e3ae7fc86e284c8d2990e9f915e4a1",
+  "source_lf_sha256": {
+    "app/cloud_execution.py": "c610dad63c561b76053761feaa7e8ba22b23c29306f4ebd086db1efafd8ce0e6",
+    "app/hf_admission.py": "b0b8d2b0bb86fe66d229b56e19fc8f29e1b19601fbaafb16587a44000b82ed9c",
+    "docs/HUGGING_FACE_PROVIDER_CANDIDATE.md": "893dc3cd634fb47687e36b9e8f450ec145b3aa05ff5dc54e40c8dfbcd734db32",
+    "tests/test_hf_admission.py": "8332b1b9aeafa2df0ab8dd27a9280c1a30aeaa4e31257351709e155aa3f3e9d8",
+    "tests/test_hf_fallback.py": "c5b34aca71eea731064b8785e84be5882a87d3837f583a0fe8f9eb69a3185ddf"
+  },
+  "uncommitted_diff_sha256": "58538c6fdfcc17e7e103720ffcbaa127d8cf4ded1894a166297979f1b697fbb1",
+  "independent_tests": "test_hf_task_scope_independent_20261007.py",
+  "executed": {
+    "pytest_passed": 28,
+    "pytest_failed": 0,
+    "elapsed_seconds": 0.39,
+    "git_diff_check_passed": true,
+    "network_calls": 0,
+    "model_calls": 0,
+    "actual_secret_resolutions": 0,
+    "production_changes": 0,
+    "competing_source_edits": 0
+  },
+  "adversarial_coverage": {
+    "malformed_scope_types_and_unhashable_members": 8,
+    "malformed_deceptive_task_labels": 8,
+    "legacy_absent_policy_compatibility": 1,
+    "deep_copy_prepared_binding": 1,
+    "denied_scope_before_adapter_or_ledger": 4,
+    "primary_alternate_in_place_widen_clear_or_null_replacement": 6
+  },
+  "findings": [
+    "Explicit malformed/empty/unsupported allowlists and missing/deceptive job classes reject before credential-capable adapter or ledger execution.",
+    "Prepared task scope is deep-copied into dispatch binding; in-place widening/clearing and removal-to-null mutations on primary or alternate deny the prepared fallback before alternate credential resolution.",
+    "Legacy unscoped HF catalogs retain their existing admission behavior intentionally.",
+    "The policy restricts declared task classes; it does not establish semantic model quality or certification.",
+    "No concrete defect found in the reviewed narrow implementation."
+  ],
+  "preserved_counterevidence": "Root's original 11 task-scope failures remain outside this review unchanged; no completed earlier runtime receipts were overwritten.",
+  "evidence_boundaries": [
+    "This is deterministic offline fixture evidence for the exact uncommitted bytes, not CI or runtime acceptance at a future committed head.",
+    "Historical b920 image/canary receipts are not evidence for this changed source head.",
+    "No production activation, L7, real Owner/iPhone, DIRECT QA price/admission, non-HF qualification, soak, host stability or thermal PASS.",
+    "No credentials, mounts, Azure permissions or production settings were modified."
+  ]
+}

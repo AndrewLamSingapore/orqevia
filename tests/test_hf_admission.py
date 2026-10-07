@@ -123,6 +123,60 @@ def test_non_hf_provider_has_no_new_restriction():
     assert require_hf_admission({'provider_kind': 'chat_completions'}, {}, 'other') is None
 
 
+def test_explicit_hf_task_scope_accepts_only_the_selected_class():
+    entry = {**ENTRY, 'allowed_task_classes': ['classification']}
+    assert require_hf_admission(entry, {**JOB, 'task_class': 'classification'}, entry['id']) is None
+    for task_class in ('auto', 'conversation', 'coding', None):
+        with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED') as failure:
+            require_hf_admission(entry, {**JOB, 'task_class': task_class}, entry['id'])
+        assert failure.value.pre_execution is True
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
+        require_hf_admission(entry, JOB, entry['id'])
+
+
+@pytest.mark.parametrize('scope', [None, [], 'classification', {},
+    ['classification', 'classification'], ['unknown-task-class'],
+    ['classification', False], [1]])
+def test_malformed_explicit_hf_task_scope_fails_closed(scope):
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED') as failure:
+        require_hf_admission({**ENTRY, 'allowed_task_classes': scope},
+                             {**JOB, 'task_class': 'classification'}, ENTRY['id'])
+    assert failure.value.pre_execution is True
+
+
+def test_hf_alternate_must_fit_both_primary_and_alternate_task_scope():
+    primary = {**fallback_entry(), 'allowed_task_classes': ['classification']}
+    alternate = {**ENTRY, 'id': 'hf-alternate', 'allowed_task_classes': ['conversation']}
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
+        require_hf_admission(alternate, {**JOB, 'task_class': 'classification'},
+                             alternate['id'], primary=primary)
+    alternate['allowed_task_classes'] = ['classification', 'conversation']
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
+        require_hf_admission(alternate, {**JOB, 'task_class': 'conversation'},
+                             alternate['id'], primary=primary)
+    assert require_hf_admission(alternate, {**JOB, 'task_class': 'classification'},
+                                alternate['id'], primary=primary) is None
+
+
+def test_unqualified_task_class_never_reaches_adapter_or_secret(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+    from app import cloud_execution
+
+    entry = {**ENTRY, 'allowed_task_classes': ['classification'],
+             'location': 'cloud', 'tier': 'NANO', 'context_tokens': 4096,
+             'model': 'google/gemma-3-4b-it:deepinfra'}
+    monkeypatch.setattr(cloud_execution, 'load_catalog', lambda: [entry])
+    monkeypatch.setattr(cloud_execution, 'adapter_for',
+                        lambda _: pytest.fail('unqualified task must not resolve a credential'))
+    monkeypatch.setattr(cloud_execution, 'action_ledger', lambda: None)
+    monkeypatch.setattr(cloud_execution.DirectExecutor, 'execute',
+                        lambda self, action, operation: operation())
+    job = {**JOB, 'id': 'fixture-scope-job', 'agent': 'a20',
+           'task_class': 'coding', 'timeout_seconds': 3}
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
+        cloud_execution.execute_cloud(job, SimpleNamespace(name=entry['id']), tmp_path, lambda: False)
+
+
 def test_implicit_hf_fallback_rejected_before_adapter_or_secret(monkeypatch, tmp_path):
     from types import SimpleNamespace
     from app import cloud_execution
