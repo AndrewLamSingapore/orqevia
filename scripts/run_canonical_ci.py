@@ -95,6 +95,7 @@ def main():
     names.append('agent_cert_execution')
     names.append('mlp_fabric')
     names.append('hf_admission')
+    names.append('provider_rejection_ambiguity')
     names.extend(['hf_fallback','provider_circuit','provider_circuit_integration','hf_serverless','objective_inference_evidence'])
     names.append('hf_observation_api')
     names.append('hf_qa_execution')
