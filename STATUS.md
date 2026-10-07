@@ -36,6 +36,45 @@ If you are an AI agent updating this file:
 
 ---
 
+## Scoped 5b deployment and unsigned A19 review — 7 October 2026
+
+### Claimed, not independently checked
+
+- The approved backend-only rollout serves source
+  `5b3dd3aa09a9f91fa52c71560498b1401443562c`, image
+  `sha256:4bf082c30689a6ea96178b1f39ea77cf7a1569ae92440fc9e0ebcfbb41247004`.
+  The existing Interface, Ollama, shared data volume, local N=1 and 30-minute
+  keep-alive are preserved. One authenticated A20 HF classification passed;
+  its exact job, all 87 queue rows and unsigned Lens projection survived one
+  same-backend restart. Five healthy samples over 69.078 seconds reported no
+  OOM or automatic restarts. This is bounded observation, not sustained soak.
+- Exact current-state copied restoration through the accepted EEE image read
+  the original data plus a newly written objective and artifact, with all ten
+  database checks and existing Owner/Member store bytes preserved. A live
+  failed-cutover rollback was not exercised; rollback retains current shared
+  data rather than overwriting it with an older snapshot.
+- The fresh authenticated A19 v2 role-normal regression on this exact source
+  produced job `d08819db-7045-4957-b760-2c00fafb6588` and a real registered A26
+  review task `ddfebde9-a731-4203-9fb7-64a959b19cf2`. Original subject, review,
+  artifact and action-chain bytes are preserved as **UNSIGNED_CASE_EVIDENCE**.
+  No signing was performed. The older EEE job remains dated evidence and was
+  not replayed or relabelled. Fully L7 certified remains **0/21**.
+- Agent-reviewed evidence is not a promotion to Lam-Verified status. Public
+  verifier configuration and denial checks do not prove a signed independent
+  attestation, the full per-agent matrix or a clean-room L7 audit. Real
+  Owner/iPhone results, current SSD temperature, sustained thermal/host
+  qualification and Windows reboot persistence remain unproved here. Domain
+  authorities retain their own records; this dated index is not a master truth
+  database or universal SSoT.
+- Exact ABEX receipts: `BACKEND-5B3DD3A-ACTIVATION.json` SHA-256
+  `4e34e7b1705cff0b8fc1c9535a0b237d76d7fdde1673f036c99e5e9e942f23b8`;
+  `BACKEND-5B3DD3A-INDEPENDENT-ACTUAL-REVIEW.json`
+  `09956031455ae260b12465896cd61a62bf8f8b4f047df631fcd43791b7de10b7`;
+  `5B3DD3A-EEE-POSTWRITE-INDEPENDENT-ACTUAL-REVIEW.json`
+  `417f3577c1168d09626a524292d4c86433809e2f0575503ee39e115cdc1c69a1`;
+  `A19-5B3DD3A-LIVE-COLLECTION-01ad47e8-946e-4771-a8d8-5278d8c76dd3.json`
+  `bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22824`.
+
 ## Scoped certification runtime and success-error repair — 7 October 2026
 
 ### Claimed, not independently checked

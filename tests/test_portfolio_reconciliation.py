@@ -93,6 +93,17 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # Remove only this exact dated deployment/unsigned-review observation.
+    # The frozen baseline and every earlier section pin stay unchanged; an
+    # altered receipt, invented signature or expanded qualification still fails.
+    live_title = "## Scoped 5b deployment and unsigned A19 review — 7 October 2026"
+    assert after.count(live_title) == 1
+    live_start = after.index(live_title)
+    live_end = after.index("## Scoped certification runtime and success-error repair — 7 October 2026", live_start)
+    live_update = after[live_start:live_end].encode("utf-8")
+    assert len(live_update) == 2507
+    assert hashlib.sha256(live_update).hexdigest() == "d74ec03cef04080982f3091d5daeeed1905e70ff7704d195c36f204434f5ca43"
+    after = after[:live_start] + after[live_end:]
     # This separately dated runtime/failure observation is an exact addition,
     # not permission to erase or rewrite any previous status/evidence section.
     runtime_title = "## Scoped certification runtime and success-error repair — 7 October 2026"
@@ -158,12 +169,17 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     ("d2793c00169cc6fca540e9c26c57790d143935d6", "d2793c00169cc6fca540e9c26c57790d143935d0"),
     ("bounded 69-second observation passed", "unbounded long-term soak passed"),
     ("before any A26\n  review or signing", "after verified A26\n  review and signing"),
+    ("No signing was performed.", "Independent protected signing passed."),
+    ("69.078 seconds", "69.078 hours"),
+    ("0/21**.\n- Agent-reviewed evidence", "21/21**.\n- Agent-reviewed evidence"),
+    ("bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22824",
+     "bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22820"),
 ])
 def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
     status = read_text(status_path, encoding="utf-8")
-    expected_count = 2 if original == "Fully L7 certified remains **0/21**." else 1
+    expected_count = 3 if original == "Fully L7 certified remains **0/21**." else 1
     assert status.count(original) == expected_count
     # Independently falsify each repeated claim, including both the new and
     # historical 0/21 statement. Do not just mutate the first occurrence.
