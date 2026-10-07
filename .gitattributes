@@ -18,4 +18,5 @@ docs/evidence/HF_B920_ISOLATED_EXECUTION_MILESTONE_20261007.json -text
 docs/evidence/HF_B920_NORMAL_WORKER_INDEPENDENT_REVIEW_20261007.json -text
 docs/evidence/HF_TASK_SCOPE_CANDIDATE_INDEPENDENT_REVIEW_20261007.json -text
 governance/agent-cert-reviewed-cases.json -text
+governance/agent-cert-historical-admissions/*.json -text
 governance/agent-cert-case-evidence/a19-5b3dd3a-role-normal-20261007/** -text

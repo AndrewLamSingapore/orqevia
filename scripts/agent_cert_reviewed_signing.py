@@ -136,6 +136,9 @@ def _case_spec(row):
 
 
 def _oracle_id(agent, spec=None):
+    if agent == 'a19' and spec is not None and spec.get('case') == 'baseline:identity':
+        from app.agent_cert_identity_review import ORACLE_ID
+        return ORACLE_ID
     if spec is not None and spec.get('case') != 'role:normal':
         from app.agent_cert_a19_cases import ORACLE_ID
         return ORACLE_ID
@@ -337,6 +340,11 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
 def _review(row, primary, review, *, source_revision, runtime_image_id,
             reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
             expected_owner_policy_sha256=None):
+    if row.get('dimension') == 'baseline' and row.get('test_case') == 'identity':
+        if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+            _deny('IDENTITY_CLOUD_TRANSPORT_FORBIDDEN')
+        return _identity_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision, now=now)
     execution = _json(primary)
     envelope = _json(review)
     cloud_requested = any(value is not None for value in (
@@ -418,6 +426,98 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
     valid, errors = review_case_output(agent, row['capability_id'], spec['case'], job['result'])
     if valid is not True or errors:
         _deny('CASE_ORACLE_FAILED')
+    return True
+
+
+def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_id,
+                     reviewer_code_revision, now):
+    """Review a genuine artifact event; never manufacture a model queue job."""
+    from app.agent_cert_identity_review import (
+        ORACLE_ID, SCHEMA, action_span, validate_identity_execution,
+    )
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id') != 'a19' or row.get('capability_id') != 'responsibility.a19'
+            or row.get('verifier') != 'a26' or row.get('executor_identity') != 'a19'
+            or row.get('source_revision') != source_revision
+            or row.get('review_source_revision') != source_revision
+            or row.get('reviewer_code_revision') != reviewer_code_revision
+            or row.get('authority_scope') != agent_record('a19')['authority']
+            or row.get('test_result') != 'PASS' or row.get('review_test_version') != ORACLE_ID
+            or any(type(row.get(key)) is not str or not 1 <= len(row[key]) <= 100
+                   for key in ('certification_test', 'test_version', 'review_run_id'))):
+        _deny('IDENTITY_RECORD_BINDING_INVALID')
+    execution, envelope = _json(primary), _json(reviewed)
+    # Off-host Linux images use the tracked LF registry bytes. This derived
+    # build pin is compared with the original report's RAW-file digest; the
+    # report is never normalized or rewritten to manufacture a match.
+    registry_sha = _sha(REGISTRY_PATH.read_bytes().replace(b'\r\n', b'\n'))
+    join = validate_identity_execution(execution, source_revision=source_revision,
+        runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=now)
+    spec = _case_spec(row)
+    expected_observations = dict(execution_task_id=join['task_id'], result_sha256=join['result_sha256'],
+        case_spec_sha256=join['case_spec_sha256'], runtime_image_id=runtime_image_id,
+        registry_sha256=registry_sha, reviewer_code_revision=reviewer_code_revision,
+        oracle_id=ORACLE_ID, oracle_pass=True)
+    observations = envelope.get('observations')
+    if (type(observations) is not dict or set(observations) != set(expected_observations) | {'reviewer_execution'}
+            or any(_canonical(observations.get(k)) != _canonical(v) for k, v in expected_observations.items())):
+        _deny('IDENTITY_REVIEW_OBSERVATIONS_INVALID')
+    proof = observations['reviewer_execution']
+    if type(proof) is not dict or set(proof) != {'dispatch', 'artifact_content_utf8', 'transport', 'action_records'}:
+        _deny('REGISTERED_IDENTITY_REVIEW_REQUIRED')
+    dispatch = proof['dispatch']
+    if (type(dispatch) is not dict or set(dispatch) != {'task_id', 'state', 'artifact', 'model_calls',
+            'execution_model', 'agent_id', 'capability', 'runtime_source_revision', 'review_action_id',
+            'review_action_durable', 'certification'} or not _uuid(dispatch.get('task_id'))
+            or dispatch['task_id'] == join['task_id'] or dispatch.get('state') != 'COMPLETED'
+            or dispatch.get('agent_id') != 'a26' or dispatch.get('capability') != 'responsibility.a26'
+            or type(dispatch.get('model_calls')) is not int or dispatch['model_calls'] != 0
+            or dispatch.get('execution_model') != 'DETERMINISTIC'
+            or dispatch.get('runtime_source_revision') != source_revision
+            or not _uuid(dispatch.get('review_action_id')) or dispatch.get('review_action_durable') is not True
+            or dispatch.get('certification') != 'UNVERIFIED'):
+        _deny('REGISTERED_IDENTITY_REVIEW_DISPATCH_INVALID')
+    transport = dict(authentication='OWNER_AUTHENTICATED', dispatch_http_status=202,
+        artifact_http_status=200, runtime_source_revision=source_revision, actual_runtime_image=runtime_image_id)
+    if _canonical(proof['transport']) != _canonical(transport):
+        _deny('REGISTERED_IDENTITY_REVIEW_TRANSPORT_INVALID')
+    raw = proof['artifact_content_utf8']
+    if type(raw) is not str or not 1 <= len(raw.encode('utf-8')) <= 65536:
+        _deny('REGISTERED_IDENTITY_REVIEW_ARTIFACT_INVALID')
+    content = _json(raw.encode('utf-8'))
+    metadata = dispatch['artifact']
+    if (type(metadata) is not dict or set(metadata) != {'artifact_id', 'task_id', 'type', 'creator_agents',
+            'timestamp', 'version', 'provenance', 'runtime_revision', 'validation_state', 'content_validation',
+            'location', 'sha256', 'bytes', 'delivery_state'}
+            or type(metadata.get('artifact_id')) is not str or not re.fullmatch('[0-9a-f]{32}', metadata['artifact_id'])
+            or metadata.get('task_id') != dispatch['task_id'] or metadata.get('creator_agents') != ['a26']
+            or metadata.get('type') != 'json' or metadata.get('version') != '1.0.0'
+            or metadata.get('provenance') != 'Deterministic computation; zero model calls'
+            or metadata.get('runtime_revision') != source_revision
+            or metadata.get('validation_state') != 'STRUCTURE_VALIDATED'
+            or metadata.get('content_validation') != 'Not independently established by structural validation'
+            or metadata.get('location') != 'artifact.json' or metadata.get('sha256') != _sha(raw.encode('utf-8'))
+            or type(metadata.get('bytes')) is not int or metadata['bytes'] != len(raw.encode('utf-8'))
+            or metadata.get('delivery_state') != 'AVAILABLE'):
+        _deny('REGISTERED_IDENTITY_REVIEW_ARTIFACT_INVALID')
+    expected = dict(schema_version=SCHEMA, task_id=dispatch['task_id'], reviewer_id='a26',
+        reviewer_capability_id='responsibility.a26', subject_agent_id='a19', subject_capability_id='responsibility.a19',
+        dimension='baseline', test_case='identity', source_revision=source_revision, runtime_image_id=runtime_image_id,
+        execution_evidence_sha256=_sha(primary), case_spec_sha256=_sha(_canonical(spec)), result_sha256=join['result_sha256'],
+        oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0, execution_model='DETERMINISTIC',
+        subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED', subject_domain_join=join,
+        certification='UNVERIFIED')
+    if (set(content) != set(expected) | {'review_nonce', 'reviewed_at'} or not _uuid(content.get('review_nonce'))
+            or any(_canonical(content.get(k)) != _canonical(v) for k, v in expected.items())):
+        _deny('REGISTERED_IDENTITY_REVIEW_CONTENT_INVALID')
+    certified = _utc(row['certified_at'])
+    if not (_utc(join['completed_at']) <= _utc(content['reviewed_at']) <= _utc(metadata['timestamp']) <= certified
+            <= _utc(row['last_revalidated']) <= now < _utc(row['expires_at'])):
+        _deny('IDENTITY_REVIEW_TIME_INVALID')
+    action_span(proof['action_records'], task_id=dispatch['task_id'], agent_id='a26',
+        action_type='agent.certification.identity.review', schema=SCHEMA, metadata=metadata,
+        began=_utc(content['reviewed_at']), ended=certified,
+        action_id=dispatch['review_action_id'], duration_limit_ms=120000)
     return True
 
 

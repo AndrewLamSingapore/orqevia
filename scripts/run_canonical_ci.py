@@ -99,6 +99,8 @@ def main():
                   'agent_cert_reviewed_signing', 'sign_admitted_agent_cases',
                   'collect_agent_cert_case', 'agent_cert_success_error_contract'])
     names.append('a19_reviewed_case_admission_20261007')
+    names.extend(['agent_cert_identity_review', 'agent_cert_identity_dispatch',
+                  'agent_cert_identity_signing'])
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('hf_prompt_scope')

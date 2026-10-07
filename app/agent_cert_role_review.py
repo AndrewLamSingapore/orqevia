@@ -48,6 +48,9 @@ def canonical_case_spec(agent, capability, case_id):
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
     if case_id == 'role:normal':
         return canonical_role_spec(agent, capability)
+    if agent == 'a19' and capability == 'responsibility.a19' and case_id == 'baseline:identity':
+        from .agent_cert_cases import challenge
+        return challenge(case_id, agent_id=agent, capability_id=capability)
     from .agent_cert_a19_cases import SUPPORTED_CASES, canonical_a19_case
     if agent != 'a19' or case_id not in SUPPORTED_CASES:
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
@@ -62,6 +65,10 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('case_oracle_unsupported',)
     if case_id == 'role:normal':
         return review_role_output(agent, capability, response)
+    if case_id == 'baseline:identity':
+        # Identity is an Objective/artifact/action event, not a model answer.
+        # It can only be reviewed through the owned event adapter.
+        return False, ('identity_event_evidence_required',)
     from .agent_cert_a19_cases import review_a19_case_output
     return review_a19_case_output(case_id, response)
 

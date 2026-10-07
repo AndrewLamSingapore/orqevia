@@ -24,7 +24,7 @@ REVIEW_SHA = 'd02c66770a17757f18a2dad4499875650d9afe89b762571f328fb5f27e4d4b23'
 
 
 def case():
-    entries = parse((ROOT / 'governance/agent-cert-reviewed-cases.json').read_bytes())
+    entries = parse((ROOT / 'governance/agent-cert-historical-admissions/a19-role-normal-20261007.json').read_bytes())
     matches = [entry for entry in entries if entry['record']['agent_id'] == 'a19'
                and entry['record']['dimension'] == 'role'
                and entry['record']['test_case'] == 'normal']
@@ -57,6 +57,19 @@ def test_original_execution_and_review_bytes_and_independent_identity():
     assert entry['record']['verifier'] == 'a26' != entry['record']['executor_identity']
     assert agent_record('a26')['agent_id'] == 'a26'
     assert check(entry, primary, review) is True
+
+
+def test_completed_case_is_preserved_exactly_not_resubmitted_after_reviewer_code_changes():
+    archive = ROOT / 'governance/agent-cert-historical-admissions'
+    original = (archive / 'a19-role-normal-20261007.json').read_bytes()
+    signed = (archive / 'a19-role-normal-signed-37613202210.json').read_bytes()
+    assert len(original) == 2413
+    assert hashlib.sha256(original).hexdigest() == '0046f5f3a8926e58b30b9a9c79366405c82b9c4ae4d1d67c6d6d4dc75bc01fd2'
+    assert len(signed) == 1804
+    assert hashlib.sha256(signed).hexdigest() == '726f997f7bbe8a50ec42fefeb0720aea92b765ffcadae35b20b781e7a286cfca'
+    output = json.loads(signed)
+    assert output['signed_case_count'] == 1 and output['l7_awarded'] is False
+    assert parse((ROOT / 'governance/agent-cert-reviewed-cases.json').read_bytes()) == []
 
 
 def test_exact_case_bytes_remain_non_text_git_inputs():

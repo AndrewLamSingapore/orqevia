@@ -93,6 +93,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # Admit only this exact new, dated signing/candidate observation. Every
+    # prior section and the original portfolio baseline remain byte-pinned.
+    signing_title = "## Actual independent A19 signing and identity-event adapter — 7 October 2026"
+    assert after.count(signing_title) == 1
+    signing_start = after.index(signing_title)
+    signing_end = after.index("## Scoped 5b deployment and unsigned A19 review — 7 October 2026", signing_start)
+    signing_update = after[signing_start:signing_end].encode("utf-8")
+    assert len(signing_update) == 2968
+    assert hashlib.sha256(signing_update).hexdigest() == "c9d8a4cc56fa50433b29a05160e0cfc6c74419d0cb7cd63ff0c43f0cd9ea1266"
+    after = after[:signing_start] + after[signing_end:]
     # Remove only this exact dated deployment/unsigned-review observation.
     # The frozen baseline and every earlier section pin stay unchanged; an
     # altered receipt, invented signature or expanded qualification still fails.
@@ -174,12 +184,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     ("0/21**.\n- Agent-reviewed evidence", "21/21**.\n- Agent-reviewed evidence"),
     ("bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22824",
      "bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22820"),
+    ("thirteen tamper-denial checks passed", "thirteen tamper-denial checks failed"),
+    ("its historical signature is not", "its historical signature is now"),
+    ("2026-10-07T11:52:32Z", "2026-10-08T11:52:32Z"),
+    ("No new cloud authority was added.", "New agent signing authority was added."),
 ])
 def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
     status = read_text(status_path, encoding="utf-8")
-    expected_count = 3 if original == "Fully L7 certified remains **0/21**." else 1
+    expected_count = 4 if original == "Fully L7 certified remains **0/21**." else 1
     assert status.count(original) == expected_count
     # Independently falsify each repeated claim, including both the new and
     # historical 0/21 statement. Do not just mutate the first occurrence.
