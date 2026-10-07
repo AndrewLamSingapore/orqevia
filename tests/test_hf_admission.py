@@ -3,7 +3,7 @@ import pytest
 from decimal import Decimal
 
 from app.compute_queue_api import SubmitJob
-from app.hf_admission import require_hf_admission
+from app.hf_admission import require_hf_admission, require_hf_fallback_policy
 from app.job_queue import JobQueue, Provider
 from app.provider_runtime import ProviderFailure
 
@@ -53,6 +53,53 @@ def test_selected_hf_cannot_fallback_to_another_cloud_provider():
     with pytest.raises(ProviderFailure, match='HF_FALLBACK_NOT_PERMITTED') as failure:
         require_hf_admission({**ENTRY, 'fallback_ids': ['other-cloud']}, JOB, 'hf-fixture')
     assert failure.value.pre_execution
+
+
+def fallback_entry():
+    return {**ENTRY, 'fallback_ids': ['hf-alternate'], 'hf_fallback_policy': {
+        'version': 'hf-fallback.v1', 'allowed_provider_ids': ['hf-alternate'],
+        'allow_non_hf': False}}
+
+
+def test_explicit_versioned_hf_fallback_consent_admits_only_bound_alternate():
+    primary = fallback_entry()
+    alternate = {**ENTRY, 'id': 'hf-alternate'}
+    assert require_hf_admission(primary, JOB, primary['id']) is None
+    assert require_hf_admission(alternate, JOB, alternate['id'], primary=primary) is None
+    with pytest.raises(ProviderFailure, match='HF_FALLBACK_NOT_PERMITTED'):
+        require_hf_admission({**alternate, 'id': 'other-hf'}, JOB, 'other-hf', primary=primary)
+
+
+@pytest.mark.parametrize('change', [
+    {'version': 'unknown'}, {'allowed_provider_ids': ['unrelated']},
+    {'allowed_provider_ids': 'hf-alternate'}, {'allow_non_hf': 'false'},
+    {'allow_non_hf': 1}, {'extra_permission': True},
+])
+def test_fallback_consent_malformed_or_mismatched_fails_closed(change):
+    primary = fallback_entry()
+    primary['hf_fallback_policy'] = {**primary['hf_fallback_policy'], **change}
+    with pytest.raises(ProviderFailure, match='HF_FALLBACK_POLICY_INVALID'):
+        require_hf_admission(primary, JOB, primary['id'])
+
+
+def test_non_hf_fallback_requires_separate_literal_consent():
+    primary = fallback_entry()
+    target = {'id': 'hf-alternate', 'provider_kind': 'chat_completions'}
+    with pytest.raises(ProviderFailure, match='HF_NON_HF_FALLBACK_NOT_PERMITTED'):
+        require_hf_fallback_policy(primary, JOB, target)
+    primary['hf_fallback_policy']['allow_non_hf'] = True
+    assert require_hf_fallback_policy(primary, JOB, target)['allow_non_hf'] is True
+
+
+def test_alternate_hf_rechecks_explicit_primary_locality_and_budget():
+    primary = fallback_entry()
+    alternate = {**ENTRY, 'id': 'hf-alternate'}
+    for job, code in (({**JOB, 'preferred_provider': 'unrelated'}, 'HF_EXPLICIT_SELECTION_REQUIRED'),
+                      ({**JOB, 'allow_cloud': 0}, 'HF_EXPLICIT_SELECTION_REQUIRED'),
+                      ({**JOB, 'data_classification': 'LOCAL_ONLY'}, 'DATA_LOCALITY'),
+                      ({**JOB, 'estimated_cost_usd': 0}, 'HF_BUDGET_NOT_RESERVED')):
+        with pytest.raises(ProviderFailure, match=code):
+            require_hf_admission(alternate, job, alternate['id'], primary=primary)
 
 
 def test_queue_reservation_covers_exact_hf_admission_cost():

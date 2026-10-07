@@ -9,6 +9,7 @@ import re
 from typing import Protocol, AsyncIterator
 from urllib.parse import urlsplit
 import httpx
+from .provider_circuit import CircuitRejected
 
 
 @dataclass(frozen=True)
@@ -185,7 +186,7 @@ class HuggingFaceProvider(ChatCompletionProvider):
                 'stream_options':{'include_usage':True},'max_tokens':output_tokens}
 
 
-async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=lambda:False,on_delta=lambda text:None,max_retries=1):
+async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=lambda:False,on_delta=lambda text:None,max_retries=1,circuits=None):
     if not isinstance(messages,list) or any(not isinstance(x,dict) or not isinstance(x.get('content',''),str) for x in messages):
         raise ProviderFailure('INVALID_MESSAGES',pre_execution=True)
     if type(max_retries) is not int or not 0<=max_retries<=2:raise ProviderFailure('INVALID_RETRY_LIMIT',pre_execution=True)
@@ -198,7 +199,12 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
         retry_errors=[]
         for attempt in range(max_retries+1):
             parts=[];usage=Usage();done=False;saw_usage=False;output_bytes=0
+            permit=None
             try:
+                if circuits is not None:
+                    try:permit=circuits.acquire(model.provider)
+                    except CircuitRejected as exc:
+                        raise ProviderFailure(exc.code,pre_execution=True) from None
                 async for chunk in provider.stream(model,messages,output_tokens):
                     if not isinstance(chunk,Chunk) or not isinstance(chunk.text,str) or type(chunk.complete) is not bool:
                         raise ProviderFailure('MALFORMED_STREAM')
@@ -215,16 +221,25 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
                         usage=chunk.usage;saw_usage=True
                     done=done or chunk.complete
                 if not done or not ''.join(parts).strip():raise ProviderFailure('EMPTY_OR_INCOMPLETE_RESPONSE')
-                return {'text':''.join(parts),'usage':usage,'cost_usd':usage.cost(model),'retries':attempt,'retry_errors':retry_errors}
+                result={'text':''.join(parts),'usage':usage,'cost_usd':usage.cost(model),'retries':attempt,'retry_errors':retry_errors}
+                if permit is not None:
+                    circuits.succeed(permit);permit=None
+                return result
             except ProviderFailure as exc:
                 exc.retry_count=attempt
                 # Never replay a request after visible output; avoid duplicated work and unaccounted retries.
                 if parts or saw_usage:
                     exc.pre_execution=False
+                if permit is not None:
+                    circuits.fail(permit,exc.code,pre_execution=exc.pre_execution is True);permit=None
                 if parts or saw_usage or not exc.pre_execution or not exc.retryable or attempt>=max_retries:raise
                 retry_errors.append(exc.code)
                 await asyncio.sleep(max(exc.retry_after,min(2**attempt,4)))
             except Exception:raise ProviderFailure('PROVIDER_ADAPTER_FAILURE') from None
+            finally:
+                # Includes cancellation and consumer-side validation failures:
+                # exhausted/terminal stream alone never claims recovery.
+                if permit is not None:circuits.abandon(permit)
     task=asyncio.create_task(run())
     try:
         async with asyncio.timeout(timeout):
@@ -270,7 +285,7 @@ async def complete_with_fallback(candidates,messages,*,authorize_candidate,outpu
             total_retries+=getattr(exc,'retry_count',0)
             exc.retry_count=total_retries
             exc.fallback_failures=list(failures)
-            if not exc.pre_execution or exc.code not in {'CREDENTIAL_UNAVAILABLE','RATE_LIMIT','CAPACITY'}:raise
+            if not exc.pre_execution or exc.code not in {'CREDENTIAL_UNAVAILABLE','RATE_LIMIT','CAPACITY','PROVIDER_CIRCUIT_OPEN'}:raise
             failures.append({'provider':model.provider,'code':exc.code})
     error=ProviderFailure('FALLBACK_EXHAUSTED',pre_execution=True)
     error.retry_count=total_retries;error.fallback_failures=failures

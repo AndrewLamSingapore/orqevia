@@ -36,6 +36,21 @@ If you are an AI agent updating this file:
 
 ---
 
+## HF runtime hardening — 7 October 2026
+
+### Claimed, not independently checked
+
+- The isolated PR #200 candidate adds explicit, versioned HF fallback consent,
+  fresh catalog binding before alternate dispatch, bounded process-local provider
+  circuits, and a task-scoped HF-owned serverless question-answering adapter.
+  Objective/Evidence Lens projections now distinguish requested and actually
+  selected inference routes without asserting independent attestation.
+- Executed focused regression: 284 passed, 1 skipped. Initial fixture-state
+  failures and two genuine stale-catalog consent/endpoint defects were preserved
+  and repaired. Full exact-revision off-host CI and real canaries remain separate
+  acceptance work. No Golden deployment, general chat qualification, God's Eye
+  acceptance, host stability pass or L7 certification is claimed by these tests.
+
 ## Status authority — 3 October 2026
 
 ### Claimed, not independently checked

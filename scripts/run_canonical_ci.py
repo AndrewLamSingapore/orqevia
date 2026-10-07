@@ -95,6 +95,7 @@ def main():
     names.append('agent_cert_execution')
     names.append('mlp_fabric')
     names.append('hf_admission')
+    names.extend(['hf_fallback','provider_circuit','provider_circuit_integration','hf_serverless','objective_inference_evidence'])
     names.append('system_architecture')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.

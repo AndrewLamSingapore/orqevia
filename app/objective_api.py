@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -23,6 +24,153 @@ router=APIRouter(prefix='/api/agents/objectives',tags=['governed-objectives'])
 
 def utcnow():
     return datetime.now(timezone.utc).isoformat()
+
+
+_INFERENCE_CODES = frozenset('''AUTHENTICATION CANCELLED CAPACITY CIRCUIT_CLOCK_INVALID
+CIRCUIT_INFLIGHT_LIMIT CIRCUIT_PROVIDER_INVALID CIRCUIT_REGISTRY_FULL
+CONTEXT_BUDGET_EXCEEDED CREDENTIAL_UNAVAILABLE DATA_LOCALITY
+EMPTY_OR_INCOMPLETE_RESPONSE FALLBACK_CONFIGURATION_INVALID FALLBACK_EXHAUSTED
+FALLBACK_POLICY_DENIED FALLBACK_UNQUALIFIED HF_BUDGET_NOT_RESERVED
+HF_CREDENTIAL_SCOPE_DENIED HF_EXPLICIT_SELECTION_REQUIRED HF_FALLBACK_NOT_PERMITTED
+HF_FALLBACK_POLICY_INVALID HF_NON_HF_FALLBACK_NOT_PERMITTED INCOMPLETE_STREAM
+INVALID_MESSAGES INVALID_QA_ANSWER_SPAN INVALID_QA_INPUT INVALID_RETRY_LIMIT
+INVALID_TIMEOUT INVALID_USAGE MALFORMED_QA_RESPONSE MALFORMED_STREAM
+MODEL_PROVIDER_UNPINNED OUTPUT_BUDGET_EXHAUSTED OUTPUT_BUDGET_INVALID
+PROVIDER_ADAPTER_FAILURE PROVIDER_CIRCUIT_OPEN PROVIDER_HTTP_FAILURE
+PROVIDER_STREAM_FAILURE PROVIDER_TIMEOUT PROVIDER_TRANSPORT_FAILURE
+PROVIDER_UNAVAILABLE PROVIDER_UNQUALIFIED QA_INPUT_BUDGET_EXCEEDED
+QA_RESPONSE_SIZE_EXCEEDED RATE_LIMIT REASONING_BUDGET_CONFIG_INVALID
+REASONING_BUDGET_COST_EXCEEDED REASONING_BUDGET_EXTENSION_DENIED
+REASONING_BUDGET_PRICE_UNAVAILABLE STREAM_SIZE_EXCEEDED TASK_TIMEOUT
+UNSUPPORTED_COMPLETION'''.split())
+_INFERENCE_DETAILS = frozenset(('agent_id', 'provider', 'model', 'cached_tokens',
+    'retries', 'success', 'failure_kind', 'requested_tier', 'requested_provider',
+    'requested_model', 'fallback_route', 'error_classifications'))
+
+
+def inference_attempt_projection(jobs):
+    """Bounded read-only projection of owned compute attempts, not attestation.
+
+    Attempt task_id is the QUEUE JOB id, not the enclosing objective UUID.
+    Missing/malformed evidence never affects execution or becomes a PASS.
+    Arbitrary model text, error bodies and credential references are excluded.
+    Provider/model names must also match an owned catalog/configuration pair.
+    """
+    result={'schema_version':'jarvis.inference-attempts.v1', 'source':'COMPUTE_LEDGER',
+        'status':'NOT_APPLICABLE', 'attempts':[], 'missing_job_ids':[],
+        'verification':'UNVERIFIED', 'timestamp_source':'QUEUE_JOB_LIFECYCLE',
+        'attempt_timestamp':'NOT_RECORDED', 'digest_scope':'SANITIZED_PROJECTION_NOT_SIGNATURE'}
+    if not jobs:return result
+
+    def reject(reason):
+        return {**result, 'status':'INVALID', 'reason':reason, 'attempts':[]}
+
+    def timestamp(value):
+        if value is None:return None
+        if not isinstance(value,str) or len(value)>40:raise ValueError()
+        parsed=datetime.fromisoformat(value.replace('Z','+00:00'))
+        if parsed.tzinfo is None or not 2000<=parsed.year<=2100:raise ValueError()
+        return parsed.isoformat()
+
+    def integer(value,maximum):
+        if value is not None and (type(value) is not int or not 0<=value<=maximum):raise ValueError()
+        return value
+
+    def number(value,maximum):
+        if value is not None and (type(value) not in (int,float) or
+            not math.isfinite(value) or not 0<=value<=maximum):raise ValueError()
+        return value
+
+    def unique_json(pairs):
+        value={}
+        for key,item in pairs:
+            if key in value:raise ValueError()
+            value[key]=item
+        return value
+
+    try:
+        if len(jobs)>6:raise ValueError()
+        bound={}
+        for job in jobs:
+            jid=job['id']
+            if str(uuid.UUID(jid))!=jid or jid in bound:raise ValueError()
+            if job.get('status') not in {'queued','running','completed','failed','cancelled'}:raise ValueError()
+            agent_record(job['agent'])
+            bound[jid]=job
+    except (KeyError,TypeError,ValueError,RegistryError):
+        return reject('INVALID_QUEUE_BINDING')
+    result['missing_job_ids']=sorted(bound)
+    path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'compute-ledger.db'
+    if not path.is_file():return {**result, 'status':'UNAVAILABLE', 'reason':'COMPUTE_LEDGER_UNAVAILABLE'}
+    try:
+        from .compute_catalog import load_catalog
+        from .agent_dispatch_api import local_model_backends
+        pairs={(entry['id'],entry['model']) for entry in load_catalog()}
+        pairs.update((entry.name,entry.model) for entry in local_model_backends())
+        placeholders=','.join('?' for _ in bound)
+        with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as db:
+            rows=db.execute('SELECT id,task_id,tier,seconds,tokens,cost,length(details),'
+                'substr(details,1,32769) FROM reasoning_attempts WHERE task_id IN ('+
+                placeholders+') ORDER BY task_id,id LIMIT 65',tuple(bound)).fetchall()
+    except (OSError,sqlite3.Error,ValueError,TypeError,KeyError):
+        return {**result, 'status':'UNAVAILABLE', 'reason':'COMPUTE_LEDGER_OR_REGISTRY_UNAVAILABLE'}
+    try:
+        if len(rows)>64:raise ValueError()
+        seen=set();covered=set();attempts=[]
+        for aid,jid,tier,seconds,tokens,cost,detail_size,raw in rows:
+            if not isinstance(aid,str) or not re.fullmatch('[0-9a-f]{32}',aid) or aid in seen:raise ValueError()
+            seen.add(aid)
+            if jid not in bound or tier not in {'NANO','MINI','FLAGSHIP'}:raise ValueError()
+            if type(detail_size) is not int or not 2<=detail_size<=32768:raise ValueError()
+            detail=json.loads(raw,object_pairs_hook=unique_json,
+                parse_constant=lambda _:(_ for _ in ()).throw(ValueError()))
+            if not isinstance(detail,dict) or set(detail)-_INFERENCE_DETAILS:raise ValueError()
+            job=bound[jid]
+            requested=(detail['requested_provider'],detail['requested_model'])
+            selected=(detail['provider'],detail['model'])
+            if (detail['agent_id']!=job['agent'] or requested!=(job['provider'],job['model']) or
+                requested not in pairs or selected not in pairs or detail['requested_tier']!=tier):raise ValueError()
+            if type(detail['success']) is not bool:raise ValueError()
+            failure=detail.get('failure_kind')
+            if failure is not None and failure not in _INFERENCE_CODES:raise ValueError()
+            if detail['success'] and failure is not None:raise ValueError()
+            if not detail['success'] and failure is None:raise ValueError()
+            routes=detail.get('fallback_route',[]);codes=detail.get('error_classifications',[])
+            if not isinstance(routes,list) or len(routes)>4 or not isinstance(codes,list) or len(codes)>16:raise ValueError()
+            if any(not isinstance(code,str) or code not in _INFERENCE_CODES for code in codes) or len(set(codes))!=len(codes):raise ValueError()
+            if failure is not None and failure not in codes:raise ValueError()
+            providers_seen=set()
+            for route in routes:
+                if not isinstance(route,dict) or set(route)!={'provider','code'}:raise ValueError()
+                provider=route['provider']
+                if (not isinstance(provider,str) or provider in providers_seen or
+                    provider not in {pair[0] for pair in pairs} or route['code'] not in _INFERENCE_CODES):raise ValueError()
+                if route['code'] not in codes:raise ValueError()
+                providers_seen.add(provider)
+            if (not routes and selected!=requested or routes and routes[0]['provider']!=requested[0] or
+                detail['success'] and selected[0] in providers_seen):raise ValueError()
+            if seconds is None or detail.get('retries') is None:raise ValueError()
+            retry_count=integer(detail['retries'],10)
+            cached=integer(detail.get('cached_tokens'),10**9)
+            total=integer(tokens,10**9)
+            if cached is not None and total is not None and cached>total:raise ValueError()
+            receipt={'attempt_id':aid,'queue_job_id':jid,'agent_id':job['agent'],
+                'requested_provider':requested[0],'requested_model':requested[1],
+                'selected_provider':selected[0],'selected_model':selected[1],
+                'tier':tier,'success':detail['success'],'failure_code':failure,
+                'fallback_route':routes,'error_classifications':codes,'retries':retry_count,
+                'total_tokens':total,'cached_tokens':cached,'cost_usd':number(cost,100),
+                'elapsed_seconds':number(seconds,86400),
+                'job_started_at':timestamp(job.get('started_at')),
+                'job_completed_at':timestamp(job.get('completed_at'))}
+            receipt['evidence_sha256']=hashlib.sha256(json.dumps(receipt,sort_keys=True,
+                separators=(',',':'),ensure_ascii=True,allow_nan=False).encode()).hexdigest()
+            attempts.append(receipt);covered.add(jid)
+        result['missing_job_ids']=sorted(set(bound)-covered)
+        return {**result,'status':'OBSERVED' if not result['missing_job_ids'] else 'MISSING' if not attempts else 'PARTIAL',
+            'attempts':attempts}
+    except (KeyError,TypeError,ValueError,OverflowError,RecursionError):
+        return reject('INVALID_INFERENCE_EVIDENCE')
 
 
 def model_content(steps,revision):
@@ -335,6 +483,7 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
             'state':job.get('status'),'created_at':job.get('created_at'),
             'started_at':job.get('started_at'),'completed_at':job.get('completed_at')} for job in jobs],
         'agent_execution':[agent_execution_metadata(step) for step in current_steps if step.get('job')],
+        'inference_attempts':inference_attempt_projection(jobs),
         'provenance':{'task_id':'DATABASE','state':'QUEUE','timestamps':'QUEUE','jobs':'QUEUE',
             'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER','runtime':runtime_provenance},
         'closed_world_policy':'UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE',

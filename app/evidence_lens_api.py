@@ -43,6 +43,8 @@ def _snapshot(task: dict) -> dict:
         "agent_ids": sorted({item["selected_agent_id"] for item in metadata["agent_execution"]
                              if item.get("selected_agent_id") and item.get("registry_binding") == "VERIFIED"}),
         "completed_at": metadata.get("completed_at"),
+        "inference_attempts": metadata.get("inference_attempts", {
+            "status": "UNAVAILABLE", "attempts": [], "verification": "UNVERIFIED"}),
     }
 
 

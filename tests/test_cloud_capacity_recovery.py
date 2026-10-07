@@ -28,6 +28,9 @@ def test_stream_capacity_does_not_replay_after_accepted_http_200():
 
 def fixture(monkeypatch,tmp_path,*,tier='FLAGSHIP',rate='1',qualified=True,partial=False):
     from app import cloud_execution as cloud
+    from app.provider_circuit import ProviderCircuits
+    # Independent fixture deployments must not share process-local outage state.
+    monkeypatch.setattr(cloud,'PROVIDER_CIRCUITS',ProviderCircuits())
     from app.job_queue import JobQueue,QueuePolicy,Provider
     root=tmp_path/'capacity-fixture';root.mkdir()
     monkeypatch.setenv('PRIME_DATA_DIR',str(root))
