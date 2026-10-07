@@ -130,3 +130,25 @@ jobs:
             --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
             https://127.0.0.1:18443/interface/v1/health)
           test "$status" = 401
+      - name: Export exact tested candidate image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/prime-image"
+          docker image inspect prime:candidate --format '{{json .}}' > "$RUNNER_TEMP/prime-image/image-inspect.json"
+          python - "$RUNNER_TEMP/prime-image/image-inspect.json" "$GITHUB_SHA" <<'PY'
+          import json, sys
+          image = json.load(open(sys.argv[1]))
+          assert image['Config']['Labels']['org.opencontainers.image.revision'] == sys.argv[2]
+          PY
+          docker save prime:candidate | gzip -1 > "$RUNNER_TEMP/prime-image/prime-candidate.tar.gz"
+          (cd "$RUNNER_TEMP/prime-image" && sha256sum prime-candidate.tar.gz image-inspect.json > SHA256SUMS)
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/prime-image/SOURCE_REVISION"
+      - name: Preserve image for separately gated deployment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: prime-candidate-image-${{ github.sha }}
+          path: ${{ runner.temp }}/prime-image/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

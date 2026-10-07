@@ -79,6 +79,28 @@ def test_phone_pairing_only_local_same_origin(shell):
     assert 'fixture-owner-secret' not in result.text
 
 
+def test_hf_inspection_requires_explicit_owner_and_same_origin(shell, monkeypatch):
+    _, client = shell
+    from app import hf_observation_api
+    calls = []
+    def inspect(authorization, task_id=None):
+        calls.append((authorization, task_id))
+        return {'schema_version': 'jarvis.hf-observation.v1', 'status': 'UNVERIFIED'}
+    monkeypatch.setattr(hf_observation_api, 'inspect_hf', inspect)
+    path = '/control/api/hf-observation'
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers={'Authorization': 'Bearer wrong'}).status_code == 401
+    assert client.get(path, headers={'Authorization': 'Bearer fixture-owner-secret',
+                                    'Host': 'evil.example'}).status_code == 403
+    assert calls == []
+    result = client.get(path, params={'task_id': 'fixture-task'},
+                        headers={'Authorization': 'Bearer fixture-owner-secret'})
+    assert result.status_code == 200
+    assert result.headers['cache-control'] == 'no-store'
+    assert result.json()['status'] == 'UNVERIFIED'
+    assert calls == [('Bearer fixture-owner-secret', 'fixture-task')]
+
+
 @pytest.mark.parametrize('headers', [
     {'Host': 'evil.example'}, {'Origin': 'http://evil.example'},
     {'Origin': 'http://localhost:8000'}, {'Origin': 'http://127.0.0.1:9999'},

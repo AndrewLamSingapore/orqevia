@@ -16,6 +16,7 @@ import time
 import httpx
 
 from .provider_runtime import ProviderFailure, capacity_rejection
+from .provider_circuit import CircuitRejected, ProviderCircuits
 from .secret_refs import resolve_secret
 from .tier_router import classify_for_cloud
 
@@ -26,6 +27,7 @@ class HFServerlessQA:
     MAX_CONTEXT_BYTES = 2048
     MAX_QUESTION_BYTES = 256
     MAX_RESPONSE_BYTES = 16384
+    CIRCUIT_ID = 'hf-inference-qa'
 
     def __init__(self, secret_ref='file:HF_TOKEN', *, model=MODEL,
                  secret_resolver=resolve_secret, transport=None):
@@ -95,8 +97,9 @@ class HFServerlessQA:
             raise ProviderFailure('INVALID_QA_ANSWER_SPAN')
         return {'answer': answer, 'provider_score': score, 'start': start, 'end': end}
 
-    async def answer(self, *, context, question, data_classification,
-                     timeout_seconds=15):
+    @classmethod
+    def validate_request(cls, *, context, question, data_classification,
+                         timeout_seconds=15):
         if (not isinstance(context, str) or not context.strip() or
                 not isinstance(question, str) or not question.strip()):
             raise ProviderFailure('INVALID_QA_INPUT', pre_execution=True)
@@ -105,8 +108,8 @@ class HFServerlessQA:
             question_bytes = len(question.encode('utf-8'))
         except UnicodeError:
             raise ProviderFailure('INVALID_QA_INPUT', pre_execution=True) from None
-        if (context_bytes > self.MAX_CONTEXT_BYTES or
-                question_bytes > self.MAX_QUESTION_BYTES or
+        if (context_bytes > cls.MAX_CONTEXT_BYTES or
+                question_bytes > cls.MAX_QUESTION_BYTES or
                 any(ord(char) < 32 and char not in '\n\r\t' for char in context + question)):
             raise ProviderFailure('QA_INPUT_BUDGET_EXCEEDED', pre_execution=True)
         if not classify_for_cloud(data_classification, context + '\n' + question):
@@ -114,6 +117,75 @@ class HFServerlessQA:
         if (type(timeout_seconds) not in (int, float) or
                 not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 30):
             raise ProviderFailure('INVALID_TIMEOUT', pre_execution=True)
+
+    @staticmethod
+    def _cancelled(callback):
+        if callback is None:
+            return False
+        try:
+            value = callback()
+        except Exception:
+            raise ProviderFailure('CANCELLATION_STATE_UNAVAILABLE', pre_execution=True) from None
+        if type(value) is not bool:
+            raise ProviderFailure('CANCELLATION_STATE_INVALID', pre_execution=True)
+        return value
+
+    async def answer(self, *, context, question, data_classification,
+                     timeout_seconds=15, circuits=None, cancelled=None):
+        self.validate_request(context=context, question=question,
+                              data_classification=data_classification,
+                              timeout_seconds=timeout_seconds)
+        if cancelled is not None and not callable(cancelled):
+            raise ProviderFailure('CANCELLATION_STATE_INVALID', pre_execution=True)
+        if circuits is not None and not isinstance(circuits, ProviderCircuits):
+            raise ProviderFailure('CIRCUIT_CONFIGURATION_INVALID', pre_execution=True)
+        if self._cancelled(cancelled):
+            raise ProviderFailure('CANCELLED', pre_execution=True)
+        permit = None
+        task = None
+        try:
+            if circuits is not None:
+                try:
+                    permit = circuits.acquire(self.CIRCUIT_ID)
+                except CircuitRejected as exc:
+                    raise ProviderFailure(exc.code, pre_execution=True) from None
+            recovery_probe = bool(permit and permit.recovery_probe)
+            task = asyncio.create_task(self._answer_once(context=context,
+                question=question, timeout_seconds=timeout_seconds))
+            if cancelled is not None:
+                while not task.done():
+                    if self._cancelled(cancelled):
+                        # Once dispatched, cancellation never proves rejected
+                        # provider admission and cannot authorize fallback.
+                        raise ProviderFailure('CANCELLED')
+                    await asyncio.wait({task}, timeout=.05)
+            result = await task
+            if self._cancelled(cancelled):
+                raise ProviderFailure('CANCELLED')
+            if permit is not None:
+                circuits.succeed(permit)
+                permit = None
+            return {**result, 'circuit_recovery_probe': recovery_probe}
+        except ProviderFailure as exc:
+            if task is not None and self._cancelled(cancelled):
+                # Cancellation may race a completed rejection/error. It still
+                # cannot authorize replay or count as a provider fault.
+                exc = ProviderFailure('CANCELLED')
+            if permit is not None:
+                circuits.fail(permit, exc.code, pre_execution=exc.pre_execution is True)
+                permit = None
+            raise exc from None
+        finally:
+            if task is not None:
+                if not task.done():
+                    task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+            if permit is not None:
+                # Caller cancellation/local faults never claim provider failure
+                # or recovery, and release an exclusive half-open permit.
+                circuits.abandon(permit)
+
+    async def _answer_once(self, *, context, question, timeout_seconds):
         key = self._credential()
         payload = {'inputs': {'context': context, 'question': question},
                    'parameters': {'top_k': 1, 'max_answer_len': 64,
@@ -134,15 +206,24 @@ class HFServerlessQA:
                                 raise ProviderFailure('QA_RESPONSE_SIZE_EXCEEDED')
                             raw.extend(chunk)
                         if response.status_code >= 300:
-                            if response.status_code == 429:
-                                raise ProviderFailure('RATE_LIMIT', pre_execution=True)
                             if response.status_code in (401, 403):
                                 raise ProviderFailure('AUTHENTICATION')
-                            if response.status_code == 503:
+                            if response.status_code in (429, 503):
                                 try:
-                                    rejected = capacity_rejection(self._decode(raw))
+                                    fault = self._decode(raw)
+                                    # Contradictory output/usage or malformed
+                                    # bodies cannot prove rejected admission.
+                                    clean_rejection = (isinstance(fault, dict)
+                                        and not any(key in fault for key in (
+                                            'answer', 'score', 'start', 'end',
+                                            'usage', 'choices', 'generated_text',
+                                            'output', 'outputs', 'result')))
+                                    rejected = clean_rejection and capacity_rejection(fault)
                                 except ProviderFailure:
+                                    clean_rejection = False
                                     rejected = False
+                                if response.status_code == 429 and clean_rejection:
+                                    raise ProviderFailure('RATE_LIMIT', pre_execution=True)
                                 if rejected:
                                     raise ProviderFailure('CAPACITY', pre_execution=True)
                             raise ProviderFailure('PROVIDER_HTTP_FAILURE')

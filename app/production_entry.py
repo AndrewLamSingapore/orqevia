@@ -181,6 +181,15 @@ def agent_capabilities(authorization=Depends(local_verifier_authorization)):
             'agents': project_capability_observatory(certification)}
 
 
+@app.get('/control/api/hf-observation')
+def hf_observation(task_id: str | None = None,
+                   authorization=Depends(local_verifier_authorization)):
+    # Inspection never dispatches a model call or creates an evidence record.
+    # Keep this behind explicit bearer access, not ambient Workbench access.
+    from .hf_observation_api import inspect_hf
+    return inspect_hf(authorization, task_id=task_id)
+
+
 @app.get('/control/api/jobs/{job_id}')
 def job(job_id: str, authorization=Depends(local_authorization)):
     return compute_queue_api.get_job(job_id, authorization)
