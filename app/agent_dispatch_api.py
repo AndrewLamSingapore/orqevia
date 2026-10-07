@@ -160,8 +160,14 @@ def joined_role_review(body, authorization, *, actor, task_id, runtime):
         # A correct answer to unrelated work is not this certification case.
         # Rebuild the existing dispatch prompt from the owned step correlation
         # and canonical source, not from a submitted expected prompt/hash.
-        from .agent_cert_role_review import canonical_role_spec
-        spec = canonical_role_spec(execution['agent_id'], execution['capability_id'])
+        from .agent_cert_role_review import canonical_case_spec
+        dimension, test_case = execution.get('dimension'), execution.get('test_case')
+        if (type(dimension) is not str or type(test_case) is not str
+                or not re.fullmatch(r'[a-z_]{1,40}', dimension)
+                or not re.fullmatch(r'[a-z_]{1,40}', test_case)):
+            raise ValueError()
+        spec = canonical_case_spec(execution['agent_id'], execution['capability_id'],
+                                   dimension + ':' + test_case)
         original = AgentRequest(**spec['request'])
         correlation = steps[0]['dispatch'].get('correlation_id')
         if type(correlation) is not str or str(uuid.UUID(correlation)) != correlation:

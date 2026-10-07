@@ -15,7 +15,9 @@ import re
 import uuid
 
 from .agent_registry import agent_record, canonical_agent_id
-from .agent_cert_role_review import canonical_role_spec, review_role_output
+from .agent_cert_role_review import (
+    canonical_case_spec, canonical_role_spec, review_case_output, review_role_output,
+)
 
 
 _EXECUTION_FIELDS = {
@@ -96,7 +98,7 @@ def _cloud_execution(execution, canonical, source_revision):
     signer must separately rebuild this binding from its pinned Owner policy.
     PREPARED_NOT_EXECUTED remains preparation metadata, not execution evidence.
     """
-    from .agent_cert_transport import (BINDING_SCHEMA, MODEL, PROVIDER_ID,
+    from .agent_cert_transport import (BINDING_SCHEMA, SUPPORTED_MODELS, PROVIDER_ID,
                                      case_transport_identity)
     extension = execution.get("cloud_transport")
     if type(extension) is not dict or set(extension) != {"binding", "queue_route"}:
@@ -117,7 +119,8 @@ def _cloud_execution(execution, canonical, source_revision):
             or binding.get("canonical_data_classification") != "LOCAL_ONLY"
             or binding.get("execution_data_classification") != "CLOUD_PERMITTED"
             or binding.get("provider_id") != PROVIDER_ID
-            or binding.get("provider_kind") != "huggingface" or binding.get("model") != MODEL
+            or binding.get("provider_kind") != "huggingface"
+            or type(binding.get("model")) is not str or binding["model"] not in SUPPORTED_MODELS
             or binding.get("task_class") != canonical["request"]["task_class"]
             or binding.get("state") != "PREPARED_NOT_EXECUTED"
             or binding.get("certification") != "UNVERIFIED"
@@ -155,8 +158,8 @@ def _cloud_execution(execution, canonical, source_revision):
             or binding["execution_request_sha256"] != digest_binding["execution_request_sha256"]
             or binding["request_binding_sha256"] != _sha(_canonical(digest_binding))):
         _deny("CLOUD_REQUEST_BINDING_INVALID")
-    expected = {"preferred_provider": PROVIDER_ID, "model": MODEL, "allow_cloud": 1,
-                "data_classification": "CLOUD_PERMITTED", "task_class": "planning",
+    expected = {"preferred_provider": PROVIDER_ID, "model": binding["model"], "allow_cloud": 1,
+                "data_classification": "CLOUD_PERMITTED", "task_class": original["task_class"],
                 "classification": "R0", "max_retries": 0, "max_cost_usd": limits["max_cost_usd"]}
     if (type(route) is not dict or set(route) != _CLOUD_ROUTE_FIELDS
             or any(_canonical(route.get(key)) != _canonical(value) for key, value in expected.items())
@@ -174,7 +177,7 @@ def _cloud_execution(execution, canonical, source_revision):
 
 def execute_role_review(context: str, *, reviewer_id: str, capability_id: str,
                         source_revision: str, task_id: str) -> dict:
-    """Review exact public role facts under a separate registered actor.
+    """Review exact public case facts under a separate registered actor.
 
     Only case quality is judged here. Caller-supplied execution metadata must
     separately match the owning queue/runtime and protected signing inputs.
@@ -211,10 +214,18 @@ def execute_role_review(context: str, *, reviewer_id: str, capability_id: str,
                 or capability_id not in agent_record(reviewer_id)["capability_requirements"]
                 or agent_record(reviewer_id)["authority"] != "advisory"):
             _deny("INDEPENDENT_REVIEWER_REQUIRED")
-        canonical = canonical_role_spec(subject, subject_cap)
+        dimension, test_case = execution.get("dimension"), execution.get("test_case")
+        if (type(dimension) is not str or type(test_case) is not str
+                or not re.fullmatch(r"[a-z_]{1,40}", dimension)
+                or not re.fullmatch(r"[a-z_]{1,40}", test_case)):
+            _deny("CASE_BINDING_INVALID")
+        case_id = dimension + ":" + test_case
+        # Preserve the exact legacy role-normal path as well as its API.
+        canonical = (canonical_role_spec(subject, subject_cap) if case_id == "role:normal"
+                     else canonical_case_spec(subject, subject_cap, case_id))
         image = execution.get("runtime_image_id")
         if (execution.get("schema_version") != "prime.agent-certification.execution.v1"
-                or execution.get("dimension") != "role" or execution.get("test_case") != "normal"
+                or canonical.get("case") != case_id
                 or execution.get("executor_identity") != subject
                 or execution.get("environment") != "LIVE_RUNTIME"
                 or _canonical(execution.get("case_spec")) != _canonical(canonical)
@@ -254,18 +265,21 @@ def execute_role_review(context: str, *, reviewer_id: str, capability_id: str,
         if not _time(job["started_at"]) <= _time(job["completed_at"]) <= now:
             _deny("EXECUTION_TIME_INVALID")
         _json(job["result"])
-        passed, errors = review_role_output(subject, subject_cap, job["result"])
+        passed, errors = (review_role_output(subject, subject_cap, job["result"])
+                          if case_id == "role:normal" else
+                          review_case_output(subject, subject_cap, case_id, job["result"]))
         if (type(passed) is not bool or type(errors) is not tuple or len(errors) > 32
                 or any(type(code) is not str or not re.fullmatch(r"[A-Za-z0-9_]{1,80}", code)
                        for code in errors) or (passed and errors)):
             _deny("ORACLE_CONTRACT_INVALID")
-        oracle_id = ("group_two_exact_role_oracle/v1" if "group_two_exact_role_oracle" in
+        oracle_id = (canonical["oracle_id"] if case_id != "role:normal" else
+                     "group_two_exact_role_oracle/v1" if "group_two_exact_role_oracle" in
                      canonical["independent_review"] else "existing.role-normal.v1")
         return {
             "schema_version": "prime.agent-cert-role-review.v1", "task_id": task_id,
             "reviewer_id": reviewer_id, "reviewer_capability_id": capability_id,
             "subject_agent_id": subject, "subject_capability_id": subject_cap,
-            "dimension": "role", "test_case": "normal", "source_revision": source_revision,
+            "dimension": dimension, "test_case": test_case, "source_revision": source_revision,
             "runtime_image_id": image, "subject_job_id": job["id"],
             "review_nonce": payload["review_nonce"], "reviewed_at": now.isoformat(),
             "execution_evidence_sha256": payload["expected_execution_sha256"],

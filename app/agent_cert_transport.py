@@ -1,4 +1,4 @@
-"""Pure, caller-authorized cloud transport for existing synthetic role cases.
+"""Pure, caller-authorized cloud transport for explicit synthetic case oracles.
 
 The protected caller must independently obtain/pin the Owner policy digest and
 the actual runtime source revision. An agent-supplied policy or digest is NOT
@@ -28,6 +28,7 @@ POLICY_SCHEMA = "prime.agent-cert-cloud-policy.v1"
 BINDING_SCHEMA = "prime.agent-cert-cloud-binding.v1"
 PROVIDER_ID = "hf-qwen-certification"
 MODEL = "Qwen/Qwen3-32B:deepinfra"
+SUPPORTED_MODELS = frozenset({MODEL, "Qwen/Qwen3-235B-A22B-Instruct-2507:novita"})
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 _REFERENCE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}\Z")
@@ -66,7 +67,7 @@ def transport_digest(value: object) -> str:
 
 def canonical_role_case(agent_id: str, capability_id: str,
                         case_id: str = "role:normal") -> dict:
-    """Return a fresh current-source challenge, not an execution/PASS record.
+    """Return a fresh current-source role challenge, not an execution/PASS record.
 
     Only the existing strict role:normal oracle for an actual primary owned
     responsibility is supported. Secondary/generic/unseen cases are not silently
@@ -107,14 +108,60 @@ def case_transport_identity(spec: dict) -> dict:
     """Public binding fields for an independently authorized policy."""
     if type(spec) is not dict:
         raise ValueError("canonical case required")
-    canonical = canonical_role_case(spec.get("agent_id"), spec.get("capability_id"),
+    canonical = canonical_cert_case(spec.get("agent_id"), spec.get("capability_id"),
                                     spec.get("case"))
     if _json(spec) != _json(canonical):
         raise ValueError("canonical case was modified")
+    oracle = _ORACLES[canonical["agent_id"]]
+    if canonical["case"] != "role:normal":
+        from .agent_cert_a19_cases import ORACLE_ID
+        oracle = ORACLE_ID
     return {"agent_id": canonical["agent_id"],
             "capability_id": canonical["capability_id"],
-            "case": canonical["case"], "oracle_id": _ORACLES[canonical["agent_id"]],
+            "case": canonical["case"], "oracle_id": oracle,
             "canonical_spec_sha256": transport_digest(canonical)}
+
+
+def canonical_cert_case(agent_id: str, capability_id: str,
+                        case_id: str = "role:normal") -> dict:
+    """Existing role or one explicit source-owned public A19 quality adapter.
+
+    No generic challenge acquires an oracle. Advisory case descriptions do not
+    prove actual tool, recovery or audit events. Higher task tiers stay intact.
+    """
+    if type(case_id) is str and case_id == "role:normal":
+        return canonical_role_case(agent_id, capability_id, case_id)
+    from .agent_cert_a19_cases import CASE_VERSION, ORACLE_ID, SUPPORTED_CASES
+    if (type(agent_id) is not str or agent_id != "a19" or
+            type(capability_id) is not str or capability_id != "responsibility.a19" or
+            type(case_id) is not str or case_id not in SUPPORTED_CASES or
+            responsibility_owner(capability_id) != agent_id or
+            capability_id not in agent_record(agent_id)["capability_requirements"]):
+        raise ValueError("unsupported registered case/oracle")
+    from .agent_cert_role_review import canonical_case_spec
+    canonical = canonical_case_spec(agent_id, capability_id, case_id)
+    request = canonical["request"]
+    expected_request = challenge(case_id, agent_id=agent_id, capability_id=capability_id)["request"]
+    try:
+        context = json.loads(request["context"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("canonical public synthetic oracle unavailable") from None
+    if (canonical.get("oracle_id") != ORACLE_ID or canonical.get("case_version") != CASE_VERSION
+            or ORACLE_ID not in canonical["independent_review"]
+            or canonical["certification"] != "UNVERIFIED"
+            or request.get("response_format") != "strict_json"
+            or request.get("task_class") != expected_request["task_class"]
+            or request.get("minimum_tier") != expected_request["minimum_tier"]
+            or request.get("classification") != "R0"
+            or request.get("data_classification") != "LOCAL_ONLY"
+            or type(request.get("max_cost_usd")) is not int or request["max_cost_usd"] != 0
+            or type(context) is not dict
+            or context.get("schema") != "prime.a19-public-quality-input.v1"
+            or context.get("data_scope") != "PUBLIC_SYNTHETIC_ONLY"
+            or context.get("case_id") != case_id or context.get("case_version") != CASE_VERSION
+            or not classify_for_cloud("CLOUD_PERMITTED", request["objective"] + "\n" + request["context"])):
+        raise ValueError("canonical public synthetic oracle unavailable")
+    return canonical
 
 
 @dataclass(frozen=True)
@@ -126,7 +173,7 @@ class CertificationTransport:
 
     def canonical_spec(self) -> dict:
         stored = json.loads(self.canonical_spec_json)
-        canonical = canonical_role_case(stored.get("agent_id"), stored.get("capability_id"),
+        canonical = canonical_cert_case(stored.get("agent_id"), stored.get("capability_id"),
                                         stored.get("case"))
         if _json(canonical) != self.canonical_spec_json:
             raise ValueError("current canonical challenge changed")
@@ -143,7 +190,7 @@ class CertificationTransport:
 
 def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
                     expected_policy_sha256: str) -> CertificationTransport:
-    """Bind one exact existing role challenge to protected Owner consent.
+    """Bind one exact source-owned challenge to protected Owner consent.
 
     ``expected_*`` MUST come from the authenticated operator/caller boundary,
     never from agent request fields. Limits are a required execution contract,
@@ -170,7 +217,7 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
             or policy["public_synthetic"] is not True
             or policy.get("provider_id") != PROVIDER_ID
             or policy.get("provider_kind") != "huggingface"
-            or policy.get("model") != MODEL):
+            or type(policy.get("model")) is not str or policy["model"] not in SUPPORTED_MODELS):
         raise ValueError("Owner policy scope mismatch")
     fixed_limits = {"context_tokens": 4096, "output_tokens": 1024,
                     "timeout_seconds": 35, "max_retries": 0, "concurrency_limit": 1}
@@ -200,7 +247,7 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
                "owner_authorization_ref": policy["owner_authorization_ref"],
                "canonical_data_classification": "LOCAL_ONLY",
                "execution_data_classification": "CLOUD_PERMITTED",
-               "provider_id": PROVIDER_ID, "provider_kind": "huggingface", "model": MODEL,
+               "provider_id": PROVIDER_ID, "provider_kind": "huggingface", "model": policy["model"],
                "minimum_tier": tier.name, "task_class": base["task_class"],
                "limits": {**fixed_limits, "max_cost_usd": cost},
                "state": "PREPARED_NOT_EXECUTED", "certification": "UNVERIFIED",

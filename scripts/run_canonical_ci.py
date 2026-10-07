@@ -100,6 +100,12 @@ def main():
                   'collect_agent_cert_case'])
     names.append('mlp_fabric')
     names.append('hf_admission')
+    names.append('hf_prompt_scope')
+    names.append('agent_cert_a19_cases')
+    names.extend(['agent_cert_a19_format_contract', 'agent_cert_role_review',
+                  'agent_cert_review_tool_cases', 'agent_cert_transport_cases',
+                  'agent_cert_case_bridge', 'agent_cert_case_bridge_independent',
+                  'agent_cert_dispatch_cases'])
     names.append('provider_rejection_ambiguity')
     names.extend(['hf_fallback','provider_circuit','provider_circuit_integration','hf_serverless','objective_inference_evidence'])
     names.append('hf_observation_api')
