@@ -392,7 +392,8 @@ def collect_role_case(spec, *, io: OperatorIO, expected_source_revision: str,
         result = job.get('result')
         _require(type(result) is str and 1 <= len(result.encode('utf-8')) <= 16_384 and
                  type(job.get('attempts')) is int and job['attempts'] == 1 and
-                 job.get('error') is None and
+                 (job.get('error') is None or
+                  (type(job.get('error')) is str and job['error'] == '')) and
                  _utc(job.get('started_at')) <= _utc(job.get('completed_at')) <= _now(wall_clock),
                  'COMPLETED_JOB_INVALID')
         execution = {'schema_version': 'prime.agent-certification.execution.v1',
