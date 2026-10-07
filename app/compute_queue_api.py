@@ -12,7 +12,7 @@ import httpx
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
-from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
+from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool, QueueAdmissionFull
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 from .settings import SETTINGS
 from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
@@ -165,6 +165,9 @@ def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
     except RegistryError:
         canonical = body.agent.strip().lower()
     try:return queue.submit(**body.model_dump())
+    except QueueAdmissionFull as exc:
+        code = exc.code if exc.code in {'PENDING_QUEUE_FULL', 'OWNER_PENDING_RESERVE'} else 'QUEUE_ADMISSION_FULL'
+        raise HTTPException(429, code, headers={'Retry-After': '1'}) from None
     except ValueError as exc:raise HTTPException(422,str(exc)) from exc
 
 

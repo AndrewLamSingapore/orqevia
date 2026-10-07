@@ -29,7 +29,10 @@ def _dispatch_binding(entry):
 
 def adapter_for(entry):
     if entry.get('provider_kind')=='huggingface':
-        return HuggingFaceProvider(entry['secret_ref'],secret_resolver=resolve_secret)
+        # Preserve the existing constructor seam for unmodified text catalogs.
+        mode = entry.get('hf_response_format', 'text')
+        options = {} if mode == 'text' else {'response_format': mode}
+        return HuggingFaceProvider(entry['secret_ref'],secret_resolver=resolve_secret, **options)
     # A HF credential must never reach an unrelated host, even if a malformed
     # catalog bypassed load_catalog or used the environment-reference variant.
     if entry.get('secret_ref') in {'env:HF_TOKEN','file:HF_TOKEN'}:

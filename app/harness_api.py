@@ -195,6 +195,9 @@ def _dispatch(body: PilotDispatch, authorization: str | None, registry_context: 
 
     try:
         job = HarnessedExecutor(harness, enqueue).execute(envelope, now=now)
+    except compute_queue_api.QueueAdmissionFull as exc:
+        code = exc.code if exc.code in {'PENDING_QUEUE_FULL', 'OWNER_PENDING_RESERVE'} else 'QUEUE_ADMISSION_FULL'
+        raise HTTPException(429, code, headers={'Retry-After': '1'}) from None
     except HarnessUnavailable as exc:
         raise HTTPException(status_code=503, detail="Harness ledger unavailable") from exc
     except PermissionError as exc:

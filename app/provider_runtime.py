@@ -222,27 +222,49 @@ class ChatCompletionProvider:
 class HuggingFaceProvider(ChatCompletionProvider):
     """Pinned Hugging Face Inference Providers chat route; no browser credentials.
 
-    Tool calls, constrained output, embeddings and provider auto-selection are not
-    advertised by this text-only adapter. Catalog activation is a separate gate.
+    Optional JSON-object wire output is not a schema or quality guarantee. Tool
+    calls, schemas, embeddings and dynamic selection remain unsupported. Catalog
+    activation and actual model output qualification are separate gates.
     """
     ENDPOINT='https://router.huggingface.co/v1/chat/completions'
     # HF policy suffixes select providers dynamically and cannot bind the
     # prepared disclosure/cost/fallback contract to a specific provider.
     _PINNED_MODEL=re.compile(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+:(?!(?i:auto|fastest|cheapest|preferred)\Z)[A-Za-z0-9._-]+\Z')
 
-    def __init__(self, secret_ref='env:HF_TOKEN', *, secret_resolver=None, transport=None):
+    def __init__(self, secret_ref='env:HF_TOKEN', *, secret_resolver=None, transport=None,
+                 response_format='text'):
+        if not self._valid_response_format(response_format):
+            raise ValueError('Unsupported Hugging Face response format')
         if secret_ref not in ('env:HF_TOKEN','file:HF_TOKEN'):
             raise ValueError('Hugging Face requires the governed HF_TOKEN reference')
+        self.response_format=response_format
         if secret_resolver is None:
             from .secret_refs import resolve_secret
             secret_resolver=resolve_secret
         super().__init__(self.ENDPOINT,secret_ref,secret_resolver=secret_resolver,transport=transport)
 
+    @staticmethod
+    def _valid_response_format(value):
+        return type(value) is str and value in ('text','json_object')
+
     def request_body(self, model, messages, output_tokens):
+        if not self._valid_response_format(self.response_format):
+            raise ProviderFailure('RESPONSE_FORMAT_UNSUPPORTED',pre_execution=True)
         if not isinstance(model.name,str) or not self._PINNED_MODEL.fullmatch(model.name):
             raise ProviderFailure('MODEL_PROVIDER_UNPINNED',pre_execution=True)
-        return {'model':model.name,'messages':messages,'stream':True,
-                'stream_options':{'include_usage':True},'max_tokens':output_tokens}
+        body={'model':model.name,'messages':messages,'stream':True,
+              'stream_options':{'include_usage':True},'max_tokens':output_tokens}
+        if self.response_format=='json_object':
+            body['response_format']={'type':'json_object'}
+        return body
+
+    async def stream(self, model, messages, output_tokens):
+        # Revalidate before the inherited adapter resolves credentials. A caller
+        # cannot mutate this option into arbitrary provider request parameters.
+        if not self._valid_response_format(self.response_format):
+            raise ProviderFailure('RESPONSE_FORMAT_UNSUPPORTED',pre_execution=True)
+        async for chunk in super().stream(model,messages,output_tokens):
+            yield chunk
 
 
 async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=lambda:False,on_delta=lambda text:None,max_retries=1,circuits=None):

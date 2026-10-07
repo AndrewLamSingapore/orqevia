@@ -24,6 +24,14 @@ TERMINAL = {"completed", "failed", "cancelled", "budget_blocked"}
 PRIORITIES = {"background": 10, "low": 25, "normal": 50, "high": 75, "critical": 100}
 
 
+class QueueAdmissionFull(RuntimeError):
+    """Sanitized backpressure, not authorization or a host-health assessment."""
+
+    def __init__(self, code: str):
+        self.code = code
+        super().__init__(code)
+
+
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -45,6 +53,19 @@ class QueuePolicy:
     starvation_boost_cap: int = 100
     max_job_cost_usd: float = 2.0
     daily_cost_ceiling_usd: float = 10.0
+    # Optional operator-declared storage/admission bounds. These do not prove a
+    # measured ABEX RAM/CPU reserve. Both must be supplied; unset stays compatible.
+    pending_job_limit: int | None = None
+    pending_owner_reserve: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.pending_job_limit is None and self.pending_owner_reserve is None:
+            return
+        if (type(self.pending_job_limit) is not int or
+                not 1 <= self.pending_job_limit <= 1_000_000 or
+                type(self.pending_owner_reserve) is not int or
+                not 1 <= self.pending_owner_reserve <= self.pending_job_limit):
+            raise ValueError('Invalid explicit pending queue policy')
 
     @classmethod
     def from_env(cls) -> "QueuePolicy":
@@ -56,6 +77,13 @@ class QueuePolicy:
             try: value = float(os.getenv(name, str(default)))
             except ValueError: value = default
             return max(low, min(high, value))
+        def optional_bound(name: str) -> int | None:
+            raw = os.getenv(name, '').strip()
+            if not raw:
+                return None
+            if not raw.isascii() or not raw.isdecimal() or len(raw) > 7:
+                raise ValueError('Invalid explicit pending queue policy')
+            return int(raw)
         return cls(
             global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 1, 1, 29),
             per_agent_concurrency=integer("PRIME_AGENT_CONCURRENCY", 1, 1, 8),
@@ -68,6 +96,8 @@ class QueuePolicy:
             starvation_boost_cap=integer("PRIME_STARVATION_BOOST_CAP", 100, 1, 1000),
             max_job_cost_usd=decimal("PRIME_MAX_JOB_COST_USD", 2.0, 0, 10000),
             daily_cost_ceiling_usd=decimal("PRIME_DAILY_COST_USD", 10.0, 0, 100000),
+            pending_job_limit=optional_bound('PRIME_QUEUE_PENDING_LIMIT'),
+            pending_owner_reserve=optional_bound('PRIME_QUEUE_OWNER_PENDING_RESERVE'),
         )
 
 
@@ -151,6 +181,46 @@ class JobQueue:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
                   (str(uuid.uuid4()), job_id, event, json.dumps(details, separators=(",", ":")), utcnow()))
 
+    @staticmethod
+    def _pending_usage(c: sqlite3.Connection) -> tuple[int, int]:
+        """Count each outstanding job once, retaining execution uncertainty.
+
+        Cancelled local work can retain a backend lease; cancelled/expired or
+        ambiguously failed cloud work has no such local lease. Existing cloud
+        queue fields conservatively retain that uncertainty. An expiry is not
+        a completion proof. Successful terminal jobs without retained local
+        leases are not pending, even if their billing metadata is unavailable.
+        """
+        row = c.execute("""WITH held_jobs AS (
+            SELECT id,priority FROM compute_jobs
+            WHERE status NOT IN ('completed','failed','cancelled','budget_blocked')
+               OR (allow_cloud=1 AND started_at IS NOT NULL
+                   AND status IN ('failed','cancelled','budget_blocked')
+                   AND (actual_cost_usd IS NULL OR lease_until IS NOT NULL
+                        OR error='worker lease expired'))
+        ), held_ids AS (
+            SELECT id AS job_id,priority FROM held_jobs
+            UNION ALL
+            SELECT b.job_id,COALESCE(MAX(j.priority),0)
+            FROM backend_admission b LEFT JOIN compute_jobs j ON j.id=b.job_id
+            WHERE NOT EXISTS (SELECT 1 FROM held_jobs h WHERE h.id=b.job_id)
+            GROUP BY b.job_id
+        )
+        SELECT COUNT(*),COALESCE(SUM(CASE
+            WHEN typeof(priority)='integer' AND priority=100 THEN 0 ELSE 1
+        END),0) FROM held_ids""").fetchone()
+        return int(row[0]), int(row[1])
+
+    def _require_pending_capacity(self, c: sqlite3.Connection, priority: int) -> None:
+        if self.policy.pending_job_limit is None:
+            return
+        held, noncritical = self._pending_usage(c)
+        if held >= self.policy.pending_job_limit:
+            raise QueueAdmissionFull('PENDING_QUEUE_FULL')
+        if (priority < PRIORITIES['critical'] and
+                noncritical >= self.policy.pending_job_limit - self.policy.pending_owner_reserve):
+            raise QueueAdmissionFull('OWNER_PENDING_RESERVE')
+
     def submit(self, *, agent: str, prompt: str, priority: str | int = "normal",
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
@@ -169,6 +239,11 @@ class JobQueue:
         approval = "not_required"  # retained database column; never a prerequisite
         jid, ts = str(uuid.uuid4()), utcnow()
         with self.lock, self.connect() as c:
+            if self.policy.pending_job_limit is not None:
+                # RLock alone is process-local. Serialize the count and insert
+                # across every queue instance/process sharing this SQLite file.
+                c.execute('BEGIN IMMEDIATE')
+                self._require_pending_capacity(c, p)
             c.execute("""INSERT INTO compute_jobs
               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,timeout_seconds,max_retries,
                max_cost_usd,allow_cloud,external_execution,status,approval_status,created_at,updated_at)
@@ -414,7 +489,14 @@ class JobQueue:
             statuses={r[0]:r[1] for r in c.execute("SELECT status,COUNT(*) FROM compute_jobs GROUP BY status")}
             spend=self._daily_spend(c)
             running=[dict(r) for r in c.execute("SELECT id,agent,provider,ram_mb,vram_mb,started_at FROM compute_jobs WHERE status='running'")]
-        return {"statuses":statuses,"running":running,"daily_spend_usd":spend,"policy":asdict(self.policy)}
+            pending = {'state':'UNCONFIGURED','held_jobs':None,'noncritical_held_jobs':None}
+            if self.policy.pending_job_limit is not None:
+                held, noncritical = self._pending_usage(c)
+                pending = {'state':'CONFIGURED','held_jobs':held,'noncritical_held_jobs':noncritical}
+            pending.update(limit=self.policy.pending_job_limit,owner_reserve=self.policy.pending_owner_reserve,
+                scope='Queue and retained execution uncertainty; not a measured host reserve')
+        return {"statuses":statuses,"running":running,"daily_spend_usd":spend,"policy":asdict(self.policy),
+                'pending_admission':pending}
 
 
 class WorkerPool:

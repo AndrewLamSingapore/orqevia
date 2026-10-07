@@ -57,10 +57,15 @@ def load_catalog(path=None):
         if kind not in ('chat_completions','huggingface'):raise ValueError('Unknown provider kind')
         if item.get('secret_ref') in ('file:HF_TOKEN','env:HF_TOKEN') and kind!='huggingface':
             raise ValueError('Hugging Face secret cannot be routed to another provider')
+        if 'hf_response_format' in item and kind != 'huggingface':
+            raise ValueError('Hugging Face output contract cannot be routed to another provider')
         if kind=='huggingface':
             if item['location']!='cloud' or item.get('endpoint')!=HuggingFaceProvider.ENDPOINT:
                 raise ValueError('Hugging Face endpoint/location must be fixed')
             if item.get('secret_ref') not in ('env:HF_TOKEN','file:HF_TOKEN'):raise ValueError('Hugging Face credential reference must be HF_TOKEN')
+            output_contract = item.get('hf_response_format', 'text')
+            if type(output_contract) is not str or output_contract not in {'text', 'json_object'}:
+                raise ValueError('Hugging Face output contract unsupported')
             model_id=item.get('model')
             if not isinstance(model_id,str) or not HuggingFaceProvider._PINNED_MODEL.fullmatch(model_id):
                 raise ValueError('Hugging Face model must pin an explicit provider')

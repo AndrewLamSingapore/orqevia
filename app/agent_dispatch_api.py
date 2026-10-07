@@ -295,10 +295,15 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         parent_agent=path[0] if len(path)>1 else None,
         parameters_summary={'prompt_sha256':hashlib.sha256(prompt.encode()).hexdigest(),
                             'prompt_bytes':prompt_bytes,'input_budget_bytes':budget_bytes})
-    job=DirectExecutor(ledger).execute(action,lambda:queue.submit(agent=actor,prompt=prompt,
-        priority=body.priority,model_role='auto',model=route.backend.model,preferred_provider=route.backend.name,
-        allow_cloud=route.backend.location=='cloud',data_classification=body.data_classification,task_class=body.task_class,
-        max_cost_usd=body.max_cost_usd,max_retries=0,classification=body.classification))
+    from .job_queue import QueueAdmissionFull
+    try:
+        job=DirectExecutor(ledger).execute(action,lambda:queue.submit(agent=actor,prompt=prompt,
+            priority=body.priority,model_role='auto',model=route.backend.model,preferred_provider=route.backend.name,
+            allow_cloud=route.backend.location=='cloud',data_classification=body.data_classification,task_class=body.task_class,
+            max_cost_usd=body.max_cost_usd,max_retries=0,classification=body.classification))
+    except QueueAdmissionFull as exc:
+        code = exc.code if exc.code in {'PENDING_QUEUE_FULL', 'OWNER_PENDING_RESERVE'} else 'QUEUE_ADMISSION_FULL'
+        raise HTTPException(429, code, headers={'Retry-After': '1'}) from None
     return {'job':job,'correlation_id':task_id,'execution_model':'DIRECT_OBSERVED',
         'classification':body.classification,'agent_path':path,'registry_version':'1.0.0',
         'capability':body.capability,'tier':tier.name,'routing_ms':routing_ms,'model_selection_ms':model_selection_ms,
