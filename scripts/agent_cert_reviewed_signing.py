@@ -20,7 +20,10 @@ from app.agent_cert_azure_es256 import AzureES256CertificationVerifier
 from app.agent_cert_azure_signer import ProtectedAzureES256Signer, _read_subject_artifact
 from app.agent_cert_ed25519 import _REQUIRED_RECORD_FIELDS
 from app.agent_cert_role_group_two import _CASES as GROUP_TWO_CASES
-from app.agent_cert_role_review import canonical_role_spec, review_role_output
+from app.agent_cert_role_review import (
+    canonical_case_spec, canonical_role_spec, review_case_output, review_role_output,
+)
+from app.agent_certification import LOGIC_SIGNALS
 from app.agent_registry import agent_record, canonical_agent_id
 
 
@@ -115,14 +118,36 @@ def _role_spec(agent):
     return canonical_role_spec(agent, f'responsibility.{agent}')
 
 
-def _oracle_id(agent):
+def _case_fields(spec):
+    case_id = spec.get('case') if type(spec) is dict else None
+    if type(case_id) is not str or case_id.count(':') != 1:
+        _deny('CASE_ORACLE_UNSUPPORTED')
+    return tuple(case_id.split(':'))
+
+
+def _case_spec(row):
+    dimension, test_case = row.get('dimension'), row.get('test_case')
+    if type(dimension) is not str or type(test_case) is not str:
+        _deny('CASE_ORACLE_UNSUPPORTED')
+    try:
+        return canonical_case_spec(row['agent_id'], row['capability_id'], dimension + ':' + test_case)
+    except (ValueError, TypeError, KeyError):
+        _deny('CASE_ORACLE_UNSUPPORTED')
+
+
+def _oracle_id(agent, spec=None):
+    if spec is not None and spec.get('case') != 'role:normal':
+        from app.agent_cert_a19_cases import ORACLE_ID
+        return ORACLE_ID
     return 'group_two_exact_role_oracle/v1' if agent in GROUP_TWO_CASES else 'existing.role-normal.v1'
 
 
-def _review_version(agent):
+def _review_version(agent, spec=None):
     # Official oracle IDs may contain '/'; the protected signer's provenance
     # grammar deliberately does not. Keep the domain oracle identity intact in
     # observations and bind a separate, fixed signing-provenance version.
+    if spec is not None and spec.get('case') != 'role:normal':
+        return _oracle_id(agent, spec)
     return 'group_two_exact_role_oracle.v1' if agent in GROUP_TWO_CASES else None
 
 
@@ -224,6 +249,10 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
             'dispatch', 'artifact_content_utf8', 'transport', 'action_records'}:
         _deny('REGISTERED_REVIEW_EXECUTION_REQUIRED')
     subject = row['agent_id']
+    dimension, test_case = _case_fields(spec)
+    if (row.get('dimension', dimension) != dimension or
+            row.get('test_case', test_case) != test_case):
+        _deny('REGISTERED_REVIEW_CONTENT_INVALID')
     actor = 'a18' if subject == 'a26' else 'a26'
     capability = 'responsibility.a27' if subject == 'a26' else 'responsibility.a26'
     dispatch = proof['dispatch']
@@ -267,10 +296,10 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
         'schema_version': 'prime.agent-cert-role-review.v1', 'task_id': dispatch['task_id'],
         'reviewer_id': actor, 'reviewer_capability_id': capability,
         'subject_agent_id': subject, 'subject_capability_id': row['capability_id'],
-        'dimension': 'role', 'test_case': 'normal', 'source_revision': source_revision,
+        'dimension': dimension, 'test_case': test_case, 'source_revision': source_revision,
         'runtime_image_id': runtime_image_id, 'subject_job_id': job['id'],
         'execution_evidence_sha256': execution_sha256, 'case_spec_sha256': _sha(_canonical(spec)),
-        'result_sha256': job['result_sha256'], 'oracle_id': _oracle_id(subject),
+        'result_sha256': job['result_sha256'], 'oracle_id': _oracle_id(subject, spec),
         'test_result': 'PASS', 'review_errors': [], 'model_calls': 0,
         'execution_model': 'DETERMINISTIC', 'subject_execution_verification': 'QUEUE_AND_OBJECTIVE_JOINED',
         'certification': 'UNVERIFIED',
@@ -320,7 +349,6 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
             type(reviewer) is not str or canonical_agent_id(reviewer) != reviewer or
             reviewer == agent or row.get('executor_identity') != agent or
             row.get('capability_id') != f'responsibility.{agent}' or
-            row.get('dimension') != 'role' or row.get('test_case') != 'normal' or
             row.get('test_result') != 'PASS' or
             row.get('source_revision') != source_revision or
             row.get('review_source_revision') != source_revision or
@@ -329,12 +357,17 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
             any(type(row.get(key)) is not str or not 1 <= len(row[key]) <= 100 for key in
                 ('certification_test', 'test_version', 'review_run_id', 'review_test_version'))):
         _deny('RECORD_BINDING_INVALID')
-    if agent in GROUP_TWO_CASES and row['review_test_version'] != _review_version(agent):
+    spec = _case_spec(row)
+    version = _review_version(agent, spec)
+    if version is not None and row['review_test_version'] != version:
         _deny('REVIEW_ORACLE_VERSION_INVALID')
-    spec = _role_spec(agent)
+    dimension, test_case = _case_fields(spec)
+    if dimension == 'logic_quality':
+        if _canonical(row.get('logic_signals')) != _canonical({LOGIC_SIGNALS[test_case]: 'PASS'}):
+            _deny('LOGIC_SIGNALS_BINDING_INVALID')
     expected = {'schema_version': 'prime.agent-certification.execution.v1',
                 'agent_id': agent, 'capability_id': row['capability_id'],
-                'dimension': 'role', 'test_case': 'normal',
+                'dimension': dimension, 'test_case': test_case,
                 'source_revision': source_revision, 'runtime_image_id': runtime_image_id,
                 'environment': 'LIVE_RUNTIME', 'executor_identity': row.get('executor_identity'),
                 'case_spec': spec}
@@ -368,7 +401,7 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
         'execution_job_id': job['id'], 'result_sha256': job['result_sha256'],
         'case_spec_sha256': _sha(_canonical(spec)), 'runtime_image_id': runtime_image_id,
         'reviewer_code_revision': reviewer_code_revision,
-        'oracle_id': _oracle_id(agent), 'oracle_pass': True,
+        'oracle_id': _oracle_id(agent, spec), 'oracle_pass': True,
     }
     supplied = envelope.get('observations')
     if (type(supplied) is not dict or set(supplied) != set(observations) | {'reviewer_execution'} or
@@ -381,7 +414,9 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
                         execution_sha256=_sha(primary), source_revision=source_revision,
                         runtime_image_id=runtime_image_id, now=now,
                         queue_prompt_sha256=queue_prompt)
-    _role_oracle(agent, job['result'])
+    valid, errors = review_case_output(agent, row['capability_id'], spec['case'], job['result'])
+    if valid is not True or errors:
+        _deny('CASE_ORACLE_FAILED')
     return True
 
 
@@ -398,7 +433,9 @@ def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
     authenticates this case only; the registry still owns full L7 projection.
     """
     try:
-        if (type(row) is not dict or set(row) != _RECORD_FIELDS or not callable(sign_digest) or
+        required_fields = _RECORD_FIELDS | ({'logic_signals'} if type(row) is dict and
+            row.get('dimension') == 'logic_quality' else set())
+        if (type(row) is not dict or set(row) != required_fields or not callable(sign_digest) or
                 type(execution_sha256) is not str or not _SHA.fullmatch(execution_sha256) or
                 type(review_sha256) is not str or not _SHA.fullmatch(review_sha256) or
                 execution_sha256 == review_sha256 or

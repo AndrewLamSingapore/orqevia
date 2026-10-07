@@ -4,6 +4,8 @@ The queue owns capacity and daily spend. This boundary checks the persisted job
 again immediately before a credential is resolved or external data is sent.
 """
 from decimal import Decimal, InvalidOperation
+import hashlib
+import re
 
 from .provider_runtime import ProviderFailure
 from .tier_router import classify_for_cloud
@@ -12,6 +14,49 @@ from .tier_router import classify_for_cloud
 HF_FALLBACK_POLICY_VERSION = 'hf-fallback.v1'
 _TASK_CLASSES = frozenset(('auto', 'classification', 'conversation', 'research',
                           'planning', 'writing', 'coding', 'architecture', 'complex_reasoning'))
+_PROMPT_DIGEST = re.compile(r'[0-9a-f]{64}\Z')
+
+
+def require_hf_prompt_scope(entry, job):
+    """Restrict a narrow qualification to actual original prompt/agent pairs.
+
+    A prose qualification_scope is not an executable disclosure boundary.
+    The operator-owned optional allowlist is rechecked on the persisted job
+    before credential resolution, including each separately admitted fallback.
+    Absence preserves existing broad catalog behavior; malformed presence denies.
+    This is admission only, never agent certification or general model quality.
+    """
+    if 'allowed_prompt_bindings' not in entry:
+        return
+    from .agent_registry import registered_agent_ids
+    allowed = entry['allowed_prompt_bindings']
+    permanent = frozenset(registered_agent_ids(include_orchestrator=False))
+    valid = type(allowed) is list and 1 <= len(allowed) <= 256
+    bindings = set()
+    if valid:
+        for binding in allowed:
+            if (type(binding) is not dict or set(binding) != {'agent', 'prompt_sha256'}
+                    or type(binding['agent']) is not str or binding['agent'] not in permanent
+                    or type(binding['prompt_sha256']) is not str
+                    or _PROMPT_DIGEST.fullmatch(binding['prompt_sha256']) is None):
+                valid = False
+                break
+            pair = (binding['agent'], binding['prompt_sha256'])
+            if pair in bindings:
+                valid = False
+                break
+            bindings.add(pair)
+    prompt = job.get('prompt')
+    actor = job.get('agent')
+    if (not valid or type(actor) is not str or type(prompt) is not str
+            or not 1 <= len(prompt) <= 200_000):
+        raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
+    try:
+        actual = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+    except UnicodeError:
+        raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True) from None
+    if (actor, actual) not in bindings:
+        raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
 
 
 def require_hf_task_scope(entry, job):
@@ -21,6 +66,7 @@ def require_hf_task_scope(entry, job):
     allowlist is supplied, malformed or missing job classes cannot bypass it.
     Task labels restrict admission; they do not establish substantive quality.
     """
+    require_hf_prompt_scope(entry, job)
     if 'allowed_task_classes' not in entry:
         return
     allowed = entry['allowed_task_classes']

@@ -18,6 +18,8 @@ MANIFEST = 'governance/agent-cert-reviewed-cases.json'
 EVIDENCE_PREFIX = 'governance/agent-cert-case-evidence'
 CODE_FILES = (
     'scripts/agent_cert_reviewed_signing.py', 'app/agent_cert_role_review.py',
+    'app/agent_cert_a19_cases.py', 'app/agent_cert_review_tool.py',
+    'app/agent_dispatch_api.py', 'app/cloud_execution.py', 'app/hf_admission.py',
     'app/agent_cert_role_group_two.py', 'app/agent_cert_role_g1.py',
     'app/agent_cert_cases.py', 'app/agent_cert_transport.py',
     'app/agent_certification.py', 'app/agent_cert_azure_signer.py',
@@ -61,7 +63,7 @@ def parse(raw):
         if value['schema_version'] != 'prime.protected-reviewed-cases.v1':
             deny()
         cases = value['cases']
-        if type(cases) is not list or len(cases) > 21:
+        if type(cases) is not list or len(cases) > 128:
             deny()
         seen = set()
         required = {'record', 'evidence_directory', 'execution_sha256', 'review_sha256',
@@ -71,9 +73,17 @@ def parse(raw):
             if type(entry) is not dict or set(entry) != required or type(entry['record']) is not dict:
                 deny()
             agent = entry['record'].get('agent_id')
-            if type(agent) is not str or agent in seen:
+            from app.agent_cert_role_review import canonical_case_spec
+            row = entry['record']
+            case_id = str(row.get('dimension')) + ':' + str(row.get('test_case'))
+            # A bounded batch may contain multiple distinct cases for the same
+            # existing agent; it never expands the permanent population or
+            # invents oracles for generic/event challenges.
+            canonical_case_spec(agent, row.get('capability_id'), case_id)
+            identity = (agent, row.get('capability_id'), case_id)
+            if type(agent) is not str or identity in seen:
                 deny()
-            seen.add(agent)
+            seen.add(identity)
             for field in ('execution_sha256', 'review_sha256'):
                 if type(entry[field]) is not str or not _SHA.fullmatch(entry[field]):
                     deny()
@@ -129,11 +139,12 @@ def run(raw, *, root, protected_source_revision, public_pin, sign_digest, now,
         directory = Path(root) / entry['evidence_directory']
         cloud = {}
         if entry['cloud_policy'] is not None:
-            from app.agent_cert_transport import bind_cloud_case, canonical_role_case
+            from app.agent_cert_transport import bind_cloud_case, canonical_cert_case
             row = entry['record']
             cloud['cloud_policy'] = entry['cloud_policy']
             cloud['expected_owner_policy_sha256'] = entry['owner_policy_sha256']
-            cloud['cloud_binding'] = bind_cloud_case(canonical_role_case(row['agent_id'], row['capability_id']),
+            cloud['cloud_binding'] = bind_cloud_case(canonical_cert_case(row['agent_id'], row['capability_id'],
+                row['dimension'] + ':' + row['test_case']),
                 entry['cloud_policy'], expected_source_revision=entry['execution_source_revision'],
                 expected_policy_sha256=entry['owner_policy_sha256'])
         accepted.append(sign_reviewed_case(entry['record'], evidence_root=directory,

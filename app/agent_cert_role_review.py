@@ -36,6 +36,36 @@ def canonical_role_spec(agent, capability):
     return challenge('role:normal', agent_id=agent, capability_id=capability)
 
 
+def canonical_case_spec(agent, capability, case_id):
+    """Return an existing exact oracle case, never a generic event challenge.
+
+    Role-normal retains its legacy source and bytes. The additional A19 cases
+    judge only their supplied public quality facts; they cannot establish real
+    recovery, tool execution, handoff, signing or audit events.
+    """
+    _primary(agent, capability)
+    if type(case_id) is not str:
+        raise ValueError('CASE_ORACLE_UNSUPPORTED')
+    if case_id == 'role:normal':
+        return canonical_role_spec(agent, capability)
+    from .agent_cert_a19_cases import SUPPORTED_CASES, canonical_a19_case
+    if agent != 'a19' or case_id not in SUPPORTED_CASES:
+        raise ValueError('CASE_ORACLE_UNSUPPORTED')
+    return canonical_a19_case(case_id)
+
+
+def review_case_output(agent, capability, case_id, response):
+    """Review the specific source-owned case without promoting its evidence."""
+    try:
+        canonical_case_spec(agent, capability, case_id)
+    except (ValueError, TypeError):
+        return False, ('case_oracle_unsupported',)
+    if case_id == 'role:normal':
+        return review_role_output(agent, capability, response)
+    from .agent_cert_a19_cases import review_a19_case_output
+    return review_a19_case_output(case_id, response)
+
+
 def _unique(pairs):
     answer = {}
     for key, value in pairs:

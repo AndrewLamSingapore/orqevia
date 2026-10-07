@@ -26,7 +26,7 @@ import time
 import uuid
 from collections.abc import Callable
 
-from app.agent_cert_role_review import canonical_role_spec, review_role_output
+from app.agent_cert_role_review import canonical_case_spec, review_case_output
 from app.agent_cert_transport import CertificationTransport, validate_cloud_binding
 from app.compute_catalog import task_tier
 from app.tier_router import Tier, required_tier
@@ -191,9 +191,9 @@ def _provider(io, prepared, expected_sha):
     _require(entry.get('secret_ref') in {'env:HF_TOKEN', 'file:HF_TOKEN'} and
              type(entry.get('tier')) is str and entry['tier'] in Tier.__members__ and
              Tier[entry['tier']] >= Tier[prepared['minimum_tier']] and
-             _equal(entry.get('allowed_task_classes'), ['planning']) and
+             _equal(entry.get('allowed_task_classes'), [prepared['task_class']]) and
              _equal(entry.get('fallback_ids', []), []), 'PROVIDER_SCOPE_INVALID')
-    _require(_equal(entry.get('task_budgets', {}).get('planning'), {
+    _require(_equal(entry.get('task_budgets', {}).get(prepared['task_class']), {
         'context_tokens': limits['context_tokens'], 'output_tokens': limits['output_tokens'],
         'timeout_seconds': limits['timeout_seconds']}), 'PROVIDER_DEADLINE_UNPROVEN')
     for key in ('input_usd_million', 'output_usd_million'):
@@ -209,7 +209,7 @@ def _route(job, request, prepared=None):
     _require(type(job) is dict and type(job.get('prompt')) is str and
              1 <= len(job['prompt'].encode('utf-8')) <= 16_000,
              'QUEUE_PROMPT_INVALID')
-    expected = {'classification': 'R0', 'task_class': 'planning', 'max_retries': 0,
+    expected = {'classification': 'R0', 'task_class': request['task_class'], 'max_retries': 0,
         'data_classification': request['data_classification'],
         'max_cost_usd': request['max_cost_usd'], 'allow_cloud': 1 if prepared else 0}
     if prepared:
@@ -328,10 +328,11 @@ def collect_role_case(spec, *, io: OperatorIO, expected_source_revision: str,
             'BOUNDED_POLL_REQUIRED')
         _require(_call(io.authorize) is None, 'OWNER_AUTHENTICATION_FAILED')
         _require(type(spec) is dict, 'CANONICAL_ROLE_CASE_REQUIRED')
-        canonical = canonical_role_spec(spec.get('agent_id'), spec.get('capability_id'))
+        canonical = canonical_case_spec(spec.get('agent_id'), spec.get('capability_id'), spec.get('case'))
         _require(_equal(spec, canonical), 'CANONICAL_ROLE_CASE_CHANGED')
         agent, capability = canonical['agent_id'], canonical['capability_id']
-        summary.update(agent_id=agent, capability_id=capability, case='role:normal')
+        dimension, test_case = canonical['case'].split(':')
+        summary.update(agent_id=agent, capability_id=capability, case=canonical['case'])
         request = _copy(canonical['request'])
         tier = max(Tier[request['minimum_tier']], task_tier(request['objective'], request['task_class']),
                    required_tier(request['objective'], request['context']))
@@ -395,7 +396,7 @@ def collect_role_case(spec, *, io: OperatorIO, expected_source_revision: str,
                  _utc(job.get('started_at')) <= _utc(job.get('completed_at')) <= _now(wall_clock),
                  'COMPLETED_JOB_INVALID')
         execution = {'schema_version': 'prime.agent-certification.execution.v1',
-            'agent_id': agent, 'capability_id': capability, 'dimension': 'role', 'test_case': 'normal',
+            'agent_id': agent, 'capability_id': capability, 'dimension': dimension, 'test_case': test_case,
             'source_revision': expected_source_revision, 'runtime_image_id': expected_runtime_image,
             'environment': 'LIVE_RUNTIME', 'executor_identity': agent, 'case_spec': canonical,
             'dispatch': {'capability': capability, 'job': {'id': job_id, 'agent': agent}},
@@ -418,7 +419,7 @@ def collect_role_case(spec, *, io: OperatorIO, expected_source_revision: str,
         objective = _objective(io, objective_id, job, capability, before)
         _require(_equal(before, _runtime(io, expected_source_revision, expected_runtime_image)),
                  'RUNTIME_IDENTITY_CHANGED')
-        passed, errors = review_role_output(agent, capability, result)
+        passed, errors = review_case_output(agent, capability, canonical['case'], result)
         _require(passed is True and not errors, 'CASE_ORACLE_FAILED')
         nonce = _call(nonce_factory)
         _require(_uuid(nonce), 'REVIEW_NONCE_INVALID')
@@ -464,6 +465,7 @@ def collect_role_case(spec, *, io: OperatorIO, expected_source_revision: str,
                 'actual_runtime_image': expected_runtime_image}, 'action_records': events}
         now = _now(wall_clock)
         _reviewer_execution(proof, row={'agent_id': agent, 'capability_id': capability,
+            'dimension': dimension, 'test_case': test_case,
             'verifier': actor, 'certified_at': now.isoformat()}, job=execution['job'], spec=canonical,
             execution_sha256=_sha(primary), source_revision=expected_source_revision,
             runtime_image_id=expected_runtime_image, now=now,
@@ -486,11 +488,11 @@ def collect_role_case(spec, *, io: OperatorIO, expected_source_revision: str,
         if cloud:
             check_cloud()
         _require(_tick(monotonic) < deadline, 'BOUNDED_OBSERVATION_INCOMPLETE')
-        version = 'group_two_exact_role_oracle.v1' if content['oracle_id'] == 'group_two_exact_role_oracle/v1' else 'existing.role-normal.v1'
+        version = 'group_two_exact_role_oracle.v1' if content['oracle_id'] == 'group_two_exact_role_oracle/v1' else content['oracle_id']
         review = {'schema_version': 'prime.agent-certification.review.v1',
             'reviewer_identity': actor, 'review_run_id': review_run_id,
             'source_revision': expected_source_revision, 'agent_id': agent, 'capability_id': capability,
-            'dimension': 'role', 'test_case': 'normal', 'execution_evidence_sha256': _sha(primary),
+            'dimension': dimension, 'test_case': test_case, 'execution_evidence_sha256': _sha(primary),
             'test_result': 'PASS', 'review_test_version': version,
             'observations': {'execution_job_id': job_id, 'result_sha256': execution['job']['result_sha256'],
                 'case_spec_sha256': _sha(_canonical(canonical)), 'runtime_image_id': expected_runtime_image,

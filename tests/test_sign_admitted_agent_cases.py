@@ -20,7 +20,9 @@ def manifest(cases=()):
 
 
 def entry():
-    return dict(record={'agent_id': 'a19'}, evidence_directory=loader.EVIDENCE_PREFIX + '/fixture-a19',
+    return dict(record={'agent_id': 'a19', 'capability_id': 'responsibility.a19',
+                       'dimension': 'role', 'test_case': 'normal'},
+        evidence_directory=loader.EVIDENCE_PREFIX + '/fixture-a19',
         execution_sha256='a' * 64, review_sha256='f' * 64, execution_source_revision=SOURCE,
         runtime_image_id=IMAGE, reviewer_code_revision=REVIEW, cloud_policy=None,
         owner_policy_sha256=None)
