@@ -6,6 +6,8 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PORTFOLIO = ROOT / "docs" / "portfolio"
@@ -91,6 +93,17 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # The reviewed 7 October candidate observation is an addition, not a change
+    # to frozen history. Remove only its exact recorded bytes; neither arbitrary
+    # new text nor an altered acceptance claim may bypass the history proof.
+    hf_title = "## HF runtime hardening — 7 October 2026"
+    assert after.count(hf_title) == 1
+    hf_start = after.index(hf_title)
+    hf_end = after.index("## Status authority — 3 October 2026", hf_start)
+    hf_update = after[hf_start:hf_end].encode("utf-8")
+    assert len(hf_update) == 871
+    assert hashlib.sha256(hf_update).hexdigest() == "5d8e92014422f868399bb5f05a3dc93d6ee5bfbc8d8c900589ee545df0e32f8a"
+    after = after[:hf_start] + after[hf_end:]
     # This dated, agent-reported update is new; preserve the original historical
     # byte proof by removing only this known addition before comparing it.
     authority_start = after.index("## Status authority — 3 October 2026")
@@ -115,6 +128,23 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     baseline = INDEX["status_before_insertion"]
     assert len(preserved) == baseline["bytes"]
     assert hashlib.sha256(preserved).hexdigest() == baseline["sha256"]
+
+
+@pytest.mark.parametrize("original,replacement", [
+    ("## Course study", "## Course study — unaccounted history edit"),
+    ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
+])
+def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
+    status_path = ROOT / "STATUS.md"
+    read_text = Path.read_text
+    status = read_text(status_path, encoding="utf-8")
+    assert status.count(original) == 1
+    changed = status.replace(original, replacement, 1)
+    def altered_read(path, *args, **kwargs):
+        return changed if path == status_path else read_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_text", altered_read)
+    with pytest.raises(AssertionError):
+        test_status_insertion_preserves_all_existing_sections_and_history()
 
 
 def test_public_deployment_identity_is_not_physical_or_commercial_proof():
