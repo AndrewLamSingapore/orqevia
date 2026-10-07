@@ -1,7 +1,8 @@
 name: PRIME independent verifier signer
 
 # A reusable protected-code boundary. The caller may not supply code, secrets,
-# signing payloads, or parameters. This canary does not certify an agent.
+# signing payloads, or parameters. Only fixed protected reviewed admissions
+# may produce case attestations; canaries and empty admissions do not award L7.
 on:
   workflow_call:
 
@@ -39,14 +40,24 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.sha }}
+          fetch-depth: 0
       - name: Bind source to protected invocation
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.12'
       - name: Install bounded verification dependency
-        run: python -m pip install --disable-pip-version-check cryptography==50.0.2
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.2 httpx==0.28.1
       - name: Protected Azure sign, public verification, tamper rejection
         run: python -m scripts.azure_verifier_live_canary
       - name: Sign reviewed non-certifying A18 observation
         run: python -m scripts.azure_verifier_observation_canary
+      - name: Sign only fixed independently reviewed admitted cases
+        run: python -m scripts.sign_admitted_agent_cases
+      - name: Preserve signed case evidence (not an L7 award)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: prime-independent-signed-cases-${{ github.sha }}-${{ github.run_id }}
+          path: verifier-output/signed-cases.json
+          if-no-files-found: error
+          retention-days: 14

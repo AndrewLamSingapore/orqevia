@@ -2,7 +2,7 @@ name: Release Acceptance
 
 on:
   push:
-    branches: [feat/prime-unified-release-20261006]
+    branches: [feat/prime-unified-release-20261006, feat/prime-agent-l7-20261007]
   workflow_dispatch:
   workflow_call:
 
@@ -68,7 +68,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Build production image
-        run: docker build -t prime:acceptance .
+        run: docker build -t prime:acceptance --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+      - name: Verify exact source and packaged certification reviewer
+        run: |
+          test "$(docker image inspect prime:acceptance --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$GITHUB_SHA"
+          docker run --rm --entrypoint python prime:acceptance -c "import os; from app import agent_cert_review_tool, agent_cert_role_review, agent_cert_transport; assert os.environ['PRIME_RUNTIME_REVISION'] == '$GITHUB_SHA'"
       - name: Create isolated acceptance network
         run: docker network create prime-acceptance
       - name: Verify current production entrypoint, artifact, and restart

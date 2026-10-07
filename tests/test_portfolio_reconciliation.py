@@ -93,6 +93,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # Remove only the exact new, non-certifying 7 October observation; retain
+    # the independently pinned historical bytes and reject altered claims.
+    cert_title = "## Agent certification execution repair — 7 October 2026"
+    assert after.count(cert_title) == 1
+    cert_start = after.index(cert_title)
+    cert_end = after.index("## HF runtime hardening — 7 October 2026", cert_start)
+    cert_update = after[cert_start:cert_end].encode("utf-8")
+    assert len(cert_update) == 1425
+    assert hashlib.sha256(cert_update).hexdigest() == "a842b1e8ba6b6f0ec2c553e4f0433280157df5018c3c25d407089562e5d12fb1"
+    after = after[:cert_start] + after[cert_end:]
     # The reviewed 7 October candidate observation is an addition, not a change
     # to frozen history. Remove only its exact recorded bytes; neither arbitrary
     # new text nor an altered acceptance claim may bypass the history proof.
@@ -133,6 +143,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
 @pytest.mark.parametrize("original,replacement", [
     ("## Course study", "## Course study — unaccounted history edit"),
     ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
+    ("Fully L7 certified remains **0/21**.", "Fully L7 certified remains **1/21**."),
+    ("candidate has not changed Golden, Interface, Ollama", "candidate has deployed to Golden, Interface, Ollama"),
 ])
 def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"

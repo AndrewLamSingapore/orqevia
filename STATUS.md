@@ -36,6 +36,28 @@ If you are an AI agent updating this file:
 
 ---
 
+## Agent certification execution repair — 7 October 2026
+
+### Claimed, not independently checked
+
+- The isolated certification branch repairs deterministic artifact runtime/source
+  binding and adds a registered, authenticated role reviewer using the existing
+  dispatcher, objective store, queue, artifact store and action ledger. Reviews
+  join the original canonical prompt and actual result to immutable objective
+  runtime metadata; a declared reviewer name is not execution evidence.
+- The protected signing path accepts only separately reviewed fixed admissions,
+  actual reviewer artifacts and durable audit records. Public synthetic cloud
+  transport requires separately pinned Owner policy; local defaults are retained.
+  The admission manifest is initially empty and therefore proves no signed case.
+- The actual registry has 21 noncontiguous permanent agent IDs, including A26.
+  Fully L7 certified remains **0/21**. Source tests, authentication-denial checks,
+  deterministic tools and signing canaries must not be relabelled L7. This
+  candidate has not changed Golden, Interface, Ollama or the live A20/HF route.
+- The Owner's newly supplied Dynamic Multi-Model Intelligence Fabric directive
+  keeps this certification/live program as P0-A. P0-B begins only after its
+  truthful terminal state; scoped registries retain domain authority, not a
+  universal SSoT. Optional provider expansion has not started.
+
 ## HF runtime hardening — 7 October 2026
 
 ### Claimed, not independently checked

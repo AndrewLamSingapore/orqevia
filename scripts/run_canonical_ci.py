@@ -93,6 +93,11 @@ def main():
     names.append('agent_cert_boundary')
     names.append('agent_cert_a17_boundary')
     names.append('agent_cert_execution')
+    names.extend(['agent_artifact_runtime_binding', 'agent_cert_deterministic_observation',
+                  'agent_cert_transport', 'agent_cert_cloud_observation',
+                  'agent_cert_review_tool', 'agent_cert_review_dispatch',
+                  'agent_cert_reviewed_signing', 'sign_admitted_agent_cases',
+                  'collect_agent_cert_case'])
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('provider_rejection_ambiguity')
