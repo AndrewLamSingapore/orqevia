@@ -43,6 +43,23 @@ fields and nonfinite JSON cannot authorize fallback. Explicit provider model
 pins reject dynamic `auto`, `fastest`, `cheapest` and `preferred` policies.
 These are source repairs; they are not production DIRECT_QA acceptance.
 
+Public HF discovery now has a bounded anonymous read-only interface: one Hub
+GET with at most ten models and optionally one fixed model metadata GET. Its
+ten-second deadline, per-response 98,304-byte cap, unique JSON keys, finite
+numbers, no redirects/retries/cookies/environment proxy and allowlisted fields
+are covered by 53 offline tests. One two-GET observation returned public model
+and provider metadata without authentication or inference. Upstream provider
+`live`, prices, feature hints and probe timings remain dated external assertions,
+not PRIME authorization, quality, health or measured performance. Nothing is
+automatically added to the catalog, dashboard polling or an agent's permissions.
+
+Native HF policy routing is a separate open acceptance gate. Documented SDK
+`provider="auto"` defaults to fastest; REST supports the bare model/default
+fastest and `:fastest`, `:cheapest`, `:preferred` or explicit provider suffixes.
+REST `:auto` was not present in the reviewed primary contract. Supporting those
+policies safely still requires bounded price/privacy/provider-selection evidence;
+the existing production pin guard is not relaxed by discovery alone.
+
 The MLP execution wrapper reuses existing governed numeric inference contracts;
 it does not register a new model, certify an agent or expose a new HTTP route.
 Production-owned approval/capability verifiers, current runtime/certification
@@ -94,6 +111,13 @@ trials; their 77 synthetic checks are validation coverage, not model quality.
   while the wrapper used stale readiness. Both failures remain preserved.
   The repaired wrapper rereads and binds unchanged current readiness immediately
   before admission; 46 writer and the same eight independent cases passed.
+- Cloud runs at candidate 4e1ef88 failed one frozen-history discriminator after
+  legitimate additive runtime observations had been included in the old pinned
+  section. The repair at 79478a7 binds the exact additive observation bytes
+  separately and retains the original historical-section hash. Thirteen focused
+  checks passed, including tamper and fabricated PASS rejection; original cloud
+  failures and raw logs remain preserved. Later candidate edits require their
+  own exact-source cloud results, not an inherited green badge.
 
 Candidate source/tests are not deployed acceptance. The accepted HF
 classification backend remains source d249e5f99589f1593a38fd675315308a42deeeb2;

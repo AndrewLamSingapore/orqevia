@@ -102,6 +102,7 @@ def main():
     names.append('hf_pinned_selection')
     names.append('hf_operational_profile')
     names.extend(['hf_text_qualification', 'mlp_execution', 'gods_eye_image_smoke'])
+    names.append('hf_discovery')
     names.append('system_architecture')
     names.extend(['gods_eye_api', 'gods_eye_security_review', 'gods_eye_preview',
                   'gods_eye_read_budget', 'semantic_fabric'])
