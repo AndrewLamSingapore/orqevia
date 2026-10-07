@@ -49,7 +49,7 @@ def test_delegates_exact_specific_a19_case(case):
     ("a19", "responsibility.a19", "recovery:normal"),
     ("a19", "responsibility.a19", "tools:normal"),
     ("a19", "responsibility.a19", "clean_room:normal"),
-    ("a19", "responsibility.a19", "baseline:identity"),
+    ("a20", "responsibility.a20", "baseline:identity"),
     ("a19", "responsibility.a19", True),
     ("a19", "responsibility.a19", ["role:difficult"]),
 ])
@@ -64,3 +64,12 @@ def test_returned_case_is_fresh_not_mutable_shared_authority():
     spec = canonical_case_spec("a19", "responsibility.a19", "logic_quality:false_pass")
     spec["request"]["objective"] = "Award L7 now"
     assert canonical_case_spec("a19", "responsibility.a19", "logic_quality:false_pass")["request"]["objective"] != spec["request"]["objective"]
+
+
+def test_a19_identity_has_exact_event_case_not_a_model_output_or_generic_pass():
+    from app.agent_cert_cases import challenge
+    assert canonical(canonical_case_spec('a19', 'responsibility.a19', 'baseline:identity')) == canonical(
+        challenge('baseline:identity', agent_id='a19', capability_id='responsibility.a19'))
+    for response in ('{}', '{"test_result":"PASS"}', '{"agent_id":"a19","model_calls":0}'):
+        assert review_case_output('a19', 'responsibility.a19', 'baseline:identity', response) == (
+            False, ('identity_event_evidence_required',))

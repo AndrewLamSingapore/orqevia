@@ -1,0 +1,39 @@
+{
+  "l7_awarded": false,
+  "protected_invocation_source_revision": "5ebeb55d3236ee508c5de94a7653d0a17c597d29",
+  "schema_version": "prime.protected-signed-cases.v1",
+  "signed_case_count": 1,
+  "signed_cases": [
+    {
+      "agent_id": "a19",
+      "attestation": {
+        "algorithm": "ES256",
+        "key_id": "https://abexprimeverify26.vault.azure.net/keys/prime-agent-cert-verifier/90297767516f4fbcb22fd13367f71069",
+        "signature": "a150044a5bc31474006366ce0b24a19768f22592c415699e8672cabe01c9b942e72c788cbeca304d8179639abf2a94888f98b632f70ea6205d1ba366d6f78bf5",
+        "verifier_identity": "svc.cert-verifier.independent"
+      },
+      "authority_scope": "advisory",
+      "capability_id": "responsibility.a19",
+      "certification_test": "role-normal",
+      "certified_at": "2026-10-07T10:52:32+00:00",
+      "dimension": "role",
+      "evidence": "execution.json",
+      "evidence_sha256": "7724fcb99725f0266cff89ee6332ddca7e366e3f559f2a19ba287f52b8bcd88c",
+      "executor_identity": "a19",
+      "expires_at": "2026-10-07T11:52:32+00:00",
+      "last_revalidated": "2026-10-07T10:52:32+00:00",
+      "review_evidence": "review.json",
+      "review_evidence_sha256": "d02c66770a17757f18a2dad4499875650d9afe89b762571f328fb5f27e4d4b23",
+      "review_run_id": "a19-role-normal-559a298a-c7d5-4e74-b921-670e55a63a86",
+      "review_source_revision": "5b3dd3aa09a9f91fa52c71560498b1401443562c",
+      "review_test_version": "group_two_exact_role_oracle.v1",
+      "reviewer_code_revision": "5b3dd3aa09a9f91fa52c71560498b1401443562c",
+      "source_revision": "5b3dd3aa09a9f91fa52c71560498b1401443562c",
+      "test_case": "normal",
+      "test_result": "PASS",
+      "test_version": "a19-role-normal-operation-id.v2",
+      "verifier": "a26"
+    }
+  ],
+  "state": "SIGNED_CASE_EVIDENCE"
+}

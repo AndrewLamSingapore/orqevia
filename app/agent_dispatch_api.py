@@ -86,10 +86,85 @@ class AgentRequest(BaseModel):
     max_cost_usd: float = Field(default=0,ge=0,le=100)
     preferred_provider: str | None = Field(default=None,min_length=1,max_length=100)
     response_format: Literal['text','strict_json'] = 'text'
-    deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review'] | None = None
+    deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review','certification_identity_review'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
+IDENTITY_REVIEW_OBJECTIVE = 'Independently review one recorded A19 zero-model identity event against its original Objective, artifact and action records; do not certify or sign.'
+
+
+def joined_identity_review(body, authorization, *, actor, task_id, runtime):
+    """Join the original zero-model event to its owning read-only domains.
+
+    This operation supplies a separate registered reviewer artifact, never a
+    signature, certification grant, health qualification or caller PASS.
+    """
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from . import agent_registry
+    from .agent_cert_identity_review import (SCHEMA, ORACLE_ID, canonical,
+        parse, read_action_span, require, sha, valid_uuid, validate_identity_execution)
+    from .artifact_factory import ArtifactFactory
+    from .objective_api import get_read_only, runtime_snapshot
+    try:
+        reviewer = agent_record(actor)
+        require(actor == 'a26' and body.capability == 'responsibility.a26'
+                and reviewer.get('authority') == 'advisory'
+                and body.capability in reviewer.get('capability_requirements', []),
+                'IDENTITY_REVIEWER_REQUIRED')
+        require(body.objective == IDENTITY_REVIEW_OBJECTIVE
+                and body.classification == 'R0' and body.data_classification == 'LOCAL_ONLY'
+                and body.priority == 'low' and body.max_cost_usd == 0
+                and body.preferred_provider is None, 'IDENTITY_REVIEW_POLICY_REQUIRED')
+        envelope = parse(body.context.encode('utf-8'))
+        require(set(envelope) == {'execution', 'expected_execution_sha256',
+                'expected_source_revision', 'review_nonce'}, 'IDENTITY_REVIEW_FIELDS_INVALID')
+        execution = envelope['execution']
+        require(type(envelope['expected_execution_sha256']) is str
+                and re.fullmatch('[0-9a-f]{64}', envelope['expected_execution_sha256']) is not None
+                and sha(canonical(execution)) == envelope['expected_execution_sha256']
+                and envelope['expected_source_revision'] == runtime['source_revision']
+                and valid_uuid(envelope['review_nonce']) and valid_uuid(task_id),
+                'IDENTITY_REVIEW_BINDING_INVALID')
+        registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
+        now = datetime.now(timezone.utc)
+        joined = validate_identity_execution(execution, source_revision=runtime['source_revision'],
+            runtime_image_id=runtime['image_digest'], registry_sha256=registry_sha, now=now)
+        require(canonical(execution['runtime']) == canonical(runtime),
+                'IDENTITY_CURRENT_RUNTIME_REQUIRED')
+        subject_task = joined['task_id']
+        require(subject_task != task_id, 'IDENTITY_REVIEW_TASK_MUST_BE_DISTINCT')
+        actual_objective = get_read_only(subject_task, authorization)
+        require(canonical(actual_objective) == canonical(execution['objective_read'][1]),
+                'IDENTITY_OWNED_OBJECTIVE_REQUIRED')
+        root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+        metadata, raw = ArtifactFactory(root / 'artifacts').retrieve(joined['artifact_id'])
+        require(canonical(metadata) == canonical(execution['artifact_metadata'])
+                and raw == execution['artifact_content_utf8'].encode('utf-8'),
+                'IDENTITY_OWNED_ARTIFACT_REQUIRED')
+        original_lines = read_action_span(root / 'action-records.jsonl', subject_task,
+                                         'runtime.status.artifact')
+        require(canonical(original_lines) == canonical(execution['action_records']),
+                'IDENTITY_ORIGINAL_ACTIONS_REQUIRED')
+        # Revalidate immutable Objective and current identity after all reads;
+        # source/registry changes cannot be concealed by a submitted snapshot.
+        require(canonical(get_read_only(subject_task, authorization)) == canonical(actual_objective)
+                and canonical(runtime_snapshot()) == canonical(runtime)
+                and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
+                'IDENTITY_DOMAINS_CHANGED_DURING_REVIEW')
+        return dict(schema_version=SCHEMA, subject_agent_id='a19',
+            subject_capability_id='responsibility.a19', dimension='baseline', test_case='identity',
+            reviewer_id=actor, reviewer_capability_id=body.capability, task_id=task_id,
+            source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
+            execution_evidence_sha256=envelope['expected_execution_sha256'],
+            case_spec_sha256=joined['case_spec_sha256'], result_sha256=joined['result_sha256'],
+            review_nonce=envelope['review_nonce'], reviewed_at=datetime.now(timezone.utc).isoformat(),
+            oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0,
+            execution_model='DETERMINISTIC',
+            subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
+            subject_domain_join=joined, certification='UNVERIFIED')
+    except Exception:
+        raise HTTPException(422, 'Independent identity review requires current joined event evidence') from None
 
 
 def joined_role_review(body, authorization, *, actor, task_id, runtime):
@@ -356,6 +431,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         try:
             if body.deterministic_operation == 'certification_role_review':
                 data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+            elif body.deterministic_operation == 'certification_identity_review':
+                data=joined_identity_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             else:
                 data=build_report(task_id,root) if runtime_status else deterministic_ops.execute(body.deterministic_operation,body.context.encode())
         except (ValueError, UnicodeError):
@@ -370,9 +447,12 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                 creator=actor,provenance='Deterministic computation; zero model calls',
                 runtime_revision=runtime_revision)
         role_review = body.deterministic_operation == 'certification_role_review'
+        identity_review = body.deterministic_operation == 'certification_identity_review'
         review_ledger = None
-        if runtime_status or role_review:
-            action=ActionRecord(task_id,actor,'agent.certification.role.review' if role_review else 'runtime.status.artifact','artifact-factory',
+        if runtime_status or role_review or identity_review:
+            action_type = ('agent.certification.identity.review' if identity_review else
+                           'agent.certification.role.review' if role_review else 'runtime.status.artifact')
+            action=ActionRecord(task_id,actor,action_type,'artifact-factory',
                 classification=body.classification,model_backend='deterministic',
                 parameters_summary={'schema_version':data['schema_version'],'read_only_observations':True})
             review_ledger = action_ledger()
@@ -390,7 +470,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             'execution_model':'DETERMINISTIC','agent_id':actor,
             'capability':'responsibility.a19' if runtime_status else body.capability,
             'runtime_source_revision':runtime_revision}
-        if role_review:
+        if role_review or identity_review:
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.
             result['review_action_id']=action.action_id

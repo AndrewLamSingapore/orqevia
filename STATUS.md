@@ -36,6 +36,49 @@ If you are an AI agent updating this file:
 
 ---
 
+## Actual independent A19 signing and identity-event adapter — 7 October 2026
+
+### Claimed, not independently checked
+
+- Owner-approved PR #206 at `e87e6f25588707369edcf42da8ff770ebb9e4576`
+  passed all five exact-head cloud gates and merged as
+  `5ebeb55d3236ee508c5de94a7653d0a17c597d29`, with an identical source tree.
+  Protected Azure run [37613202210](https://github.com/AndrewLamSingapore/prime/actions/runs/37613202210)
+  then signed one real A19 role-normal case, independently reviewed by permanent
+  A26. The signing service is separate from both agents. Independent offline
+  ES256 verification and thirteen tamper-denial checks passed against the actual
+  downloaded signature and original evidence. No new cloud authority was added.
+- The original signed-case bytes are preserved without transformation in
+  `governance/agent-cert-historical-admissions/`; signed JSON SHA-256
+  `726f997f7bbe8a50ec42fefeb0720aea92b765ffcadae35b20b781e7a286cfca`.
+  This case's existing admissibility deadline is `2026-10-07T11:52:32Z`;
+  its historical signature is not a current-case renewal or an L7 award.
+  Active admissions are empty after the reviewed code changes. Future signing
+  requires separately reviewed original evidence and exact code/runtime pins.
+- One actual A19 zero-model baseline identity event was captured on the running
+  `5b3dd3a` backend and independently audited against its original Objective,
+  artifact, registry and action records. It created no inference queue job and
+  made no model call. That event is unsigned: no actual registered A26 identity
+  review or protected identity-case signature is claimed.
+- The isolated identity adapter joins those owned domains through the existing
+  authenticated dispatcher and a separate A26 review artifact. Focused tests
+  use temporary domain stores and ephemeral signing keys, not Azure or live
+  production. Submitted-capability and current-runtime-identity defects were
+  independently found, preserved and repaired. Full off-host candidate gates,
+  accepted deployment and fresh runtime-bound identity evidence remain required.
+- Fully L7 certified remains **0/21**. One signed role case and one unsigned
+  identity event do not establish the missing substantive matrices, independent
+  clean-room agent audits, Owner/iPhone path, current SSD temperature, host
+  stability, sustained thermal qualification or Windows reboot persistence.
+  Current backend remains source `5b3dd3a`, Interface/Ollama remain unchanged,
+  and local inference remains N=1 with a 30-minute keep-alive.
+- Exact ABEX independent receipts: `A19-5B3DD3A-SIGNED-ACTUAL-INDEPENDENT-REVIEW.json`
+  SHA-256 `6ab85dfedf156713b4284a0af3d7665783ea260b34ac5fd5681e04f3d3d59bf5`;
+  `A19-IDENTITY-5B3DD3A-INDEPENDENT-ACTUAL-REVIEW.json`
+  `5b6116e1bd0eebe27dbda4749a0ed6eb4c98c3f65ca810ddaf3e2e5dafa3f942`.
+  Domain ownership and evidence provenance govern reconciliation; this index
+  is not an operational master database.
+
 ## Scoped 5b deployment and unsigned A19 review — 7 October 2026
 
 ### Claimed, not independently checked

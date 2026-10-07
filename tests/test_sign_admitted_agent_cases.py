@@ -100,6 +100,43 @@ def test_manifest_without_agent_does_not_admit_unknown_identity():
         loader.parse(manifest([changed]))
 
 
+def test_identity_admission_is_exact_event_scope_not_a_model_answer_or_duplicate_role():
+    identity = entry()
+    identity['record'] = dict(agent_id='a19', capability_id='responsibility.a19',
+                              dimension='baseline', test_case='identity')
+    assert loader.parse(manifest([identity])) == [identity]
+    assert loader.parse(manifest([entry(), identity])) == [entry(), identity]
+    wrong_agent = copy.deepcopy(identity)
+    wrong_agent['record'].update(agent_id='a20', capability_id='responsibility.a20')
+    with pytest.raises(ValueError):
+        loader.parse(manifest([wrong_agent]))
+
+
+@pytest.mark.parametrize('cloud,policy', [(None, 'f' * 64), ({}, None), ({}, 'f' * 64)])
+def test_identity_admission_never_accepts_cloud_transport(cloud, policy):
+    identity = entry()
+    identity['record'].update(dimension='baseline', test_case='identity')
+    identity.update(cloud_policy=cloud, owner_policy_sha256=policy)
+    with pytest.raises(ValueError):
+        loader.parse(manifest([identity]))
+
+
+@pytest.mark.parametrize('dependency', ['app/agent_cert_identity_review.py',
+    'app/action_records.py', 'app/artifact_factory.py', 'app/objective_api.py'])
+def test_original_identity_domain_dependencies_are_all_protected_code_inputs(tmp_path, dependency):
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 39
+    revisions = {}
+    for name in loader.CODE_FILES:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b'SYNTHETIC_CODE_FIXTURE')
+        revisions[name] = path.read_bytes()
+    loader.unchanged_reviewer_code(tmp_path, REVIEW, read_revision=lambda name: revisions[name])
+    revisions[dependency] = b'SYNTHETIC_CHANGED_DOMAIN'
+    with pytest.raises(ValueError):
+        loader.unchanged_reviewer_code(tmp_path, REVIEW, read_revision=lambda name: revisions[name])
+
+
 def test_reviewer_code_reuse_requires_all_fixed_inputs_byte_identical(tmp_path):
     revisions = {}
     for name in loader.CODE_FILES:
