@@ -36,6 +36,32 @@ If you are an AI agent updating this file:
 
 ---
 
+## Scoped certification runtime and success-error repair — 7 October 2026
+
+### Claimed, not independently checked
+
+- Owner-approved PR #204 at `eee2247bb1bb09e6b17952b3f7d01a0e590a2c73`
+  merged as `d2793c00169cc6fca540e9c26c57790d143935d6`. All five off-host
+  checks passed before merge. The scoped backend now runs that tested source,
+  image `sha256:d89d46826f9954c45be87ffa4378f6818904fb4f994342c8eb44efd14c8e774b`.
+  Interface, Ollama, local N=1 and 30-minute keep-alive remain unchanged.
+- Exact current-state isolated restore through the retained accepted `8ed78f2`
+  image preserved the original data plus a newly written objective and artifact.
+  Backend health, normal TLS/authentication denials, one A20 HF canary and a
+  bounded 69-second observation passed. This is not host, thermal, Windows
+  reboot, Owner/iPhone or long-soak qualification.
+- One actual authenticated A19 v2 normal case passed its unchanged six-field
+  oracle through the single prompt-bound HF route. Its original completed job
+  `582b4818-e05b-4334-9a6f-77a168bdb7dc` is preserved: the collector rejected
+  the successful queue writer's literal empty-string error before any A26
+  review or signing. The consumer repair admits only `null` or literal `""`,
+  retaining raw evidence and rejecting false/zero, whitespace and error values.
+  It remains a source candidate until its own review and deployment gates pass.
+- Fully L7 certified remains **0/21**. No signed independent case, complete
+  per-agent matrix or clean-room L7 audit is inferred from this role result.
+  Existing subject/reviewer runtime bindings require a same-case regression on
+  the repaired exact runtime; old execution provenance must not be rewritten.
+
 ## Agent certification execution repair — 7 October 2026
 
 ### Claimed, not independently checked

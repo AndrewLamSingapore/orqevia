@@ -234,7 +234,8 @@ def execute_role_review(context: str, *, reviewer_id: str, capability_id: str,
         job = execution["job"]
         if (type(job) is not dict or set(job) != _JOB_FIELDS or not _uuid(job.get("id"))
                 or job["id"] == task_id or job.get("agent") != subject
-                or job.get("status") != "completed" or job.get("error") is not None
+                or job.get("status") != "completed"
+                or not (job["error"] is None or (type(job["error"]) is str and job["error"] == ""))
                 or type(job.get("attempts")) is not int or not 1 <= job["attempts"] <= 3
                 or type(job.get("provider")) is not str
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", job["provider"])

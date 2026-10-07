@@ -93,6 +93,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # This separately dated runtime/failure observation is an exact addition,
+    # not permission to erase or rewrite any previous status/evidence section.
+    runtime_title = "## Scoped certification runtime and success-error repair — 7 October 2026"
+    assert after.count(runtime_title) == 1
+    runtime_start = after.index(runtime_title)
+    runtime_end = after.index("## Agent certification execution repair — 7 October 2026", runtime_start)
+    runtime_update = after[runtime_start:runtime_end].encode("utf-8")
+    assert len(runtime_update) == 1715
+    assert hashlib.sha256(runtime_update).hexdigest() == "e981b56286dba42533f6024d677a58334e2e35f247dc0dde67fdaa70bfa54ec9"
+    after = after[:runtime_start] + after[runtime_end:]
     # Remove only the exact new, non-certifying 7 October observation; retain
     # the independently pinned historical bytes and reject altered claims.
     cert_title = "## Agent certification execution repair — 7 October 2026"
@@ -145,18 +155,28 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
     ("Fully L7 certified remains **0/21**.", "Fully L7 certified remains **1/21**."),
     ("candidate has not changed Golden, Interface, Ollama", "candidate has deployed to Golden, Interface, Ollama"),
+    ("d2793c00169cc6fca540e9c26c57790d143935d6", "d2793c00169cc6fca540e9c26c57790d143935d0"),
+    ("bounded 69-second observation passed", "unbounded long-term soak passed"),
+    ("before any A26\n  review or signing", "after verified A26\n  review and signing"),
 ])
 def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
     status = read_text(status_path, encoding="utf-8")
-    assert status.count(original) == 1
-    changed = status.replace(original, replacement, 1)
-    def altered_read(path, *args, **kwargs):
-        return changed if path == status_path else read_text(path, *args, **kwargs)
-    monkeypatch.setattr(Path, "read_text", altered_read)
-    with pytest.raises(AssertionError):
-        test_status_insertion_preserves_all_existing_sections_and_history()
+    expected_count = 2 if original == "Fully L7 certified remains **0/21**." else 1
+    assert status.count(original) == expected_count
+    # Independently falsify each repeated claim, including both the new and
+    # historical 0/21 statement. Do not just mutate the first occurrence.
+    offset = 0
+    for _ in range(expected_count):
+        position = status.index(original, offset)
+        changed = status[:position] + replacement + status[position + len(original):]
+        def altered_read(path, *args, **kwargs):
+            return changed if path == status_path else read_text(path, *args, **kwargs)
+        monkeypatch.setattr(Path, "read_text", altered_read)
+        with pytest.raises(AssertionError):
+            test_status_insertion_preserves_all_existing_sections_and_history()
+        offset = position + len(original)
 
 
 def test_public_deployment_identity_is_not_physical_or_commercial_proof():

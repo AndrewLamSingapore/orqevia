@@ -97,7 +97,7 @@ def main():
                   'agent_cert_transport', 'agent_cert_cloud_observation',
                   'agent_cert_review_tool', 'agent_cert_review_dispatch',
                   'agent_cert_reviewed_signing', 'sign_admitted_agent_cases',
-                  'collect_agent_cert_case'])
+                  'collect_agent_cert_case', 'agent_cert_success_error_contract'])
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('hf_prompt_scope')

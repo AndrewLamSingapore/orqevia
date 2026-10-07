@@ -384,7 +384,8 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
     job = execution['job']
     if (type(job) is not dict or set(job) != _JOB_FIELDS or
             type(job['id']) is not str or str(uuid.UUID(job['id'])) != job['id'] or
-            job['agent'] != agent or job['status'] != 'completed' or job['error'] is not None or
+            job['agent'] != agent or job['status'] != 'completed' or
+            not (job['error'] is None or (type(job['error']) is str and job['error'] == '')) or
             type(job['attempts']) is not int or not 1 <= job['attempts'] <= 3 or
             type(job['provider']) is not str or not _PROVIDER.fullmatch(job['provider']) or
             type(job['result']) is not str or not 1 <= len(job['result'].encode('utf-8')) <= 64 * 1024 or
