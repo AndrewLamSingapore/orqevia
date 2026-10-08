@@ -93,6 +93,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # Admit this exact new correction/merge observation without rewriting the
+    # earlier failed observation or any of its byte-pinned historical evidence.
+    correction_title = "## PR #210 source merge and copied-data rollback correction — 8 October 2026"
+    assert after.count(correction_title) == 1
+    correction_start = after.index(correction_title)
+    correction_end = after.index("## Authenticated certification feeds merged; further cases prepared — 8 October 2026", correction_start)
+    correction_update = after[correction_start:correction_end].encode("utf-8")
+    assert len(correction_update) == 2692
+    assert hashlib.sha256(correction_update).hexdigest() == "449da24a577e56e43954e7e181bedbd2f0597dfb2040d2f1cbd56449f4842a7d"
+    after = after[:correction_start] + after[correction_end:]
     # Admit only the exact new 8 October source/rehearsal observation. It is
     # distinct from all byte-pinned historical additions below; no arbitrary
     # current text, new PASS or deployment claim can bypass the history proof.
@@ -243,6 +253,30 @@ def test_current_case_observation_rejects_inflated_claims(monkeypatch, original,
     status = read_text(status_path, encoding="utf-8")
     # Each full snippet belongs only to the new dated observation. Historical
     # claim counts and their independent mutation tests stay unchanged.
+    assert status.count(original) == 1
+    changed = status.replace(original, replacement, 1)
+    def altered_read(path, *args, **kwargs):
+        return changed if path == status_path else read_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_text", altered_read)
+    with pytest.raises(AssertionError):
+        test_status_insertion_preserves_all_existing_sections_and_history()
+
+
+@pytest.mark.parametrize("original,replacement", [
+    ("944755427c177d9ef661b24fdb37ea3f35f7ca99", "944755427c177d9ef661b24fdb37ea3f35f7ca90"),
+    ("Agent L7 remains **0/21**.", "Agent L7 is complete **21/21**."),
+    ("Public verifier\n  fixtures are not live Azure signing", "Public verifier\n  fixtures are live Azure signing"),
+    ("prove a production cutover or preservation of arbitrary later production writes.",
+     "prove a production cutover and preservation of arbitrary later production writes."),
+    ("no production code or image was repaired.", "production code and image were repaired."),
+    ("No PR #209 or #210 production deployment is established", "PR #209 and #210 production deployment is established"),
+    ("Host stability remains unqualified.", "Host stability is qualified."),
+    ("this observation awards no certification", "this observation awards all certifications"),
+])
+def test_current_rollback_correction_rejects_expanded_claims(monkeypatch, original, replacement):
+    status_path = ROOT / "STATUS.md"
+    read_text = Path.read_text
+    status = read_text(status_path, encoding="utf-8")
     assert status.count(original) == 1
     changed = status.replace(original, replacement, 1)
     def altered_read(path, *args, **kwargs):

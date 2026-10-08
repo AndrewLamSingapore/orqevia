@@ -127,7 +127,7 @@ def test_identity_admission_never_accepts_cloud_transport(cloud, policy):
     'app/agent_cert_secondary_roles.py', 'app/agent_cert_a19_general.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_a19_baseline.py'])
 def test_original_identity_domain_dependencies_are_all_protected_code_inputs(tmp_path, dependency):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 45
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 46
     revisions = {}
     for name in loader.CODE_FILES:
         path = tmp_path / name

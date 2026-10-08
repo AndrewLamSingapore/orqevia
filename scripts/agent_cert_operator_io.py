@@ -175,6 +175,19 @@ class AgentCertOperatorIO:
                 self._reviewer, self._review_cap = initialization_reviewer(agent, capability)
                 self._review_objective = initialization_review_objective(agent, capability)
                 self._review_operation = 'certification_initialization_review'
+                self._review_action_type = 'agent.certification.initialization.review'
+            elif case in {'general:artifact_consume', 'general:artifact_produce', 'general:review'}:
+                from app.agent_cert_artifact_events import artifact_action_type
+                from app.agent_cert_role_review import (
+                    ARTIFACT_REVIEW_ACTION, ARTIFACT_REVIEW_OBJECTIVE, ARTIFACT_REVIEW_OPERATION,
+                )
+                _require((agent, capability) == ('a19', 'responsibility.a19'),
+                    'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
+                self._action_type = artifact_action_type(case)
+                self._reviewer, self._review_cap = 'a26', 'responsibility.a26'
+                self._review_objective = ARTIFACT_REVIEW_OBJECTIVE
+                self._review_operation = ARTIFACT_REVIEW_OPERATION
+                self._review_action_type = ARTIFACT_REVIEW_ACTION
             else:
                 _require((agent, capability, case) == ('a19', 'responsibility.a19', 'baseline:identity'),
                     'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
@@ -185,6 +198,10 @@ class AgentCertOperatorIO:
                 self._review_objective = ('Independently review one recorded A19 zero-model identity event '
                     'against its original Objective, artifact and action records; do not certify or sign.')
                 self._review_operation = 'certification_identity_review'
+                self._review_action_type = 'agent.certification.identity.review'
+            self._subject_action_types = {self._action_type}
+            if case in {'general:artifact_consume', 'general:review'}:
+                self._subject_action_types.add(artifact_action_type(case, setup=True))
             self._spec = json.loads(_canonical(canonical))
         except Exception:
             raise OperatorBindingError('CANONICAL_ZERO_MODEL_EVENT_REQUIRED') from None
@@ -230,10 +247,10 @@ class AgentCertOperatorIO:
         paths = {RUNTIME_PATH}
         if self._subject_task:
             paths.add('/api/agents/objectives/' + self._subject_task)
-            paths.add('/api/agent-cert-events/actions/' + self._subject_task + '?action_type=' + self._action_type)
+            paths.update('/api/agent-cert-events/actions/' + self._subject_task + '?action_type=' + action
+                for action in self._subject_action_types)
         if self._review_task:
-            paths.add('/api/agent-cert-events/actions/' + self._review_task + '?action_type=agent.certification.'
-                + self._spec['case'].split(':')[1] + '.review')
+            paths.add('/api/agent-cert-events/actions/' + self._review_task + '?action_type=' + self._review_action_type)
         return path in paths
 
     def _request(self, method, path, *, body=None, artifact=False):
@@ -358,6 +375,11 @@ class AgentCertOperatorIO:
             steps = value.get('steps')
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
+            if self._spec['case'] in {'general:artifact_consume', 'general:review'}:
+                dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
+                event = dispatch.get('artifact_event') if type(dispatch) is dict else None
+                if type(event) is dict:
+                    self._remember_artifact(event.get('input_artifact_metadata'))
         return status, value
 
     def _remember_artifact(self, metadata):
@@ -392,7 +414,7 @@ class AgentCertOperatorIO:
         return status, value
 
     def read_subject_actions(self, task_id, action_type):
-        _require(_uuid(task_id) and task_id == self._subject_task and action_type == self._action_type,
+        _require(_uuid(task_id) and task_id == self._subject_task and action_type in self._subject_action_types,
             'OWNED_ACTION_BINDING_REQUIRED')
         return self._actions(task_id, action_type)
 
@@ -413,7 +435,7 @@ class AgentCertOperatorIO:
     def read_review_actions(self, action_id):
         _require(_uuid(action_id) and action_id == self._review_action and _uuid(self._review_task),
             'OWNED_ACTION_BINDING_REQUIRED')
-        return self._actions(self._review_task, 'agent.certification.' + self._spec['case'].split(':')[1] + '.review')
+        return self._actions(self._review_task, self._review_action_type)
 
     def io(self):
         def objective(task):

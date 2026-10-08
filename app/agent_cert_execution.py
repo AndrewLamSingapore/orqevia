@@ -332,6 +332,81 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
             'review_errors': ()}
 
 
+def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
+                            expected_source_revision, expected_registry_sha256,
+                            started, timeout_seconds, monotonic, wall_clock):
+    """Observe fixed actual artifact work, not a model answer or complete review."""
+    from . import agent_cert_artifact_events as events
+    fixed = events.canonical_artifact_case(spec.get('case'))
+    if _canonical(spec) != _canonical(fixed):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_case_source_mismatch'}
+    if (not callable(get_artifact) or not callable(get_runtime)
+            or type(expected_source_revision) is not str
+            or re.fullmatch('[0-9a-f]{40}', expected_source_revision) is None
+            or type(expected_registry_sha256) is not str
+            or re.fullmatch('[0-9a-f]{64}', expected_registry_sha256) is None):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_evidence_reader_missing'}
+    began = wall_clock()
+    if type(began) is not datetime or began.tzinfo is None or began.utcoffset() is None:
+        return {**base, 'state': 'REJECTED', 'reason': 'observation_time_missing'}
+    before = _runtime_identity(get_runtime(), expected_source_revision)
+    if before is None:
+        return {**base, 'state': 'REJECTED', 'reason': 'runtime_identity_missing'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    reply = dispatch(fixed['request'])
+    if (type(reply) is not dict or set(reply) != {'task_id', 'state', 'artifact', 'model_calls',
+            'execution_model', 'agent_id', 'capability', 'runtime_source_revision', 'artifact_event'}
+            or reply.get('state') != 'COMPLETED' or reply.get('execution_model') != 'DETERMINISTIC'
+            or reply.get('agent_id') != 'a19' or reply.get('capability') != 'responsibility.a19'
+            or reply.get('runtime_source_revision') != expected_source_revision
+            or type(reply.get('model_calls')) is not int or reply['model_calls'] != 0):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_dispatch_invalid'}
+    task, declared, event = reply['task_id'], reply['artifact'], reply['artifact_event']
+    if (not events._uuid(task) or type(declared) is not dict or type(event) is not dict
+            or type(declared.get('artifact_id')) is not str
+            or re.fullmatch('[0-9a-f]{32}', declared['artifact_id']) is None):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_identity_mismatch'}
+    event_began, event_ended = _time(event.get('started_at')), _time(event.get('completed_at'))
+    if (event.get('schema_version') != events.EVENT_SCHEMA or event.get('case') != fixed['case']
+            or event.get('case_version') != events.CASE_VERSION or event.get('task_id') != task
+            or event.get('source_revision') != expected_source_revision
+            or event.get('registry_sha256') != expected_registry_sha256
+            or event.get('case_spec_sha256') != events.sha(events.canonical(fixed))
+            or event.get('input_sha256') != fixed['case_input_sha256']
+            or event.get('runtime_identity_sha256') != events.sha(events.canonical(before))
+            or event.get('durable_action_delivery') is not True or event.get('certification') != 'UNVERIFIED'
+            or not events._uuid(event.get('subject_action_id')) or event_began is None or event_ended is None
+            or not began <= event_began <= event_ended
+            or (event_ended - event_began).total_seconds() > 5):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_event_binding_mismatch'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    retrieved = get_artifact(declared['artifact_id'])
+    if (type(retrieved) is not tuple or len(retrieved) != 2
+            or type(retrieved[0]) is not dict or type(retrieved[1]) is not bytes):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_read_invalid'}
+    metadata, raw = retrieved
+    if events.canonical(metadata) != events.canonical(declared) or raw != events.expected_artifact_bytes(fixed['case']):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_binding_mismatch'}
+    events._metadata(metadata, raw, task, expected_source_revision, began=event_began, ended=event_ended)
+    after = _runtime_identity(get_runtime(), expected_source_revision)
+    ended = wall_clock()
+    if after is None or _canonical(before) != _canonical(after):
+        return {**base, 'state': 'REJECTED', 'reason': 'runtime_identity_changed'}
+    if type(ended) is not datetime or ended.tzinfo is None or ended.utcoffset() is None or event_ended > ended:
+        return {**base, 'state': 'REJECTED', 'reason': 'observation_time_invalid'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    return {**base, 'state': 'EXECUTED', 'execution_model': 'DETERMINISTIC',
+        'task_id': task, 'artifact_id': metadata['artifact_id'], 'model_calls': 0,
+        'source_revision': expected_source_revision, 'registry_sha256': expected_registry_sha256,
+        'runtime_identity_sha256': events.sha(events.canonical(before)), 'result_sha256': events.sha(raw),
+        'artifact_metadata_sha256': events.sha(events.canonical(metadata)),
+        'started_at': began.isoformat(), 'captured_at': event_began.isoformat(), 'completed_at': ended.isoformat(),
+        'case_review': 'ARTIFACT_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED', 'review_errors': ()}
+
+
 def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                       get_job: Callable[[str], dict], timeout_seconds: float = 60,
                       monotonic: Callable[[], float] = time.monotonic,
@@ -431,6 +506,14 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 return {**base, 'state': 'REJECTED', 'reason': 'initialization_cloud_transport_forbidden'}
             return _observe_initialization_artifact(
                 spec, base, dispatch=dispatch, get_artifact=get_artifact,
+                get_runtime=get_runtime, expected_source_revision=expected_source_revision,
+                expected_registry_sha256=expected_registry_sha256, started=started,
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
+        from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
+        if spec.get('case') in ARTIFACT_CASES:
+            if cloud_receipt is not None:
+                return {**base, 'state': 'REJECTED', 'reason': 'artifact_cloud_transport_forbidden'}
+            return _observe_artifact_event(spec, base, dispatch=dispatch, get_artifact=get_artifact,
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)

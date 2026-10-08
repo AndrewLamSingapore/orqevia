@@ -142,6 +142,10 @@ def _oracle_id(agent, spec=None):
     if agent == 'a19' and spec is not None and spec.get('case') == 'baseline:identity':
         from app.agent_cert_identity_review import ORACLE_ID
         return ORACLE_ID
+    if spec is not None:
+        from app.agent_cert_artifact_events import SUPPORTED_CASES, ORACLE_ID
+        if spec.get('case') in SUPPORTED_CASES:
+            return ORACLE_ID
     if spec is not None and spec.get('case') != 'role:normal':
         from app.agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, ORACLE_ID as BASELINE_ORACLE
         if spec.get('case') in BASELINE_CASES:
@@ -363,6 +367,14 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
         return _contract_event_review(row, primary, review, source_revision=source_revision,
             runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
             now=now, initialization=row['test_case'] == 'initialization')
+    from app.agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
+    if (row.get('dimension') == 'general' and
+            'general:' + str(row.get('test_case')) in ARTIFACT_CASES):
+        if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+            _deny('ARTIFACT_CLOUD_TRANSPORT_FORBIDDEN')
+        return _contract_event_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
+            now=now, initialization=False, artifact=True)
     execution = _json(primary)
     envelope = _json(review)
     cloud_requested = any(value is not None for value in (
@@ -456,7 +468,7 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
 
 
 def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_image_id,
-                           reviewer_code_revision, now, initialization):
+                           reviewer_code_revision, now, initialization, artifact=False):
     """Review a genuine artifact event; never manufacture a model queue job."""
     from app.agent_cert_identity_review import (
         ORACLE_ID, SCHEMA, action_span, validate_identity_execution,
@@ -464,7 +476,14 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     from app.agent_registry import REGISTRY_PATH
     subject, capability = 'a19', 'responsibility.a19'
     reviewer, reviewer_capability = 'a26', 'responsibility.a26'
-    if initialization:
+    dimension = 'baseline'
+    if artifact:
+        from app.agent_cert_artifact_events import ORACLE_ID
+        from app.agent_cert_role_review import (ARTIFACT_REVIEW_SCHEMA as SCHEMA,
+            ARTIFACT_REVIEW_ACTION as review_action_type, artifact_event_review_join as validate_event)
+        event_case = row.get('test_case')
+        dimension = 'general'
+    elif initialization:
         from app.agent_cert_initialization_review import (SCHEMA,
             validate_initialization_execution as validate_event)
         from app.agent_cert_initialization import initialization_reviewer, initialization_oracle_id
@@ -494,11 +513,14 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     # Initialization recomputes the complete owned contracts from their actual
     # raw build bytes. Do not normalize its original report/pin into a match.
     registry_raw = REGISTRY_PATH.read_bytes()
-    registry_sha = _sha(registry_raw if initialization else registry_raw.replace(b'\r\n', b'\n'))
+    registry_sha = _sha(registry_raw if initialization or artifact else registry_raw.replace(b'\r\n', b'\n'))
     join = validate_event(execution, source_revision=source_revision,
         runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=now,
         **({'agent_id': subject, 'capability_id': capability} if initialization else {}))
     spec = _case_spec(row)
+    if artifact and (join.get('case') != spec['case'] or
+            join.get('case_spec_sha256') != _sha(_canonical(spec))):
+        _deny('ARTIFACT_REVIEW_CASE_MISMATCH')
     expected_observations = dict(execution_task_id=join['task_id'], result_sha256=join['result_sha256'],
         case_spec_sha256=join['case_spec_sha256'], runtime_image_id=runtime_image_id,
         registry_sha256=registry_sha, reviewer_code_revision=reviewer_code_revision,
@@ -547,7 +569,7 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         _deny('REGISTERED_IDENTITY_REVIEW_ARTIFACT_INVALID')
     expected = dict(schema_version=SCHEMA, task_id=dispatch['task_id'], reviewer_id=reviewer,
         reviewer_capability_id=reviewer_capability, subject_agent_id=subject, subject_capability_id=capability,
-        dimension='baseline', test_case=event_case, source_revision=source_revision, runtime_image_id=runtime_image_id,
+        dimension=dimension, test_case=event_case, source_revision=source_revision, runtime_image_id=runtime_image_id,
         execution_evidence_sha256=_sha(primary), case_spec_sha256=_sha(_canonical(spec)), result_sha256=join['result_sha256'],
         oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0, execution_model='DETERMINISTIC',
         subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED', subject_domain_join=join,
