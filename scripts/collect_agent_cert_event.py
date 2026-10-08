@@ -92,7 +92,8 @@ def _registry_pin(expected):
 def _lines(value):
     _require(type(value) is list and 2 <= len(value) <= 128
              and all(type(line) is str and line.endswith('\n')
-                     and 0 < len(line.encode('utf-8')) <= 65536 for line in value),
+                     and 0 < len(line) <= 65536
+                     and len(line.encode('utf-8')) <= 65536 for line in value),
              'ORIGINAL_DURABLE_ACTIONS_REQUIRED')
     return value
 
@@ -213,9 +214,13 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         summary.update(stage='SUBJECT_JOIN', submission_uncertain=False)
         objective = _response(read(io.read_objective, task), 200, 'OWNED_OBJECTIVE_READ_FAILED')
         execution['objective_read'] = [200, objective]
-        events = _lines(read(read_subject_actions, task, action_type))
+        bounded()
+        events = _lines(_call(read_subject_actions, task, action_type))
         subject_lines = tuple(events)
         execution['action_records'] = events
+        # Retain bounded original counterevidence before rejecting a late read.
+        # Custody is not acceptance, and cannot cause a retry or further POST.
+        bounded()
         observation = execution['observation']
         execution['action_chain_join'] = action_span(events, task_id=task, agent_id=agent,
             action_type=action_type, schema=report_schema, metadata=execution['artifact_metadata'],
@@ -287,8 +292,10 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         now = _now(wall_clock)
         _require(utc(join['completed_at']) <= utc(content['reviewed_at'])
             <= utc(metadata['timestamp']) <= now, 'REVIEW_TIME_INVALID')
-        lines = _lines(read(io.read_review_actions, result['review_action_id']))
+        bounded()
+        lines = _lines(_call(io.read_review_actions, result['review_action_id']))
         reviewer_lines = tuple(lines)
+        bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
             action_type='agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),

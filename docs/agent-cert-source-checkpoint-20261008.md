@@ -27,11 +27,16 @@ branch's tested revision; retain all original failures and historical evidence.
 - Reject duplicate decoded JSON keys and nonfinite numbers in certification
   manifests. Independent tests exposed concealed FAIL/counterevidence; preserve
   their original failures and reject the whole malformed manifest, not its rows.
+- Reject non-string evidence timestamps per case instead of crashing the
+  certification view; retain separate unaffected records and the original
+  ten failing discriminators.
 - Add one operator-only event collector using existing authenticated operations
   and an explicit original subject-action reader. It has no credential/client,
   ledger path, signer, retry or certification authority. Missing callbacks or
   mismatched raw Registry source fail closed. Live operator binding remains
   required; an unsigned collected event is not L7 or a protected attestation.
+  Retain bounded original action spans even when their callback finishes late;
+  they remain unaccepted counterevidence and never trigger a replay or PASS.
 
 ## Reproducible checks
 
@@ -113,3 +118,13 @@ independent checks), `EVENT-COLLECTOR-FOCUSED-AFTER-20261008.json` (57 checks),
 `CERTIFICATION-MANIFEST-STRICT-JSON-INDEPENDENT-AFTER-20261008.json` (61 checks
 and one platform skip). These cover actual temporary software domains and
 discriminating negative tests, not accepted live runtime execution or L7 awards.
+
+The subsequent timestamp repair passed 115 projection/signature source checks
+with one platform skip, recorded in `CERTIFICATION-TIMESTAMP-TYPE-AFTER-20261008.json`.
+The subsequent collector custody repair passed 64 focused source checks;
+the earlier two independent counterevidence failures remain preserved in
+`EVENT-COLLECTOR-INDEPENDENT-BEFORE-20261008.json`. Each receipt binds its own
+bytes: it must not be relabeled as evidence for an untested later revision.
+`EVENT-COLLECTOR-INDEPENDENT-AFTER-20261008.json` records the unchanged four
+discriminators plus 64 focused checks passing after the repair. Separate review
+reran all 15 timestamp discriminators successfully without editing the source.

@@ -115,6 +115,8 @@ def _artifact_digest_ok(agent_dir: Path, name: object, expected: object) -> bool
 
 
 def _utc(value: str) -> datetime:
+    if type(value) is not str:
+        raise ValueError("certification timestamps require strings")
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError("certification timestamps require timezone")

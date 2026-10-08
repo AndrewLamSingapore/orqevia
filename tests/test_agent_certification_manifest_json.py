@@ -91,3 +91,17 @@ def test_finite_metadata_does_not_invalidate_valid_evidence(tmp_path, literal):
 def test_deep_malformed_manifest_is_unknown_not_an_unhandled_error(tmp_path):
     fixture_rows(tmp_path, ("baseline",))
     denied(project(tmp_path, '{"schema_version":"1.0","records":' + '[' * 2000 + '}' ))
+
+
+@pytest.mark.parametrize("field", ["last_revalidated", "certified_at", "expires_at"])
+@pytest.mark.parametrize("value", [None, {}, [], 1, True])
+def test_non_string_timestamp_rejects_case_without_crashing_projection(tmp_path, field, value):
+    rows = fixture_rows(tmp_path, ("baseline",))
+    rejected_case = "baseline:" + rows[0]["test_case"]
+    rows[0][field] = value
+    result = project(tmp_path, encode({"schema_version": "1.0", "records": rows}))
+    assert result["level"] == "L0"
+    assert result["current_cases"] == []
+    assert rejected_case not in result["valid_cases"]
+    # Retain distinct unaffected records; bad time is not a blanket rewrite.
+    assert len(result["valid_cases"]) == len(rows) - 1

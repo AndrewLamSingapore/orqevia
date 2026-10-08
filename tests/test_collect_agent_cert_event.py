@@ -373,6 +373,47 @@ def test_reviewer_original_chain_failure_never_returns_collected(operator):
     assert result.reviewer_actions == tuple(reversed(operator.review_lines))
 
 
+@pytest.mark.parametrize('reviewer', [False, True])
+def test_late_original_action_read_kept_as_unaccepted_counterevidence(operator, reviewer):
+    clock = [0.0]
+    def late_subject(task, action):
+        original = operator.subject_actions(task, action)
+        clock[0] = 11.0
+        return original
+    def late_reviewer(action):
+        original = operator.reviewer_actions(action)
+        clock[0] = 11.0
+        return original
+    result = collect(operator, monotonic=lambda: clock[0],
+        actions=operator.subject_actions if reviewer else late_subject,
+        io=replace(operator.io(), read_review_actions=late_reviewer) if reviewer else operator.io())
+    reject(result, operator, submits=1, reviews=int(reviewer))
+    assert result.summary['reason'] == 'BOUNDED_EVENT_OBSERVATION_INCOMPLETE'
+    assert result.subject_actions == tuple(operator.subject_lines)
+    assert result.subject_artifact_bytes is not None
+    if reviewer:
+        assert result.reviewer_actions == tuple(operator.review_lines)
+        assert result.reviewer_artifact_bytes is not None
+    else:
+        assert json.loads(result.execution_bytes)['action_records'] == operator.subject_lines
+        assert result.summary['review_dispatch_attempts'] == 0
+
+
+@pytest.mark.parametrize('invalid', [
+    ['{}\n']*129, ['{}\n'], ['x'*65536+'\n', '{}\n'],
+    ['\u00e9'*40000+'\n', '{}\n'], [b'{}\n', '{}\n'],
+])
+def test_late_malformed_or_oversize_span_is_not_retained_or_accepted(operator, invalid):
+    clock = [0.0]
+    def late(task, action):
+        clock[0] = 11.0
+        return invalid
+    result = collect(operator, actions=late, monotonic=lambda: clock[0])
+    reject(result, operator, submits=1)
+    assert result.subject_actions == ()
+    assert result.summary['reason'] == 'ORIGINAL_DURABLE_ACTIONS_REQUIRED'
+
+
 def test_source_module_contains_no_live_client_or_cli_operator():
     from pathlib import Path
     from scripts import collect_agent_cert_event
