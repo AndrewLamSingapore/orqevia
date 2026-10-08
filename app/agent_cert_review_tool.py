@@ -273,7 +273,9 @@ def execute_role_review(context: str, *, reviewer_id: str, capability_id: str,
                 or any(type(code) is not str or not re.fullmatch(r"[A-Za-z0-9_]{1,80}", code)
                        for code in errors) or (passed and errors)):
             _deny("ORACLE_CONTRACT_INVALID")
-        oracle_id = (canonical["oracle_id"] if case_id != "role:normal" else
+        from .agent_cert_secondary_roles import SUPPORTED_CAPABILITIES, ORACLE_ID as SECONDARY_ORACLE
+        oracle_id = (SECONDARY_ORACLE if subject_cap in SUPPORTED_CAPABILITIES else
+                     canonical["oracle_id"] if case_id != "role:normal" else
                      "group_two_exact_role_oracle/v1" if "group_two_exact_role_oracle" in
                      canonical["independent_review"] else "existing.role-normal.v1")
         return {

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -71,6 +72,27 @@ CERTIFICATION_WAVES = (
 MAX_EVIDENCE_BYTES = 1024 * 1024
 
 
+def _unique_manifest_fields(pairs):
+    """Reject contradictory decoded fields rather than hiding counterevidence."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate certification manifest field")
+        result[key] = value
+    return result
+
+
+def _finite_manifest_number(value):
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ValueError("nonfinite certification manifest number")
+    return parsed
+
+
+def _invalid_manifest_constant(_):
+    raise ValueError("nonfinite certification manifest constant")
+
+
 def _artifact_digest_ok(agent_dir: Path, name: object, expected: object) -> bool:
     if not isinstance(name, str) or not name or "\\" in name:
         return False
@@ -93,6 +115,8 @@ def _artifact_digest_ok(agent_dir: Path, name: object, expected: object) -> bool
 
 
 def _utc(value: str) -> datetime:
+    if type(value) is not str:
+        raise ValueError("certification timestamps require strings")
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError("certification timestamps require timezone")
@@ -173,14 +197,19 @@ class AgentCertificationRegistry:
                 raw = stream.read(MAX_EVIDENCE_BYTES + 1)
             if len(raw) > MAX_EVIDENCE_BYTES:
                 raise ValueError("certification manifest exceeds size limit")
-            data = json.loads(raw.decode("utf-8"))
+            # The manifest is evidence, not a last-key-wins projection. A
+            # duplicate at any depth can otherwise conceal a recorded FAIL.
+            data = json.loads(raw.decode("utf-8"),
+                              object_pairs_hook=_unique_manifest_fields,
+                              parse_float=_finite_manifest_number,
+                              parse_constant=_invalid_manifest_constant)
             if not isinstance(data, dict):
                 raise ValueError("certification manifest must be an object")
             rows = data["records"] if data.get("schema_version") == "1.0" else []
             if not isinstance(rows, list):
                 return []
             return rows
-        except (OSError, ValueError, TypeError, KeyError):
+        except (OSError, ValueError, TypeError, KeyError, RecursionError, OverflowError):
             return []
 
     def project(self, agent_id: str, capability_id: str, *, now: datetime | None = None) -> dict:

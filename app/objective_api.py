@@ -424,6 +424,29 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         db.close()
 
 
+def _timestamp_provenance(recorded,jobs,*,created_at,started_at,completed_at,updated_at,
+                          completed_from_queue):
+    """Label the selected stored values without changing times or verifying claims."""
+    queue_updates=[job.get('completed_at') or job.get('started_at') or job.get('created_at') for job in jobs]
+    update_sources=set()
+    if updated_at is not None:
+        if recorded[1] and updated_at==recorded[1]:update_sources.add('OBJECTIVE_METADATA')
+        if updated_at in queue_updates:update_sources.add('QUEUE')
+    def label(sources):
+        return '_AND_'.join(source for source in ('OBJECTIVE_METADATA','QUEUE') if source in sources) or 'UNAVAILABLE'
+    fields={
+        'created_at':'UNAVAILABLE' if created_at is None else 'OBJECTIVE_METADATA' if recorded[0] else 'QUEUE',
+        'started_at':'UNAVAILABLE' if started_at is None else 'QUEUE',
+        'completed_at':'UNAVAILABLE' if completed_at is None else 'QUEUE' if completed_from_queue else label(update_sources),
+        'updated_at':label(update_sources),
+    }
+    sources=set()
+    for value in fields.values():
+        if value in {'OBJECTIVE_METADATA','OBJECTIVE_METADATA_AND_QUEUE'}:sources.add('OBJECTIVE_METADATA')
+        if value in {'QUEUE','OBJECTIVE_METADATA_AND_QUEUE'}:sources.add('QUEUE')
+    return label(sources),fields
+
+
 def _get(task_id: str,authorization: str | None,*,read_only=False):
     authenticate_owner(authorization)
     db=connect(read_only=True) if read_only else connect()
@@ -464,6 +487,7 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
     updated_at=max(observed_updates,default=None)
     started_at=min((job.get('started_at') for job in jobs if job.get('started_at')),default=None)
     completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
+    completed_from_queue=completed_at is not None
     deterministic=system_content(steps,revision)
     if state=='COMPLETED' and deterministic and completed_at is None:completed_at=updated_at
     lifecycle={}
@@ -471,6 +495,11 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
         lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'
     if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and completed_at is None:
         completed_at=updated_at;lifecycle['completed_at_source']='TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE'
+    state_provenance=('OBJECTIVE_DISPATCH' if not jobs or state=='reconciliation_required' else
+        'QUEUE' if len(jobs)==len(current_steps) else 'QUEUE_AND_OBJECTIVE_DISPATCH')
+    timestamps_provenance,timestamp_fields=_timestamp_provenance(recorded,jobs,
+        created_at=created_at,started_at=started_at,completed_at=completed_at,updated_at=updated_at,
+        completed_from_queue=completed_from_queue)
     runtime=runtime_rows.get(revision)
     runtime_provenance='IMMUTABLE_OBJECTIVE_RUNTIME' if runtime else 'UNAVAILABLE_LEGACY_TASK'
     if runtime is None:runtime={'host_id':'UNKNOWN','source_revision':'UNKNOWN','version':'UNKNOWN','image_digest':None}
@@ -484,7 +513,8 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
             'started_at':job.get('started_at'),'completed_at':job.get('completed_at')} for job in jobs],
         'agent_execution':[agent_execution_metadata(step) for step in current_steps if step.get('job')],
         'inference_attempts':inference_attempt_projection(jobs),
-        'provenance':{'task_id':'DATABASE','state':'QUEUE','timestamps':'QUEUE','jobs':'QUEUE',
+        'provenance':{'task_id':'DATABASE','state':state_provenance,'timestamps':timestamps_provenance,
+            'timestamp_fields':timestamp_fields,'jobs':'QUEUE',
             'authority':'IDENTITY_SERVICE','artifact':'ARTIFACT_STORE','verification':'VERIFIER','runtime':runtime_provenance},
         'closed_world_policy':'UNKNOWN_WHEN_CANONICAL_SOURCE_HAS_NO_VALUE',
         'model_content_is_authoritative_metadata':False,

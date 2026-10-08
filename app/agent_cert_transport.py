@@ -69,25 +69,38 @@ def canonical_role_case(agent_id: str, capability_id: str,
                         case_id: str = "role:normal") -> dict:
     """Return a fresh current-source role challenge, not an execution/PASS record.
 
-    Only the existing strict role:normal oracle for an actual primary owned
-    responsibility is supported. Secondary/generic/unseen cases are not silently
-    given an oracle; they need their own existing discriminating contract.
+    Only existing source-owned primary or explicit secondary role:normal
+    oracles are supported. Generic/unseen cases never acquire a borrowed
+    oracle. Source support grants neither Owner consent nor provider admission.
     """
     if (type(agent_id) is not str or agent_id not in _ORACLES
             or type(capability_id) is not str
-            or capability_id != f"responsibility.{agent_id}"
             or type(case_id) is not str or case_id != "role:normal"
             or responsibility_owner(capability_id) != agent_id
             or capability_id not in agent_record(agent_id)["capability_requirements"]):
         raise ValueError("unsupported registered case/oracle")
-    if agent_id in _GROUP_TWO:
+    secondary = capability_id != f"responsibility.{agent_id}"
+    if secondary:
+        from .agent_cert_secondary_roles import (
+            CASE_VERSION, ORACLE_ID, SUPPORTED_CAPABILITIES, canonical_secondary_spec,
+        )
+        if SUPPORTED_CAPABILITIES.get(capability_id) != agent_id:
+            raise ValueError("unsupported registered case/oracle")
+        spec = canonical_secondary_spec(agent_id, capability_id)
+        if spec.get('case_version') != CASE_VERSION or spec.get('oracle_id') != ORACLE_ID:
+            raise ValueError("canonical public synthetic oracle unavailable")
+        marker = 'exact_secondary_role_oracle'
+        public_prefix = f'PUBLIC SYNTHETIC source={CASE_VERSION}; facts='
+    elif agent_id in _GROUP_TWO:
         # Lazy import avoids a cycle when the existing observer uses this module.
         from .agent_cert_role_group_two import role_case
         spec = role_case(agent_id)
         marker = "group_two_exact_role_oracle"
+        public_prefix = 'SYNTHETIC'
     else:
         spec = challenge(case_id, agent_id=agent_id, capability_id=capability_id)
         marker = _ORACLES[agent_id]
+        public_prefix = 'SYNTHETIC'
     request = spec["request"]
     if (marker not in spec["independent_review"]
             or spec["certification"] != "UNVERIFIED"
@@ -97,7 +110,8 @@ def canonical_role_case(agent_id: str, capability_id: str,
             or request.get("data_classification") != "LOCAL_ONLY"
             or type(request.get("max_cost_usd")) is not int
             or request["max_cost_usd"] != 0
-            or not request["context"].startswith("SYNTHETIC")
+            or (secondary and request.get('minimum_tier') != 'MINI')
+            or not request["context"].startswith(public_prefix)
             or not classify_for_cloud("CLOUD_PERMITTED",
                                       request["objective"] + "\n" + request["context"])):
         raise ValueError("canonical public synthetic oracle unavailable")
@@ -113,9 +127,13 @@ def case_transport_identity(spec: dict) -> dict:
     if _json(spec) != _json(canonical):
         raise ValueError("canonical case was modified")
     oracle = _ORACLES[canonical["agent_id"]]
-    if canonical["case"] != "role:normal":
-        from .agent_cert_a19_cases import ORACLE_ID
+    if canonical['capability_id'] != f"responsibility.{canonical['agent_id']}":
+        from .agent_cert_secondary_roles import ORACLE_ID
         oracle = ORACLE_ID
+    elif canonical["case"] != "role:normal":
+        # Each source-owned family retains its own grader identity. Never
+        # lend an older quality oracle to a new/general/event challenge.
+        oracle = canonical['oracle_id']
     return {"agent_id": canonical["agent_id"],
             "capability_id": canonical["capability_id"],
             "case": canonical["case"], "oracle_id": oracle,
@@ -132,9 +150,16 @@ def canonical_cert_case(agent_id: str, capability_id: str,
     if type(case_id) is str and case_id == "role:normal":
         return canonical_role_case(agent_id, capability_id, case_id)
     from .agent_cert_a19_cases import CASE_VERSION, ORACLE_ID, SUPPORTED_CASES
+    from .agent_cert_a19_general import (CASE_VERSION as GENERAL_VERSION,
+        ORACLE_ID as GENERAL_ORACLE, SUPPORTED_CASES as GENERAL_CASES)
+    schema = 'prime.a19-public-quality-input.v1'
+    if type(case_id) is str and case_id in GENERAL_CASES:
+        CASE_VERSION, ORACLE_ID = GENERAL_VERSION, GENERAL_ORACLE
+        schema = 'prime.a19-general-quality-input.v1'
+    supported = (*SUPPORTED_CASES, *GENERAL_CASES)
     if (type(agent_id) is not str or agent_id != "a19" or
             type(capability_id) is not str or capability_id != "responsibility.a19" or
-            type(case_id) is not str or case_id not in SUPPORTED_CASES or
+            type(case_id) is not str or case_id not in supported or
             responsibility_owner(capability_id) != agent_id or
             capability_id not in agent_record(agent_id)["capability_requirements"]):
         raise ValueError("unsupported registered case/oracle")
@@ -156,7 +181,7 @@ def canonical_cert_case(agent_id: str, capability_id: str,
             or request.get("data_classification") != "LOCAL_ONLY"
             or type(request.get("max_cost_usd")) is not int or request["max_cost_usd"] != 0
             or type(context) is not dict
-            or context.get("schema") != "prime.a19-public-quality-input.v1"
+            or context.get("schema") != schema
             or context.get("data_scope") != "PUBLIC_SYNTHETIC_ONLY"
             or context.get("case_id") != case_id or context.get("case_version") != CASE_VERSION
             or not classify_for_cloud("CLOUD_PERMITTED", request["objective"] + "\n" + request["context"])):
