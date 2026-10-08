@@ -36,6 +36,37 @@ If you are an AI agent updating this file:
 
 ---
 
+## 8 October host evidence and isolated product/model boundaries
+
+### Claimed, not independently checked
+
+- A fresh preserved dump records a real `0x133` bugcheck at 08:11:26 SGT,
+  122.845 seconds into the preceding kernel session. Local-cache analysis points
+  to the kernel DPC timeout path but does not identify a responsible driver.
+  Host stability remains **UNQUALIFIED**. Services were observed stopped;
+  no production restart, load test, deployment or L7 award occurred here.
+- One Owner-approved read-only NVMe check at 08:22:56–59 SGT measured the exact
+  Lexar NM610 PRO 1TB composite at **59.85°C**, sensor 2 at **64.85°C**, and
+  Windows current temperature at **60°C**. Media/integrity errors and critical
+  warning were zero. These are dated measurements, not sustained qualification.
+  `TemperatureMax=90` is a reported operating capability, not a historical peak.
+  Original crash, health, failure and rollback evidence remains preserved.
+- Isolated source now separates JARVIS Workspace from a read-only Owner-session
+  Control Center boundary. Existing recovery enrollment remains available;
+  replacement account/passkey authentication and operational Control Center
+  projections are **not implemented or claimed**. The loopback operational
+  console is not exposed to the browser. Full cloud/browser checks remain
+  required before acceptance; these changes are not deployed.
+- An optional provider-neutral model router prepares bounded plans over existing
+  admitted jobs and explicit model identities. It does not supply credentials,
+  create execution authority, prove independent model quality, or wire a new
+  production inference route. Local/cloud live proofs remain separate gates.
+- Current manifest/document authority statements use scoped domain ownership.
+  Historical terminology and evidence are retained; no universal master state
+  or replacement SSOT was introduced. **Fully L7 certified remains 0/21.**
+  The Owner's latest priority is completing the actual missing per-agent cases,
+  independent signed attestations and clean-room audits, not optional expansion.
+
 ## Actual independent A19 signing and identity-event adapter — 7 October 2026
 
 ### Claimed, not independently checked

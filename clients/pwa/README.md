@@ -1,4 +1,4 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> PRIME component reference: [dated operational manifest](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this client only; source, identity, authorization and observed deployment retain their separate domain ownership. Neither this document nor the manifest establishes current runtime state.
 
 # JARVIS mobile PWA
 

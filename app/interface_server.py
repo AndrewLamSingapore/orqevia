@@ -17,6 +17,8 @@ from fastapi.staticfiles import StaticFiles
 app=FastAPI(title='JARVIS ABEX Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None)
 app.include_router(router)
 app.include_router(pwa_sessions.router)
+from .product_surfaces import router as product_surfaces_router
+app.include_router(product_surfaces_router)
 app.add_middleware(pwa_sessions.PWASessionMiddleware)
 from .product_handoff import router as product_handoff_router
 app.include_router(product_handoff_router)

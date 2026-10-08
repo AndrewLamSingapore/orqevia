@@ -1,4 +1,4 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> PRIME component reference: [dated operational manifest](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). Source, package bytes, identity and observed deployment retain their separate authority boundaries; this packaging document and the manifest do not establish current runtime state.
 
 # Reproducible Dell client package
 

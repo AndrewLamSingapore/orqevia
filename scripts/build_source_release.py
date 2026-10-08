@@ -16,7 +16,7 @@ def build(output):
         if not source.is_file():continue
         if name.startswith(('app/','config/','contracts/','docs/','deploy/')) or name in {'requirements.txt','system.manifest.json'}:
             target=output/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
-        if name.startswith('clients/pwa/') and source.name not in {'tests.mjs','followup-tests.mjs','revision-tests.mjs','make-icons.mjs','README.md'}:
+        if name.startswith('clients/pwa/') and source.name not in {'tests.mjs','followup-tests.mjs','revision-tests.mjs','product-tests.mjs','make-icons.mjs','README.md'}:
             target=output/'app/pwa_static'/source.relative_to(ROOT/'clients/pwa');target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
     rows=[{'path':p.relative_to(output).as_posix(),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in sorted(output.rglob('*')) if p.is_file()]
     (output/'SOURCE_MANIFEST.json').write_text(json.dumps(rows,indent=2)+'\n')

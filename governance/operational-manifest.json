@@ -334,7 +334,7 @@
     "secret_values_allowed": false
   },
   "supersession": {
-    "rule": "This manifest alone selects current architecture and operational state. Generated mirrors and public-safe source summaries are subordinate. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
+    "rule": "This manifest records dated component and architecture references only. Source, runtime, deployment, identity, authorization, tasks, models, agents, artifacts and evidence each retain their own authority boundaries. Derived mirrors cannot establish current operational state. Preserve conflicting observations and investigate through their owning domains. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
     "duplicate_current_checkpoints_allowed": false,
     "superseded_prime_prs": [
       59,
@@ -353,7 +353,7 @@
   },
   "truth_reconciliation": {
     "version": "1.0.0",
-    "authority_boundary": "STATUS.md alone owns current status; this manifest records component and observation references. Dell may independently verify; ABEX remains the PRIME runtime authority.",
+    "authority_boundary": "STATUS.md records portfolio claims, not operational truth or a synchronization target. This manifest records dated component and observation references. Source, runtime, deployment, identity, authorization, tasks, models, agents, artifacts and evidence retain explicit domain ownership. Truth must be proven at the relevant authority boundary. Dell may independently verify; ABEX observations establish only the state actually observed on ABEX.",
     "result_contract": "contracts/truth-reconciliation-v1.schema.json",
     "execution_record_contract": "contracts/prime-execution-record-v1.schema.json",
     "repository_registry": "governance/repository-registry.json",

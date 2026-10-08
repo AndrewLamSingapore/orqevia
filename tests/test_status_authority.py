@@ -73,6 +73,29 @@ def test_retired_pointer_is_rejected(authority_copy):
         validate_status_authority(authority_copy)
 
 
+@pytest.mark.parametrize('section,field,claim', [
+    ('supersession', 'rule', 'This manifest alone selects current architecture and operational state; domain views are subordinate.'),
+    ('truth_reconciliation', 'authority_boundary', 'STATUS.md alone owns current status; each domain is subordinate.'),
+    ('truth_reconciliation', 'authority_boundary', 'One master database owns all current state.'),
+    ('supersession', 'rule', 'A single master database owns all domain state.'),
+    ('supersession', 'rule', 'A universal operational store governs all domain truth.'),
+])
+def test_current_rules_cannot_reintroduce_universal_truth(authority_copy, section, field, claim):
+    path = authority_copy / 'governance/operational-manifest.json'
+    manifest = json.loads(path.read_text(encoding='utf-8'))
+    manifest[section][field] = claim
+    path.write_text(json.dumps(manifest), encoding='utf-8')
+    with pytest.raises(AssertionError):
+        validate_status_authority(authority_copy)
+
+
+def test_historical_reference_names_are_not_mechanically_erased(authority_copy):
+    manifest = json.loads((authority_copy / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
+    assert manifest['human_resume_mirror']['title'] == 'JARVIS_PRIME_CURRENT_SSOT.md'
+    assert manifest['github_hygiene']['live_reconciliation']['path'] == 'governance/reconciliations/2026-09-16-github-ssot-cleanup.json'
+    validate_status_authority(authority_copy)
+
+
 @pytest.mark.parametrize('name', [
     'AGENTS.md', 'README.md', 'governance/README.md',
     'governance/CHANNEL_CONTRACT.md', 'governance/JARVIS_Resume_Checkpoint.generated.md',

@@ -23,3 +23,29 @@ Continuation reserves additive revisions in the existing objectives database; or
 ## Product truth
 
 Git defines intended product state. Runtime defines deployed state. Evidence proves their correspondence. Change canonical source → test → commit → package → deploy → verify → record revision-aware evidence. Private deployment material remains external. Legacy Compose and startup examples remain historical compatibility material; deploy/product-runtime-v1.json describes current entrypoints and external inputs. This repository alone does not prove a live deployment.
+
+## Domain-owned state
+
+PRIME has no SSOT architectural layer or master operational truth database.
+Source belongs to its controlled repository/revision; execution to the observed
+runtime; identity to authentication; authorization to server-side PRIME policy;
+tasks and artifacts to their persistence domains; models to the configured and
+reachable provider/runtime; agents to their registry/runtime; machine health to
+direct observation; deployment to the actually deployed revision; and audit to
+retained provenance. Documentation and STATUS.md describe dated claims, not
+operational truth or synchronization targets.
+
+God's Eye and the intended PRIME Control Center federate these domains. Derived
+views, caches and generated resume files are rebuildable and non-authoritative.
+When observations disagree, preserve both, identify the responsible boundaries,
+investigate the discrepancy, repair only the incorrect/stale domain where safe,
+and retain the discrepancy and repair evidence. No forced canonical copy or
+universal synchronization store is introduced.
+
+Current intended product separation is JARVIS Workspace for user work and PRIME
+Control Center for authorized Owner administration; PRIME remains the shared
+cognitive/governance plane. This intent is not a claim that replacement
+authentication, redesigned clients or a live deployment have passed acceptance.
+Multiple agents are not automatically multiple independent intelligences.
+Model diversity requires independent underlying model backends and actual
+execution provenance, not provider aliases or repeated calls to the same model.

@@ -46,6 +46,7 @@ jobs:
           node clients/pwa/tests.mjs
           node clients/pwa/followup-tests.mjs
           node clients/pwa/revision-tests.mjs
+          node clients/pwa/product-tests.mjs
           node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
       - name: Dell canonical-source package and archive regression tests
         run: python -B -m unittest discover -s clients/dell/tools -p test_package_client.py

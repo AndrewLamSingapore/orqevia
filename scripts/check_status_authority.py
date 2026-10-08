@@ -1,5 +1,6 @@
 """Check that portfolio status and component authority stay distinct."""
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +18,16 @@ def validate_status_authority(root: Path = ROOT) -> None:
 
     manifest = json.loads((root / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
     assert manifest['status_authority'] == STATUS_URL
+    # These fields are current interpretation rules, not historical receipts.
+    # Reject known positive universal-ownership statements, including those
+    # which mention domains without actually preserving their ownership.
+    for field in (manifest['supersession']['rule'],
+                  manifest['truth_reconciliation']['authority_boundary']):
+        assert 'domain' in field.lower(), 'current manifest rules must preserve domain ownership'
+        assert 'manifest alone selects' not in field.lower(), 'manifest cannot own runtime truth'
+        assert 'status.md alone owns current status' not in field.lower(), 'status index cannot own operational truth'
+        assert not re.search(r'\b(?:single|universal|master|global)(?:[-\s]+\w+){0,4}\s+(?:owns|selects|governs|controls|is authoritative)\b', field, re.I), 'current reference cannot assert universal ownership'
+    assert 'Truth must be proven at the relevant authority boundary.' in manifest['truth_reconciliation']['authority_boundary']
     assert manifest['canonical_machine_source'] == {
         'repository': 'AndrewLamSingapore/prime',
         'branch': 'main',

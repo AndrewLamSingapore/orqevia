@@ -56,6 +56,7 @@ jobs:
           node clients/pwa/revision-tests.mjs
           node clients/pwa/candidate-tests.mjs
           node clients/pwa/followup-tests.mjs
+          node clients/pwa/product-tests.mjs
           node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
 
   image-smoke:
@@ -152,4 +153,29 @@ jobs:
           path: ${{ runner.temp }}/prime-image/
           if-no-files-found: error
           compression-level: 0
+          retention-days: 7
+
+  workspace-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install browser tools only on the disposable cloud runner
+        run: |
+          python -m pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Check public Workspace layout, CSP styling and offline draft
+        run: python -B scripts/verify_workspace_browser.py "$RUNNER_TEMP/workspace-browser"
+      - name: Preserve screenshots and fixture-scoped evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: workspace-browser-${{ github.sha }}
+          path: ${{ runner.temp }}/workspace-browser/
+          if-no-files-found: warn
           retention-days: 7
