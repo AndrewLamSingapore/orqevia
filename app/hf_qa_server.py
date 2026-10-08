@@ -1,13 +1,14 @@
 """Trusted, optional HF QA integration with the existing Model Fabric queue.
 
-The selected operator-owned catalog entry must supply a real, expiring fixed
-maximum-charge contract for one bounded serverless QA request. No default price,
-allowance, activation or qualification is invented. Request JSON supplies task
-input/selection only; it cannot supply an admission/executor or price contract.
+Direct serverless QA requires a real expiring maximum-charge contract. Explicit
+Router-only QA instead uses the selected operator catalog's token prices and
+question-answering scope. No default price, allowance or qualification is
+invented. Requests cannot supply admission/executors or price authority.
 """
 from copy import deepcopy
 from datetime import datetime, timezone
 from decimal import Decimal
+from time import monotonic
 import hashlib
 import json
 import re
@@ -15,7 +16,8 @@ import re
 from .client_auth import authenticate_owner
 from .compute_catalog import load_catalog, model_spec
 from .hf_admission import require_hf_task_scope, require_hf_admission
-from .hf_qa_execution import QAReservation, execute_direct_qa, qa_router_prompt
+from .hf_qa_execution import (QAReservation, execute_direct_qa, qa_router_prompt,
+                              validate_qa_identity, validate_router_span)
 from .hf_serverless import HFServerlessQA
 from .job_queue import Provider
 from .provider_runtime import ProviderFailure
@@ -63,6 +65,124 @@ def _entry(provider_id):
             or entries[0].get('qualification_status') != 'QUALIFIED'):
         raise ProviderFailure('PROVIDER_UNQUALIFIED', pre_execution=True)
     return deepcopy(entries[0])
+
+
+def execute_governed_router_qa(*, authorization, queue, data, available_providers,
+        provider_id, agent_id, task_id, context, question, data_classification,
+        max_cost_usd, timeout_seconds=30, primary_timeout_seconds=15):
+    """One explicit token-metered HF Router request; no serverless attempt."""
+    authenticate_owner(authorization)
+    ceiling = validate_qa_identity(agent_id, task_id, max_cost_usd)
+    HFServerlessQA.validate_request(context=context, question=question,
+        data_classification=data_classification, timeout_seconds=timeout_seconds)
+    deadline = monotonic() + timeout_seconds
+    selected = _entry(provider_id)
+    if selected.get('fallback_ids'):
+        raise ProviderFailure('QA_ROUTER_CHAIN_DENIED', pre_execution=True)
+    prompt = qa_router_prompt(context, question)
+    scope = {'agent': agent_id, 'prompt': prompt, 'task_class': 'question_answering'}
+    require_hf_task_scope(selected, scope)
+    spec = model_spec(selected)
+    matches = [p for p in available_providers if p.name == provider_id and p.kind == 'cloud'
+               and p.model == spec.name]
+    if (len(matches) != 1 or spec.input_usd_million is None or spec.output_usd_million is None
+            or len(prompt.encode()) + 16 + spec.output_tokens > spec.context_tokens):
+        raise ProviderFailure('QA_ROUTER_BUDGET_INVALID', pre_execution=True)
+    provider = Provider(provider_id, 'cloud', spec.name, 0, 0,
+        int(selected.get('concurrency', 1)),
+        float(max(spec.input_usd_million, spec.cached_usd_million or spec.input_usd_million)),
+        float(spec.output_usd_million), spec.output_tokens, True)
+    selected_digest = _digest(selected)
+    binding = {'schema': 'prime.hf-router-qa-admission.v1', 'agent_id': agent_id,
+        'task_id': task_id, 'task': 'question-answering', 'task_class': 'question_answering',
+        'provider_id': provider_id, 'model': spec.name, 'data_classification': data_classification,
+        'context_sha256': hashlib.sha256(context.encode()).hexdigest(),
+        'question_sha256': hashlib.sha256(question.encode()).hexdigest(),
+        'max_cost_usd': str(ceiling), 'deadline_monotonic': deadline,
+        'catalog_sha256': selected_digest}
+    binding_digest = _digest(binding)
+    job = None
+    entered = False
+    result = None
+    failure = None
+
+    def revalidate():
+        current = _entry(provider_id)
+        if _digest(current) != selected_digest:
+            raise ProviderFailure('QA_CATALOG_CHANGED', pre_execution=True)
+        require_hf_task_scope(current, scope)
+        remaining = deadline - monotonic()
+        if remaining <= 0:
+            raise ProviderFailure('TASK_TIMEOUT')
+        return remaining
+
+    def cancelled():
+        return queue.get(job['id'])['status'] == 'cancelled'
+
+    try:
+        revalidate()
+        cap = min(ceiling, Decimal(str(queue.policy.max_job_cost_usd)))
+        try:
+            job = queue.reserve_cloud_chain(agent=agent_id, requests=[{
+                'provider': provider, 'prompt': prompt, 'max_cost_usd': str(cap)}],
+                timeout_seconds=timeout_seconds, task_class='question_answering', binding={
+                    'parent_task_id': task_id, 'request_binding_sha256': binding_digest,
+                    'catalog_sha256': selected_digest})[0]
+        except (ValueError, ArithmeticError):
+            raise ProviderFailure('QA_BUDGET_NOT_RESERVED', pre_execution=True) from None
+        revalidate()
+        claimed = queue.claim('hf-router-qa', [provider], held_job_id=job['id'])
+        if claimed is None:
+            raise ProviderFailure('CAPACITY', pre_execution=True)
+        job = claimed
+        job['timeout_seconds'] = min(job['timeout_seconds'], revalidate())
+        if cancelled():
+            raise ProviderFailure('CANCELLED')
+        entered = True
+        result = cloud_execution.execute_cloud(job, provider, data, cancelled,
+            include_identity=True, expected_entry=selected)
+        if cancelled():
+            raise ProviderFailure('CANCELLED')
+        if monotonic() >= deadline:
+            raise ProviderFailure('TASK_TIMEOUT')
+        if result.get('provider') != provider_id or result.get('model') != spec.name:
+            raise ProviderFailure('QA_ROUTER_IDENTITY_MISMATCH')
+        start, end = validate_router_span(result.get('result'), context)
+        try:
+            charge = Decimal(str(result['actual_cost_usd']))
+            if not charge.is_finite() or not 0 <= charge <= min(cap, Decimal(str(job['estimated_cost_usd']))):
+                raise ValueError()
+        except (KeyError, ValueError, TypeError, ArithmeticError):
+            raise ProviderFailure('QA_ROUTER_COST_NOT_VERIFIED') from None
+        return {'answer': result['result'], 'start': start, 'end': end,
+            'provider': provider_id, 'model': spec.name, 'route': 'HF_ROUTER_QA',
+            'task_class': 'question_answering', 'agent_id': agent_id, 'task_id': task_id,
+            'router_task_id': job['id'], 'reservation_id': job['id'],
+            'request_binding_sha256': binding_digest, 'catalog_sha256': selected_digest,
+            'input_tokens': result['input_tokens'], 'output_tokens': result['output_tokens'],
+            'cost_usd': float(charge), 'cost_measurement': 'USAGE_X_CATALOG_RATES_NOT_INVOICE',
+            'span_validation': 'MATCHES_INPUT_CONTEXT', 'quality_oracle': 'CALLER_VERIFICATION_REQUIRED',
+            'direct_qa_attempted': False, 'retries': 0, 'automatic_qualification': False,
+            'l7_awarded': False}
+    except ProviderFailure as exc:
+        failure = exc
+        raise
+    except Exception:
+        failure = ProviderFailure('QA_ROUTER_EXECUTION_FAILURE')
+        raise failure from None
+    finally:
+        if job is not None:
+            current = queue.get(job['id'])
+            if current['status'] == 'held':
+                queue.cancel(job['id'])
+            elif current['status'] == 'running' or current['cloud_inflight']:
+                # Only never-entered execution proves zero. Generic final error
+                # flags cannot erase dispatched usage or an unknown reservation.
+                queue.finish(job['id'], result=result.get('result', '') if result else '',
+                    error=failure.code if failure else '', retryable=False,
+                    actual_cost_usd=result['actual_cost_usd'] if result else (None if entered else 0),
+                    input_tokens=result['input_tokens'] if result else None,
+                    output_tokens=result['output_tokens'] if result else None)
 
 
 def execute_governed_qa(*, authorization, queue, data, available_providers,
