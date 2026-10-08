@@ -87,13 +87,15 @@ def configured_provider_health():
     return result
 
 
-def execute_cloud(job,provider,data,cancelled):
+def execute_cloud(job,provider,data,cancelled, *, include_identity=False, expected_entry=None):
     if not classify_for_cloud(job.get('data_classification','LOCAL_ONLY'),job['prompt']):raise ProviderFailure('DATA_LOCALITY')
     catalog=load_catalog()
     entries=[x for x in catalog if x['id']==provider.name and x.get('enabled')]
     if not entries:raise ProviderFailure('PROVIDER_UNAVAILABLE')
     entry=entries[0]
     require_text_admission(entry,job)
+    if expected_entry is not None and entry != expected_entry:
+        raise ProviderFailure('QA_CATALOG_CHANGED', pre_execution=True)
     require_hf_admission(entry,job,provider.name)
     spec=model_spec(entry);metrics=OutcomeMetrics(data/'compute-ledger.db')
     started=time.monotonic();answer=None;failure=None;selected=entry;failure_retries=0;failure_routes=[]
@@ -161,18 +163,25 @@ def execute_cloud(job,provider,data,cancelled):
                 return True
             adapters=[(adapter_for(x),specs[x['id']]) for x in candidates]
             result=asyncio.run(complete_with_fallback(adapters,[{'role':'user','content':job['prompt']}],authorize_candidate=approve,
-                output_tokens=budget.output_tokens,timeout=min(x.timeout_seconds for x in budgets.values()),cancelled=cancelled,max_retries=min(1,int(entry.get('max_retries',1))),circuits=PROVIDER_CIRCUITS))
+                output_tokens=budget.output_tokens,timeout=min(x.timeout_seconds for x in budgets.values()),cancelled=cancelled,max_retries=min(1,int(entry.get('max_retries',1)),job.get('max_retries',1)),circuits=PROVIDER_CIRCUITS))
             action.parameters_summary['fallback_failures']=result['fallback_failures']
             return result
+        if expected_entry is not None:
+            fresh = [x for x in load_catalog() if x['id'] == provider.name]
+            if len(fresh) != 1 or fresh[0] != expected_entry:
+                raise ProviderFailure('QA_CATALOG_CHANGED', pre_execution=True)
         adapter=adapter_for(entry)
-        return asyncio.run(complete(adapter,budget.model,messages,output_tokens=budget.output_tokens,timeout=budget.timeout_seconds,cancelled=cancelled,max_retries=min(1,int(entry.get('max_retries',1))),circuits=PROVIDER_CIRCUITS))
+        return asyncio.run(complete(adapter,budget.model,messages,output_tokens=budget.output_tokens,timeout=budget.timeout_seconds,cancelled=cancelled,max_retries=min(1,int(entry.get('max_retries',1)),job.get('max_retries',1)),circuits=PROVIDER_CIRCUITS))
     try:
         action=ActionRecord(job['id'],job['agent'],'inference.run',provider.name,classification=job.get('classification','R0'),model_backend=spec.name,execution_location='cloud')
         answer=DirectExecutor(action_ledger()).execute(action,operation)
         usage=answer['usage']
         # Preserve the JobQueue.finish wire contract. Attribution is recorded in
         # the task/agent-bound ledger below, rather than extra queue kwargs.
-        return {'result':answer['text'],'input_tokens':usage.input_tokens,'output_tokens':usage.output_tokens,'actual_cost_usd':None if answer['cost_usd'] is None else float(answer['cost_usd'])}
+        result = {'result':answer['text'],'input_tokens':usage.input_tokens,'output_tokens':usage.output_tokens,'actual_cost_usd':None if answer['cost_usd'] is None else float(answer['cost_usd'])}
+        if include_identity:
+            result.update(provider=selected['id'], model=selected['model'])
+        return result
     except SecretUnavailable:failure='CREDENTIAL_UNAVAILABLE';raise ProviderFailure(failure) from None
     except ProviderFailure as exc:
         failure=exc.code;failure_retries=getattr(exc,'retry_count',0);failure_routes=getattr(exc,'fallback_failures',[]);raise

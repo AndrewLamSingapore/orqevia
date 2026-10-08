@@ -80,13 +80,16 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
                       data_classification, max_cost_usd, admit=None,
                       execute_hf_router=None, timeout_seconds=30,
                       primary_timeout_seconds=15, qa=None, circuits=None,
-                      cancelled=None, clock=time.monotonic):
+                      cancelled=None, clock=time.monotonic, record_direct_rejection=None):
     """Execute one QA primary and at most one explicitly approved HF alternate.
 
     The synchronous executor is for the existing bounded worker/Model Fabric,
     not an event-loop handler. The router callback must honor the passed shared
     remaining deadline and cancellation using the existing provider executor.
     Late output is rejected; no second route is attempted after ambiguous work.
+    The optional trusted bookkeeping observer receives only an affirmative
+    clean direct rejection. An eventual pre_execution flag alone is not proof
+    that an earlier request was undispatched, and cannot release its reserve.
     """
     authenticate_owner(authorization)
     try:
@@ -110,7 +113,8 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
         raise ProviderFailure('CANCELLATION_STATE_INVALID', pre_execution=True)
     if admit is None:
         raise ProviderFailure('QA_PRICE_CONTRACT_UNAVAILABLE', pre_execution=True)
-    if not callable(admit) or (execute_hf_router is not None and not callable(execute_hf_router)):
+    if (not callable(admit) or (execute_hf_router is not None and not callable(execute_hf_router))
+            or (record_direct_rejection is not None and not callable(record_direct_rejection))):
         raise ProviderFailure('QA_ADMISSION_CONFIGURATION_INVALID', pre_execution=True)
     if qa is not None and type(qa) is not HFServerlessQA:
         raise ProviderFailure('QA_ADAPTER_SCOPE_INVALID', pre_execution=True)
@@ -182,6 +186,11 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
     except ProviderFailure as exc:
         if exc.pre_execution is not True or exc.code not in _SAFE_FAILOVER:
             raise
+        if record_direct_rejection is not None:
+            try:
+                record_direct_rejection(binding=dict(binding), reservation=permit, code=exc.code)
+            except Exception:
+                raise ProviderFailure('QA_ACCOUNTING_UNAVAILABLE') from None
         failures.append({'provider': HFServerlessQA.CIRCUIT_ID, 'code': exc.code})
         if permit.hf_router_provider_id is None or execute_hf_router is None:
             raise

@@ -47,6 +47,9 @@ class QueuePolicy:
     starvation_boost_cap: int = 100
     max_job_cost_usd: float = 2.0
     daily_cost_ceiling_usd: float = 10.0
+    # A separate upper bound also covers inline governed cloud requests. It
+    # never increases the measured global/local worker limit.
+    cloud_concurrency: int = 1
 
     @classmethod
     def from_env(cls) -> "QueuePolicy":
@@ -70,6 +73,7 @@ class QueuePolicy:
             starvation_boost_cap=integer("PRIME_STARVATION_BOOST_CAP", 100, 1, 1000),
             max_job_cost_usd=decimal("PRIME_MAX_JOB_COST_USD", 2.0, 0, 10000),
             daily_cost_ceiling_usd=decimal("PRIME_DAILY_COST_USD", 10.0, 0, 100000),
+            cloud_concurrency=integer("PRIME_CLOUD_REQUEST_CAPACITY", 1, 1, 4),
         )
 
 
@@ -85,6 +89,8 @@ class Provider:
     output_cost_per_mtok: float = 0.0
     max_output_tokens: int = 4096
     explicit_selection_required: bool = False
+    # Trusted fixed-price request contracts, never a client-supplied rate.
+    maximum_charge_usd: str | None = None
 
 
 class JobQueue:
@@ -151,6 +157,12 @@ class JobQueue:
             columns={r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}
             for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'"),('response_format',"TEXT DEFAULT 'text'"),('response_schema','TEXT'),('response_schema_order',"TEXT DEFAULT 'canonical'"),('inference_receipt','TEXT')]:
                 if name not in columns:c.execute(f'ALTER TABLE compute_jobs ADD COLUMN {name} {definition}')
+            if 'cloud_inflight' not in columns:
+                c.execute('ALTER TABLE compute_jobs ADD COLUMN cloud_inflight INTEGER NOT NULL DEFAULT 0')
+                # Legacy rows have no reliable dispatch-kind evidence. NULL
+                # identities or a cloud provider named like a local one cannot
+                # prove cleanup; conservatively retain all cloud-eligible work.
+                c.execute("UPDATE compute_jobs SET cloud_inflight=1 WHERE status='running' AND allow_cloud=1")
 
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
@@ -234,7 +246,7 @@ class JobQueue:
             if row['status'] not in TERMINAL:
                 if row['status']=='running':
                     backend_admission.cancel(c,self.backend_endpoint,job_id)
-                c.execute("UPDATE compute_jobs SET status='cancelled',updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
+                c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=CASE WHEN status='held' THEN 0 ELSE actual_cost_usd END,updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
                 self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
         self.wake.set()
         return self.get(job_id)
@@ -275,8 +287,9 @@ class JobQueue:
         estimated_input=max(1,len(row["prompt"].encode())+16)
         estimated_output=provider.max_output_tokens
         try:
-            exact=(Decimal(estimated_input)*Decimal(str(provider.input_cost_per_mtok))
-                   +Decimal(estimated_output)*Decimal(str(provider.output_cost_per_mtok)))/Decimal(1_000_000)
+            exact=(Decimal(provider.maximum_charge_usd) if provider.maximum_charge_usd is not None else
+                   (Decimal(estimated_input)*Decimal(str(provider.input_cost_per_mtok))
+                   +Decimal(estimated_output)*Decimal(str(provider.output_cost_per_mtok)))/Decimal(1_000_000))
             if not exact.is_finite() or exact < 0:
                 return math.inf
             reserved=float(exact)
@@ -292,12 +305,58 @@ class JobQueue:
         except (InvalidOperation, ValueError, TypeError, OverflowError):
             return math.inf
 
+    def reserve_cloud_chain(self, *, agent: str, requests: list[dict],
+                            timeout_seconds: float, binding: dict) -> list[dict]:
+        """Atomically hold at most two trusted requests before any disclosure.
+
+        Held jobs are invisible to ordinary workers. Their caps count against
+        daily admission; only a targeted claim can dispatch one. A never-claimed
+        hold expires unspent, whereas running/ambiguous work retains its cap.
+        """
+        actor = canonical_agent_id(agent)
+        if actor != agent or actor == 'prime' or not 1 <= len(requests) <= 2:
+            raise ValueError('invalid cloud reservation identity')
+        if type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 30:
+            raise ValueError('invalid cloud reservation timeout')
+        prepared = []
+        from .tier_router import classify_for_cloud
+        for request in requests:
+            provider, prompt = request['provider'], request['prompt']
+            cap = Decimal(str(request['max_cost_usd']))
+            if (provider.kind != 'cloud' or not classify_for_cloud('CLOUD_PERMITTED', prompt)
+                    or not cap.is_finite() or not 0 < cap <= Decimal(str(self.policy.max_job_cost_usd))):
+                raise ValueError('invalid cloud reservation scope or cap')
+            estimate = self.estimate_cost({'prompt': prompt}, provider)
+            if Decimal(str(estimate)) > cap:
+                raise ValueError('cloud reservation cap is insufficient')
+            prepared.append((str(uuid.uuid4()), provider, prompt, float(cap), estimate))
+        with self.lock, self.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            if c.execute("SELECT 1 FROM compute_events WHERE event_type='cloud_reserved' AND json_extract(details_json,'$.parent_task_id')=? LIMIT 1",
+                         (binding.get('parent_task_id'),)).fetchone():
+                raise ValueError('cloud request already reserved')
+            reserved = c.execute("SELECT COALESCE(SUM(estimated_cost_usd),0) FROM compute_jobs WHERE status IN ('running','held')").fetchone()[0]
+            if self._daily_spend(c) + reserved + sum(item[4] for item in prepared) > self.policy.daily_cost_ceiling_usd:
+                raise ValueError('daily cloud cost ceiling reached')
+            ts = utcnow()
+            for jid, provider, prompt, cap, estimate in prepared:
+                c.execute("""INSERT INTO compute_jobs
+                    (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,timeout_seconds,max_retries,
+                     max_cost_usd,allow_cloud,external_execution,status,approval_status,provider,
+                     estimated_cost_usd,actual_cost_usd,lease_until,created_at,updated_at,
+                     preferred_provider,data_classification,task_class)
+                    VALUES(?,?,?,50,'deep',?,0,0,?,0,?,1,0,'held','not_required',?, ?,NULL,?,?,?,?,'CLOUD_PERMITTED','classification')""",
+                    (jid, actor, prompt, provider.model, timeout_seconds, cap, provider.name,
+                     estimate, time.time() + timeout_seconds + 30, ts, ts, provider.name))
+                self._event(c, jid, 'cloud_reserved', binding)
+        return [self.get(item[0]) for item in prepared]
+
     def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider],
                *, local_unavailable: bool = False) -> tuple[Provider | None,str,float]:
         local_names={p.name for p in providers if p.kind=="local"}
         if row['preferred_provider']:
             providers=[p for p in providers if p.name==row['preferred_provider']]
-        active=c.execute("SELECT provider,agent,ram_mb,vram_mb,priority FROM compute_jobs WHERE status='running'").fetchall()
+        active=c.execute("SELECT provider,agent,ram_mb,vram_mb,priority,cloud_inflight FROM compute_jobs WHERE status='running' OR cloud_inflight=1").fetchall()
         if len(active)>=self.policy.global_concurrency:return None,"global concurrency limit",0
         def identity(value: str) -> str:
             try: return canonical_agent_id(value)
@@ -332,13 +391,15 @@ class JobQueue:
         if not hard_need and waited<self.policy.cloud_wait_seconds:return None,"waiting for local capacity before cloud fallback",0
         for p in providers:
             if p.kind!="cloud":continue
+            if sum(1 for x in active if x['cloud_inflight'] or x['provider'] not in local_names) >= self.policy.cloud_concurrency:
+                return None,"cloud request capacity limit",0
             if p.explicit_selection_required and row['preferred_provider'] != p.name:continue
             if sum(1 for x in active if x["provider"]==p.name)>=p.concurrency:continue
             if row["model"] and row["model"]!=p.model:continue
             if not row["model"] and row["model_role"] not in {"auto","deep"}:continue
             estimate=self.estimate_cost(row,p)
             if estimate>row["max_cost_usd"]:return None,"estimated job cost exceeds job ceiling",estimate
-            reserved=c.execute("SELECT COALESCE(SUM(estimated_cost_usd),0) FROM compute_jobs WHERE status='running'").fetchone()[0]
+            reserved=c.execute("SELECT COALESCE(SUM(estimated_cost_usd),0) FROM compute_jobs WHERE status IN ('running','held') AND id!=?", (row['id'],)).fetchone()[0]
             if self._daily_spend(c)+reserved+estimate>self.policy.daily_cost_ceiling_usd:return None,"daily cloud cost ceiling reached",estimate
             return p,("local VRAM/model insufficient" if hard_need else "local wait threshold exceeded"),estimate
         return None,"no eligible provider",0
@@ -355,7 +416,7 @@ class JobQueue:
         )
         return float(min(PRIORITIES["critical"] - 1, row["priority"] + boost))
 
-    def claim(self, worker_id: str, providers: list[Provider]) -> dict | None:
+    def claim(self, worker_id: str, providers: list[Provider], *, held_job_id: str | None = None) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
             claim_time = time.time()
@@ -369,13 +430,16 @@ class JobQueue:
             # A blocked oldest job must not conceal eligible work in its lane.
             # Equal timestamps must tie-break by insertion order (rowid), never
             # by the random job id, so FIFO scheduling stays deterministic.
-            cursor=c.execute("""SELECT * FROM compute_jobs WHERE status='queued'
+            where = "status='queued'" if held_job_id is None else "status='held' AND id=?"
+            cursor=c.execute("""SELECT * FROM compute_jobs WHERE """ + where + """
                 ORDER BY effective_priority(priority,created_at) DESC,
-                         priority DESC,created_at,rowid""")
+                         priority DESC,created_at,rowid""", () if held_job_id is None else (held_job_id,))
             def candidates():
                 while rows := cursor.fetchmany(1000):
                     yield from rows
             for row in candidates():
+                if row['status'] == 'held' and row['lease_until'] <= claim_time:
+                    continue
                 # Revalidate persisted identities under the current registry before
                 # admission. Never reinterpret a retired legacy ID as a new role.
                 try:
@@ -410,8 +474,8 @@ class JobQueue:
                             continue
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
-                             lease_until=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status='queued'""",
-                          (provider.name,reason,estimate,lease,ts,ts,row["id"]))
+                             lease_until=?,cloud_inflight=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status IN ('queued','held')""",
+                          (provider.name,reason,estimate,lease,int(provider.kind=='cloud'),ts,ts,row["id"]))
                 if changed.rowcount:
                     self._event(c,row["id"],"claimed",{"worker":worker_id,"provider":provider.name,"reason":reason})
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
@@ -426,7 +490,16 @@ class JobQueue:
         with self.lock, self.connect() as c:
             row=c.execute("SELECT * FROM compute_jobs WHERE id=?",(job_id,)).fetchone()
             if not row: raise KeyError(job_id)
-            if row["status"]=="cancelled":return dict(row)
+            if row['status'] == 'cancelled' or (row['cloud_inflight'] and row['status'] in TERMINAL):
+                # Only the trusted worker/executor calls finish after its HTTP
+                # coroutine and cancellation cleanup have settled. Cancellation
+                # itself cannot free a still-running request slot. Unknown remote
+                # billing remains reserved; this records client-request cleanup.
+                cost = row['actual_cost_usd'] if actual_cost_usd is None else max(0.0, float(actual_cost_usd))
+                c.execute("UPDATE compute_jobs SET cloud_inflight=0,lease_until=NULL,actual_cost_usd=?,input_tokens=?,output_tokens=?,updated_at=? WHERE id=?",
+                          (cost, input_tokens, output_tokens, utcnow(), job_id))
+                self._event(c, job_id, 'terminal_cloud_execution_settled', {'cost_usd': cost})
+                return dict(c.execute('SELECT * FROM compute_jobs WHERE id=?', (job_id,)).fetchone())
             if row["status"]!="running": raise ValueError("job is not running")
             if inference_receipt is not None:
                 c.execute('UPDATE compute_jobs SET inference_receipt=? WHERE id=?',
@@ -440,7 +513,7 @@ class JobQueue:
             elif error: status="failed"
             else: status="completed"
             c.execute("""UPDATE compute_jobs SET status=?,result=?,error=?,actual_cost_usd=?,input_tokens=?,output_tokens=?,
-                         provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
+                         provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,cloud_inflight=0,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
                       (status,result,error,cost,None if input_tokens is None else int(input_tokens),None if output_tokens is None else int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
             self._event(c,job_id,status,{"error":error,"cost_usd":cost,"attempt":row["attempts"],
                                        "model_load_ns":model_load_ns,"inference_ns":inference_ns})
@@ -448,21 +521,30 @@ class JobQueue:
 
     def recover_expired(self) -> int:
         with self.lock, self.connect() as c:
+            held=c.execute("SELECT id FROM compute_jobs WHERE status='held' AND lease_until<?", (time.time(),)).fetchall()
+            for row in held:
+                c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=0,lease_until=NULL,error='undispatched reservation expired',updated_at=?,completed_at=? WHERE id=?",
+                          (utcnow(), utcnow(), row['id']))
+                self._event(c, row['id'], 'reservation_expired', {'dispatched': False})
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='running' AND lease_until<?",(time.time(),)).fetchall()
             for row in rows:
                 backend_admission.cancel(c,self.backend_endpoint,row['id'])
                 status="queued" if not row['allow_cloud'] and row["attempts"]<=row["max_retries"] else "failed"
-                c.execute("UPDATE compute_jobs SET status=?,provider=NULL,lease_until=NULL,error='worker lease expired',updated_at=?,completed_at=? WHERE id=?",
+                # Worker expiry cannot prove HTTP cleanup. Cloud identity and
+                # occupancy survive until its trusted executor actually settles;
+                # cost remains unknown/reserved and no replay is authorized.
+                c.execute("UPDATE compute_jobs SET status=?,provider=CASE WHEN cloud_inflight=1 THEN provider ELSE NULL END,lease_until=NULL,error='worker lease expired',updated_at=?,completed_at=? WHERE id=?",
                           (status,utcnow(),utcnow() if status=="failed" else None,row["id"]))
                 self._event(c,row["id"],"lease_expired",{"next_status":status})
-        return len(rows)
+        return len(rows) + len(held)
 
     def metrics(self) -> dict:
         with self.connect() as c:
             statuses={r[0]:r[1] for r in c.execute("SELECT status,COUNT(*) FROM compute_jobs GROUP BY status")}
             spend=self._daily_spend(c)
             running=[dict(r) for r in c.execute("SELECT id,agent,provider,ram_mb,vram_mb,started_at FROM compute_jobs WHERE status='running'")]
-        return {"statuses":statuses,"running":running,"daily_spend_usd":spend,"policy":asdict(self.policy)}
+            inflight=[dict(r) for r in c.execute("SELECT id,agent,provider,status,lease_until FROM compute_jobs WHERE cloud_inflight=1")]
+        return {"statuses":statuses,"running":running,"cloud_inflight":inflight,"daily_spend_usd":spend,"policy":asdict(self.policy)}
 
 
 class WorkerPool:
