@@ -18,7 +18,7 @@ from app.agent_certification import AgentCertificationRegistry
 from app.agent_registry import agent_record
 from app.agent_cert_role_review import artifact_event_review_join, ARTIFACT_REVIEW_SCHEMA, ARTIFACT_REVIEW_ACTION
 from scripts.agent_cert_reviewed_signing import CertificationReviewError, SERVICE, sign_reviewed_case
-from tests.test_agent_cert_artifact_events import domain, execute_and_collect, SOURCE, IMAGE
+from tests.test_agent_cert_artifact_events import domain, execute_and_collect, observation_failure_metrics, SOURCE, IMAGE
 from tests.test_agent_cert_identity_signing import mutate_reviewer_artifact
 
 
@@ -38,7 +38,17 @@ def persist(state):
 
 def prepared(domain, case_id, tmp_path):
     execution, pins = execute_and_collect(domain, case_id)
-    join = artifact_event_review_join(execution, **pins)
+    try:
+        join = artifact_event_review_join(execution, **pins)
+    except events.ArtifactEventError as error:
+        # Preserve the original rejection; disclose only discriminating timing
+        # measurements if a baseline fixture fails before the negative case.
+        try:
+            note = json.dumps(observation_failure_metrics(execution, pins['now']), sort_keys=True)
+        except Exception:
+            note = 'TIMING_DIAGNOSTIC_UNAVAILABLE'
+        error.add_note(note)
+        raise
     review_task = str(uuid.uuid4())
     reviewed_at = datetime.now(timezone.utc).isoformat()
     primary = events.canonical(execution)
@@ -184,3 +194,17 @@ def test_review_time_is_original_event_completion_not_later_observer_timestamp(d
     assert content['subject_domain_join']['completed_at'] == state.execution['dispatch']['artifact_event']['completed_at']
     assert content['subject_domain_join']['completed_at'] != state.execution['observation']['completed_at']
     assert content['subject_domain_join']['case_spec_sha256'] == events.sha(events.canonical(state.execution['case_spec']))
+
+
+def test_baseline_rejection_is_not_masked_by_timing_diagnostic_failure(domain, tmp_path, monkeypatch):
+    original = events.ArtifactEventError('ARTIFACT_OBSERVATION_UNBOUND')
+    def rejected(*args, **kwargs):
+        raise original
+    def unavailable(*args, **kwargs):
+        raise ValueError('malformed diagnostic input')
+    monkeypatch.setitem(globals(), 'artifact_event_review_join', rejected)
+    monkeypatch.setitem(globals(), 'observation_failure_metrics', unavailable)
+    with pytest.raises(events.ArtifactEventError, match='ARTIFACT_OBSERVATION_UNBOUND') as caught:
+        prepared(domain, events.SUPPORTED_CASES[0], tmp_path)
+    assert caught.value is original
+    assert caught.value.__notes__ == ['TIMING_DIAGNOSTIC_UNAVAILABLE']
