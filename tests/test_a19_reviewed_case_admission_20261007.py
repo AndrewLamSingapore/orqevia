@@ -69,7 +69,16 @@ def test_completed_case_is_preserved_exactly_not_resubmitted_after_reviewer_code
     assert hashlib.sha256(signed).hexdigest() == '726f997f7bbe8a50ec42fefeb0720aea92b765ffcadae35b20b781e7a286cfca'
     output = json.loads(signed)
     assert output['signed_case_count'] == 1 and output['l7_awarded'] is False
-    assert parse((ROOT / 'governance/agent-cert-reviewed-cases.json').read_bytes()) == []
+    active = parse((ROOT / 'governance/agent-cert-reviewed-cases.json').read_bytes())
+    # A distinct new case may be admitted; this retired role-normal case must
+    # remain historical, preserving its original signed and unsigned bytes.
+    assert not any(entry['execution_source_revision'] == SOURCE
+        and entry['record'].get('agent_id') == 'a19'
+        and entry['record'].get('capability_id') == 'responsibility.a19'
+        and entry['record'].get('dimension') == 'role'
+        and entry['record'].get('test_case') == 'normal' for entry in active)
+    assert all(entry['execution_sha256'] != EXECUTION_SHA
+        and entry['review_sha256'] != REVIEW_SHA for entry in active)
 
 
 def test_exact_case_bytes_remain_non_text_git_inputs():
