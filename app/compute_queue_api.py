@@ -10,7 +10,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
@@ -143,6 +143,46 @@ class SubmitJob(BaseModel):
 class Approval(BaseModel):
     decision: str
     reason: str=""
+
+
+class SubmitHFQA(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    @model_validator(mode='before')
+    @classmethod
+    def require_finite_json(cls, value):
+        # FastAPI's standard error renderer cannot serialize NaN or lone
+        # surrogates echoed in Pydantic error details. Deny invalid JSON/UTF-8
+        # with a sanitized response before those details are constructed.
+        try:
+            if not isinstance(value, dict):
+                raise ValueError()
+            json.dumps(value, allow_nan=False, ensure_ascii=False).encode('utf-8')
+        except (TypeError, ValueError, UnicodeError, RecursionError):
+            raise HTTPException(422, 'INVALID_QA_REQUEST') from None
+        return value
+
+    agent_id: str = Field(min_length=1, max_length=80)
+    task_id: str
+    provider_id: str = Field(min_length=1, max_length=100)
+    context: str = Field(min_length=1, max_length=2048)
+    question: str = Field(min_length=1, max_length=256)
+    data_classification: str
+    max_cost_usd: str
+    timeout_seconds: float = Field(default=30, gt=0, le=30, strict=True)
+    primary_timeout_seconds: float = Field(default=15, gt=0, le=30, strict=True)
+
+
+@router.post('/hf/qa')
+def submit_hf_qa(body: SubmitHFQA, authorization: str | None = Header(None)):
+    authorize(authorization)
+    from .hf_qa_server import execute_governed_qa
+    from .provider_runtime import ProviderFailure
+    try:
+        return execute_governed_qa(authorization=authorization, queue=queue, data=DATA,
+                                  available_providers=providers(), **body.model_dump())
+    except ProviderFailure as exc:
+        raise HTTPException(503 if exc.pre_execution else 502, exc.code) from None
 
 
 @router.post("/jobs",status_code=202)
