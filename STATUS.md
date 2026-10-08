@@ -69,12 +69,22 @@ If you are an AI agent updating this file:
 - PR #209's exact tested image artifact was downloaded and loaded solely for
   the Owner-approved isolated rollback rehearsal. Its content/layers and runtime
   configuration matched the pinned archive; it has not been deployed. The next
-  rollback proof must use a fresh
-  consistent current-data copy, a candidate zero-model write and an accepted-image
-  read, preserving post-snapshot writes and existing identities. Historical
-  restores do not establish that proof. Full L7 remains **0/21**; all 29 owned
+  stage preserved a fresh consistent current-data copy: 358 files, 3,979,058 bytes
+  and ten intact SQLite stores. The original PRIME/Interface containers resumed
+  healthy. An authenticated candidate zero-model task/artifact write passed on
+  an isolated copy, preserving previous rows and Owner stores. The accepted-image
+  read failed closed on a relevant-code pin mismatch; restoration remains unproved.
+  The running accepted files match the pins, so image/runtime divergence requires
+  investigation, not relaxed checks. Both failed stopped clones and their raw
+  receipts are preserved. Full L7 remains **0/21**; all 29 owned
   capabilities retain their individual evidence obligations. No new credentials,
   permissions, public ports or signing authority were created.
+- The first continuation's exact-head cloud source tests failed only the STATUS
+  insertion-history test: Windows reported 4,978 passes, Linux release source
+  4,977 passes and one skip, and canonical source 4,326 passes and one skip.
+  Windows PWA/image stages were skipped after that failure, not passed. The repair admits
+  only the exact new dated section, preserves every historical byte pin and adds
+  false-PASS/deployment/readiness negative tests. A repaired-head full run is required.
 
 ## Actual independent A19 signing and identity-event adapter — 7 October 2026
 
