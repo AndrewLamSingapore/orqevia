@@ -1,7 +1,9 @@
 """Fixed protected-main admissions, not arbitrary caller signing or an L7 award.
 
-Case hashes, source/image, policy and reviewer revision must be reviewed in the
-same protected repository as this manifest. Empty admissions remain pending.
+Case hashes, source/image, policy and original reviewer revision must be reviewed
+in the same protected repository as this manifest. A separately pinned verifier
+revision may change only the verifier-owned bridge relative to those original
+runtime/oracle/trust inputs. Empty admissions remain pending.
 No token, raw model output or production data is printed or uploaded here.
 """
 from datetime import datetime, timezone
@@ -42,6 +44,11 @@ CODE_FILES = (
     'app/provider_runtime.py', 'app/provider_circuit.py', 'app/tier_router.py',
     'governance/agent-cert-verifier-azure-pins.json',
 )
+# A26's original runtime/oracle inputs remain pinned separately from the later
+# protected verifier bridge. That bridge remains in the complete verifier
+# closure above; it is not an input to the runtime's original review operation.
+RUNTIME_REVIEW_CODE_FILES = tuple(path for path in CODE_FILES
+    if path != 'scripts/agent_cert_reviewed_signing.py')
 _REV = re.compile(r'[0-9a-f]{40}\Z')
 _SHA = re.compile(r'[0-9a-f]{64}\Z')
 _IMAGE = re.compile(r'sha256:[0-9a-f]{64}\Z')
@@ -78,7 +85,8 @@ def parse(raw):
                     'execution_source_revision', 'runtime_image_id', 'reviewer_code_revision',
                     'cloud_policy', 'owner_policy_sha256'}
         for entry in cases:
-            if type(entry) is not dict or set(entry) != required or type(entry['record']) is not dict:
+            if (type(entry) is not dict or set(entry) not in (required, required | {'verifier_code_revision'})
+                    or type(entry['record']) is not dict):
                 deny()
             agent = entry['record'].get('agent_id')
             from app.agent_cert_role_review import canonical_case_spec
@@ -103,6 +111,9 @@ def parse(raw):
             for field in ('execution_source_revision', 'reviewer_code_revision'):
                 if type(entry[field]) is not str or not _REV.fullmatch(entry[field]):
                     deny()
+            if 'verifier_code_revision' in entry and (type(entry['verifier_code_revision']) is not str
+                    or not _REV.fullmatch(entry['verifier_code_revision'])):
+                deny()
             if type(entry['runtime_image_id']) is not str or not _IMAGE.fullmatch(entry['runtime_image_id']):
                 deny()
             directory = entry['evidence_directory']
@@ -119,11 +130,11 @@ def parse(raw):
         deny()
 
 
-def unchanged_reviewer_code(root, revision, *, read_revision=None):
-    """Bind a reviewed code revision without a self-referential manifest SHA.
+def unchanged_reviewer_code(root, revision, *, read_revision=None, code_files=CODE_FILES):
+    """Pin complete current verifier code without a self-referential manifest SHA.
 
-The current protected invocation remains separately recorded. Reuse of prior
-reviewer code is allowed only when the complete fixed oracle/trust inputs are
+The current protected invocation remains separately recorded. The default
+closure includes every fixed oracle/trust input and the protected bridge, all
 byte-identical to that reviewed revision, never merely because it is an ancestor.
 """
     if type(revision) is not str or not _REV.fullmatch(revision):
@@ -133,7 +144,7 @@ byte-identical to that reviewed revision, never merely because it is an ancestor
             capture_output=True, check=True, timeout=10).stdout
     reader = read_revision or git_read
     try:
-        for path in CODE_FILES:
+        for path in code_files:
             current = Path(root) / path
             if current.is_symlink() or not current.is_file() or reader(path) != current.read_bytes():
                 deny()
@@ -141,14 +152,23 @@ byte-identical to that reviewed revision, never merely because it is an ancestor
         deny()
 
 
+def unchanged_runtime_reviewer_code(root, revision, *, read_revision=None):
+    """Preserve every original runtime/oracle/trust input except verifier code."""
+    unchanged_reviewer_code(root, revision, read_revision=read_revision,
+        code_files=RUNTIME_REVIEW_CODE_FILES)
+
+
 def run(raw, *, root, protected_source_revision, public_pin, sign_digest, now,
-        check_code=unchanged_reviewer_code):
+        check_code=unchanged_reviewer_code, check_runtime_code=unchanged_runtime_reviewer_code):
     if type(protected_source_revision) is not str or not _REV.fullmatch(protected_source_revision):
         deny()
     cases = parse(raw)
     accepted = []
     for entry in cases:
-        check_code(root, entry['reviewer_code_revision'])
+        verifier_revision = entry.get('verifier_code_revision', entry['reviewer_code_revision'])
+        check_code(root, verifier_revision)
+        if verifier_revision != entry['reviewer_code_revision']:
+            check_runtime_code(root, entry['reviewer_code_revision'])
         directory = Path(root) / entry['evidence_directory']
         cloud = {}
         if entry['cloud_policy'] is not None:
@@ -164,7 +184,8 @@ def run(raw, *, root, protected_source_revision, public_pin, sign_digest, now,
             execution_sha256=entry['execution_sha256'], review_sha256=entry['review_sha256'],
             execution_source_revision=entry['execution_source_revision'],
             runtime_image_id=entry['runtime_image_id'], reviewer_code_revision=entry['reviewer_code_revision'],
-            public_pin=public_pin, sign_digest=sign_digest, now=now, **cloud))
+            public_pin=public_pin, sign_digest=sign_digest, now=now,
+            **({'verifier_code_revision': verifier_revision} if 'verifier_code_revision' in entry else {}), **cloud))
     return {'schema_version': 'prime.protected-signed-cases.v1',
             'protected_invocation_source_revision': protected_source_revision,
             'state': 'SIGNED_CASE_EVIDENCE' if accepted else 'PENDING_NO_ADMITTED_CASES',

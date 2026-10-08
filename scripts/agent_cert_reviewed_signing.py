@@ -4,7 +4,8 @@ The protected caller owns the independently reviewed artifact hashes, exact
 runtime identity and public key pin. None may be obtained from an executing
 agent's submission. Only that caller may inject the existing Key Vault signing
 operation. This module performs no network, credential loading or file writes.
-Execution source and reviewed source remain distinct from reviewer code source.
+Execution source and original reviewer code remain distinct from later protected
+verifier code. A newly verified record does not change original event/review time.
 """
 from __future__ import annotations
 
@@ -529,8 +530,24 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     # raw build bytes. Do not normalize its original report/pin into a match.
     registry_raw = REGISTRY_PATH.read_bytes()
     registry_sha = _sha(registry_raw if initialization or artifact or authority else registry_raw.replace(b'\r\n', b'\n'))
+    event_review_time = now
+    if artifact:
+        # The runtime's 300-second consumption bound applies when the actual
+        # A26 reviewer read the original event. Later protected verification
+        # must preserve that time, not claim a new execution or rereview. The
+        # timestamp is provisional until the complete original reviewer
+        # artifact, metadata, action span and joins below bind it. The real
+        # current clock still governs the certification record's validity.
+        preliminary = envelope.get('observations')
+        proof = preliminary.get('reviewer_execution') if type(preliminary) is dict else None
+        raw = proof.get('artifact_content_utf8') if type(proof) is dict else None
+        if type(raw) is not str or not 1 <= len(raw.encode('utf-8')) <= 65536:
+            _deny('REGISTERED_IDENTITY_REVIEW_ARTIFACT_INVALID')
+        event_review_time = _utc(_json(raw.encode('utf-8')).get('reviewed_at'))
+        if event_review_time > now:
+            _deny('IDENTITY_REVIEW_TIME_INVALID')
     join = validate_event(execution, source_revision=source_revision,
-        runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=now,
+        runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=event_review_time,
         **({'agent_id': subject, 'capability_id': capability} if initialization else {}))
     spec = _case_spec(row)
     if (artifact or authority) and (join.get('case') != spec['case'] or
@@ -607,6 +624,7 @@ def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
                        review_sha256: str, execution_source_revision: str,
                        runtime_image_id: str, reviewer_code_revision: str,
                        public_pin: dict, sign_digest, now: datetime,
+                       verifier_code_revision: str | None = None,
                        cloud_binding=None, cloud_policy=None,
                        expected_owner_policy_sha256: str | None = None) -> dict:
     """Validate and sign ONE approved case using the existing protected signer.
@@ -624,6 +642,8 @@ def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
                 execution_sha256 == review_sha256 or
                 type(execution_source_revision) is not str or not _REV.fullmatch(execution_source_revision) or
                 type(reviewer_code_revision) is not str or not _REV.fullmatch(reviewer_code_revision) or
+                (verifier_code_revision is not None and (type(verifier_code_revision) is not str or
+                    not _REV.fullmatch(verifier_code_revision))) or
                 type(runtime_image_id) is not str or not _IMAGE.fullmatch(runtime_image_id) or
                 type(now) is not datetime or now.tzinfo is None or
                 type(public_pin) is not dict or set(public_pin) != {'key_id', 'jwk'}):
@@ -633,6 +653,11 @@ def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
                 candidate.get('review_evidence_sha256') != review_sha256 or
                 'attestation' in candidate):
             _deny('APPROVED_ARTIFACT_MISMATCH')
+        if verifier_code_revision is not None:
+            # Protected caller pins the complete current verifier closure.
+            # Keep the immutable runtime reviewer provenance distinct; all
+            # fields, including this new protected binding, are signed.
+            candidate['verifier_code_revision'] = verifier_code_revision
         root = Path(evidence_root)
         if not root.is_absolute() or any(path.is_symlink() for path in (root, *root.parents)):
             _deny('PROTECTED_EVIDENCE_ROOT_REQUIRED')

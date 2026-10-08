@@ -66,6 +66,7 @@ def test_fixed_trusted_manifest_passes_exact_pins_to_existing_signer(tmp_path, m
     ('evidence_directory', loader.EVIDENCE_PREFIX + '/fixture/child'), ('evidence_directory', True),
     ('execution_sha256', 'bad'), ('review_sha256', False), ('execution_source_revision', 'UNKNOWN'),
     ('reviewer_code_revision', 'main'), ('runtime_image_id', 'UNKNOWN'), ('record', []),
+    ('verifier_code_revision', 'main'), ('verifier_code_revision', True),
     ('owner_policy_sha256', 'f' * 64), ('cloud_policy', {}), ('unused_approval', True)])
 def test_invalid_manifest_cannot_reach_signer(tmp_path, monkeypatch, field, value):
     calls = []
@@ -152,6 +153,55 @@ def test_reviewer_code_reuse_requires_all_fixed_inputs_byte_identical(tmp_path):
     revisions[name] = b'SYNTHETIC_CHANGED_AUTHORITY'
     with pytest.raises(ValueError):
         loader.unchanged_reviewer_code(tmp_path, REVIEW, read_revision=lambda name: revisions[name])
+
+
+def separated_code(tmp_path):
+    current = {}
+    for name in loader.CODE_FILES:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b'SYNTHETIC_CURRENT_PROTECTED_CODE')
+        current[name] = path.read_bytes()
+    original = dict(current)
+    original['scripts/agent_cert_reviewed_signing.py'] = b'SYNTHETIC_ORIGINAL_VERIFIER_BRIDGE'
+    return current, original
+
+
+def test_new_verifier_bridge_preserves_original_runtime_review_provenance(tmp_path, monkeypatch):
+    current, original = separated_code(tmp_path)
+    assert len(loader.CODE_FILES) == 47 and len(loader.RUNTIME_REVIEW_CODE_FILES) == 46
+    assert set(loader.CODE_FILES) - set(loader.RUNTIME_REVIEW_CODE_FILES) == {'scripts/agent_cert_reviewed_signing.py'}
+    value = entry()
+    value['record']['reviewer_code_revision'] = REVIEW
+    value['verifier_code_revision'] = INVOKE
+    revisions = {REVIEW: original, INVOKE: current}
+    calls = []
+    monkeypatch.setattr(loader, 'sign_reviewed_case', lambda row, **kwargs: calls.append((row, kwargs)) or row)
+    result = loader.run(manifest([value]), root=tmp_path, protected_source_revision=INVOKE,
+        public_pin={}, sign_digest=lambda _: None, now=datetime.now(timezone.utc),
+        check_code=lambda root, revision: loader.unchanged_reviewer_code(root, revision,
+            read_revision=revisions[revision].__getitem__),
+        check_runtime_code=lambda root, revision: loader.unchanged_runtime_reviewer_code(root, revision,
+            read_revision=revisions[revision].__getitem__))
+    assert result['signed_case_count'] == 1
+    assert calls[0][0] == value['record']
+    assert calls[0][1]['reviewer_code_revision'] == REVIEW
+    assert calls[0][1]['verifier_code_revision'] == INVOKE
+
+
+@pytest.mark.parametrize('dependency', loader.RUNTIME_REVIEW_CODE_FILES)
+def test_separate_verifier_version_cannot_allow_changed_original_runtime_oracle_or_trust_input(tmp_path, dependency):
+    _, original = separated_code(tmp_path)
+    original[dependency] = b'SYNTHETIC_CHANGED_ORIGINAL_RUNTIME_INPUT'
+    with pytest.raises(ValueError, match='Protected reviewed-case admission rejected'):
+        loader.unchanged_runtime_reviewer_code(tmp_path, REVIEW, read_revision=original.__getitem__)
+
+
+def test_complete_current_verifier_closure_still_pins_the_changed_bridge(tmp_path):
+    current, _ = separated_code(tmp_path)
+    current['scripts/agent_cert_reviewed_signing.py'] = b'SYNTHETIC_UNREVIEWED_CURRENT_BRIDGE'
+    with pytest.raises(ValueError, match='Protected reviewed-case admission rejected'):
+        loader.unchanged_reviewer_code(tmp_path, INVOKE, read_revision=current.__getitem__)
 
 
 def test_missing_or_private_upstream_code_error_is_sanitized(tmp_path):
