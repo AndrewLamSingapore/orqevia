@@ -30,6 +30,7 @@ SOURCE_FILES = (
     'app/agent_cert_role_review.py', 'app/agent_cert_role_g1.py',
     'app/agent_cert_role_group_two.py', 'app/agent_cert_secondary_roles.py',
     'app/agent_cert_a19_cases.py', 'app/agent_cert_a19_general.py',
+    'app/agent_cert_a19_baseline.py', 'app/agent_cert_artifact_events.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',

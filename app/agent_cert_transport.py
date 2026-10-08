@@ -152,11 +152,16 @@ def canonical_cert_case(agent_id: str, capability_id: str,
     from .agent_cert_a19_cases import CASE_VERSION, ORACLE_ID, SUPPORTED_CASES
     from .agent_cert_a19_general import (CASE_VERSION as GENERAL_VERSION,
         ORACLE_ID as GENERAL_ORACLE, SUPPORTED_CASES as GENERAL_CASES)
+    from .agent_cert_a19_baseline import (CASE_VERSION as BASELINE_VERSION,
+        ORACLE_ID as BASELINE_ORACLE, SUPPORTED_CASES as BASELINE_CASES)
     schema = 'prime.a19-public-quality-input.v1'
     if type(case_id) is str and case_id in GENERAL_CASES:
         CASE_VERSION, ORACLE_ID = GENERAL_VERSION, GENERAL_ORACLE
         schema = 'prime.a19-general-quality-input.v1'
-    supported = (*SUPPORTED_CASES, *GENERAL_CASES)
+    if type(case_id) is str and case_id in BASELINE_CASES:
+        CASE_VERSION, ORACLE_ID = BASELINE_VERSION, BASELINE_ORACLE
+        schema = 'prime.a19-baseline-quality-input.v1'
+    supported = (*SUPPORTED_CASES, *GENERAL_CASES, *BASELINE_CASES)
     if (type(agent_id) is not str or agent_id != "a19" or
             type(capability_id) is not str or capability_id != "responsibility.a19" or
             type(case_id) is not str or case_id not in supported or

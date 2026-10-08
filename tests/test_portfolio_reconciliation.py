@@ -93,6 +93,17 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # Admit only the exact new 8 October source/rehearsal observation. It is
+    # distinct from all byte-pinned historical additions below; no arbitrary
+    # current text, new PASS or deployment claim can bypass the history proof.
+    current_title = "## Authenticated certification feeds merged; further cases prepared — 8 October 2026"
+    assert after.count(current_title) == 1
+    current_start = after.index(current_title)
+    current_end = after.index("## Actual independent A19 signing and identity-event adapter — 7 October 2026", current_start)
+    current_update = after[current_start:current_end].encode("utf-8")
+    assert len(current_update) == 3620
+    assert hashlib.sha256(current_update).hexdigest() == "c6df942a332489af2ea9abf5ac11f1f4b9bc9abbc213d236fe846887a8814944"
+    after = after[:current_start] + after[current_end:]
     # Admit only this exact new, dated signing/candidate observation. Every
     # prior section and the original portfolio baseline remain byte-pinned.
     signing_title = "## Actual independent A19 signing and identity-event adapter — 7 October 2026"
@@ -207,6 +218,38 @@ def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, re
         with pytest.raises(AssertionError):
             test_status_insertion_preserves_all_existing_sections_and_history()
         offset = position + len(original)
+
+
+@pytest.mark.parametrize("original,replacement", [
+    ("Full exact-head cloud tests for\n  this changed continuation remain separate from PR #209's completed CI.",
+     "Full exact-head cloud tests for\n  this changed continuation passed all checks using PR #209's completed CI."),
+    ("configuration matched the pinned archive; it has not been deployed.",
+     "configuration matched the pinned archive; it has been deployed."),
+    ("Source readiness is 98/2,146 paths, A19 42/74; these are not live case counts.",
+     "Live certification is 98/2,146 paths, A19 42/74; these are live case counts."),
+    ("receipts are preserved. Full L7 remains **0/21**;",
+     "receipts are preserved. Full L7 is certified **21/21**;"),
+    ("remain unwired. They are not counted as ready certification paths.",
+     "are fully wired. They are counted as ready certification paths."),
+    ("read failed closed on a relevant-code pin mismatch; restoration remains unproved.",
+     "read passed despite a relevant-code pin mismatch; restoration is proved."),
+    ("Windows PWA/image stages were skipped after that failure, not passed.",
+     "Windows PWA/image stages passed despite that failure, not skipped."),
+], ids=["new-cloud-pass", "new-deployment", "new-live-counts", "new-l7", "new-unwired-readiness",
+        "new-rollback-pass", "new-skipped-pass"])
+def test_current_case_observation_rejects_inflated_claims(monkeypatch, original, replacement):
+    status_path = ROOT / "STATUS.md"
+    read_text = Path.read_text
+    status = read_text(status_path, encoding="utf-8")
+    # Each full snippet belongs only to the new dated observation. Historical
+    # claim counts and their independent mutation tests stay unchanged.
+    assert status.count(original) == 1
+    changed = status.replace(original, replacement, 1)
+    def altered_read(path, *args, **kwargs):
+        return changed if path == status_path else read_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_text", altered_read)
+    with pytest.raises(AssertionError):
+        test_status_insertion_preserves_all_existing_sections_and_history()
 
 
 def test_public_deployment_identity_is_not_physical_or_commercial_proof():

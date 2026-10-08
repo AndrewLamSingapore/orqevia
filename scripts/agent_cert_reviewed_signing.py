@@ -143,6 +143,9 @@ def _oracle_id(agent, spec=None):
         from app.agent_cert_identity_review import ORACLE_ID
         return ORACLE_ID
     if spec is not None and spec.get('case') != 'role:normal':
+        from app.agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, ORACLE_ID as BASELINE_ORACLE
+        if spec.get('case') in BASELINE_CASES:
+            return BASELINE_ORACLE
         from app.agent_cert_a19_general import SUPPORTED_CASES, ORACLE_ID as GENERAL_ORACLE
         if spec.get('case') in SUPPORTED_CASES:
             return GENERAL_ORACLE

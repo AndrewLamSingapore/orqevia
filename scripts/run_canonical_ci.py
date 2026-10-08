@@ -111,6 +111,8 @@ def main():
     names.append('collect_agent_cert_event')
     names.extend(['agent_cert_event_api', 'agent_cert_operator_io',
                   'agent_cert_a19_general', 'agent_cert_a19_general_integration'])
+    names.extend(['agent_cert_a19_baseline', 'agent_cert_a19_baseline_integration',
+                  'agent_cert_artifact_events'])
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('hf_prompt_scope')

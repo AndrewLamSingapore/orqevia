@@ -36,6 +36,56 @@ If you are an AI agent updating this file:
 
 ---
 
+## Authenticated certification feeds merged; further cases prepared — 8 October 2026
+
+### Claimed, not independently checked
+
+- Owner-approved PR #209 at `dcbe248d4586207c6ac9b1b5e9a7eee2ac2d0da1`
+  passed all five exact-head cloud gates and merged as
+  `e1a75cfb56b51b8642aaafed4b66be01ba7ee797`. Independent verification found
+  the merged source tree identical to the tested candidate. Windows reported
+  4,695 Python passes; PWA, image and isolated release acceptance passed.
+  This was a source merge, not a production deployment or certification award.
+- Accepted PRIME source `5b3dd3a` and the existing Interface/Ollama were restored
+  in their original containers/configuration. A bounded 8 October read observed
+  all three healthy, restart zero and OOM false. Host stability remains
+  unqualified; this observation is not a soak, reboot-persistence or Owner-path proof.
+- The continuation prepares twelve distinct A19 baseline advisory-output
+  challenges and independent exact oracles through the existing reviewer,
+  governed cloud-transport and protected signer contracts. Reasoning about
+  synthetic permission, timeout, assessment completion and proposed validation
+  does not establish those real runtime events. Full exact-head cloud tests for
+  this changed continuation remain separate from PR #209's completed CI.
+- Three bounded artifact event producers/validators are preparation only:
+  their owning dispatcher, collector, independent reviewer and signer integration
+  remain unwired. They are not counted as ready certification paths.
+- Affected source regression passed 708 checks with one unprivileged Windows
+  symlink-test skip. Independent baseline review passed 286 checks, including
+  74 independently derived negatives/numeric boundaries; artifact review passed
+  82 with the same platform skip. Original broken chain/replay tests and the
+  stale 44-file signer-pin test failures remain preserved outside Git. The pin
+  test now requires the added baseline dependency and rejects its code drift.
+  Source readiness is 98/2,146 paths, A19 42/74; these are not live case counts.
+- PR #209's exact tested image artifact was downloaded and loaded solely for
+  the Owner-approved isolated rollback rehearsal. Its content/layers and runtime
+  configuration matched the pinned archive; it has not been deployed. The next
+  stage preserved a fresh consistent current-data copy: 358 files, 3,979,058 bytes
+  and ten intact SQLite stores. The original PRIME/Interface containers resumed
+  healthy. An authenticated candidate zero-model task/artifact write passed on
+  an isolated copy, preserving previous rows and Owner stores. The accepted-image
+  read failed closed on a relevant-code pin mismatch; restoration remains unproved.
+  The running accepted files match the pins, so image/runtime divergence requires
+  investigation, not relaxed checks. Both failed stopped clones and their raw
+  receipts are preserved. Full L7 remains **0/21**; all 29 owned
+  capabilities retain their individual evidence obligations. No new credentials,
+  permissions, public ports or signing authority were created.
+- The first continuation's exact-head cloud source tests failed only the STATUS
+  insertion-history test: Windows reported 4,978 passes, Linux release source
+  4,977 passes and one skip, and canonical source 4,326 passes and one skip.
+  Windows PWA/image stages were skipped after that failure, not passed. The repair admits
+  only the exact new dated section, preserves every historical byte pin and adds
+  false-PASS/deployment/readiness negative tests. A repaired-head full run is required.
+
 ## Actual independent A19 signing and identity-event adapter — 7 October 2026
 
 ### Claimed, not independently checked
