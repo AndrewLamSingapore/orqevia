@@ -19,6 +19,8 @@ EVIDENCE_PREFIX = 'governance/agent-cert-case-evidence'
 CODE_FILES = (
     'scripts/agent_cert_reviewed_signing.py', 'app/agent_cert_role_review.py',
     'app/agent_cert_identity_review.py', 'app/action_records.py',
+    'app/agent_cert_initialization.py', 'app/agent_cert_initialization_review.py',
+    'app/agent_cert_secondary_roles.py',
     'app/artifact_factory.py', 'app/objective_api.py',
     'app/agent_cert_a19_cases.py', 'app/agent_cert_review_tool.py',
     'app/agent_dispatch_api.py', 'app/cloud_execution.py', 'app/hf_admission.py',
@@ -82,7 +84,7 @@ def parse(raw):
             # existing agent; it never expands the permanent population or
             # invents oracles for generic/event challenges.
             canonical_case_spec(agent, row.get('capability_id'), case_id)
-            if case_id == 'baseline:identity' and (entry['cloud_policy'] is not None or
+            if case_id in {'baseline:identity', 'baseline:initialization'} and (entry['cloud_policy'] is not None or
                     entry['owner_policy_sha256'] is not None):
                 deny()
             identity = (agent, row.get('capability_id'), case_id)

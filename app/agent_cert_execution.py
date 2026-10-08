@@ -245,6 +245,92 @@ def _observe_runtime_artifact(spec, base, *, dispatch, get_artifact, get_runtime
             "case_review": "RUNTIME_STATUS_ARTIFACT_CHECK_PASS", "review_errors": ()}
 
 
+def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_runtime,
+                                     expected_source_revision, expected_registry_sha256,
+                                     started, timeout_seconds, monotonic, wall_clock):
+    """Observe the distinct owned-contract inspection, never an identity clone."""
+    from .agent_cert_initialization import MAX_BYTES, validate_initialization_report
+    if _canonical(spec) != _canonical(challenge('baseline:initialization', agent_id='a19',
+                                                capability_id='responsibility.a19')):
+        return {**base, 'state': 'REJECTED', 'reason': 'initialization_case_source_mismatch'}
+    if (not callable(get_artifact) or not callable(get_runtime)
+            or type(expected_source_revision) is not str
+            or re.fullmatch('[0-9a-f]{40}', expected_source_revision) is None
+            or type(expected_registry_sha256) is not str
+            or re.fullmatch('[0-9a-f]{64}', expected_registry_sha256) is None):
+        return {**base, 'state': 'REJECTED', 'reason': 'initialization_evidence_reader_missing'}
+    began = wall_clock()
+    if type(began) is not datetime or began.tzinfo is None or began.utcoffset() is None:
+        return {**base, 'state': 'REJECTED', 'reason': 'observation_time_missing'}
+    before = _runtime_identity(get_runtime(), expected_source_revision)
+    if before is None:
+        return {**base, 'state': 'REJECTED', 'reason': 'runtime_identity_missing'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    reply = dispatch(spec['request'])
+    if (type(reply) is not dict or set(reply) != {'task_id', 'state', 'artifact', 'model_calls',
+            'execution_model', 'agent_id', 'capability', 'runtime_source_revision'}
+            or reply.get('state') != 'COMPLETED' or reply.get('execution_model') != 'DETERMINISTIC'
+            or reply.get('agent_id') != 'a19' or reply.get('capability') != 'responsibility.a19'
+            or reply.get('runtime_source_revision') != expected_source_revision
+            or type(reply.get('model_calls')) is not int or reply['model_calls'] != 0):
+        return {**base, 'state': 'REJECTED', 'reason': 'deterministic_dispatch_invalid'}
+    task, declared = reply.get('task_id'), reply.get('artifact')
+    if (type(task) is not str
+            or re.fullmatch('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', task) is None
+            or type(declared) is not dict):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_identity_mismatch'}
+    artifact_id = declared.get('artifact_id')
+    if type(artifact_id) is not str or re.fullmatch('[0-9a-f]{32}', artifact_id) is None:
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_identity_mismatch'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    retrieved = get_artifact(artifact_id)
+    if (type(retrieved) is not tuple or len(retrieved) != 2
+            or type(retrieved[0]) is not dict or type(retrieved[1]) is not bytes):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_read_invalid'}
+    metadata, raw = retrieved
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'task_id': task, 'artifact_id': artifact_id,
+                'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    if (not 0 < len(raw) <= MAX_BYTES or len(_canonical(metadata)) > 16384
+            or _canonical(metadata) != _canonical(declared)
+            or metadata.get('artifact_id') != artifact_id or metadata.get('task_id') != task
+            or metadata.get('creator_agents') != ['a19'] or metadata.get('type') != 'json'
+            or metadata.get('runtime_revision') != expected_source_revision
+            or metadata.get('validation_state') != 'STRUCTURE_VALIDATED'
+            or metadata.get('delivery_state') != 'AVAILABLE' or metadata.get('location') != 'artifact.json'
+            or type(metadata.get('bytes')) is not int or metadata['bytes'] != len(raw)
+            or metadata.get('sha256') != hashlib.sha256(raw).hexdigest()):
+        return {**base, 'state': 'REJECTED', 'reason': 'artifact_binding_mismatch'}
+    after = _runtime_identity(get_runtime(), expected_source_revision)
+    ended = wall_clock()
+    if after is None or _canonical(before) != _canonical(after):
+        return {**base, 'state': 'REJECTED', 'reason': 'runtime_identity_changed'}
+    if type(ended) is not datetime or ended.tzinfo is None or ended.utcoffset() is None:
+        return {**base, 'state': 'REJECTED', 'reason': 'observation_time_invalid'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'task_id': task, 'artifact_id': artifact_id,
+                'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    joined = validate_initialization_report(raw, task_id=task, runtime=before,
+        source_revision=expected_source_revision, runtime_image_id=before['image_digest'],
+        registry_sha256=expected_registry_sha256, now=ended)
+    captured, artifact_time = _time(joined['captured_at']), _time(metadata.get('timestamp'))
+    if captured is None or artifact_time is None or not began <= captured <= artifact_time <= ended:
+        return {**base, 'state': 'REJECTED', 'reason': 'initialization_report_time_unbound'}
+    if monotonic() - started >= timeout_seconds:
+        return {**base, 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
+    return {**base, 'state': 'EXECUTED', 'execution_model': 'DETERMINISTIC',
+            'task_id': task, 'artifact_id': artifact_id, 'model_calls': 0,
+            'source_revision': expected_source_revision, 'registry_sha256': expected_registry_sha256,
+            'runtime_identity_sha256': hashlib.sha256(_canonical(before)).hexdigest(),
+            'result_sha256': metadata['sha256'],
+            'artifact_metadata_sha256': hashlib.sha256(_canonical(metadata)).hexdigest(),
+            'started_at': began.isoformat(), 'completed_at': ended.isoformat(),
+            'captured_at': captured.isoformat(), 'case_review': 'INITIALIZATION_ARTIFACT_CHECK_PASS',
+            'review_errors': ()}
+
+
 def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                       get_job: Callable[[str], dict], timeout_seconds: float = 60,
                       monotonic: Callable[[], float] = time.monotonic,
@@ -303,7 +389,17 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 "execution_request_sha256": cloud_receipt["execution_request_sha256"],
                 "execution_data_classification": "CLOUD_PERMITTED"}
         timeout_seconds = min(timeout_seconds, cloud_receipt["limits"]["timeout_seconds"])
-    if agent in ROLE_G1_SOURCES and spec.get("case") == "role:normal":
+    secondary_role = spec.get('case') == 'role:normal' and capability != f'responsibility.{agent}'
+    if secondary_role:
+        from .agent_cert_secondary_roles import canonical_secondary_spec
+        try:
+            expected = canonical_secondary_spec(agent, capability)
+            if _canonical(spec) != _canonical(expected):
+                return {**base, 'state': 'REJECTED', 'reason': 'secondary_role_oracle_source_mismatch'}
+        except (ValueError, TypeError, KeyError, UnicodeError):
+            return {**base, 'state': 'REJECTED', 'reason': 'secondary_role_oracle_scope_mismatch'}
+    if (agent in ROLE_G1_SOURCES and capability == f'responsibility.{agent}'
+            and spec.get("case") == "role:normal"):
         canonical = challenge("role:normal", agent_id=agent, capability_id=capability)
         if ("exact_role_g1_oracle" in spec.get("independent_review", ())
                 or request.get("context") == canonical["request"]["context"]) and spec != canonical:
@@ -325,6 +421,15 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
         if (agent, capability, spec.get("case")) == (
                 "a19", "responsibility.a19", "baseline:identity"):
             return _observe_runtime_artifact(
+                spec, base, dispatch=dispatch, get_artifact=get_artifact,
+                get_runtime=get_runtime, expected_source_revision=expected_source_revision,
+                expected_registry_sha256=expected_registry_sha256, started=started,
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
+        if (agent, capability, spec.get('case')) == (
+                'a19', 'responsibility.a19', 'baseline:initialization'):
+            if cloud_receipt is not None:
+                return {**base, 'state': 'REJECTED', 'reason': 'initialization_cloud_transport_forbidden'}
+            return _observe_initialization_artifact(
                 spec, base, dispatch=dispatch, get_artifact=get_artifact,
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
@@ -388,6 +493,18 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                                 "reason": "bounded_timeout"}
                 review = "UNREVIEWED"
                 review_errors: tuple[str, ...] = ()
+                if secondary_role:
+                    from .agent_cert_role_review import review_case_output
+                    valid, review_errors = review_case_output(agent, capability, 'role:normal', result)
+                    review = 'SECONDARY_ROLE_CHECK_PASS' if valid is True else 'SECONDARY_ROLE_CHECK_FAIL'
+                    # Legacy challenge metadata may contain the owner's
+                    # primary oracle flag. A secondary capability is reviewed
+                    # only by its own fixed source, never that primary oracle.
+                    return {**base, 'job_id': job_id, 'state': 'EXECUTED',
+                            'provider': provider, 'attempts': row['attempts'],
+                            'started_at': began.isoformat(), 'completed_at': ended.isoformat(),
+                            'result_sha256': hashlib.sha256(result.encode()).hexdigest(),
+                            'case_review': review, 'review_errors': review_errors}
                 if "exact_numeric_oracle" in spec.get("independent_review", ()):
                     if agent != "a01" or capability != "responsibility.a01" or spec.get("case") != "role:normal":
                         return {**base, "job_id": job_id, "state": "REJECTED",

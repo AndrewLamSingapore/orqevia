@@ -110,8 +110,8 @@ def test_prompt_context_contract_and_tier_cannot_be_mutated(field, value):
 @pytest.mark.parametrize("agent,capability,case", [
     ("prime", "responsibility.a18", "role:normal"),
     ("a22", "responsibility.a22", "role:normal"),
-    ("a18", "responsibility.a27", "role:normal"),
-    ("a20", "responsibility.a24", "role:normal"),
+    ("a17", "responsibility.a27", "role:normal"),
+    ("a19", "responsibility.a24", "role:normal"),
     ("a18", "responsibility.a18", "role:difficult"),
     ("a18", "responsibility.a18", "fresh_challenge:complete"),
     (True, "responsibility.a18", "role:normal"),

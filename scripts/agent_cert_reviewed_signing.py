@@ -24,7 +24,7 @@ from app.agent_cert_role_review import (
     canonical_case_spec, canonical_role_spec, review_case_output, review_role_output,
 )
 from app.agent_certification import LOGIC_SIGNALS
-from app.agent_registry import agent_record, canonical_agent_id
+from app.agent_registry import agent_record, canonical_agent_id, responsibility_owner
 
 
 SERVICE = 'svc.cert-verifier.independent'
@@ -136,12 +136,19 @@ def _case_spec(row):
 
 
 def _oracle_id(agent, spec=None):
+    if spec is not None and spec.get('case') == 'baseline:initialization':
+        from app.agent_cert_initialization_review import ORACLE_ID
+        return ORACLE_ID
     if agent == 'a19' and spec is not None and spec.get('case') == 'baseline:identity':
         from app.agent_cert_identity_review import ORACLE_ID
         return ORACLE_ID
     if spec is not None and spec.get('case') != 'role:normal':
         from app.agent_cert_a19_cases import ORACLE_ID
         return ORACLE_ID
+    if spec is not None:
+        from app.agent_cert_secondary_roles import SUPPORTED_CAPABILITIES, ORACLE_ID
+        if spec.get('capability_id') in SUPPORTED_CAPABILITIES:
+            return ORACLE_ID
     return 'group_two_exact_role_oracle/v1' if agent in GROUP_TWO_CASES else 'existing.role-normal.v1'
 
 
@@ -151,6 +158,10 @@ def _review_version(agent, spec=None):
     # observations and bind a separate, fixed signing-provenance version.
     if spec is not None and spec.get('case') != 'role:normal':
         return _oracle_id(agent, spec)
+    if spec is not None:
+        from app.agent_cert_secondary_roles import SUPPORTED_CAPABILITIES, ORACLE_ID
+        if spec.get('capability_id') in SUPPORTED_CAPABILITIES:
+            return ORACLE_ID
     return 'group_two_exact_role_oracle.v1' if agent in GROUP_TWO_CASES else None
 
 
@@ -340,11 +351,12 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
 def _review(row, primary, review, *, source_revision, runtime_image_id,
             reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
             expected_owner_policy_sha256=None):
-    if row.get('dimension') == 'baseline' and row.get('test_case') == 'identity':
+    if row.get('dimension') == 'baseline' and row.get('test_case') in {'identity', 'initialization'}:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
             _deny('IDENTITY_CLOUD_TRANSPORT_FORBIDDEN')
-        return _identity_review(row, primary, review, source_revision=source_revision,
-            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision, now=now)
+        return _contract_event_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
+            now=now, initialization=row['test_case'] == 'initialization')
     execution = _json(primary)
     envelope = _json(review)
     cloud_requested = any(value is not None for value in (
@@ -356,7 +368,8 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
     if (type(agent) is not str or canonical_agent_id(agent) != agent or
             type(reviewer) is not str or canonical_agent_id(reviewer) != reviewer or
             reviewer == agent or row.get('executor_identity') != agent or
-            row.get('capability_id') != f'responsibility.{agent}' or
+            row.get('capability_id') not in agent_record(agent)['capability_requirements'] or
+            responsibility_owner(row.get('capability_id')) != agent or
             row.get('test_result') != 'PASS' or
             row.get('source_revision') != source_revision or
             row.get('review_source_revision') != source_revision or
@@ -431,11 +444,27 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
 
 def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_id,
                      reviewer_code_revision, now):
+    return _contract_event_review(row, primary, reviewed, source_revision=source_revision,
+        runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
+        now=now, initialization=False)
+
+
+def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_image_id,
+                           reviewer_code_revision, now, initialization):
     """Review a genuine artifact event; never manufacture a model queue job."""
     from app.agent_cert_identity_review import (
         ORACLE_ID, SCHEMA, action_span, validate_identity_execution,
     )
     from app.agent_registry import REGISTRY_PATH
+    if initialization:
+        from app.agent_cert_initialization_review import (ORACLE_ID, SCHEMA,
+            validate_initialization_execution as validate_event)
+        event_case = 'initialization'
+        review_action_type = 'agent.certification.initialization.review'
+    else:
+        validate_event = validate_identity_execution
+        event_case = 'identity'
+        review_action_type = 'agent.certification.identity.review'
     if (row.get('agent_id') != 'a19' or row.get('capability_id') != 'responsibility.a19'
             or row.get('verifier') != 'a26' or row.get('executor_identity') != 'a19'
             or row.get('source_revision') != source_revision
@@ -450,8 +479,11 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
     # Off-host Linux images use the tracked LF registry bytes. This derived
     # build pin is compared with the original report's RAW-file digest; the
     # report is never normalized or rewritten to manufacture a match.
-    registry_sha = _sha(REGISTRY_PATH.read_bytes().replace(b'\r\n', b'\n'))
-    join = validate_identity_execution(execution, source_revision=source_revision,
+    # Initialization recomputes the complete owned contracts from their actual
+    # raw build bytes. Do not normalize its original report/pin into a match.
+    registry_raw = REGISTRY_PATH.read_bytes()
+    registry_sha = _sha(registry_raw if initialization else registry_raw.replace(b'\r\n', b'\n'))
+    join = validate_event(execution, source_revision=source_revision,
         runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=now)
     spec = _case_spec(row)
     expected_observations = dict(execution_task_id=join['task_id'], result_sha256=join['result_sha256'],
@@ -502,7 +534,7 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
         _deny('REGISTERED_IDENTITY_REVIEW_ARTIFACT_INVALID')
     expected = dict(schema_version=SCHEMA, task_id=dispatch['task_id'], reviewer_id='a26',
         reviewer_capability_id='responsibility.a26', subject_agent_id='a19', subject_capability_id='responsibility.a19',
-        dimension='baseline', test_case='identity', source_revision=source_revision, runtime_image_id=runtime_image_id,
+        dimension='baseline', test_case=event_case, source_revision=source_revision, runtime_image_id=runtime_image_id,
         execution_evidence_sha256=_sha(primary), case_spec_sha256=_sha(_canonical(spec)), result_sha256=join['result_sha256'],
         oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0, execution_model='DETERMINISTIC',
         subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED', subject_domain_join=join,
@@ -515,7 +547,7 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
             <= _utc(row['last_revalidated']) <= now < _utc(row['expires_at'])):
         _deny('IDENTITY_REVIEW_TIME_INVALID')
     action_span(proof['action_records'], task_id=dispatch['task_id'], agent_id='a26',
-        action_type='agent.certification.identity.review', schema=SCHEMA, metadata=metadata,
+        action_type=review_action_type, schema=SCHEMA, metadata=metadata,
         began=_utc(content['reviewed_at']), ended=certified,
         action_id=dispatch['review_action_id'], duration_limit_ms=120000)
     return True

@@ -26,6 +26,12 @@ def _primary(agent, capability):
 
 def canonical_role_spec(agent, capability):
     """Return the exact existing case, never an arbitrary caller's challenge."""
+    from .agent_cert_secondary_roles import SUPPORTED_CAPABILITIES, canonical_secondary_spec
+    if type(capability) is str and capability in SUPPORTED_CAPABILITIES:
+        try:
+            return canonical_secondary_spec(agent, capability)
+        except (ValueError, TypeError, KeyError):
+            raise ValueError('CASE_ORACLE_UNSUPPORTED') from None
     _primary(agent, capability)
     # Lazy imports keep this shared oracle independent of runtime dispatch and
     # protected signing initialization; the existing cases own their sources.
@@ -43,12 +49,13 @@ def canonical_case_spec(agent, capability, case_id):
     judge only their supplied public quality facts; they cannot establish real
     recovery, tool execution, handoff, signing or audit events.
     """
-    _primary(agent, capability)
     if type(case_id) is not str:
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
     if case_id == 'role:normal':
         return canonical_role_spec(agent, capability)
-    if agent == 'a19' and capability == 'responsibility.a19' and case_id == 'baseline:identity':
+    _primary(agent, capability)
+    if agent == 'a19' and capability == 'responsibility.a19' and case_id in {
+            'baseline:identity', 'baseline:initialization'}:
         from .agent_cert_cases import challenge
         return challenge(case_id, agent_id=agent, capability_id=capability)
     from .agent_cert_a19_cases import SUPPORTED_CASES, canonical_a19_case
@@ -69,6 +76,8 @@ def review_case_output(agent, capability, case_id, response):
         # Identity is an Objective/artifact/action event, not a model answer.
         # It can only be reviewed through the owned event adapter.
         return False, ('identity_event_evidence_required',)
+    if case_id == 'baseline:initialization':
+        return False, ('initialization_event_evidence_required',)
     from .agent_cert_a19_cases import review_a19_case_output
     return review_a19_case_output(case_id, response)
 
@@ -100,6 +109,9 @@ def _canonical(value):
 
 def review_role_output(agent, capability, response):
     """Return a literal verdict and fixed errors; never export the raw answer."""
+    from .agent_cert_secondary_roles import SUPPORTED_CAPABILITIES, review_secondary_output
+    if type(capability) is str and capability in SUPPORTED_CAPABILITIES:
+        return review_secondary_output(agent, capability, response)
     try:
         _primary(agent, capability)
     except (ValueError, TypeError):

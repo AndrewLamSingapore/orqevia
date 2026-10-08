@@ -53,7 +53,7 @@ def test_a01_false_efficiency_and_invalid_json_are_observed_failures():
 
 
 def test_other_agent_case_remains_unreviewed_not_auto_passed():
-    spec = challenge("role:normal", agent_id="a26")
+    spec = challenge("role:normal", agent_id="a26", capability_id="responsibility.a26")
     observation = _run(spec, "Plausible prose")
     assert observation["state"] == "EXECUTED"
     assert observation["case_review"] == "UNREVIEWED"

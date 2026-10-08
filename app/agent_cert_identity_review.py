@@ -6,6 +6,7 @@ files and the reviewed code. No submitted digest or PASS supplies authority.
 This module performs no dispatch, signing, credential loading or state writes.
 """
 from datetime import datetime
+from dataclasses import dataclass
 import hashlib
 import json
 import math
@@ -17,6 +18,19 @@ CASE = 'baseline:identity'
 ORACLE_ID = 'a19.runtime-identity.v1'
 SCHEMA = 'prime.agent-cert-identity-review.v1'
 MAX_BYTES = 1024 * 1024
+
+
+@dataclass(frozen=True)
+class _TrustedEventAdapter:
+    """Internal fixed adapters, never a caller-supplied oracle/action mapping."""
+    case: str
+    action_type: str
+    report_schema: str
+
+
+_IDENTITY_ADAPTER = _TrustedEventAdapter(CASE, 'runtime.status.artifact', 'jarvis.runtime-status.v1')
+_INITIALIZATION_ADAPTER = _TrustedEventAdapter('baseline:initialization',
+    'agent.certification.initialization.artifact', 'jarvis.agent-initialization.v1')
 
 
 class IdentityReviewError(ValueError):
@@ -135,7 +149,8 @@ def read_action_span(path, task_id, action_type, max_bytes=8 * 1024 * 1024):
     """Bounded read of the existing ledger; no flush, rewrite or alternate path."""
     try:
         require(valid_uuid(task_id) and action_type in {'runtime.status.artifact',
-            'agent.certification.identity.review'} and type(max_bytes) is int and
+            'agent.certification.identity.review', 'agent.certification.initialization.artifact',
+            'agent.certification.initialization.review'} and type(max_bytes) is int and
             1 <= max_bytes <= 8 * 1024 * 1024, 'ACTION_READER_BINDING_INVALID')
         path = Path(path)
         require(path.is_absolute() and not any(p.is_symlink() for p in (path, *path.parents)),
@@ -161,7 +176,17 @@ def read_action_span(path, task_id, action_type, max_bytes=8 * 1024 * 1024):
 def validate_identity_execution(execution, *, source_revision, runtime_image_id,
                                 registry_sha256, now):
     """Recompute the exact existing identity oracle from original event evidence."""
+    return _validate_event_execution(execution, source_revision=source_revision,
+        runtime_image_id=runtime_image_id, registry_sha256=registry_sha256, now=now,
+        _adapter=_IDENTITY_ADAPTER)
+
+
+def _validate_event_execution(execution, *, source_revision, runtime_image_id,
+                              registry_sha256, now, _adapter):
+    """Reuse original domain joins only for the two source-owned event cases."""
     try:
+        require(_adapter is _IDENTITY_ADAPTER or _adapter is _INITIALIZATION_ADAPTER,
+                'TRUSTED_EVENT_ADAPTER_REQUIRED')
         require(type(source_revision) is str and re.fullmatch('[0-9a-f]{40}', source_revision) is not None
                 and type(runtime_image_id) is str and re.fullmatch('sha256:[0-9a-f]{64}', runtime_image_id) is not None
                 and type(registry_sha256) is str and re.fullmatch('[0-9a-f]{64}', registry_sha256) is not None
@@ -173,7 +198,7 @@ def validate_identity_execution(execution, *, source_revision, runtime_image_id,
             'IDENTITY_FIELDS_INVALID')
         from .agent_cert_cases import challenge
         from .agent_cert_execution import observe_cert_case
-        spec = challenge(CASE, agent_id='a19', capability_id='responsibility.a19')
+        spec = challenge(_adapter.case, agent_id='a19', capability_id='responsibility.a19')
         require(canonical(value['case_spec']) == canonical(spec), 'CANONICAL_IDENTITY_CASE_REQUIRED')
         runtime = value['runtime']
         require(type(runtime) is dict and set(runtime) == {'host_id', 'version', 'source_revision', 'image_digest'}
@@ -233,8 +258,17 @@ def validate_identity_execution(execution, *, source_revision, runtime_image_id,
                 and immutable.get('model_content_is_authoritative_metadata') is False
                 and immutable.get('provenance', {}).get('runtime') == 'IMMUTABLE_OBJECTIVE_RUNTIME',
                 'IDENTITY_IMMUTABLE_RUNTIME_REQUIRED')
+        if _adapter is _INITIALIZATION_ADAPTER:
+            from .objective_api import inference_attempt_projection
+            require(canonical(immutable.get('inference_attempts')) ==
+                    canonical(inference_attempt_projection([])),
+                    'ZERO_MODEL_EVENT_REQUIRED')
+            from .agent_cert_initialization import validate_initialization_report
+            validate_initialization_report(raw, task_id=task, runtime=runtime,
+                source_revision=source_revision, runtime_image_id=runtime_image_id,
+                registry_sha256=registry_sha256, now=now)
         chain = action_span(value['action_records'], task_id=task, agent_id='a19',
-            action_type='runtime.status.artifact', schema='jarvis.runtime-status.v1', metadata=metadata,
+            action_type=_adapter.action_type, schema=_adapter.report_schema, metadata=metadata,
             began=utc(observation['captured_at']), ended=ended)
         require(canonical(chain) == canonical(value['action_chain_join'])
                 and began <= utc(immutable.get('created_at')) <= utc(observation['captured_at'])

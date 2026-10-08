@@ -295,6 +295,25 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
     if case_id not in case_ids():
         raise ValueError("unknown certification case")
     capability, record, responsibility = _registered_responsibility(agent_id, capability_id)
+    if agent_id == AGENT_ID and capability == CAPABILITY_ID and case_id == 'baseline:initialization':
+        if context:
+            raise ValueError('Initialization uses current owned contracts, not supplied context')
+        from .agent_cert_initialization import OBJECTIVE
+        return {
+            'agent_id': agent_id, 'capability_id': capability, 'case': case_id,
+            'request': {'capability': capability, 'objective': OBJECTIVE, 'context': '',
+                'classification': 'R0', 'data_classification': 'LOCAL_ONLY',
+                'minimum_tier': 'NANO', 'priority': 'low', 'task_class': 'classification',
+                'max_cost_usd': 0, 'response_format': 'strict_json',
+                'deterministic_operation': 'certification_initialization'},
+            'independent_review': ('authenticated_owner', 'registered_a19_route',
+                'original_initialization_artifact', 'owned_objective_action_join',
+                'independent_verifier'),
+            'expected_discriminants': ('Current role and bounds come from their owning contracts',
+                'Unknown health and missing evidence remain unknown',
+                'Distinct initialization event is not an identity or model answer'),
+            'certification': 'UNVERIFIED',
+        }
     dimension, case = case_id.split(":", 1)
     discriminants: tuple[str, ...] = ()
     if agent_id == AGENT_ID and capability == CAPABILITY_ID and case_id == "baseline:identity":

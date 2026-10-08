@@ -166,7 +166,8 @@ def test_review_joins_owned_sqlite_runtime_queue_and_durable_action(configured):
     for row in actions:
         claimed = row.pop('sha256')
         assert claimed == digest(canonical(row))
-    assert configured.calls == ['fixture-owner', 'fixture-owner']
+    # Initial dispatch + two authenticated reads of the owned subject state.
+    assert configured.calls == ['fixture-owner', 'fixture-owner', 'fixture-owner']
 
 
 @pytest.mark.parametrize('field,value', [('result', '{"continuous_health_proven":true}'),
@@ -323,3 +324,50 @@ def test_anonymous_request_cannot_read_subject_or_create_review(configured):
     assert failure.value.status_code == 401
     assert configured.calls == [None]
     assert not (configured.root / 'artifacts').exists()
+
+
+@pytest.mark.parametrize('changed_domain', [
+    'objective_revision', 'runtime', 'queue_result', 'queue_prompt', 'queue_cost',
+    'provider_model',
+])
+def test_subject_change_during_oracle_cannot_create_stale_review(configured, monkeypatch, changed_domain):
+    """A real oracle callback may not turn an earlier snapshot into current proof.
+
+    All state here belongs to temporary SQLite/queue fixtures; this is a source
+    regression, not an actual agent execution or certification event.
+    """
+    from app import agent_cert_review_tool
+    original = agent_cert_review_tool.execute_role_review
+
+    def review_then_change(*args, **kwargs):
+        answer = original(*args, **kwargs)
+        if changed_domain == 'objective_revision':
+            change_database('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',
+                (OBJECTIVE, 1, 'during-review', '0' * 64, 'dispatching', '[]'))
+        elif changed_domain == 'runtime':
+            monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', 'sha256:' + 'f' * 64)
+        elif changed_domain == 'queue_result':
+            configured.job['result'] = 'a different result after review began'
+        elif changed_domain == 'queue_prompt':
+            configured.job['prompt'] = 'a different objective after review began'
+        elif changed_domain == 'queue_cost':
+            configured.job['actual_cost_usd'] = 0.5
+        else:
+            monkeypatch.setattr(compute_queue_api, 'providers', lambda: [
+                SimpleNamespace(name='ollama-deep', kind='local', model='different-model')])
+        return answer
+
+    monkeypatch.setattr(agent_cert_review_tool, 'execute_role_review', review_then_change)
+    reject(configured)
+
+
+def test_final_owned_objective_read_must_succeed_before_review_artifact(configured, monkeypatch):
+    original = objective_api.get_read_only
+    calls = []
+    def read_once(*args, **kwargs):
+        calls.append(1)
+        if len(calls) > 1:
+            raise KeyError('synthetic lost owned state')
+        return original(*args, **kwargs)
+    monkeypatch.setattr(objective_api, 'get_read_only', read_once)
+    reject(configured)

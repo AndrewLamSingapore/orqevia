@@ -101,6 +101,11 @@ def main():
     names.append('a19_reviewed_case_admission_20261007')
     names.extend(['agent_cert_identity_review', 'agent_cert_identity_dispatch',
                   'agent_cert_identity_signing'])
+    names.extend(['agent_cert_initialization', 'agent_cert_initialization_review',
+                  'agent_cert_initialization_dispatch', 'agent_cert_initialization_signing',
+                  'agent_cert_secondary_roles', 'agent_cert_secondary_execution',
+                  'agent_cert_secondary_integration', 'agent_cert_secondary_transport'])
+    names.extend(['agent_cert_readiness', 'objective_domain_provenance'])
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('hf_prompt_scope')
