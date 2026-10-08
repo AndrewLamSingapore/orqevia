@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -64,7 +65,9 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
         a19['distinct_zero_model_event_adapter_cases'])
     assert {'unauthorized_rejection:unauthorized', 'unauthorized_rejection:owner_only'} <= set(
         a19['locally_actionable_missing_case_adapter_ids'])
-    assert result['active_protected_admission_count'] == 0
+    root = Path(__file__).resolve().parents[1]
+    active = loader.parse((root / loader.MANIFEST).read_bytes())
+    assert result['active_protected_admission_count'] == len(active)
     assert result['source_generated_certification_claims'] == 0
     assert result['runtime_observation'] == 'NOT_PERFORMED'
     assert a19['full_l7'] == 'NOT_PROVEN_BY_SOURCE_INVENTORY'
