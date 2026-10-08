@@ -122,9 +122,10 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
     # Only these two source-owned event contracts are selectable. The request
     # cannot supply a replacement validator, event type, schema or verdict.
     if initialization:
-        from .agent_cert_initialization_review import (SCHEMA, ORACLE_ID,
+        from .agent_cert_initialization_review import (SCHEMA,
             validate_initialization_execution as validate_event)
-        from .agent_cert_initialization import ACTION_TYPE as subject_action
+        from .agent_cert_initialization import (ACTION_TYPE as subject_action,
+            initialization_reviewer, initialization_oracle_id, initialization_review_objective)
         expected_objective = INITIALIZATION_REVIEW_OBJECTIVE
         test_case = 'initialization'
     else:
@@ -133,8 +134,22 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         expected_objective = IDENTITY_REVIEW_OBJECTIVE
         test_case = 'identity'
     try:
+        # Subject is still untrusted until its complete canonical event has
+        # been validated below. Resolve only the fixed owned reviewer now, then
+        # bind every subsequent original domain read to that same pair.
+        subject_actor, subject_capability = 'a19', 'responsibility.a19'
+        if initialization:
+            preliminary = parse(body.context.encode('utf-8'))
+            subject_spec = preliminary.get('execution', {}).get('case_spec', {})
+            require(type(subject_spec) is dict, 'IDENTITY_REVIEW_FIELDS_INVALID')
+            subject_actor, subject_capability = subject_spec.get('agent_id'), subject_spec.get('capability_id')
+            reviewer_actor, reviewer_capability = initialization_reviewer(subject_actor, subject_capability)
+            ORACLE_ID = initialization_oracle_id(subject_actor, subject_capability)
+            expected_objective = initialization_review_objective(subject_actor, subject_capability)
+        else:
+            reviewer_actor, reviewer_capability = 'a26', 'responsibility.a26'
         reviewer = agent_record(actor)
-        require(actor == 'a26' and body.capability == 'responsibility.a26'
+        require(actor == reviewer_actor and body.capability == reviewer_capability
                 and reviewer.get('authority') == 'advisory'
                 and body.capability in reviewer.get('capability_requirements', []),
                 'IDENTITY_REVIEWER_REQUIRED')
@@ -155,7 +170,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
         joined = validate_event(execution, source_revision=runtime['source_revision'],
-            runtime_image_id=runtime['image_digest'], registry_sha256=registry_sha, now=now)
+            runtime_image_id=runtime['image_digest'], registry_sha256=registry_sha, now=now,
+            **({'agent_id': subject_actor, 'capability_id': subject_capability} if initialization else {}))
         require(canonical(execution['runtime']) == canonical(runtime),
                 'IDENTITY_CURRENT_RUNTIME_REQUIRED')
         subject_task = joined['task_id']
@@ -178,8 +194,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and canonical(runtime_snapshot()) == canonical(runtime)
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'IDENTITY_DOMAINS_CHANGED_DURING_REVIEW')
-        return dict(schema_version=SCHEMA, subject_agent_id='a19',
-            subject_capability_id='responsibility.a19', dimension='baseline', test_case=test_case,
+        return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
+            subject_capability_id=subject_capability, dimension='baseline', test_case=test_case,
             reviewer_id=actor, reviewer_capability_id=body.capability, task_id=task_id,
             source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
             execution_evidence_sha256=envelope['expected_execution_sha256'],
@@ -485,8 +501,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                 from . import agent_registry
                 from .agent_cert_initialization import (build_initialization_report,
                     is_initialization, sha as initialization_sha)
-                if (actor != 'a19' or body.capability != 'responsibility.a19'
-                        or not is_initialization(body.objective, body.context)
+                if (not is_initialization(body.objective, body.context,
+                                          agent_id=actor, capability_id=body.capability)
                         or body.classification != 'R0' or body.data_classification != 'LOCAL_ONLY'
                         or body.priority != 'low' or body.max_cost_usd != 0
                         or body.preferred_provider is not None or body.minimum_tier != 'NANO'
@@ -495,7 +511,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                 registry_sha = initialization_sha(agent_registry.REGISTRY_PATH.read_bytes())
                 data = build_initialization_report(task_id, runtime=runtime,
                     source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
-                    registry_sha256=registry_sha)
+                    registry_sha256=registry_sha, agent_id=actor, capability_id=body.capability)
                 if (runtime_snapshot() != runtime
                         or initialization_sha(agent_registry.REGISTRY_PATH.read_bytes()) != registry_sha):
                     raise ValueError('INITIALIZATION_DOMAINS_CHANGED')

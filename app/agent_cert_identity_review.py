@@ -182,11 +182,21 @@ def validate_identity_execution(execution, *, source_revision, runtime_image_id,
 
 
 def _validate_event_execution(execution, *, source_revision, runtime_image_id,
-                              registry_sha256, now, _adapter):
+                              registry_sha256, now, _adapter, agent_id='a19',
+                              capability_id='responsibility.a19'):
     """Reuse original domain joins only for the two source-owned event cases."""
     try:
         require(_adapter is _IDENTITY_ADAPTER or _adapter is _INITIALIZATION_ADAPTER,
                 'TRUSTED_EVENT_ADAPTER_REQUIRED')
+        # Identity retains its original A19-only contract. Initialization alone
+        # may inspect another actual owned pair; schema/action/oracle selection
+        # remain fixed in source, never arguments supplied by a request.
+        if _adapter is _INITIALIZATION_ADAPTER:
+            from .agent_cert_initialization import initialization_objective
+            initialization_objective(agent_id, capability_id)
+        else:
+            require((agent_id, capability_id) == ('a19', 'responsibility.a19'),
+                    'TRUSTED_EVENT_ADAPTER_REQUIRED')
         require(type(source_revision) is str and re.fullmatch('[0-9a-f]{40}', source_revision) is not None
                 and type(runtime_image_id) is str and re.fullmatch('sha256:[0-9a-f]{64}', runtime_image_id) is not None
                 and type(registry_sha256) is str and re.fullmatch('[0-9a-f]{64}', registry_sha256) is not None
@@ -198,7 +208,7 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
             'IDENTITY_FIELDS_INVALID')
         from .agent_cert_cases import challenge
         from .agent_cert_execution import observe_cert_case
-        spec = challenge(_adapter.case, agent_id='a19', capability_id='responsibility.a19')
+        spec = challenge(_adapter.case, agent_id=agent_id, capability_id=capability_id)
         require(canonical(value['case_spec']) == canonical(spec), 'CANONICAL_IDENTITY_CASE_REQUIRED')
         runtime = value['runtime']
         require(type(runtime) is dict and set(runtime) == {'host_id', 'version', 'source_revision', 'image_digest'}
@@ -236,7 +246,7 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
                 and submission[1].get('id') == task and type(submission[1].get('steps')) is list
                 and len(submission[1]['steps']) == 1
                 and type(submission[1]['steps'][0]) is dict
-                and submission[1]['steps'][0].get('capability') == 'responsibility.a19'
+                and submission[1]['steps'][0].get('capability') == capability_id
                 and canonical(submission[1]['steps'][0].get('dispatch')) == canonical(dispatch),
                 'IDENTITY_SUBMISSION_JOIN_INVALID')
         require(type(read) is list and len(read) == 2 and type(read[0]) is int and read[0] == 200
@@ -246,7 +256,7 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
         require(objective.get('id') == task and type(objective.get('revision')) is int
                 and objective['revision'] == 0 and objective.get('state') == 'COMPLETED'
                 and type(steps) is list and len(steps) == 1 and type(steps[0]) is dict
-                and steps[0].get('capability') == 'responsibility.a19'
+                and steps[0].get('capability') == capability_id
                 and type(steps[0].get('revision')) is int and steps[0]['revision'] == 0
                 and steps[0].get('state') == 'completed' and 'job' not in steps[0]
                 and canonical(steps[0].get('dispatch')) == canonical(dispatch), 'IDENTITY_OBJECTIVE_JOIN_INVALID')
@@ -266,8 +276,8 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
             from .agent_cert_initialization import validate_initialization_report
             validate_initialization_report(raw, task_id=task, runtime=runtime,
                 source_revision=source_revision, runtime_image_id=runtime_image_id,
-                registry_sha256=registry_sha256, now=now)
-        chain = action_span(value['action_records'], task_id=task, agent_id='a19',
+                registry_sha256=registry_sha256, now=now, agent_id=agent_id, capability_id=capability_id)
+        chain = action_span(value['action_records'], task_id=task, agent_id=agent_id,
             action_type=_adapter.action_type, schema=_adapter.report_schema, metadata=metadata,
             began=utc(observation['captured_at']), ended=ended)
         require(canonical(chain) == canonical(value['action_chain_join'])

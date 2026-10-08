@@ -34,6 +34,7 @@ SOURCE_FILES = (
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
     'app/agent_cert_transport.py', 'app/agent_dispatch_api.py',
     'app/production_entry.py', 'scripts/collect_agent_cert_case.py',
+    'scripts/collect_agent_cert_event.py',
     'scripts/agent_cert_reviewed_signing.py', 'scripts/sign_admitted_agent_cases.py',
     'governance/agent-cert-reviewed-cases.json',
     'governance/agent-cert-historical-admissions/a19-role-normal-signed-37613202210.json',

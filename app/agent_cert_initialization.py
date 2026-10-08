@@ -1,4 +1,4 @@
-"""A19's distinct, zero-model initialization/contract inspection.
+"""Distinct, zero-model initialization of a registered owned capability.
 
 The owned Registry and the actual dispatch request model supply the definition
 and input limits. No caller can supply an "initialized" verdict or replacement
@@ -23,6 +23,8 @@ OBJECTIVE = ('Inspect the current registered A19 role, advisory authority, owned
              'input/output contracts and dispatch input bounds before beginning '
              'a reliability assessment; produce a zero-model initialization '
              'artifact and identify missing evidence without claiming health or certification.')
+REVIEW_OBJECTIVE = ('Independently review one recorded A19 initialization event against its current owned '
+                    'contracts, original Objective, artifact and action records; do not certify or sign.')
 MAX_BYTES = 64 * 1024
 MAX_REGISTRY_BYTES = 1024 * 1024
 MAX_AGE_SECONDS = 300
@@ -128,12 +130,72 @@ def _bindings(task_id, runtime, source_revision, runtime_image_id, registry_sha2
     return _parse(canonical(runtime), MAX_BYTES)
 
 
-def is_initialization(objective, context):
+def _owned_pair(agent_id, capability_id):
+    from .agent_registry import agent_record, canonical_agent_id, responsibility_owner
+    _require(type(agent_id) is str and type(capability_id) is str,
+             'INITIALIZATION_AGENT_INVALID')
+    try:
+        record = agent_record(agent_id)
+        _require(canonical_agent_id(agent_id) == agent_id and record['id'] == agent_id
+                 and capability_id in record['capability_requirements']
+                 and responsibility_owner(capability_id) == agent_id,
+                 'INITIALIZATION_CAPABILITY_INVALID')
+        selected = [r for r in record['responsibilities'] if r.get('id') == capability_id]
+        _require(len(selected) == 1 and set(selected[0]) == {'id', 'description', 'input', 'output'}
+                 and all(type(v) is str and v for v in selected[0].values()),
+                 'INITIALIZATION_CAPABILITY_INVALID')
+        return record, selected[0]
+    except InitializationError:
+        raise
+    except Exception:
+        raise InitializationError('INITIALIZATION_CAPABILITY_INVALID') from None
+
+
+def initialization_objective(agent_id='a19', capability_id='responsibility.a19'):
+    """Fixed owned pair, not a caller-provided prompt or executable authority."""
+    _owned_pair(agent_id, capability_id)
+    if (agent_id, capability_id) == ('a19', 'responsibility.a19'):
+        return OBJECTIVE
+    return (f'Inspect the current registered {agent_id.upper()} owned capability {capability_id}, '
+            'role, authority, input/output contracts and dispatch input bounds; produce a '
+            'distinct zero-model initialization artifact and identify missing evidence '
+            'without claiming health, executed actions or certification.')
+
+
+def initialization_oracle_id(agent_id='a19', capability_id='responsibility.a19'):
+    _owned_pair(agent_id, capability_id)
+    return ORACLE_ID if (agent_id, capability_id) == ('a19', 'responsibility.a19') else 'registered.owned-initialization.v1'
+
+
+def initialization_review_objective(agent_id='a19', capability_id='responsibility.a19'):
+    _owned_pair(agent_id, capability_id)
+    if (agent_id, capability_id) == ('a19', 'responsibility.a19'):
+        return REVIEW_OBJECTIVE
+    return (f'Independently review one recorded {agent_id.upper()} initialization event for {capability_id} '
+            'against its current owned contracts, original Objective, artifact and action records; '
+            'do not certify or sign.')
+
+
+def initialization_reviewer(agent_id, capability_id):
+    """Existing independent review responsibilities; no caller-selected verifier."""
+    _owned_pair(agent_id, capability_id)
+    actor, cap = ('a18', 'responsibility.a27') if agent_id == 'a26' else ('a26', 'responsibility.a26')
+    record, responsibility = _owned_pair(actor, cap)
+    _require(actor != agent_id and record['authority'] == 'advisory'
+             and 'provided_context.read' in record['tool_eligibility']
+             and record['tap_relationship'].get('delegation_transfers_authority') is False
+             and record['tap_relationship'].get('execution_authority') == 'none inherited from Registry'
+             and responsibility['id'] == cap, 'INITIALIZATION_REVIEWER_INVALID')
+    return actor, cap
+
+
+def is_initialization(objective, context, *, agent_id='a19', capability_id='responsibility.a19'):
     """Exact dedicated route, not a substring/alias of runtime identity."""
-    return type(objective) is str and objective == OBJECTIVE and type(context) is str and context == ''
+    return (type(objective) is str and objective == initialization_objective(agent_id, capability_id)
+            and type(context) is str and context == '')
 
 
-def _owned_domains(registry_sha256):
+def _owned_domains(registry_sha256, agent_id='a19', capability_id='responsibility.a19'):
     """Read current domain-owned source internally, never caller projections."""
     from . import agent_registry
     # Lazy import allows the dispatcher to call this module after its request
@@ -172,10 +234,10 @@ def _owned_domains(registry_sha256):
         _require(canonical(normalized) == canonical(loaded),
                  'INITIALIZATION_LOADED_REGISTRY_MISMATCH')
         records = [item for item in source['agents']
-                   if type(item) is dict and item.get('agent_id') == 'a19']
+                   if type(item) is dict and item.get('agent_id') == agent_id]
         _require(len(records) == 1, 'INITIALIZATION_AGENT_INVALID')
         record = records[0]
-        actual = agent_registry.agent_record('a19')
+        actual, selected = _owned_pair(agent_id, capability_id)
         _require(all(key in record and key in actual for key in _DEFINITION_FIELDS),
                  'INITIALIZATION_DEFINITION_INVALID')
         definition = {key: record[key] for key in _DEFINITION_FIELDS}
@@ -188,10 +250,11 @@ def _owned_domains(registry_sha256):
         definition['reports_to'] = aliases.get(record['reports_to'], record['reports_to'])
         _require(canonical(definition) == canonical({key: actual[key] for key in _DEFINITION_FIELDS}),
                  'INITIALIZATION_LOADED_DEFINITION_MISMATCH')
-        _require(record['immutable_id'] == 'a19' and record['authority'] == 'advisory'
-                 and type(record['can_delegate']) is bool and record['can_delegate'] is False
-                 and record['capability_requirements'] == ['responsibility.a19']
-                 and agent_registry.responsibility_owner('responsibility.a19') == 'a19'
+        _require(record['immutable_id'] == agent_id and record['authority'] in ('advisory', 'restricted')
+                 and type(record['can_delegate']) is bool
+                 and capability_id in record['capability_requirements']
+                 and 'provided_context.read' in record['tool_eligibility']
+                 and agent_registry.responsibility_owner(capability_id) == agent_id
                  and record['tap_relationship'].get('delegation_transfers_authority') is False
                  and record['tap_relationship'].get('execution_authority') == 'none inherited from Registry',
                  'INITIALIZATION_AUTHORITY_INVALID')
@@ -223,6 +286,13 @@ def _owned_domains(registry_sha256):
                                       'schema': request_schema,
                                       'schema_sha256': sha(canonical(request_schema)),
                                       'input_bounds': bounds}}
+        # A19's original single-capability definition already binds the exact
+        # sole responsibility. Preserve those historical report bytes. Every
+        # other report explicitly binds its selected owned responsibility,
+        # including both capabilities of merged agents; never use the first.
+        if (agent_id, capability_id) != ('a19', 'responsibility.a19'):
+            owned['selected_capability'] = selected
+            owned['selected_capability_sha256'] = sha(canonical(selected))
         _require(len(canonical(owned)) <= MAX_BYTES // 2, 'INITIALIZATION_DOMAINS_TOO_LARGE')
         return _parse(canonical(owned), MAX_BYTES)
     except InitializationError:
@@ -232,13 +302,15 @@ def _owned_domains(registry_sha256):
 
 
 def build_initialization_report(task_id, *, runtime, source_revision, runtime_image_id,
-                                registry_sha256, now=None):
+                                registry_sha256, now=None, agent_id='a19',
+                                capability_id='responsibility.a19'):
     """Inspect real owned contracts, bound to a protected dispatch's runtime."""
     bound = _bindings(task_id, runtime, source_revision, runtime_image_id, registry_sha256)
     captured = _instant(datetime.now(timezone.utc) if now is None else now)
-    owned = _owned_domains(registry_sha256)
-    return {'schema_version': SCHEMA, 'case': CASE, 'oracle_id': ORACLE_ID,
-            'task_id': task_id, 'agent_id': 'a19', 'capability_id': 'responsibility.a19',
+    owned = _owned_domains(registry_sha256, agent_id, capability_id)
+    return {'schema_version': SCHEMA, 'case': CASE,
+            'oracle_id': initialization_oracle_id(agent_id, capability_id),
+            'task_id': task_id, 'agent_id': agent_id, 'capability_id': capability_id,
             'captured_at': captured.isoformat(), 'runtime': bound, 'owned_domains': owned,
             'observation': 'ROLE_AUTHORITY_AND_INPUT_BOUNDS_READ',
             'evidence_gaps': {'service_map': 'NOT_SUPPLIED', 'health': 'NOT_MEASURED',
@@ -254,7 +326,8 @@ def build_initialization_report(task_id, *, runtime, source_revision, runtime_im
 
 
 def validate_initialization_report(raw, *, task_id, runtime, source_revision,
-                                   runtime_image_id, registry_sha256, now=None):
+                                   runtime_image_id, registry_sha256, now=None,
+                                   agent_id='a19', capability_id='responsibility.a19'):
     """Rebuild from current domains; never accept a caller's PASS or definition.
 
     The bounded timestamp and task binding are report checks only. The protected
@@ -272,7 +345,7 @@ def validate_initialization_report(raw, *, task_id, runtime, source_revision,
              'INITIALIZATION_TIME_UNBOUND')
     expected = build_initialization_report(task_id, runtime=runtime,
         source_revision=source_revision, runtime_image_id=runtime_image_id,
-        registry_sha256=registry_sha256, now=captured)
+        registry_sha256=registry_sha256, now=captured, agent_id=agent_id, capability_id=capability_id)
     _require(canonical(report) == canonical(expected), 'INITIALIZATION_REPORT_MISMATCH')
     original = raw.encode('utf-8') if type(raw) is str else raw
     return {'task_id': task_id, 'case': CASE, 'result_sha256': sha(original),

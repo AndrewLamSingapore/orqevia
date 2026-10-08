@@ -19,11 +19,12 @@ class InitializationReviewError(ValueError):
 
 
 def validate_initialization_execution(execution, *, source_revision, runtime_image_id,
-                                      registry_sha256, now):
+                                      registry_sha256, now, agent_id='a19',
+                                      capability_id='responsibility.a19'):
     """Validate only the dedicated source-owned baseline:initialization event."""
     try:
         return _validate_event_execution(execution, source_revision=source_revision,
             runtime_image_id=runtime_image_id, registry_sha256=registry_sha256,
-            now=now, _adapter=_INITIALIZATION_ADAPTER)
+            now=now, _adapter=_INITIALIZATION_ADAPTER, agent_id=agent_id, capability_id=capability_id)
     except IdentityReviewError as exc:
         raise InitializationReviewError(str(exc)) from None

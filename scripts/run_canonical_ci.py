@@ -62,6 +62,7 @@ def main():
     names.append('job_queue')
     names.append('agent_role_contract_matrix')
     names.append('agent_certification')
+    names.append('agent_certification_manifest_json')
     names.append('agent_capability_route')
     names.append('agent_cert_attestation')
     names.append('agent_cert_ed25519')
@@ -103,9 +104,11 @@ def main():
                   'agent_cert_identity_signing'])
     names.extend(['agent_cert_initialization', 'agent_cert_initialization_review',
                   'agent_cert_initialization_dispatch', 'agent_cert_initialization_signing',
+                  'agent_cert_initialization_fleet', 'agent_cert_initialization_fleet_events',
                   'agent_cert_secondary_roles', 'agent_cert_secondary_execution',
                   'agent_cert_secondary_integration', 'agent_cert_secondary_transport'])
     names.extend(['agent_cert_readiness', 'objective_domain_provenance'])
+    names.append('collect_agent_cert_event')
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('hf_prompt_scope')

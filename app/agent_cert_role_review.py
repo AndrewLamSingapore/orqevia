@@ -53,9 +53,14 @@ def canonical_case_spec(agent, capability, case_id):
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
     if case_id == 'role:normal':
         return canonical_role_spec(agent, capability)
+    if case_id == 'baseline:initialization':
+        from .agent_cert_initialization import initialization_objective
+        from .agent_cert_cases import challenge
+        initialization_objective(agent, capability)  # Exact registered ownership.
+        return challenge(case_id, agent_id=agent, capability_id=capability)
     _primary(agent, capability)
     if agent == 'a19' and capability == 'responsibility.a19' and case_id in {
-            'baseline:identity', 'baseline:initialization'}:
+            'baseline:identity'}:
         from .agent_cert_cases import challenge
         return challenge(case_id, agent_id=agent, capability_id=capability)
     from .agent_cert_a19_cases import SUPPORTED_CASES, canonical_a19_case

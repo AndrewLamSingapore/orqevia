@@ -250,8 +250,9 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
                                      started, timeout_seconds, monotonic, wall_clock):
     """Observe the distinct owned-contract inspection, never an identity clone."""
     from .agent_cert_initialization import MAX_BYTES, validate_initialization_report
-    if _canonical(spec) != _canonical(challenge('baseline:initialization', agent_id='a19',
-                                                capability_id='responsibility.a19')):
+    agent, capability = spec.get('agent_id'), spec.get('capability_id')
+    if _canonical(spec) != _canonical(challenge('baseline:initialization', agent_id=agent,
+                                                capability_id=capability)):
         return {**base, 'state': 'REJECTED', 'reason': 'initialization_case_source_mismatch'}
     if (not callable(get_artifact) or not callable(get_runtime)
             or type(expected_source_revision) is not str
@@ -271,7 +272,7 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
     if (type(reply) is not dict or set(reply) != {'task_id', 'state', 'artifact', 'model_calls',
             'execution_model', 'agent_id', 'capability', 'runtime_source_revision'}
             or reply.get('state') != 'COMPLETED' or reply.get('execution_model') != 'DETERMINISTIC'
-            or reply.get('agent_id') != 'a19' or reply.get('capability') != 'responsibility.a19'
+            or reply.get('agent_id') != agent or reply.get('capability') != capability
             or reply.get('runtime_source_revision') != expected_source_revision
             or type(reply.get('model_calls')) is not int or reply['model_calls'] != 0):
         return {**base, 'state': 'REJECTED', 'reason': 'deterministic_dispatch_invalid'}
@@ -296,7 +297,7 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
     if (not 0 < len(raw) <= MAX_BYTES or len(_canonical(metadata)) > 16384
             or _canonical(metadata) != _canonical(declared)
             or metadata.get('artifact_id') != artifact_id or metadata.get('task_id') != task
-            or metadata.get('creator_agents') != ['a19'] or metadata.get('type') != 'json'
+            or metadata.get('creator_agents') != [agent] or metadata.get('type') != 'json'
             or metadata.get('runtime_revision') != expected_source_revision
             or metadata.get('validation_state') != 'STRUCTURE_VALIDATED'
             or metadata.get('delivery_state') != 'AVAILABLE' or metadata.get('location') != 'artifact.json'
@@ -314,7 +315,7 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
                 'state': 'INCOMPLETE', 'reason': 'bounded_timeout'}
     joined = validate_initialization_report(raw, task_id=task, runtime=before,
         source_revision=expected_source_revision, runtime_image_id=before['image_digest'],
-        registry_sha256=expected_registry_sha256, now=ended)
+        registry_sha256=expected_registry_sha256, now=ended, agent_id=agent, capability_id=capability)
     captured, artifact_time = _time(joined['captured_at']), _time(metadata.get('timestamp'))
     if captured is None or artifact_time is None or not began <= captured <= artifact_time <= ended:
         return {**base, 'state': 'REJECTED', 'reason': 'initialization_report_time_unbound'}
@@ -425,8 +426,7 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
-        if (agent, capability, spec.get('case')) == (
-                'a19', 'responsibility.a19', 'baseline:initialization'):
+        if spec.get('case') == 'baseline:initialization':
             if cloud_receipt is not None:
                 return {**base, 'state': 'REJECTED', 'reason': 'initialization_cloud_transport_forbidden'}
             return _observe_initialization_artifact(
