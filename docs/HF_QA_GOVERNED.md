@@ -8,7 +8,27 @@ and Model Fabric queue. Its body contains `agent_id` (canonical permanent ID),
 The same task UUID cannot reserve a second chain. Input is at most 2048 context
 bytes and 256 question bytes; secret-like input is denied before disclosure.
 
-The selected **operator-owned** enabled/qualified HF catalog entry must contain
+The optional explicit `route` is `DIRECT_HF` (the backwards-compatible default)
+or `HF_ROUTER`. Router-only mode makes one pinned token-metered chat request,
+using the same bounded QA input and fixed source-owned prompt. It never attempts
+the direct serverless model and needs no `serverless_qa` fixed-charge contract.
+It uses one existing governed queue reservation, the operator's current token
+rates/context/output limits, existing backpressure, a shared total deadline and
+zero retries/fallbacks. `primary_timeout_seconds` applies only to direct mode.
+
+Router-only work has the distinct source-owned `question_answering` task class.
+It must satisfy the selected entry's actual task/prompt/agent scope; a
+classification-only allowlist or unrelated prompt binding does not authorize
+it. No catalog, activation or quality qualification is supplied by this mode.
+Its receipt says `HF_ROUTER_QA`, identifies the actual pinned chat model/job,
+and reports token usage times the catalog rates, not an independently reconciled
+invoice. Only a nonempty bounded verbatim context span is accepted, with the
+answer's factual correctness still requiring the caller's independent oracle.
+Unknown usage/failure/cancellation retains the queue estimate. Known usage is
+accounted even when output fails span validation or arrives after the deadline.
+No direct RoBERTa score, model identity or QA qualification is fabricated.
+
+For direct mode, the **operator-owned** enabled/qualified HF entry must contain
 an optional `serverless_qa` object with exactly these fields:
 
 - `version`: `hf-serverless-qa.price.v1`

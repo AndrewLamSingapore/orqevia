@@ -13,6 +13,7 @@ import pytest
 from app import hf_qa_server as server, cloud_execution as cloud
 from app.action_records import ActionLedger
 from app.hf_serverless import HFServerlessQA
+from app.hf_qa_execution import qa_router_prompt
 from app.job_queue import JobQueue, Provider, QueuePolicy
 from app.provider_circuit import ProviderCircuits
 from app.provider_runtime import HuggingFaceProvider, ProviderFailure
@@ -20,6 +21,17 @@ from app.provider_runtime import HuggingFaceProvider, ProviderFailure
 
 CONTEXT = 'My name is Clara and I live in Berkeley.'
 SPAN = {'answer': 'Clara', 'score': .97, 'start': 11, 'end': 16}
+
+
+def _router_response(answer='Clara', *, include_usage=True):
+    events = [
+        {'choices': [{'index': 0, 'delta': {'content': answer}, 'finish_reason': None}]},
+        {'choices': [{'index': 0, 'delta': {}, 'finish_reason': 'stop'}]},
+    ]
+    if include_usage:
+        events.append({'choices': [], 'usage': {'prompt_tokens': 8, 'completion_tokens': 2}})
+    return httpx.Response(200, text=''.join('data: ' + json.dumps(x) + '\n\n' for x in events)
+                          + 'data: [DONE]\n\n')
 
 
 @pytest.fixture
@@ -59,13 +71,7 @@ def governed(monkeypatch, tmp_path):
             if isinstance(value, Exception):
                 raise value
             return value
-        events = [
-            {'choices': [{'index': 0, 'delta': {'content': 'Clara'}, 'finish_reason': None}]},
-            {'choices': [{'index': 0, 'delta': {}, 'finish_reason': 'stop'}]},
-            {'choices': [], 'usage': {'prompt_tokens': 8, 'completion_tokens': 2}},
-        ]
-        return httpx.Response(200, text=''.join('data: ' + json.dumps(x) + '\n\n' for x in events)
-                              + 'data: [DONE]\n\n')
+        return _router_response()
 
     transport = httpx.MockTransport(handler)
     qa = HFServerlessQA('env:HF_TOKEN', secret_resolver=resolve, transport=transport)
@@ -490,3 +496,257 @@ def test_server_input_byte_validation_precedes_prompt_sizing(governed, field):
     with pytest.raises(ProviderFailure, match='INVALID_QA_INPUT'):
         server.execute_governed_qa(**arguments)
     assert not calls and not credentials and not arguments['queue'].list()
+
+
+@pytest.fixture
+def router_only(governed, monkeypatch):
+    arguments, entry, calls, credentials, _, _ = governed
+    entry.pop('serverless_qa')
+    entry['allowed_task_classes'] = ['question_answering']
+    responses, before = [_router_response()], []
+    def handler(request):
+        calls.append('router')
+        payload = json.loads(request.content)
+        assert payload['model'] == entry['model'] and payload['max_tokens'] == entry['output_tokens']
+        assert payload['messages'][0]['content'] == qa_router_prompt(arguments['context'], arguments['question'])
+        for callback in before:
+            callback()
+        if isinstance(responses[0], Exception):
+            raise responses[0]
+        return responses[0]
+    def resolve(ref):
+        credentials.append(ref)
+        return 'offline-secret-fixture'
+    def no_direct(**_kwargs):
+        pytest.fail('Router-only QA must never instantiate the direct adapter')
+    no_direct.validate_request = HFServerlessQA.validate_request
+    no_direct.MODEL, no_direct.CIRCUIT_ID = HFServerlessQA.MODEL, HFServerlessQA.CIRCUIT_ID
+    monkeypatch.setattr(server, 'HFServerlessQA', no_direct)
+    monkeypatch.setattr(cloud, 'adapter_for', lambda item: HuggingFaceProvider(
+        item['secret_ref'], secret_resolver=resolve, transport=httpx.MockTransport(handler)))
+    return arguments, entry, calls, credentials, responses, before
+
+
+def test_router_only_uses_one_metered_reservation_without_direct_contract(router_only):
+    arguments, _, calls, credentials, _, _ = router_only
+    result = server.execute_governed_router_qa(**arguments)
+    assert calls == ['router'] and credentials == ['env:HF_TOKEN']
+    assert result['route'] == 'HF_ROUTER_QA' and result['direct_qa_attempted'] is False
+    assert result['answer'] == 'Clara' and result['model'] == 'fixture/span:provider'
+    assert result['cost_usd'] == .0000018 and result['cost_measurement'] == 'USAGE_X_CATALOG_RATES_NOT_INVOICE'
+    assert result['quality_oracle'] == 'CALLER_VERIFICATION_REQUIRED'
+    assert not result['automatic_qualification'] and not result['l7_awarded']
+    jobs = arguments['queue'].list()
+    assert len(jobs) == 1 and jobs[0]['id'] == result['reservation_id'] == result['router_task_id']
+    assert jobs[0]['task_class'] == 'question_answering' and jobs[0]['agent'] == arguments['agent_id']
+    assert jobs[0]['prompt'] == qa_router_prompt(arguments['context'], arguments['question'])
+    assert jobs[0]['status'] == 'completed' and jobs[0]['actual_cost_usd'] == result['cost_usd']
+    assert jobs[0]['attempts'] == 1 and jobs[0]['max_retries'] == 0 and not jobs[0]['cloud_inflight']
+
+
+@pytest.mark.parametrize('agent', ['prime', 'A18', 'A12', 'a999'])
+def test_router_only_rejects_alias_or_non_permanent_owner_before_reservation(router_only, agent):
+    arguments, _, calls, credentials, _, _ = router_only
+    arguments['agent_id'] = agent
+    with pytest.raises(ProviderFailure, match='QA_REQUEST_IDENTITY_OR_BUDGET_INVALID'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials and not arguments['queue'].list()
+
+
+def test_router_only_requires_owner_authority_before_input_or_catalog(router_only):
+    arguments, _, calls, credentials, _, _ = router_only
+    arguments.update(authorization='Bearer wrong-fixture', context='')
+    with pytest.raises(HTTPException) as failure:
+        server.execute_governed_router_qa(**arguments)
+    assert failure.value.status_code == 401
+    assert not calls and not credentials and not arguments['queue'].list()
+
+
+@pytest.mark.parametrize('scope', ['classification_only', 'wrong_prompt', 'wrong_agent'])
+def test_router_only_does_not_inherit_unrelated_task_prompt_or_owner_scope(router_only, scope):
+    arguments, entry, calls, credentials, _, _ = router_only
+    if scope == 'classification_only':
+        entry['allowed_task_classes'] = ['classification']
+    else:
+        entry['allowed_prompt_bindings'] = [{'agent': 'a20' if scope == 'wrong_agent' else 'a18',
+            'prompt_sha256': server._digest('not-the-fixed-qa-prompt')}]
+        if scope == 'wrong_agent':
+            entry['allowed_prompt_bindings'][0]['prompt_sha256'] = server.hashlib.sha256(
+                qa_router_prompt(arguments['context'], arguments['question']).encode()).hexdigest()
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials and not arguments['queue'].list()
+
+
+def test_router_only_honors_exact_original_prompt_and_agent_scope(router_only):
+    arguments, entry, _, _, _, _ = router_only
+    entry['allowed_prompt_bindings'] = [{'agent': arguments['agent_id'],
+        'prompt_sha256': server.hashlib.sha256(qa_router_prompt(arguments['context'], arguments['question']).encode()).hexdigest()}]
+    result = server.execute_governed_router_qa(**arguments)
+    assert result['task_class'] == 'question_answering' and result['answer'] == 'Clara'
+
+
+@pytest.mark.parametrize('denial', ['request', 'daily'])
+def test_router_only_cost_denial_happens_before_credentials(router_only, denial):
+    arguments, _, calls, credentials, _, _ = router_only
+    if denial == 'request':
+        arguments['max_cost_usd'] = '.000000001'
+    else:
+        arguments['queue'].policy = replace(arguments['queue'].policy, daily_cost_ceiling_usd=.000000001)
+    with pytest.raises(ProviderFailure, match='QA_BUDGET_NOT_RESERVED'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials and not arguments['queue'].list()
+
+
+def test_router_only_parent_task_replay_never_creates_a_second_request(router_only):
+    arguments, _, calls, credentials, _, _ = router_only
+    server.execute_governed_router_qa(**arguments)
+    with pytest.raises(ProviderFailure, match='QA_BUDGET_NOT_RESERVED'):
+        server.execute_governed_router_qa(**arguments)
+    assert calls == ['router'] and len(credentials) == 1 and len(arguments['queue'].list()) == 1
+
+
+def test_router_only_cancellation_before_executor_is_proven_unspent(router_only, monkeypatch):
+    arguments, _, calls, credentials, _, _ = router_only
+    q, original_claim = arguments['queue'], arguments['queue'].claim
+    def claim(*args, **kwargs):
+        job = original_claim(*args, **kwargs)
+        q.cancel(job['id'])
+        return job
+    monkeypatch.setattr(q, 'claim', claim)
+    with pytest.raises(ProviderFailure, match='CANCELLED'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials
+    job = q.list()[0]
+    assert job['status'] == 'cancelled' and job['actual_cost_usd'] == 0 and not job['cloud_inflight']
+
+
+@pytest.mark.parametrize('reported_usage', [False, True])
+def test_router_only_cancelled_request_stays_occupied_until_real_client_cleanup(router_only, reported_usage):
+    arguments, _, calls, _, responses, before = router_only
+    if not reported_usage:
+        responses[0] = httpx.ReadTimeout('offline cancellation race')
+    q, p = arguments['queue'], arguments['available_providers'][0]
+    def cancel_during_http():
+        job = q.list()[0]
+        q.cancel(job['id'])
+        assert q.get(job['id'])['cloud_inflight'] == 1
+        q.submit(agent='a20', prompt='public', model=p.model, preferred_provider=p.name,
+            allow_cloud=True, data_classification='CLOUD_PERMITTED', max_cost_usd=.01)
+        assert q.claim('overlap-denied', [p]) is None
+    before.append(cancel_during_http)
+    with pytest.raises(ProviderFailure):
+        server.execute_governed_router_qa(**arguments)
+    job = next(job for job in q.list() if job['agent'] == 'a18')
+    assert calls == ['router'] and job['status'] == 'cancelled'
+    assert job['actual_cost_usd'] == (.0000018 if reported_usage else None)
+    assert not job['cloud_inflight'] and q.metrics()['daily_spend_usd'] == (
+        .0000018 if reported_usage else job['estimated_cost_usd'])
+
+
+@pytest.mark.parametrize('failure', ['ambiguous', 'missing_usage', 'invalid_span'])
+def test_router_only_controlled_failure_never_retries_or_erases_spend(router_only, failure):
+    arguments, _, calls, _, responses, _ = router_only
+    responses[0] = {'ambiguous': httpx.Response(503, json={}),
+        'missing_usage': _router_response(include_usage=False),
+        'invalid_span': _router_response('not-in-context')}[failure]
+    with pytest.raises(ProviderFailure):
+        server.execute_governed_router_qa(**arguments)
+    job = arguments['queue'].list()[0]
+    assert calls == ['router'] and job['status'] == 'failed' and not job['cloud_inflight']
+    assert job['actual_cost_usd'] == (.0000018 if failure == 'invalid_span' else None)
+    assert arguments['queue'].metrics()['daily_spend_usd'] == (
+        .0000018 if failure == 'invalid_span' else job['estimated_cost_usd'])
+
+
+@pytest.mark.parametrize('point', ['claim', 'dispatch'])
+def test_router_only_original_deadline_covers_claim_wait_and_output(router_only, monkeypatch, point):
+    arguments, _, calls, credentials, _, before = router_only
+    clock = [100]
+    monkeypatch.setattr(server, 'monotonic', lambda: clock[0])
+    if point == 'claim':
+        original_claim = arguments['queue'].claim
+        def claim(*args, **kwargs):
+            job = original_claim(*args, **kwargs)
+            clock[0] = 131
+            return job
+        monkeypatch.setattr(arguments['queue'], 'claim', claim)
+    else:
+        before.append(lambda: clock.__setitem__(0, 131))
+    with pytest.raises(ProviderFailure, match='TASK_TIMEOUT'):
+        server.execute_governed_router_qa(**arguments)
+    job = arguments['queue'].list()[0]
+    assert len(calls) == len(credentials) == (0 if point == 'claim' else 1)
+    assert job['actual_cost_usd'] == (0 if point == 'claim' else .0000018)
+
+
+def test_api_router_mode_is_explicit_and_does_not_unlock_direct_without_contract(router_only, monkeypatch):
+    arguments, _, calls, credentials, _, _ = router_only
+    client, body = _api_client(router_only, monkeypatch)
+    headers = {'Authorization': arguments['authorization']}
+    assert client.post('/api/compute-queue/hf/qa', json={**body, 'route': 'HF_ROUTER'}).status_code == 401
+    direct = client.post('/api/compute-queue/hf/qa', json=body, headers=headers)
+    assert direct.status_code == 503 and direct.json() == {'detail': 'QA_PRICE_CONTRACT_UNAVAILABLE'}
+    assert not calls and not credentials and not arguments['queue'].list()
+    for injected in ({'route': 'auto'}, {'route': 'HF_ROUTER', 'task_class': 'classification'},
+                     {'route': 'HF_ROUTER', 'execute_hf_router': 'forged'}):
+        assert client.post('/api/compute-queue/hf/qa', json={**body, **injected}, headers=headers).status_code == 422
+    response = client.post('/api/compute-queue/hf/qa', json={**body, 'route': 'HF_ROUTER'}, headers=headers)
+    assert response.status_code == 200 and response.json()['route'] == 'HF_ROUTER_QA'
+    assert calls == ['router'] and len(credentials) == 1
+
+
+@pytest.mark.parametrize('change', [
+    {'data_classification': 'SENSITIVE'}, {'context': 'password=offline-fixture'},
+])
+def test_router_only_preserves_privacy_denial_before_disclosure(router_only, change):
+    arguments, _, calls, credentials, _, _ = router_only
+    arguments.update(change)
+    with pytest.raises(ProviderFailure, match='DATA_LOCALITY'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials and not arguments['queue'].list()
+
+
+def test_router_only_backpressure_cancels_only_unused_hold(router_only):
+    arguments, _, calls, credentials, _, _ = router_only
+    q, p = arguments['queue'], arguments['available_providers'][0]
+    busy = q.submit(agent='a20', prompt='public', model=p.model, preferred_provider=p.name,
+        allow_cloud=True, data_classification='CLOUD_PERMITTED', max_cost_usd=.01)
+    assert q.claim('occupied', [p])['id'] == busy['id']
+    with pytest.raises(ProviderFailure, match='CAPACITY'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials and q.policy.cloud_concurrency == 1
+    assert q.get(busy['id'])['status'] == 'running' and q.get(busy['id'])['cloud_inflight'] == 1
+    held = next(job for job in q.list() if job['id'] != busy['id'])
+    assert held['status'] == 'cancelled' and held['actual_cost_usd'] == 0
+
+
+def test_router_only_postclaim_catalog_change_cannot_read_credentials(router_only, monkeypatch):
+    arguments, entry, calls, credentials, _, _ = router_only
+    q, original_claim = arguments['queue'], arguments['queue'].claim
+    def claim(*args, **kwargs):
+        job = original_claim(*args, **kwargs)
+        entry['allowed_task_classes'] = ['classification']
+        return job
+    monkeypatch.setattr(q, 'claim', claim)
+    with pytest.raises(ProviderFailure, match='QA_CATALOG_CHANGED'):
+        server.execute_governed_router_qa(**arguments)
+    assert not calls and not credentials
+    assert q.metrics()['daily_spend_usd'] == 0 and not q.metrics()['cloud_inflight']
+
+
+def test_router_only_postresponse_state_fault_preserves_reported_charge(router_only, monkeypatch):
+    arguments, _, calls, _, _, before = router_only
+    q, original_get = arguments['queue'], arguments['queue'].get
+    fault = {'armed': False, 'remaining': 1}
+    before.append(lambda: fault.update(armed=True))
+    def get(job_id):
+        if fault['armed'] and fault['remaining']:
+            fault['remaining'] -= 1
+            raise RuntimeError('synthetic temporary state read fault')
+        return original_get(job_id)
+    monkeypatch.setattr(q, 'get', get)
+    with pytest.raises(ProviderFailure, match='QA_ROUTER_EXECUTION_FAILURE'):
+        server.execute_governed_router_qa(**arguments)
+    assert calls == ['router'] and q.metrics()['daily_spend_usd'] == .0000018
+    assert q.list()[0]['actual_cost_usd'] == .0000018 and not q.metrics()['cloud_inflight']

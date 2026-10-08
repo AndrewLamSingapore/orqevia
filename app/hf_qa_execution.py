@@ -76,6 +76,35 @@ def _uuid(value):
     return isinstance(value, str) and str(uuid.UUID(value)) == value
 
 
+def validate_qa_identity(agent_id, task_id, max_cost_usd):
+    """Canonical permanent owner and positive finite budget, for either route."""
+    try:
+        if not isinstance(agent_id, str):
+            raise ValueError()
+        canonical = canonical_agent_id(agent_id)
+        if canonical != agent_id or canonical == 'prime' or not _uuid(task_id):
+            raise ValueError()
+        ceiling = _money(max_cost_usd)
+        if ceiling <= 0:
+            raise ValueError()
+        return ceiling
+    except (RegistryError, ValueError, TypeError, InvalidOperation):
+        raise ProviderFailure('QA_REQUEST_IDENTITY_OR_BUDGET_INVALID', pre_execution=True) from None
+
+
+def validate_router_span(answer, context):
+    """Output shape only: a verbatim source span is not a task-quality oracle."""
+    try:
+        valid = (isinstance(answer, str) and bool(answer.strip())
+                 and len(answer.encode()) <= 1024 and answer in context)
+    except UnicodeError:
+        valid = False
+    if not valid:
+        raise ProviderFailure('INVALID_QA_ANSWER_SPAN')
+    start = context.index(answer)
+    return start, start + len(answer)
+
+
 def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
                       data_classification, max_cost_usd, admit=None,
                       execute_hf_router=None, timeout_seconds=30,
@@ -92,17 +121,7 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
     that an earlier request was undispatched, and cannot release its reserve.
     """
     authenticate_owner(authorization)
-    try:
-        if not isinstance(agent_id, str):
-            raise ValueError()
-        canonical = canonical_agent_id(agent_id)
-        if canonical != agent_id or canonical == 'prime' or not _uuid(task_id):
-            raise ValueError()
-        ceiling = _money(max_cost_usd)
-        if ceiling <= 0:
-            raise ValueError()
-    except (RegistryError, ValueError, TypeError, InvalidOperation):
-        raise ProviderFailure('QA_REQUEST_IDENTITY_OR_BUDGET_INVALID', pre_execution=True) from None
+    ceiling = validate_qa_identity(agent_id, task_id, max_cost_usd)
     HFServerlessQA.validate_request(context=context, question=question,
         data_classification=data_classification, timeout_seconds=timeout_seconds)
     if (type(primary_timeout_seconds) not in (int, float) or
@@ -226,21 +245,14 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
         if not identity_valid:
             raise ProviderFailure('QA_ROUTER_IDENTITY_MISMATCH')
         answer = result.get('result')
-        try:
-            span_valid = (isinstance(answer, str) and bool(answer.strip())
-                and len(answer.encode()) <= 1024 and answer in context)
-        except UnicodeError:
-            span_valid = False
-        if not span_valid:
-            raise ProviderFailure('INVALID_QA_ANSWER_SPAN')
+        start, end = validate_router_span(answer, context)
         try:
             measured = result.get('actual_cost_usd')
             if measured is None or _money(measured) > _money(permit.router_maximum_charge_usd):
                 raise ValueError()
         except (ValueError, TypeError, InvalidOperation):
             raise ProviderFailure('QA_ROUTER_COST_NOT_VERIFIED') from None
-        start = context.index(answer)
-        result = {'answer': answer, 'start': start, 'end': start + len(answer),
+        result = {'answer': answer, 'start': start, 'end': end,
             'provider': permit.hf_router_provider_id, 'model': permit.hf_router_model,
             'route': 'HF_ROUTER', 'span_validation': 'MATCHES_INPUT_CONTEXT',
             'quality_oracle': 'CALLER_VERIFICATION_REQUIRED',

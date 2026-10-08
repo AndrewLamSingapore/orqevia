@@ -209,6 +209,7 @@ class SubmitHFQA(BaseModel):
     question: str = Field(min_length=1, max_length=256)
     data_classification: str
     max_cost_usd: str
+    route: Literal['DIRECT_HF', 'HF_ROUTER'] = 'DIRECT_HF'
     timeout_seconds: float = Field(default=30, gt=0, le=30, strict=True)
     primary_timeout_seconds: float = Field(default=15, gt=0, le=30, strict=True)
 
@@ -216,11 +217,13 @@ class SubmitHFQA(BaseModel):
 @router.post('/hf/qa')
 def submit_hf_qa(body: SubmitHFQA, authorization: str | None = Header(None)):
     authorize(authorization)
-    from .hf_qa_server import execute_governed_qa
+    from .hf_qa_server import execute_governed_qa, execute_governed_router_qa
     from .provider_runtime import ProviderFailure
     try:
-        return execute_governed_qa(authorization=authorization, queue=queue, data=DATA,
-                                  available_providers=providers(), **body.model_dump())
+        request = body.model_dump()
+        execute = execute_governed_router_qa if request.pop('route') == 'HF_ROUTER' else execute_governed_qa
+        return execute(authorization=authorization, queue=queue, data=DATA,
+                       available_providers=providers(), **request)
     except ProviderFailure as exc:
         raise HTTPException(503 if exc.pre_execution else 502, exc.code) from None
 
