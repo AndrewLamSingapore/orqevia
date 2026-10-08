@@ -264,7 +264,8 @@ class JobQueue:
             return math.inf
 
     def reserve_cloud_chain(self, *, agent: str, requests: list[dict],
-                            timeout_seconds: float, binding: dict) -> list[dict]:
+                            timeout_seconds: float, binding: dict,
+                            task_class: str = 'classification') -> list[dict]:
         """Atomically hold at most two trusted requests before any disclosure.
 
         Held jobs are invisible to ordinary workers. Their caps count against
@@ -274,6 +275,8 @@ class JobQueue:
         actor = canonical_agent_id(agent)
         if actor != agent or actor == 'prime' or not 1 <= len(requests) <= 2:
             raise ValueError('invalid cloud reservation identity')
+        if task_class not in {'classification', 'question_answering'}:
+            raise ValueError('invalid cloud reservation task scope')
         if type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or not 0 < timeout_seconds <= 30:
             raise ValueError('invalid cloud reservation timeout')
         prepared = []
@@ -303,9 +306,9 @@ class JobQueue:
                      max_cost_usd,allow_cloud,external_execution,status,approval_status,provider,
                      estimated_cost_usd,actual_cost_usd,lease_until,created_at,updated_at,
                      preferred_provider,data_classification,task_class)
-                    VALUES(?,?,?,50,'deep',?,0,0,?,0,?,1,0,'held','not_required',?, ?,NULL,?,?,?,?,'CLOUD_PERMITTED','classification')""",
+                    VALUES(?,?,?,50,'deep',?,0,0,?,0,?,1,0,'held','not_required',?, ?,NULL,?,?,?,?,'CLOUD_PERMITTED',?)""",
                     (jid, actor, prompt, provider.model, timeout_seconds, cap, provider.name,
-                     estimate, time.time() + timeout_seconds + 30, ts, ts, provider.name))
+                     estimate, time.time() + timeout_seconds + 30, ts, ts, provider.name, task_class))
                 self._event(c, jid, 'cloud_reserved', binding)
         return [self.get(item[0]) for item in prepared]
 
