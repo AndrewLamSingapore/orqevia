@@ -89,7 +89,8 @@ class AgentRequest(BaseModel):
     deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review',
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
-        'certification_artifact_review'] | None = None
+        'certification_artifact_review','certification_authority_event',
+        'certification_authority_review'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -112,8 +113,13 @@ def joined_artifact_review(body, authorization, *, actor, task_id, runtime):
         task_id=task_id, runtime=runtime, initialization=False, artifact=True)
 
 
+def joined_authority_review(body, authorization, *, actor, task_id, runtime):
+    return _joined_contract_event_review(body, authorization, actor=actor,
+        task_id=task_id, runtime=runtime, initialization=False, authority=True)
+
+
 def _joined_contract_event_review(body, authorization, *, actor, task_id, runtime, initialization,
-                                  artifact=False):
+                                  artifact=False, authority=False):
     """Join the original zero-model event to its owning read-only domains.
 
     This operation supplies a separate registered reviewer artifact, never a
@@ -128,7 +134,15 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
     from .objective_api import get_read_only, runtime_snapshot
     # Only fixed source-owned event contracts are selectable. The request
     # cannot supply a replacement validator, event type, schema or verdict.
-    if artifact:
+    bounded_event = artifact or authority
+    if authority:
+        from .agent_cert_artifact_events import MAX_BYTES, _path
+        from .agent_cert_authority_events import (SUPPORTED_CASES, authority_action_type,
+            read_authority_action_span, ORACLE_ID)
+        from .agent_cert_role_review import (AUTHORITY_REVIEW_SCHEMA as SCHEMA,
+            AUTHORITY_REVIEW_OBJECTIVE as expected_objective, authority_event_review_join as validate_event)
+        test_case = None
+    elif artifact:
         from .agent_cert_artifact_events import (SUPPORTED_CASES, MAX_BYTES, _path,
             artifact_action_type, read_artifact_action_span)
         from .agent_cert_role_review import (ARTIFACT_REVIEW_SCHEMA as SCHEMA,
@@ -170,20 +184,21 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and body.classification == 'R0' and body.data_classification == 'LOCAL_ONLY'
                 and body.priority == 'low' and body.max_cost_usd == 0
                 and body.preferred_provider is None, 'IDENTITY_REVIEW_POLICY_REQUIRED')
-        if artifact:
+        if bounded_event:
             require(body.minimum_tier == 'NANO' and body.task_class == 'classification'
                 and body.response_format == 'strict_json', 'ARTIFACT_REVIEW_POLICY_REQUIRED')
         envelope = parse(body.context.encode('utf-8'))
         require(set(envelope) == {'execution', 'expected_execution_sha256',
                 'expected_source_revision', 'review_nonce'}, 'IDENTITY_REVIEW_FIELDS_INVALID')
         execution = envelope['execution']
-        if artifact:
+        if bounded_event:
             case_id = execution.get('case_spec', {}).get('case')
             require(type(case_id) is str and case_id in SUPPORTED_CASES,
                 'ARTIFACT_REVIEW_CASE_REQUIRED')
-            subject_action = artifact_action_type(case_id)
+            subject_action = authority_action_type(case_id) if authority else artifact_action_type(case_id)
             test_case = case_id.split(':')[1]
-            from .agent_cert_artifact_events import ORACLE_ID
+            if artifact:
+                from .agent_cert_artifact_events import ORACLE_ID
         require(type(envelope['expected_execution_sha256']) is str
                 and re.fullmatch('[0-9a-f]{64}', envelope['expected_execution_sha256']) is not None
                 and sha(canonical(execution)) == envelope['expected_execution_sha256']
@@ -200,7 +215,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         subject_task = joined['task_id']
         require(subject_task != task_id, 'IDENTITY_REVIEW_TASK_MUST_BE_DISTINCT')
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if artifact:
+        if bounded_event:
             root = _path(root)
             require(_path(root / 'objectives.db').is_file()
                 and _path(root / 'artifacts').is_dir(), 'ARTIFACT_ORIGINAL_DOMAINS_REQUIRED')
@@ -209,7 +224,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 'IDENTITY_OWNED_OBJECTIVE_REQUIRED')
         factory = ArtifactFactory(root / 'artifacts')
         def retrieve_owned(identifier):
-            if artifact:
+            if bounded_event:
                 # Use the substrate's owning-path guard, including Windows
                 # reparse parents. Never follow submitted paths or large files.
                 folder = root / 'artifacts' / identifier
@@ -222,7 +237,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         require(canonical(metadata) == canonical(execution['artifact_metadata'])
                 and raw == execution['artifact_content_utf8'].encode('utf-8'),
                 'IDENTITY_OWNED_ARTIFACT_REQUIRED')
-        original_lines = (read_artifact_action_span(root, subject_task, case_id) if artifact
+        original_lines = (read_authority_action_span(root, subject_task, case_id) if authority else
+            read_artifact_action_span(root, subject_task, case_id) if artifact
             else read_action_span(root / 'action-records.jsonl', subject_task, subject_action))
         require(canonical(original_lines) == canonical(execution['action_records']),
                 'IDENTITY_ORIGINAL_ACTIONS_REQUIRED')
@@ -239,15 +255,16 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and canonical(runtime_snapshot()) == canonical(runtime)
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'IDENTITY_DOMAINS_CHANGED_DURING_REVIEW')
-        if artifact:
+        if bounded_event:
             # The last Objective read must not conceal a changed original
             # artifact or persisted action span. These are owning-store reads,
             # not a second validation of caller-supplied snapshots.
             final_metadata, final_raw = retrieve_owned(joined['artifact_id'])
             require(canonical(final_metadata) == canonical(metadata) and final_raw == raw
-                and canonical(read_artifact_action_span(root, subject_task, case_id)) ==
+                and canonical(read_authority_action_span(root, subject_task, case_id) if authority else
+                    read_artifact_action_span(root, subject_task, case_id)) ==
                     canonical(original_lines), 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
-            if case_id != 'general:artifact_produce':
+            if artifact and case_id != 'general:artifact_produce':
                 final_input_metadata, final_input_raw = retrieve_owned(input_metadata['artifact_id'])
                 require(canonical(final_input_metadata) == canonical(original_metadata)
                     and final_input_raw == original_raw
@@ -257,7 +274,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
-            subject_capability_id=subject_capability, dimension='general' if artifact else 'baseline', test_case=test_case,
+            subject_capability_id=subject_capability,
+            dimension=case_id.split(':')[0] if bounded_event else 'baseline', test_case=test_case,
             reviewer_id=actor, reviewer_capability_id=body.capability, task_id=task_id,
             source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
             execution_evidence_sha256=envelope['expected_execution_sha256'],
@@ -268,7 +286,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
             subject_domain_join=joined, certification='UNVERIFIED')
     except Exception:
-        detail = ('Independent artifact review requires current joined event evidence' if artifact else
+        detail = ('Independent authority review requires current joined event evidence' if authority else
+                  'Independent artifact review requires current joined event evidence' if artifact else
                   'Independent initialization review requires current joined event evidence'
                   if initialization else 'Independent identity review requires current joined event evidence')
         raise HTTPException(422, detail) from None
@@ -554,7 +573,20 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         from .objective_api import runtime_snapshot
         runtime = runtime_snapshot()
         try:
-            if body.deterministic_operation == 'certification_artifact_event':
+            if body.deterministic_operation == 'certification_authority_event':
+                from . import agent_registry
+                from .agent_cert_authority_events import (SUPPORTED_CASES, canonical_authority_case,
+                    execute_authority_case, parse, sha)
+                case_id = parse(body.context.encode('utf-8')).get('case')
+                if (actor != 'a19' or body.capability != 'responsibility.a19'
+                        or type(case_id) is not str or case_id not in SUPPORTED_CASES):
+                    raise ValueError('AUTHORITY_OWNING_CASE_REQUIRED')
+                spec = canonical_authority_case(case_id)
+                return execute_authority_case(spec, task_id, submitted_request=body.model_dump(),
+                    data_root=root, ledger=action_ledger(), runtime=runtime, read_runtime=runtime_snapshot,
+                    source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
+                    registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
+            elif body.deterministic_operation == 'certification_artifact_event':
                 from . import agent_registry
                 from .agent_cert_artifact_events import (SUPPORTED_CASES, canonical_artifact_case,
                     execute_artifact_case, parse, sha)
@@ -569,6 +601,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
             elif body.deterministic_operation == 'certification_artifact_review':
                 data=joined_artifact_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+            elif body.deterministic_operation == 'certification_authority_review':
+                data=joined_authority_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_role_review':
                 data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_identity_review':
@@ -611,10 +645,11 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         initialization = body.deterministic_operation == 'certification_initialization'
         initialization_review = body.deterministic_operation == 'certification_initialization_review'
         artifact_review = body.deterministic_operation == 'certification_artifact_review'
+        authority_review = body.deterministic_operation == 'certification_authority_review'
         review_ledger = None
-        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review:
-            from .agent_cert_role_review import ARTIFACT_REVIEW_ACTION
-            action_type = (ARTIFACT_REVIEW_ACTION if artifact_review else
+        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review:
+            from .agent_cert_role_review import ARTIFACT_REVIEW_ACTION, AUTHORITY_REVIEW_ACTION
+            action_type = (AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
                            'agent.certification.initialization.review' if initialization_review else
                            'agent.certification.initialization.artifact' if initialization else
                            'agent.certification.identity.review' if identity_review else
@@ -639,7 +674,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             'execution_model':'DETERMINISTIC','agent_id':actor,
             'capability':'responsibility.a19' if runtime_status else body.capability,
             'runtime_source_revision':runtime_revision}
-        if role_review or identity_review or initialization_review or artifact_review:
+        if role_review or identity_review or initialization_review or artifact_review or authority_review:
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.
             result['review_action_id']=action.action_id

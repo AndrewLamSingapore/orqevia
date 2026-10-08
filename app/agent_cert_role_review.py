@@ -18,6 +18,11 @@ ARTIFACT_REVIEW_ACTION = 'agent.certification.artifact.review'
 ARTIFACT_REVIEW_OPERATION = 'certification_artifact_review'
 ARTIFACT_REVIEW_OBJECTIVE = ('Independently review one recorded A19 artifact event against its original '
     'Objective, immutable input and result artifacts and action records; do not certify or sign.')
+AUTHORITY_REVIEW_SCHEMA = 'prime.agent-cert-authority-review.v1'
+AUTHORITY_REVIEW_ACTION = 'agent.certification.authority.review'
+AUTHORITY_REVIEW_OPERATION = 'certification_authority_review'
+AUTHORITY_REVIEW_OBJECTIVE = ('Independently review one recorded A19 permitted authority-read event against '
+    'the current owning Registry, original Objective, result artifact and action records; do not certify or sign.')
 
 
 def artifact_event_review_join(execution, **pins):
@@ -25,6 +30,25 @@ def artifact_event_review_join(execution, **pins):
     from .agent_cert_artifact_events import validate_artifact_execution
     joined = validate_artifact_execution(execution, **pins)
     return {**joined, 'completed_at': execution['dispatch']['artifact_event']['completed_at']}
+
+
+def authority_event_review_join(execution, **pins):
+    """Only the two owning permitted events; no generic PASS or guard-denial proof."""
+    from .agent_cert_authority_events import validate_authority_execution
+    joined = validate_authority_execution(execution, **pins)
+    return {**joined, 'completed_at': execution['dispatch']['authority_event']['completed_at']}
+
+
+def read_authority_review_action_span(data_root, task_id):
+    """Bounded original fixed A26 review pair, never a caller-selected action/path."""
+    from .agent_cert_artifact_events import _ledger_lines, _path, _uuid, parse, _require
+    _require(_uuid(task_id), 'AUTHORITY_REVIEW_TASK_REQUIRED')
+    lines = _ledger_lines(_path(data_root))
+    owned = [i for i, line in enumerate(lines) if (event := parse(line.encode('utf-8'))).get('task_id') == task_id
+        and event.get('action_type') == AUTHORITY_REVIEW_ACTION]
+    _require(len(owned) == 2 and 2 <= owned[-1] - owned[0] + 1 <= 128,
+        'AUTHORITY_REVIEW_ACTION_PAIR_REQUIRED')
+    return lines[owned[0]:owned[-1] + 1]
 
 
 def _primary(agent, capability):
@@ -80,6 +104,9 @@ def canonical_case_spec(agent, capability, case_id):
     from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES, canonical_artifact_case
     if agent == 'a19' and case_id in ARTIFACT_CASES:
         return canonical_artifact_case(case_id, agent_id=agent, capability_id=capability)
+    from .agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES, canonical_authority_case
+    if agent == 'a19' and case_id in AUTHORITY_CASES:
+        return canonical_authority_case(case_id)
     from .agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, canonical_a19_baseline_case
     if agent == 'a19' and case_id in BASELINE_CASES:
         return canonical_a19_baseline_case(case_id)
@@ -106,6 +133,9 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
+    from .agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
+    if case_id in AUTHORITY_CASES:
+        return False, ('authority_event_evidence_required',)
     from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
     if case_id in ARTIFACT_CASES:
         return False, ('artifact_event_evidence_required',)

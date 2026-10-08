@@ -176,6 +176,18 @@ class AgentCertOperatorIO:
                 self._review_objective = initialization_review_objective(agent, capability)
                 self._review_operation = 'certification_initialization_review'
                 self._review_action_type = 'agent.certification.initialization.review'
+            elif case in {'authority:complete', 'unauthorized_rejection:authorized'}:
+                from app.agent_cert_authority_events import authority_action_type
+                from app.agent_cert_role_review import (
+                    AUTHORITY_REVIEW_ACTION, AUTHORITY_REVIEW_OBJECTIVE, AUTHORITY_REVIEW_OPERATION,
+                )
+                _require((agent, capability) == ('a19', 'responsibility.a19'),
+                    'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
+                self._action_type = authority_action_type(case)
+                self._reviewer, self._review_cap = 'a26', 'responsibility.a26'
+                self._review_objective = AUTHORITY_REVIEW_OBJECTIVE
+                self._review_operation = AUTHORITY_REVIEW_OPERATION
+                self._review_action_type = AUTHORITY_REVIEW_ACTION
             elif case in {'general:artifact_consume', 'general:artifact_produce', 'general:review'}:
                 from app.agent_cert_artifact_events import artifact_action_type
                 from app.agent_cert_role_review import (

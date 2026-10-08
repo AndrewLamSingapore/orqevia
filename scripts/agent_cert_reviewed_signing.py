@@ -143,6 +143,9 @@ def _oracle_id(agent, spec=None):
         from app.agent_cert_identity_review import ORACLE_ID
         return ORACLE_ID
     if spec is not None:
+        from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES, ORACLE_ID as AUTHORITY_ORACLE
+        if spec.get('case') in AUTHORITY_CASES:
+            return AUTHORITY_ORACLE
         from app.agent_cert_artifact_events import SUPPORTED_CASES, ORACLE_ID
         if spec.get('case') in SUPPORTED_CASES:
             return ORACLE_ID
@@ -361,6 +364,13 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
 def _review(row, primary, review, *, source_revision, runtime_image_id,
             reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
             expected_owner_policy_sha256=None):
+    from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
+    if str(row.get('dimension')) + ':' + str(row.get('test_case')) in AUTHORITY_CASES:
+        if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+            _deny('AUTHORITY_CLOUD_TRANSPORT_FORBIDDEN')
+        return _contract_event_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
+            now=now, initialization=False, authority=True)
     if row.get('dimension') == 'baseline' and row.get('test_case') in {'identity', 'initialization'}:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
             _deny('IDENTITY_CLOUD_TRANSPORT_FORBIDDEN')
@@ -468,7 +478,7 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
 
 
 def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_image_id,
-                           reviewer_code_revision, now, initialization, artifact=False):
+                           reviewer_code_revision, now, initialization, artifact=False, authority=False):
     """Review a genuine artifact event; never manufacture a model queue job."""
     from app.agent_cert_identity_review import (
         ORACLE_ID, SCHEMA, action_span, validate_identity_execution,
@@ -477,7 +487,12 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     subject, capability = 'a19', 'responsibility.a19'
     reviewer, reviewer_capability = 'a26', 'responsibility.a26'
     dimension = 'baseline'
-    if artifact:
+    if authority:
+        from app.agent_cert_authority_events import ORACLE_ID
+        from app.agent_cert_role_review import (AUTHORITY_REVIEW_SCHEMA as SCHEMA,
+            AUTHORITY_REVIEW_ACTION as review_action_type, authority_event_review_join as validate_event)
+        event_case, dimension = row.get('test_case'), row.get('dimension')
+    elif artifact:
         from app.agent_cert_artifact_events import ORACLE_ID
         from app.agent_cert_role_review import (ARTIFACT_REVIEW_SCHEMA as SCHEMA,
             ARTIFACT_REVIEW_ACTION as review_action_type, artifact_event_review_join as validate_event)
@@ -513,12 +528,12 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     # Initialization recomputes the complete owned contracts from their actual
     # raw build bytes. Do not normalize its original report/pin into a match.
     registry_raw = REGISTRY_PATH.read_bytes()
-    registry_sha = _sha(registry_raw if initialization or artifact else registry_raw.replace(b'\r\n', b'\n'))
+    registry_sha = _sha(registry_raw if initialization or artifact or authority else registry_raw.replace(b'\r\n', b'\n'))
     join = validate_event(execution, source_revision=source_revision,
         runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=now,
         **({'agent_id': subject, 'capability_id': capability} if initialization else {}))
     spec = _case_spec(row)
-    if artifact and (join.get('case') != spec['case'] or
+    if (artifact or authority) and (join.get('case') != spec['case'] or
             join.get('case_spec_sha256') != _sha(_canonical(spec))):
         _deny('ARTIFACT_REVIEW_CASE_MISMATCH')
     expected_observations = dict(execution_task_id=join['task_id'], result_sha256=join['result_sha256'],

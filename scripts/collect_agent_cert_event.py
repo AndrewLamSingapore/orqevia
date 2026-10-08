@@ -22,7 +22,8 @@ from app.agent_cert_execution import observe_cert_case
 from app.agent_cert_identity_review import action_span, parse, utc
 from app.agent_cert_role_review import (canonical_case_spec, ARTIFACT_REVIEW_SCHEMA,
     ARTIFACT_REVIEW_ACTION, ARTIFACT_REVIEW_OPERATION, ARTIFACT_REVIEW_OBJECTIVE,
-    artifact_event_review_join)
+    artifact_event_review_join, AUTHORITY_REVIEW_SCHEMA, AUTHORITY_REVIEW_ACTION,
+    AUTHORITY_REVIEW_OPERATION, AUTHORITY_REVIEW_OBJECTIVE, authority_event_review_join)
 from scripts.collect_agent_cert_case import (
     OperatorIO, CollectionError, _call, _canonical, _copy, _equal, _now,
     _require, _response, _runtime, _sha, _tick, _uuid,
@@ -55,6 +56,12 @@ class CollectedEvent:
 
 
 def _contract(agent, capability, case):
+    from app.agent_cert_authority_events import (SUPPORTED_CASES as AUTHORITY_CASES,
+        RESULT_SCHEMA as AUTHORITY_RESULT_SCHEMA, ORACLE_ID as AUTHORITY_ORACLE, authority_action_type)
+    if case in AUTHORITY_CASES:
+        _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
+        return (authority_action_type(case), AUTHORITY_RESULT_SCHEMA, AUTHORITY_REVIEW_SCHEMA,
+            AUTHORITY_ORACLE, AUTHORITY_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), authority_event_review_join)
     from app.agent_cert_artifact_events import SUPPORTED_CASES, RESULT_SCHEMA, ORACLE_ID, artifact_action_type
     if case in SUPPORTED_CASES:
         _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
@@ -168,7 +175,10 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         _require(_equal(canonical, spec), 'CANONICAL_EVENT_CHANGED')
         agent, capability, case = canonical['agent_id'], canonical['capability_id'], canonical['case']
         from app.agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
+        from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
         artifact_case = case in ARTIFACT_CASES
+        authority_case = case in AUTHORITY_CASES
+        bounded_event = artifact_case or authority_case
         dimension = case.split(':')[0]
         action_type, report_schema, review_schema, oracle, review_objective, reviewer_pair, validate = _contract(agent, capability, case)
         reviewer, reviewer_cap = reviewer_pair
@@ -221,10 +231,10 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             timeout_seconds=min(5, max(0.001, deadline - _tick(monotonic))),
             monotonic=monotonic, wall_clock=wall_clock))
         execution['observation'] = ({key: observed[key] for key in ('started_at', 'completed_at')}
-            if artifact_case and observed.get('state') == 'EXECUTED' else observed)
+            if bounded_event and observed.get('state') == 'EXECUTED' else observed)
         primary = _canonical(execution)
         _require(observed.get('state') == 'EXECUTED', 'SUBJECT_EVENT_INCOMPLETE')
-        if artifact_case:
+        if bounded_event:
             execution['runtime_after'] = runtime()
         task = execution['dispatch']['task_id']
         summary.update(stage='SUBJECT_JOIN', submission_uncertain=False)
@@ -238,13 +248,14 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         # Custody is not acceptance, and cannot cause a retry or further POST.
         bounded()
         observation = execution['observation']
-        event = execution['dispatch'].get('artifact_event') if artifact_case else None
-        action_began = utc(event['started_at'] if artifact_case else observation['captured_at'])
-        action_ended = utc(event['completed_at'] if artifact_case else observation['completed_at'])
+        event = (execution['dispatch'].get('authority_event') if authority_case else
+            execution['dispatch'].get('artifact_event') if artifact_case else None)
+        action_began = utc(event['started_at'] if bounded_event else observation['captured_at'])
+        action_ended = utc(event['completed_at'] if bounded_event else observation['completed_at'])
         execution['action_chain_join'] = action_span(events, task_id=task, agent_id=agent,
             action_type=action_type, schema=report_schema, metadata=execution['artifact_metadata'],
             began=action_began, ended=action_ended,
-            **({'action_id': event['subject_action_id']} if artifact_case else {}))
+            **({'action_id': event['subject_action_id']} if bounded_event else {}))
         if artifact_case:
             from app.agent_cert_artifact_events import INPUT_SCHEMA, artifact_action_type
             execution.update(input_content_utf8=None, input_action_records=[], input_action_chain_join=None)
@@ -263,6 +274,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                     action_type=artifact_action_type(case, setup=True), schema=INPUT_SCHEMA,
                     metadata=input_metadata, began=action_began, ended=action_ended,
                     action_id=event['input_action_id'])
+        if bounded_event:
             execution['runtime_current'] = runtime()
         primary = _canonical(execution)
         _require(len(primary) <= 1024 * 1024, 'EVENT_ENVELOPE_TOO_LARGE')
@@ -280,7 +292,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         request = dict(classification='R0', capability=reviewer_cap, objective=review_objective,
             context=context, data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0, response_format='strict_json',
-            deterministic_operation=ARTIFACT_REVIEW_OPERATION if artifact_case else
+            deterministic_operation=AUTHORITY_REVIEW_OPERATION if authority_case else ARTIFACT_REVIEW_OPERATION if artifact_case else
                 'certification_initialization_review' if case.endswith('initialization')
                 else 'certification_identity_review')
         _registry_pin(expected_registry_sha256)
@@ -337,7 +349,8 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         reviewer_lines = tuple(lines)
         bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
-            action_type=ARTIFACT_REVIEW_ACTION if artifact_case else 'agent.certification.' + case.split(':')[1] + '.review',
+            action_type=AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
+                'agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),
             ended=now, action_id=result['review_action_id'], duration_limit_ms=120000)
         proof = dict(dispatch=result, artifact_content_utf8=raw.decode('utf-8'), action_records=lines,

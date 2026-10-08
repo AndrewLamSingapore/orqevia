@@ -40,9 +40,12 @@ def domain(tmp_path, monkeypatch):
     def prepare(case_id):
         spec = events.canonical_artifact_case(case_id)
         task = str(uuid.uuid4())
-        created = datetime.now(timezone.utc).isoformat()
         db = objective_api.connect()
         try:
+            # Schema/bootstrap is fixture setup, not the owning objective's
+            # observation. Start before its first write; still include runtime
+            # binding, actual execution and all original-domain readbacks.
+            created = datetime.now(timezone.utc).isoformat()
             db.execute('INSERT INTO objectives VALUES(?,?,?,?)',
                 (task, events.sha(spec['request']['objective'].encode()), 'dispatching', json.dumps([events.CAPABILITY_ID])))
             db.execute('INSERT INTO objective_metadata VALUES(?,?,?,?)', (task, 0, created, created))
@@ -99,6 +102,53 @@ def execute_and_collect(domain, case_id):
         'input_action_chain_join': input_chain, 'observation': {'started_at': created, 'completed_at': ended.isoformat()}}
     pins = dict(source_revision=SOURCE, runtime_image_id=IMAGE, registry_sha256=args['registry_sha256'], now=ended)
     return execution, pins
+
+
+def observation_failure_metrics(execution, now):
+    """Failure-only timing diagnostics, without artifact/context/credential data."""
+    observation = execution['observation']
+    event = execution['dispatch']['artifact_event']
+    first, last = events._utc(observation['started_at']), events._utc(observation['completed_at'])
+    began, ended = events._utc(event['started_at']), events._utc(event['completed_at'])
+    return {'observation_seconds': (last - first).total_seconds(),
+        'execution_seconds': (ended - began).total_seconds(),
+        'setup_seconds': (began - first).total_seconds(),
+        'readback_seconds': (last - ended).total_seconds(),
+        'age_seconds': (now - last).total_seconds(),
+        'ordered': first <= began <= ended <= last <= now,
+        'within_five_seconds': 0 <= (last - first).total_seconds() <= 5}
+
+
+def test_fixture_bootstrap_precedes_objective_observation_without_retiming_event(domain, monkeypatch):
+    root, _, _, objective_api = domain
+    original_connect = objective_api.connect
+    connected_at = []
+    def observed_connect(*args, **kwargs):
+        db = original_connect(*args, **kwargs)
+        connected_at.append(datetime.now(timezone.utc))
+        return db
+    monkeypatch.setattr(objective_api, 'connect', observed_connect)
+    execution, pins = execute_and_collect(domain, events.SUPPORTED_CASES[0])
+    start = events._utc(execution['observation']['started_at'])
+    with sqlite3.connect(root / 'objectives.db') as db:
+        original_created = db.execute('SELECT created_at FROM objective_metadata WHERE task=? AND revision=0',
+            (execution['dispatch']['task_id'],)).fetchone()[0]
+    assert connected_at[0] <= start
+    assert original_created == execution['observation']['started_at']
+    assert start <= events._utc(execution['dispatch']['artifact_event']['started_at'])
+    assert events.validate_artifact_execution(execution, **pins)['certification'] == 'UNVERIFIED'
+
+
+def test_long_observation_still_rejected_and_failure_metrics_do_not_retime_evidence(domain):
+    execution, pins = execute_and_collect(domain, events.SUPPORTED_CASES[0])
+    execution['observation']['started_at'] = (events._utc(execution['observation']['completed_at'])
+        - timedelta(seconds=6)).isoformat()
+    original = deepcopy(execution)
+    metrics = observation_failure_metrics(execution, pins['now'])
+    assert metrics['observation_seconds'] == 6 and metrics['within_five_seconds'] is False
+    assert execution == original
+    with pytest.raises(events.ArtifactEventError, match='ARTIFACT_OBSERVATION_UNBOUND'):
+        events.validate_artifact_execution(execution, **pins)
 
 
 def test_import_executes_no_domain_or_file_io(monkeypatch):
