@@ -36,6 +36,45 @@ If you are an AI agent updating this file:
 
 ---
 
+## PR #210 source merge and copied-data rollback correction — 8 October 2026
+
+### Claimed, not independently checked
+
+- Owner-approved PR #210 at `e5a31d1c4786b3019db840827cf50709837f914c`
+  passed all five exact-head cloud checks and merged as
+  `944755427c177d9ef661b24fdb37ea3f35f7ca99`. The merged tree exactly matches
+  the tested source. Windows reported 4,986 Python passes; Linux release reported
+  4,985 passes and one skip; canonical reported 4,334 passes and one skip.
+  PWA and image-smoke passed. Suite counts are not additive. Public verifier
+  fixtures are not live Azure signing, agent execution or production evidence.
+- PR #209's bounded copied-current-data rollback rehearsal subsequently passed
+  an independent actual-data audit. The accepted image read the candidate's
+  newly written zero-model task, complete result and artifact on an isolated copy.
+  All ten SQLite stores checked intact, previous rows and Owner/Member store bytes
+  were preserved, and authentication denials remained enforced. This does not
+  prove a production cutover or preservation of arbitrary later production writes.
+- The earlier image/runtime-drift suspicion was falsified by direct raw-byte
+  equality. The operator reader had compared normalized bytes to a raw-byte pin.
+  Its replacement checks all seven original raw pins and their normalized pins;
+  no production code or image was repaired. Both failed attempts and the later
+  successful receipt remain preserved; the preceding dated observation is history.
+- After the rehearsal the same accepted PRIME, Interface and Ollama containers
+  were healthy, restart zero and OOM false at 12:14:58 SGT. PRIME still serves
+  `5b3dd3a`; Interface/Ollama, local N=1 and 30-minute keep-alive are unchanged.
+  No PR #209 or #210 production deployment is established by these source events.
+- Agent L7 remains **0/21**. Distinct substantive cases, independent signed
+  attestations and clean-room audits remain required for all 29 owned capabilities.
+  The 11:40:58 SGT Lexar reading was 63.85 C composite and 71.85 C Sensor2;
+  Sensor2's physical mapping is unestablished. This is not a current reading at
+  resume or sustained thermal qualification. Host stability remains unqualified.
+- Exact receipts are retained outside Git under
+  `C:/Users/Admin/Documents/ABEX/recovery-records/host-qualification-20261008/`:
+  `PR210-MERGED-E5A31D1-20261008.json`,
+  `A19-NEXT-E5A31D1-EXACT-CLOUD-TERMINAL-20261008.json`, and
+  `PR209-CURRENT-ROLLBACK-INDEPENDENT-AFTER-THREE-20261008.json`.
+  Source integration of remaining artifact cases is separate candidate work;
+  this observation awards no certification and introduces no signing authority.
+
 ## Authenticated certification feeds merged; further cases prepared — 8 October 2026
 
 ### Claimed, not independently checked

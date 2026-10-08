@@ -41,7 +41,8 @@ SOURCE_FILES = (
     'governance/agent-cert-reviewed-cases.json',
     'governance/agent-cert-historical-admissions/a19-role-normal-signed-37613202210.json',
 )
-EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization'})
+EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
+    'general:artifact_consume', 'general:artifact_produce', 'general:review'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})
 
 

@@ -149,6 +149,12 @@ def canonical_cert_case(agent_id: str, capability_id: str,
     """
     if type(case_id) is str and case_id == "role:normal":
         return canonical_role_case(agent_id, capability_id, case_id)
+    # These are actual local ArtifactFactory/Objective/ActionLedger events,
+    # not model-answer challenges. A cloud policy cannot turn an event into
+    # inference or substitute a quality oracle for original event custody.
+    from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
+    if type(case_id) is str and case_id in ARTIFACT_CASES:
+        raise ValueError("zero-model artifact events forbid cloud transport")
     from .agent_cert_a19_cases import CASE_VERSION, ORACLE_ID, SUPPORTED_CASES
     from .agent_cert_a19_general import (CASE_VERSION as GENERAL_VERSION,
         ORACLE_ID as GENERAL_ORACLE, SUPPORTED_CASES as GENERAL_CASES)

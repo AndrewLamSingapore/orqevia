@@ -16,14 +16,22 @@ from .client_auth import authenticate_owner
 from .agent_cert_identity_review import (
     IdentityReviewError, canonical, parse, read_action_span, sha, valid_uuid,
 )
+from .agent_cert_artifact_events import (
+    SUPPORTED_CASES as ARTIFACT_CASES, artifact_action_type, read_artifact_action_span,
+)
 
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
 _read_slot = threading.BoundedSemaphore(1)
+_ARTIFACT_ACTIONS = {
+    artifact_action_type(case): (case, False) for case in ARTIFACT_CASES
+}
+_ARTIFACT_ACTIONS.update({artifact_action_type(case, setup=True): (case, True)
+    for case in ARTIFACT_CASES if case != 'general:artifact_produce'})
 _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
-})
+} | set(_ARTIFACT_ACTIONS))
 
 
 def _headers(response):
@@ -90,7 +98,11 @@ def actions(task_id: str, response: Response, action_type: str = '',
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
+        if action_type in _ARTIFACT_ACTIONS:
+            case, setup = _ARTIFACT_ACTIONS[action_type]
+            lines = read_artifact_action_span(root, task_id, case, setup=setup)
+        else:
+            lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
         _original_chain(lines, task_id, action_type)
         after = runtime_snapshot()
         if canonical(before) != canonical(after) or before.get('source_revision') == 'UNKNOWN':

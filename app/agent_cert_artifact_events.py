@@ -3,7 +3,8 @@
 Importing this module performs no I/O. The producer is explicit, bounded and
 NEVER authenticates its caller: an owning authenticated dispatcher must supply
 its actual data mount, existing ledger and independently observed runtime pins.
-It is not wired into dispatch/collection/review/signing by this module. Generic
+The existing owning dispatch/collection/review/signing paths supply its inputs;
+this module does not authenticate them. Generic
 answer text, a returned digest or this validator cannot establish origin,
 independent acceptance, health, certification or L7.
 """
@@ -398,7 +399,8 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
 
     Caller must independently read these bytes from the CURRENT owning domains
     and pin reviewed code/source/image. Submitted JSON/hash chains alone are
-    forgeable. Collection, separate authenticated review and signing are unwired.
+    forgeable. Owning collection and separate authenticated review/signing must
+    independently bind the original records; this validator grants none of them.
     V1 supplies no cross-operation bridging span: setup completion and subject
     start must be adjacent in the original ledger. A gap needs original bridge
     evidence in a later collector contract, never an assumed predecessor.

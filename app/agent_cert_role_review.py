@@ -13,6 +13,20 @@ import re
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 
 
+ARTIFACT_REVIEW_SCHEMA = 'prime.agent-cert-artifact-review.v1'
+ARTIFACT_REVIEW_ACTION = 'agent.certification.artifact.review'
+ARTIFACT_REVIEW_OPERATION = 'certification_artifact_review'
+ARTIFACT_REVIEW_OBJECTIVE = ('Independently review one recorded A19 artifact event against its original '
+    'Objective, immutable input and result artifacts and action records; do not certify or sign.')
+
+
+def artifact_event_review_join(execution, **pins):
+    """Fixed original-event adapter; an untrusted submitted join is never used."""
+    from .agent_cert_artifact_events import validate_artifact_execution
+    joined = validate_artifact_execution(execution, **pins)
+    return {**joined, 'completed_at': execution['dispatch']['artifact_event']['completed_at']}
+
+
 def _primary(agent, capability):
     if type(agent) is not str or type(capability) is not str:
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
@@ -63,6 +77,9 @@ def canonical_case_spec(agent, capability, case_id):
             'baseline:identity'}:
         from .agent_cert_cases import challenge
         return challenge(case_id, agent_id=agent, capability_id=capability)
+    from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES, canonical_artifact_case
+    if agent == 'a19' and case_id in ARTIFACT_CASES:
+        return canonical_artifact_case(case_id, agent_id=agent, capability_id=capability)
     from .agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, canonical_a19_baseline_case
     if agent == 'a19' and case_id in BASELINE_CASES:
         return canonical_a19_baseline_case(case_id)
@@ -89,6 +106,9 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
+    from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
+    if case_id in ARTIFACT_CASES:
+        return False, ('artifact_event_evidence_required',)
     from .agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, review_a19_baseline_output
     if case_id in BASELINE_CASES:
         return review_a19_baseline_output(case_id, response)

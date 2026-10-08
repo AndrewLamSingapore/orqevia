@@ -20,7 +20,9 @@ import uuid
 
 from app.agent_cert_execution import observe_cert_case
 from app.agent_cert_identity_review import action_span, parse, utc
-from app.agent_cert_role_review import canonical_case_spec
+from app.agent_cert_role_review import (canonical_case_spec, ARTIFACT_REVIEW_SCHEMA,
+    ARTIFACT_REVIEW_ACTION, ARTIFACT_REVIEW_OPERATION, ARTIFACT_REVIEW_OBJECTIVE,
+    artifact_event_review_join)
 from scripts.collect_agent_cert_case import (
     OperatorIO, CollectionError, _call, _canonical, _copy, _equal, _now,
     _require, _response, _runtime, _sha, _tick, _uuid,
@@ -48,9 +50,16 @@ class CollectedEvent:
     # Canonical encoding of the original decoded callback reply, not a claim
     # of raw HTTP wire preservation. Retained even after a late one-shot reply.
     reviewer_dispatch_response_bytes: bytes | None = field(default=None, repr=False)
+    input_artifact_bytes: bytes | None = field(default=None, repr=False)
+    input_actions: tuple[str, ...] = field(default=(), repr=False)
 
 
 def _contract(agent, capability, case):
+    from app.agent_cert_artifact_events import SUPPORTED_CASES, RESULT_SCHEMA, ORACLE_ID, artifact_action_type
+    if case in SUPPORTED_CASES:
+        _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
+        return (artifact_action_type(case), RESULT_SCHEMA, ARTIFACT_REVIEW_SCHEMA,
+            ORACLE_ID, ARTIFACT_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), artifact_event_review_join)
     if case == 'baseline:initialization':
         from app.agent_cert_initialization import (
             ACTION_TYPE, SCHEMA, initialization_reviewer, initialization_oracle_id,
@@ -98,14 +107,14 @@ def _lines(value):
     return value
 
 
-def _artifact(io, identifier, metadata, holder, *, subject=False):
+def _artifact(io, identifier, metadata, holder, *, subject=False, input_artifact=False):
     _require(type(identifier) is str and _ARTIFACT.fullmatch(identifier) is not None,
              'ARTIFACT_ID_INVALID')
     value = _call(io.read_artifact, identifier)
     _require(type(value) is tuple and len(value) == 3 and type(value[0]) is int
              and value[0] == 200 and type(value[1]) is bytes
              and 0 < len(value[1]) <= 65536, 'ORIGINAL_ARTIFACT_READ_FAILED')
-    holder['subject_raw' if subject else 'reviewer_raw'] = value[1]
+    holder['input_raw' if input_artifact else 'subject_raw' if subject else 'reviewer_raw'] = value[1]
     _require(type(value[2]) is str and value[2] == _sha(value[1])
              and type(metadata) is dict and set(metadata) == _METADATA_FIELDS
              and metadata.get('sha256') == value[2]
@@ -127,9 +136,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         protected_signing='PENDING_SEPARATE_ADMISSION', subject_submission_attempts=0,
         review_dispatch_attempts=0, submission_uncertain=False,
         review_dispatch_uncertain=False, source_revision=None, runtime_image_id=None)
-    holder = dict(subject_raw=None, reviewer_raw=None, reviewer_dispatch=None)
+    holder = dict(subject_raw=None, reviewer_raw=None, reviewer_dispatch=None, input_raw=None)
     primary = review_raw = None
-    subject_lines = reviewer_lines = ()
+    subject_lines = reviewer_lines = input_lines = ()
     execution = {}
     try:
         _require(type(io) is OperatorIO and callable(read_subject_actions)
@@ -158,6 +167,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         canonical = canonical_case_spec(spec.get('agent_id'), spec.get('capability_id'), spec.get('case'))
         _require(_equal(canonical, spec), 'CANONICAL_EVENT_CHANGED')
         agent, capability, case = canonical['agent_id'], canonical['capability_id'], canonical['case']
+        from app.agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
+        artifact_case = case in ARTIFACT_CASES
+        dimension = case.split(':')[0]
         action_type, report_schema, review_schema, oracle, review_objective, reviewer_pair, validate = _contract(agent, capability, case)
         reviewer, reviewer_cap = reviewer_pair
         _require(reviewer != agent, 'INDEPENDENT_REVIEWER_REQUIRED')
@@ -202,14 +214,18 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             return value
         def no_job(_):
             raise CollectionError('ZERO_MODEL_EVENT_HAS_NO_QUEUE') from None
-        execution['observation'] = _copy(observe_cert_case(canonical, dispatch=submit,
+        observed = _copy(observe_cert_case(canonical, dispatch=submit,
             get_artifact=artifact, get_job=no_job, get_runtime=runtime,
             expected_source_revision=expected_source_revision,
             expected_registry_sha256=expected_registry_sha256,
             timeout_seconds=min(5, max(0.001, deadline - _tick(monotonic))),
             monotonic=monotonic, wall_clock=wall_clock))
+        execution['observation'] = ({key: observed[key] for key in ('started_at', 'completed_at')}
+            if artifact_case and observed.get('state') == 'EXECUTED' else observed)
         primary = _canonical(execution)
-        _require(execution['observation'].get('state') == 'EXECUTED', 'SUBJECT_EVENT_INCOMPLETE')
+        _require(observed.get('state') == 'EXECUTED', 'SUBJECT_EVENT_INCOMPLETE')
+        if artifact_case:
+            execution['runtime_after'] = runtime()
         task = execution['dispatch']['task_id']
         summary.update(stage='SUBJECT_JOIN', submission_uncertain=False)
         objective = _response(read(io.read_objective, task), 200, 'OWNED_OBJECTIVE_READ_FAILED')
@@ -222,9 +238,32 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         # Custody is not acceptance, and cannot cause a retry or further POST.
         bounded()
         observation = execution['observation']
+        event = execution['dispatch'].get('artifact_event') if artifact_case else None
+        action_began = utc(event['started_at'] if artifact_case else observation['captured_at'])
+        action_ended = utc(event['completed_at'] if artifact_case else observation['completed_at'])
         execution['action_chain_join'] = action_span(events, task_id=task, agent_id=agent,
             action_type=action_type, schema=report_schema, metadata=execution['artifact_metadata'],
-            began=utc(observation['captured_at']), ended=utc(observation['completed_at']))
+            began=action_began, ended=action_ended,
+            **({'action_id': event['subject_action_id']} if artifact_case else {}))
+        if artifact_case:
+            from app.agent_cert_artifact_events import INPUT_SCHEMA, artifact_action_type
+            execution.update(input_content_utf8=None, input_action_records=[], input_action_chain_join=None)
+            if case != 'general:artifact_produce':
+                input_metadata = event['input_artifact_metadata']
+                bounded()
+                raw = _artifact(io, input_metadata.get('artifact_id') if type(input_metadata) is dict else None,
+                    input_metadata, holder, input_artifact=True)
+                execution['input_content_utf8'] = raw.decode('utf-8')
+                bounded()
+                lines = _lines(_call(read_subject_actions, task, artifact_action_type(case, setup=True)))
+                input_lines = tuple(lines)
+                execution['input_action_records'] = lines
+                bounded()
+                execution['input_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
+                    action_type=artifact_action_type(case, setup=True), schema=INPUT_SCHEMA,
+                    metadata=input_metadata, began=action_began, ended=action_ended,
+                    action_id=event['input_action_id'])
+            execution['runtime_current'] = runtime()
         primary = _canonical(execution)
         _require(len(primary) <= 1024 * 1024, 'EVENT_ENVELOPE_TOO_LARGE')
         now = _now(wall_clock)
@@ -241,7 +280,8 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         request = dict(classification='R0', capability=reviewer_cap, objective=review_objective,
             context=context, data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0, response_format='strict_json',
-            deterministic_operation='certification_initialization_review' if case.endswith('initialization')
+            deterministic_operation=ARTIFACT_REVIEW_OPERATION if artifact_case else
+                'certification_initialization_review' if case.endswith('initialization')
                 else 'certification_identity_review')
         _registry_pin(expected_registry_sha256)
         _require(read(io.authorize) is None, 'OWNER_AUTHENTICATION_FAILED')
@@ -279,7 +319,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             'REVIEW_ARTIFACT_BINDING_INVALID')
         expected = dict(schema_version=review_schema, task_id=result['task_id'], reviewer_id=reviewer,
             reviewer_capability_id=reviewer_cap, subject_agent_id=agent, subject_capability_id=capability,
-            dimension='baseline', test_case=case.split(':')[1], source_revision=expected_source_revision,
+            dimension=dimension, test_case=case.split(':')[1], source_revision=expected_source_revision,
             runtime_image_id=expected_runtime_image, execution_evidence_sha256=_sha(primary),
             case_spec_sha256=_sha(_canonical(canonical)), result_sha256=join['result_sha256'],
             oracle_id=oracle, test_result='PASS', review_errors=[], model_calls=0,
@@ -297,7 +337,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         reviewer_lines = tuple(lines)
         bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
-            action_type='agent.certification.' + case.split(':')[1] + '.review',
+            action_type=ARTIFACT_REVIEW_ACTION if artifact_case else 'agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),
             ended=now, action_id=result['review_action_id'], duration_limit_ms=120000)
         proof = dict(dispatch=result, artifact_content_utf8=raw.decode('utf-8'), action_records=lines,
@@ -306,7 +346,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                 actual_runtime_image=expected_runtime_image))
         review = dict(schema_version='prime.agent-certification.review.v1', reviewer_identity=reviewer,
             review_run_id=review_run_id, source_revision=expected_source_revision, agent_id=agent,
-            capability_id=capability, dimension='baseline', test_case=case.split(':')[1],
+            capability_id=capability, dimension=dimension, test_case=case.split(':')[1],
             execution_evidence_sha256=_sha(primary), test_result='PASS', review_test_version=oracle,
             observations=dict(execution_task_id=task, result_sha256=join['result_sha256'],
                 case_spec_sha256=join['case_spec_sha256'], runtime_image_id=expected_runtime_image,
@@ -339,4 +379,5 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         except Exception:
             pass
     return CollectedEvent(summary, primary, review_raw, holder['subject_raw'],
-        holder['reviewer_raw'], subject_lines, reviewer_lines, holder['reviewer_dispatch'])
+        holder['reviewer_raw'], subject_lines, reviewer_lines, holder['reviewer_dispatch'],
+        holder['input_raw'], input_lines)
