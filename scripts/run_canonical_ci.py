@@ -65,6 +65,7 @@ def main():
     names.append('lens_claim_authority_current')
     names.append('evidence_lens_live_slice')
     names.append('job_queue')
+    names.append('hf_qa_server')
     names.append('agent_role_contract_matrix')
     names.append('agent_certification')
     names.append('agent_certification_manifest_json')
