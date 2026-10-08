@@ -27,4 +27,6 @@ LABEL org.opencontainers.image.revision=$PRIME_RUNTIME_REVISION
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.production_entry:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]
+# Fatal-fault diagnostics contain frame locations, not locals or source values.
+# No timer, signal injection, core dump or additional privilege is introduced.
+CMD ["python", "-X", "faulthandler", "-m", "uvicorn", "app.production_entry:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]

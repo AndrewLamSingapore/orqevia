@@ -93,6 +93,17 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     )
     assert after.startswith(title + interpretation)
     after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    # Admit exactly the dated observation, failure and non-certifying evidence
+    # repair. Neither the later service failure nor the earlier finite pass may
+    # overwrite history or become an unbounded/current acceptance claim.
+    observation_title = "## Light-production observation and dated HF evidence repair — 8 October 2026"
+    assert after.count(observation_title) == 1
+    observation_start = after.index(observation_title)
+    observation_end = after.index("## PR #210 source merge and copied-data rollback correction — 8 October 2026", observation_start)
+    observation_update = after[observation_start:observation_end].encode("utf-8")
+    assert len(observation_update) == 3517
+    assert hashlib.sha256(observation_update).hexdigest() == "b2bc0b19fc66d0ed61dd4696b941306936b2a33b12b265fc9d1e07d3f2e31e2e"
+    after = after[:observation_start] + after[observation_end:]
     # Admit this exact new correction/merge observation without rewriting the
     # earlier failed observation or any of its byte-pinned historical evidence.
     correction_title = "## PR #210 source merge and copied-data rollback correction — 8 October 2026"
@@ -190,6 +201,34 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     baseline = INDEX["status_before_insertion"]
     assert len(preserved) == baseline["bytes"]
     assert hashlib.sha256(preserved).hexdigest() == baseline["sha256"]
+
+
+@pytest.mark.parametrize("original,replacement", [
+    ("QUALIFIED_FOR_OBSERVED_LIGHT_PRODUCTION", "PERMANENTLY_QUALIFIED_FOR_ALL_WORKLOADS"),
+    ("not a continuously current sensor or heavy-load thermal qualification.",
+     "a continuously current sensor and heavy-load thermal qualification."),
+    ("Accepted backend remains `5b3dd3a`.", "Accepted backend is now `8b673e5`."),
+    ("accepted PRIME exited with code 139 and Docker restarted it.",
+     "accepted PRIME never exited and Docker never restarted it."),
+    ("before any\n  stop, start, reader or copy operation.",
+     "after every\n  stop, start, reader and copy operation passed."),
+    ("without new inference,\n  fresh execution evidence, independent signature or certification.",
+     "with new inference,\n  fresh execution evidence, independent signature and certification."),
+    ("Full L7 remains **0/21**; no capability certification was awarded.",
+     "Full L7 is **21/21**; every capability certification was awarded."),
+], ids=["finite-not-permanent", "dated-not-heavy", "exact-accepted-runtime", "preserve-exit139",
+        "no-fenced-copy", "projection-not-execution", "no-l7-award"])
+def test_light_observation_and_failure_reject_inflated_claims(monkeypatch, original, replacement):
+    status_path = ROOT / "STATUS.md"
+    read_text = Path.read_text
+    status = read_text(status_path, encoding="utf-8")
+    assert status.count(original) == 1
+    changed = status.replace(original, replacement, 1)
+    def altered_read(path, *args, **kwargs):
+        return changed if path == status_path else read_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_text", altered_read)
+    with pytest.raises(AssertionError):
+        test_status_insertion_preserves_all_existing_sections_and_history()
 
 
 @pytest.mark.parametrize("original,replacement", [

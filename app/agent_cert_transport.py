@@ -29,6 +29,14 @@ BINDING_SCHEMA = "prime.agent-cert-cloud-binding.v1"
 PROVIDER_ID = "hf-qwen-certification"
 MODEL = "Qwen/Qwen3-32B:deepinfra"
 SUPPORTED_MODELS = frozenset({MODEL, "Qwen/Qwen3-235B-A22B-Instruct-2507:novita"})
+A19_VERIFICATION_PROVIDER_ID = "hf-qwen-a19-verification"
+# A distinct catalog ID may prepare only this source-owned case/model. This
+# mapping grants neither enabled-catalog admission nor provider qualification;
+# it preserves the existing role route and all higher canonical tier bounds.
+_CASE_PROVIDER_MODELS = frozenset({
+    ("a19", "responsibility.a19", "general:verification",
+     A19_VERIFICATION_PROVIDER_ID, "Qwen/Qwen3-235B-A22B-Instruct-2507:novita"),
+})
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 _REFERENCE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}\Z")
@@ -242,6 +250,12 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
     if transport_digest(policy) != expected_policy_sha256:
         raise ValueError("Owner policy digest mismatch")
     identity = case_transport_identity(spec)
+    provider_id, model = policy.get("provider_id"), policy.get("model")
+    if (type(provider_id) is not str or type(model) is not str or
+            provider_id != PROVIDER_ID and
+            (identity["agent_id"], identity["capability_id"], identity["case"],
+             provider_id, model) not in _CASE_PROVIDER_MODELS):
+        raise ValueError("Owner policy scope mismatch")
     if (policy.get("schema") != POLICY_SCHEMA
             or policy.get("source_revision") != expected_source_revision
             or any(type(policy.get(key)) is not str or not _REFERENCE.fullmatch(policy[key])
@@ -251,9 +265,8 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
             or policy.get("data_classification") != "CLOUD_PERMITTED"
             or type(policy.get("public_synthetic")) is not bool
             or policy["public_synthetic"] is not True
-            or policy.get("provider_id") != PROVIDER_ID
             or policy.get("provider_kind") != "huggingface"
-            or type(policy.get("model")) is not str or policy["model"] not in SUPPORTED_MODELS):
+            or model not in SUPPORTED_MODELS):
         raise ValueError("Owner policy scope mismatch")
     fixed_limits = {"context_tokens": 4096, "output_tokens": 1024,
                     "timeout_seconds": 35, "max_retries": 0, "concurrency_limit": 1}
@@ -271,7 +284,7 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
     if type(policy.get("minimum_tier")) is not str or policy["minimum_tier"] != tier.name:
         raise ValueError("canonical required tier must be preserved")
     request = {**base, "data_classification": "CLOUD_PERMITTED",
-               "max_cost_usd": cost, "preferred_provider": PROVIDER_ID,
+               "max_cost_usd": cost, "preferred_provider": provider_id,
                "minimum_tier": tier.name}
     request_sha = transport_digest(request)
     binding = {**identity, "source_revision": expected_source_revision,
@@ -283,7 +296,7 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
                "owner_authorization_ref": policy["owner_authorization_ref"],
                "canonical_data_classification": "LOCAL_ONLY",
                "execution_data_classification": "CLOUD_PERMITTED",
-               "provider_id": PROVIDER_ID, "provider_kind": "huggingface", "model": policy["model"],
+               "provider_id": provider_id, "provider_kind": "huggingface", "model": model,
                "minimum_tier": tier.name, "task_class": base["task_class"],
                "limits": {**fixed_limits, "max_cost_usd": cost},
                "state": "PREPARED_NOT_EXECUTED", "certification": "UNVERIFIED",

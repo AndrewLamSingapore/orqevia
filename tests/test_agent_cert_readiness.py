@@ -27,21 +27,25 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert inventory['cases_per_capability'] == 74
     assert inventory['required_capability_cases'] == 2146
     assert len(set(inventory['existing_matrix_case_ids'])) == 74
-    assert inventory['source_canonical_adapter_oracle_count'] == 101
+    assert inventory['source_canonical_adapter_oracle_count'] == 103
     assert all('role:normal' in r['canonical_adapter_oracle_ready_cases'] for r in rows)
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
 
 def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inventory):
     row = next(r for r in inventory['capability_rows'] if r['agent_id'] == 'a19')
-    assert len(row['canonical_adapter_oracle_ready_cases']) == 45
+    assert len(row['canonical_adapter_oracle_ready_cases']) == 47
     assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization',
-        'general:artifact_consume', 'general:artifact_produce', 'general:review']
+        'general:artifact_consume', 'general:artifact_produce', 'general:review',
+        'authority:complete', 'unauthorized_rejection:authorized']
     assert len(row['source_pinned_cloud_transport_cases']) == 40
     assert 'tools:complete' in row['locally_actionable_missing_case_adapter_ids']
     assert 'clean_room_audit:complete' in row['locally_actionable_missing_case_adapter_ids']
     assert 'baseline:authorization' in row['source_pinned_cloud_transport_cases']
-    assert 'authority:complete' in row['locally_actionable_missing_case_adapter_ids']
+    assert 'authority:complete' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'unauthorized_rejection:authorized' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'unauthorized_rejection:unauthorized' in row['locally_actionable_missing_case_adapter_ids']
+    assert 'unauthorized_rejection:owner_only' in row['locally_actionable_missing_case_adapter_ids']
     assert 'general:artifact_consume' not in row['locally_actionable_missing_case_adapter_ids']
     assert 'missing_event_executor_oracle_ids' not in row
     assert 'locally_actionable_missing_quality_adapter_ids' not in row

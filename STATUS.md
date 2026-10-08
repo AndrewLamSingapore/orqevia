@@ -36,6 +36,56 @@ If you are an AI agent updating this file:
 
 ---
 
+## Light-production observation and dated HF evidence repair — 8 October 2026
+
+### Claimed, not independently checked
+
+- The predefined ABEX light-production window ran from 13:21:58 to 13:37:02
+  SGT: 16 samples over 903.9 seconds. Independent evaluation passed only
+  `QUALIFIED_FOR_OBSERVED_LIGHT_PRODUCTION`. Sampled CPU was 3–20%, available
+  memory remained at least 17,566 MiB, and committed memory at most 51%.
+  PRIME, Interface and Ollama retained their exact identities, healthy states,
+  restart counts and start times. No selected new System failure was found.
+- Three actual read-only NVMe samples showed Lexar composite temperature
+  46.85 → 44.85 → 44.85°C and sensor 2 at 48.85 → 48.85 → 47.85°C.
+  Critical-warning bits, media errors and error-log entries were zero; lifetime
+  warning/critical-temperature minutes remained 6/13. These are dated readings,
+  not a continuously current sensor or heavy-load thermal qualification.
+  Cached DISM CheckHealth reported no corruption and C: was not dirty; neither
+  is a full integrity scan. CPU temperature and sensor locations remain unknown.
+- Original observation collector errors were retained. Complete retained-log
+  coverage independently repaired the failed provider query; strict review
+  reconstructed the three ordered service rows from the original columnar JSON.
+  Historical kernel-crash causality and sustained/heavy-load qualification are
+  unresolved; this finite pass does not claim a permanent hardware repair.
+- PR #211 source `8b673e5` merged as `35ef060` with an identical tested tree.
+  All five cloud gates passed, including 5,081 Windows Python checks. The exact
+  cloud artifact was downloaded and its locally loaded image content verified;
+  this does not establish a production cutover. Accepted backend remains `5b3dd3a`.
+- At 13:57:44 SGT, accepted PRIME exited with code 139 and Docker restarted it.
+  The approved rollback fence rejected the unhealthy pre-stop state before any
+  stop, start, reader or copy operation. PRIME subsequently reported healthy;
+  Interface and Ollama were unchanged. The failed receipt and partial private
+  configuration capture remain preserved. This later failure does not erase the
+  earlier finite observation, but current rollback/cutover acceptance is blocked
+  pending investigation; the cause is not established by the exit code alone.
+- One authenticated Evidence Lens materialization repaired the missing projection
+  for dated A19 Objective `91aacb0d-9e59-471f-92a9-4d79045662b4`. Original
+  7 October execution, result, A26 review artifact and action records were preserved.
+  The HF observation now displays that existing attempt, without new inference,
+  fresh execution evidence, independent signature or certification.
+- Two permitted A19 authority-read event producers and an exact-case HF transport
+  mapping are separate source work. Consequential denial, live collection,
+  protected signing and full per-agent acceptance are not inferred from them.
+  Full L7 remains **0/21**; no capability certification was awarded.
+- Raw and independent receipts are under
+  `C:/Users/Admin/Documents/ABEX/recovery-records/host-qualification-20261008/`:
+  `HOST-LIGHT-INDEPENDENT-QUALIFICATION-20261008.json`,
+  `PR211-8B673E5-CI-INDEPENDENT-TERMINAL-20261008.json`,
+  `candidate-pr211-8b673e5/LOADED-CONTENT-VERIFIED.json`, and
+  `A19-DATED-LENS-MATERIALIZATION-ACTUAL-20261008.json`, plus
+  `CURRENT-RUNTIME-FENCED-PR211-8B673E5-20261008.json` (failed before fencing).
+
 ## PR #210 source merge and copied-data rollback correction — 8 October 2026
 
 ### Claimed, not independently checked
