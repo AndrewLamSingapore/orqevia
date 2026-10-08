@@ -131,8 +131,9 @@ def case_transport_identity(spec: dict) -> dict:
         from .agent_cert_secondary_roles import ORACLE_ID
         oracle = ORACLE_ID
     elif canonical["case"] != "role:normal":
-        from .agent_cert_a19_cases import ORACLE_ID
-        oracle = ORACLE_ID
+        # Each source-owned family retains its own grader identity. Never
+        # lend an older quality oracle to a new/general/event challenge.
+        oracle = canonical['oracle_id']
     return {"agent_id": canonical["agent_id"],
             "capability_id": canonical["capability_id"],
             "case": canonical["case"], "oracle_id": oracle,
@@ -149,9 +150,16 @@ def canonical_cert_case(agent_id: str, capability_id: str,
     if type(case_id) is str and case_id == "role:normal":
         return canonical_role_case(agent_id, capability_id, case_id)
     from .agent_cert_a19_cases import CASE_VERSION, ORACLE_ID, SUPPORTED_CASES
+    from .agent_cert_a19_general import (CASE_VERSION as GENERAL_VERSION,
+        ORACLE_ID as GENERAL_ORACLE, SUPPORTED_CASES as GENERAL_CASES)
+    schema = 'prime.a19-public-quality-input.v1'
+    if type(case_id) is str and case_id in GENERAL_CASES:
+        CASE_VERSION, ORACLE_ID = GENERAL_VERSION, GENERAL_ORACLE
+        schema = 'prime.a19-general-quality-input.v1'
+    supported = (*SUPPORTED_CASES, *GENERAL_CASES)
     if (type(agent_id) is not str or agent_id != "a19" or
             type(capability_id) is not str or capability_id != "responsibility.a19" or
-            type(case_id) is not str or case_id not in SUPPORTED_CASES or
+            type(case_id) is not str or case_id not in supported or
             responsibility_owner(capability_id) != agent_id or
             capability_id not in agent_record(agent_id)["capability_requirements"]):
         raise ValueError("unsupported registered case/oracle")
@@ -173,7 +181,7 @@ def canonical_cert_case(agent_id: str, capability_id: str,
             or request.get("data_classification") != "LOCAL_ONLY"
             or type(request.get("max_cost_usd")) is not int or request["max_cost_usd"] != 0
             or type(context) is not dict
-            or context.get("schema") != "prime.a19-public-quality-input.v1"
+            or context.get("schema") != schema
             or context.get("data_scope") != "PUBLIC_SYNTHETIC_ONLY"
             or context.get("case_id") != case_id or context.get("case_version") != CASE_VERSION
             or not classify_for_cloud("CLOUD_PERMITTED", request["objective"] + "\n" + request["context"])):

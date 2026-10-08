@@ -124,9 +124,10 @@ def test_identity_admission_never_accepts_cloud_transport(cloud, policy):
 @pytest.mark.parametrize('dependency', ['app/agent_cert_identity_review.py',
     'app/action_records.py', 'app/artifact_factory.py', 'app/objective_api.py',
     'app/agent_cert_initialization.py', 'app/agent_cert_initialization_review.py',
-    'app/agent_cert_secondary_roles.py'])
+    'app/agent_cert_secondary_roles.py', 'app/agent_cert_a19_general.py',
+    'app/agent_cert_event_api.py'])
 def test_original_identity_domain_dependencies_are_all_protected_code_inputs(tmp_path, dependency):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 42
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 44
     revisions = {}
     for name in loader.CODE_FILES:
         path = tmp_path / name

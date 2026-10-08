@@ -63,6 +63,9 @@ def canonical_case_spec(agent, capability, case_id):
             'baseline:identity'}:
         from .agent_cert_cases import challenge
         return challenge(case_id, agent_id=agent, capability_id=capability)
+    from .agent_cert_a19_general import SUPPORTED_CASES as GENERAL_CASES, canonical_a19_general_case
+    if agent == 'a19' and case_id in GENERAL_CASES:
+        return canonical_a19_general_case(case_id)
     from .agent_cert_a19_cases import SUPPORTED_CASES, canonical_a19_case
     if agent != 'a19' or case_id not in SUPPORTED_CASES:
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
@@ -83,6 +86,9 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
+    from .agent_cert_a19_general import SUPPORTED_CASES as GENERAL_CASES, review_a19_general_output
+    if case_id in GENERAL_CASES:
+        return review_a19_general_output(case_id, response)
     from .agent_cert_a19_cases import review_a19_case_output
     return review_a19_case_output(case_id, response)
 
