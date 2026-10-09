@@ -334,15 +334,18 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
 
 def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
                             expected_source_revision, expected_registry_sha256,
-                            started, timeout_seconds, monotonic, wall_clock, authority=False):
+                            started, timeout_seconds, monotonic, wall_clock, authority=False, tool=False):
     """Observe fixed actual artifact work, not a model answer or complete review."""
-    if authority:
+    if tool:
+        from . import agent_cert_tool_events as events
+        fixed = events.canonical_tool_case(spec.get('case'))
+    elif authority:
         from . import agent_cert_authority_events as events
         fixed = events.canonical_authority_case(spec.get('case'))
     else:
         from . import agent_cert_artifact_events as events
         fixed = events.canonical_artifact_case(spec.get('case'))
-    event_key = 'authority_event' if authority else 'artifact_event'
+    event_key = 'tool_event' if tool else 'authority_event' if authority else 'artifact_event'
     if _canonical(spec) != _canonical(fixed):
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_case_source_mismatch'}
     if (not callable(get_artifact) or not callable(get_runtime)
@@ -413,7 +416,8 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         'runtime_identity_sha256': events.sha(events.canonical(before)), 'result_sha256': events.sha(raw),
         'artifact_metadata_sha256': events.sha(events.canonical(metadata)),
         'started_at': began.isoformat(), 'captured_at': event_began.isoformat(), 'completed_at': ended.isoformat(),
-        'case_review': ('AUTHORITY_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED' if authority else
+        'case_review': ('TOOL_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED' if tool else
+            'AUTHORITY_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED' if authority else
             'ARTIFACT_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED'), 'review_errors': ()}
 
 
@@ -519,6 +523,14 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
+        from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
+        if spec.get('case') in TOOL_CASES:
+            if cloud_receipt is not None:
+                return {**base, 'state': 'REJECTED', 'reason': 'tool_cloud_transport_forbidden'}
+            return _observe_artifact_event(spec, base, dispatch=dispatch, get_artifact=get_artifact,
+                get_runtime=get_runtime, expected_source_revision=expected_source_revision,
+                expected_registry_sha256=expected_registry_sha256, started=started,
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock, tool=True)
         from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
         if spec.get('case') in ARTIFACT_CASES:
             if cloud_receipt is not None:
