@@ -1,8 +1,9 @@
-"""Exact existing primary role:normal oracles; no execution or certification.
+"""Exact source-owned quality oracles and original event joins; no execution.
 
 This pure reviewer is shared by the registered review tool and the protected
 signing bridge. A correct answer proves only these supplied synthetic facts,
-not health, recovery, tool use, review execution, or any L7 level.
+not health, recovery, tool use, review execution, or any L7 level. The fixed
+event adapters instead require original domain joins and independent custody.
 """
 from __future__ import annotations
 
@@ -23,6 +24,27 @@ AUTHORITY_REVIEW_ACTION = 'agent.certification.authority.review'
 AUTHORITY_REVIEW_OPERATION = 'certification_authority_review'
 AUTHORITY_REVIEW_OBJECTIVE = ('Independently review one recorded A19 permitted authority-read event against '
     'the current owning Registry, original Objective, result artifact and action records; do not certify or sign.')
+TOOL_REVIEW_SCHEMA = 'prime.agent-cert-tool-review.v1'
+TOOL_REVIEW_ACTION = 'agent.certification.tool.review'
+TOOL_REVIEW_OPERATION = 'certification_tool_review'
+TOOL_REVIEW_OBJECTIVE = ('Independently review one recorded A19 single failed context read and bounded response '
+    'against its original Objective, setup/result artifacts and complete action span; do not retry, certify or sign.')
+
+
+def tool_event_review_join(execution, **pins):
+    from .agent_cert_tool_events import validate_tool_execution
+    joined = validate_tool_execution(execution, **pins)
+    return {**joined, 'completed_at': execution['dispatch']['tool_event']['completed_at']}
+
+
+def read_tool_review_action_span(data_root, task_id):
+    from .agent_cert_artifact_events import _ledger_lines, _path, _uuid, parse, _require
+    _require(_uuid(task_id), 'TOOL_REVIEW_TASK_REQUIRED')
+    lines = _ledger_lines(_path(data_root))
+    owned = [i for i, line in enumerate(lines) if (event := parse(line.encode())).get('task_id') == task_id
+        and event.get('action_type') == TOOL_REVIEW_ACTION]
+    _require(len(owned) == 2 and 2 <= owned[-1] - owned[0] + 1 <= 128, 'TOOL_REVIEW_ACTION_PAIR_REQUIRED')
+    return lines[owned[0]:owned[-1] + 1]
 
 
 def artifact_event_review_join(execution, **pins):
@@ -83,9 +105,9 @@ def canonical_role_spec(agent, capability):
 def canonical_case_spec(agent, capability, case_id):
     """Return an existing exact oracle case, never a generic event challenge.
 
-    Role-normal retains its legacy source and bytes. The additional A19 cases
-    judge only their supplied public quality facts; they cannot establish real
-    recovery, tool execution, handoff, signing or audit events.
+    Role-normal retains its legacy source and bytes. Quality cases judge only
+    their public facts; fixed event cases require original Objective/artifact/
+    action joins. Source readiness alone establishes no execution or award.
     """
     if type(case_id) is not str:
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
@@ -101,6 +123,9 @@ def canonical_case_spec(agent, capability, case_id):
             'baseline:identity'}:
         from .agent_cert_cases import challenge
         return challenge(case_id, agent_id=agent, capability_id=capability)
+    from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES, canonical_tool_case
+    if agent == 'a19' and case_id in TOOL_CASES:
+        return canonical_tool_case(case_id)
     from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES, canonical_artifact_case
     if agent == 'a19' and case_id in ARTIFACT_CASES:
         return canonical_artifact_case(case_id, agent_id=agent, capability_id=capability)
@@ -133,6 +158,9 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
+    from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
+    if case_id in TOOL_CASES:
+        return False, ('tool_event_evidence_required',)
     from .agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
     if case_id in AUTHORITY_CASES:
         return False, ('authority_event_evidence_required',)

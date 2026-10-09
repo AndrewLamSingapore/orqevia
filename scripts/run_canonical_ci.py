@@ -115,6 +115,8 @@ def main():
                   'agent_cert_artifact_events'])
     names.extend(['agent_cert_artifact_paths', 'agent_cert_artifact_signing',
                   'agent_cert_artifact_admission', 'agent_cert_operator_artifact'])
+    names.append('agent_cert_handoff_events')
+    names.append('agent_cert_recovery_events')
     names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain'])
     names.append('agent_cert_hf_case_provider')
     names.append('backend_fault_diagnostics')

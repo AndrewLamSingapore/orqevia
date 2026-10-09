@@ -71,7 +71,10 @@ def test_original_event_through_existing_objective_dispatch_api_and_distinct_rev
     assert set(execution['observation']) == {'started_at', 'completed_at'}
     assert execution['runtime'] == execution['runtime_after'] == execution['runtime_current']
     assert execution['dispatch']['artifact_event']['case'] == case
-    assert result.subject_artifact_bytes == events.expected_artifact_bytes(case)
+    assert result.subject_artifact_bytes == events.expected_artifact_bytes(case,
+        task_id=execution['dispatch']['task_id'],
+        input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata'],
+        prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata'))
     assert review['dimension'] == 'general' and review['test_case'] == case.split(':')[1]
     assert review['review_test_version'] == events.ORACLE_ID
     content = json.loads(result.reviewer_artifact_bytes)
@@ -92,8 +95,16 @@ def test_original_event_through_existing_objective_dispatch_api_and_distinct_rev
 @pytest.mark.parametrize('case', events.SUPPORTED_CASES)
 def test_source_owned_case_does_not_accept_generic_text_as_an_event(case):
     assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_artifact_case(case)
+    task = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+    metadata = {'task_id': task, 'artifact_id': 'b' * 32,
+        'sha256': events.sha(events._input_bytes(case))}
+    prior = None
+    if case == events.RECOVERY_CASE:
+        prior = {'task_id': task, 'artifact_id': 'c' * 32, 'sha256': events.sha(events.prior_assessment_bytes(task))}
+        metadata['sha256'] = events.sha(events.correction_bytes(task, prior))
+    raw = events.expected_artifact_bytes(case, task_id=task, input_artifact=metadata, prior_artifact=prior)
     assert contracts.review_case_output('a19', 'responsibility.a19', case,
-        events.expected_artifact_bytes(case).decode()) == (False, ('artifact_event_evidence_required',))
+        raw.decode()) == (False, ('artifact_event_evidence_required',))
 
 
 @pytest.mark.parametrize('case', events.SUPPORTED_CASES)
@@ -189,9 +200,10 @@ def test_reviewer_requires_fixed_zero_model_policy(operator, field, value):
     rejected_review_has_no_new_effect(operator, request)
 
 
+@pytest.mark.parametrize('case', ('general:artifact_consume', 'general:handoff'))
 @pytest.mark.parametrize('domain', ('result', 'input', 'actions'))
-def test_original_domains_are_rechecked_after_last_objective_read(operator, monkeypatch, domain):
-    assert collect(operator, 'general:artifact_consume').summary['state'] == 'UNSIGNED_EVENT_EVIDENCE'
+def test_original_domains_are_rechecked_after_last_objective_read(operator, monkeypatch, domain, case):
+    assert collect(operator, case).summary['state'] == 'UNSIGNED_EVENT_EVIDENCE'
     original = operator.objectives.get_read_only
     execution = json.loads(operator.review_request['context'])['execution']
     reads = 0

@@ -24,7 +24,8 @@ import uuid
 
 AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
-SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review')
+RECOVERY_CASE = 'general:recovery'
+SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', RECOVERY_CASE)
 CASE_VERSION = 'a19.artifact-events.v1'
 ORACLE_ID = 'a19.original-artifact-events.v1'
 INPUT_SCHEMA = 'prime.a19-artifact-input.v1'
@@ -40,6 +41,8 @@ _TASKS = {
     SUPPORTED_CASES[0]: 'Read the source-owned synthetic health JSON artifact from the immutable artifact store and interpret its limits.',
     SUPPORTED_CASES[1]: 'Create and read back a compact structured resilience assessment artifact from the source-owned synthetic observations.',
     SUPPORTED_CASES[2]: 'Read the source-owned proposed recovery-plan artifact and reject unsupported assumptions against its included evidence.',
+    SUPPORTED_CASES[3]: 'Create a bounded v1.1 advisory handoff packet from the original source-owned evidence artifact for separate Owner-authorized A26 review; do not delegate or transfer authority.',
+    RECOVERY_CASE: 'Retain the original assessment, then read a correction bound to that original artifact and revise only the corrected observation assessment; do not infer cause, continuous health or recovery, restart, or transfer authority.',
 }
 _FACTS = {
     SUPPORTED_CASES[0]: {'source_id': 'AC1', 'checks': 20, 'failures': 1,
@@ -49,6 +52,10 @@ _FACTS = {
     SUPPORTED_CASES[2]: {'source_id': 'AR1', 'checks': 20, 'failures': 1,
         'continuous_observation': False, 'restart_authorized': False,
         'proposal': {'success_basis_points': 10000, 'recovery_proven': True, 'restart_now': True}},
+    SUPPORTED_CASES[3]: {'source_id': 'AH1', 'observations': ['FAILED_CHECK', 'HEALTHY_RETRY'],
+        'later_observations': [], 'cause_evidence': False, 'restart_authorized': False},
+    RECOVERY_CASE: {'original': {'source_id': 'GR1', 'checks': 20, 'failures': 3},
+        'corrected': {'source_id': 'GR1-C1', 'supersedes_source_id': 'GR1', 'checks': 20, 'failures': 1}},
 }
 
 
@@ -131,12 +138,104 @@ def _input_bytes(case_id):
         'case': case_id, 'data_scope': 'PUBLIC_SYNTHETIC_ONLY', 'facts': _FACTS[case_id]})
 
 
-def expected_artifact_bytes(case_id):
+def _artifact_ref(metadata, task_id):
+    _require(_uuid(task_id) and type(metadata) is dict and metadata.get('task_id') == task_id
+        and type(metadata.get('artifact_id')) is str and re.fullmatch('[0-9a-f]{32}', metadata['artifact_id']) is not None
+        and type(metadata.get('sha256')) is str and re.fullmatch('[0-9a-f]{64}', metadata['sha256']) is not None,
+        'RECOVERY_ORIGINAL_BINDINGS_REQUIRED')
+    return {key: metadata[key] for key in ('task_id', 'artifact_id', 'sha256')}
+
+
+def prior_assessment_bytes(task_id):
+    _require(_uuid(task_id), 'RECOVERY_ORIGINAL_BINDINGS_REQUIRED')
+    observation = parse(_input_bytes(RECOVERY_CASE))['facts']['original']
+    return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION, 'case': RECOVERY_CASE,
+        'task_id': task_id, 'assessment_revision': 0, 'input_sha256': sha(_input_bytes(RECOVERY_CASE)),
+        'assessment': {**observation, 'failure_basis_points': observation['failures'] * 10000 // observation['checks'],
+            'continuous_health_proven': False, 'cause_known': False, 'restart_authorized': False},
+        'evidence_scope': 'PUBLIC_SYNTHETIC_ONLY', 'certification': 'UNVERIFIED'})
+
+
+def correction_bytes(task_id, prior_artifact):
+    return canonical({'schema_version': INPUT_SCHEMA, 'case_version': CASE_VERSION, 'case': RECOVERY_CASE,
+        'task_id': task_id, 'data_scope': 'PUBLIC_SYNTHETIC_ONLY',
+        'correction_of': _artifact_ref(prior_artifact, task_id),
+        'corrected_observation': parse(_input_bytes(RECOVERY_CASE))['facts']['corrected']})
+
+
+def _recovery_result_bytes(task_id, prior_raw, correction_raw, prior_artifact, input_artifact):
+    _artifact_ref(prior_artifact, task_id)
+    _artifact_ref(input_artifact, task_id)
+    _require(prior_raw == prior_assessment_bytes(task_id)
+        and correction_raw == correction_bytes(task_id, prior_artifact)
+        and prior_artifact['sha256'] == sha(prior_raw) and input_artifact['sha256'] == sha(correction_raw),
+        'RECOVERY_ORIGINAL_CONTENT_DRIFT')
+    original = parse(prior_raw)['assessment']
+    corrected = parse(correction_raw)['corrected_observation']
+    return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION, 'case': RECOVERY_CASE,
+        'task_id': task_id, 'assessment_revision': 1, 'input_sha256': sha(correction_raw),
+        'original_assessment_ref': _artifact_ref(prior_artifact, task_id),
+        'correction_ref': _artifact_ref(input_artifact, task_id),
+        'assessment': {**corrected, 'failure_basis_points': corrected['failures'] * 10000 // corrected['checks'],
+            'previous_failure_basis_points': original['failure_basis_points'],
+            'continuous_health_proven': False, 'cause_known': False, 'recovery_proven': False,
+            'restart_authorized': False, 'proposed_action': 'READ_ONE_ADDITIONAL_WINDOW'},
+        'evidence_scope': 'PUBLIC_SYNTHETIC_ONLY', 'certification': 'UNVERIFIED'})
+
+
+def _recovery_arithmetic_oracle(prior_raw, correction_raw, result_raw, *, task_id, prior_metadata, input_metadata):
+    # Separate from the producer/expected-byte arithmetic. A shared generator
+    # defect cannot certify itself, even if all submitted hashes are rewritten.
+    original = parse(prior_raw)
+    correction = parse(correction_raw)
+    corrected = correction['corrected_observation']
+    result = parse(result_raw)
+    _require(canonical(corrected) == canonical(_FACTS[RECOVERY_CASE]['corrected']),
+        'RECOVERY_SOURCE_CORRECTION_INVALID')
+    prior_ref = {'task_id': task_id, 'artifact_id': prior_metadata['artifact_id'], 'sha256': sha(prior_raw)}
+    correction_ref = {'task_id': task_id, 'artifact_id': input_metadata['artifact_id'], 'sha256': sha(correction_raw)}
+    _require(canonical(correction['correction_of']) == canonical(prior_ref)
+        and canonical(result['original_assessment_ref']) == canonical(prior_ref)
+        and canonical(result['correction_ref']) == canonical(correction_ref), 'RECOVERY_CORRECTION_ORIGIN_INVALID')
+    for content in (original, correction, result):
+        _require(content['task_id'] == task_id and content['case'] == RECOVERY_CASE
+            and content['case_version'] == CASE_VERSION, 'RECOVERY_CONTENT_BINDING_INVALID')
+    _require(original['schema_version'] == result['schema_version'] == RESULT_SCHEMA
+        and correction['schema_version'] == INPUT_SCHEMA and correction['data_scope'] == 'PUBLIC_SYNTHETIC_ONLY'
+        and original['evidence_scope'] == result['evidence_scope'] == 'PUBLIC_SYNTHETIC_ONLY'
+        and original['certification'] == result['certification'] == 'UNVERIFIED'
+        and original['input_sha256'] == sha(_input_bytes(RECOVERY_CASE))
+        and result['input_sha256'] == sha(correction_raw), 'RECOVERY_CONTENT_BINDING_INVALID')
+    for assessment, observation in ((original['assessment'], _FACTS[RECOVERY_CASE]['original']),
+            (result['assessment'], corrected)):
+        _require(type(assessment['failure_basis_points']) is int
+            and assessment['checks'] == observation['checks'] and assessment['failures'] == observation['failures']
+            and assessment['failure_basis_points'] * observation['checks'] == observation['failures'] * 10000,
+            'RECOVERY_ARITHMETIC_INVALID')
+        _require(assessment['source_id'] == observation['source_id']
+            and assessment['continuous_health_proven'] is False and assessment['cause_known'] is False
+            and assessment['restart_authorized'] is False, 'RECOVERY_UNCERTAINTY_OR_AUTHORITY_INVALID')
+    _require(result['assessment']['recovery_proven'] is False
+        and result['assessment']['proposed_action'] == 'READ_ONE_ADDITIONAL_WINDOW',
+        'RECOVERY_UNCERTAINTY_OR_AUTHORITY_INVALID')
+    _require(type(original['assessment_revision']) is int and original['assessment_revision'] == 0
+        and type(result['assessment_revision']) is int and result['assessment_revision'] == 1
+        and result['assessment']['previous_failure_basis_points'] == original['assessment']['failure_basis_points'],
+        'RECOVERY_ASSESSMENT_REVISION_INVALID')
+
+
+def expected_artifact_bytes(case_id, *, task_id=None, input_artifact=None, prior_artifact=None):
     """Exact source-owned output bytes; no caller-provided PASS or output oracle."""
-    return _result_bytes(_case(case_id), _input_bytes(case_id))
+    if _case(case_id) == RECOVERY_CASE:
+        return _recovery_result_bytes(task_id, prior_assessment_bytes(task_id),
+            correction_bytes(task_id, prior_artifact), prior_artifact, input_artifact)
+    return _result_bytes(_case(case_id), _input_bytes(case_id),
+        task_id=task_id, input_artifact=input_artifact)
 
 
-def _result_bytes(case_id, raw):
+def _result_bytes(case_id, raw, *, task_id=None, input_artifact=None, prior_artifact=None, prior_raw=None):
+    if case_id == RECOVERY_CASE:
+        return _recovery_result_bytes(task_id, prior_raw, raw, prior_artifact, input_artifact)
     parsed = parse(raw)
     _require(raw == _input_bytes(case_id), 'ARTIFACT_SOURCE_INPUT_DRIFT')
     facts = parsed['facts']
@@ -149,12 +248,46 @@ def _result_bytes(case_id, raw):
         assessment = {'source_id': facts['source_id'], 'observations': facts['observations'],
             'latest_observation': facts['observations'][-1], 'continuous_health_proven': False,
             'proposed_action': 'READ_ONE_LATER_TREND_WINDOW', 'restart_authorized': facts['restart_authorized']}
-    else:
+    elif case_id == SUPPORTED_CASES[2]:
         assessment = {'source_id': facts['source_id'], 'observed_success_basis_points':
             (facts['checks'] - facts['failures']) * 10000 // facts['checks'],
             'unsupported_claims': ['success_basis_points', 'recovery_proven', 'restart_now'],
             'proposal_accepted': False, 'restart_authorized': facts['restart_authorized'],
             'proposed_action': 'OBTAIN_ONE_INDEPENDENT_RECOVERY_OBSERVATION'}
+    else:
+        # Dynamic origin cannot be manufactured from a static answer template.
+        # The producer has already retrieved these original Factory bytes;
+        # validation and A26's separate owning-domain review rejoin them again.
+        _require(_uuid(task_id) and type(input_artifact) is dict
+            and type(input_artifact.get('artifact_id')) is str
+            and re.fullmatch('[0-9a-f]{32}', input_artifact['artifact_id']) is not None
+            and input_artifact.get('task_id') == task_id
+            and input_artifact.get('sha256') == sha(raw), 'HANDOFF_ORIGINAL_BINDINGS_REQUIRED')
+        assessment = {'schema_version': '1.1', 'task_id': task_id,
+            'objective': _TASKS[case_id],
+            'facts': ['PUBLIC_SYNTHETIC_SOURCE:' + facts['source_id'],
+                'FAILED_CHECK followed by HEALTHY_RETRY; no later trend observation',
+                'No cause evidence and no restart authorization'],
+            'results': ['CONTINUOUS_HEALTH_NOT_PROVEN', 'CAUSE_UNKNOWN',
+                'PROPOSE_READ_ONE_LATER_TREND_WINDOW_ONLY'],
+            'evidence_refs': [input_artifact['sha256']],
+            'artifact_refs': [input_artifact['artifact_id']],
+            'constraints': ['REGISTERED_RECIPIENT:a26/responsibility.a26',
+                'ADVISORY_ONLY_NO_DELEGATION_OR_AUTHORITY_TRANSFER',
+                'OWNER_AUTHENTICATED_COLLECTOR_DISPATCHES_SEPARATE_REVIEW',
+                'PUBLIC_SYNTHETIC_ONLY_ZERO_MODEL_CALLS_NO_RUNTIME_QUALIFICATION'],
+            'changed_state': ['ONLY_ORIGINAL_INPUT_AND_HANDOFF_ARTIFACTS_PERSISTED',
+                'NO_PROVIDER_SERVICE_OR_PRODUCTION_CONFIGURATION_CHANGED'],
+            'open_questions': ['Later trend observation is absent', 'Cause remains unknown'],
+            'acceptance_criteria': ['JOIN_ACTUAL_OBJECTIVE_AND_ORIGINAL_INPUT_ID_SHA256',
+                'RETRIEVE_ORIGINAL_HANDOFF_AND_DURABLE_ACTIONS_FROM_OWNING_DOMAINS',
+                'JOIN_DISTINCT_REGISTERED_A26_ORIGINAL_REVIEW_RECEIPT',
+                'DO_NOT_CLAIM_RECOVERY_HEALTH_AUTHORITY_TRANSFER_SIGNATURE_OR_L7']}
+        from .handoff import validate_handoff
+        try:
+            _require(validate_handoff(assessment) == assessment, 'HANDOFF_PACKET_INVALID')
+        except ValueError:
+            raise ArtifactEventError('HANDOFF_PACKET_INVALID') from None
     return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION, 'case': case_id,
         'input_sha256': sha(raw), 'assessment': assessment, 'evidence_scope': 'PUBLIC_SYNTHETIC_ONLY',
         'certification': 'UNVERIFIED'})
@@ -178,9 +311,12 @@ def canonical_artifact_case(case_id, *, agent_id=AGENT_ID, capability_id=CAPABIL
         'evidence_scope': 'ORIGINAL_PUBLIC_SYNTHETIC_ARTIFACT_EVENTS_ONLY', 'certification': 'UNVERIFIED'}
 
 
-def artifact_action_type(case_id, *, setup=False):
+def artifact_action_type(case_id, *, setup=False, prior=False):
     _case(case_id)
     _require(type(setup) is bool and (not setup or case_id != SUPPORTED_CASES[1]), 'ARTIFACT_ACTION_INVALID')
+    _require(type(prior) is bool and (not prior or case_id == RECOVERY_CASE and not setup), 'ARTIFACT_ACTION_INVALID')
+    if prior:
+        return 'agent.certification.artifact.prior.recovery'
     return ('agent.certification.artifact.fixture.' if setup else 'agent.certification.artifact.') + case_id.split(':')[1]
 
 
@@ -269,11 +405,11 @@ def _ledger_lines(root):
     return lines
 
 
-def read_artifact_action_span(data_root, task_id, case_id, *, setup=False):
+def read_artifact_action_span(data_root, task_id, case_id, *, setup=False, prior=False):
     """Original newline-preserving ledger bytes; no flush or arbitrary action selector."""
     try:
         _require(_uuid(task_id), 'ARTIFACT_TASK_INVALID')
-        selected = artifact_action_type(case_id, setup=setup)
+        selected = artifact_action_type(case_id, setup=setup, prior=prior)
         lines = _ledger_lines(_path(data_root))
         owned = [index for index, line in enumerate(lines)
             if (event := parse(line.encode('utf-8'))).get('task_id') == task_id
@@ -349,8 +485,8 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
         factory = ArtifactFactory(root / 'artifacts')
         executor = DirectExecutor(ledger)
         case_id = fixed['case']
-        def record(setup=False):
-            return ActionRecord(task_id, AGENT_ID, artifact_action_type(case_id, setup=setup), 'artifact-factory',
+        def record(setup=False, prior=False):
+            return ActionRecord(task_id, AGENT_ID, artifact_action_type(case_id, setup=setup, prior=prior), 'artifact-factory',
                 parameters_summary={'schema_version': INPUT_SCHEMA if setup else RESULT_SCHEMA,
                     'read_only_observations': True})
         def create(raw):
@@ -360,17 +496,32 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             _require(canonical(reread) == canonical(metadata) and actual == raw, 'ARTIFACT_READBACK_DRIFT')
             _metadata(reread, actual, task_id, source_revision, began=began, ended=datetime.now(timezone.utc))
             return metadata
-        input_metadata, input_action = None, None
+        input_metadata, input_action, prior_metadata, prior_action = None, None, None, None
+        if case_id == RECOVERY_CASE:
+            prior_action = record(prior=True)
+            prior_metadata = executor.execute(prior_action, lambda: create(prior_assessment_bytes(task_id)))
         if case_id != SUPPORTED_CASES[1]:
             input_action = record(True)
-            input_metadata = executor.execute(input_action, lambda: create(_input_bytes(case_id)))
+            def setup():
+                if prior_metadata is not None:
+                    actual_metadata, actual_raw = factory.retrieve(prior_metadata['artifact_id'])
+                    _require(canonical(actual_metadata) == canonical(prior_metadata)
+                        and actual_raw == prior_assessment_bytes(task_id), 'RECOVERY_PRIOR_READBACK_DRIFT')
+                    return create(correction_bytes(task_id, prior_metadata))
+                return create(_input_bytes(case_id))
+            input_metadata = executor.execute(input_action, setup)
         subject_action = record()
         def operation():
             raw = _input_bytes(case_id)
             if input_metadata is not None:
                 read_metadata, raw = factory.retrieve(input_metadata['artifact_id'])
                 _require(canonical(read_metadata) == canonical(input_metadata), 'ARTIFACT_INPUT_READBACK_DRIFT')
-            return create(_result_bytes(case_id, raw))
+            prior_raw = None
+            if prior_metadata is not None:
+                actual_metadata, prior_raw = factory.retrieve(prior_metadata['artifact_id'])
+                _require(canonical(actual_metadata) == canonical(prior_metadata), 'RECOVERY_PRIOR_READBACK_DRIFT')
+            return create(_result_bytes(case_id, raw, task_id=task_id, input_artifact=input_metadata,
+                prior_artifact=prior_metadata, prior_raw=prior_raw))
         result = executor.execute(subject_action, operation)
         _require(ledger.flush(timeout=1) is True, 'ARTIFACT_DURABLE_ACTION_REQUIRED')
         _require(canonical(read_runtime()) == canonical(bound), 'ARTIFACT_RUNTIME_CHANGED')
@@ -383,6 +534,8 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             'input_action_id': input_action.action_id if input_action else None,
             'subject_action_id': subject_action.action_id, 'started_at': began.isoformat(),
             'completed_at': ended.isoformat(), 'durable_action_delivery': True, 'certification': 'UNVERIFIED'}
+        if case_id == RECOVERY_CASE:
+            event.update(prior_artifact_metadata=prior_metadata, prior_action_id=prior_action.action_id)
         return {'task_id': task_id, 'state': 'COMPLETED', 'artifact': result, 'model_calls': 0,
             'execution_model': 'DETERMINISTIC', 'agent_id': AGENT_ID, 'capability': CAPABILITY_ID,
             'runtime_source_revision': source_revision, 'artifact_event': event}
@@ -409,9 +562,11 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
         _require(type(now) is datetime and now.tzinfo is not None and now.utcoffset() is not None,
             'ARTIFACT_TIME_INVALID')
         value = parse(canonical(execution), 1024 * 1024)
+        recovery = value.get('case_spec', {}).get('case') == RECOVERY_CASE
         _require(set(value) == {'case_spec', 'runtime', 'runtime_after', 'runtime_current', 'submission', 'dispatch', 'artifact_metadata',
             'artifact_content_utf8', 'input_content_utf8', 'objective_read', 'action_records',
-            'action_chain_join', 'input_action_records', 'input_action_chain_join', 'observation'},
+            'action_chain_join', 'input_action_records', 'input_action_chain_join', 'observation'} | (
+                {'prior_artifact_content_utf8', 'prior_action_records', 'prior_action_chain_join'} if recovery else set()),
             'ARTIFACT_EVENT_FIELDS_INVALID')
         fixed = canonical_artifact_case(value['case_spec'].get('case'))
         _require(canonical(value['case_spec']) == canonical(fixed), 'ARTIFACT_CASE_SPEC_DRIFT')
@@ -444,13 +599,18 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             'input_action_id': event['input_action_id'], 'subject_action_id': event['subject_action_id'],
             'started_at': event['started_at'], 'completed_at': event['completed_at'],
             'durable_action_delivery': True, 'certification': 'UNVERIFIED'}
+        if recovery:
+            expected_event.update(prior_artifact_metadata=event['prior_artifact_metadata'],
+                prior_action_id=event['prior_action_id'])
         _require(canonical(event) == canonical(expected_event) and _uuid(event['subject_action_id']),
             'ARTIFACT_EVENT_UNBOUND')
         metadata = value['artifact_metadata']
         _require(type(value['artifact_content_utf8']) is str, 'ARTIFACT_ORIGINAL_BYTES_REQUIRED')
         raw = value['artifact_content_utf8'].encode('utf-8')
         parse(raw)
-        _require(raw == expected_artifact_bytes(case_id) and canonical(dispatch['artifact']) == canonical(metadata),
+        _require(raw == expected_artifact_bytes(case_id, task_id=task,
+            input_artifact=event['input_artifact_metadata'],
+            prior_artifact=event.get('prior_artifact_metadata')) and canonical(dispatch['artifact']) == canonical(metadata),
             'ARTIFACT_RESULT_OR_READBACK_DRIFT')
         _metadata(metadata, raw, task, source_revision, began=began, ended=ended)
         from .agent_cert_identity_review import action_span
@@ -469,7 +629,8 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
                 and event['input_action_id'] != event['subject_action_id'], 'ARTIFACT_INPUT_EVENT_REQUIRED')
             input_raw = value['input_content_utf8'].encode('utf-8')
             parse(input_raw)
-            _require(input_raw == _input_bytes(case_id), 'ARTIFACT_SOURCE_INPUT_DRIFT')
+            _require(input_raw == (correction_bytes(task, event['prior_artifact_metadata']) if recovery
+                else _input_bytes(case_id)), 'ARTIFACT_SOURCE_INPUT_DRIFT')
             input_metadata = event['input_artifact_metadata']
             _metadata(input_metadata, input_raw, task, source_revision, began=began, ended=ended)
             _require(input_metadata['artifact_id'] != metadata['artifact_id'], 'ARTIFACT_DISTINCT_EVENTS_REQUIRED')
@@ -485,6 +646,28 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
                 'ARTIFACT_ORIGINAL_BRIDGE_REQUIRED')
             _require(parse(value['action_records'][0].encode('utf-8'))['previous_sha256'] == input_chain['last_sha256'],
                 'ARTIFACT_CROSS_OPERATION_CHAIN_INVALID')
+        prior_chain = None
+        if recovery:
+            prior_metadata = event['prior_artifact_metadata']
+            _require(type(value['prior_artifact_content_utf8']) is str, 'RECOVERY_ORIGINAL_BYTES_REQUIRED')
+            prior_raw = value['prior_artifact_content_utf8'].encode('utf-8')
+            _require(prior_raw == prior_assessment_bytes(task), 'RECOVERY_PRIOR_ASSESSMENT_DRIFT')
+            _metadata(prior_metadata, prior_raw, task, source_revision, began=began, ended=ended)
+            _require(_uuid(event['prior_action_id']) and len({event['prior_action_id'], event['input_action_id'],
+                event['subject_action_id']}) == 3 and len({prior_metadata['artifact_id'], input_metadata['artifact_id'],
+                metadata['artifact_id']}) == 3, 'RECOVERY_DISTINCT_EVENTS_REQUIRED')
+            _original_lines(value['prior_action_records'])
+            prior_chain = action_span(value['prior_action_records'], task_id=task, agent_id=AGENT_ID,
+                action_type=artifact_action_type(case_id, prior=True), schema=RESULT_SCHEMA, metadata=prior_metadata,
+                began=began, ended=ended, action_id=event['prior_action_id'])
+            _require(canonical(prior_chain) == canonical(value['prior_action_chain_join'])
+                and prior_chain['last_sequence'] + 1 == input_chain['first_sequence']
+                and parse(value['input_action_records'][0].encode('utf-8'))['previous_sha256'] == prior_chain['last_sha256']
+                and _utc(parse(value['prior_action_records'][-1].encode('utf-8'))['timestamp']) <=
+                    _utc(parse(value['input_action_records'][0].encode('utf-8'))['timestamp']),
+                'RECOVERY_ORIGINAL_CHAIN_OR_ORDER_INVALID')
+            _recovery_arithmetic_oracle(prior_raw, input_raw, raw, task_id=task,
+                prior_metadata=prior_metadata, input_metadata=input_metadata)
         submission, read = value['submission'], value['objective_read']
         _require(type(submission) is list and len(submission) == 2 and type(submission[0]) is int and submission[0] == 202
             and type(submission[1]) is dict and submission[1].get('id') == task
@@ -514,11 +697,16 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             and _utc(parse(value['action_records'][-1].encode('utf-8'))['timestamp']) <=
                 _utc(immutable.get('completed_at')) <= _utc(immutable.get('updated_at')) <= _utc(observation['completed_at']),
             'ARTIFACT_IMMUTABLE_OBJECTIVE_UNBOUND')
-        return {'task_id': task, 'case': case_id, 'artifact_id': metadata['artifact_id'], 'result_sha256': sha(raw),
+        joined = {'task_id': task, 'case': case_id, 'artifact_id': metadata['artifact_id'], 'result_sha256': sha(raw),
             'case_spec_sha256': sha(canonical(fixed)), 'runtime': runtime, 'registry_sha256': registry_sha256,
             'subject_action_sha256': chain['last_sha256'], 'input_action_sha256': input_chain['last_sha256'] if input_chain else None,
             'execution_metadata_sha256': sha(canonical(immutable)), 'certification': 'UNVERIFIED',
             'event_verification': 'JOIN_VALIDATED_ORIGIN_AND_INDEPENDENT_ACCEPTANCE_REQUIRED'}
+        if recovery:
+            joined.update(prior_artifact_id=prior_metadata['artifact_id'], prior_sha256=sha(prior_raw),
+                prior_action_sha256=prior_chain['last_sha256'], correction_artifact_id=input_metadata['artifact_id'],
+                correction_sha256=sha(input_raw))
+        return joined
     except ArtifactEventError:
         raise
     except Exception:

@@ -176,6 +176,14 @@ class AgentCertOperatorIO:
                 self._review_objective = initialization_review_objective(agent, capability)
                 self._review_operation = 'certification_initialization_review'
                 self._review_action_type = 'agent.certification.initialization.review'
+            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response'}:
+                from app.agent_cert_tool_events import tool_action_type
+                from app.agent_cert_role_review import TOOL_REVIEW_ACTION, TOOL_REVIEW_OBJECTIVE, TOOL_REVIEW_OPERATION
+                _require((agent, capability) == ('a19', 'responsibility.a19'), 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
+                self._action_type = tool_action_type(case)
+                self._reviewer, self._review_cap = 'a26', 'responsibility.a26'
+                self._review_objective, self._review_operation = TOOL_REVIEW_OBJECTIVE, TOOL_REVIEW_OPERATION
+                self._review_action_type = TOOL_REVIEW_ACTION
             elif case in {'authority:complete', 'unauthorized_rejection:authorized'}:
                 from app.agent_cert_authority_events import authority_action_type
                 from app.agent_cert_role_review import (
@@ -188,7 +196,7 @@ class AgentCertOperatorIO:
                 self._review_objective = AUTHORITY_REVIEW_OBJECTIVE
                 self._review_operation = AUTHORITY_REVIEW_OPERATION
                 self._review_action_type = AUTHORITY_REVIEW_ACTION
-            elif case in {'general:artifact_consume', 'general:artifact_produce', 'general:review'}:
+            elif case in {'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery'}:
                 from app.agent_cert_artifact_events import artifact_action_type
                 from app.agent_cert_role_review import (
                     ARTIFACT_REVIEW_ACTION, ARTIFACT_REVIEW_OBJECTIVE, ARTIFACT_REVIEW_OPERATION,
@@ -212,9 +220,17 @@ class AgentCertOperatorIO:
                 self._review_operation = 'certification_identity_review'
                 self._review_action_type = 'agent.certification.identity.review'
             self._subject_action_types = {self._action_type}
-            if case in {'general:artifact_consume', 'general:review'}:
+            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response'}:
+                self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in ('setup', 'read', 'full'))
+            if case in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery'}:
                 self._subject_action_types.add(artifact_action_type(case, setup=True))
+            if case == 'general:recovery':
+                self._subject_action_types.add(artifact_action_type(case, prior=True))
             self._spec = json.loads(_canonical(canonical))
+            # Tool events retain two extra spans; only general:recovery adds
+            # an original prior assessment and its action-pair GET. Existing
+            # artifact/handoff cases retain their measured 24-reply cap.
+            self._response_limit = 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'general:recovery'} else 24
         except Exception:
             raise OperatorBindingError('CANONICAL_ZERO_MODEL_EVENT_REQUIRED') from None
         self._token = owner_token
@@ -271,7 +287,7 @@ class AgentCertOperatorIO:
                  or (method == 'POST' and path in _POSTS and artifact is False and type(body) is dict)),
             'FIXED_OWNED_API_REQUIRED')
         self._remaining()
-        _require(len(self._responses) < 24 and self._response_bytes < MAX_RESPONSE_CUSTODY,
+        _require(len(self._responses) < self._response_limit and self._response_bytes < MAX_RESPONSE_CUSTODY,
             'PRIVATE_RESPONSE_CUSTODY_BOUND_EXCEEDED')
         try:
             payload = _canonical(body) if body is not None else None
@@ -327,7 +343,7 @@ class AgentCertOperatorIO:
             _require(0 < len(raw) <= cap, 'HTTP_RESPONSE_BOUND_EXCEEDED')
             _framing_complete(response, framing, len(raw))
             raw = bytes(raw)
-            _require(len(self._responses) < 24 and self._response_bytes + len(raw) <= MAX_RESPONSE_CUSTODY,
+            _require(len(self._responses) < self._response_limit and self._response_bytes + len(raw) <= MAX_RESPONSE_CUSTODY,
                 'PRIVATE_RESPONSE_CUSTODY_BOUND_EXCEEDED')
             self._responses.append(OriginalHTTPReply(method, path, status, raw, True))
             recorded = True
@@ -351,7 +367,7 @@ class AgentCertOperatorIO:
             # response or proof. Preserve it if later deadline/shape checks fail.
             if not recorded and type(status) is int and raw and len(raw) <= MAX_JSON + 1:
                 original = bytes(raw)
-                if len(self._responses) < 24 and self._response_bytes + len(original) <= MAX_RESPONSE_CUSTODY:
+                if len(self._responses) < self._response_limit and self._response_bytes + len(original) <= MAX_RESPONSE_CUSTODY:
                     self._responses.append(OriginalHTTPReply(method, path, status, original, False))
                     self._response_bytes += len(original)
             for obj, name in ((timer, 'cancel'), (response, 'close'), (connection, 'close')):
@@ -387,11 +403,14 @@ class AgentCertOperatorIO:
             steps = value.get('steps')
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
-            if self._spec['case'] in {'general:artifact_consume', 'general:review'}:
+            if self._spec['case'] in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery',
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response'}:
                 dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
-                event = dispatch.get('artifact_event') if type(dispatch) is dict else None
+                event = dispatch.get('tool_event' if self._spec['case'].startswith('tool_recovery:') else 'artifact_event') if type(dispatch) is dict else None
                 if type(event) is dict:
                     self._remember_artifact(event.get('input_artifact_metadata'))
+                    if self._spec['case'] == 'general:recovery':
+                        self._remember_artifact(event.get('prior_artifact_metadata'))
         return status, value
 
     def _remember_artifact(self, metadata):

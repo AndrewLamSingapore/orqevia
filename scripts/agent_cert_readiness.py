@@ -31,7 +31,9 @@ SOURCE_FILES = (
     'app/agent_cert_role_group_two.py', 'app/agent_cert_secondary_roles.py',
     'app/agent_cert_a19_cases.py', 'app/agent_cert_a19_general.py',
     'app/agent_cert_a19_baseline.py', 'app/agent_cert_artifact_events.py',
+    'app/handoff.py',
     'app/agent_cert_authority_events.py',
+    'app/agent_cert_tool_events.py', 'app/deterministic_ops.py', 'app/sink_guard.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
@@ -43,8 +45,9 @@ SOURCE_FILES = (
     'governance/agent-cert-historical-admissions/a19-role-normal-signed-37613202210.json',
 )
 EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
-    'general:artifact_consume', 'general:artifact_produce', 'general:review',
-    'authority:complete', 'unauthorized_rejection:authorized'})
+    'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
+    'authority:complete', 'unauthorized_rejection:authorized',
+    'tool_recovery:tool_failure', 'tool_recovery:bounded_response'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})
 
 
