@@ -28,7 +28,7 @@ def test_canonical_ci_selects_every_new_artifact_integration_suite():
             value = ast.literal_eval(node.args[0])
             selected.update([value] if node.func.attr == 'append' else value)
     required = {'agent_cert_artifact_paths', 'agent_cert_artifact_signing',
-                'agent_cert_artifact_admission', 'agent_cert_operator_artifact'}
+                'agent_cert_artifact_admission', 'agent_cert_operator_artifact', 'agent_cert_handoff_events'}
     assert required <= selected
     assert all((root / 'tests' / ('test_' + name + '.py')).is_file() for name in required)
 
@@ -53,6 +53,7 @@ def test_artifact_operator_preparation_is_bounded_and_has_distinct_reviewer(case
     assert item._review_operation == 'certification_artifact_review'
     assert item._review_action_type == 'agent.certification.artifact.review'
     assert item._action_type == artifact_action_type(case)
+    assert item._response_limit == 24
     assert TOKEN not in repr(item)
     with pytest.raises(OperatorBindingError, match='ZERO_MODEL_EVENT_HAS_NO_QUEUE'):
         item.io().read_job(TASK)

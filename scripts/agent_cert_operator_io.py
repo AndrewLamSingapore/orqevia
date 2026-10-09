@@ -196,7 +196,7 @@ class AgentCertOperatorIO:
                 self._review_objective = AUTHORITY_REVIEW_OBJECTIVE
                 self._review_operation = AUTHORITY_REVIEW_OPERATION
                 self._review_action_type = AUTHORITY_REVIEW_ACTION
-            elif case in {'general:artifact_consume', 'general:artifact_produce', 'general:review'}:
+            elif case in {'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff'}:
                 from app.agent_cert_artifact_events import artifact_action_type
                 from app.agent_cert_role_review import (
                     ARTIFACT_REVIEW_ACTION, ARTIFACT_REVIEW_OBJECTIVE, ARTIFACT_REVIEW_OPERATION,
@@ -222,7 +222,7 @@ class AgentCertOperatorIO:
             self._subject_action_types = {self._action_type}
             if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response'}:
                 self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in ('setup', 'read', 'full'))
-            if case in {'general:artifact_consume', 'general:review'}:
+            if case in {'general:artifact_consume', 'general:review', 'general:handoff'}:
                 self._subject_action_types.add(artifact_action_type(case, setup=True))
             self._spec = json.loads(_canonical(canonical))
             # These two fixed events additionally retain the failed-read and
@@ -400,7 +400,7 @@ class AgentCertOperatorIO:
             steps = value.get('steps')
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
-            if self._spec['case'] in {'general:artifact_consume', 'general:review',
+            if self._spec['case'] in {'general:artifact_consume', 'general:review', 'general:handoff',
                     'tool_recovery:tool_failure', 'tool_recovery:bounded_response'}:
                 dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
                 event = dispatch.get('tool_event' if self._spec['case'].startswith('tool_recovery:') else 'artifact_event') if type(dispatch) is dict else None

@@ -165,8 +165,8 @@ def test_import_executes_no_domain_or_file_io(monkeypatch):
 
 
 def test_source_cases_have_distinct_exact_bytes_hashes_and_no_answer_in_request():
-    specs = [events.canonical_artifact_case(case) for case in events.SUPPORTED_CASES]
-    outputs = [events.expected_artifact_bytes(case) for case in events.SUPPORTED_CASES]
+    specs = [events.canonical_artifact_case(case) for case in events.SUPPORTED_CASES[:3]]
+    outputs = [events.expected_artifact_bytes(case) for case in events.SUPPORTED_CASES[:3]]
     assert len({spec['case_input_sha256'] for spec in specs}) == 3
     assert len({events.sha(raw) for raw in outputs}) == 3
     assert [json.loads(raw)['assessment'].get('failure_basis_points') for raw in outputs] == [500, None, None]
@@ -182,7 +182,9 @@ def test_actual_factory_durable_executor_and_original_objective_readback_join(do
     execution, pins = execute_and_collect(domain, case_id)
     result = events.validate_artifact_execution(execution, **pins)
     assert result['certification'] == 'UNVERIFIED'
-    assert result['result_sha256'] == events.sha(events.expected_artifact_bytes(case_id))
+    assert result['result_sha256'] == events.sha(events.expected_artifact_bytes(case_id,
+        task_id=execution['dispatch']['task_id'],
+        input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata']))
     assert 'ORIGIN_AND_INDEPENDENT_ACCEPTANCE_REQUIRED' in result['event_verification']
     assert (result['input_action_sha256'] is None) == (case_id == events.SUPPORTED_CASES[1])
     root, ledger, _, _ = domain

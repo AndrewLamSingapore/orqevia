@@ -24,7 +24,7 @@ import uuid
 
 AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
-SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review')
+SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff')
 CASE_VERSION = 'a19.artifact-events.v1'
 ORACLE_ID = 'a19.original-artifact-events.v1'
 INPUT_SCHEMA = 'prime.a19-artifact-input.v1'
@@ -40,6 +40,7 @@ _TASKS = {
     SUPPORTED_CASES[0]: 'Read the source-owned synthetic health JSON artifact from the immutable artifact store and interpret its limits.',
     SUPPORTED_CASES[1]: 'Create and read back a compact structured resilience assessment artifact from the source-owned synthetic observations.',
     SUPPORTED_CASES[2]: 'Read the source-owned proposed recovery-plan artifact and reject unsupported assumptions against its included evidence.',
+    SUPPORTED_CASES[3]: 'Create a bounded v1.1 advisory handoff packet from the original source-owned evidence artifact for separate Owner-authorized A26 review; do not delegate or transfer authority.',
 }
 _FACTS = {
     SUPPORTED_CASES[0]: {'source_id': 'AC1', 'checks': 20, 'failures': 1,
@@ -49,6 +50,8 @@ _FACTS = {
     SUPPORTED_CASES[2]: {'source_id': 'AR1', 'checks': 20, 'failures': 1,
         'continuous_observation': False, 'restart_authorized': False,
         'proposal': {'success_basis_points': 10000, 'recovery_proven': True, 'restart_now': True}},
+    SUPPORTED_CASES[3]: {'source_id': 'AH1', 'observations': ['FAILED_CHECK', 'HEALTHY_RETRY'],
+        'later_observations': [], 'cause_evidence': False, 'restart_authorized': False},
 }
 
 
@@ -131,12 +134,13 @@ def _input_bytes(case_id):
         'case': case_id, 'data_scope': 'PUBLIC_SYNTHETIC_ONLY', 'facts': _FACTS[case_id]})
 
 
-def expected_artifact_bytes(case_id):
+def expected_artifact_bytes(case_id, *, task_id=None, input_artifact=None):
     """Exact source-owned output bytes; no caller-provided PASS or output oracle."""
-    return _result_bytes(_case(case_id), _input_bytes(case_id))
+    return _result_bytes(_case(case_id), _input_bytes(case_id),
+        task_id=task_id, input_artifact=input_artifact)
 
 
-def _result_bytes(case_id, raw):
+def _result_bytes(case_id, raw, *, task_id=None, input_artifact=None):
     parsed = parse(raw)
     _require(raw == _input_bytes(case_id), 'ARTIFACT_SOURCE_INPUT_DRIFT')
     facts = parsed['facts']
@@ -149,12 +153,46 @@ def _result_bytes(case_id, raw):
         assessment = {'source_id': facts['source_id'], 'observations': facts['observations'],
             'latest_observation': facts['observations'][-1], 'continuous_health_proven': False,
             'proposed_action': 'READ_ONE_LATER_TREND_WINDOW', 'restart_authorized': facts['restart_authorized']}
-    else:
+    elif case_id == SUPPORTED_CASES[2]:
         assessment = {'source_id': facts['source_id'], 'observed_success_basis_points':
             (facts['checks'] - facts['failures']) * 10000 // facts['checks'],
             'unsupported_claims': ['success_basis_points', 'recovery_proven', 'restart_now'],
             'proposal_accepted': False, 'restart_authorized': facts['restart_authorized'],
             'proposed_action': 'OBTAIN_ONE_INDEPENDENT_RECOVERY_OBSERVATION'}
+    else:
+        # Dynamic origin cannot be manufactured from a static answer template.
+        # The producer has already retrieved these original Factory bytes;
+        # validation and A26's separate owning-domain review rejoin them again.
+        _require(_uuid(task_id) and type(input_artifact) is dict
+            and type(input_artifact.get('artifact_id')) is str
+            and re.fullmatch('[0-9a-f]{32}', input_artifact['artifact_id']) is not None
+            and input_artifact.get('task_id') == task_id
+            and input_artifact.get('sha256') == sha(raw), 'HANDOFF_ORIGINAL_BINDINGS_REQUIRED')
+        assessment = {'schema_version': '1.1', 'task_id': task_id,
+            'objective': _TASKS[case_id],
+            'facts': ['PUBLIC_SYNTHETIC_SOURCE:' + facts['source_id'],
+                'FAILED_CHECK followed by HEALTHY_RETRY; no later trend observation',
+                'No cause evidence and no restart authorization'],
+            'results': ['CONTINUOUS_HEALTH_NOT_PROVEN', 'CAUSE_UNKNOWN',
+                'PROPOSE_READ_ONE_LATER_TREND_WINDOW_ONLY'],
+            'evidence_refs': [input_artifact['sha256']],
+            'artifact_refs': [input_artifact['artifact_id']],
+            'constraints': ['REGISTERED_RECIPIENT:a26/responsibility.a26',
+                'ADVISORY_ONLY_NO_DELEGATION_OR_AUTHORITY_TRANSFER',
+                'OWNER_AUTHENTICATED_COLLECTOR_DISPATCHES_SEPARATE_REVIEW',
+                'PUBLIC_SYNTHETIC_ONLY_ZERO_MODEL_CALLS_NO_RUNTIME_QUALIFICATION'],
+            'changed_state': ['ONLY_ORIGINAL_INPUT_AND_HANDOFF_ARTIFACTS_PERSISTED',
+                'NO_PROVIDER_SERVICE_OR_PRODUCTION_CONFIGURATION_CHANGED'],
+            'open_questions': ['Later trend observation is absent', 'Cause remains unknown'],
+            'acceptance_criteria': ['JOIN_ACTUAL_OBJECTIVE_AND_ORIGINAL_INPUT_ID_SHA256',
+                'RETRIEVE_ORIGINAL_HANDOFF_AND_DURABLE_ACTIONS_FROM_OWNING_DOMAINS',
+                'JOIN_DISTINCT_REGISTERED_A26_ORIGINAL_REVIEW_RECEIPT',
+                'DO_NOT_CLAIM_RECOVERY_HEALTH_AUTHORITY_TRANSFER_SIGNATURE_OR_L7']}
+        from .handoff import validate_handoff
+        try:
+            _require(validate_handoff(assessment) == assessment, 'HANDOFF_PACKET_INVALID')
+        except ValueError:
+            raise ArtifactEventError('HANDOFF_PACKET_INVALID') from None
     return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION, 'case': case_id,
         'input_sha256': sha(raw), 'assessment': assessment, 'evidence_scope': 'PUBLIC_SYNTHETIC_ONLY',
         'certification': 'UNVERIFIED'})
@@ -370,7 +408,7 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             if input_metadata is not None:
                 read_metadata, raw = factory.retrieve(input_metadata['artifact_id'])
                 _require(canonical(read_metadata) == canonical(input_metadata), 'ARTIFACT_INPUT_READBACK_DRIFT')
-            return create(_result_bytes(case_id, raw))
+            return create(_result_bytes(case_id, raw, task_id=task_id, input_artifact=input_metadata))
         result = executor.execute(subject_action, operation)
         _require(ledger.flush(timeout=1) is True, 'ARTIFACT_DURABLE_ACTION_REQUIRED')
         _require(canonical(read_runtime()) == canonical(bound), 'ARTIFACT_RUNTIME_CHANGED')
@@ -450,7 +488,8 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
         _require(type(value['artifact_content_utf8']) is str, 'ARTIFACT_ORIGINAL_BYTES_REQUIRED')
         raw = value['artifact_content_utf8'].encode('utf-8')
         parse(raw)
-        _require(raw == expected_artifact_bytes(case_id) and canonical(dispatch['artifact']) == canonical(metadata),
+        _require(raw == expected_artifact_bytes(case_id, task_id=task,
+            input_artifact=event['input_artifact_metadata']) and canonical(dispatch['artifact']) == canonical(metadata),
             'ARTIFACT_RESULT_OR_READBACK_DRIFT')
         _metadata(metadata, raw, task, source_revision, began=began, ended=ended)
         from .agent_cert_identity_review import action_span
