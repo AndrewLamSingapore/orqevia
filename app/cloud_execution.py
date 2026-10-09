@@ -83,7 +83,7 @@ def execute_cloud(job,provider,data,cancelled, *, include_identity=False, expect
         raise ProviderFailure('QA_CATALOG_CHANGED', pre_execution=True)
     require_hf_admission(entry,job,provider.name)
     spec=model_spec(entry);metrics=OutcomeMetrics(data/'compute-ledger.db')
-    started=time.monotonic();answer=None;failure=None;selected=entry;failure_retries=0;failure_routes=[]
+    started=time.monotonic();answer=None;failure=None;selected=entry;failure_retries=0;failure_routes=[];failure_diagnostics={}
     def operation():
         nonlocal selected
         messages=[{'role':'user','content':job['prompt']}]
@@ -166,7 +166,8 @@ def execute_cloud(job,provider,data,cancelled, *, include_identity=False, expect
         return result
     except SecretUnavailable:failure='CREDENTIAL_UNAVAILABLE';raise ProviderFailure(failure) from None
     except ProviderFailure as exc:
-        failure=exc.code;failure_retries=getattr(exc,'retry_count',0);failure_routes=getattr(exc,'fallback_failures',[]);raise
+        failure=exc.code;failure_retries=getattr(exc,'retry_count',0);failure_routes=getattr(exc,'fallback_failures',[])
+        failure_diagnostics=exc.diagnostics();raise
     finally:
         usage=answer['usage'] if answer else None
         metrics.record(attempt_id=uuid.uuid4().hex,task_id=job['id'],task_class=job.get('task_class','auto'),tier=entry['tier'],seconds=time.monotonic()-started,
@@ -175,4 +176,5 @@ def execute_cloud(job,provider,data,cancelled, *, include_identity=False, expect
             requested_tier=entry['tier'],requested_provider=entry['id'],requested_model=entry['model'],
             fallback_route=answer.get('fallback_failures',[]) if answer else failure_routes,
             error_classifications=sorted(set(([x['code'] for x in answer.get('fallback_failures',[])]+answer.get('retry_errors',[])) if answer else ([x['code'] for x in failure_routes]+([failure] if failure else [])))),
-            cached_tokens=usage.cached_tokens if usage else None,success=answer is not None,failure_kind=failure)
+            cached_tokens=usage.cached_tokens if usage else None,success=answer is not None,failure_kind=failure,
+            **failure_diagnostics)

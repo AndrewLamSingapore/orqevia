@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import dataclass
 from decimal import Decimal
 import json
+import hashlib
 import os
 import math
 import re
@@ -46,11 +47,41 @@ class Chunk:
     complete: bool = False
 
 
+def _failure_diagnostics(status, request_id_sha256):
+    """Optional bounded observations, never execution/retry/billing authority."""
+    result={}
+    if type(status) is int and 100<=status<=599:
+        result['upstream_http_status']=status
+    if type(request_id_sha256) is str and re.fullmatch(r'[0-9a-f]{64}',request_id_sha256):
+        result['upstream_request_id_sha256']=request_id_sha256
+    return result
+
+
+def _response_diagnostics(response):
+    status=request_id=None
+    try:
+        status=response.status_code
+        request_id=response.headers.get('x-request-id')
+    except Exception:
+        pass  # Optional diagnosis cannot change the original failure decision.
+    fingerprint=None
+    if type(request_id) is str and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,127}',request_id):
+        fingerprint=hashlib.sha256(request_id.encode('ascii')).hexdigest()
+    return _failure_diagnostics(status,fingerprint)
+
+
 class ProviderFailure(RuntimeError):
-    def __init__(self, code, retryable=False, retry_after=0, *, pre_execution=False):
+    def __init__(self, code, retryable=False, retry_after=0, *, pre_execution=False,
+                 upstream_http_status=None, upstream_request_id_sha256=None):
         super().__init__(code)
         self.code=code;self.retryable=retryable;self.retry_after=retry_after
         self.pre_execution=pre_execution
+        metadata=_failure_diagnostics(upstream_http_status,upstream_request_id_sha256)
+        self.upstream_http_status=metadata.get('upstream_http_status')
+        self.upstream_request_id_sha256=metadata.get('upstream_request_id_sha256')
+
+    def diagnostics(self):
+        return _failure_diagnostics(self.upstream_http_status,self.upstream_request_id_sha256)
 
 
 def capacity_rejection(value):
@@ -139,9 +170,11 @@ class ChatCompletionProvider:
         if not isinstance(key,str) or not key or '\r' in key or '\n' in key:
             raise ProviderFailure('CREDENTIAL_UNAVAILABLE',pre_execution=True)
         body=self.request_body(model,messages,output_tokens)
+        diagnosis={}
         try:
             async with httpx.AsyncClient(transport=self.transport,timeout=30,follow_redirects=False) as client:
                 async with client.stream('POST',self.endpoint,headers={'Authorization':'Bearer '+key},json=body) as response:
+                    diagnosis=_response_diagnostics(response)
                     if response.status_code>=300:
                         try:delay=max(0,min(30,float(response.headers.get('Retry-After','0'))))
                         except ValueError:delay=0
@@ -213,10 +246,12 @@ class ChatCompletionProvider:
                             if content:yield Chunk(text=content)
                     if not ended or not finished:raise ProviderFailure('INCOMPLETE_STREAM')
                     yield Chunk(complete=True)
-        except httpx.TimeoutException:raise ProviderFailure('PROVIDER_TIMEOUT') from None
-        except httpx.TransportError:raise ProviderFailure('PROVIDER_TRANSPORT_FAILURE') from None
-        except ProviderFailure:raise
-        except Exception:raise ProviderFailure('PROVIDER_ADAPTER_FAILURE') from None
+        except httpx.TimeoutException:raise ProviderFailure('PROVIDER_TIMEOUT',**diagnosis) from None
+        except httpx.TransportError:raise ProviderFailure('PROVIDER_TRANSPORT_FAILURE',**diagnosis) from None
+        except ProviderFailure as exc:
+            for name,value in diagnosis.items():setattr(exc,name,value)
+            raise
+        except Exception:raise ProviderFailure('PROVIDER_ADAPTER_FAILURE',**diagnosis) from None
 
 
 class HuggingFaceProvider(ChatCompletionProvider):

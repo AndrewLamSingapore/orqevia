@@ -3,6 +3,7 @@ import json
 import sqlite3
 import time
 import math
+import re
 from pathlib import Path
 
 
@@ -13,8 +14,11 @@ class OutcomeMetrics:
             c.execute('CREATE TABLE IF NOT EXISTS reasoning_attempts (id TEXT PRIMARY KEY, task_id TEXT NOT NULL, task_class TEXT NOT NULL, tier TEXT NOT NULL, seconds REAL NOT NULL, tokens INTEGER, cost REAL, verified INTEGER NOT NULL, details TEXT NOT NULL)')
     def connect(self):return sqlite3.connect(self.path,timeout=15)
     def record(self,*,attempt_id,task_id,task_class,tier,seconds,input_tokens=None,output_tokens=None,cost=None,verified=False,**metrics):
-        allowed={'agent_id','workflow_id','provider','model','cached_tokens','retrieved_context_bytes','retries','escalations','success','artifact_id','artifact_validation','handoff_accuracy','context_preservation','role_adherence','tool_selection_precision','schema_adherence','repair_cycles','redundant_work','human_interventions','failure_kind','requested_tier','requested_provider','requested_model','fallback_route','error_classifications'}
+        allowed={'agent_id','workflow_id','provider','model','cached_tokens','retrieved_context_bytes','retries','escalations','success','artifact_id','artifact_validation','handoff_accuracy','context_preservation','role_adherence','tool_selection_precision','schema_adherence','repair_cycles','redundant_work','human_interventions','failure_kind','requested_tier','requested_provider','requested_model','fallback_route','error_classifications','upstream_http_status','upstream_request_id_sha256'}
         if set(metrics)-allowed:raise ValueError('Unrecognized metrics; raw prompts/reasoning are not accepted')
+        status=metrics.get('upstream_http_status');fingerprint=metrics.get('upstream_request_id_sha256')
+        if status is not None and (type(status) is not int or not 100<=status<=599):raise ValueError('Invalid HTTP diagnosis')
+        if fingerprint is not None and (type(fingerprint) is not str or not re.fullmatch(r'[0-9a-f]{64}',fingerprint)):raise ValueError('Invalid request fingerprint')
         if not math.isfinite(seconds) or seconds<0:raise ValueError('Invalid duration')
         for value in (input_tokens,output_tokens):
             if value is not None and (type(value) is not int or value<0):raise ValueError('Invalid token count')
