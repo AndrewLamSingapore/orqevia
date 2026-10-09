@@ -182,8 +182,16 @@ def test_pure_signer_rejects_rehashed_binding_tamper(runtime, defect):
     elif defect == 'review_boolean': review['observations']['reviewer_execution']['dispatch']['model_calls'] = False
     elif defect == 'review_not_durable': review['observations']['reviewer_execution']['dispatch']['review_action_durable'] = False
     elif defect == 'stale':
+        # Protected verification may be later; the original registered review
+        # itself must still consume the event within the owning 300-second bound.
+        proof = review['observations']['reviewer_execution']
+        content = json.loads(proof['artifact_content_utf8'])
+        content['reviewed_at'] = (events._utc(execution['dispatch']['authority_event']['completed_at'])
+            + timedelta(seconds=301)).isoformat()
+        proof['artifact_content_utf8'] = events.canonical(content).decode()
         with pytest.raises(events.AuthorityEventError, match='AUTHORITY_EVENT_STALE_OR_UNBOUNDED'):
-            recompute(row, result.execution_bytes, result.review_bytes, now=datetime.now(timezone.utc) + timedelta(seconds=301))
+            recompute(row, result.execution_bytes, events.canonical(review),
+                now=datetime.now(timezone.utc) + timedelta(minutes=6))
         return
     elif defect == 'model_substitution': execution['job'] = {'result': '{"PASS":true}'}
     primary = events.canonical(execution)

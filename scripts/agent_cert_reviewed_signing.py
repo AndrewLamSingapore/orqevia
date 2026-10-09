@@ -531,9 +531,9 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     registry_raw = REGISTRY_PATH.read_bytes()
     registry_sha = _sha(registry_raw if initialization or artifact or authority else registry_raw.replace(b'\r\n', b'\n'))
     event_review_time = now
-    if artifact:
+    if artifact or initialization or authority:
         # The runtime's 300-second consumption bound applies when the actual
-        # A26 reviewer read the original event. Later protected verification
+        # registered peer reviewer read the original event/report. Later protected verification
         # must preserve that time, not claim a new execution or rereview. The
         # timestamp is provisional until the complete original reviewer
         # artifact, metadata, action span and joins below bind it. The real
