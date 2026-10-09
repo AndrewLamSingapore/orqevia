@@ -150,9 +150,9 @@ def _oracle_id(agent, spec=None):
         from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES, ORACLE_ID as AUTHORITY_ORACLE
         if spec.get('case') in AUTHORITY_CASES:
             return AUTHORITY_ORACLE
-        from app.agent_cert_artifact_events import SUPPORTED_CASES, ORACLE_ID
+        from app.agent_cert_artifact_events import SUPPORTED_CASES, oracle_id
         if spec.get('case') in SUPPORTED_CASES:
-            return ORACLE_ID
+            return oracle_id(spec['case'])
     if spec is not None and spec.get('case') != 'role:normal':
         from app.agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, ORACLE_ID as BASELINE_ORACLE
         if spec.get('case') in BASELINE_CASES:
@@ -389,8 +389,7 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
             runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
             now=now, initialization=row['test_case'] == 'initialization')
     from app.agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
-    if (row.get('dimension') == 'general' and
-            'general:' + str(row.get('test_case')) in ARTIFACT_CASES):
+    if str(row.get('dimension')) + ':' + str(row.get('test_case')) in ARTIFACT_CASES:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
             _deny('ARTIFACT_CLOUD_TRANSPORT_FORBIDDEN')
         return _contract_event_review(row, primary, review, source_revision=source_revision,
@@ -510,11 +509,11 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
             AUTHORITY_REVIEW_ACTION as review_action_type, authority_event_review_join as validate_event)
         event_case, dimension = row.get('test_case'), row.get('dimension')
     elif artifact:
-        from app.agent_cert_artifact_events import ORACLE_ID
+        from app.agent_cert_artifact_events import oracle_id
         from app.agent_cert_role_review import (ARTIFACT_REVIEW_SCHEMA as SCHEMA,
             ARTIFACT_REVIEW_ACTION as review_action_type, artifact_event_review_join as validate_event)
-        event_case = row.get('test_case')
-        dimension = 'general'
+        event_case, dimension = row.get('test_case'), row.get('dimension')
+        ORACLE_ID = oracle_id(str(dimension) + ':' + str(event_case))
     elif initialization:
         from app.agent_cert_initialization_review import (SCHEMA,
             validate_initialization_execution as validate_event)

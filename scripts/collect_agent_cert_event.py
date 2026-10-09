@@ -71,11 +71,11 @@ def _contract(agent, capability, case):
         _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
         return (authority_action_type(case), AUTHORITY_RESULT_SCHEMA, AUTHORITY_REVIEW_SCHEMA,
             AUTHORITY_ORACLE, AUTHORITY_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), authority_event_review_join)
-    from app.agent_cert_artifact_events import SUPPORTED_CASES, RESULT_SCHEMA, ORACLE_ID, artifact_action_type
+    from app.agent_cert_artifact_events import SUPPORTED_CASES, RESULT_SCHEMA, oracle_id, artifact_action_type
     if case in SUPPORTED_CASES:
         _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
         return (artifact_action_type(case), RESULT_SCHEMA, ARTIFACT_REVIEW_SCHEMA,
-            ORACLE_ID, ARTIFACT_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), artifact_event_review_join)
+            oracle_id(case), ARTIFACT_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), artifact_event_review_join)
     if case == 'baseline:initialization':
         from app.agent_cert_initialization import (
             ACTION_TYPE, SCHEMA, initialization_reviewer, initialization_oracle_id,
@@ -305,7 +305,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                     action_type=artifact_action_type(case, setup=True), schema=INPUT_SCHEMA,
                     metadata=input_metadata, began=action_began, ended=action_ended,
                     action_id=event['input_action_id'])
-            if case == 'general:recovery':
+            if case in {'general:recovery', 'evidence_integrity:complete'}:
                 prior_metadata = event['prior_artifact_metadata']
                 bounded()
                 raw = _artifact(io, prior_metadata.get('artifact_id') if type(prior_metadata) is dict else None,

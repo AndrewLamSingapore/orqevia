@@ -75,12 +75,13 @@ def test_original_event_through_existing_objective_dispatch_api_and_distinct_rev
         task_id=execution['dispatch']['task_id'],
         input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata'],
         prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata'))
-    assert review['dimension'] == 'general' and review['test_case'] == case.split(':')[1]
-    assert review['review_test_version'] == events.ORACLE_ID
+    assert review['dimension'] == case.split(':')[0] and review['test_case'] == case.split(':')[1]
+    assert review['review_test_version'] == events.oracle_id(case)
     content = json.loads(result.reviewer_artifact_bytes)
     assert content['schema_version'] == contracts.ARTIFACT_REVIEW_SCHEMA
     assert content['subject_domain_join']['completed_at'] == execution['dispatch']['artifact_event']['completed_at']
-    assert len(result.subject_actions) == len(result.reviewer_actions) == 2
+    assert len(result.subject_actions) == (4 if case == events.INTEGRITY_CASE else 2)
+    assert len(result.reviewer_actions) == 2
     if case == 'general:artifact_produce':
         assert result.input_artifact_bytes is None and result.input_actions == ()
         assert execution['input_action_records'] == []
@@ -102,6 +103,9 @@ def test_source_owned_case_does_not_accept_generic_text_as_an_event(case):
     if case == events.RECOVERY_CASE:
         prior = {'task_id': task, 'artifact_id': 'c' * 32, 'sha256': events.sha(events.prior_assessment_bytes(task))}
         metadata['sha256'] = events.sha(events.correction_bytes(task, prior))
+    if case == events.INTEGRITY_CASE:
+        prior = {'task_id': task, 'artifact_id': 'c' * 32, 'sha256': events.sha(events.integrity_revision_bytes(task))}
+        metadata['sha256'] = events.sha(events.integrity_revision_bytes(task, prior))
     raw = events.expected_artifact_bytes(case, task_id=task, input_artifact=metadata, prior_artifact=prior)
     assert contracts.review_case_output('a19', 'responsibility.a19', case,
         raw.decode()) == (False, ('artifact_event_evidence_required',))

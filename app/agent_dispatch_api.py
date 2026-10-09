@@ -205,7 +205,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             subject_action = tool_action_type(case_id) if tool else authority_action_type(case_id) if authority else artifact_action_type(case_id)
             test_case = case_id.split(':')[1]
             if artifact:
-                from .agent_cert_artifact_events import ORACLE_ID
+                from .agent_cert_artifact_events import oracle_id
+                ORACLE_ID = oracle_id(case_id)
             if tool:
                 ORACLE_ID = oracle_id(case_id)
         require(type(envelope['expected_execution_sha256']) is str
@@ -269,7 +270,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and original_raw == execution['input_content_utf8'].encode('utf-8')
                 and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                     canonical(execution['input_action_records']), 'ARTIFACT_ORIGINAL_INPUT_REQUIRED')
-        if artifact and case_id == 'general:recovery':
+        if artifact and case_id in {'general:recovery', 'evidence_integrity:complete'}:
             prior_metadata = execution['dispatch']['artifact_event']['prior_artifact_metadata']
             original_prior_metadata, original_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
             require(canonical(original_prior_metadata) == canonical(prior_metadata)
@@ -304,7 +305,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                     and final_input_raw == original_raw
                     and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                         canonical(execution['input_action_records']), 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
-            if artifact and case_id == 'general:recovery':
+            if artifact and case_id in {'general:recovery', 'evidence_integrity:complete'}:
                 final_prior_metadata, final_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
                 require(canonical(final_prior_metadata) == canonical(original_prior_metadata)
                     and final_prior_raw == original_prior_raw

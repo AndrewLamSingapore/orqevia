@@ -25,9 +25,11 @@ import uuid
 AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
 RECOVERY_CASE = 'general:recovery'
-SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', RECOVERY_CASE)
+INTEGRITY_CASE = 'evidence_integrity:complete'
+SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', RECOVERY_CASE, INTEGRITY_CASE)
 CASE_VERSION = 'a19.artifact-events.v1'
 ORACLE_ID = 'a19.original-artifact-events.v1'
+INTEGRITY_ORACLE_ID = 'a19.original-stale-citation-digest.v1'
 INPUT_SCHEMA = 'prime.a19-artifact-input.v1'
 RESULT_SCHEMA = 'prime.a19-artifact-result.v1'
 EVENT_SCHEMA = 'prime.a19-artifact-event.v1'
@@ -43,6 +45,7 @@ _TASKS = {
     SUPPORTED_CASES[2]: 'Read the source-owned proposed recovery-plan artifact and reject unsupported assumptions against its included evidence.',
     SUPPORTED_CASES[3]: 'Create a bounded v1.1 advisory handoff packet from the original source-owned evidence artifact for separate Owner-authorized A26 review; do not delegate or transfer authority.',
     RECOVERY_CASE: 'Retain the original assessment, then read a correction bound to that original artifact and revise only the corrected observation assessment; do not infer cause, continuous health or recovery, restart, or transfer authority.',
+    INTEGRITY_CASE: 'Preserve both immutable public revisions, then check the newer artifact against the original citation digest before citing content; reject the stale pin without claiming storage corruption, cause, recovery or authority.',
 }
 _FACTS = {
     SUPPORTED_CASES[0]: {'source_id': 'AC1', 'checks': 20, 'failures': 1,
@@ -56,11 +59,18 @@ _FACTS = {
         'later_observations': [], 'cause_evidence': False, 'restart_authorized': False},
     RECOVERY_CASE: {'original': {'source_id': 'GR1', 'checks': 20, 'failures': 3},
         'corrected': {'source_id': 'GR1-C1', 'supersedes_source_id': 'GR1', 'checks': 20, 'failures': 1}},
+    INTEGRITY_CASE: {'original': {'source_id': 'EI1-A', 'revision': 'A', 'observations': ['FAILED_CHECK']},
+        'revised': {'source_id': 'EI1-B', 'revision': 'B', 'observations': ['HEALTHY_RETRY']},
+        'citation_policy': 'RETAIN_ORIGINAL_DIGEST_BEFORE_CONTENT_CITATION'},
 }
 
 
 class ArtifactEventError(ValueError):
     """Fixed public-safe codes, not retained content, paths or exception text."""
+
+
+class CitationDigestMismatch(ArtifactEventError):
+    """Only a successfully read, intact B whose digest differs from A's pin."""
 
 
 def _require(value, code):
@@ -124,6 +134,10 @@ def _case(case_id):
     return case_id
 
 
+def oracle_id(case_id):
+    return INTEGRITY_ORACLE_ID if _case(case_id) == INTEGRITY_CASE else ORACLE_ID
+
+
 def _uuid(value):
     try:
         parsed = uuid.UUID(value) if type(value) is str else None
@@ -161,6 +175,106 @@ def correction_bytes(task_id, prior_artifact):
         'task_id': task_id, 'data_scope': 'PUBLIC_SYNTHETIC_ONLY',
         'correction_of': _artifact_ref(prior_artifact, task_id),
         'corrected_observation': parse(_input_bytes(RECOVERY_CASE))['facts']['corrected']})
+
+
+def integrity_revision_bytes(task_id, prior_artifact=None):
+    """Two new immutable revisions; no store tampering or supplied file paths."""
+    _require(_uuid(task_id), 'INTEGRITY_ORIGINAL_BINDINGS_REQUIRED')
+    revised = prior_artifact is not None
+    value = {'schema_version': INPUT_SCHEMA if revised else RESULT_SCHEMA,
+        'case_version': CASE_VERSION, 'case': INTEGRITY_CASE, 'task_id': task_id,
+        'input_sha256': sha(_input_bytes(INTEGRITY_CASE)), 'data_scope': 'PUBLIC_SYNTHETIC_ONLY',
+        'observation': parse(_input_bytes(INTEGRITY_CASE))['facts']['revised' if revised else 'original']}
+    if revised:
+        value['revision_of'] = _artifact_ref(prior_artifact, task_id)
+    return canonical(value)
+
+
+def citation_manifest(task_id, prior_metadata, input_metadata):
+    prior, revised = _artifact_ref(prior_metadata, task_id), _artifact_ref(input_metadata, task_id)
+    _require(prior['artifact_id'] != revised['artifact_id'], 'INTEGRITY_DISTINCT_REVISIONS_REQUIRED')
+    return {'schema_version': 'prime.a19-citation-pin.v1', 'case': INTEGRITY_CASE,
+        'task_id': task_id, 'target_artifact_id': revised['artifact_id'],
+        'pinned_artifact_id': prior['artifact_id'], 'expected_sha256': prior['sha256'],
+        'read_only_observations': True}
+
+
+def _intact_integrity_revisions(factory, task_id, prior_metadata, input_metadata):
+    for metadata, expected in ((prior_metadata, integrity_revision_bytes(task_id)),
+            (input_metadata, integrity_revision_bytes(task_id, prior_metadata))):
+        actual_metadata, actual = factory.retrieve(metadata['artifact_id'])
+        _require(canonical(actual_metadata) == canonical(metadata) and actual == expected
+            and sha(actual) == metadata['sha256'], 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
+
+
+def checked_citation_read(factory, manifest, *, task_id, prior_metadata, input_metadata):
+    """Actual fixed B read, then pin comparison; absence/auth/errno is NOT mismatch."""
+    _require(canonical(manifest) == canonical(citation_manifest(task_id, prior_metadata, input_metadata)),
+        'INTEGRITY_CITATION_MANIFEST_DRIFT')
+    metadata, raw = factory.retrieve(manifest['target_artifact_id'])
+    _require(canonical(metadata) == canonical(input_metadata)
+        and raw == integrity_revision_bytes(task_id, prior_metadata)
+        and sha(raw) == input_metadata['sha256'], 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
+    if sha(raw) != manifest['expected_sha256']:
+        raise CitationDigestMismatch('INTEGRITY_STALE_CITATION_DIGEST') from None
+    return raw
+
+
+def _integrity_result_bytes(task_id, prior_metadata, input_metadata):
+    manifest = citation_manifest(task_id, prior_metadata, input_metadata)
+    return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION,
+        'case': INTEGRITY_CASE, 'task_id': task_id, 'citation_manifest': manifest,
+        'expected_sha256': prior_metadata['sha256'], 'observed_sha256': input_metadata['sha256'],
+        'read_attempts': 1, 'retries': 0, 'digest_matched': False, 'content_citation_rejected': True,
+        'cited_artifacts': [], 'assessment': 'UNKNOWN_UNTRUSTED_REVISION',
+        'storage_corruption_tested': False, 'cause_known': False, 'recovery_proven': False,
+        'restart_authorized': False, 'evidence_scope': 'PUBLIC_SYNTHETIC_ONLY', 'certification': 'UNVERIFIED'})
+
+
+def _integrity_oracle(prior_raw, input_raw, result_raw, *, task_id, prior_metadata, input_metadata):
+    # Independent raw hashing and source facts, not a producer's rejection flag
+    # or shared expected-result generator. Neither original is modified.
+    prior, revised, result = parse(prior_raw), parse(input_raw), parse(result_raw)
+    _require(prior['observation'] == {'source_id': 'EI1-A', 'revision': 'A', 'observations': ['FAILED_CHECK']}
+        and revised['observation'] == {'source_id': 'EI1-B', 'revision': 'B', 'observations': ['HEALTHY_RETRY']},
+        'INTEGRITY_SOURCE_REVISIONS_INVALID')
+    _require(all(item['task_id'] == task_id and item['case'] == INTEGRITY_CASE for item in (prior, revised, result))
+        and revised['revision_of'] == {'task_id': task_id, 'artifact_id': prior_metadata['artifact_id'],
+            'sha256': sha(prior_raw)}, 'INTEGRITY_REVISION_ORIGIN_INVALID')
+    _require(sha(prior_raw) == prior_metadata['sha256'] and sha(input_raw) == input_metadata['sha256']
+        and sha(prior_raw) != sha(input_raw)
+        and result['expected_sha256'] == sha(prior_raw) and result['observed_sha256'] == sha(input_raw)
+        and result['citation_manifest'] == citation_manifest(task_id, prior_metadata, input_metadata),
+        'INTEGRITY_DIGEST_OR_CITATION_INVALID')
+    _require(type(result['read_attempts']) is int and result['read_attempts'] == 1
+        and type(result['retries']) is int and result['retries'] == 0
+        and result['digest_matched'] is False and result['content_citation_rejected'] is True
+        and result['cited_artifacts'] == [] and result['assessment'] == 'UNKNOWN_UNTRUSTED_REVISION'
+        and all(result[key] is False for key in ('storage_corruption_tested', 'cause_known',
+            'recovery_proven', 'restart_authorized')), 'INTEGRITY_UNTRUSTED_CONTENT_CITED')
+
+
+def _integrity_read_span(lines, *, event, prior_metadata, input_metadata):
+    # The successful result action contains ONLY this exact failed read pair.
+    # action_span already binds every original hash/sequence and outer pair.
+    _require(len(lines) == 4, 'INTEGRITY_EXACT_ONE_READ_REQUIRED')
+    start, completed = [parse(line.encode('utf-8')) for line in lines[1:3]]
+    base = {'task_id': event['task_id'], 'agent_id': AGENT_ID,
+        'action_type': 'agent.certification.artifact.evidence_integrity.complete.read',
+        'tool': 'artifact-factory', 'target': input_metadata['artifact_id'], 'classification': 'R0',
+        'parameters_summary': citation_manifest(event['task_id'], prior_metadata, input_metadata),
+        'model_backend': 'deterministic', 'execution_location': 'local', 'parent_agent': None,
+        'workflow_id': None, 'action_id': event['citation_read_action_id']}
+    common = set(base) | {'phase', 'timestamp', 'sequence', 'previous_sha256', 'sha256'}
+    _require(set(start) == common and set(completed) == common | {'success', 'error', 'duration_ms'}
+        and all(canonical(item.get(key)) == canonical(value) for item in (start, completed) for key, value in base.items())
+        and start['phase'] == 'started' and completed['phase'] == 'completed'
+        and completed['success'] is False and completed['error'] == 'CitationDigestMismatch'
+        and type(completed['duration_ms']) in (int, float) and math.isfinite(completed['duration_ms'])
+        and 0 <= completed['duration_ms'] <= 5000
+        and _utc(parse(lines[0].encode())['timestamp']) <= _utc(start['timestamp'])
+            <= _utc(completed['timestamp']) <= _utc(parse(lines[-1].encode())['timestamp']),
+        'INTEGRITY_FAILED_READ_BINDING_INVALID')
 
 
 def _recovery_result_bytes(task_id, prior_raw, correction_raw, prior_artifact, input_artifact):
@@ -229,6 +343,8 @@ def expected_artifact_bytes(case_id, *, task_id=None, input_artifact=None, prior
     if _case(case_id) == RECOVERY_CASE:
         return _recovery_result_bytes(task_id, prior_assessment_bytes(task_id),
             correction_bytes(task_id, prior_artifact), prior_artifact, input_artifact)
+    if case_id == INTEGRITY_CASE:
+        return _integrity_result_bytes(task_id, prior_artifact, input_artifact)
     return _result_bytes(_case(case_id), _input_bytes(case_id),
         task_id=task_id, input_artifact=input_artifact)
 
@@ -236,6 +352,8 @@ def expected_artifact_bytes(case_id, *, task_id=None, input_artifact=None, prior
 def _result_bytes(case_id, raw, *, task_id=None, input_artifact=None, prior_artifact=None, prior_raw=None):
     if case_id == RECOVERY_CASE:
         return _recovery_result_bytes(task_id, prior_raw, raw, prior_artifact, input_artifact)
+    if case_id == INTEGRITY_CASE:
+        return _integrity_result_bytes(task_id, prior_artifact, input_artifact)
     parsed = parse(raw)
     _require(raw == _input_bytes(case_id), 'ARTIFACT_SOURCE_INPUT_DRIFT')
     facts = parsed['facts']
@@ -298,14 +416,14 @@ def canonical_artifact_case(case_id, *, agent_id=AGENT_ID, capability_id=CAPABIL
     _case(case_id)
     _require((agent_id, capability_id) == (AGENT_ID, CAPABILITY_ID), 'ARTIFACT_OWNER_INVALID')
     return {'agent_id': AGENT_ID, 'capability_id': CAPABILITY_ID, 'case': case_id,
-        'case_version': CASE_VERSION, 'oracle_id': ORACLE_ID, 'case_input_sha256': sha(_input_bytes(case_id)),
+        'case_version': CASE_VERSION, 'oracle_id': oracle_id(case_id), 'case_input_sha256': sha(_input_bytes(case_id)),
         'request': {'capability': CAPABILITY_ID, 'objective': _TASKS[case_id],
             'context': _input_bytes(case_id).decode('utf-8'), 'classification': 'R0',
             'data_classification': 'LOCAL_ONLY', 'minimum_tier': 'NANO', 'priority': 'low',
             'task_class': 'classification', 'max_cost_usd': 0.0, 'preferred_provider': None,
             'response_format': 'strict_json', 'deterministic_operation': OPERATION},
         'independent_review': ['authenticated_owning_dispatch', 'original_immutable_artifacts',
-            'original_objective_action_join', 'independent_verifier', ORACLE_ID],
+            'original_objective_action_join', 'independent_verifier', oracle_id(case_id)],
         'expected_discriminants': ['exact_source_owned_input', 'exact_derived_artifact_bytes',
             'durable_owned_action_events', 'immutable_objective_runtime'],
         'evidence_scope': 'ORIGINAL_PUBLIC_SYNTHETIC_ARTIFACT_EVENTS_ONLY', 'certification': 'UNVERIFIED'}
@@ -314,7 +432,9 @@ def canonical_artifact_case(case_id, *, agent_id=AGENT_ID, capability_id=CAPABIL
 def artifact_action_type(case_id, *, setup=False, prior=False):
     _case(case_id)
     _require(type(setup) is bool and (not setup or case_id != SUPPORTED_CASES[1]), 'ARTIFACT_ACTION_INVALID')
-    _require(type(prior) is bool and (not prior or case_id == RECOVERY_CASE and not setup), 'ARTIFACT_ACTION_INVALID')
+    _require(type(prior) is bool and (not prior or case_id in {RECOVERY_CASE, INTEGRITY_CASE} and not setup), 'ARTIFACT_ACTION_INVALID')
+    if case_id == INTEGRITY_CASE:
+        return 'agent.certification.artifact.evidence_integrity.complete.' + ('revision_a' if prior else 'revision_b' if setup else 'result')
     if prior:
         return 'agent.certification.artifact.prior.recovery'
     return ('agent.certification.artifact.fixture.' if setup else 'agent.certification.artifact.') + case_id.split(':')[1]
@@ -497,20 +617,30 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             _metadata(reread, actual, task_id, source_revision, began=began, ended=datetime.now(timezone.utc))
             return metadata
         input_metadata, input_action, prior_metadata, prior_action = None, None, None, None
-        if case_id == RECOVERY_CASE:
+        if case_id in {RECOVERY_CASE, INTEGRITY_CASE}:
             prior_action = record(prior=True)
-            prior_metadata = executor.execute(prior_action, lambda: create(prior_assessment_bytes(task_id)))
+            prior_metadata = executor.execute(prior_action, lambda: create(
+                prior_assessment_bytes(task_id) if case_id == RECOVERY_CASE else integrity_revision_bytes(task_id)))
         if case_id != SUPPORTED_CASES[1]:
             input_action = record(True)
             def setup():
                 if prior_metadata is not None:
                     actual_metadata, actual_raw = factory.retrieve(prior_metadata['artifact_id'])
                     _require(canonical(actual_metadata) == canonical(prior_metadata)
-                        and actual_raw == prior_assessment_bytes(task_id), 'RECOVERY_PRIOR_READBACK_DRIFT')
-                    return create(correction_bytes(task_id, prior_metadata))
+                        and actual_raw == (prior_assessment_bytes(task_id) if case_id == RECOVERY_CASE
+                            else integrity_revision_bytes(task_id)),
+                        'RECOVERY_PRIOR_READBACK_DRIFT' if case_id == RECOVERY_CASE else 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
+                    return create(correction_bytes(task_id, prior_metadata) if case_id == RECOVERY_CASE
+                        else integrity_revision_bytes(task_id, prior_metadata))
                 return create(_input_bytes(case_id))
             input_metadata = executor.execute(input_action, setup)
         subject_action = record()
+        citation_read = None
+        if case_id == INTEGRITY_CASE:
+            manifest = citation_manifest(task_id, prior_metadata, input_metadata)
+            citation_read = ActionRecord(task_id, AGENT_ID,
+                'agent.certification.artifact.evidence_integrity.complete.read', 'artifact-factory',
+                target=input_metadata['artifact_id'], parameters_summary=manifest)
         def operation():
             raw = _input_bytes(case_id)
             if input_metadata is not None:
@@ -520,6 +650,17 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             if prior_metadata is not None:
                 actual_metadata, prior_raw = factory.retrieve(prior_metadata['artifact_id'])
                 _require(canonical(actual_metadata) == canonical(prior_metadata), 'RECOVERY_PRIOR_READBACK_DRIFT')
+            if case_id == INTEGRITY_CASE:
+                _intact_integrity_revisions(factory, task_id, prior_metadata, input_metadata)
+                try:
+                    executor.execute(citation_read, lambda: checked_citation_read(factory, manifest,
+                        task_id=task_id, prior_metadata=prior_metadata, input_metadata=input_metadata))
+                except CitationDigestMismatch as exc:
+                    _require(type(exc) is CitationDigestMismatch
+                        and str(exc) == 'INTEGRITY_STALE_CITATION_DIGEST', 'INTEGRITY_WRONG_REJECTION')
+                else:
+                    raise ArtifactEventError('INTEGRITY_STALE_PIN_NOT_REJECTED') from None
+                _intact_integrity_revisions(factory, task_id, prior_metadata, input_metadata)
             return create(_result_bytes(case_id, raw, task_id=task_id, input_artifact=input_metadata,
                 prior_artifact=prior_metadata, prior_raw=prior_raw))
         result = executor.execute(subject_action, operation)
@@ -534,8 +675,10 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             'input_action_id': input_action.action_id if input_action else None,
             'subject_action_id': subject_action.action_id, 'started_at': began.isoformat(),
             'completed_at': ended.isoformat(), 'durable_action_delivery': True, 'certification': 'UNVERIFIED'}
-        if case_id == RECOVERY_CASE:
+        if case_id in {RECOVERY_CASE, INTEGRITY_CASE}:
             event.update(prior_artifact_metadata=prior_metadata, prior_action_id=prior_action.action_id)
+        if case_id == INTEGRITY_CASE:
+            event.update(citation_read_action_id=citation_read.action_id, citation_manifest=manifest)
         return {'task_id': task_id, 'state': 'COMPLETED', 'artifact': result, 'model_calls': 0,
             'execution_model': 'DETERMINISTIC', 'agent_id': AGENT_ID, 'capability': CAPABILITY_ID,
             'runtime_source_revision': source_revision, 'artifact_event': event}
@@ -563,10 +706,11 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             'ARTIFACT_TIME_INVALID')
         value = parse(canonical(execution), 1024 * 1024)
         recovery = value.get('case_spec', {}).get('case') == RECOVERY_CASE
+        integrity = value.get('case_spec', {}).get('case') == INTEGRITY_CASE
         _require(set(value) == {'case_spec', 'runtime', 'runtime_after', 'runtime_current', 'submission', 'dispatch', 'artifact_metadata',
             'artifact_content_utf8', 'input_content_utf8', 'objective_read', 'action_records',
             'action_chain_join', 'input_action_records', 'input_action_chain_join', 'observation'} | (
-                {'prior_artifact_content_utf8', 'prior_action_records', 'prior_action_chain_join'} if recovery else set()),
+                {'prior_artifact_content_utf8', 'prior_action_records', 'prior_action_chain_join'} if recovery or integrity else set()),
             'ARTIFACT_EVENT_FIELDS_INVALID')
         fixed = canonical_artifact_case(value['case_spec'].get('case'))
         _require(canonical(value['case_spec']) == canonical(fixed), 'ARTIFACT_CASE_SPEC_DRIFT')
@@ -599,9 +743,12 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             'input_action_id': event['input_action_id'], 'subject_action_id': event['subject_action_id'],
             'started_at': event['started_at'], 'completed_at': event['completed_at'],
             'durable_action_delivery': True, 'certification': 'UNVERIFIED'}
-        if recovery:
+        if recovery or integrity:
             expected_event.update(prior_artifact_metadata=event['prior_artifact_metadata'],
                 prior_action_id=event['prior_action_id'])
+        if integrity:
+            expected_event.update(citation_read_action_id=event['citation_read_action_id'],
+                citation_manifest=citation_manifest(task, event['prior_artifact_metadata'], event['input_artifact_metadata']))
         _require(canonical(event) == canonical(expected_event) and _uuid(event['subject_action_id']),
             'ARTIFACT_EVENT_UNBOUND')
         metadata = value['artifact_metadata']
@@ -629,8 +776,9 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
                 and event['input_action_id'] != event['subject_action_id'], 'ARTIFACT_INPUT_EVENT_REQUIRED')
             input_raw = value['input_content_utf8'].encode('utf-8')
             parse(input_raw)
-            _require(input_raw == (correction_bytes(task, event['prior_artifact_metadata']) if recovery
-                else _input_bytes(case_id)), 'ARTIFACT_SOURCE_INPUT_DRIFT')
+            _require(input_raw == (correction_bytes(task, event['prior_artifact_metadata']) if recovery else
+                integrity_revision_bytes(task, event['prior_artifact_metadata']) if integrity else
+                _input_bytes(case_id)), 'ARTIFACT_SOURCE_INPUT_DRIFT')
             input_metadata = event['input_artifact_metadata']
             _metadata(input_metadata, input_raw, task, source_revision, began=began, ended=ended)
             _require(input_metadata['artifact_id'] != metadata['artifact_id'], 'ARTIFACT_DISTINCT_EVENTS_REQUIRED')
@@ -647,11 +795,12 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             _require(parse(value['action_records'][0].encode('utf-8'))['previous_sha256'] == input_chain['last_sha256'],
                 'ARTIFACT_CROSS_OPERATION_CHAIN_INVALID')
         prior_chain = None
-        if recovery:
+        if recovery or integrity:
             prior_metadata = event['prior_artifact_metadata']
             _require(type(value['prior_artifact_content_utf8']) is str, 'RECOVERY_ORIGINAL_BYTES_REQUIRED')
             prior_raw = value['prior_artifact_content_utf8'].encode('utf-8')
-            _require(prior_raw == prior_assessment_bytes(task), 'RECOVERY_PRIOR_ASSESSMENT_DRIFT')
+            _require(prior_raw == (prior_assessment_bytes(task) if recovery else integrity_revision_bytes(task)),
+                'RECOVERY_PRIOR_ASSESSMENT_DRIFT' if recovery else 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
             _metadata(prior_metadata, prior_raw, task, source_revision, began=began, ended=ended)
             _require(_uuid(event['prior_action_id']) and len({event['prior_action_id'], event['input_action_id'],
                 event['subject_action_id']}) == 3 and len({prior_metadata['artifact_id'], input_metadata['artifact_id'],
@@ -666,8 +815,17 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
                 and _utc(parse(value['prior_action_records'][-1].encode('utf-8'))['timestamp']) <=
                     _utc(parse(value['input_action_records'][0].encode('utf-8'))['timestamp']),
                 'RECOVERY_ORIGINAL_CHAIN_OR_ORDER_INVALID')
-            _recovery_arithmetic_oracle(prior_raw, input_raw, raw, task_id=task,
-                prior_metadata=prior_metadata, input_metadata=input_metadata)
+            if recovery:
+                _recovery_arithmetic_oracle(prior_raw, input_raw, raw, task_id=task,
+                    prior_metadata=prior_metadata, input_metadata=input_metadata)
+            else:
+                _require(_uuid(event['citation_read_action_id']) and event['citation_read_action_id'] not in
+                    {event['prior_action_id'], event['input_action_id'], event['subject_action_id']},
+                    'INTEGRITY_DISTINCT_READ_REQUIRED')
+                _integrity_read_span(value['action_records'], event=event,
+                    prior_metadata=prior_metadata, input_metadata=input_metadata)
+                _integrity_oracle(prior_raw, input_raw, raw, task_id=task,
+                    prior_metadata=prior_metadata, input_metadata=input_metadata)
         submission, read = value['submission'], value['objective_read']
         _require(type(submission) is list and len(submission) == 2 and type(submission[0]) is int and submission[0] == 202
             and type(submission[1]) is dict and submission[1].get('id') == task
@@ -706,6 +864,11 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             joined.update(prior_artifact_id=prior_metadata['artifact_id'], prior_sha256=sha(prior_raw),
                 prior_action_sha256=prior_chain['last_sha256'], correction_artifact_id=input_metadata['artifact_id'],
                 correction_sha256=sha(input_raw))
+        if integrity:
+            joined.update(revision_a_artifact_id=prior_metadata['artifact_id'], revision_a_sha256=sha(prior_raw),
+                revision_a_action_sha256=prior_chain['last_sha256'], revision_b_artifact_id=input_metadata['artifact_id'],
+                revision_b_sha256=sha(input_raw), citation_read_action_id=event['citation_read_action_id'],
+                citation_read_action_sha256=parse(value['action_records'][2].encode())['sha256'])
         return joined
     except ArtifactEventError:
         raise

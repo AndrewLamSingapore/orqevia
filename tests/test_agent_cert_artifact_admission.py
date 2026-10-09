@@ -16,7 +16,7 @@ from tests.test_sign_admitted_agent_cases import entry, manifest, REVIEW
 @pytest.mark.parametrize('case_id', events.SUPPORTED_CASES)
 def test_exact_owned_artifact_admissions_stay_local_distinct_events(case_id):
     value = entry()
-    value['record'].update(dimension='general', test_case=case_id.split(':')[1])
+    value['record'].update(dimension=case_id.split(':')[0], test_case=case_id.split(':')[1])
     assert loader.parse(manifest([value])) == [value]
     wrong = copy.deepcopy(value)
     wrong['record'].update(agent_id='a20', capability_id='responsibility.a20')
@@ -56,12 +56,12 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
     result = readiness.build_source_readiness(source_revision='a' * 40, canonical_main_revision='b' * 40,
         now=datetime.now(timezone.utc))
     a19 = next(row for row in result['capability_rows'] if row['agent_id'] == 'a19')
-    assert len(a19['canonical_adapter_oracle_ready_cases']) == 51
+    assert len(a19['canonical_adapter_oracle_ready_cases']) == 52
     assert set(events.SUPPORTED_CASES) <= set(a19['distinct_zero_model_event_adapter_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['source_pinned_cloud_transport_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['cloud_transport_missing_for_ready_quality_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['generic_queue_observer_quality_gap_cases'])
-    assert result['source_canonical_adapter_oracle_count'] == 107
+    assert result['source_canonical_adapter_oracle_count'] == 108
     assert {'authority:complete', 'unauthorized_rejection:authorized'} <= set(
         a19['distinct_zero_model_event_adapter_cases'])
     assert {'unauthorized_rejection:unauthorized', 'unauthorized_rejection:owner_only'} <= set(

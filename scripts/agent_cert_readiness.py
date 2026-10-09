@@ -46,6 +46,7 @@ SOURCE_FILES = (
 )
 EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
+    'evidence_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized',
     'tool_recovery:tool_failure', 'tool_recovery:bounded_response'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})

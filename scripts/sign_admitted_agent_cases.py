@@ -100,6 +100,7 @@ def parse(raw):
             canonical_case_spec(agent, row.get('capability_id'), case_id)
             if case_id in {'baseline:identity', 'baseline:initialization',
                     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
+                    'evidence_integrity:complete',
                     'authority:complete', 'unauthorized_rejection:authorized',
                     'tool_recovery:tool_failure', 'tool_recovery:bounded_response'} and (entry['cloud_policy'] is not None or
                     entry['owner_policy_sha256'] is not None):
