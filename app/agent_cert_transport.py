@@ -36,6 +36,8 @@ A19_VERIFICATION_PROVIDER_ID = "hf-qwen-a19-verification"
 _CASE_PROVIDER_MODELS = frozenset({
     ("a19", "responsibility.a19", "general:verification",
      A19_VERIFICATION_PROVIDER_ID, "Qwen/Qwen3-235B-A22B-Instruct-2507:novita"),
+    ("a19", "responsibility.a19", "role:normal",
+     "hf-qwen-a19-role-deepinfra-candidate", "Qwen/Qwen3-235B-A22B-Instruct-2507:deepinfra"),
 })
 _HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
@@ -251,10 +253,11 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
         raise ValueError("Owner policy digest mismatch")
     identity = case_transport_identity(spec)
     provider_id, model = policy.get("provider_id"), policy.get("model")
+    case_provider_model = (identity["agent_id"], identity["capability_id"],
+                           identity["case"], provider_id, model)
     if (type(provider_id) is not str or type(model) is not str or
             provider_id != PROVIDER_ID and
-            (identity["agent_id"], identity["capability_id"], identity["case"],
-             provider_id, model) not in _CASE_PROVIDER_MODELS):
+            case_provider_model not in _CASE_PROVIDER_MODELS):
         raise ValueError("Owner policy scope mismatch")
     if (policy.get("schema") != POLICY_SCHEMA
             or policy.get("source_revision") != expected_source_revision
@@ -266,7 +269,8 @@ def bind_cloud_case(spec: dict, policy: dict, *, expected_source_revision: str,
             or type(policy.get("public_synthetic")) is not bool
             or policy["public_synthetic"] is not True
             or policy.get("provider_kind") != "huggingface"
-            or model not in SUPPORTED_MODELS):
+            or (model not in SUPPORTED_MODELS and
+                case_provider_model not in _CASE_PROVIDER_MODELS)):
         raise ValueError("Owner policy scope mismatch")
     fixed_limits = {"context_tokens": 4096, "output_tokens": 1024,
                     "timeout_seconds": 35, "max_retries": 0, "concurrency_limit": 1}
