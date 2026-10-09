@@ -58,6 +58,7 @@ class QueuePolicy:
         def decimal(name: str, default: float, low: float, high: float) -> float:
             try: value = float(os.getenv(name, str(default)))
             except ValueError: value = default
+            if not math.isfinite(value): value = default
             return max(low, min(high, value))
         return cls(
             global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 1, 1, 29),
@@ -237,7 +238,11 @@ class JobQueue:
         return [dict(r) for r in rows]
 
     def _daily_spend(self, c: sqlite3.Connection) -> float:
-        row=c.execute("SELECT COALESCE(SUM(COALESCE(actual_cost_usd,estimated_cost_usd)),0) FROM compute_jobs WHERE julianday(completed_at)>=julianday('now','-1 day')").fetchone()
+        # Known charges age normally; unresolved terminal reservations cannot
+        # disappear merely with time. Running/held caps are added by admission.
+        row=c.execute("""SELECT COALESCE(SUM(COALESCE(actual_cost_usd,estimated_cost_usd)),0)
+            FROM compute_jobs WHERE julianday(completed_at)>=julianday('now','-1 day')
+            OR (actual_cost_usd IS NULL AND status IN ('completed','failed','cancelled','budget_blocked'))""").fetchone()
         return float(row[0] or 0)
 
     @staticmethod
