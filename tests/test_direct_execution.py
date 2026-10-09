@@ -16,6 +16,7 @@ from app.connector_sdk import ConnectorRegistry,Sink
 def isolated(monkeypatch,tmp_path):
     close_ledgers()
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
     monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
     monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
