@@ -269,6 +269,13 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and original_raw == execution['input_content_utf8'].encode('utf-8')
                 and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                     canonical(execution['input_action_records']), 'ARTIFACT_ORIGINAL_INPUT_REQUIRED')
+        if artifact and case_id == 'general:recovery':
+            prior_metadata = execution['dispatch']['artifact_event']['prior_artifact_metadata']
+            original_prior_metadata, original_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
+            require(canonical(original_prior_metadata) == canonical(prior_metadata)
+                and original_prior_raw == execution['prior_artifact_content_utf8'].encode('utf-8')
+                and canonical(read_artifact_action_span(root, subject_task, case_id, prior=True)) ==
+                    canonical(execution['prior_action_records']), 'RECOVERY_ORIGINAL_PRIOR_REQUIRED')
         # Revalidate immutable Objective and current identity after all reads;
         # source/registry changes cannot be concealed by a submitted snapshot.
         require(canonical(get_read_only(subject_task, authorization)) == canonical(actual_objective)
@@ -297,6 +304,12 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                     and final_input_raw == original_raw
                     and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                         canonical(execution['input_action_records']), 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
+            if artifact and case_id == 'general:recovery':
+                final_prior_metadata, final_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
+                require(canonical(final_prior_metadata) == canonical(original_prior_metadata)
+                    and final_prior_raw == original_prior_raw
+                    and canonical(read_artifact_action_span(root, subject_task, case_id, prior=True)) ==
+                        canonical(execution['prior_action_records']), 'RECOVERY_DOMAINS_CHANGED_DURING_REVIEW')
             require(canonical(runtime_snapshot()) == canonical(runtime)
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')

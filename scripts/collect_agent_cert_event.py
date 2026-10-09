@@ -54,6 +54,8 @@ class CollectedEvent:
     reviewer_dispatch_response_bytes: bytes | None = field(default=None, repr=False)
     input_artifact_bytes: bytes | None = field(default=None, repr=False)
     input_actions: tuple[str, ...] = field(default=(), repr=False)
+    prior_artifact_bytes: bytes | None = field(default=None, repr=False)
+    prior_actions: tuple[str, ...] = field(default=(), repr=False)
 
 
 def _contract(agent, capability, case):
@@ -121,14 +123,14 @@ def _lines(value):
     return value
 
 
-def _artifact(io, identifier, metadata, holder, *, subject=False, input_artifact=False):
+def _artifact(io, identifier, metadata, holder, *, subject=False, input_artifact=False, prior_artifact=False):
     _require(type(identifier) is str and _ARTIFACT.fullmatch(identifier) is not None,
              'ARTIFACT_ID_INVALID')
     value = _call(io.read_artifact, identifier)
     _require(type(value) is tuple and len(value) == 3 and type(value[0]) is int
              and value[0] == 200 and type(value[1]) is bytes
              and 0 < len(value[1]) <= 65536, 'ORIGINAL_ARTIFACT_READ_FAILED')
-    holder['input_raw' if input_artifact else 'subject_raw' if subject else 'reviewer_raw'] = value[1]
+    holder['prior_raw' if prior_artifact else 'input_raw' if input_artifact else 'subject_raw' if subject else 'reviewer_raw'] = value[1]
     _require(type(value[2]) is str and value[2] == _sha(value[1])
              and type(metadata) is dict and set(metadata) == _METADATA_FIELDS
              and metadata.get('sha256') == value[2]
@@ -150,9 +152,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         protected_signing='PENDING_SEPARATE_ADMISSION', subject_submission_attempts=0,
         review_dispatch_attempts=0, submission_uncertain=False,
         review_dispatch_uncertain=False, source_revision=None, runtime_image_id=None)
-    holder = dict(subject_raw=None, reviewer_raw=None, reviewer_dispatch=None, input_raw=None)
+    holder = dict(subject_raw=None, reviewer_raw=None, reviewer_dispatch=None, input_raw=None, prior_raw=None)
     primary = review_raw = None
-    subject_lines = reviewer_lines = input_lines = ()
+    subject_lines = reviewer_lines = input_lines = prior_lines = ()
     execution = {}
     try:
         _require(type(io) is OperatorIO and callable(read_subject_actions)
@@ -303,6 +305,20 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                     action_type=artifact_action_type(case, setup=True), schema=INPUT_SCHEMA,
                     metadata=input_metadata, began=action_began, ended=action_ended,
                     action_id=event['input_action_id'])
+            if case == 'general:recovery':
+                prior_metadata = event['prior_artifact_metadata']
+                bounded()
+                raw = _artifact(io, prior_metadata.get('artifact_id') if type(prior_metadata) is dict else None,
+                    prior_metadata, holder, prior_artifact=True)
+                execution['prior_artifact_content_utf8'] = raw.decode('utf-8')
+                bounded()
+                lines = _lines(_call(read_subject_actions, task, artifact_action_type(case, prior=True)))
+                prior_lines = tuple(lines)
+                execution['prior_action_records'] = lines
+                bounded()
+                execution['prior_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
+                    action_type=artifact_action_type(case, prior=True), schema=report_schema, metadata=prior_metadata,
+                    began=action_began, ended=action_ended, action_id=event['prior_action_id'])
         if bounded_event:
             execution['runtime_current'] = runtime()
         primary = _canonical(execution)
@@ -422,4 +438,4 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             pass
     return CollectedEvent(summary, primary, review_raw, holder['subject_raw'],
         holder['reviewer_raw'], subject_lines, reviewer_lines, holder['reviewer_dispatch'],
-        holder['input_raw'], input_lines)
+        holder['input_raw'], input_lines, holder['prior_raw'], prior_lines)

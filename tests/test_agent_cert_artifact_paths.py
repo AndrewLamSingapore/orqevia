@@ -73,7 +73,8 @@ def test_original_event_through_existing_objective_dispatch_api_and_distinct_rev
     assert execution['dispatch']['artifact_event']['case'] == case
     assert result.subject_artifact_bytes == events.expected_artifact_bytes(case,
         task_id=execution['dispatch']['task_id'],
-        input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata'])
+        input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata'],
+        prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata'))
     assert review['dimension'] == 'general' and review['test_case'] == case.split(':')[1]
     assert review['review_test_version'] == events.ORACLE_ID
     content = json.loads(result.reviewer_artifact_bytes)
@@ -97,7 +98,11 @@ def test_source_owned_case_does_not_accept_generic_text_as_an_event(case):
     task = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
     metadata = {'task_id': task, 'artifact_id': 'b' * 32,
         'sha256': events.sha(events._input_bytes(case))}
-    raw = events.expected_artifact_bytes(case, task_id=task, input_artifact=metadata)
+    prior = None
+    if case == events.RECOVERY_CASE:
+        prior = {'task_id': task, 'artifact_id': 'c' * 32, 'sha256': events.sha(events.prior_assessment_bytes(task))}
+        metadata['sha256'] = events.sha(events.correction_bytes(task, prior))
+    raw = events.expected_artifact_bytes(case, task_id=task, input_artifact=metadata, prior_artifact=prior)
     assert contracts.review_case_output('a19', 'responsibility.a19', case,
         raw.decode()) == (False, ('artifact_event_evidence_required',))
 

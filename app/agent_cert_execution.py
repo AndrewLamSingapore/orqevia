@@ -399,8 +399,10 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         events.current_authority_policy(expected_registry_sha256),
         events.sha(events.canonical(events._snapshot(event.get('read_domains_before'))))) if authority
         else events.expected_artifact_bytes(fixed['case'], **(
-            {'task_id': task, 'input_artifact': event.get('input_artifact_metadata')}
-            if fixed['case'] == 'general:handoff' else {})))
+            {'task_id': task, 'input_artifact': event.get('input_artifact_metadata'),
+             **({'prior_artifact': event.get('prior_artifact_metadata')}
+                if fixed['case'] == 'general:recovery' else {})}
+            if fixed['case'] in {'general:handoff', 'general:recovery'} else {})))
     if events.canonical(metadata) != events.canonical(declared) or raw != expected_raw:
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_binding_mismatch'}
     events._metadata(metadata, raw, task, expected_source_revision, began=event_began, ended=event_ended)
