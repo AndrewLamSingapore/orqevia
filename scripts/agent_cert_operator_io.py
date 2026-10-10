@@ -257,6 +257,9 @@ class AgentCertOperatorIO:
         self._responses = []
         self._response_bytes = 0
         self._lock = threading.Lock()
+        self._execution_input = None
+        self._execution_input_body = None
+        self._execution_input_tasks = {}
 
     def __repr__(self):
         return '<AgentCertOperatorIO credential=[REDACTED] PREPARED_NOT_LIVE>'
@@ -285,6 +288,9 @@ class AgentCertOperatorIO:
         if artifact:
             return path in {'/api/artifacts/' + value for value in self._artifact_ids}
         paths = {RUNTIME_PATH}
+        for task,actions in self._execution_input_tasks.items():
+            paths.add('/api/agents/objectives/'+task)
+            paths.update('/api/agent-cert-events/actions/'+task+'?action_type='+action for action in actions)
         if self._subject_task:
             paths.add('/api/agents/objectives/' + self._subject_task)
             paths.update('/api/agent-cert-events/actions/' + self._subject_task + '?action_type=' + action
@@ -316,7 +322,12 @@ class AgentCertOperatorIO:
         request_deadline = self._now() + min(self._request_seconds, self._remaining())
         if method == 'POST':
             claim = path
-            if (self._spec['case'] in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} and path == '/api/agents/objectives'
+            if self._execution_input_body is not None:
+                _require(path == '/api/agents/objectives' and _canonical(body) == _canonical(self._execution_input_body)
+                    and self._execution_input is not None and not self._execution_input['failed'],
+                    'EXECUTION_INPUT_FIXED_STAGE_REQUIRED')
+                claim = (path,'execution-input-'+self._execution_input['stage'])
+            elif (self._spec['case'] in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} and path == '/api/agents/objectives'
                     and body.get('capability') == self._review_cap
                     and body.get('deterministic_operation') == self._review_operation):
                 _require(_uuid(self._subject_task) and path in self._post_attempts,'CROSS_FIXED_PEER_REQUEST_REQUIRED')
@@ -463,6 +474,78 @@ class AgentCertOperatorIO:
     def _remember_artifact(self, metadata):
         if type(metadata) is dict and type(metadata.get('artifact_id')) is str and _ARTIFACT.fullmatch(metadata['artifact_id']) is not None:
             self._artifact_ids.add(metadata['artifact_id'])
+
+    def activate_execution_input(self, case, initialization):
+        """Exact new protocol after this client's genuine initialized task."""
+        from datetime import datetime,timezone
+        from app.agent_cert_fresh_input import CASES
+        from app.agent_cert_initialization_review import validate_initialization_execution
+        from app.agent_cert_tool_events import independent_verifier_binding
+        _require(self._execution_input is None and case in CASES and self._authorized
+            and self._spec['case'] == 'baseline:initialization' and self._spec['agent_id'] == 'a19'
+            and initialization.get('dispatch',{}).get('task_id') == self._subject_task
+            and _uuid(self._review_task),'ORIGINAL_CLIENT_INITIALIZATION_REQUIRED')
+        registry = independent_verifier_binding()['registry_sha256']
+        validate_initialization_execution(initialization,agent_id='a19',capability_id='responsibility.a19',
+            source_revision=self._source,runtime_image_id=self._image,registry_sha256=registry,
+            now=datetime.now(timezone.utc))
+        self._execution_input = dict(case=case,initialization=_decode(_canonical(initialization)),
+            registry=registry,stage='custodian',proofs={},failed=False,nonces=set())
+        self._response_limit = 60  # The same 24MiB custody and original30s deadline apply.
+
+    def execution_input_stage(self, *, supplied_payload=None, nonce):
+        from datetime import datetime,timezone
+        from app import agent_cert_fresh_input as fresh
+        state = self._execution_input
+        _require(state is not None and not state['failed'] and state['stage'] in fresh.STAGES,
+            'EXECUTION_INPUT_STAGE_OR_REPLAY_DENIED')
+        stage,proofs = state['stage'],state['proofs']
+        _require(_uuid(nonce),'EXECUTION_INPUT_NONCE_REQUIRED')
+        _require(nonce not in state['nonces'],'EXECUTION_INPUT_NONCE_REPLAY_DENIED')
+        if stage == 'custodian':
+            body = fresh.custodian_request(state['case'],state['initialization'],supplied_payload,state['registry'],nonce)
+        else:
+            _require(supplied_payload is None,'EXECUTION_INPUT_ONLY_CUSTODIAN_SUPPLIES_PAYLOAD')
+            body = fresh.stage_request(stage,state['case'],proofs['custodian'],state['registry'],nonce,
+                source=proofs.get('source'),audit=proofs.get('audit'))
+        fresh.admit(body,state['registry'])
+        try:
+            before = self.runtime()
+            state['nonces'].add(nonce)
+            self._execution_input_body = body
+            status,reply = self._request('POST','/api/agents/objectives',body=body)
+            _require(status == 202 and type(reply.get('steps')) is list and len(reply['steps']) == 1,
+                'EXECUTION_INPUT_ORIGINAL_OBJECTIVE_REQUIRED')
+            dispatch = reply['steps'][0].get('dispatch');metadata = dispatch.get('artifact') if type(dispatch) is dict else None
+            _require(type(dispatch) is dict and dispatch.get('state') == 'COMPLETED'
+                and _uuid(dispatch.get('task_id')) and type(metadata) is dict,'EXECUTION_INPUT_ACTUAL_STAGE_FAILED_NO_RETRY')
+            task = dispatch['task_id'];actions = {fresh.output_action(stage)}
+            if stage in ('source','audit'):actions.add(fresh.read_action(stage))
+            self._execution_input_tasks[task] = actions
+            self._remember_artifact(metadata)
+            first = self._request('GET','/api/agents/objectives/'+task)
+            raw_status,raw,digest = self._request('GET','/api/artifacts/'+metadata['artifact_id'],artifact=True)
+            _require(raw_status == 200 and digest == metadata.get('sha256'),'EXECUTION_INPUT_ORIGINAL_ARTIFACT_REQUIRED')
+            spans = {}
+            for action in sorted(actions):
+                action_status,span = self._request('GET','/api/agent-cert-events/actions/'+task+'?action_type='+action)
+                _require(action_status == 200 and span.get('task_id') == task and span.get('action_type') == action,
+                    'EXECUTION_INPUT_ORIGINAL_ACTIONS_REQUIRED')
+                spans[action] = span.get('original_lines')
+            second = self._request('GET','/api/agents/objectives/'+task)
+            _require(_canonical(first) == _canonical(second) and _canonical(self.runtime()) == _canonical(before),
+                'EXECUTION_INPUT_ORIGINAL_OBSERVATION_DRIFT')
+            proof = dict(request=body,dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+                read_action_records=spans[fresh.read_action(stage)] if stage in ('source','audit') else [],
+                action_records=spans[fresh.output_action(stage)],objective_read=list(second))
+            fresh.validate_proof(proof,before,state['registry'],datetime.now(timezone.utc))
+            proofs[stage] = proof
+            state['stage'] = fresh.STAGES[fresh.STAGES.index(stage)+1] if stage != 'comparison' else 'DONE'
+            return _decode(_canonical(proof))
+        except Exception:
+            state['failed'] = True
+            raise
+        finally:self._execution_input_body = None
 
     def dispatch_reviewer(self, body):
         _require(_uuid(self._subject_task), 'OWNED_SUBJECT_TASK_REQUIRED')

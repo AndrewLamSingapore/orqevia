@@ -167,6 +167,9 @@ def canonical_case_spec(agent, capability, case_id):
     if agent=='a19' and case_id=='recovery:complete':
         from .agent_cert_recovery_events import canonical_recovery_case
         return canonical_recovery_case()
+    from .agent_cert_fresh_input import CASES as FRESH_CASES, canonical_case as canonical_fresh_case
+    if agent == 'a19' and case_id in FRESH_CASES:
+        return canonical_fresh_case(case_id)
     from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES, canonical_tool_case
     if agent == 'a19' and case_id in TOOL_CASES:
         return canonical_tool_case(case_id)
@@ -208,6 +211,9 @@ def review_case_output(agent, capability, case_id, response):
         return False,('original_four_task_conflict_evidence_required',)
     if case_id=='recovery:complete':
         return False,('original_two_task_recovery_evidence_required',)
+    from .agent_cert_fresh_input import CASES as FRESH_CASES
+    if case_id in FRESH_CASES:
+        return False, ('original_supplied_execution_input_event_evidence_required',)
     from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
     if case_id in TOOL_CASES:
         return False, ('tool_event_evidence_required',)

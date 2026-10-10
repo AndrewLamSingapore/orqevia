@@ -674,8 +674,13 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     started = time.perf_counter()
     blind_budget = None
+    execution_input_budget = None
     if body.deterministic_operation == 'certification_tool_review':
         from .agent_cert_clean_room import OBJECTIVE as blind_objective
+        from .agent_cert_fresh_input import OBJECTIVES as execution_input_objectives
+        if body.objective in execution_input_objectives.values():
+            from datetime import datetime, timezone
+            execution_input_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
         if body.objective == blind_objective:
             from datetime import datetime, timezone
             blind_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
@@ -806,6 +811,10 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             elif body.deterministic_operation == 'certification_authority_review':
                 data=joined_authority_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_tool_review':
+                from .agent_cert_fresh_input import OBJECTIVES as execution_input_objectives,dispatch as dispatch_execution_input
+                if body.objective in execution_input_objectives.values():
+                    return dispatch_execution_input(body,authorization,actor=actor,task_id=task_id,runtime=runtime,
+                        budget=execution_input_budget)
                 from .agent_cert_clean_room import OBJECTIVE as blind_objective,execute_blind,case_remaining
                 if body.objective == blind_objective:
                     data=execute_blind(body,authorization,actor=actor,task_id=task_id,runtime=runtime,budget=blind_budget)

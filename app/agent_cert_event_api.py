@@ -30,6 +30,9 @@ from .agent_cert_recovery_events import (PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACT
     action_type as recovery_action_type,read_action_span as read_recovery_action_span,
     read_review_action_span as read_recovery_review_span,validate_full_action_span as validate_recovery_full_span)
 from .agent_cert_clean_room import INPUT_READ_ACTION as BLIND_INPUT_READ_ACTION, input_action_span as blind_input_span
+from .agent_cert_fresh_input import (STAGES as EXECUTION_INPUT_STAGES,
+    read_action as execution_input_read_action, output_action as execution_input_output_action,
+    read_span as execution_input_span)
 
 from .agent_cert_conflict_events import (PHASES as CONFLICT_PHASES,steps as conflict_steps,
     action_type as conflict_action_type,REVIEW_ACTION as CONFLICT_REVIEW_ACTION,
@@ -58,13 +61,15 @@ _CONFLICT_ACTIONS={conflict_action_type(which,step):(which,step)
     for which in CONFLICT_PHASES for step in conflict_steps(which)+('full',)}
 _CROSS_ACTIONS={cross_action_type(which,step):(which,step)
     for which in CROSS_PHASES for step in cross_steps(which)+('full',)}
+_EXECUTION_INPUT_ACTIONS = {execution_input_read_action(stage) for stage in ('source','audit')} | {
+    execution_input_output_action(stage) for stage in EXECUTION_INPUT_STAGES}
 _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
     'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
     AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,CONFLICT_REVIEW_ACTION,CROSS_REVIEW_ACTION,
-} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS)|set(_CROSS_ACTIONS))
+} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS)|set(_CROSS_ACTIONS)|_EXECUTION_INPUT_ACTIONS)
 
 
 def _headers(response):
@@ -131,7 +136,9 @@ def actions(task_id: str, response: Response, action_type: str = '',
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if action_type in _CROSS_ACTIONS:
+        if action_type in _EXECUTION_INPUT_ACTIONS:
+            lines = execution_input_span(root,task_id,action_type)
+        elif action_type in _CROSS_ACTIONS:
             which,step=_CROSS_ACTIONS[action_type]
             lines=read_cross_span(root,task_id,which,step=step)
         elif action_type==CROSS_REVIEW_ACTION:

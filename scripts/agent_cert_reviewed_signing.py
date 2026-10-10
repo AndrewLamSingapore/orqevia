@@ -156,6 +156,9 @@ def _oracle_id(agent, spec=None):
         from app.agent_cert_owned_identity import ORACLE_ID
         return ORACLE_ID
     if spec is not None:
+        from app.agent_cert_fresh_input import CASES as FRESH_CASES, ORACLE_ID as FRESH_ORACLE
+        if spec.get('case') in FRESH_CASES:
+            return FRESH_ORACLE
         from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES, oracle_id
         if spec.get('case') in TOOL_CASES:
             return oracle_id(spec['case'])
@@ -377,6 +380,42 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
                          reviewed_at=reviewed_at, certified_at=certified_at)
 
 
+def _fresh_input_review(row,primary,review,*,source_revision,runtime_image_id,reviewer_code_revision,now):
+    from app import agent_cert_fresh_input as fresh
+    from app.agent_registry import REGISTRY_PATH
+    case = str(row.get('dimension'))+':'+str(row.get('test_case'))
+    if (case not in fresh.CASES or row.get('agent_id') != 'a19'
+        or row.get('capability_id') != 'responsibility.a19' or row.get('verifier') != 'a26'
+        or row.get('executor_identity') != 'a19' or row.get('authority_scope') != agent_record('a19')['authority']
+        or row.get('test_result') != 'PASS' or row.get('test_version') != fresh.CASE_VERSION
+        or row.get('review_test_version') != fresh.ORACLE_ID or row.get('source_revision') != source_revision
+        or row.get('review_source_revision') != source_revision or row.get('reviewer_code_revision') != reviewer_code_revision
+        or any(type(row.get(k)) is not str or not 1 <= len(row[k]) <= 100
+            for k in ('certification_test','review_run_id'))):
+        _deny('EXECUTION_INPUT_RECORD_BINDING_INVALID')
+    execution,envelope = _json(primary),_json(review)
+    registry = _sha(REGISTRY_PATH.read_bytes())
+    try:
+        comparison = execution['comparison']
+        reviewed_at = _utc(comparison['objective_read'][1]['execution_metadata']['updated_at'])
+        if reviewed_at > now:_deny('EXECUTION_INPUT_REVIEW_TIME_INVALID')
+        join = fresh.validate_execution(execution,source_revision=source_revision,
+            runtime_image_id=runtime_image_id,registry_sha256=registry,now=reviewed_at)
+        if execution['case_spec']['case'] != case:_deny('EXECUTION_INPUT_CASE_MISMATCH')
+        expected = dict(schema_version=fresh.REVIEW_SCHEMA,execution_sha256=_sha(primary),case=case,
+            registry_sha256=registry,reviewer_code_revision=reviewer_code_revision,review_run_id=row['review_run_id'],
+            oracle_id=fresh.ORACLE_ID,oracle_pass=True,subject_agent_id='a19',subject_capability_id='responsibility.a19',
+            reviewer_agent_id='a26',reviewer_capability_id='responsibility.a26',subject_domain_join=join,
+            reviewer_execution=comparison,model_calls=0,certification='UNVERIFIED',
+            service_confirmation='NOT_PERFORMED',live_unfamiliarity='NOT_PROVEN')
+        if _canonical(envelope) != _canonical(expected):_deny('EXECUTION_INPUT_ORIGINAL_REVIEW_UNBOUND')
+        if not (_utc(join['completed_at']) <= reviewed_at <= _utc(row['certified_at'])
+            <= _utc(row['last_revalidated']) <= now < _utc(row['expires_at'])):
+            _deny('EXECUTION_INPUT_RECORD_TIME_INVALID')
+    except (KeyError,TypeError,ValueError,UnicodeError):
+        _deny('EXECUTION_INPUT_ORIGINAL_REVIEW_INVALID')
+
+
 def _review(row, primary, review, *, source_revision, runtime_image_id,
             reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
             expected_owner_policy_sha256=None):
@@ -395,6 +434,12 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
             _deny('RECOVERY_CLOUD_TRANSPORT_FORBIDDEN')
         return _recovery_review(row, primary, review, source_revision=source_revision,
             runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision, now=now)
+    from app.agent_cert_fresh_input import CASES as FRESH_CASES
+    if str(row.get('dimension'))+':'+str(row.get('test_case')) in FRESH_CASES:
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('EXECUTION_INPUT_CLOUD_TRANSPORT_FORBIDDEN')
+        return _fresh_input_review(row,primary,review,source_revision=source_revision,
+            runtime_image_id=runtime_image_id,reviewer_code_revision=reviewer_code_revision,now=now)
     from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
     if str(row.get('dimension')) + ':' + str(row.get('test_case')) in TOOL_CASES:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):

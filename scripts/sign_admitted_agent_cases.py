@@ -31,7 +31,7 @@ CODE_FILES = (
     'app/handoff.py',
     'app/context_pack.py',
     'app/agent_cert_authority_events.py', 'app/spine.py', 'app/generated/portfolio_contracts.py',
-    'app/agent_cert_tool_events.py', 'app/agent_cert_handoff_gap.py', 'app/agent_cert_clean_room.py', 'app/agent_cert_revalidation.py', 'app/deterministic_ops.py', 'app/sink_guard.py',
+    'app/agent_cert_tool_events.py', 'app/agent_cert_fresh_input.py', 'app/agent_cert_handoff_gap.py', 'app/agent_cert_clean_room.py', 'app/agent_cert_revalidation.py', 'app/deterministic_ops.py', 'app/sink_guard.py',
     'app/agent_cert_recovery_events.py',
     'app/agent_cert_conflict_events.py',
     'app/agent_cert_cross_conflict_events.py',

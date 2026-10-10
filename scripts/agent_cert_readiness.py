@@ -34,7 +34,7 @@ SOURCE_FILES = (
     'app/handoff.py',
     'app/context_pack.py',
     'app/agent_cert_authority_events.py', 'app/spine.py', 'app/generated/portfolio_contracts.py',
-    'app/agent_cert_tool_events.py', 'app/agent_cert_handoff_gap.py', 'app/agent_cert_revalidation.py', 'app/deterministic_ops.py', 'app/sink_guard.py',
+    'app/agent_cert_tool_events.py', 'app/agent_cert_fresh_input.py', 'app/agent_cert_handoff_gap.py', 'app/agent_cert_revalidation.py', 'app/deterministic_ops.py', 'app/sink_guard.py',
     'app/agent_cert_recovery_events.py', 'app/agent_cert_clean_room.py',
     'app/agent_cert_conflict_events.py',
     'app/agent_cert_cross_conflict_events.py',
@@ -44,7 +44,7 @@ SOURCE_FILES = (
     'app/agent_cert_owned_identity.py',
     'app/agent_cert_transport.py', 'app/agent_dispatch_api.py',
     'app/production_entry.py', 'scripts/collect_agent_cert_case.py',
-    'scripts/collect_agent_cert_event.py', 'scripts/agent_cert_operator_io.py',
+    'scripts/collect_agent_cert_event.py', 'scripts/collect_agent_cert_fresh_input.py', 'scripts/agent_cert_operator_io.py',
     'scripts/agent_cert_reviewed_signing.py', 'scripts/sign_admitted_agent_cases.py',
     'governance/agent-cert-reviewed-cases.json',
     'governance/agent-cert-historical-admissions/a19-role-normal-signed-37613202210.json',
@@ -53,7 +53,7 @@ EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
     'evidence_integrity:complete', 'context_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
-    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'recovery:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete','conflict_resolution:complete','cross_agent_conflict:complete'})
+    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'recovery:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete','conflict_resolution:complete','cross_agent_conflict:complete','fresh_challenge:complete','unseen_task:complete'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})
 
 
