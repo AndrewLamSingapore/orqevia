@@ -29,7 +29,7 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert inventory['cases_per_capability'] == 74
     assert inventory['required_capability_cases'] == 2146
     assert len(set(inventory['existing_matrix_case_ids'])) == 74
-    assert inventory['source_canonical_adapter_oracle_count'] == 108
+    assert inventory['source_canonical_adapter_oracle_count'] == 136
     assert all('role:normal' in r['canonical_adapter_oracle_ready_cases'] for r in rows)
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
@@ -60,7 +60,7 @@ def test_eight_secondary_source_oracles_have_only_explicit_prepared_transport(in
     secondary = [r for r in inventory['capability_rows'] if not r['primary_capability']]
     assert len(secondary) == 8
     for row in secondary:
-        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:initialization', 'role:normal']
+        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:identity', 'baseline:initialization', 'role:normal']
         assert row['source_pinned_cloud_transport_cases'] == ['role:normal']
         assert row['cloud_transport_missing_for_ready_quality_cases'] == []
         assert row['generic_queue_observer_quality_gap_cases'] == []

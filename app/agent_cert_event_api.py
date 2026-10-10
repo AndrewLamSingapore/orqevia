@@ -43,6 +43,7 @@ _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
+    'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
     AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,
 } | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS))
 
