@@ -97,14 +97,16 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
         assert answer['owner_authority']=='NOT_GRANTED' and answer['log_handling']['commands_followed'] is False
     else:
         answer = json.loads(result.subject_artifact_bytes)
-        if case_id == events.CROSS_CASE:
+        if case_id == events.COLLABORATION_CASE:
+            assert answer['peer_handoff']['service_confirmation'] == 'NOT_PERFORMED' and answer['peer_handoff']['authority_transfer'] is False
+        elif case_id == events.CROSS_CASE:
             assert answer['second_check_request']['service_confirmation'] == 'NOT_PERFORMED'
         else:
             assert answer['proposed_check' if case_id == events.PROPOSAL_CASE else 'independent_confirmation']['execution'] == 'NOT_PERFORMED'
         assert 'read_succeeded' not in assessment and 'read_attempts' not in assessment
     assert ('next_check_proposal' in assessment) == (case_id == events.SUPPORTED_CASES[1])
     assert [method for method, _ in runtime.requests].count('POST') == 2
-    assert len(runtime.operator.original_replies()) == (28 if case_id == events.CROSS_CASE else 27 if case_id == events.DEGRADATION_CASE else 26)
+    assert len(runtime.operator.original_replies()) == (28 if case_id in events.PEER_REQUEST_CASES else 27 if case_id == events.DEGRADATION_CASE else 26)
     row = signer_row(result)
     assert bridge._review(row, result.execution_bytes, result.review_bytes, source_revision=SOURCE,
         runtime_image_id=IMAGE, reviewer_code_revision=CODE, now=datetime.now(timezone.utc) + timedelta(minutes=6)) is True
@@ -113,8 +115,8 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
 def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     from app.agent_cert_transport import canonical_cert_case
     specs = [events.canonical_tool_case(case) for case in events.SUPPORTED_CASES]
-    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 7
-    assert len({spec['oracle_id'] for spec in specs}) == 7
+    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 8
+    assert len({spec['oracle_id'] for spec in specs}) == 8
     for case in events.SUPPORTED_CASES:
         assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_tool_case(case)
         assert contracts.review_case_output('a19', 'responsibility.a19', case, '{"PASS":true}') == (
@@ -250,7 +252,7 @@ def test_complete_original_chain_rejects_rehashed_retry_or_impossible_order(runt
 
 def test_response_count_extension_is_only_the_fixed_original_event_cases():
     for case, expected in [('baseline:identity', 24), ('general:artifact_consume', 24),
-            ('authority:complete', 24), *((case, 28 if case in (events.DEGRADATION_CASE, events.CROSS_CASE) else 26) for case in events.SUPPORTED_CASES)]:
+            ('authority:complete', 24), *((case, 28 if case in (events.DEGRADATION_CASE,) + events.PEER_REQUEST_CASES else 26) for case in events.SUPPORTED_CASES)]:
         operator = AgentCertOperatorIO(owner_token=TOKEN,
             spec=contracts.canonical_case_spec('a19', 'responsibility.a19', case),
             expected_source_revision=SOURCE, expected_runtime_image=IMAGE,

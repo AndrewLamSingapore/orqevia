@@ -590,7 +590,7 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         _deny('IDENTITY_REVIEW_OBSERVATIONS_INVALID')
     proof = observations['reviewer_execution']
     if type(proof) is not dict or set(proof) != ({'dispatch', 'artifact_content_utf8', 'transport', 'action_records'} |
-            ({'peer_objective_read','peer_request_body'} if tool and str(dimension)+':'+str(event_case) == 'cross_verification:complete' else set())):
+            ({'peer_objective_read','peer_request_body'} if tool and str(dimension)+':'+str(event_case) in {'cross_verification:complete','collaboration:complete'} else set())):
         _deny('REGISTERED_IDENTITY_REVIEW_REQUIRED')
     dispatch = proof['dispatch']
     if (type(dispatch) is not dict or set(dispatch) != {'task_id', 'state', 'artifact', 'model_calls',
@@ -634,8 +634,8 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0, execution_model='DETERMINISTIC',
         subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED', subject_domain_join=join,
         certification='UNVERIFIED')
-    if tool and str(dimension)+':'+str(event_case) == 'cross_verification:complete':
-        from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective
+    if tool and str(dimension)+':'+str(event_case) in {'cross_verification:complete','collaboration:complete'}:
+        from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective,peer_review_fields
         peer_request = cross_peer_request(execution,content.get('review_nonce'),source_revision)
         receipt = content.get('peer_request_receipt')
         validate_cross_peer_receipt(receipt,peer_task=dispatch['task_id'],subject_task=join['task_id'],
@@ -646,8 +646,7 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
             _deny('CROSS_ORIGINAL_PEER_REQUEST_REQUIRED')
         validate_cross_peer_objective(peer_read[1],dispatch=dispatch,runtime=execution['runtime'],receipt=receipt,
             now=_utc(row['certified_at']))
-        expected.update(peer_request_receipt=receipt,cross_check_scope='ORIGINAL_SUPPLIED_RECOVERY_CLAIM_ONLY',
-            recovery='NOT_PROVEN',current_health='UNKNOWN')
+        expected.update(peer_review_fields(str(dimension)+':'+str(event_case),receipt))
     if (set(content) != set(expected) | {'review_nonce', 'reviewed_at'} or not _uuid(content.get('review_nonce'))
             or any(_canonical(content.get(k)) != _canonical(v) for k, v in expected.items())):
         _deny('REGISTERED_IDENTITY_REVIEW_CONTENT_INVALID')

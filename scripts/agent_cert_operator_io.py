@@ -183,7 +183,7 @@ class AgentCertOperatorIO:
                 self._reviewer, self._review_cap = identity_reviewer(agent, capability)
                 self._review_objective = identity_review_objective(agent, capability)
                 self._review_operation, self._review_action_type = REVIEW_OPERATION, REVIEW_ACTION
-            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete'}:
+            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'collaboration:complete'}:
                 from app.agent_cert_tool_events import tool_action_type
                 from app.agent_cert_role_review import TOOL_REVIEW_ACTION, tool_review_objective, TOOL_REVIEW_OPERATION
                 _require((agent, capability) == ('a19', 'responsibility.a19'), 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
@@ -227,7 +227,7 @@ class AgentCertOperatorIO:
                 self._review_operation = 'certification_identity_review'
                 self._review_action_type = 'agent.certification.identity.review'
             self._subject_action_types = {self._action_type}
-            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete'}:
+            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'collaboration:complete'}:
                 from app.agent_cert_tool_events import tool_phases
                 self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in tool_phases(case) + ('full',))
             if case in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
@@ -238,7 +238,7 @@ class AgentCertOperatorIO:
             # Tool events retain two extra spans; recovery/integrity add
             # an original prior artifact and its action-pair GET. Existing
             # artifact/handoff cases retain their measured 24-reply cap.
-            self._response_limit = 28 if case in {'graceful_degradation:complete','cross_verification:complete'} else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
+            self._response_limit = 28 if case in {'graceful_degradation:complete','cross_verification:complete', 'collaboration:complete'} else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
         except Exception:
             raise OperatorBindingError('CANONICAL_ZERO_MODEL_EVENT_REQUIRED') from None
         self._token = owner_token
@@ -286,7 +286,7 @@ class AgentCertOperatorIO:
             paths.update('/api/agent-cert-events/actions/' + self._subject_task + '?action_type=' + action
                 for action in self._subject_action_types)
         if self._review_task:
-            if self._spec['case'] == 'cross_verification:complete':
+            if self._spec['case'] in {'cross_verification:complete','collaboration:complete'}:
                 paths.add('/api/agents/objectives/'+self._review_task)
             paths.add('/api/agent-cert-events/actions/' + self._review_task + '?action_type=' + self._review_action_type)
         return path in paths
@@ -307,7 +307,7 @@ class AgentCertOperatorIO:
         request_deadline = self._now() + min(self._request_seconds, self._remaining())
         if method == 'POST':
             claim = path
-            if (self._spec['case'] == 'cross_verification:complete' and path == '/api/agents/objectives'
+            if (self._spec['case'] in {'cross_verification:complete','collaboration:complete'} and path == '/api/agents/objectives'
                     and body.get('capability') == self._review_cap
                     and body.get('deterministic_operation') == self._review_operation):
                 _require(_uuid(self._subject_task) and path in self._post_attempts
@@ -427,9 +427,9 @@ class AgentCertOperatorIO:
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
             if self._spec['case'] in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery',
-                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'collaboration:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
-                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete'} else 'artifact_event') if type(dispatch) is dict else None
+                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'collaboration:complete'} else 'artifact_event') if type(dispatch) is dict else None
                 if type(event) is dict:
                     self._remember_artifact(event.get('input_artifact_metadata'))
                     if self._spec['case'] in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
@@ -461,7 +461,7 @@ class AgentCertOperatorIO:
         except Exception:
             raise OperatorBindingError('FIXED_ZERO_MODEL_REVIEW_REQUIRED') from None
         self.runtime()
-        if self._spec['case'] == 'cross_verification:complete':
+        if self._spec['case'] in {'cross_verification:complete','collaboration:complete'}:
             status, envelope = self._request('POST','/api/agents/objectives',body=body)
             _require(status == 202 and _uuid(envelope.get('id')) and envelope['id'] != self._subject_task
                 and type(envelope.get('steps')) is list and len(envelope['steps']) == 1
@@ -504,7 +504,7 @@ class AgentCertOperatorIO:
     def io(self):
         def objective(task):
             _require(_uuid(task) and (task == self._subject_task or
-                (self._spec['case'] == 'cross_verification:complete' and task == self._review_task)), 'OWNED_OBJECTIVE_BINDING_REQUIRED')
+                (self._spec['case'] in {'cross_verification:complete','collaboration:complete'} and task == self._review_task)), 'OWNED_OBJECTIVE_BINDING_REQUIRED')
             return self._request('GET', '/api/agents/objectives/' + task)
         def artifact(identifier):
             _require(type(identifier) is str and identifier in self._artifact_ids, 'OWNED_ARTIFACT_BINDING_REQUIRED')

@@ -232,8 +232,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
         cross_receipt = None
-        if tool and case_id == 'cross_verification:complete':
-            from .agent_cert_tool_events import read_cross_peer_request
+        if tool and case_id in {'cross_verification:complete','collaboration:complete'}:
+            from .agent_cert_tool_events import read_cross_peer_request,peer_review_fields
             cross_deadline = time.monotonic() + 1
             cross_receipt = read_cross_peer_request(Path(os.getenv('PRIME_DATA_DIR','/data')),task_id,
                 body.model_dump(),runtime,execution['dispatch']['task_id'],deadline=cross_deadline)
@@ -354,8 +354,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             execution_model='DETERMINISTIC',
             subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
             subject_domain_join=joined, certification='UNVERIFIED',
-            **({'peer_request_receipt':cross_receipt,'cross_check_scope':'ORIGINAL_SUPPLIED_RECOVERY_CLAIM_ONLY',
-                'recovery':'NOT_PROVEN','current_health':'UNKNOWN'} if cross_receipt is not None else {}))
+            **(peer_review_fields(case_id,cross_receipt) if cross_receipt is not None else {}))
     except Exception:
         detail = ('Independent tool review requires current joined event evidence' if tool else
                   'Independent authority review requires current joined event evidence' if authority else
