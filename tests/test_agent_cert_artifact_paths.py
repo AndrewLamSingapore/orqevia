@@ -74,13 +74,14 @@ def test_original_event_through_existing_objective_dispatch_api_and_distinct_rev
     assert result.subject_artifact_bytes == events.expected_artifact_bytes(case,
         task_id=execution['dispatch']['task_id'],
         input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata'],
-        prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata'))
+        prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata'),
+        registry_sha256=operator.registry_sha)
     assert review['dimension'] == case.split(':')[0] and review['test_case'] == case.split(':')[1]
     assert review['review_test_version'] == events.oracle_id(case)
     content = json.loads(result.reviewer_artifact_bytes)
     assert content['schema_version'] == contracts.ARTIFACT_REVIEW_SCHEMA
     assert content['subject_domain_join']['completed_at'] == execution['dispatch']['artifact_event']['completed_at']
-    assert len(result.subject_actions) == (4 if case == events.INTEGRITY_CASE else 2)
+    assert len(result.subject_actions) == (4 if case in {events.INTEGRITY_CASE, events.CONTEXT_CASE} else 2)
     assert len(result.reviewer_actions) == 2
     if case == 'general:artifact_produce':
         assert result.input_artifact_bytes is None and result.input_actions == ()
@@ -106,7 +107,11 @@ def test_source_owned_case_does_not_accept_generic_text_as_an_event(case):
     if case == events.INTEGRITY_CASE:
         prior = {'task_id': task, 'artifact_id': 'c' * 32, 'sha256': events.sha(events.integrity_revision_bytes(task))}
         metadata['sha256'] = events.sha(events.integrity_revision_bytes(task, prior))
-    raw = events.expected_artifact_bytes(case, task_id=task, input_artifact=metadata, prior_artifact=prior)
+    if case == events.CONTEXT_CASE:
+        prior = {'task_id': task, 'artifact_id': 'c' * 32, 'sha256': events.sha(events.context_source_bytes(task))}
+        metadata['sha256'] = events.sha(events.context_source_bytes(task, second=True))
+    raw = events.expected_artifact_bytes(case, task_id=task, input_artifact=metadata, prior_artifact=prior,
+        registry_sha256='d' * 64)
     assert contracts.review_case_output('a19', 'responsibility.a19', case,
         raw.decode()) == (False, ('artifact_event_evidence_required',))
 

@@ -118,6 +118,7 @@ def main():
     names.append('agent_cert_handoff_events')
     names.append('agent_cert_recovery_events')
     names.append('agent_cert_evidence_integrity_events')
+    names.append('agent_cert_context_integrity_events')
     names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain'])
     names.append('agent_cert_hf_case_provider')
     names.append('backend_fault_diagnostics')

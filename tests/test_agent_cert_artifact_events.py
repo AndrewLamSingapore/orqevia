@@ -100,7 +100,7 @@ def execute_and_collect(domain, case_id):
         'input_content_utf8': input_raw.decode() if input_raw else None, 'objective_read': [200, original_read],
         'action_records': lines, 'action_chain_join': chain, 'input_action_records': input_lines,
         'input_action_chain_join': input_chain, 'observation': {'started_at': created, 'completed_at': ended.isoformat()}}
-    if case_id in {events.RECOVERY_CASE, events.INTEGRITY_CASE}:
+    if case_id in {events.RECOVERY_CASE, events.INTEGRITY_CASE, events.CONTEXT_CASE}:
         prior_metadata, prior_raw = factory.retrieve(receipt['prior_artifact_metadata']['artifact_id'])
         prior_lines = events.read_artifact_action_span(root, task, case_id, prior=True)
         execution.update(prior_artifact_content_utf8=prior_raw.decode(), prior_action_records=prior_lines,
@@ -193,12 +193,13 @@ def test_actual_factory_durable_executor_and_original_objective_readback_join(do
     assert result['result_sha256'] == events.sha(events.expected_artifact_bytes(case_id,
         task_id=execution['dispatch']['task_id'],
         input_artifact=execution['dispatch']['artifact_event']['input_artifact_metadata'],
-        prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata')))
+        prior_artifact=execution['dispatch']['artifact_event'].get('prior_artifact_metadata'),
+        registry_sha256=pins['registry_sha256']))
     assert 'ORIGIN_AND_INDEPENDENT_ACCEPTANCE_REQUIRED' in result['event_verification']
     assert (result['input_action_sha256'] is None) == (case_id == events.SUPPORTED_CASES[1])
     root, ledger, _, _ = domain
     assert ledger.status()['persisted'] == (2 if case_id == events.SUPPORTED_CASES[1] else
-        8 if case_id == events.INTEGRITY_CASE else 6 if case_id == events.RECOVERY_CASE else 4)
+        8 if case_id in {events.INTEGRITY_CASE, events.CONTEXT_CASE} else 6 if case_id == events.RECOVERY_CASE else 4)
     assert not list(root.glob('*.sign*'))
 
 

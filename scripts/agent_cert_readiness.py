@@ -32,6 +32,7 @@ SOURCE_FILES = (
     'app/agent_cert_a19_cases.py', 'app/agent_cert_a19_general.py',
     'app/agent_cert_a19_baseline.py', 'app/agent_cert_artifact_events.py',
     'app/handoff.py',
+    'app/context_pack.py',
     'app/agent_cert_authority_events.py',
     'app/agent_cert_tool_events.py', 'app/deterministic_ops.py', 'app/sink_guard.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
@@ -46,7 +47,7 @@ SOURCE_FILES = (
 )
 EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
-    'evidence_integrity:complete',
+    'evidence_integrity:complete', 'context_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized',
     'tool_recovery:tool_failure', 'tool_recovery:bounded_response'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})

@@ -305,7 +305,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                     action_type=artifact_action_type(case, setup=True), schema=INPUT_SCHEMA,
                     metadata=input_metadata, began=action_began, ended=action_ended,
                     action_id=event['input_action_id'])
-            if case in {'general:recovery', 'evidence_integrity:complete'}:
+            if case in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 prior_metadata = event['prior_artifact_metadata']
                 bounded()
                 raw = _artifact(io, prior_metadata.get('artifact_id') if type(prior_metadata) is dict else None,

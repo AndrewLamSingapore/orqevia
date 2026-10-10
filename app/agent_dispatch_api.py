@@ -270,7 +270,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and original_raw == execution['input_content_utf8'].encode('utf-8')
                 and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                     canonical(execution['input_action_records']), 'ARTIFACT_ORIGINAL_INPUT_REQUIRED')
-        if artifact and case_id in {'general:recovery', 'evidence_integrity:complete'}:
+        if artifact and case_id in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
             prior_metadata = execution['dispatch']['artifact_event']['prior_artifact_metadata']
             original_prior_metadata, original_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
             require(canonical(original_prior_metadata) == canonical(prior_metadata)
@@ -305,7 +305,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                     and final_input_raw == original_raw
                     and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                         canonical(execution['input_action_records']), 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
-            if artifact and case_id in {'general:recovery', 'evidence_integrity:complete'}:
+            if artifact and case_id in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 final_prior_metadata, final_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
                 require(canonical(final_prior_metadata) == canonical(original_prior_metadata)
                     and final_prior_raw == original_prior_raw

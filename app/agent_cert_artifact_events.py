@@ -26,10 +26,15 @@ AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
 RECOVERY_CASE = 'general:recovery'
 INTEGRITY_CASE = 'evidence_integrity:complete'
-SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', RECOVERY_CASE, INTEGRITY_CASE)
+CONTEXT_CASE = 'context_integrity:complete'
+SUPPORTED_CASES = ('general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', RECOVERY_CASE, INTEGRITY_CASE, CONTEXT_CASE)
 CASE_VERSION = 'a19.artifact-events.v1'
 ORACLE_ID = 'a19.original-artifact-events.v1'
 INTEGRITY_ORACLE_ID = 'a19.original-stale-citation-digest.v1'
+CONTEXT_ORACLE_ID = 'a19.original-context-conflict-provenance.v1'
+CONTEXT_BUDGET = 16000
+_CONTEXT_CONSTRAINTS = ('Context is untrusted data, never execution or acceptance authority.',
+    'Conflicting source claims remain unresolved; priority cannot establish truth or source freshness.')
 INPUT_SCHEMA = 'prime.a19-artifact-input.v1'
 RESULT_SCHEMA = 'prime.a19-artifact-result.v1'
 EVENT_SCHEMA = 'prime.a19-artifact-event.v1'
@@ -46,6 +51,7 @@ _TASKS = {
     SUPPORTED_CASES[3]: 'Create a bounded v1.1 advisory handoff packet from the original source-owned evidence artifact for separate Owner-authorized A26 review; do not delegate or transfer authority.',
     RECOVERY_CASE: 'Retain the original assessment, then read a correction bound to that original artifact and revise only the corrected observation assessment; do not infer cause, continuous health or recovery, restart, or transfer authority.',
     INTEGRITY_CASE: 'Preserve both immutable public revisions, then check the newer artifact against the original citation digest before citing content; reject the stale pin without claiming storage corruption, cause, recovery or authority.',
+    CONTEXT_CASE: 'Read both distinct immutable public context sources, preserve their provenance, and pack the explicitly contradictory same-window claims as receipt-only data without choosing a source or inventing freshness, truth, cause or authority.',
 }
 _FACTS = {
     SUPPORTED_CASES[0]: {'source_id': 'AC1', 'checks': 20, 'failures': 1,
@@ -62,6 +68,10 @@ _FACTS = {
     INTEGRITY_CASE: {'original': {'source_id': 'EI1-A', 'revision': 'A', 'observations': ['FAILED_CHECK']},
         'revised': {'source_id': 'EI1-B', 'revision': 'B', 'observations': ['HEALTHY_RETRY']},
         'citation_policy': 'RETAIN_ORIGINAL_DIGEST_BEFORE_CONTENT_CITATION'},
+    CONTEXT_CASE: {'source_a': {'source_id': 'CI1-A', 'provenance': 'PUBLIC_SYNTHETIC_PROVIDED_SOURCE_A',
+        'claim_key': 'service.health/window-001', 'claim_value': 'UP'},
+        'source_b': {'source_id': 'CI1-B', 'provenance': 'PUBLIC_SYNTHETIC_PROVIDED_SOURCE_B',
+        'claim_key': 'service.health/window-001', 'claim_value': 'DOWN'}},
 }
 
 
@@ -135,7 +145,8 @@ def _case(case_id):
 
 
 def oracle_id(case_id):
-    return INTEGRITY_ORACLE_ID if _case(case_id) == INTEGRITY_CASE else ORACLE_ID
+    case_id = _case(case_id)
+    return CONTEXT_ORACLE_ID if case_id == CONTEXT_CASE else INTEGRITY_ORACLE_ID if case_id == INTEGRITY_CASE else ORACLE_ID
 
 
 def _uuid(value):
@@ -277,6 +288,135 @@ def _integrity_read_span(lines, *, event, prior_metadata, input_metadata):
         'INTEGRITY_FAILED_READ_BINDING_INVALID')
 
 
+def context_source_bytes(task_id, *, second=False):
+    """Two independent supplied source statements, not revisions or live sensors."""
+    _require(_uuid(task_id) and type(second) is bool, 'CONTEXT_SOURCE_BINDING_INVALID')
+    return canonical({'schema_version': INPUT_SCHEMA if second else RESULT_SCHEMA,
+        'case_version': CASE_VERSION, 'case': CONTEXT_CASE, 'task_id': task_id,
+        'data_scope': 'PUBLIC_SYNTHETIC_ONLY', 'source_freshness': 'UNKNOWN_RECEIPT_ONLY',
+        'source': parse(_input_bytes(CONTEXT_CASE))['facts']['source_b' if second else 'source_a']})
+
+
+def context_source_index(task_id, prior_metadata, input_metadata):
+    _require(prior_metadata['artifact_id'] != input_metadata['artifact_id'], 'CONTEXT_DISTINCT_SOURCES_REQUIRED')
+    return [{**_artifact_ref(metadata, task_id), **parse(context_source_bytes(task_id, second=second))['source'],
+        'source_freshness': 'UNKNOWN_RECEIPT_ONLY'}
+        for metadata, second in ((prior_metadata, False), (input_metadata, True))]
+
+
+def _context_pack_parameters(task_id, prior_metadata, input_metadata):
+    return {'schema_version': '1.0', 'case': CONTEXT_CASE, 'read_only_observations': True,
+        'source_artifacts': [_artifact_ref(metadata, task_id) for metadata in (prior_metadata, input_metadata)]}
+
+
+def _intact_context_sources(factory, task_id, prior_metadata, input_metadata):
+    originals = []
+    for metadata, second in ((prior_metadata, False), (input_metadata, True)):
+        actual_metadata, raw = factory.retrieve(metadata['artifact_id'])
+        _require(canonical(actual_metadata) == canonical(metadata) and raw == context_source_bytes(task_id, second=second)
+            and sha(raw) == metadata['sha256'], 'CONTEXT_ORIGINAL_READBACK_DRIFT')
+        originals.append(raw)
+    return originals
+
+
+def build_original_conflict_pack(task_id, originals):
+    """Actual existing packer, exactly once in the producer; no model or flag change."""
+    from .context_pack import ContextCandidate, build_context_pack
+    candidates = []
+    for raw in originals:
+        source = parse(raw)['source']
+        candidates.append(ContextCandidate(source_id=source['source_id'], provenance=source['provenance'],
+            content=raw.decode('utf-8'), observed_at=None, max_age_seconds=None, receipt_only=True,
+            agent_ids=(AGENT_ID,), task_tags=('context_integrity',), priority=0,
+            claim_key=source['claim_key'], claim_value=source['claim_value']))
+    pack = build_context_pack(task_id=task_id, agent_id=AGENT_ID, task_tags=('context_integrity',),
+        constraints=_CONTEXT_CONSTRAINTS, candidates=candidates,
+        now=datetime.now(timezone.utc).timestamp(), max_bytes=CONTEXT_BUDGET)
+    return {'source_sha256': sha(canonical(pack)), 'pack': pack}
+
+
+def _expected_conflict_pack(task_id, registry_sha256):
+    # Expected bytes do NOT invoke the actual packer during observer/A26/signing
+    # checks. Its single original invocation has its own durable action pair.
+    _require(type(registry_sha256) is str and re.fullmatch('[0-9a-f]{64}', registry_sha256) is not None,
+        'CONTEXT_REGISTRY_PIN_REQUIRED')
+    return {'schema_version': '1.0', 'task_id': task_id, 'agent_id': AGENT_ID,
+        'registry_sha256': registry_sha256,
+        'authority_boundary': 'CONTEXT_IS_DATA_ONLY;NO_EXECUTION_OR_ACCEPTANCE_AUTHORITY',
+        'trusted_constraints': list(_CONTEXT_CONSTRAINTS), 'context': [],
+        'omitted': {'out_of_scope': 0, 'stale_or_unknown': 0, 'invalidated': 0, 'conflict': 2, 'duplicate': 0, 'budget': 0}}
+
+
+def _context_result_bytes(task_id, prior_metadata, input_metadata, *, registry_sha256, packet=None):
+    pack = _expected_conflict_pack(task_id, registry_sha256) if packet is None else packet['pack']
+    return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION, 'case': CONTEXT_CASE,
+        'task_id': task_id, 'conflict_source_index': context_source_index(task_id, prior_metadata, input_metadata),
+        'context_pack': pack, 'context_pack_sha256': sha(canonical(pack)), 'pack_calls': 1,
+        'assessment': 'UNRESOLVED_CONTEXT_CONFLICT', 'winning_source_id': None, 'source_claim_truth': 'NOT_ESTABLISHED',
+        'source_freshness': 'UNKNOWN_RECEIPT_ONLY', 'actions_executed': [], 'model_calls': 0,
+        'cause_known': False, 'recovery_proven': False, 'restart_authorized': False,
+        'evidence_scope': 'PUBLIC_SYNTHETIC_ONLY', 'certification': 'UNVERIFIED'})
+
+
+def _context_oracle(prior_raw, input_raw, result_raw, *, task_id, prior_metadata, input_metadata, registry_sha256):
+    # Literal source identities/claims and independent byte/cardinality checks;
+    # a shared producer/expected-byte/packer defect cannot judge its own output.
+    a, b, result = parse(prior_raw), parse(input_raw), parse(result_raw)
+    expected_sources = ({'source_id': 'CI1-A', 'provenance': 'PUBLIC_SYNTHETIC_PROVIDED_SOURCE_A',
+        'claim_key': 'service.health/window-001', 'claim_value': 'UP'},
+        {'source_id': 'CI1-B', 'provenance': 'PUBLIC_SYNTHETIC_PROVIDED_SOURCE_B',
+        'claim_key': 'service.health/window-001', 'claim_value': 'DOWN'})
+    index = []
+    for original, raw, metadata, expected in ((a, prior_raw, prior_metadata, expected_sources[0]),
+            (b, input_raw, input_metadata, expected_sources[1])):
+        _require(original['source'] == expected and original['task_id'] == task_id and original['case'] == CONTEXT_CASE
+            and original['source_freshness'] == 'UNKNOWN_RECEIPT_ONLY' and sha(raw) == metadata['sha256'],
+            'CONTEXT_SOURCE_OR_PROVENANCE_INVALID')
+        index.append({'task_id': task_id, 'artifact_id': metadata['artifact_id'], 'sha256': sha(raw),
+            **expected, 'source_freshness': 'UNKNOWN_RECEIPT_ONLY'})
+    _require(a['source']['claim_key'] == b['source']['claim_key']
+        and len({a['source']['claim_value'], b['source']['claim_value']}) == 2
+        and len({a['source']['source_id'], b['source']['source_id']}) == 2
+        and sha(prior_raw) != sha(input_raw) and result['conflict_source_index'] == index,
+        'CONTEXT_CONFLICT_OR_CUSTODY_INVALID')
+    pack = result['context_pack']
+    _require(pack['task_id'] == task_id and pack['agent_id'] == AGENT_ID and pack['schema_version'] == '1.0'
+        and pack['registry_sha256'] == registry_sha256 and pack['context'] == []
+        and set(pack['omitted']) == {'out_of_scope', 'stale_or_unknown', 'invalidated', 'conflict', 'duplicate', 'budget'}
+        and all(type(value) is int and value == (2 if key == 'conflict' else 0) for key, value in pack['omitted'].items())
+        and pack['authority_boundary'] == 'CONTEXT_IS_DATA_ONLY;NO_EXECUTION_OR_ACCEPTANCE_AUTHORITY'
+        and pack['trusted_constraints'] == list(_CONTEXT_CONSTRAINTS)
+        and len(canonical(pack)) <= CONTEXT_BUDGET and result['context_pack_sha256'] == sha(canonical(pack)),
+        'CONTEXT_PACK_CONFLICT_OR_AUTHORITY_INVALID')
+    _require(type(result['pack_calls']) is int and result['pack_calls'] == 1 and result['task_id'] == task_id
+        and result['assessment'] == 'UNRESOLVED_CONTEXT_CONFLICT' and result['winning_source_id'] is None
+        and result['source_claim_truth'] == 'NOT_ESTABLISHED' and result['source_freshness'] == 'UNKNOWN_RECEIPT_ONLY'
+        and result['actions_executed'] == [] and type(result['model_calls']) is int and result['model_calls'] == 0
+        and all(result[key] is False for key in ('cause_known', 'recovery_proven', 'restart_authorized')),
+        'CONTEXT_UNFOUNDED_TRUTH_FRESHNESS_OR_ACTION')
+
+
+def _context_pack_span(lines, *, event, prior_metadata, input_metadata, pack_sha256):
+    _require(len(lines) == 4, 'CONTEXT_EXACT_ONE_PACK_REQUIRED')
+    start, completed = [parse(line.encode()) for line in lines[1:3]]
+    base = {'task_id': event['task_id'], 'agent_id': AGENT_ID,
+        'action_type': 'agent.certification.artifact.context_integrity.complete.pack', 'tool': 'context-pack',
+        'target': '', 'classification': 'R0',
+        'parameters_summary': _context_pack_parameters(event['task_id'], prior_metadata, input_metadata),
+        'model_backend': 'deterministic', 'execution_location': 'local', 'parent_agent': None,
+        'workflow_id': None, 'action_id': event['context_pack_action_id']}
+    common = set(base) | {'phase', 'timestamp', 'sequence', 'previous_sha256', 'sha256'}
+    _require(set(start) == common and set(completed) == common | {'success', 'duration_ms', 'result_summary'}
+        and all(canonical(item.get(key)) == canonical(value) for item in (start, completed) for key, value in base.items())
+        and start['phase'] == 'started' and completed['phase'] == 'completed' and completed['success'] is True
+        and completed['result_summary'] == {'type': 'dict', 'source_sha256': pack_sha256}
+        and type(completed['duration_ms']) in (int, float) and math.isfinite(completed['duration_ms'])
+        and 0 <= completed['duration_ms'] <= 5000
+        and _utc(parse(lines[0].encode())['timestamp']) <= _utc(start['timestamp'])
+            <= _utc(completed['timestamp']) <= _utc(parse(lines[-1].encode())['timestamp']),
+        'CONTEXT_PACK_ACTION_BINDING_INVALID')
+
+
 def _recovery_result_bytes(task_id, prior_raw, correction_raw, prior_artifact, input_artifact):
     _artifact_ref(prior_artifact, task_id)
     _artifact_ref(input_artifact, task_id)
@@ -338,22 +478,28 @@ def _recovery_arithmetic_oracle(prior_raw, correction_raw, result_raw, *, task_i
         'RECOVERY_ASSESSMENT_REVISION_INVALID')
 
 
-def expected_artifact_bytes(case_id, *, task_id=None, input_artifact=None, prior_artifact=None):
+def expected_artifact_bytes(case_id, *, task_id=None, input_artifact=None, prior_artifact=None, registry_sha256=None):
     """Exact source-owned output bytes; no caller-provided PASS or output oracle."""
     if _case(case_id) == RECOVERY_CASE:
         return _recovery_result_bytes(task_id, prior_assessment_bytes(task_id),
             correction_bytes(task_id, prior_artifact), prior_artifact, input_artifact)
     if case_id == INTEGRITY_CASE:
         return _integrity_result_bytes(task_id, prior_artifact, input_artifact)
+    if case_id == CONTEXT_CASE:
+        return _context_result_bytes(task_id, prior_artifact, input_artifact, registry_sha256=registry_sha256)
     return _result_bytes(_case(case_id), _input_bytes(case_id),
         task_id=task_id, input_artifact=input_artifact)
 
 
-def _result_bytes(case_id, raw, *, task_id=None, input_artifact=None, prior_artifact=None, prior_raw=None):
+def _result_bytes(case_id, raw, *, task_id=None, input_artifact=None, prior_artifact=None, prior_raw=None,
+        registry_sha256=None, context_packet=None):
     if case_id == RECOVERY_CASE:
         return _recovery_result_bytes(task_id, prior_raw, raw, prior_artifact, input_artifact)
     if case_id == INTEGRITY_CASE:
         return _integrity_result_bytes(task_id, prior_artifact, input_artifact)
+    if case_id == CONTEXT_CASE:
+        return _context_result_bytes(task_id, prior_artifact, input_artifact,
+            registry_sha256=registry_sha256, packet=context_packet)
     parsed = parse(raw)
     _require(raw == _input_bytes(case_id), 'ARTIFACT_SOURCE_INPUT_DRIFT')
     facts = parsed['facts']
@@ -432,7 +578,9 @@ def canonical_artifact_case(case_id, *, agent_id=AGENT_ID, capability_id=CAPABIL
 def artifact_action_type(case_id, *, setup=False, prior=False):
     _case(case_id)
     _require(type(setup) is bool and (not setup or case_id != SUPPORTED_CASES[1]), 'ARTIFACT_ACTION_INVALID')
-    _require(type(prior) is bool and (not prior or case_id in {RECOVERY_CASE, INTEGRITY_CASE} and not setup), 'ARTIFACT_ACTION_INVALID')
+    _require(type(prior) is bool and (not prior or case_id in {RECOVERY_CASE, INTEGRITY_CASE, CONTEXT_CASE} and not setup), 'ARTIFACT_ACTION_INVALID')
+    if case_id == CONTEXT_CASE:
+        return 'agent.certification.artifact.context_integrity.complete.' + ('source_a' if prior else 'source_b' if setup else 'result')
     if case_id == INTEGRITY_CASE:
         return 'agent.certification.artifact.evidence_integrity.complete.' + ('revision_a' if prior else 'revision_b' if setup else 'result')
     if prior:
@@ -617,10 +765,11 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             _metadata(reread, actual, task_id, source_revision, began=began, ended=datetime.now(timezone.utc))
             return metadata
         input_metadata, input_action, prior_metadata, prior_action = None, None, None, None
-        if case_id in {RECOVERY_CASE, INTEGRITY_CASE}:
+        if case_id in {RECOVERY_CASE, INTEGRITY_CASE, CONTEXT_CASE}:
             prior_action = record(prior=True)
             prior_metadata = executor.execute(prior_action, lambda: create(
-                prior_assessment_bytes(task_id) if case_id == RECOVERY_CASE else integrity_revision_bytes(task_id)))
+                prior_assessment_bytes(task_id) if case_id == RECOVERY_CASE else
+                context_source_bytes(task_id) if case_id == CONTEXT_CASE else integrity_revision_bytes(task_id)))
         if case_id != SUPPORTED_CASES[1]:
             input_action = record(True)
             def setup():
@@ -628,19 +777,26 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
                     actual_metadata, actual_raw = factory.retrieve(prior_metadata['artifact_id'])
                     _require(canonical(actual_metadata) == canonical(prior_metadata)
                         and actual_raw == (prior_assessment_bytes(task_id) if case_id == RECOVERY_CASE
-                            else integrity_revision_bytes(task_id)),
-                        'RECOVERY_PRIOR_READBACK_DRIFT' if case_id == RECOVERY_CASE else 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
+                            else context_source_bytes(task_id) if case_id == CONTEXT_CASE else integrity_revision_bytes(task_id)),
+                        'RECOVERY_PRIOR_READBACK_DRIFT' if case_id == RECOVERY_CASE else
+                        'CONTEXT_ORIGINAL_READBACK_DRIFT' if case_id == CONTEXT_CASE else 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
                     return create(correction_bytes(task_id, prior_metadata) if case_id == RECOVERY_CASE
+                        else context_source_bytes(task_id, second=True) if case_id == CONTEXT_CASE
                         else integrity_revision_bytes(task_id, prior_metadata))
                 return create(_input_bytes(case_id))
             input_metadata = executor.execute(input_action, setup)
         subject_action = record()
         citation_read = None
+        context_action = None
         if case_id == INTEGRITY_CASE:
             manifest = citation_manifest(task_id, prior_metadata, input_metadata)
             citation_read = ActionRecord(task_id, AGENT_ID,
                 'agent.certification.artifact.evidence_integrity.complete.read', 'artifact-factory',
                 target=input_metadata['artifact_id'], parameters_summary=manifest)
+        if case_id == CONTEXT_CASE:
+            context_action = ActionRecord(task_id, AGENT_ID,
+                'agent.certification.artifact.context_integrity.complete.pack', 'context-pack',
+                parameters_summary=_context_pack_parameters(task_id, prior_metadata, input_metadata))
         def operation():
             raw = _input_bytes(case_id)
             if input_metadata is not None:
@@ -661,8 +817,14 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
                 else:
                     raise ArtifactEventError('INTEGRITY_STALE_PIN_NOT_REJECTED') from None
                 _intact_integrity_revisions(factory, task_id, prior_metadata, input_metadata)
+            packet = None
+            if case_id == CONTEXT_CASE:
+                originals = _intact_context_sources(factory, task_id, prior_metadata, input_metadata)
+                packet = executor.execute(context_action, lambda: build_original_conflict_pack(task_id, originals))
+                _intact_context_sources(factory, task_id, prior_metadata, input_metadata)
             return create(_result_bytes(case_id, raw, task_id=task_id, input_artifact=input_metadata,
-                prior_artifact=prior_metadata, prior_raw=prior_raw))
+                prior_artifact=prior_metadata, prior_raw=prior_raw, registry_sha256=registry_sha256,
+                context_packet=packet))
         result = executor.execute(subject_action, operation)
         _require(ledger.flush(timeout=1) is True, 'ARTIFACT_DURABLE_ACTION_REQUIRED')
         _require(canonical(read_runtime()) == canonical(bound), 'ARTIFACT_RUNTIME_CHANGED')
@@ -675,10 +837,12 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             'input_action_id': input_action.action_id if input_action else None,
             'subject_action_id': subject_action.action_id, 'started_at': began.isoformat(),
             'completed_at': ended.isoformat(), 'durable_action_delivery': True, 'certification': 'UNVERIFIED'}
-        if case_id in {RECOVERY_CASE, INTEGRITY_CASE}:
+        if case_id in {RECOVERY_CASE, INTEGRITY_CASE, CONTEXT_CASE}:
             event.update(prior_artifact_metadata=prior_metadata, prior_action_id=prior_action.action_id)
         if case_id == INTEGRITY_CASE:
             event.update(citation_read_action_id=citation_read.action_id, citation_manifest=manifest)
+        if case_id == CONTEXT_CASE:
+            event.update(context_pack_action_id=context_action.action_id)
         return {'task_id': task_id, 'state': 'COMPLETED', 'artifact': result, 'model_calls': 0,
             'execution_model': 'DETERMINISTIC', 'agent_id': AGENT_ID, 'capability': CAPABILITY_ID,
             'runtime_source_revision': source_revision, 'artifact_event': event}
@@ -707,10 +871,11 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
         value = parse(canonical(execution), 1024 * 1024)
         recovery = value.get('case_spec', {}).get('case') == RECOVERY_CASE
         integrity = value.get('case_spec', {}).get('case') == INTEGRITY_CASE
+        context = value.get('case_spec', {}).get('case') == CONTEXT_CASE
         _require(set(value) == {'case_spec', 'runtime', 'runtime_after', 'runtime_current', 'submission', 'dispatch', 'artifact_metadata',
             'artifact_content_utf8', 'input_content_utf8', 'objective_read', 'action_records',
             'action_chain_join', 'input_action_records', 'input_action_chain_join', 'observation'} | (
-                {'prior_artifact_content_utf8', 'prior_action_records', 'prior_action_chain_join'} if recovery or integrity else set()),
+                {'prior_artifact_content_utf8', 'prior_action_records', 'prior_action_chain_join'} if recovery or integrity or context else set()),
             'ARTIFACT_EVENT_FIELDS_INVALID')
         fixed = canonical_artifact_case(value['case_spec'].get('case'))
         _require(canonical(value['case_spec']) == canonical(fixed), 'ARTIFACT_CASE_SPEC_DRIFT')
@@ -743,12 +908,14 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             'input_action_id': event['input_action_id'], 'subject_action_id': event['subject_action_id'],
             'started_at': event['started_at'], 'completed_at': event['completed_at'],
             'durable_action_delivery': True, 'certification': 'UNVERIFIED'}
-        if recovery or integrity:
+        if recovery or integrity or context:
             expected_event.update(prior_artifact_metadata=event['prior_artifact_metadata'],
                 prior_action_id=event['prior_action_id'])
         if integrity:
             expected_event.update(citation_read_action_id=event['citation_read_action_id'],
                 citation_manifest=citation_manifest(task, event['prior_artifact_metadata'], event['input_artifact_metadata']))
+        if context:
+            expected_event.update(context_pack_action_id=event['context_pack_action_id'])
         _require(canonical(event) == canonical(expected_event) and _uuid(event['subject_action_id']),
             'ARTIFACT_EVENT_UNBOUND')
         metadata = value['artifact_metadata']
@@ -757,7 +924,8 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
         parse(raw)
         _require(raw == expected_artifact_bytes(case_id, task_id=task,
             input_artifact=event['input_artifact_metadata'],
-            prior_artifact=event.get('prior_artifact_metadata')) and canonical(dispatch['artifact']) == canonical(metadata),
+            prior_artifact=event.get('prior_artifact_metadata'), registry_sha256=registry_sha256)
+            and canonical(dispatch['artifact']) == canonical(metadata),
             'ARTIFACT_RESULT_OR_READBACK_DRIFT')
         _metadata(metadata, raw, task, source_revision, began=began, ended=ended)
         from .agent_cert_identity_review import action_span
@@ -778,6 +946,7 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             parse(input_raw)
             _require(input_raw == (correction_bytes(task, event['prior_artifact_metadata']) if recovery else
                 integrity_revision_bytes(task, event['prior_artifact_metadata']) if integrity else
+                context_source_bytes(task, second=True) if context else
                 _input_bytes(case_id)), 'ARTIFACT_SOURCE_INPUT_DRIFT')
             input_metadata = event['input_artifact_metadata']
             _metadata(input_metadata, input_raw, task, source_revision, began=began, ended=ended)
@@ -795,12 +964,14 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             _require(parse(value['action_records'][0].encode('utf-8'))['previous_sha256'] == input_chain['last_sha256'],
                 'ARTIFACT_CROSS_OPERATION_CHAIN_INVALID')
         prior_chain = None
-        if recovery or integrity:
+        if recovery or integrity or context:
             prior_metadata = event['prior_artifact_metadata']
             _require(type(value['prior_artifact_content_utf8']) is str, 'RECOVERY_ORIGINAL_BYTES_REQUIRED')
             prior_raw = value['prior_artifact_content_utf8'].encode('utf-8')
-            _require(prior_raw == (prior_assessment_bytes(task) if recovery else integrity_revision_bytes(task)),
-                'RECOVERY_PRIOR_ASSESSMENT_DRIFT' if recovery else 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
+            _require(prior_raw == (prior_assessment_bytes(task) if recovery else
+                context_source_bytes(task) if context else integrity_revision_bytes(task)),
+                'RECOVERY_PRIOR_ASSESSMENT_DRIFT' if recovery else
+                'CONTEXT_ORIGINAL_READBACK_DRIFT' if context else 'INTEGRITY_ORIGINAL_READBACK_DRIFT')
             _metadata(prior_metadata, prior_raw, task, source_revision, began=began, ended=ended)
             _require(_uuid(event['prior_action_id']) and len({event['prior_action_id'], event['input_action_id'],
                 event['subject_action_id']}) == 3 and len({prior_metadata['artifact_id'], input_metadata['artifact_id'],
@@ -818,7 +989,7 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
             if recovery:
                 _recovery_arithmetic_oracle(prior_raw, input_raw, raw, task_id=task,
                     prior_metadata=prior_metadata, input_metadata=input_metadata)
-            else:
+            elif integrity:
                 _require(_uuid(event['citation_read_action_id']) and event['citation_read_action_id'] not in
                     {event['prior_action_id'], event['input_action_id'], event['subject_action_id']},
                     'INTEGRITY_DISTINCT_READ_REQUIRED')
@@ -826,6 +997,14 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
                     prior_metadata=prior_metadata, input_metadata=input_metadata)
                 _integrity_oracle(prior_raw, input_raw, raw, task_id=task,
                     prior_metadata=prior_metadata, input_metadata=input_metadata)
+            else:
+                _require(_uuid(event['context_pack_action_id']) and event['context_pack_action_id'] not in
+                    {event['prior_action_id'], event['input_action_id'], event['subject_action_id']},
+                    'CONTEXT_DISTINCT_PACK_ACTION_REQUIRED')
+                _context_pack_span(value['action_records'], event=event, prior_metadata=prior_metadata,
+                    input_metadata=input_metadata, pack_sha256=parse(raw)['context_pack_sha256'])
+                _context_oracle(prior_raw, input_raw, raw, task_id=task, prior_metadata=prior_metadata,
+                    input_metadata=input_metadata, registry_sha256=registry_sha256)
         submission, read = value['submission'], value['objective_read']
         _require(type(submission) is list and len(submission) == 2 and type(submission[0]) is int and submission[0] == 202
             and type(submission[1]) is dict and submission[1].get('id') == task
@@ -869,6 +1048,11 @@ def validate_artifact_execution(execution, *, source_revision, runtime_image_id,
                 revision_a_action_sha256=prior_chain['last_sha256'], revision_b_artifact_id=input_metadata['artifact_id'],
                 revision_b_sha256=sha(input_raw), citation_read_action_id=event['citation_read_action_id'],
                 citation_read_action_sha256=parse(value['action_records'][2].encode())['sha256'])
+        if context:
+            joined.update(source_a_artifact_id=prior_metadata['artifact_id'], source_a_sha256=sha(prior_raw),
+                source_a_action_sha256=prior_chain['last_sha256'], source_b_artifact_id=input_metadata['artifact_id'],
+                source_b_sha256=sha(input_raw), context_pack_action_id=event['context_pack_action_id'],
+                context_pack_sha256=parse(raw)['context_pack_sha256'])
         return joined
     except ArtifactEventError:
         raise

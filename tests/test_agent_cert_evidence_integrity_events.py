@@ -43,7 +43,7 @@ def test_only_existing_case_has_distinct_oracle_dimension_and_action_names():
         events.artifact_action_type(CASE), 'agent.certification.artifact.evidence_integrity.complete.read'}) == 4
     assert all('evidence_integrity.complete.' in events.artifact_action_type(CASE, **options)
         for options in ({}, {'setup': True}, {'prior': True}))
-    for unknown in ('general:complete', 'context_integrity:complete', 'evidence_integrity:other'):
+    for unknown in ('general:complete', 'context_integrity:other', 'evidence_integrity:other'):
         with pytest.raises(ValueError):
             events.canonical_artifact_case(unknown)
 

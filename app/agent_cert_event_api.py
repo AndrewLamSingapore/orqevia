@@ -36,6 +36,7 @@ _ARTIFACT_ACTIONS.update({artifact_action_type(case, setup=True): (case, True, F
     for case in ARTIFACT_CASES if case != 'general:artifact_produce'})
 _ARTIFACT_ACTIONS[artifact_action_type('general:recovery', prior=True)] = ('general:recovery', False, True)
 _ARTIFACT_ACTIONS[artifact_action_type('evidence_integrity:complete', prior=True)] = ('evidence_integrity:complete', False, True)
+_ARTIFACT_ACTIONS[artifact_action_type('context_integrity:complete', prior=True)] = ('context_integrity:complete', False, True)
 _AUTHORITY_ACTIONS = {authority_action_type(case): case for case in AUTHORITY_CASES}
 _TOOL_ACTIONS = {tool_action_type(case, phase=phase): (case, phase)
     for case in TOOL_CASES for phase in ('setup', 'read', 'result', 'full')}
