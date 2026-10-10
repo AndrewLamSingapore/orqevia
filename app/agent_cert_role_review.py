@@ -118,6 +118,9 @@ def canonical_case_spec(agent, capability, case_id):
         from .agent_cert_cases import challenge
         initialization_objective(agent, capability)  # Exact registered ownership.
         return challenge(case_id, agent_id=agent, capability_id=capability)
+    if case_id == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+        from .agent_cert_owned_identity import canonical_owned_identity_case
+        return canonical_owned_identity_case(agent, capability)
     _primary(agent, capability)
     if agent == 'a19' and capability == 'responsibility.a19' and case_id in {
             'baseline:identity'}:

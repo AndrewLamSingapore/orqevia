@@ -91,6 +91,13 @@ def _contract(agent, capability, case):
             initialization_oracle_id(agent, capability),
             initialization_review_objective(agent, capability),
             initialization_reviewer(agent, capability), validate)
+    if case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+        from app.agent_cert_owned_identity import (ACTION_TYPE, SCHEMA, REVIEW_SCHEMA,
+            ORACLE_ID, identity_reviewer, identity_review_objective, validate_owned_identity_execution)
+        def validate(value, **pins):
+            return validate_owned_identity_execution(value, agent_id=agent, capability_id=capability, **pins)
+        return (ACTION_TYPE, SCHEMA, REVIEW_SCHEMA, ORACLE_ID, identity_review_objective(agent, capability),
+            identity_reviewer(agent, capability), validate)
     _require((agent, capability, case) == ('a19', 'responsibility.a19', 'baseline:identity'),
              'SOURCE_OWNED_EVENT_UNAVAILABLE')
     from app.agent_cert_identity_review import SCHEMA, ORACLE_ID, validate_identity_execution
@@ -339,6 +346,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             task_class='classification', max_cost_usd=0, response_format='strict_json',
             deterministic_operation=TOOL_REVIEW_OPERATION if tool_case else AUTHORITY_REVIEW_OPERATION if authority_case else ARTIFACT_REVIEW_OPERATION if artifact_case else
                 'certification_initialization_review' if case.endswith('initialization')
+                else 'certification_owned_identity_review' if (agent, capability) != ('a19', 'responsibility.a19')
                 else 'certification_identity_review')
         _registry_pin(expected_registry_sha256)
         _require(read(io.authorize) is None, 'OWNER_AUTHENTICATION_FAILED')

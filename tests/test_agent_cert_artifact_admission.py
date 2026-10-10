@@ -37,8 +37,10 @@ def test_artifact_custody_cannot_acquire_cloud_model_oracle_or_policy(case_id):
 
 
 def test_artifact_producer_and_validator_added_to_complete_protected_code_pins(tmp_path):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 52
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 53
     assert 'app/context_pack.py' in loader.CODE_FILES and 'app/context_pack.py' in loader.RUNTIME_REVIEW_CODE_FILES
+    assert 'app/agent_cert_owned_identity.py' in loader.CODE_FILES
+    assert 'app/agent_cert_owned_identity.py' in loader.RUNTIME_REVIEW_CODE_FILES
     assert 'app/handoff.py' in loader.CODE_FILES and 'app/handoff.py' in loader.RUNTIME_REVIEW_CODE_FILES
     assert 'app/agent_cert_artifact_events.py' in loader.CODE_FILES
     assert 'app/agent_cert_authority_events.py' in loader.CODE_FILES
@@ -62,7 +64,7 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
     assert not set(events.SUPPORTED_CASES) & set(a19['source_pinned_cloud_transport_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['cloud_transport_missing_for_ready_quality_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['generic_queue_observer_quality_gap_cases'])
-    assert result['source_canonical_adapter_oracle_count'] == 109
+    assert result['source_canonical_adapter_oracle_count'] == 137
     assert {'authority:complete', 'unauthorized_rejection:authorized'} <= set(
         a19['distinct_zero_model_event_adapter_cases'])
     assert {'unauthorized_rejection:unauthorized', 'unauthorized_rejection:owner_only'} <= set(

@@ -176,6 +176,13 @@ class AgentCertOperatorIO:
                 self._review_objective = initialization_review_objective(agent, capability)
                 self._review_operation = 'certification_initialization_review'
                 self._review_action_type = 'agent.certification.initialization.review'
+            elif case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+                from app.agent_cert_owned_identity import (ACTION_TYPE, REVIEW_ACTION, REVIEW_OPERATION,
+                    identity_reviewer, identity_review_objective)
+                self._action_type = ACTION_TYPE
+                self._reviewer, self._review_cap = identity_reviewer(agent, capability)
+                self._review_objective = identity_review_objective(agent, capability)
+                self._review_operation, self._review_action_type = REVIEW_OPERATION, REVIEW_ACTION
             elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response'}:
                 from app.agent_cert_tool_events import tool_action_type
                 from app.agent_cert_role_review import TOOL_REVIEW_ACTION, TOOL_REVIEW_OBJECTIVE, TOOL_REVIEW_OPERATION

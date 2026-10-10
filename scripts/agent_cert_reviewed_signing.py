@@ -143,6 +143,9 @@ def _oracle_id(agent, spec=None):
     if agent == 'a19' and spec is not None and spec.get('case') == 'baseline:identity':
         from app.agent_cert_identity_review import ORACLE_ID
         return ORACLE_ID
+    if spec is not None and spec.get('case') == 'baseline:identity':
+        from app.agent_cert_owned_identity import ORACLE_ID
+        return ORACLE_ID
     if spec is not None:
         from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES, oracle_id
         if spec.get('case') in TOOL_CASES:
@@ -497,6 +500,8 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     subject, capability = 'a19', 'responsibility.a19'
     reviewer, reviewer_capability = 'a26', 'responsibility.a26'
     dimension = 'baseline'
+    owned_identity = (not (tool or authority or artifact or initialization)
+        and (row.get('agent_id'), row.get('capability_id')) != ('a19', 'responsibility.a19'))
     if tool:
         from app.agent_cert_tool_events import oracle_id
         from app.agent_cert_role_review import (TOOL_REVIEW_SCHEMA as SCHEMA,
@@ -523,6 +528,13 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         ORACLE_ID = initialization_oracle_id(subject, capability)
         event_case = 'initialization'
         review_action_type = 'agent.certification.initialization.review'
+    elif owned_identity:
+        from app.agent_cert_owned_identity import (REVIEW_SCHEMA as SCHEMA, ORACLE_ID,
+            REVIEW_ACTION as review_action_type, identity_reviewer,
+            validate_owned_identity_execution as validate_event)
+        subject, capability = row.get('agent_id'), row.get('capability_id')
+        reviewer, reviewer_capability = identity_reviewer(subject, capability)
+        event_case = 'identity'
     else:
         validate_event = validate_identity_execution
         event_case = 'identity'
@@ -544,9 +556,9 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     # Initialization recomputes the complete owned contracts from their actual
     # raw build bytes. Do not normalize its original report/pin into a match.
     registry_raw = REGISTRY_PATH.read_bytes()
-    registry_sha = _sha(registry_raw if initialization or artifact or authority or tool else registry_raw.replace(b'\r\n', b'\n'))
+    registry_sha = _sha(registry_raw if initialization or owned_identity or artifact or authority or tool else registry_raw.replace(b'\r\n', b'\n'))
     event_review_time = now
-    if artifact or initialization or authority or tool:
+    if artifact or initialization or owned_identity or authority or tool:
         # The runtime's 300-second consumption bound applies when the actual
         # registered peer reviewer read the original event/report. Later protected verification
         # must preserve that time, not claim a new execution or rereview. The
@@ -563,7 +575,7 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
             _deny('IDENTITY_REVIEW_TIME_INVALID')
     join = validate_event(execution, source_revision=source_revision,
         runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=event_review_time,
-        **({'agent_id': subject, 'capability_id': capability} if initialization else {}))
+        **({'agent_id': subject, 'capability_id': capability} if initialization or owned_identity else {}))
     spec = _case_spec(row)
     if (artifact or authority or tool) and (join.get('case') != spec['case'] or
             join.get('case_spec_sha256') != _sha(_canonical(spec))):

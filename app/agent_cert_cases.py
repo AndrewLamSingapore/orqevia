@@ -295,6 +295,11 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
     if case_id not in case_ids():
         raise ValueError("unknown certification case")
     capability, record, responsibility = _registered_responsibility(agent_id, capability_id)
+    if case_id == 'baseline:identity' and (agent_id, capability) != (AGENT_ID, CAPABILITY_ID):
+        if context:
+            raise ValueError('Owned identity uses current Registry, not supplied context')
+        from .agent_cert_owned_identity import canonical_owned_identity_case
+        return canonical_owned_identity_case(agent_id, capability)
     if case_id == 'baseline:initialization':
         if context:
             raise ValueError('Initialization uses current owned contracts, not supplied context')
