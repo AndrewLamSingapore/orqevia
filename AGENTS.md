@@ -74,3 +74,7 @@ stop condition; prevent circular delegation or new permanent agents. Make focuse
 evidence-backed changes, retain product/domain ownership, and obtain required authority
 for spending, security changes and production promotion. Continuous improvement requires
 a measured problem, relevant before/after tests and a reversible acceptance decision.
+
+## Owner execution priority — 10 October 2026
+
+Read [the updated execution directive](governance/OWNER_EXECUTION_20261010.md) and the updated Golden selection reference before executing PRIME work. These supersede older execution priorities; immutable historical evidence, product/domain ownership and required production controls remain. Genuine 21/21 L7 certification is P0; TV power saver or screen saver activation is not a pause request.

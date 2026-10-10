@@ -36,6 +36,33 @@ If you are an AI agent updating this file:
 
 ---
 
+## Owner-directed restart and certification resumption — 10 October 2026
+
+### Claimed, not independently checked
+
+- Owner supplied five updated directives, made genuine 21/21 L7 the overriding
+  priority, and instructed continuation through TV screen saver/power saver.
+  `governance/OWNER_EXECUTION_20261010.md` reconciles execution priorities;
+  `governance/updated-golden-selection.json` selects existing accepted source
+  `61335a9` as an operating reference. Frozen Golden manifests remain unchanged.
+  No newer candidate was deployed or independently declared Golden.
+- Fresh read-only SMART at 08:07:32 SGT reported 51.85C composite, sensor 2
+  57.85C, zero warning bits, media errors and error-log entries. Existing exact
+  Ollama, PRIME and Interface containers restarted in that order; all observed
+  healthy, restart count zero and no OOM. Queue continuity: 88 completed, one
+  preserved failed job, zero active jobs. This is bounded startup evidence,
+  not permanent hardware stability or a completed endurance run.
+- Fresh accepted-source registry and certification-domain reads verified
+  21 registered agents/29 owned capabilities, zero installed manifests,
+  zero current valid signed cases, 0/21 full L7 and 0/29 full capabilities.
+  Main `d9a4e0b` has 103 implemented source adapter/oracle paths out of 2,146
+  required case slots; source readiness is not actual case certification.
+  Original failures, historical signed-case expiry and rollback assets retained.
+- Local receipts and file hashes are under `docs/evidence/resume-20261010/`.
+  Source candidates, production identity, hardware qualification and L7 remain
+  separate. PR225 release approval and current-data rollback acceptance remain
+  outstanding; cancelled PR226 Windows/image CI was resumed separately.
+
 ## Light-production observation and dated HF evidence repair — 8 October 2026
 
 ### Claimed, not independently checked

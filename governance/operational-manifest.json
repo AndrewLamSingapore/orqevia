@@ -225,7 +225,7 @@
       "read_only_health_capture_title": "IMG_5587.jpeg",
       "tunnel_metadata_capture_library_file_id": "libfile_e8e853ed35a08191b90ce61229b4cf9d",
       "tunnel_metadata_capture_title": "IMG_5582.jpeg",
-      "connector": "JARVIS PRIME \u2013 Read Only",
+      "connector": "JARVIS PRIME – Read Only",
       "tunnel_id": "tunnel_6a97806a99e481919b6adb92aa8b7505",
       "system_health_version": "7.3.1.1-evidence-grounded",
       "system_health_result": "healthy",
@@ -349,6 +349,12 @@
       "legacy J Console site",
       "owner-only Relationship Console from public navigation",
       "localhost control links for public visitors"
+    ],
+    "prior_next_actions_snapshot_before_20261010": [
+      "Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.",
+      "Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.",
+      "Complete Wuhan/Mainland-China physical verification when geographically available.",
+      "Refresh unrelated public-system evidence before claiming global CURRENT status."
     ]
   },
   "truth_reconciliation": {
@@ -485,10 +491,10 @@
     "adoption_state": "NOT_OBSERVED_ALL_CHANNELS"
   },
   "next_actions": [
-    "Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.",
-    "Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.",
-    "Complete Wuhan/Mainland-China physical verification when geographically available.",
-    "Refresh unrelated public-system evidence before claiming global CURRENT status."
+    "Read governance/OWNER_EXECUTION_20261010.md and governance/updated-golden-selection.json before resuming PRIME.",
+    "Complete genuine 21/21 L7 certification with 29 owned capabilities; A19 first, independent safe fleet work concurrently.",
+    "Keep historical Golden, failures, credentials, identities and current writes recoverable.",
+    "Keep unrelated expansion paused; stability, SOUP and provider work support certification only."
   ],
   "public_experience": {
     "contract": "governance/public-experience.json",
@@ -544,5 +550,12 @@
     "accepted_scope": "PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
     "former_generation": "jarvis-prime-golden-gen1-20260926",
     "dell_post_promotion": "PROMOTION_VERIFICATION_PASS"
+  },
+  "owner_execution": {
+    "path": "governance/OWNER_EXECUTION_20261010.md",
+    "date": "2026-10-10",
+    "priority": "GENUINE_21_OF_21_L7",
+    "updated_golden_selection": "governance/updated-golden-selection.json",
+    "scope": "Owner execution policy and dated selection reference; domain ownership and release controls retained"
   }
 }

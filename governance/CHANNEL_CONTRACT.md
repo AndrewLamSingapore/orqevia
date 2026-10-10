@@ -44,3 +44,7 @@ product data. Cross-product reconciliation does not move databases into Git.
 Old conversations and model memories cannot be remotely rewritten by this file.
 Conformance requires a channel to read each relevant owning source; lack of access must be
 reported, never presented as successful synchronization.
+
+## Owner execution priority — 10 October 2026
+
+Read [the updated execution directive](OWNER_EXECUTION_20261010.md) and the updated Golden selection reference before executing PRIME work. These supersede older execution priorities; immutable historical evidence, product/domain ownership and required production controls remain. Genuine 21/21 L7 certification is P0; TV power saver or screen saver activation is not a pause request.
