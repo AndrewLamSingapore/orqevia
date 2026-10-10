@@ -183,13 +183,13 @@ class AgentCertOperatorIO:
                 self._reviewer, self._review_cap = identity_reviewer(agent, capability)
                 self._review_objective = identity_review_objective(agent, capability)
                 self._review_operation, self._review_action_type = REVIEW_OPERATION, REVIEW_ACTION
-            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete'}:
+            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete'}:
                 from app.agent_cert_tool_events import tool_action_type
-                from app.agent_cert_role_review import TOOL_REVIEW_ACTION, TOOL_REVIEW_OBJECTIVE, TOOL_REVIEW_OPERATION
+                from app.agent_cert_role_review import TOOL_REVIEW_ACTION, tool_review_objective, TOOL_REVIEW_OPERATION
                 _require((agent, capability) == ('a19', 'responsibility.a19'), 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
                 self._action_type = tool_action_type(case)
                 self._reviewer, self._review_cap = 'a26', 'responsibility.a26'
-                self._review_objective, self._review_operation = TOOL_REVIEW_OBJECTIVE, TOOL_REVIEW_OPERATION
+                self._review_objective, self._review_operation = tool_review_objective(case), TOOL_REVIEW_OPERATION
                 self._review_action_type = TOOL_REVIEW_ACTION
             elif case in {'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized'}:
                 from app.agent_cert_authority_events import authority_action_type
@@ -227,9 +227,9 @@ class AgentCertOperatorIO:
                 self._review_operation = 'certification_identity_review'
                 self._review_action_type = 'agent.certification.identity.review'
             self._subject_action_types = {self._action_type}
-            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete'}:
-                self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in (('setup','available','read','full')
-                    if case == 'graceful_degradation:complete' else ('setup','read','full')))
+            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete'}:
+                from app.agent_cert_tool_events import tool_phases
+                self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in tool_phases(case) + ('full',))
             if case in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 self._subject_action_types.add(artifact_action_type(case, setup=True))
             if case in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
@@ -238,7 +238,7 @@ class AgentCertOperatorIO:
             # Tool events retain two extra spans; recovery/integrity add
             # an original prior artifact and its action-pair GET. Existing
             # artifact/handoff cases retain their measured 24-reply cap.
-            self._response_limit = 28 if case == 'graceful_degradation:complete' else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
+            self._response_limit = 28 if case == 'graceful_degradation:complete' else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
         except Exception:
             raise OperatorBindingError('CANONICAL_ZERO_MODEL_EVENT_REQUIRED') from None
         self._token = owner_token
@@ -412,9 +412,9 @@ class AgentCertOperatorIO:
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
             if self._spec['case'] in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery',
-                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
-                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete'} else 'artifact_event') if type(dispatch) is dict else None
+                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete', 'tools:complete'} else 'artifact_event') if type(dispatch) is dict else None
                 if type(event) is dict:
                     self._remember_artifact(event.get('input_artifact_metadata'))
                     if self._spec['case'] in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:

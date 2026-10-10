@@ -24,7 +24,7 @@ from .agent_cert_authority_events import (
 )
 from .agent_cert_role_review import AUTHORITY_REVIEW_ACTION, read_authority_review_action_span
 from .agent_cert_tool_events import (SUPPORTED_CASES as TOOL_CASES, tool_action_type,
-    read_tool_action_span, validate_full_span)
+    read_tool_action_span, validate_full_span, tool_phases)
 from .agent_cert_role_review import TOOL_REVIEW_ACTION, read_tool_review_action_span
 
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
@@ -39,8 +39,7 @@ _ARTIFACT_ACTIONS[artifact_action_type('evidence_integrity:complete', prior=True
 _ARTIFACT_ACTIONS[artifact_action_type('context_integrity:complete', prior=True)] = ('context_integrity:complete', False, True)
 _AUTHORITY_ACTIONS = {authority_action_type(case): case for case in AUTHORITY_CASES}
 _TOOL_ACTIONS = {tool_action_type(case, phase=phase): (case, phase)
-    for case in TOOL_CASES for phase in (('setup','available','read','result','full')
-        if case == 'graceful_degradation:complete' else ('setup','read','result','full'))}
+    for case in TOOL_CASES for phase in tool_phases(case) + ('full',)}
 _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',

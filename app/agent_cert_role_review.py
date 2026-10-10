@@ -31,6 +31,16 @@ TOOL_REVIEW_OBJECTIVE = ('Independently review one recorded A19 single failed co
     'against its original Objective, setup/result artifacts and complete action span; do not retry, certify or sign.')
 
 
+def tool_review_objective(case):
+    from .agent_cert_tool_events import PROPOSAL_CASE, canonical_tool_case
+    canonical_tool_case(case)
+    if case == PROPOSAL_CASE:
+        return ('Independently review one original A19 provided-context assessment and unperformed read-only proposal '
+            'against its original Objective, setup/result artifacts and complete context-custody action span; '
+            'reject tool-execution claims, do not execute the proposed check, certify or sign.')
+    return TOOL_REVIEW_OBJECTIVE
+
+
 def tool_event_review_join(execution, **pins):
     from .agent_cert_tool_events import validate_tool_execution
     joined = validate_tool_execution(execution, **pins)

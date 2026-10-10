@@ -404,7 +404,7 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         admission=event.get('admission')) if authority
         else events.expected_artifact_bytes(fixed['case'], **(
             {'available_bytes': events.input_bytes(fixed['case'])}
-            if tool and fixed['case'] == 'graceful_degradation:complete' else {}), **(
+            if tool and fixed['case'] in events.AVAILABLE_CASES else {}), **(
             {'registry_sha256': expected_registry_sha256}
             if fixed['case'] == 'context_integrity:complete' else {}), **(
             {'task_id': task, 'input_artifact': event.get('input_artifact_metadata'),

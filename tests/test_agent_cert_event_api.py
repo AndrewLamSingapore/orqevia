@@ -64,13 +64,15 @@ def tool_full(env, case):
         setup = executor.execute(record('setup'), lambda: create(tool_events.input_bytes(case)))
         folder = env.root / 'artifacts' / setup['artifact_id']
         assert {path.name for path in folder.iterdir()} == {'artifact.json', 'metadata.json'}
-        read = ActionRecord(task, 'a19', tool_events.tool_action_type(case, phase='read'), 'provided_context.read',
-            target=tool_events.MISSING_SLOT, parameters_summary={'schema_version': tool_events.INPUT_SCHEMA,
-                'setup_artifact_id': setup['artifact_id'], 'relative_path': tool_events.MISSING_SLOT,
-                'read_only_observations': True})
+        read = None
+        if case != tool_events.PROPOSAL_CASE:
+            read = ActionRecord(task, 'a19', tool_events.tool_action_type(case, phase='read'), 'provided_context.read',
+                target=tool_events.MISSING_SLOT, parameters_summary={'schema_version': tool_events.INPUT_SCHEMA,
+                    'setup_artifact_id': setup['artifact_id'], 'relative_path': tool_events.MISSING_SLOT,
+                    'read_only_observations': True})
         reader = DeterministicOps(source_version=SOURCE)
         available_raw = None
-        if case == tool_events.DEGRADATION_CASE:
+        if case in tool_events.AVAILABLE_CASES:
             available = ActionRecord(task,'a19',tool_events.tool_action_type(case,phase='available'),
                 'provided_context.read',target='artifact.json',parameters_summary={
                     'schema_version':tool_events.INPUT_SCHEMA,'setup_artifact_id':setup['artifact_id'],
@@ -80,9 +82,10 @@ def tool_full(env, case):
                 return {'source_sha256':digest,'result':raw.decode()}
             available_raw = executor.execute(available,consume)['result'].encode()
             assert available_raw == tool_events.input_bytes(case)
-        with pytest.raises(FileNotFoundError) as missing:
-            executor.execute(read, lambda: reader.retrieve_file(folder, tool_events.MISSING_SLOT))
-        assert missing.value.errno == 2 and Path(missing.value.filename) == folder / tool_events.MISSING_SLOT
+        if read is not None:
+            with pytest.raises(FileNotFoundError) as missing:
+                executor.execute(read, lambda: reader.retrieve_file(folder, tool_events.MISSING_SLOT))
+            assert missing.value.errno == 2 and Path(missing.value.filename) == folder / tool_events.MISSING_SLOT
         assert factory.retrieve(setup['artifact_id']) == (setup, tool_events.input_bytes(case))
         result = executor.execute(record('result'), lambda: create(tool_events.expected_artifact_bytes(case,available_bytes=available_raw)))
         assert result['artifact_id'] != setup['artifact_id']
@@ -145,7 +148,8 @@ def test_tool_full_returns_exact_actual_original_records_without_mutation_or_flu
     task, before = tool_full(env, case)
     lines = before.decode().splitlines(keepends=True)
     original = [json.loads(line) for line in lines]
-    phases = ('setup','available','read','result') if case == tool_events.DEGRADATION_CASE else ('setup','read','result')
+    phases = ('setup','available','result') if case == tool_events.PROPOSAL_CASE else (
+        ('setup','available','read','result') if case == tool_events.DEGRADATION_CASE else ('setup','read','result'))
     if case == tool_events.DEGRADATION_CASE:
         assert len(original) == 8 and len({event['action_id'] for event in original}) == 4
     else:

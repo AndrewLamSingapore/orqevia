@@ -17,7 +17,9 @@ from .agent_cert_artifact_events import (canonical, parse, sha, _bindings, _path
 AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
 DEGRADATION_CASE = 'graceful_degradation:complete'
-SUPPORTED_CASES = ('tool_recovery:tool_failure', 'tool_recovery:bounded_response', DEGRADATION_CASE)
+PROPOSAL_CASE = 'tools:complete'
+AVAILABLE_CASES = (DEGRADATION_CASE, PROPOSAL_CASE)
+SUPPORTED_CASES = ('tool_recovery:tool_failure', 'tool_recovery:bounded_response', DEGRADATION_CASE, PROPOSAL_CASE)
 CASE_VERSION = 'a19.tool-recovery-events.v1'
 INPUT_SCHEMA = 'prime.a19-tool-recovery-input.v1'
 RESULT_SCHEMA = 'prime.a19-tool-recovery-result.v1'
@@ -42,10 +44,14 @@ def _case(case):
 
 
 def case_version(case):
+    if _case(case) == PROPOSAL_CASE:
+        return 'a19.tools-proposal-events.v1'
     return 'a19.graceful-degradation-events.v1' if _case(case) == DEGRADATION_CASE else CASE_VERSION
 
 
 def oracle_id(case):
+    if _case(case) == PROPOSAL_CASE:
+        return 'a19.original-tools-proposal.complete.v1'
     if _case(case) == DEGRADATION_CASE:
         return 'a19.original-graceful-degradation.complete.v1'
     return 'a19.original-tool-recovery.' + _case(case).split(':')[1] + '.v1'
@@ -54,16 +60,30 @@ def oracle_id(case):
 def input_bytes(case):
     return canonical(dict(schema_version=INPUT_SCHEMA, case_version=case_version(case),
         case=_case(case), missing_slot=MISSING_SLOT, data_scope='PUBLIC_SYNTHETIC_ONLY',
-        known_observation=dict(source_id='GD1' if case == DEGRADATION_CASE else 'TF1' if case == SUPPORTED_CASES[0] else 'TB1',
+        known_observation=dict(source_id='TP1' if case == PROPOSAL_CASE else 'GD1' if case == DEGRADATION_CASE else 'TF1' if case == SUPPORTED_CASES[0] else 'TB1',
             api_checks=20, api_failures=1, dependency_context_supplied=False)))
 
 
 def expected_artifact_bytes(case, *, available_bytes=None):
-    if case == DEGRADATION_CASE:
+    if case in AVAILABLE_CASES:
         require(type(available_bytes) is bytes and available_bytes == input_bytes(case), 'DEGRADATION_ORIGINAL_AVAILABLE_BYTES_REQUIRED')
         original = parse(available_bytes)
     else:
         original = parse(input_bytes(case))
+    if case == PROPOSAL_CASE:
+        observation = original['known_observation']
+        require(type(observation['api_checks']) is int and type(observation['api_failures']) is int
+            and 0 <= observation['api_failures'] <= observation['api_checks'] and observation['api_checks'] > 0
+            and observation['dependency_context_supplied'] is False, 'TOOLS_PROPOSAL_OBSERVATION_INVALID')
+        return canonical(dict(schema_version=RESULT_SCHEMA, case_version=case_version(case), case=case,
+            context_label='PUBLIC_SYNTHETIC_ONLY', input_sha256=sha(available_bytes),
+            evidence=dict(source_id=observation['source_id'], context_sha256=sha(available_bytes)),
+            assessment=dict(known_observation=observation, assessment_scope='API_WINDOW_ONLY',
+                api_failure_basis_points=observation['api_failures'] * 10000 // observation['api_checks'],
+                dependency_health='UNKNOWN', cause='UNKNOWN', recovery='NOT_ESTABLISHED'),
+            proposed_check=dict(action='READ_ONE_NEW_OWNER_SUPPLIED_DEPENDENCY_WINDOW',
+                classification='READ_ONLY_PROPOSAL', read_only=True, automatic_execution=False,
+                execution='NOT_PERFORMED'), certification='UNVERIFIED'))
     assessment = dict(known_observation=original['known_observation'], dependency_health='UNKNOWN',
         cause='UNKNOWN', recovery='NOT_ESTABLISHED', read_attempts=1, read_succeeded=False,
         retries=0, invented_dependency_content=False, executed_followups=0)
@@ -89,7 +109,9 @@ def canonical_tool_case(case):
     _case(case)
     objective = ('Read once the fixed absent dependency-window slot in the new source-owned public context artifact; '
         'preserve the supplied API observations, label dependency context unknown and do not retry or invent recovery.')
-    if case == DEGRADATION_CASE:
+    if case == PROPOSAL_CASE:
+        objective = 'Use only the supplied source-owned public context to derive a bounded API-window assessment and propose exactly one read-only dependency-window check. The proposed check is NOT_PERFORMED; do not claim tool execution, health, recovery or execution authority in the answer.'
+    elif case == DEGRADATION_CASE:
         objective = 'Read the actual available source-owned public API observation, then one absent dependency-window slot; derive the API-window assessment from the read bytes and narrow scope to API_WINDOW_ONLY without claiming system health, recovery, retries or execution authority.'
     elif case == SUPPORTED_CASES[1]:
         objective += ' Propose exactly one new Owner-supplied read-only dependency window; do not execute the proposal.'
@@ -99,14 +121,27 @@ def canonical_tool_case(case):
             classification='R0', data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0.0, preferred_provider=None,
             response_format='strict_json', deterministic_operation=OPERATION),
-        evidence_scope=('ACTUAL_AVAILABLE_READ_FAILED_DEPENDENCY_AND_NARROWED_API_WINDOW_ONLY'
+        evidence_scope=('ORIGINAL_PROVIDED_CONTEXT_AND_UNPERFORMED_READ_ONLY_PROPOSAL_ONLY'
+            if case == PROPOSAL_CASE else 'ACTUAL_AVAILABLE_READ_FAILED_DEPENDENCY_AND_NARROWED_API_WINDOW_ONLY'
             if case == DEGRADATION_CASE else 'ACTUAL_SINGLE_FAILED_CONTEXT_READ_AND_BOUNDED_RESPONSE_ONLY'), certification='UNVERIFIED')
 
 
 def tool_action_type(case, *, phase='result'):
     _case(case)
-    require(phase in ('setup', 'read', 'result', 'full') or (case == DEGRADATION_CASE and phase == 'available'), 'TOOL_ACTION_INVALID')
-    return 'agent.certification.tool.' + case.split(':')[1] + '.' + phase
+    require(phase in tool_phases(case) + ('full',), 'TOOL_ACTION_INVALID')
+    return 'agent.certification.tool.' + ('tools.complete' if case == PROPOSAL_CASE else case.split(':')[1]) + '.' + phase
+
+
+def tool_phases(case):
+    _case(case)
+    return ('setup','available','result') if case == PROPOSAL_CASE else (
+        ('setup','available','read','result') if case == DEGRADATION_CASE else ('setup','read','result'))
+
+
+def original_custody_fields(case):
+    return [('setup','input_action_records'), ('full','original_action_records')] + (
+        [('read','failed_read_action_records')] if case != PROPOSAL_CASE else []) + (
+        [('available','available_read_action_records')] if case in AVAILABLE_CASES else [])
 
 
 def read_tool_action_span(data_root, task_id, case, *, phase='result'):
@@ -145,7 +180,7 @@ def validate_full_span(lines, task_id, case):
     """Fixed virtual range endpoint; never weaken the ordinary same-action pair."""
     events = _events(lines)
     owned = [event for event in events if event.get('task_id') == task_id]
-    phases = ('setup','available','read','result') if case == DEGRADATION_CASE else ('setup','read','result')
+    phases = tool_phases(case)
     require(len(owned) == len(phases) * 2 and owned[0] is events[0] and owned[-1] is events[-1],
         'TOOL_EXACT_SINGLE_READ_AND_ORDER_REQUIRED')
     ids = []
@@ -187,7 +222,7 @@ def failed_read_span(lines, *, task_id, case, setup_metadata, began, ended, acti
 
 
 def available_read_span(lines, *, task_id, case, setup_metadata, input_raw, began, ended, action_id):
-    require(case == DEGRADATION_CASE and input_raw == input_bytes(case), 'DEGRADATION_ORIGINAL_AVAILABLE_BYTES_REQUIRED')
+    require(case in AVAILABLE_CASES and input_raw == input_bytes(case), 'DEGRADATION_ORIGINAL_AVAILABLE_BYTES_REQUIRED')
     events = _events(lines)
     action = tool_action_type(case, phase='available')
     owned = [event for event in events if event.get('task_id') == task_id and event.get('action_type') == action]
@@ -268,12 +303,14 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
         setup_action = record('setup')
         setup = executor.execute(setup_action, lambda: create(input_bytes(case)))
         folder = check_setup(factory, setup, case, root)
-        read_action = ActionRecord(task_id, AGENT_ID, tool_action_type(case, phase='read'), 'provided_context.read',
-            target=MISSING_SLOT, parameters_summary=dict(schema_version=INPUT_SCHEMA,
-                setup_artifact_id=setup['artifact_id'], relative_path=MISSING_SLOT, read_only_observations=True))
+        read_action = None
+        if case != PROPOSAL_CASE:
+            read_action = ActionRecord(task_id, AGENT_ID, tool_action_type(case, phase='read'), 'provided_context.read',
+                target=MISSING_SLOT, parameters_summary=dict(schema_version=INPUT_SCHEMA,
+                    setup_artifact_id=setup['artifact_id'], relative_path=MISSING_SLOT, read_only_observations=True))
         reader = DeterministicOps(source_version=source_revision)
         available_raw, available_action = None, None
-        if case == DEGRADATION_CASE:
+        if case in AVAILABLE_CASES:
             available_action = ActionRecord(task_id, AGENT_ID, tool_action_type(case, phase='available'),
                 'provided_context.read', target='artifact.json', parameters_summary=dict(schema_version=INPUT_SCHEMA,
                     setup_artifact_id=setup['artifact_id'], relative_path='artifact.json',
@@ -285,13 +322,14 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
             actual_read = executor.execute(available_action, read_available)
             available_raw = actual_read['result'].encode()
             require(check_setup(factory, setup, case, root) == folder, 'TOOL_CONTEXT_CHANGED_DURING_READ')
-        try:
-            executor.execute(read_action, lambda: reader.retrieve_file(folder, MISSING_SLOT))
-        except FileNotFoundError as error:
-            require(error.errno == 2 and error.filename is not None
-                and Path(error.filename).absolute() == folder / MISSING_SLOT, 'TOOL_MISSING_SLOT_UNBOUND')
-        else:
-            raise ToolEventError('TOOL_EXPECTED_MISSING_READ_REQUIRED')
+        if read_action is not None:
+            try:
+                executor.execute(read_action, lambda: reader.retrieve_file(folder, MISSING_SLOT))
+            except FileNotFoundError as error:
+                require(error.errno == 2 and error.filename is not None
+                    and Path(error.filename).absolute() == folder / MISSING_SLOT, 'TOOL_MISSING_SLOT_UNBOUND')
+            else:
+                raise ToolEventError('TOOL_EXPECTED_MISSING_READ_REQUIRED')
         require(check_setup(factory, setup, case, root) == folder, 'TOOL_CONTEXT_CHANGED_DURING_READ')
         subject_action = record('result')
         result = executor.execute(subject_action, lambda: create(expected_artifact_bytes(case, available_bytes=available_raw)))
@@ -304,11 +342,12 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
             source_revision=source_revision, registry_sha256=registry_sha256,
             runtime_identity_sha256=sha(canonical(bound)), case_spec_sha256=sha(canonical(fixed)),
             input_sha256=sha(input_bytes(case)), input_artifact_metadata=setup, setup_action_id=setup_action.action_id,
-            failed_read_action_id=read_action.action_id, subject_action_id=subject_action.action_id,
-            missing_slot=MISSING_SLOT, started_at=began.isoformat(), completed_at=ended.isoformat(),
+            subject_action_id=subject_action.action_id,
+            started_at=began.isoformat(), completed_at=ended.isoformat(),
             durable_action_delivery=True, certification='UNVERIFIED',
+            **({'failed_read_action_id':read_action.action_id,'missing_slot':MISSING_SLOT} if read_action is not None else {}),
             **({'available_read_action_id': available_action.action_id, 'available_input_sha256': sha(available_raw)}
-                if case == DEGRADATION_CASE else {}))
+                if case in AVAILABLE_CASES else {}))
         return dict(task_id=task_id, state='COMPLETED', artifact=result, model_calls=0,
             execution_model='DETERMINISTIC', agent_id=AGENT_ID, capability=CAPABILITY_ID,
             runtime_source_revision=source_revision, tool_event=event)
@@ -328,10 +367,12 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
         value = parse(canonical(execution), 1024 * 1024)
         require(set(value) == {'case_spec', 'runtime', 'runtime_after', 'runtime_current', 'submission', 'dispatch',
             'artifact_metadata', 'artifact_content_utf8', 'input_content_utf8', 'objective_read', 'action_records',
-            'action_chain_join', 'input_action_records', 'input_action_chain_join', 'failed_read_action_records',
-            'failed_read_action_chain_join', 'original_action_records', 'observation'} |
+            'action_chain_join', 'input_action_records', 'input_action_chain_join',
+            'original_action_records', 'observation'} |
+            ({'failed_read_action_records','failed_read_action_chain_join'}
+                if value.get('case_spec',{}).get('case') != PROPOSAL_CASE else set()) |
             ({'available_read_action_records','available_read_action_chain_join'}
-                if value.get('case_spec',{}).get('case') == DEGRADATION_CASE else set()), 'TOOL_EVENT_FIELDS_INVALID')
+                if value.get('case_spec',{}).get('case') in AVAILABLE_CASES else set()), 'TOOL_EVENT_FIELDS_INVALID')
         fixed = canonical_tool_case(value['case_spec'].get('case'))
         require(canonical(value['case_spec']) == canonical(fixed), 'TOOL_CASE_SPEC_DRIFT')
         dispatch, case = value['dispatch'], fixed['case']
@@ -357,13 +398,16 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
             source_revision=source_revision, registry_sha256=registry_sha256,
             runtime_identity_sha256=sha(canonical(runtime)), case_spec_sha256=sha(canonical(fixed)),
             input_sha256=sha(input_bytes(case)), input_artifact_metadata=event['input_artifact_metadata'],
-            setup_action_id=event['setup_action_id'], failed_read_action_id=event['failed_read_action_id'],
-            subject_action_id=event['subject_action_id'], missing_slot=MISSING_SLOT,
+            setup_action_id=event['setup_action_id'], subject_action_id=event['subject_action_id'],
             started_at=event['started_at'], completed_at=event['completed_at'], durable_action_delivery=True,
-            certification='UNVERIFIED', **({'available_read_action_id': event['available_read_action_id'],
-                'available_input_sha256': sha(input_bytes(case))} if case == DEGRADATION_CASE else {}))
-        ids = [event[key] for key in ('setup_action_id', 'failed_read_action_id', 'subject_action_id')]
-        if case == DEGRADATION_CASE:
+            certification='UNVERIFIED',
+            **({'failed_read_action_id':event['failed_read_action_id'],'missing_slot':MISSING_SLOT} if case != PROPOSAL_CASE else {}),
+            **({'available_read_action_id': event['available_read_action_id'],
+                'available_input_sha256': sha(input_bytes(case))} if case in AVAILABLE_CASES else {}))
+        ids = [event[key] for key in ('setup_action_id', 'subject_action_id')]
+        if case != PROPOSAL_CASE:
+            ids.append(event['failed_read_action_id'])
+        if case in AVAILABLE_CASES:
             ids.append(event['available_read_action_id'])
         require(canonical(event) == canonical(expected) and all(_uuid(item) for item in ids)
             and len(set(ids)) == len(ids), 'TOOL_EVENT_UNBOUND')
@@ -378,30 +422,33 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
         spans = []
         for phase, lines_key, join_key, action, report, artifact in (
                 ('setup', 'input_action_records', 'input_action_chain_join', ids[0], INPUT_SCHEMA, setup),
-                ('result', 'action_records', 'action_chain_join', ids[2], RESULT_SCHEMA, metadata)):
+                ('result', 'action_records', 'action_chain_join', event['subject_action_id'], RESULT_SCHEMA, metadata)):
             _original_lines(value[lines_key])
             joined = action_span(value[lines_key], task_id=task, agent_id=AGENT_ID,
                 action_type=tool_action_type(case, phase=phase), schema=report, metadata=artifact,
                 began=began, ended=ended, action_id=action)
             require(canonical(joined) == canonical(value[join_key]), 'TOOL_POSITIVE_ACTION_JOIN_DRIFT')
             spans.append(value[lines_key])
-        failed = failed_read_span(value['failed_read_action_records'], task_id=task, case=case,
-            setup_metadata=setup, began=began, ended=ended, action_id=ids[1])
-        require(canonical(failed) == canonical(value['failed_read_action_chain_join']), 'TOOL_FAILED_READ_JOIN_DRIFT')
+        failed, failed_lines = None, []
+        if case != PROPOSAL_CASE:
+            failed_lines = value['failed_read_action_records']
+            failed = failed_read_span(failed_lines, task_id=task, case=case,
+                setup_metadata=setup, began=began, ended=ended, action_id=event['failed_read_action_id'])
+            require(canonical(failed) == canonical(value['failed_read_action_chain_join']), 'TOOL_FAILED_READ_JOIN_DRIFT')
         available_lines = []
-        if case == DEGRADATION_CASE:
+        if case in AVAILABLE_CASES:
             available_lines = value['available_read_action_records']
             available = available_read_span(available_lines, task_id=task, case=case, setup_metadata=setup,
-                input_raw=input_raw, began=began, ended=ended, action_id=ids[3])
+                input_raw=input_raw, began=began, ended=ended, action_id=event['available_read_action_id'])
             require(canonical(available) == canonical(value['available_read_action_chain_join']), 'DEGRADATION_AVAILABLE_JOIN_DRIFT')
         original = validate_full_span(value['original_action_records'], task, case)
         selected = [event for event in original if event.get('task_id') == task]
-        expected_owned = [parse(line.encode()) for lines in (spans[0], available_lines, value['failed_read_action_records'], spans[1])
+        expected_owned = [parse(line.encode()) for lines in (spans[0], available_lines, failed_lines, spans[1])
             for line in lines if parse(line.encode()).get('task_id') == task]
         require(len(selected) == (8 if case == DEGRADATION_CASE else 6) and canonical(selected) == canonical(expected_owned)
             and value['original_action_records'][:len(spans[0])] == spans[0]
             and value['original_action_records'][-len(spans[1]):] == spans[1]
-            and all(line in value['original_action_records'] for line in value['failed_read_action_records'] + available_lines)
+            and all(line in value['original_action_records'] for line in failed_lines + available_lines)
             and all(_utc(first['timestamp']) <= _utc(last['timestamp'])
                 for first, last in zip(selected, selected[1:]))
             and _utc(selected[-3]['timestamp']) <= _utc(metadata['timestamp']),
@@ -433,9 +480,10 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
         return dict(task_id=task, case=case, artifact_id=metadata['artifact_id'], result_sha256=sha(raw),
             case_spec_sha256=sha(canonical(fixed)), runtime=runtime, registry_sha256=registry_sha256,
             subject_action_sha256=parse(spans[1][-1].encode())['sha256'],
-            input_action_sha256=parse(spans[0][-1].encode())['sha256'], failed_read_action_sha256=failed['last_sha256'],
+            input_action_sha256=parse(spans[0][-1].encode())['sha256'],
+            **({'failed_read_action_sha256':failed['last_sha256']} if failed is not None else {}),
             **({'available_read_action_sha256': available['last_sha256'], 'available_source_sha256': available['source_sha256']}
-                if case == DEGRADATION_CASE else {}),
+                if case in AVAILABLE_CASES else {}),
             original_action_span_sha256=sha(''.join(value['original_action_records']).encode()),
             execution_metadata_sha256=sha(canonical(immutable)), certification='UNVERIFIED',
             event_verification='JOIN_VALIDATED_ORIGIN_AND_INDEPENDENT_ACCEPTANCE_REQUIRED')

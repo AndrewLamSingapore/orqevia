@@ -104,7 +104,7 @@ def parse(raw):
                     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
                     'evidence_integrity:complete', 'context_integrity:complete',
                     'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
-                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete'} and (entry['cloud_policy'] is not None or
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete'} and (entry['cloud_policy'] is not None or
                     entry['owner_policy_sha256'] is not None):
                 deny()
             identity = (agent, row.get('capability_id'), case_id)

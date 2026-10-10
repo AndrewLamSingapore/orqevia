@@ -78,16 +78,22 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
     execution = json.loads(result.execution_bytes)
     event = execution['dispatch']['tool_event']
     folder = runtime.root / 'artifacts' / event['input_artifact_metadata']['artifact_id']
-    assert calls == ([(folder,'artifact.json')] if case_id == events.DEGRADATION_CASE else []) + [(folder,events.MISSING_SLOT)]
+    assert calls == ([(folder,'artifact.json')] if case_id in events.AVAILABLE_CASES else []) + (
+        [(folder,events.MISSING_SLOT)] if case_id != events.PROPOSAL_CASE else [])
     assert len({event['input_artifact_metadata']['artifact_id'], execution['artifact_metadata']['artifact_id'],
         result.summary['reviewer_artifact_id']}) == 3
     assert result.summary['subject_task_id'] != result.summary['review_task_id']
     assert result.summary['model_calls'] == 0 and result.summary['signature'] == 'NOT_PERFORMED'
     assert len(execution['original_action_records']) == (8 if case_id == events.DEGRADATION_CASE else 6)
-    last = events.parse(execution['failed_read_action_records'][-1].encode())
-    assert last['success'] is False and last['error'] == 'FileNotFoundError' and 'result_summary' not in last
+    if case_id != events.PROPOSAL_CASE:
+        last = events.parse(execution['failed_read_action_records'][-1].encode())
+        assert last['success'] is False and last['error'] == 'FileNotFoundError' and 'result_summary' not in last
     assessment = json.loads(result.subject_artifact_bytes)['assessment']
-    assert assessment['read_attempts'] == (2 if case_id == events.DEGRADATION_CASE else 1) and assessment['retries'] == assessment['executed_followups'] == 0
+    if case_id != events.PROPOSAL_CASE:
+        assert assessment['read_attempts'] == (2 if case_id == events.DEGRADATION_CASE else 1) and assessment['retries'] == assessment['executed_followups'] == 0
+    else:
+        assert json.loads(result.subject_artifact_bytes)['proposed_check']['execution'] == 'NOT_PERFORMED'
+        assert 'read_succeeded' not in assessment and 'read_attempts' not in assessment
     assert ('next_check_proposal' in assessment) == (case_id == events.SUPPORTED_CASES[1])
     assert [method for method, _ in runtime.requests].count('POST') == 2
     assert len(runtime.operator.original_replies()) == (27 if case_id == events.DEGRADATION_CASE else 26)
@@ -99,8 +105,8 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
 def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     from app.agent_cert_transport import canonical_cert_case
     specs = [events.canonical_tool_case(case) for case in events.SUPPORTED_CASES]
-    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 3
-    assert len({spec['oracle_id'] for spec in specs}) == 3
+    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 4
+    assert len({spec['oracle_id'] for spec in specs}) == 4
     for case in events.SUPPORTED_CASES:
         assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_tool_case(case)
         assert contracts.review_case_output('a19', 'responsibility.a19', case, '{"PASS":true}') == (

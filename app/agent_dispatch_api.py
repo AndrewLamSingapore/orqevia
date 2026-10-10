@@ -138,10 +138,10 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
     bounded_event = artifact or authority or tool
     if tool:
         from .agent_cert_artifact_events import MAX_BYTES, _path
-        from .agent_cert_tool_events import (SUPPORTED_CASES, tool_action_type, read_tool_action_span,
+        from .agent_cert_tool_events import (SUPPORTED_CASES, tool_action_type, read_tool_action_span, original_custody_fields,
             oracle_id, check_setup)
         from .agent_cert_role_review import (TOOL_REVIEW_SCHEMA as SCHEMA,
-            TOOL_REVIEW_OBJECTIVE as expected_objective, tool_event_review_join as validate_event)
+            TOOL_REVIEW_OBJECTIVE as expected_objective, tool_review_objective, tool_event_review_join as validate_event)
         test_case = None
     elif authority:
         from .agent_cert_artifact_events import MAX_BYTES, _path
@@ -179,6 +179,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         # been validated below. Resolve only the fixed owned reviewer now, then
         # bind every subsequent original domain read to that same pair.
         subject_actor, subject_capability = 'a19', 'responsibility.a19'
+        if tool:
+            preliminary = parse(body.context.encode('utf-8'))
+            expected_objective = tool_review_objective(preliminary.get('execution', {}).get('case_spec', {}).get('case'))
         if initialization or owned_identity:
             preliminary = parse(body.context.encode('utf-8'))
             subject_spec = preliminary.get('execution', {}).get('case_spec', {})
@@ -276,11 +279,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             require(canonical(original_metadata) == canonical(input_metadata)
                 and original_raw == execution['input_content_utf8'].encode()
                 and all(canonical(read_tool_action_span(root, subject_task, case_id, phase=phase)) ==
-                    canonical(execution[key]) for phase, key in (
-                        ('setup', 'input_action_records'), ('read', 'failed_read_action_records'),
-                        ('full', 'original_action_records')) + (
-                            (('available','available_read_action_records'),)
-                            if case_id == 'graceful_degradation:complete' else ())), 'TOOL_ORIGINAL_DOMAINS_REQUIRED')
+                    canonical(execution[key]) for phase, key in original_custody_fields(case_id)), 'TOOL_ORIGINAL_DOMAINS_REQUIRED')
         if artifact and case_id != 'general:artifact_produce':
             input_metadata = execution['dispatch']['artifact_event']['input_artifact_metadata']
             original_metadata, original_raw = retrieve_owned(input_metadata['artifact_id'])
@@ -315,11 +314,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             if tool:
                 check_setup(factory, input_metadata, case_id, root)
                 require(all(canonical(read_tool_action_span(root, subject_task, case_id, phase=phase)) ==
-                    canonical(execution[key]) for phase, key in (
-                        ('setup', 'input_action_records'), ('read', 'failed_read_action_records'),
-                        ('full', 'original_action_records')) + (
-                            (('available','available_read_action_records'),)
-                            if case_id == 'graceful_degradation:complete' else ())), 'TOOL_DOMAINS_CHANGED_DURING_REVIEW')
+                    canonical(execution[key]) for phase, key in original_custody_fields(case_id)), 'TOOL_DOMAINS_CHANGED_DURING_REVIEW')
             if artifact and case_id != 'general:artifact_produce':
                 final_input_metadata, final_input_raw = retrieve_owned(input_metadata['artifact_id'])
                 require(canonical(final_input_metadata) == canonical(original_metadata)
