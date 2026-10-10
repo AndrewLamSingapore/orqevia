@@ -45,7 +45,10 @@ def capture(configured, monkeypatch, agent, cap):
         get_job=lambda _: pytest.fail('No job/model request'), get_artifact=artifact,
         get_runtime=objective_api.runtime_snapshot, expected_source_revision=SOURCE,
         expected_registry_sha256=registry_sha, timeout_seconds=5)
-    assert execution['observation']['state'] == 'EXECUTED'
+    assert execution['observation']['state'] == 'EXECUTED', {
+        'state': execution['observation'].get('state'),
+        'reason': execution['observation'].get('reason'),
+        'agent_id': agent, 'capability_id': cap}
     task = execution['dispatch']['task_id']
     execution['objective_read'] = [200, objective_api.get_read_only(task, 'fixture-owner')]
     assert ledger.flush(timeout=1) is True
