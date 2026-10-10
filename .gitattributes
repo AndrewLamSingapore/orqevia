@@ -23,5 +23,5 @@ governance/agent-cert-case-evidence/a19-5b3dd3a-role-normal-20261007/** -text
 governance/agent-cert-case-evidence/a19-61335a9-artifact-produce-20261008/** -text
 
 # Original restart and certification observations retain their exact hash-bound bytes.
-docs/evidence/resume-20261010/** -text
+docs/evidence/resume-20261010/** -text whitespace=cr-at-eol
 governance/updated-golden-selection.json text eol=lf
