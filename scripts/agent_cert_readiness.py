@@ -50,7 +50,7 @@ EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
     'evidence_integrity:complete', 'context_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
-    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete'})
+    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'cross_verification:complete'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})
 
 

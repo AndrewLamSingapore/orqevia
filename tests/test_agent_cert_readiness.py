@@ -29,19 +29,21 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert inventory['cases_per_capability'] == 74
     assert inventory['required_capability_cases'] == 2146
     assert len(set(inventory['existing_matrix_case_ids'])) == 74
-    assert inventory['source_canonical_adapter_oracle_count'] == 142
+    assert inventory['source_canonical_adapter_oracle_count'] == 143
     assert all('role:normal' in r['canonical_adapter_oracle_ready_cases'] for r in rows)
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
 
 def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inventory):
     row = next(r for r in inventory['capability_rows'] if r['agent_id'] == 'a19')
-    assert len(row['canonical_adapter_oracle_ready_cases']) == 58
+    assert len(row['canonical_adapter_oracle_ready_cases']) == 59
     assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization',
         'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
-        'authority:complete', 'tools:complete', 'context_integrity:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
+        'authority:complete', 'tools:complete', 'cross_verification:complete', 'context_integrity:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
         'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'evidence_integrity:complete', 'graceful_degradation:complete', 'independent_verification:complete']
     assert len(row['source_pinned_cloud_transport_cases']) == 40
+    assert 'cross_verification:complete' in row['distinct_zero_model_event_adapter_cases']
+    assert 'cross_verification:complete' not in row['source_pinned_cloud_transport_cases']
     assert 'independent_verification:complete' not in row['locally_actionable_missing_case_adapter_ids']
     assert 'independent_verification:complete' not in row['source_pinned_cloud_transport_cases']
     assert 'tools:complete' not in row['locally_actionable_missing_case_adapter_ids']

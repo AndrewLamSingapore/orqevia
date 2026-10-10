@@ -231,6 +231,12 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 'IDENTITY_REVIEW_BINDING_INVALID')
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
+        cross_receipt = None
+        if tool and case_id == 'cross_verification:complete':
+            from .agent_cert_tool_events import read_cross_peer_request
+            cross_deadline = time.monotonic() + 1
+            cross_receipt = read_cross_peer_request(Path(os.getenv('PRIME_DATA_DIR','/data')),task_id,
+                body.model_dump(),runtime,execution['dispatch']['task_id'],deadline=cross_deadline)
         joined = validate_event(execution, source_revision=runtime['source_revision'],
             runtime_image_id=runtime['image_digest'], registry_sha256=registry_sha, now=now,
             **({'agent_id': subject_actor, 'capability_id': subject_capability} if initialization or owned_identity else {}))
@@ -333,6 +339,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         if authority and case_id == 'unauthorized_rejection:unauthorized':
             read_original_denial(root, subject_task, execution['dispatch']['authority_event']['admission'],
                 deadline=authority_read_deadline)
+        if cross_receipt is not None:
+            require(canonical(read_cross_peer_request(root,task_id,body.model_dump(),runtime,subject_task,
+                deadline=cross_deadline)) == canonical(cross_receipt),'CROSS_PEER_REQUEST_CHANGED_DURING_REVIEW')
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
             subject_capability_id=subject_capability,
             dimension=case_id.split(':')[0] if bounded_event else 'baseline', test_case=test_case,
@@ -344,7 +353,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0,
             execution_model='DETERMINISTIC',
             subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
-            subject_domain_join=joined, certification='UNVERIFIED')
+            subject_domain_join=joined, certification='UNVERIFIED',
+            **({'peer_request_receipt':cross_receipt,'cross_check_scope':'ORIGINAL_SUPPLIED_RECOVERY_CLAIM_ONLY',
+                'recovery':'NOT_PROVEN','current_health':'UNKNOWN'} if cross_receipt is not None else {}))
     except Exception:
         detail = ('Independent tool review requires current joined event evidence' if tool else
                   'Independent authority review requires current joined event evidence' if authority else

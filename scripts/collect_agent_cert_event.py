@@ -288,14 +288,14 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             execution['input_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
                 action_type=tool_action_type(case, phase='setup'), schema=INPUT_SCHEMA, metadata=input_metadata,
                 began=action_began, ended=action_ended, action_id=event['setup_action_id'])
-            if case in {'graceful_degradation:complete','tools:complete','independent_verification:complete','injection_resistance:complete'}:
+            if case in {'graceful_degradation:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'cross_verification:complete'}:
                 from app.agent_cert_tool_events import available_read_span
                 available_lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='available')))
                 execution['available_read_action_records'] = available_lines
                 execution['available_read_action_chain_join'] = available_read_span(available_lines, task_id=task,
                     case=case, setup_metadata=input_metadata, input_raw=raw, began=action_began, ended=action_ended,
                     action_id=event['available_read_action_id'])
-            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete'}:
+            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'cross_verification:complete'}:
                 lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='read')))
                 execution['failed_read_action_records'] = lines
                 execution['failed_read_action_chain_join'] = failed_read_span(lines, task_id=task, case=case,
@@ -399,6 +399,17 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             oracle_id=oracle, test_result='PASS', review_errors=[], model_calls=0,
             execution_model='DETERMINISTIC', subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
             subject_domain_join=join, certification='UNVERIFIED')
+        peer_objective = None
+        if case == 'cross_verification:complete':
+            from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective
+            peer_request = cross_peer_request(execution,nonce,expected_source_revision)
+            receipt = content.get('peer_request_receipt')
+            validate_cross_peer_receipt(receipt,peer_task=result['task_id'],subject_task=task,
+                request=peer_request,runtime=before,now=_now(wall_clock))
+            expected.update(peer_request_receipt=receipt,cross_check_scope='ORIGINAL_SUPPLIED_RECOVERY_CLAIM_ONLY',
+                recovery='NOT_PROVEN',current_health='UNKNOWN')
+            peer_objective = _response(read(io.read_objective,result['task_id']),200,'CROSS_ORIGINAL_PEER_REQUEST_REQUIRED')
+            validate_cross_peer_objective(peer_objective,dispatch=result,runtime=before,receipt=receipt,now=_now(wall_clock))
         _require(set(content) == set(expected) | {'review_nonce', 'reviewed_at'}
             and content.get('review_nonce') == nonce
             and all(_equal(content.get(key), value) for key, value in expected.items()),
@@ -419,6 +430,11 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             transport=dict(authentication='OWNER_AUTHENTICATED', dispatch_http_status=202,
                 artifact_http_status=200, runtime_source_revision=expected_source_revision,
                 actual_runtime_image=expected_runtime_image))
+        if peer_objective is not None:
+            final_peer = _response(read(io.read_objective,result['task_id']),200,'CROSS_ORIGINAL_PEER_REQUEST_REQUIRED')
+            _require(_equal(final_peer,peer_objective),'CROSS_ORIGINAL_PEER_REQUEST_CHANGED')
+            validate_cross_peer_objective(final_peer,dispatch=result,runtime=before,receipt=receipt,now=_now(wall_clock))
+            proof.update(peer_objective_read=[200,peer_objective],peer_request_body=peer_request)
         review = dict(schema_version='prime.agent-certification.review.v1', reviewer_identity=reviewer,
             review_run_id=review_run_id, source_revision=expected_source_revision, agent_id=agent,
             capability_id=capability, dimension=dimension, test_case=case.split(':')[1],
