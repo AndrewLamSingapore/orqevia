@@ -29,6 +29,7 @@ from .agent_cert_role_review import TOOL_REVIEW_ACTION, read_tool_review_action_
 from .agent_cert_recovery_events import (PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACTION as RECOVERY_REVIEW_ACTION,
     action_type as recovery_action_type,read_action_span as read_recovery_action_span,
     read_review_action_span as read_recovery_review_span,validate_full_action_span as validate_recovery_full_span)
+from .agent_cert_clean_room import INPUT_READ_ACTION as BLIND_INPUT_READ_ACTION, input_action_span as blind_input_span
 
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
 _read_slot = threading.BoundedSemaphore(1)
@@ -50,7 +51,7 @@ _ACTIONS = frozenset({
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
     'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
-    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION,
+    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,
 } | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS))
 
 
@@ -123,6 +124,8 @@ def actions(task_id: str, response: Response, action_type: str = '',
             lines=read_recovery_action_span(root,task_id,which,step=step)
         elif action_type==RECOVERY_REVIEW_ACTION:
             lines=read_recovery_review_span(root,task_id)
+        elif action_type == BLIND_INPUT_READ_ACTION:
+            lines = blind_input_span(root,task_id)
         elif action_type in _TOOL_ACTIONS:
             case, phase = _TOOL_ACTIONS[action_type]
             lines = read_tool_action_span(root, task_id, case, phase=phase)

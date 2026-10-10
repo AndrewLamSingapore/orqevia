@@ -37,9 +37,11 @@ def test_artifact_custody_cannot_acquire_cloud_model_oracle_or_policy(case_id):
 
 
 def test_artifact_producer_and_validator_added_to_complete_protected_code_pins(tmp_path):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 57
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 58
     assert 'app/agent_cert_revalidation.py' in loader.CODE_FILES
     assert 'app/agent_cert_revalidation.py' in loader.RUNTIME_REVIEW_CODE_FILES
+    assert 'app/agent_cert_clean_room.py' in loader.CODE_FILES
+    assert 'app/agent_cert_clean_room.py' in loader.RUNTIME_REVIEW_CODE_FILES
     for dependency in ('app/spine.py', 'app/generated/portfolio_contracts.py'):
         assert dependency in loader.CODE_FILES and dependency in loader.RUNTIME_REVIEW_CODE_FILES
     assert 'app/context_pack.py' in loader.CODE_FILES and 'app/context_pack.py' in loader.RUNTIME_REVIEW_CODE_FILES
@@ -65,12 +67,12 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
     result = readiness.build_source_readiness(source_revision='a' * 40, canonical_main_revision='b' * 40,
         now=datetime.now(timezone.utc))
     a19 = next(row for row in result['capability_rows'] if row['agent_id'] == 'a19')
-    assert len(a19['canonical_adapter_oracle_ready_cases']) == 63
+    assert len(a19['canonical_adapter_oracle_ready_cases']) == 64
     assert set(events.SUPPORTED_CASES) <= set(a19['distinct_zero_model_event_adapter_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['source_pinned_cloud_transport_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['cloud_transport_missing_for_ready_quality_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['generic_queue_observer_quality_gap_cases'])
-    assert result['source_canonical_adapter_oracle_count'] == 147
+    assert result['source_canonical_adapter_oracle_count'] == 148
     assert 'health:complete' in a19['distinct_zero_model_event_adapter_cases']
     assert 'health:complete' not in a19['source_pinned_cloud_transport_cases']
     assert 'health:complete' not in a19['locally_actionable_missing_case_adapter_ids']
@@ -82,6 +84,9 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
     assert 'collaboration:complete' in a19['distinct_zero_model_event_adapter_cases']
     assert 'collaboration:complete' not in a19['source_pinned_cloud_transport_cases']
     assert 'collaboration:complete' not in a19['locally_actionable_missing_case_adapter_ids']
+    assert 'clean_room_audit:complete' in a19['distinct_zero_model_event_adapter_cases']
+    assert 'clean_room_audit:complete' not in a19['source_pinned_cloud_transport_cases']
+    assert 'clean_room_audit:complete' not in a19['locally_actionable_missing_case_adapter_ids']
     assert 'independent_verification:complete' not in a19['source_pinned_cloud_transport_cases']
     assert 'independent_verification:complete' not in a19['locally_actionable_missing_case_adapter_ids']
     assert 'continuous_revalidation:complete' in a19['distinct_zero_model_event_adapter_cases']

@@ -195,9 +195,10 @@ def test_population_and_owning_age_limits_are_not_expanded():
     from scripts.sign_admitted_agent_cases import CODE_FILES, RUNTIME_REVIEW_CODE_FILES
     assert len(PAIRS) == 29 and len({agent for agent, _ in PAIRS}) == 21
     assert initialization.MAX_AGE_SECONDS == authority.MAX_AGE_SECONDS == artifact.MAX_AGE_SECONDS == 300
-    assert len(CODE_FILES) == 57 and len(RUNTIME_REVIEW_CODE_FILES) == 56
+    assert len(CODE_FILES) == 58 and len(RUNTIME_REVIEW_CODE_FILES) == 57
     for dependency in ('app/spine.py', 'app/generated/portfolio_contracts.py'):
         assert dependency in CODE_FILES and dependency in RUNTIME_REVIEW_CODE_FILES
+    assert 'app/agent_cert_clean_room.py' in CODE_FILES and 'app/agent_cert_clean_room.py' in RUNTIME_REVIEW_CODE_FILES
     assert 'app/context_pack.py' in CODE_FILES and 'app/context_pack.py' in RUNTIME_REVIEW_CODE_FILES
     assert 'app/agent_cert_owned_identity.py' in CODE_FILES and 'app/agent_cert_owned_identity.py' in RUNTIME_REVIEW_CODE_FILES
     assert set(CODE_FILES) - set(RUNTIME_REVIEW_CODE_FILES) == {'scripts/agent_cert_reviewed_signing.py'}

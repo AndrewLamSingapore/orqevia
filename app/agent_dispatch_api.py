@@ -233,11 +233,22 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
         cross_receipt = None
-        if tool and case_id in {'cross_verification:complete','collaboration:complete'}:
+        if tool and case_id in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
             from .agent_cert_tool_events import read_cross_peer_request,peer_review_fields
             cross_deadline = time.monotonic() + 1
             cross_receipt = read_cross_peer_request(Path(os.getenv('PRIME_DATA_DIR','/data')),task_id,
                 body.model_dump(),runtime,execution['dispatch']['task_id'],deadline=cross_deadline)
+        blind_original = None
+        if tool and case_id == 'clean_room_audit:complete':
+            from .agent_cert_clean_room import read_original_audit
+            from .agent_cert_artifact_events import _utc
+            blind_original = read_original_audit(Path(os.getenv('PRIME_DATA_DIR','/data')),execution.get('blind_audit'),
+                input_metadata=execution['dispatch']['tool_event']['input_artifact_metadata'],
+                input_raw=execution['input_content_utf8'].encode(),runtime=runtime,registry=registry_sha,
+                authorization=authorization,now=now)
+            require(execution['blind_audit']['dispatch']['task_id'] not in {task_id,execution['dispatch']['task_id']}
+                and _utc(execution['blind_audit']['artifact_metadata']['timestamp']) <= _utc(cross_receipt['created_at']),
+                'BLIND_AUDIT_MUST_PRECEDE_COMPARISON')
         joined = validate_event(execution, source_revision=runtime['source_revision'],
             runtime_image_id=runtime['image_digest'], registry_sha256=registry_sha, now=now,
             **({'agent_id': subject_actor, 'capability_id': subject_capability} if initialization or owned_identity else {}))
@@ -341,6 +352,12 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             read_original_denial(root, subject_task, execution['dispatch']['authority_event']['admission'],
                 deadline=authority_read_deadline)
         if cross_receipt is not None:
+            if blind_original is not None:
+                require(canonical(read_original_audit(root,execution['blind_audit'],
+                    input_metadata=execution['dispatch']['tool_event']['input_artifact_metadata'],
+                    input_raw=execution['input_content_utf8'].encode(),runtime=runtime,registry=registry_sha,
+                    authorization=authorization,now=datetime.now(timezone.utc))) == canonical(blind_original),
+                    'BLIND_AUDIT_CHANGED_DURING_COMPARISON')
             require(canonical(read_cross_peer_request(root,task_id,body.model_dump(),runtime,subject_task,
                 deadline=cross_deadline)) == canonical(cross_receipt),'CROSS_PEER_REQUEST_CHANGED_DURING_REVIEW')
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
@@ -628,6 +645,12 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
         raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     started = time.perf_counter()
+    blind_budget = None
+    if body.deterministic_operation == 'certification_tool_review':
+        from .agent_cert_clean_room import OBJECTIVE as blind_objective
+        if body.objective == blind_objective:
+            from datetime import datetime, timezone
+            blind_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
     from .runtime_status import is_runtime_status,build_report,validate_report
     runtime_status=not body.deterministic_operation and is_runtime_status(body.objective,body.context)
     try:
@@ -708,8 +731,12 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             elif body.deterministic_operation == 'certification_authority_review':
                 data=joined_authority_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_tool_review':
-                data=_joined_contract_event_review(body,authorization,actor=actor,task_id=task_id,
-                    runtime=runtime,initialization=False,tool=True)
+                from .agent_cert_clean_room import OBJECTIVE as blind_objective,execute_blind,case_remaining
+                if body.objective == blind_objective:
+                    data=execute_blind(body,authorization,actor=actor,task_id=task_id,runtime=runtime,budget=blind_budget)
+                else:
+                    data=_joined_contract_event_review(body,authorization,actor=actor,task_id=task_id,
+                        runtime=runtime,initialization=False,tool=True)
             elif body.deterministic_operation == 'certification_role_review':
                 data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_identity_review':
@@ -758,6 +785,9 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         artifact_review = body.deterministic_operation == 'certification_artifact_review'
         authority_review = body.deterministic_operation == 'certification_authority_review'
         tool_review = body.deterministic_operation == 'certification_tool_review'
+        blind_review = tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1'
+        if blind_review and case_remaining(blind_budget) <= 0:
+            raise HTTPException(422,'Blind audit case budget exhausted')
         review_ledger = None
         if runtime_status or role_review or identity_review or owned_identity_review or initialization or initialization_review or artifact_review or authority_review or tool_review:
             from .agent_cert_role_review import TOOL_REVIEW_ACTION
@@ -791,8 +821,12 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.
             result['review_action_id']=action.action_id
-            result['review_action_durable']=review_ledger.flush(timeout=1) is True
+            result['review_action_durable']=review_ledger.flush(timeout=case_remaining(blind_budget) if blind_review else 1) is True
+            if blind_review:
+                result['review_action_durable'] = result['review_action_durable'] and case_remaining(blind_budget) > 0
             result['certification']='UNVERIFIED'
+            if tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1':
+                result['blind_input_read_action_id']=data['input_read_action_id']
         return result
     # This deployment admits one measured NANO model. Larger tiers are not
     # inferred from agent identity or from an unqualified installed model.

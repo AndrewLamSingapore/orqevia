@@ -400,14 +400,14 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             execution['input_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
                 action_type=tool_action_type(case, phase='setup'), schema=INPUT_SCHEMA, metadata=input_metadata,
                 began=action_began, ended=action_ended, action_id=event['setup_action_id'])
-            if case in {'graceful_degradation:complete','health:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'}:
+            if case in {'graceful_degradation:complete','health:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
                 from app.agent_cert_tool_events import available_read_span
                 available_lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='available')))
                 execution['available_read_action_records'] = available_lines
                 execution['available_read_action_chain_join'] = available_read_span(available_lines, task_id=task,
                     case=case, setup_metadata=input_metadata, input_raw=raw, began=action_began, ended=action_ended,
                     action_id=event['available_read_action_id'])
-            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'}:
+            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
                 lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='read')))
                 execution['failed_read_action_records'] = lines
                 execution['failed_read_action_chain_join'] = failed_read_span(lines, task_id=task, case=case,
@@ -449,6 +449,41 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                     began=action_began, ended=action_ended, action_id=event['prior_action_id'])
         if bounded_event:
             execution['runtime_current'] = runtime()
+        if tool_case and case == 'clean_room_audit:complete':
+            from app.agent_cert_clean_room import request_body as blind_request,validate_audit
+            blind_nonce = read(nonce_factory)
+            _require(_uuid(blind_nonce),'BLIND_NONCE_INVALID')
+            blind_body = blind_request(event['input_artifact_metadata'],expected_source_revision,
+                expected_registry_sha256,blind_nonce)
+            _registry_pin(expected_registry_sha256)
+            bounded()
+            summary.update(stage='BLIND_AUDIT_DISPATCH',blind_audit_dispatch_attempts=1,
+                blind_audit_dispatch_uncertain=True)
+            blind_dispatch = _response(_call(io.dispatch_reviewer,blind_body),202,'BLIND_AUDIT_DISPATCH_FAILED')
+            bounded()
+            _require(type(blind_dispatch) is dict and _uuid(blind_dispatch.get('task_id'))
+                and blind_dispatch['task_id'] != task and _uuid(blind_dispatch.get('review_action_id'))
+                and _uuid(blind_dispatch.get('blind_input_read_action_id'))
+                and blind_dispatch.get('review_action_durable') is True,'BLIND_DURABLE_ORIGINAL_TASK_REQUIRED')
+            blind_metadata = blind_dispatch.get('artifact')
+            blind_holder = {}
+            blind_raw = _artifact(io,blind_metadata.get('artifact_id') if type(blind_metadata) is dict else None,
+                blind_metadata,blind_holder)
+            holder['blind_audit_raw'] = blind_raw
+            blind_view = _response(read(io.read_objective,blind_dispatch['task_id']),200,'BLIND_ORIGINAL_OBJECTIVE_FAILED')
+            blind_proof = dict(request=blind_body,dispatch=blind_dispatch,artifact_metadata=blind_metadata,
+                artifact_content_utf8=blind_raw.decode(),objective_read=[200,blind_view],
+                input_action_records=_lines(read(io.read_review_actions,blind_dispatch['blind_input_read_action_id'])),
+                action_records=_lines(read(io.read_review_actions,blind_dispatch['review_action_id'])))
+            validate_audit(blind_proof,input_metadata=event['input_artifact_metadata'],
+                input_raw=execution['input_content_utf8'].encode(),runtime=before,
+                registry=expected_registry_sha256,now=_now(wall_clock))
+            _require(_equal(blind_view,_response(read(io.read_objective,blind_dispatch['task_id']),200,
+                'BLIND_ORIGINAL_OBJECTIVE_FAILED')),'BLIND_ORIGINAL_OBJECTIVE_CHANGED')
+            execution['blind_audit'] = blind_proof
+            summary.update(blind_audit_dispatch_uncertain=False,blind_audit_task_id=blind_dispatch['task_id'],
+                blind_audit_sha256=blind_metadata['sha256'])
+            bounded()
         primary = _canonical(execution)
         _require(len(primary) <= 1024 * 1024, 'EVENT_ENVELOPE_TOO_LARGE')
         now = _now(wall_clock)
@@ -512,7 +547,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             execution_model='DETERMINISTIC', subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
             subject_domain_join=join, certification='UNVERIFIED')
         peer_objective = None
-        if case in {'cross_verification:complete','collaboration:complete'}:
+        if case in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
             from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective,peer_review_fields
             peer_request = cross_peer_request(execution,nonce,expected_source_revision)
             receipt = content.get('peer_request_receipt')

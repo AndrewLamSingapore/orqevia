@@ -183,7 +183,7 @@ class AgentCertOperatorIO:
                 self._reviewer, self._review_cap = identity_reviewer(agent, capability)
                 self._review_objective = identity_review_objective(agent, capability)
                 self._review_operation, self._review_action_type = REVIEW_OPERATION, REVIEW_ACTION
-            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'}:
+            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
                 from app.agent_cert_tool_events import tool_action_type
                 from app.agent_cert_role_review import TOOL_REVIEW_ACTION, tool_review_objective, TOOL_REVIEW_OPERATION
                 _require((agent, capability) == ('a19', 'responsibility.a19'), 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
@@ -227,7 +227,7 @@ class AgentCertOperatorIO:
                 self._review_operation = 'certification_identity_review'
                 self._review_action_type = 'agent.certification.identity.review'
             self._subject_action_types = {self._action_type}
-            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'}:
+            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
                 from app.agent_cert_tool_events import tool_phases
                 self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in tool_phases(case) + ('full',))
             if case in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
@@ -238,7 +238,7 @@ class AgentCertOperatorIO:
             # Tool events retain two extra spans; recovery/integrity add
             # an original prior artifact and its action-pair GET. Existing
             # artifact/handoff cases retain their measured 24-reply cap.
-            self._response_limit = 28 if case in {'graceful_degradation:complete','health:complete','cross_verification:complete', 'collaboration:complete'} else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
+            self._response_limit = 28 if case in {'graceful_degradation:complete','health:complete','cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'} else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
         except Exception:
             raise OperatorBindingError('CANONICAL_ZERO_MODEL_EVENT_REQUIRED') from None
         self._token = owner_token
@@ -249,6 +249,10 @@ class AgentCertOperatorIO:
         self._authorized = False
         self._post_attempts = set()
         self._subject_task = self._review_task = self._review_action = None
+        self._blind_task = self._blind_action = self._blind_read = self._blind_input_meta = None
+        self._last_runtime = None
+        if case == 'clean_room_audit:complete':
+            self._response_limit = 35
         self._artifact_ids = set()
         self._responses = []
         self._response_bytes = 0
@@ -286,9 +290,14 @@ class AgentCertOperatorIO:
             paths.update('/api/agent-cert-events/actions/' + self._subject_task + '?action_type=' + action
                 for action in self._subject_action_types)
         if self._review_task:
-            if self._spec['case'] in {'cross_verification:complete','collaboration:complete'}:
+            if self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
                 paths.add('/api/agents/objectives/'+self._review_task)
             paths.add('/api/agent-cert-events/actions/' + self._review_task + '?action_type=' + self._review_action_type)
+        if self._spec['case'] == 'clean_room_audit:complete' and self._blind_task:
+            from app.agent_cert_clean_room import INPUT_READ_ACTION
+            paths.add('/api/agents/objectives/'+self._blind_task)
+            paths.update('/api/agent-cert-events/actions/'+self._blind_task+'?action_type='+action
+                for action in (INPUT_READ_ACTION,self._review_action_type))
         return path in paths
 
     def _request(self, method, path, *, body=None, artifact=False):
@@ -307,18 +316,30 @@ class AgentCertOperatorIO:
         request_deadline = self._now() + min(self._request_seconds, self._remaining())
         if method == 'POST':
             claim = path
-            if (self._spec['case'] in {'cross_verification:complete','collaboration:complete'} and path == '/api/agents/objectives'
+            if (self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'} and path == '/api/agents/objectives'
                     and body.get('capability') == self._review_cap
                     and body.get('deterministic_operation') == self._review_operation):
-                _require(_uuid(self._subject_task) and path in self._post_attempts
-                    and body.get('objective') == self._review_objective, 'CROSS_FIXED_PEER_REQUEST_REQUIRED')
-                envelope = _decode(body.get('context','').encode())
-                _require(envelope.get('execution',{}).get('dispatch',{}).get('task_id') == self._subject_task
-                    and _canonical(envelope.get('execution',{}).get('case_spec')) == _canonical(self._spec)
-                    and envelope.get('expected_execution_sha256') == hashlib.sha256(_canonical(envelope.get('execution'))).hexdigest()
-                    and envelope.get('expected_source_revision') == self._source and _uuid(envelope.get('review_nonce')),
-                    'CROSS_FIXED_PEER_REQUEST_REQUIRED')
-                claim = (path,'cross-peer-objective')
+                _require(_uuid(self._subject_task) and path in self._post_attempts,'CROSS_FIXED_PEER_REQUEST_REQUIRED')
+                from app.agent_cert_clean_room import OBJECTIVE as blind_objective
+                if self._spec['case'] == 'clean_room_audit:complete' and body.get('objective') == blind_objective:
+                    _require(self._blind_task is None and self._blind_input_meta is not None,'BLIND_FIXED_REQUEST_REQUIRED')
+                    from app.agent_cert_clean_room import admit_request
+                    from app.agent_cert_tool_events import independent_verifier_binding
+                    admit_request(body,runtime=self._last_runtime,registry=independent_verifier_binding()['registry_sha256'],
+                        metadata=self._blind_input_meta)
+                    claim = (path,'blind-audit-objective')
+                else:
+                    _require(body.get('objective') == self._review_objective,'CROSS_FIXED_PEER_REQUEST_REQUIRED')
+                    envelope = _decode(body.get('context','').encode())
+                    _require(envelope.get('execution',{}).get('dispatch',{}).get('task_id') == self._subject_task
+                        and _canonical(envelope.get('execution',{}).get('case_spec')) == _canonical(self._spec)
+                        and envelope.get('expected_execution_sha256') == hashlib.sha256(_canonical(envelope.get('execution'))).hexdigest()
+                        and envelope.get('expected_source_revision') == self._source and _uuid(envelope.get('review_nonce')),
+                        'CROSS_FIXED_PEER_REQUEST_REQUIRED')
+                    if self._spec['case'] == 'clean_room_audit:complete':
+                        _require(_uuid(self._blind_task) and envelope.get('execution',{}).get('blind_audit',{}).get('dispatch',{}).get('task_id')
+                            == self._blind_task,'BLIND_BEFORE_COMPARISON_REQUIRED')
+                    claim = (path,'cross-peer-objective')
             with self._lock:
                 _require(self._authorized and claim not in self._post_attempts, 'MUTATION_UNAUTHORIZED_OR_REPLAY')
                 self._remaining(request_deadline)
@@ -407,6 +428,7 @@ class AgentCertOperatorIO:
             and all(type(value[key]) is str and _IDENTITY.fullmatch(value[key]) is not None
                     and value[key] != 'UNKNOWN' for key in ('host_id', 'version')),
             'AUTHENTICATED_RUNTIME_BINDING_REQUIRED')
+        self._last_runtime = value
         return value
 
     def authorize(self):
@@ -427,11 +449,13 @@ class AgentCertOperatorIO:
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
             if self._spec['case'] in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery',
-                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
-                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'} else 'artifact_event') if type(dispatch) is dict else None
+                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'} else 'artifact_event') if type(dispatch) is dict else None
                 if type(event) is dict:
                     self._remember_artifact(event.get('input_artifact_metadata'))
+                    if self._spec['case'] == 'clean_room_audit:complete':
+                        self._blind_input_meta = event.get('input_artifact_metadata')
                     if self._spec['case'] in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
                         self._remember_artifact(event.get('prior_artifact_metadata'))
         return status, value
@@ -442,6 +466,25 @@ class AgentCertOperatorIO:
 
     def dispatch_reviewer(self, body):
         _require(_uuid(self._subject_task), 'OWNED_SUBJECT_TASK_REQUIRED')
+        if self._spec['case'] == 'clean_room_audit:complete':
+            from app.agent_cert_clean_room import OBJECTIVE as blind_objective, admit_request
+            if type(body) is dict and body.get('objective') == blind_objective:
+                from app.agent_cert_tool_events import independent_verifier_binding
+                admit_request(body,runtime=self.runtime(),registry=independent_verifier_binding()['registry_sha256'],
+                    metadata=self._blind_input_meta)
+                status,envelope = self._request('POST','/api/agents/objectives',body=body)
+                _require(status == 202 and _uuid(envelope.get('id')) and envelope['id'] != self._subject_task
+                    and type(envelope.get('steps')) is list and len(envelope['steps']) == 1
+                    and envelope['steps'][0].get('capability') == self._review_cap
+                    and type(envelope['steps'][0].get('dispatch')) is dict
+                    and envelope['steps'][0]['dispatch'].get('task_id') == envelope['id'],
+                    'BLIND_ACTUAL_SUBMISSION_REQUIRED')
+                dispatch = envelope['steps'][0]['dispatch']
+                self._blind_task = envelope['id']
+                self._blind_action = dispatch.get('review_action_id')
+                self._blind_read = dispatch.get('blind_input_read_action_id')
+                self._remember_artifact(dispatch.get('artifact'))
+                return status,dispatch
         expected = dict(classification='R0', capability=self._review_cap, objective=self._review_objective,
             data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low', task_class='classification',
             max_cost_usd=0, response_format='strict_json', deterministic_operation=self._review_operation)
@@ -461,7 +504,7 @@ class AgentCertOperatorIO:
         except Exception:
             raise OperatorBindingError('FIXED_ZERO_MODEL_REVIEW_REQUIRED') from None
         self.runtime()
-        if self._spec['case'] in {'cross_verification:complete','collaboration:complete'}:
+        if self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
             status, envelope = self._request('POST','/api/agents/objectives',body=body)
             _require(status == 202 and _uuid(envelope.get('id')) and envelope['id'] != self._subject_task
                 and type(envelope.get('steps')) is list and len(envelope['steps']) == 1
@@ -497,6 +540,10 @@ class AgentCertOperatorIO:
         return lines  # Never truncate, rewrite, synthesize or certify the span.
 
     def read_review_actions(self, action_id):
+        if self._spec['case'] == 'clean_room_audit:complete' and _uuid(self._blind_task):
+            from app.agent_cert_clean_room import INPUT_READ_ACTION
+            if _uuid(action_id) and action_id in {self._blind_action,self._blind_read}:
+                return self._actions(self._blind_task,INPUT_READ_ACTION if action_id == self._blind_read else self._review_action_type)
         _require(_uuid(action_id) and action_id == self._review_action and _uuid(self._review_task),
             'OWNED_ACTION_BINDING_REQUIRED')
         return self._actions(self._review_task, self._review_action_type)
@@ -504,7 +551,8 @@ class AgentCertOperatorIO:
     def io(self):
         def objective(task):
             _require(_uuid(task) and (task == self._subject_task or
-                (self._spec['case'] in {'cross_verification:complete','collaboration:complete'} and task == self._review_task)), 'OWNED_OBJECTIVE_BINDING_REQUIRED')
+                (self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'} and task == self._review_task)
+                or (self._spec['case'] == 'clean_room_audit:complete' and task == self._blind_task)), 'OWNED_OBJECTIVE_BINDING_REQUIRED')
             return self._request('GET', '/api/agents/objectives/' + task)
         def artifact(identifier):
             _require(type(identifier) is str and identifier in self._artifact_ids, 'OWNED_ARTIFACT_BINDING_REQUIRED')
