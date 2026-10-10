@@ -686,6 +686,7 @@ class ConflictPhaseOperatorIO(AgentCertOperatorIO):
         self._factory=connection_factory;self._timer_factory=timer_factory;self._clock=monotonic
         self._deadline=None;self._authorized=False;self._post_attempts=set()
         self._subject_task=self._review_task=self._review_action=None
+        self._execution_input=None;self._execution_input_body=None;self._execution_input_tasks={}
         self._artifact_ids=set();self._responses=[];self._response_bytes=0;self._response_limit=24
         self._lock=threading.Lock()
 
@@ -740,6 +741,7 @@ class CrossConflictPhaseOperatorIO(AgentCertOperatorIO):
         self._factory=connection_factory;self._timer_factory=timer_factory;self._clock=monotonic
         self._deadline=None;self._authorized=False;self._post_attempts=set()
         self._subject_task=self._review_task=self._review_action=None
+        self._execution_input=None;self._execution_input_body=None;self._execution_input_tasks={}
         self._artifact_ids=set();self._responses=[];self._response_bytes=0;self._response_limit=24
         self._lock=threading.Lock()
 
@@ -813,6 +815,7 @@ class RecoveryPhaseOperatorIO(AgentCertOperatorIO):
         self._factory=connection_factory;self._timer_factory=timer_factory;self._clock=monotonic
         self._deadline=None;self._authorized=False;self._post_attempts=set()
         self._subject_task=self._review_task=self._review_action=None
+        self._execution_input=None;self._execution_input_body=None;self._execution_input_tasks={}
         self._artifact_ids=set();self._responses=[];self._response_bytes=0;self._response_limit=24
         self._lock=threading.Lock()
 
@@ -922,6 +925,7 @@ class OwnerPhaseOperatorIO(ConflictPhaseOperatorIO):
         self._factory=connection_factory;self._timer_factory=timer_factory;self._clock=monotonic
         self._deadline=None;self._authorized=False;self._post_attempts=set()
         self._subject_task=self._review_task=self._review_action=None
+        self._execution_input=None;self._execution_input_body=None;self._execution_input_tasks={}
         self._artifact_ids=set();self._responses=[];self._response_bytes=0;self._response_limit=32
         self._lock=threading.Lock();self._owner_referral_id=None;self._owner_proposal=None
         self._pwa_origin=approved_pwa_origin;self._pwa_host=parsed.hostname;self._pwa_port=port

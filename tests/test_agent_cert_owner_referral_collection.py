@@ -40,6 +40,16 @@ def test_construct_does_not_connect_or_disclose_cookie():
     with pytest.raises(OperatorBindingError):value.acknowledge_owner_referral()
     assert not transport.calls
 
+def test_owner_transport_cannot_activate_or_submit_fresh_input_protocol():
+    transport=FakeTransport();value=prepared(connection_factory=transport)
+    assert value._execution_input is None and value._execution_input_body is None
+    assert value._execution_input_tasks=={}
+    with pytest.raises(OperatorBindingError,match='ORIGINAL_CLIENT_INITIALIZATION_REQUIRED'):
+        value.activate_execution_input('fresh_challenge:complete',{})
+    with pytest.raises(OperatorBindingError,match='EXECUTION_INPUT_STAGE_OR_REPLAY_DENIED'):
+        value.execution_input_stage(nonce='00000000-0000-4000-8000-000000000001')
+    assert not transport.calls and not transport.connections
+
 class FramedASGIResponse(FakeResponse):
     def __init__(self,**kwargs):
         super().__init__(**kwargs);self.length=len(self.stream.getvalue())
