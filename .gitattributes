@@ -21,3 +21,7 @@ governance/agent-cert-reviewed-cases.json -text
 governance/agent-cert-historical-admissions/*.json -text
 governance/agent-cert-case-evidence/a19-5b3dd3a-role-normal-20261007/** -text
 governance/agent-cert-case-evidence/a19-61335a9-artifact-produce-20261008/** -text
+
+# Original restart and certification observations retain their exact hash-bound bytes.
+docs/evidence/resume-20261010/** -text
+governance/updated-golden-selection.json text eol=lf
