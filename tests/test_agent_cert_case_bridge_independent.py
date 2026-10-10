@@ -158,7 +158,9 @@ def test_collector_no_weakening_for_missing_or_insufficient_bound_reservation(ba
 
 @pytest.mark.parametrize("change", [
     {"dimension": "recovery", "test_case": "complete"},
-    {"dimension": "tools", "test_case": "complete"},
+    # A19 now owns a genuine tools:complete oracle; borrowing it for another
+    # permanent identity must still fail, rather than denying its actual owner.
+    {"agent_id": "a20", "capability_id": "responsibility.a20", "dimension": "tools", "test_case": "complete"},
     {"dimension": "clean_room_audit", "test_case": "complete"},
     {"dimension": True, "test_case": "difficult"},
     {"agent_id": "a22", "capability_id": "responsibility.a22"},
@@ -168,6 +170,19 @@ def test_manifest_does_not_invent_event_or_agent_population(change):
     item["record"].update(change)
     with pytest.raises(ValueError):
         loader.parse(manifest([item]))
+
+
+def test_a19_tools_header_is_supported_without_granting_evidence_or_signature(tmp_path):
+    item = entry()
+    item['record'].update(dimension='tools', test_case='complete')
+    assert loader.parse(manifest([item])) == [item]
+    # Manifest parsing admits a header only. Actual original-domain execution
+    # and distinct fixed A26 evidence remain required by the signing bridge.
+    state = signing_fixture(tmp_path, 'role:difficult')
+    state['row'].update(dimension='tools', test_case='complete')
+    with pytest.raises(CertificationReviewError):
+        run(state)
+    assert state['calls'] == []
 
 
 def test_manifest_case_duplication_cannot_evade_cap_by_relabeling_fields():

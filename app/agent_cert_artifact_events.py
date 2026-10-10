@@ -19,6 +19,7 @@ from pathlib import Path
 import re
 import sqlite3
 import threading
+import time
 import uuid
 
 
@@ -737,6 +738,7 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
             'ARTIFACT_OWNING_LEDGER_REQUIRED')
         _registry(registry_sha256)
         began = datetime.now(timezone.utc)
+        case_deadline = time.monotonic() + 5
         _objective_preflight(root, task_id, fixed, bound, began)
         # qsize() omits the writer's currently dequeued event. Require a
         # quiescent original ledger before scanning for prior attempts; never
@@ -826,10 +828,17 @@ def execute_artifact_case(spec, task_id, *, submitted_request, data_root, ledger
                 prior_artifact=prior_metadata, prior_raw=prior_raw, registry_sha256=registry_sha256,
                 context_packet=packet))
         result = executor.execute(subject_action, operation)
-        _require(ledger.flush(timeout=1) is True, 'ARTIFACT_DURABLE_ACTION_REQUIRED')
+        # One original durable drain may use only the remainder of this case's
+        # existing five-second budget. Eight fsync records can exceed one second
+        # on a healthy Windows disk; never replay or widen the case deadline.
+        remaining = min(5, 5 - (datetime.now(timezone.utc) - began).total_seconds(),
+            case_deadline - time.monotonic())
+        _require(remaining > 0, 'ARTIFACT_EXECUTION_BOUND_EXCEEDED')
+        _require(ledger.flush(timeout=remaining) is True, 'ARTIFACT_DURABLE_ACTION_REQUIRED')
         _require(canonical(read_runtime()) == canonical(bound), 'ARTIFACT_RUNTIME_CHANGED')
         ended = datetime.now(timezone.utc)
-        _require(0 <= (ended - began).total_seconds() <= 5, 'ARTIFACT_EXECUTION_BOUND_EXCEEDED')
+        _require(0 <= (ended - began).total_seconds() <= 5 and time.monotonic() <= case_deadline,
+            'ARTIFACT_EXECUTION_BOUND_EXCEEDED')
         event = {'schema_version': EVENT_SCHEMA, 'case': case_id, 'case_version': CASE_VERSION,
             'task_id': task_id, 'source_revision': source_revision, 'registry_sha256': registry_sha256,
             'runtime_identity_sha256': sha(canonical(bound)), 'case_spec_sha256': sha(canonical(fixed)),

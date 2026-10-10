@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sqlite3
 import threading
+import time
 from types import SimpleNamespace
 import uuid
 
@@ -332,6 +333,106 @@ def test_delivery_failure_retains_real_events_but_cannot_return_completed(domain
     assert ledger.flush(timeout=1)
     assert len(events.read_artifact_action_span(root, task, spec['case'])) == 2
     assert len(list((root / 'artifacts').iterdir())) == 1
+
+
+def test_real_eight_row_writer_over_one_second_uses_only_remaining_case_budget(domain, monkeypatch):
+    import app.action_records as records
+    root, ledger, prepare, _ = domain
+    spec, task, args, _ = prepare(events.CONTEXT_CASE)
+    real_sync, real_flush = records.os.fsync, ledger.flush
+    syncs, drains = [], []
+    def delayed_sync(fd):
+        if threading.current_thread() is ledger.worker:
+            if not syncs:
+                time.sleep(1.2)
+            syncs.append(fd)
+        return real_sync(fd)
+    def observed_flush(*, timeout):
+        drains.append(timeout)
+        return real_flush(timeout=timeout)
+    monkeypatch.setattr(records.os, 'fsync', delayed_sync)
+    monkeypatch.setattr(ledger, 'flush', observed_flush)
+    dispatch = events.execute_artifact_case(spec, task, **args)
+    assert len(drains) == 1 and 1 < drains[0] <= 5
+    event = dispatch['artifact_event']
+    assert 1 < (events._utc(event['completed_at']) - events._utc(event['started_at'])).total_seconds() <= 5
+    assert len(syncs) == 8
+    original = (root / 'action-records.jsonl').read_text().splitlines()
+    assert len(original) == 8 and all(json.loads(x)['sequence'] == i for i, x in enumerate(original, 1))
+    assert ledger.status()['healthy'] and ledger.pending.unfinished_tasks == 0
+    monkeypatch.setattr(ledger, 'flush', real_flush)
+
+
+def test_exhausted_original_case_budget_does_not_flush_or_complete(domain, monkeypatch):
+    import app.action_records as records
+    root, ledger, prepare, _ = domain
+    spec, task, args, _ = prepare(events.CONTEXT_CASE)
+    execute, real_flush = records.DirectExecutor.execute, ledger.flush
+    calls = []
+    class ExpiredClock:
+        @staticmethod
+        def now(zone):
+            return datetime.now(zone) + timedelta(seconds=6)
+    def complete_then_expire(executor, record, operation):
+        result = execute(executor, record, operation)
+        if record.action_type == events.artifact_action_type(events.CONTEXT_CASE):
+            monkeypatch.setattr(events, 'datetime', ExpiredClock)
+        return result
+    monkeypatch.setattr(records.DirectExecutor, 'execute', complete_then_expire)
+    monkeypatch.setattr(ledger, 'flush', lambda **kwargs: calls.append(kwargs))
+    with pytest.raises(events.ArtifactEventError, match='ARTIFACT_EXECUTION_BOUND_EXCEEDED'):
+        events.execute_artifact_case(spec, task, **args)
+    assert calls == []
+    monkeypatch.setattr(ledger, 'flush', real_flush)
+    assert real_flush(timeout=2)
+    assert len((root / 'action-records.jsonl').read_text().splitlines()) == 8
+
+
+def test_actual_fsync_failed_writer_cannot_return_durable_event(domain, monkeypatch):
+    import app.action_records as records
+    root, _, prepare, _ = domain
+    spec, task, args, _ = prepare(events.CONTEXT_CASE)
+    failed = ActionLedger(root / 'action-records.jsonl')
+    args['ledger'] = failed
+    real_sync = records.os.fsync
+    def disk_failure(fd):
+        if threading.current_thread() is failed.worker:
+            raise OSError('disposable simulated disk failure')
+        return real_sync(fd)
+    monkeypatch.setattr(records.os, 'fsync', disk_failure)
+    try:
+        with pytest.raises(events.ArtifactEventError, match='ARTIFACT_DURABLE_ACTION_REQUIRED'):
+            events.execute_artifact_case(spec, task, **args)
+        assert failed.status()['healthy'] is False and failed.status()['dropped'] == 8
+    finally:
+        assert failed.close() is False
+
+
+def test_wallclock_rollback_cannot_expand_drain_budget_or_return_completed(domain, monkeypatch):
+    import app.action_records as records
+    root, ledger, prepare, _ = domain
+    spec, task, args, _ = prepare(events.CONTEXT_CASE)
+    execute, real_flush = records.DirectExecutor.execute, ledger.flush
+    drains = []
+    class RolledBackClock:
+        @staticmethod
+        def now(zone):
+            return datetime.now(zone) - timedelta(seconds=10)
+    def complete_then_rollback(executor, record, operation):
+        result = execute(executor, record, operation)
+        if record.action_type == events.artifact_action_type(events.CONTEXT_CASE):
+            monkeypatch.setattr(events, 'datetime', RolledBackClock)
+        return result
+    def drain(*, timeout):
+        drains.append(timeout)
+        return real_flush(timeout=timeout)
+    monkeypatch.setattr(records.DirectExecutor, 'execute', complete_then_rollback)
+    monkeypatch.setattr(ledger, 'flush', drain)
+    with pytest.raises(events.ArtifactEventError, match='ARTIFACT_EXECUTION_BOUND_EXCEEDED'):
+        events.execute_artifact_case(spec, task, **args)
+    assert len(drains) == 1 and 0 < drains[0] <= 5
+    monkeypatch.setattr(ledger, 'flush', real_flush)
+    assert len((root / 'action-records.jsonl').read_text().splitlines()) == 8
 
 
 def test_real_operation_failure_is_failed_action_and_not_generic_completion(domain, monkeypatch):
