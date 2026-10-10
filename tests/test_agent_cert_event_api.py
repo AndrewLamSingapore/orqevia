@@ -69,11 +69,22 @@ def tool_full(env, case):
                 'setup_artifact_id': setup['artifact_id'], 'relative_path': tool_events.MISSING_SLOT,
                 'read_only_observations': True})
         reader = DeterministicOps(source_version=SOURCE)
+        available_raw = None
+        if case == tool_events.DEGRADATION_CASE:
+            available = ActionRecord(task,'a19',tool_events.tool_action_type(case,phase='available'),
+                'provided_context.read',target='artifact.json',parameters_summary={
+                    'schema_version':tool_events.INPUT_SCHEMA,'setup_artifact_id':setup['artifact_id'],
+                    'relative_path':'artifact.json','expected_sha256':setup['sha256'],'read_only_observations':True})
+            def consume():
+                raw,digest = reader.retrieve_file(folder,'artifact.json',expected_sha256=setup['sha256'])
+                return {'source_sha256':digest,'result':raw.decode()}
+            available_raw = executor.execute(available,consume)['result'].encode()
+            assert available_raw == tool_events.input_bytes(case)
         with pytest.raises(FileNotFoundError) as missing:
             executor.execute(read, lambda: reader.retrieve_file(folder, tool_events.MISSING_SLOT))
         assert missing.value.errno == 2 and Path(missing.value.filename) == folder / tool_events.MISSING_SLOT
         assert factory.retrieve(setup['artifact_id']) == (setup, tool_events.input_bytes(case))
-        result = executor.execute(record('result'), lambda: create(tool_events.expected_artifact_bytes(case)))
+        result = executor.execute(record('result'), lambda: create(tool_events.expected_artifact_bytes(case,available_bytes=available_raw)))
         assert result['artifact_id'] != setup['artifact_id']
         assert ledger.flush(timeout=1) is True
     finally:
@@ -130,16 +141,23 @@ def test_ordinary_pair_cannot_masquerade_as_virtual_tool_full_span(env, monkeypa
 
 
 @pytest.mark.parametrize('case', tool_events.SUPPORTED_CASES)
-def test_tool_full_returns_six_actual_original_records_without_mutation_or_flush(env, monkeypatch, case):
+def test_tool_full_returns_exact_actual_original_records_without_mutation_or_flush(env, monkeypatch, case):
     task, before = tool_full(env, case)
     lines = before.decode().splitlines(keepends=True)
     original = [json.loads(line) for line in lines]
-    assert len(original) == 6 and len({event['action_id'] for event in original}) == 3
-    assert [event['phase'] for event in original] == ['started', 'completed'] * 3
+    phases = ('setup','available','read','result') if case == tool_events.DEGRADATION_CASE else ('setup','read','result')
+    if case == tool_events.DEGRADATION_CASE:
+        assert len(original) == 8 and len({event['action_id'] for event in original}) == 4
+    else:
+        assert len(original) == 6 and len({event['action_id'] for event in original}) == 3
+    assert len(original) == 2 * len(phases) and len({event['action_id'] for event in original}) == len(phases)
+    assert [event['phase'] for event in original] == ['started', 'completed'] * len(phases)
     assert [event['action_type'] for event in original] == [tool_events.tool_action_type(case, phase=phase)
-        for phase in ('setup', 'read', 'result') for _ in range(2)]
-    assert original[1]['success'] is original[5]['success'] is True
-    assert original[3]['success'] is False and original[3]['error'] == 'FileNotFoundError'
+        for phase in phases for _ in range(2)]
+    for phase,completion in zip(phases,original[1::2]):
+        assert completion['success'] is (phase != 'read')
+        if phase == 'read':assert completion['error'] == 'FileNotFoundError'
+        elif phase == 'available':assert completion['result_summary']['output_sha256'] == tool_events.sha(tool_events.input_bytes(case))
     assert tool_events.validate_full_span(lines, task, case) == original
     for previous, current in zip(original, original[1:]):
         assert current['sequence'] == previous['sequence'] + 1 and current['previous_sha256'] == previous['sha256']
