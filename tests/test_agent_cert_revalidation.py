@@ -191,3 +191,88 @@ def test_all_five_prior_case_bytes_preserved():
         'independent_verification:complete':'50713d536f4fca236ddaf2dffa6b3be752d4deeec2ef99234a87ed8639d5688b',
     }
     assert {case:events.sha(canonical(events.canonical_tool_case(case))) for case in expected} == expected
+
+
+def test_actual_wrong_producer_classifier_rejected_by_independent_peer(runtime, monkeypatch):
+    from app import agent_cert_tool_events as events
+    real = revalidation.temporal_assessment
+    def wrong(row, observed, source):
+        answer = real(row, observed, source)
+        answer['temporal_status'] = 'WITHIN_SIGNED_INTERVAL'
+        answer['source_compatible'] = True
+        answer['fresh_check_required'] = False
+        return answer
+    monkeypatch.setattr(revalidation, 'temporal_assessment', wrong)
+    result = collect(runtime, events.REVALIDATION_CASE)
+    assert result.summary['state'] != 'UNSIGNED_EVENT_EVIDENCE'
+    assert runtime.ledger.flush()
+    rows = [parse(line.encode()) for line in runtime.ledger.path.read_text().splitlines()]
+    actual = [row for row in rows if row['action_type'].startswith('agent.certification.tool.continuous_revalidation.')]
+    assert len(actual) == 6
+    outputs = [parse(path.read_bytes()) for path in (runtime.root/'artifacts').glob('*/artifact.json')]
+    assert any(value.get('assessment', {}).get('fresh_check_required') is False for value in outputs)
+
+
+def test_real_six_row_writer_over_one_second_uses_remaining_original_budget(runtime, monkeypatch):
+    from app import agent_cert_tool_events as events, action_records as records
+    import threading, time
+    real_sync, real_flush = records.os.fsync, runtime.ledger.flush
+    syncs, drains = [], []
+    def delayed(fd):
+        if threading.current_thread() is runtime.ledger.worker:
+            if not syncs:
+                time.sleep(1.2)
+            syncs.append(fd)
+        return real_sync(fd)
+    def observed_flush(timeout=5):
+        drains.append(timeout)
+        return real_flush(timeout=timeout)
+    monkeypatch.setattr(records.os, 'fsync', delayed)
+    monkeypatch.setattr(runtime.ledger, 'flush', observed_flush)
+    result = collect(runtime, events.REVALIDATION_CASE)
+    assert result.summary['state'] == 'UNSIGNED_EVENT_EVIDENCE', result.summary
+    event = parse(result.execution_bytes)['dispatch']['tool_event']
+    assert 1 < drains[0] <= 5
+    assert 1 < (events._utc(event['completed_at'])-events._utc(event['started_at'])).total_seconds() <= 5
+    assert len(syncs) == 8  # Six owning original rows, two later peer review rows.
+    monkeypatch.setattr(runtime.ledger, 'flush', real_flush)
+
+
+def test_exhausted_case_budget_never_flushes_or_completes(runtime, monkeypatch):
+    from app import agent_cert_tool_events as events, action_records as records
+    real_execute, real_flush = records.DirectExecutor.execute, runtime.ledger.flush
+    drains = []
+    class ExpiredClock:
+        @staticmethod
+        def now(zone):
+            return datetime.now(zone) + timedelta(seconds=6)
+    def expire_after_result(executor, record, operation):
+        result = real_execute(executor, record, operation)
+        if record.action_type == events.tool_action_type(events.REVALIDATION_CASE):
+            monkeypatch.setattr(events, 'datetime', ExpiredClock)
+        return result
+    monkeypatch.setattr(records.DirectExecutor, 'execute', expire_after_result)
+    monkeypatch.setattr(runtime.ledger, 'flush', lambda **kwargs: drains.append(kwargs))
+    result = collect(runtime, events.REVALIDATION_CASE)
+    assert result.summary['state'] != 'UNSIGNED_EVENT_EVIDENCE' and drains == []
+    monkeypatch.setattr(runtime.ledger, 'flush', real_flush)
+    assert real_flush(timeout=2)
+
+
+def test_actual_fsync_failed_writer_cannot_return_durable_original(runtime, monkeypatch):
+    from app import agent_cert_tool_events as events, action_records as records, agent_dispatch_api
+    import threading
+    failed = records.ActionLedger(runtime.ledger.path)
+    real_sync = records.os.fsync
+    def failure(fd):
+        if threading.current_thread() is failed.worker:
+            raise OSError('disposable source-test fsync failure')
+        return real_sync(fd)
+    monkeypatch.setattr(records.os, 'fsync', failure)
+    monkeypatch.setattr(agent_dispatch_api, 'action_ledger', lambda: failed)
+    try:
+        result = collect(runtime, events.REVALIDATION_CASE)
+        assert result.summary['state'] != 'UNSIGNED_EVENT_EVIDENCE'
+        assert failed.status()['healthy'] is False and failed.status()['dropped'] == 6
+    finally:
+        assert failed.close() is False

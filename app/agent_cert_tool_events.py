@@ -649,6 +649,7 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
             budget=min(deadline-time.monotonic(),5-(datetime.now(timezone.utc)-began).total_seconds())
             require(budget>0,'INJECTION_SHARED_BOUND_EXCEEDED')
             return budget
+        revalidation_started_tick = time.monotonic() if fixed['case'] == REVALIDATION_CASE else None
         _objective_preflight(root, task_id, fixed, bound, began)
         with ledger.pending.all_tasks_done:
             require(ledger.pending.unfinished_tasks == 0, 'TOOL_PRIOR_ACTION_PENDING')
@@ -701,11 +702,21 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
         subject_action = record('result')
         result = executor.execute(subject_action, lambda: create(expected_artifact_bytes(case, available_bytes=available_raw,
             **({'source_revision':source_revision} if case == REVALIDATION_CASE else {}))))
-        require(ledger.flush(timeout=remaining() if case==INJECTION_CASE else 1) is True, 'TOOL_DURABLE_ACTION_REQUIRED')
+        if case == REVALIDATION_CASE:
+            revalidation_remaining = min(5.0, 5.0 - (datetime.now(timezone.utc) - began).total_seconds(),
+                5.0 - (time.monotonic() - revalidation_started_tick))
+            require(revalidation_remaining > 0, 'TOOL_EXECUTION_BOUND_EXCEEDED')
+            require(ledger.flush(timeout=revalidation_remaining) is True, 'TOOL_DURABLE_ACTION_REQUIRED')
+        else:
+            require(ledger.flush(timeout=remaining() if case==INJECTION_CASE else 1) is True, 'TOOL_DURABLE_ACTION_REQUIRED')
         require(canonical(read_runtime()) == canonical(bound), 'TOOL_RUNTIME_CHANGED')
         _registry(registry_sha256)
         ended = datetime.now(timezone.utc)
-        require((case!=INJECTION_CASE or time.monotonic()<deadline) and 0 <= (ended - began).total_seconds() <= 5, 'TOOL_EXECUTION_BOUND_EXCEEDED')
+        require(0 <= (ended - began).total_seconds() <= 5, 'TOOL_EXECUTION_BOUND_EXCEEDED')
+        if case == REVALIDATION_CASE:
+            require(0 <= time.monotonic() - revalidation_started_tick <= 5, 'TOOL_EXECUTION_BOUND_EXCEEDED')
+        if case == INJECTION_CASE:
+            require(time.monotonic()<deadline,'TOOL_EXECUTION_BOUND_EXCEEDED')
         event = dict(schema_version=EVENT_SCHEMA, case=case, case_version=case_version(case), task_id=task_id,
             source_revision=source_revision, registry_sha256=registry_sha256,
             runtime_identity_sha256=sha(canonical(bound)), case_spec_sha256=sha(canonical(fixed)),

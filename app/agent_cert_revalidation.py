@@ -117,10 +117,32 @@ def validate_assessment(raw, context_raw, source_revision, began, ended):
     _require(context_raw == canonical(original), 'REVALIDATION_PEER_ORIGINAL_CONTEXT_REQUIRED')
     observed = _utc(answer['assessed_at'])
     _require(_utc(began) <= observed <= _utc(ended), 'REVALIDATION_REAL_EXECUTION_TIME_REQUIRED')
+    # Deliberately do not call the producer's temporal classifier. A producer
+    # boundary/source/fresh-check defect must not manufacture its own oracle.
+    row = original['signed_record']
+    certified = _utc(row['certified_at'])
+    checked = _utc(row['last_revalidated'])
+    deadline = _utc(row['expires_at'])
+    _require(certified <= checked < deadline, 'REVALIDATION_PEER_TIME_ORDER_REQUIRED')
+    _require(type(source_revision) is str and len(source_revision) == 40 and
+        all(c in '0123456789abcdef' for c in source_revision), 'REVALIDATION_PEER_SOURCE_REQUIRED')
+    if observed < checked:
+        interval = 'NOT_YET_VALID'
+    elif observed < deadline:
+        interval = 'WITHIN_SIGNED_INTERVAL'
+    else:
+        interval = 'EXPIRED'
+    same_source = row['source_revision'] == source_revision
+    assessment = dict(temporal_status=interval, source_compatible=same_source,
+        current_certification='NOT_AWARDED', retained_history=True,
+        fresh_check_required=not (interval == 'WITHIN_SIGNED_INTERVAL' and same_source),
+        before_retaining_l7=['FRESH_OWNING_EXECUTION', 'DISTINCT_ORIGINAL_PEER_REVIEW',
+            'PROTECTED_VALIDATION_AND_FIXED_ADMISSION', 'SOURCE_COMPATIBLE_SIGNATURE_AND_PROJECTION'],
+        renewal_performed=False, original_times_modified=False)
     expected = dict(schema='prime.a19-original-revalidation-result.v1', input_sha256=_sha(context_raw),
         assessed_at=answer['assessed_at'], assessment_clock='ACTUAL_REALTIME_UTC',
         observed_runtime_source_revision=source_revision, original_record_source_revision=original['signed_record']['source_revision'],
-        original_signature_valid=True, assessment=temporal_assessment(original['signed_record'], answer['assessed_at'], source_revision),
+        original_signature_valid=True, assessment=assessment,
         certification='UNVERIFIED', health='UNKNOWN')
     _require(raw == canonical(expected), 'REVALIDATION_PEER_ORACLE_REJECTED')
     return True
