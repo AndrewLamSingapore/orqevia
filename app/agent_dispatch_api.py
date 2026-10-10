@@ -126,7 +126,7 @@ def joined_authority_review(body, authorization, *, actor, task_id, runtime):
 
 
 def _joined_contract_event_review(body, authorization, *, actor, task_id, runtime, initialization,
-                                  artifact=False, authority=False, tool=False, owned_identity=False,handoff_budget=None):
+                                  artifact=False, authority=False, tool=False, owned_identity=False,handoff_budget=None,models_budget=None):
     """Join the original zero-model event to its owning read-only domains.
 
     This operation supplies a separate registered reviewer artifact, never a
@@ -238,11 +238,17 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
         cross_receipt = None
-        if tool and case_id in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure'}:
+        if tool and case_id in {'models:complete','cross_verification:complete','collaboration:complete', 'clean_room_audit:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure'}:
             from .agent_cert_tool_events import read_cross_peer_request,peer_review_fields
             cross_deadline = time.monotonic() + 1
             cross_receipt = read_cross_peer_request(Path(os.getenv('PRIME_DATA_DIR','/data')),task_id,
                 body.model_dump(),runtime,execution['dispatch']['task_id'],deadline=cross_deadline)
+            if case_id=='models:complete':
+                from .agent_cert_model_selection import case_remaining as models_remaining
+                from .agent_cert_artifact_events import _utc
+                require(type(models_budget) is dict,'MODELS_ORIGINAL_PEER_BUDGET_REQUIRED')
+                models_budget['started_at']=min(models_budget['started_at'],_utc(cross_receipt['created_at']))
+                require(models_remaining(models_budget)>0,'MODELS_PEER_BOUND_EXCEEDED')
             if case_id.startswith('handoff_recovery:'):
                 from .agent_cert_handoff_gap import case_remaining,_utc
                 require(type(handoff_budget) is dict,'HANDOFF_ORIGINAL_PEER_BUDGET_REQUIRED')
@@ -290,6 +296,10 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 now=now,subject_task=subject_task,deadline=handoff_deadline)
             require(canonical(handoff_receipt)==canonical(execution['dispatch']['tool_event']['original_failed_store']),
                 'HANDOFF_ORIGINAL_DENIAL_STORE_DRIFT')
+        if tool and case_id=='models:complete':
+            from .agent_cert_model_selection import reread_native_snapshot
+            models_original=execution['dispatch']['tool_event']['original_model_snapshot']
+            reread_native_snapshot(models_original,deadline=time.monotonic()+models_remaining(models_budget))
         factory = ArtifactFactory(root / 'artifacts')
         def retrieve_owned(identifier):
             if bounded_event or owned_identity:
@@ -387,6 +397,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                     'BLIND_AUDIT_CHANGED_DURING_COMPARISON')
             require(canonical(read_cross_peer_request(root,task_id,body.model_dump(),runtime,subject_task,
                 deadline=cross_deadline)) == canonical(cross_receipt),'CROSS_PEER_REQUEST_CHANGED_DURING_REVIEW')
+        if tool and case_id=='models:complete':
+            reread_native_snapshot(models_original,deadline=time.monotonic()+models_remaining(models_budget))
+            require(models_remaining(models_budget)>0,'MODELS_PEER_BOUND_EXCEEDED')
         if handoff_receipt is not None:
             require(case_remaining(handoff_budget)>0,'HANDOFF_PEER_BOUND_EXCEEDED')
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
@@ -685,12 +698,16 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         if body.objective == blind_objective:
             from datetime import datetime, timezone
             blind_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
+    models_budget=None
     handoff_budget=None
     if body.deterministic_operation=='certification_tool_review':
         from .agent_cert_handoff_gap import parse as handoff_parse,CASES as handoff_cases,case_remaining as handoff_case_remaining
         from datetime import datetime,timezone
         try:handoff_case=handoff_parse(body.context.encode()).get('execution',{}).get('case_spec',{}).get('case')
         except ValueError:handoff_case=None
+        if handoff_case=='models:complete':
+            from .agent_cert_model_selection import case_remaining as models_case_remaining
+            models_budget=dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
         if handoff_case in handoff_cases:
             handoff_budget=dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
     from .runtime_status import is_runtime_status,build_report,validate_report
@@ -832,7 +849,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     data=execute_blind(body,authorization,actor=actor,task_id=task_id,runtime=runtime,budget=blind_budget)
                 else:
                     data=_joined_contract_event_review(body,authorization,actor=actor,task_id=task_id,
-                        runtime=runtime,initialization=False,tool=True,handoff_budget=handoff_budget)
+                        runtime=runtime,initialization=False,tool=True,handoff_budget=handoff_budget,models_budget=models_budget)
             elif body.deterministic_operation == 'certification_role_review':
                 data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_identity_review':
@@ -884,6 +901,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         blind_review = tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1'
         if blind_review and case_remaining(blind_budget) <= 0:
             raise HTTPException(422,'Blind audit case budget exhausted')
+        if models_budget is not None and models_case_remaining(models_budget)<=0:
+            raise HTTPException(422,'Model selection review case budget exhausted')
         if handoff_budget is not None and handoff_case_remaining(handoff_budget)<=0:
             raise HTTPException(422,'Handoff review case budget exhausted')
         review_ledger = None
@@ -919,9 +938,11 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.
             result['review_action_id']=action.action_id
-            result['review_action_durable']=review_ledger.flush(timeout=case_remaining(blind_budget) if blind_review else handoff_case_remaining(handoff_budget) if handoff_budget is not None else 1) is True
+            result['review_action_durable']=review_ledger.flush(timeout=case_remaining(blind_budget) if blind_review else handoff_case_remaining(handoff_budget) if handoff_budget is not None else models_case_remaining(models_budget) if models_budget is not None else 1) is True
             if blind_review:
                 result['review_action_durable'] = result['review_action_durable'] and case_remaining(blind_budget) > 0
+            if models_budget is not None:
+                result['review_action_durable']=result['review_action_durable'] and models_case_remaining(models_budget)>0
             if handoff_budget is not None:
                 result['review_action_durable']=result['review_action_durable'] and handoff_case_remaining(handoff_budget)>0
             result['certification']='UNVERIFIED'
@@ -934,31 +955,9 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     from .compute_catalog import load_catalog,task_tier,choose
     from .compute_queue_api import providers
     configured=load_catalog();available={p.name for p in providers()}
-    selected=next((x for x in configured if x['id']==body.preferred_provider),None) if body.preferred_provider else None
-    if body.preferred_provider and (selected is None or not selected.get('enabled') or selected['id'] not in available):
-        raise HTTPException(422,'Selected provider is unavailable')
-    if selected and selected.get('provider_kind')=='huggingface' and (
-        body.data_classification!='CLOUD_PERMITTED' or body.max_cost_usd<=0
-    ):
-        raise HTTPException(422,'Hugging Face requires explicit disclosure and cost opt-in')
-    tier=max(Tier[body.minimum_tier],task_tier(body.objective,body.task_class),required_tier(body.objective,body.context))
-    backends=local_model_backends()+tuple(Backend(x['id'],x['model'],Tier[x['tier']],x['location']) for x in configured
-        if x.get('enabled') and x['id'] in available and
-        (x.get('provider_kind')!='huggingface' or x['id']==body.preferred_provider))
-    if body.preferred_provider:
-        backends=tuple(x for x in backends if x.name==body.preferred_provider)
-    route = select_direct_route(backends,
-                         minimum_tier=tier,classification=body.data_classification,
-                         text=body.objective+'\n'+body.context)
-    measured=choose([x for x in configured if x['id'] in available and x.get('measurement_evidence') and x.get('expected_seconds') is not None
-        and (x.get('provider_kind')!='huggingface' or x['id']==body.preferred_provider)
-        and (not body.preferred_provider or x['id']==body.preferred_provider)],tier,body.data_classification,body.objective+'\n'+body.context)
-    # Use a measured alternative only when every eligible available backend is
-    # measured. Unknown performance is never treated as slower by assumption.
-    eligible={b.name for b in backends if b.tier>=tier and (b.location=='local' or body.data_classification=='CLOUD_PERMITTED')}
-    if measured and eligible.issubset({x['id'] for x in measured}):
-        item=measured[0]
-        route=Route('READY','Fastest measured sufficient backend within data locality',Backend(item['id'],item['model'],Tier[item['tier']],item['location']))
+    from .model_selection import select_final_model
+    route,tier=select_final_model(body,configured=configured,available=available,
+        local_backends=local_model_backends)
     model_selection_ms=(time.perf_counter()-selection_started)*1000
     if route.state not in {'READY','QUEUED'}:
         raise HTTPException(409,{'state':route.state,'reason':route.reason})

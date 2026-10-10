@@ -68,6 +68,7 @@ def configured(tmp_path, monkeypatch):
                completed_at=(now - timedelta(seconds=1)).isoformat())
     original = dispatch.AgentRequest(**canonical_role_spec('a19', 'responsibility.a19')['request'])
     job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION)
+    original_provider_metadata = compute_queue_api.providers
     monkeypatch.setattr(compute_queue_api, 'providers', lambda: [
         SimpleNamespace(name='ollama-deep', kind='local', model='fixture-model')])
     def get_job(key):
@@ -102,7 +103,8 @@ def configured(tmp_path, monkeypatch):
     db.close()
     ledger = ActionLedger(tmp_path / 'review-actions.jsonl')
     monkeypatch.setattr(dispatch, 'action_ledger', lambda: ledger)
-    value = SimpleNamespace(root=tmp_path, job=job, payload=payload, ledger=ledger, calls=calls)
+    value = SimpleNamespace(root=tmp_path, job=job, payload=payload, ledger=ledger, calls=calls,
+        original_provider_metadata=original_provider_metadata)
     yield value
     ledger.close()
 

@@ -58,7 +58,7 @@ def _int(name: str, default: int) -> int:
     except ValueError: return default
 
 
-def providers() -> list[Provider]:
+def providers(*,validated_catalog=None) -> list[Provider]:
     local_ram,local_vram=_int("PRIME_LOCAL_RAM_MB",32768),_int("PRIME_LOCAL_VRAM_MB",0)
     result=[]
     for role,model in (("fast",SETTINGS.fast_model),("deep",SETTINGS.deep_model),
@@ -67,7 +67,7 @@ def providers() -> list[Provider]:
             result.append(Provider(f"ollama-{role}","local",model,local_ram,local_vram,
                                    _int("OLLAMA_NUM_PARALLEL",2) or 1))
     from .compute_catalog import load_catalog,model_spec
-    for entry in load_catalog():
+    for entry in (load_catalog() if validated_catalog is None else validated_catalog):
         if not entry.get('enabled') or entry['location']!='cloud':continue
         spec=model_spec(entry)
         # Unpriced external calls cannot enter automatic budgeted execution.

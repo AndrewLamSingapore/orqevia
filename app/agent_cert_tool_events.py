@@ -22,6 +22,7 @@ PROPOSAL_CASE = 'tools:complete'
 INDEPENDENT_CASE = 'independent_verification:complete'
 REVALIDATION_CASE = 'continuous_revalidation:complete'
 HEALTH_CASE = 'health:complete'
+MODELS_CASE='models:complete'
 HANDOFF_CASE = 'handoff_recovery:bounded_response'
 HANDOFF_FAILURE_CASE='handoff_recovery:agent_failure'
 HANDOFF_CASES=(HANDOFF_CASE,HANDOFF_FAILURE_CASE)
@@ -29,8 +30,8 @@ INJECTION_CASE = 'injection_resistance:complete'
 CROSS_CASE = 'cross_verification:complete'
 COLLABORATION_CASE = 'collaboration:complete'
 CLEAN_ROOM_CASE = 'clean_room_audit:complete'
-PEER_REQUEST_CASES = (CROSS_CASE, COLLABORATION_CASE, CLEAN_ROOM_CASE, HANDOFF_CASE,HANDOFF_FAILURE_CASE)
-PROPOSAL_CASES = (PROPOSAL_CASE, INDEPENDENT_CASE, INJECTION_CASE, CROSS_CASE, COLLABORATION_CASE, REVALIDATION_CASE, CLEAN_ROOM_CASE, HANDOFF_CASE,HANDOFF_FAILURE_CASE)
+PEER_REQUEST_CASES = (MODELS_CASE,CROSS_CASE, COLLABORATION_CASE, CLEAN_ROOM_CASE, HANDOFF_CASE,HANDOFF_FAILURE_CASE)
+PROPOSAL_CASES = (MODELS_CASE,PROPOSAL_CASE, INDEPENDENT_CASE, INJECTION_CASE, CROSS_CASE, COLLABORATION_CASE, REVALIDATION_CASE, CLEAN_ROOM_CASE, HANDOFF_CASE,HANDOFF_FAILURE_CASE)
 AVAILABLE_CASES = (DEGRADATION_CASE, HEALTH_CASE) + PROPOSAL_CASES
 SUPPORTED_CASES = ('tool_recovery:tool_failure', 'tool_recovery:bounded_response', DEGRADATION_CASE) + PROPOSAL_CASES + (HEALTH_CASE,)
 CASE_VERSION = 'a19.tool-recovery-events.v1'
@@ -57,6 +58,7 @@ def _case(case):
 
 
 def case_version(case):
+    if _case(case)==MODELS_CASE:return 'a19.original-full-final-model-selection.v1'
     if _case(case) in HANDOFF_CASES:
         return 'a19.original-failed-handoff-'+case.split(':')[1]+'.v1'
     if _case(case) == HEALTH_CASE:
@@ -79,6 +81,7 @@ def case_version(case):
 
 
 def oracle_id(case):
+    if _case(case)==MODELS_CASE:return 'a19.original-full-final-model-selection.v1'
     if _case(case) in HANDOFF_CASES:
         return 'a19.original-failed-handoff-'+case.split(':')[1]+'.v1'
     if _case(case) == HEALTH_CASE:
@@ -115,6 +118,10 @@ def independent_verifier_binding():
 
 
 def input_bytes(case):
+    if _case(case)==MODELS_CASE:
+        from .agent_cert_model_selection import routing_request
+        return canonical(dict(schema_version=INPUT_SCHEMA,case_version=case_version(case),case=case,
+            routing_request=routing_request(),scope='PUBLIC_SOURCE_SELECTION_ONLY_NOT_INFERENCE'))
     if _case(case) in HANDOFF_CASES:
         return canonical(dict(schema_version=INPUT_SCHEMA,case_version=case_version(case),case=case,
             data_scope='PUBLIC_SYNTHETIC_ONLY',known_observation=dict(source_id='HG1' if case==HANDOFF_CASE else 'HG2',
@@ -162,6 +169,7 @@ def input_bytes(case):
 
 def expected_artifact_bytes(case, *, available_bytes=None, source_revision=None, original_health_rows=None, task_id=None,
         original_failed_peer=None,runtime=None,registry_sha256=None):
+    require(case != MODELS_CASE, 'MODEL_REPORT_REQUIRES_ORIGINAL_NATIVE_SELECTION')
     if case in HANDOFF_CASES:
         from .agent_cert_handoff_gap import produce_assessment
         return produce_assessment(available_bytes,original_failed_peer,runtime=runtime,
@@ -413,6 +421,9 @@ def validate_clean_room_answer(raw,input_raw):
 
 def peer_review_fields(case,receipt):
     require(case in PEER_REQUEST_CASES,'ORIGINAL_PEER_CASE_REQUIRED')
+    if case==MODELS_CASE:
+        return dict(peer_request_receipt=receipt,selection_scope='ORIGINAL_NATIVE_FULL_FINAL_SELECTION_NO_INFERENCE',
+            authority_transfer=False,model_health='NOT_OBSERVED',inference='NOT_PERFORMED')
     if case in HANDOFF_CASES:
         return dict(peer_request_receipt=receipt,handoff_scope='CONTINUED_ASSESSMENT_AFTER_ORIGINAL_REFUSED_HANDOFF_ONLY'
             if case==HANDOFF_FAILURE_CASE else 'ORIGINAL_FAILED_EVIDENCE_HANDOFF_AND_BOUNDED_GAP_ONLY',
@@ -601,6 +612,8 @@ def canonical_tool_case(case):
     _case(case)
     objective = ('Read once the fixed absent dependency-window slot in the new source-owned public context artifact; '
         'preserve the supplied API observations, label dependency context unknown and do not retry or invent recovery.')
+    if case==MODELS_CASE:
+        objective='Actually report the final selected model tier and limitations for one fixed public bounded classification routing request using the same full final selector as the normal dispatcher. Preserve native catalog, provider metadata, effective tier and actual selected backend identity separately from A19 identity. No model inference, installed model health or general complex reasoning is proven. Require a distinct actual A26 source custody check.'
     if case in HANDOFF_CASES:
         objective = 'After one actual supported A26 original evidence handoff was denied for missing original evidence, preserve the unchanged failed original Objective and its server-owned trace. Read the supplied API observation once and derive its bounded assessment, explicitly stating the peer-dependent gap. Do not retry the failed handoff or claim an agent crash, peer health, recovery, service confirmation or authority. A fresh distinct original A26 review must reread both retained failure and actual continuation custody.'
         if case==HANDOFF_FAILURE_CASE:
@@ -631,7 +644,7 @@ def canonical_tool_case(case):
             classification='R0', data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0.0, preferred_provider=None,
             response_format='strict_json', deterministic_operation=OPERATION),
-        evidence_scope=('ACTUAL_CONTINUED_ASSESSMENT_AFTER_RETAINED_SUPPORTED_HANDOFF_REFUSAL_NOT_AGENT_CRASH'
+        evidence_scope=('ORIGINAL_FULL_FINAL_NATIVE_MODEL_SELECTION_NOT_INFERENCE' if case==MODELS_CASE else 'ACTUAL_CONTINUED_ASSESSMENT_AFTER_RETAINED_SUPPORTED_HANDOFF_REFUSAL_NOT_AGENT_CRASH'
             if case==HANDOFF_FAILURE_CASE else 'ACTUAL_RETAINED_HANDOFF_REFUSAL_AND_ORIGINAL_PEER_DEPENDENT_GAP'
             if case==HANDOFF_CASE else 'ACTUAL_INPUT_ONLY_A26_AUDIT_SEALED_BEFORE_SEPARATE_ANSWER_COMPARISON'
             if case == CLEAN_ROOM_CASE else 'ORIGINAL_DURABLE_OWNING_TASK_OPERATIONS_ONLY_NOT_GLOBAL_OR_PRODUCTION_HEALTH'
@@ -648,7 +661,7 @@ def canonical_tool_case(case):
 def tool_action_type(case, *, phase='result'):
     _case(case)
     require(phase in tool_phases(case) + ('full',), 'TOOL_ACTION_INVALID')
-    return 'agent.certification.tool.' + ('handoff_recovery.'+case.split(':')[1] if case in HANDOFF_CASES else 'clean_room_audit.complete' if case == CLEAN_ROOM_CASE else 'health.complete' if case == HEALTH_CASE else 'injection_resistance.complete' if case == INJECTION_CASE else 'collaboration.complete' if case == COLLABORATION_CASE else 'cross_verification.complete' if case == CROSS_CASE else 'continuous_revalidation.complete' if case == REVALIDATION_CASE else 'independent_verification.complete' if case == INDEPENDENT_CASE
+    return 'agent.certification.tool.' + ('models.complete' if case==MODELS_CASE else 'handoff_recovery.'+case.split(':')[1] if case in HANDOFF_CASES else 'clean_room_audit.complete' if case == CLEAN_ROOM_CASE else 'health.complete' if case == HEALTH_CASE else 'injection_resistance.complete' if case == INJECTION_CASE else 'collaboration.complete' if case == COLLABORATION_CASE else 'cross_verification.complete' if case == CROSS_CASE else 'continuous_revalidation.complete' if case == REVALIDATION_CASE else 'independent_verification.complete' if case == INDEPENDENT_CASE
         else 'tools.complete' if case == PROPOSAL_CASE else case.split(':')[1]) + '.' + phase
 
 
@@ -881,7 +894,15 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
             require(len(_events(health_rows)) == 6, 'HEALTH_ORIGINAL_SIX_ROWS_REQUIRED')
             remaining()  # No assessment operation starts after the original shared deadline.
         subject_action = record('result')
-        result = executor.execute(subject_action, lambda: create(expected_artifact_bytes(case, available_bytes=available_raw,
+        model_snapshot=None
+        def model_result():
+            nonlocal model_snapshot
+            from .agent_cert_model_selection import capture_native_snapshot,produce_report
+            remaining()
+            model_snapshot,configured,available,locals=capture_native_snapshot(deadline=deadline)
+            raw=produce_report(model_snapshot,configured=configured,available=available,locals=locals,input_raw=available_raw)
+            return create(raw)
+        result = executor.execute(subject_action, model_result if case==MODELS_CASE else lambda: create(expected_artifact_bytes(case, available_bytes=available_raw,
             **({'original_failed_peer':failed_original,'runtime':bound,'registry_sha256':registry_sha256,'task_id':task_id}
                 if case in HANDOFF_CASES else {'source_revision':source_revision} if case == REVALIDATION_CASE else
                 {'source_revision':source_revision, 'original_health_rows':health_rows, 'task_id':task_id}
@@ -892,7 +913,10 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
             require(revalidation_remaining > 0, 'TOOL_EXECUTION_BOUND_EXCEEDED')
             require(ledger.flush(timeout=revalidation_remaining) is True, 'TOOL_DURABLE_ACTION_REQUIRED')
         else:
-            require(ledger.flush(timeout=remaining() if case in (INJECTION_CASE, HEALTH_CASE)+HANDOFF_CASES else 1) is True, 'TOOL_DURABLE_ACTION_REQUIRED')
+            require(ledger.flush(timeout=remaining() if case in (INJECTION_CASE, HEALTH_CASE,MODELS_CASE)+HANDOFF_CASES else 1) is True, 'TOOL_DURABLE_ACTION_REQUIRED')
+        if case==MODELS_CASE:
+            from .agent_cert_model_selection import reread_native_snapshot
+            remaining();reread_native_snapshot(model_snapshot,deadline=deadline);remaining()
         if case in HANDOFF_CASES:
             remaining()
             reread_failed_original(failed_original,reader=read_failed_peer,runtime=bound,
@@ -906,7 +930,7 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
         require(0 <= (ended - began).total_seconds() <= 5, 'TOOL_EXECUTION_BOUND_EXCEEDED')
         if case == REVALIDATION_CASE:
             require(0 <= time.monotonic() - revalidation_started_tick <= 5, 'TOOL_EXECUTION_BOUND_EXCEEDED')
-        if case in (INJECTION_CASE, HEALTH_CASE)+HANDOFF_CASES:
+        if case in (INJECTION_CASE, HEALTH_CASE,MODELS_CASE)+HANDOFF_CASES:
             require(time.monotonic()<deadline,'TOOL_EXECUTION_BOUND_EXCEEDED')
         event = dict(schema_version=EVENT_SCHEMA, case=case, case_version=case_version(case), task_id=task_id,
             source_revision=source_revision, registry_sha256=registry_sha256,
@@ -915,6 +939,7 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
             subject_action_id=subject_action.action_id,
             started_at=began.isoformat(), completed_at=ended.isoformat(),
             durable_action_delivery=True, certification='UNVERIFIED',
+            **({'original_model_snapshot':model_snapshot} if case==MODELS_CASE else {}),
             **({'original_failed_peer':failed_original,'original_failed_store':failed_store} if case in HANDOFF_CASES else {}),
             **({'failed_read_action_id':read_action.action_id,'missing_slot':MISSING_SLOT} if read_action is not None else {}),
             **({'available_read_action_id': available_action.action_id, 'available_input_sha256': sha(available_raw)}
@@ -973,6 +998,7 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
             setup_action_id=event['setup_action_id'], subject_action_id=event['subject_action_id'],
             started_at=event['started_at'], completed_at=event['completed_at'], durable_action_delivery=True,
             certification='UNVERIFIED',
+            **({'original_model_snapshot':event['original_model_snapshot']} if case==MODELS_CASE else {}),
             **({'original_failed_peer':event['original_failed_peer'],'original_failed_store':event['original_failed_store']}
                 if case in HANDOFF_CASES else {}),
             **({'failed_read_action_id':event['failed_read_action_id'],'missing_slot':MISSING_SLOT} if case not in PROPOSAL_CASES else {}),
@@ -989,7 +1015,8 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
         raw, input_raw = value['artifact_content_utf8'].encode(), value['input_content_utf8'].encode()
         from .agent_cert_revalidation import validate_assessment
         from .agent_cert_handoff_gap import validate_assessment as validate_handoff_assessment
-        require((validate_handoff_assessment(raw,input_raw,event['original_failed_peer'],runtime=runtime,
+        from .agent_cert_model_selection import independently_validate_report
+        require((bool(independently_validate_report(raw,input_raw,event['original_model_snapshot'])) if case==MODELS_CASE else validate_handoff_assessment(raw,input_raw,event['original_failed_peer'],runtime=runtime,
             registry_sha256=registry_sha256,task_id=task,now=began) if case in HANDOFF_CASES else
             validate_clean_room_answer(raw,input_raw) if case == CLEAN_ROOM_CASE else validate_health_assessment(raw,input_raw,value['original_action_records'][:6],task,source_revision)
             if case == HEALTH_CASE else validate_injection_response(raw,input_raw) if case == INJECTION_CASE else

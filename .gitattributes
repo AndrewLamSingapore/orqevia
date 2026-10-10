@@ -35,3 +35,6 @@ app/agent_cert_handoff_gap.py text eol=lf
 app/agent_cert_fresh_input.py text eol=lf
 app/agent_cert_owner_referral_events.py text eol=lf
 app/owner_referrals.py text eol=lf
+
+app/model_selection.py text eol=lf
+app/agent_cert_model_selection.py text eol=lf

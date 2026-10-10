@@ -227,7 +227,7 @@ def test_ordinary_pair_cannot_masquerade_as_virtual_tool_full_span(env, monkeypa
 
 # The original refused-Objective prerequisite belongs to the actual handoff
 # chain fixture; this helper only manufactures source-owned temporary spans.
-@pytest.mark.parametrize('case', tuple(c for c in tool_events.SUPPORTED_CASES if c not in tool_events.HANDOFF_CASES))
+@pytest.mark.parametrize('case', tuple(c for c in tool_events.SUPPORTED_CASES if c not in tool_events.HANDOFF_CASES+(tool_events.MODELS_CASE,)))
 def test_tool_full_returns_exact_actual_original_records_without_mutation_or_flush(env, monkeypatch, case):
     task, before = tool_full(env, case)
     lines = before.decode().splitlines(keepends=True)

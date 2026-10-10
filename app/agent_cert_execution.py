@@ -404,6 +404,11 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
             runtime=before,registry_sha256=expected_registry_sha256,task_id=task,
             now=event_began)
         expected_raw=raw
+    elif tool and fixed['case'] == events.MODELS_CASE:
+        from .agent_cert_model_selection import independently_validate_report
+        independently_validate_report(raw, fixed['request']['context'].encode(),
+            event['original_model_snapshot'])
+        expected_raw = raw
     elif tool and fixed['case'] == events.HEALTH_CASE:
         events.validate_health_assessment(raw, fixed['request']['context'].encode(),
             events.parse(raw).get('observed_action_records'), task, expected_source_revision)
