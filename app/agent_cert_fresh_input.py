@@ -222,7 +222,7 @@ def read_task(root,task,body,runtime,*,deadline,completed=None,actor=None):
     """Bounded read-only original store; no migration, initialization or COUNT."""
     root = _path(root);path = _path(root/'objectives.db');used = 0
     require(_uuid(task) and path.is_file(),'EXECUTION_INPUT_ORIGINAL_STORE_REQUIRED')
-    for suffix in ('','-wal','-journal'):
+    for suffix in ('','-wal','-shm','-journal'):
         candidate = _path(root/('objectives.db'+suffix))
         if candidate.exists():
             require(candidate.is_file(),'EXECUTION_INPUT_STORE_INVALID');used += candidate.stat().st_size

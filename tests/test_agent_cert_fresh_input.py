@@ -302,3 +302,28 @@ def test_actual_failed_final_fsync_is_not_claimed_durable(runtime,monkeypatch):
         assert len(writers) == 1 and writers[0].close() is False and not writers[0].worker.is_alive()
     assert reply.status_code == 202 and reply.json()['steps'][0]['state'] == 'blocked'
     assert failures and writers[0].status()['dropped'] > 0 and runtime.ledger.status()['healthy'] is True
+
+
+@pytest.mark.parametrize('defect',['oversize','aggregate','junction'])
+def test_native_shared_memory_guard_rejects_before_sqlite_open(runtime,monkeypatch,defect):
+    import os,sqlite3,time,subprocess
+    initialization,value,custody = input_chain(runtime,fresh.CASES[0])
+    sidecar = runtime.root/'objectives.db-shm';sentinel = None
+    if defect == 'junction':
+        if os.name != 'nt':pytest.skip('Windows native junction negative')
+        target = runtime.root.parent/(runtime.root.name+'-outside-shm')
+        target.mkdir();sentinel = target/'untouched.txt';sentinel.write_bytes(b'Never traverse this original-store sidecar')
+        made = subprocess.run(['cmd','/c','mklink','/J',str(sidecar),str(target)],capture_output=True)
+        assert made.returncode == 0,made.stderr.decode(errors='replace')
+        assert sidecar.is_dir()
+    else:
+        size = 8*1024*1024+1 if defect == 'oversize' else 8*1024*1024-(runtime.root/'objectives.db').stat().st_size+1
+        sidecar.write_bytes(b'x'*size)
+        if defect == 'aggregate':assert sidecar.stat().st_size < 8*1024*1024
+    original = (runtime.root/'objectives.db').read_bytes();calls = []
+    def forbidden(*args,**kwargs):calls.append(args);pytest.fail('Native guard opened SQLite before rejecting SHM')
+    monkeypatch.setattr(sqlite3,'connect',forbidden)
+    with pytest.raises(ValueError):fresh.read_original_proof(runtime.root,custody,initialization['runtime'],
+        runtime.registry_sha,deadline=time.monotonic()+1)
+    assert calls == [] and (runtime.root/'objectives.db').read_bytes() == original
+    if sentinel is not None:assert sentinel.read_bytes() == b'Never traverse this original-store sidecar'
