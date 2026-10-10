@@ -137,6 +137,9 @@ def _case_spec(row):
 
 
 def _oracle_id(agent, spec=None):
+    if agent == 'a19' and spec is not None and spec.get('case') == 'recovery:complete':
+        from app.agent_cert_recovery_events import ORACLE
+        return ORACLE
     if spec is not None and spec.get('case') == 'baseline:initialization':
         from app.agent_cert_initialization import initialization_oracle_id
         return initialization_oracle_id(agent, spec['capability_id'])
@@ -371,6 +374,11 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
 def _review(row, primary, review, *, source_revision, runtime_image_id,
             reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
             expected_owner_policy_sha256=None):
+    if (row.get('dimension'), row.get('test_case')) == ('recovery', 'complete'):
+        if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+            _deny('RECOVERY_CLOUD_TRANSPORT_FORBIDDEN')
+        return _recovery_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision, now=now)
     from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
     if str(row.get('dimension')) + ':' + str(row.get('test_case')) in TOOL_CASES:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
@@ -658,6 +666,39 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         action_type=review_action_type, schema=SCHEMA, metadata=metadata,
         began=_utc(content['reviewed_at']), ended=certified,
         action_id=dispatch['review_action_id'], duration_limit_ms=120000)
+    return True
+
+
+def _recovery_review(row, primary, reviewed, *, source_revision, runtime_image_id,
+                     reviewer_code_revision, now):
+    """Consume the original two tasks and persisted peer, never renew their time."""
+    from app.agent_cert_recovery_events import VERSION, ORACLE, validate_reviewed_recovery
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id') != 'a19' or row.get('capability_id') != 'responsibility.a19'
+            or row.get('executor_identity') != 'a19' or row.get('verifier') != 'a26'
+            or row.get('authority_scope') != agent_record('a19')['authority']
+            or row.get('source_revision') != source_revision
+            or row.get('review_source_revision') != source_revision
+            or row.get('reviewer_code_revision') != reviewer_code_revision
+            or row.get('test_result') != 'PASS' or row.get('test_version') != VERSION
+            or row.get('review_test_version') != ORACLE
+            or any(type(row.get(key)) is not str or not 1 <= len(row[key]) <= 100
+                   for key in ('certification_test', 'review_run_id'))):
+        _deny('RECOVERY_RECORD_BINDING_INVALID')
+    execution, peer = _json(primary), _json(reviewed)
+    raw = peer.get('artifact_content_utf8')
+    if type(raw) is not str or not 1 <= len(raw.encode('utf-8')) <= 65536:
+        _deny('RECOVERY_ORIGINAL_PEER_REQUIRED')
+    original_review_time = _utc(_json(raw.encode('utf-8')).get('reviewed_at'))
+    peer_completed = _utc(peer.get('observation', {}).get('completed_at'))
+    if not (original_review_time <= peer_completed <= _utc(row.get('certified_at'))
+            <= _utc(row.get('last_revalidated')) <= now < _utc(row.get('expires_at'))):
+        _deny('RECOVERY_RECORD_TIME_INVALID')
+    # The peer's actual completed observation binds the historical consumption
+    # check; current time governs only the record interval above.
+    validate_reviewed_recovery(execution, peer, source_revision=source_revision,
+        runtime_image_id=runtime_image_id, registry_sha256=_sha(REGISTRY_PATH.read_bytes()),
+        now=peer_completed)
     return True
 
 

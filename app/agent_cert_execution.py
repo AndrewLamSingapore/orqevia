@@ -546,6 +546,12 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock,
                 owned_identity=spec['case'] == 'baseline:identity')
+        if spec.get('case') == 'recovery:complete':
+            # This case owns two persisted subject tasks and a third persisted
+            # peer Objective. A single generic dispatch cannot observe that
+            # original chain or substitute a model answer for it.
+            return {**base, 'state': 'REJECTED',
+                'reason': 'original_two_task_recovery_collector_required'}
         from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
         if spec.get('case') in TOOL_CASES:
             if cloud_receipt is not None:

@@ -91,7 +91,8 @@ class AgentRequest(BaseModel):
         'certification_initialization_review','certification_artifact_event',
         'certification_owned_identity','certification_owned_identity_review',
         'certification_artifact_review','certification_authority_event',
-        'certification_authority_review','certification_tool_event','certification_tool_review'] | None = None
+        'certification_authority_review','certification_tool_event','certification_tool_review',
+        'certification_recovery_controlled_prior','certification_recovery_correction','certification_recovery_review'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -651,6 +652,20 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     submitted_request=body.model_dump(), data_root=root, ledger=action_ledger(), runtime=runtime,
                     read_runtime=runtime_snapshot, source_revision=runtime['source_revision'],
                     runtime_image_id=runtime['image_digest'], registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
+            elif body.deterministic_operation in {'certification_recovery_controlled_prior','certification_recovery_correction','certification_recovery_review'}:
+                from . import agent_registry
+                from .agent_cert_recovery_events import execute_phase,execute_review,PRIOR_PHASE,CORRECTION_PHASE,sha
+                from .objective_api import get_read_only
+                arguments=dict(submitted_request=body.model_dump(),data_root=root,ledger=action_ledger(),runtime=runtime,
+                    read_runtime=runtime_snapshot,source_revision=runtime['source_revision'],runtime_image_id=runtime['image_digest'],
+                    registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    read_objective=lambda original:get_read_only(original,authorization))
+                if body.deterministic_operation=='certification_recovery_review':
+                    return execute_review(task_id,actor=actor,**arguments)
+                if actor!='a19' or body.capability!='responsibility.a19':
+                    raise ValueError('RECOVERY_FIXED_OWNER_REQUIRED')
+                return execute_phase(PRIOR_PHASE if body.deterministic_operation=='certification_recovery_controlled_prior'
+                    else CORRECTION_PHASE,task_id,**arguments)
             elif body.deterministic_operation == 'certification_tool_event':
                 from . import agent_registry
                 from .agent_cert_tool_events import (SUPPORTED_CASES, canonical_tool_case, execute_tool_case, parse, sha)

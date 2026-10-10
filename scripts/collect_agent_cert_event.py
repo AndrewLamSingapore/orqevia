@@ -58,6 +58,118 @@ class CollectedEvent:
     prior_actions: tuple[str, ...] = field(default=(), repr=False)
 
 
+@dataclass(frozen=True)
+class CollectedRecoveryCase:
+    summary: dict
+    execution_bytes: bytes | None = field(default=None,repr=False)
+    peer_execution_bytes: bytes | None = field(default=None,repr=False)
+    original_http_replies: tuple = field(default=(),repr=False)
+
+
+def collect_recovery_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Exactly two producer Objectives and a third persisted fixed A26 Objective.
+
+    The injected factory must return the existing bounded fixed-loopback phase
+    operator. It injects an already authorized credential; this collector never
+    finds credentials, signs, renews, accesses local domains or retries a POST.
+    """
+    from app.agent_cert_recovery_events import (PRIOR_PHASE,CORRECTION_PHASE,CASE,canonical_phase_spec,
+        action_type,REVIEW_ACTION,validate_phase_execution,validate_reviewed_recovery,canonical_review_request)
+    from scripts.agent_cert_operator_io import RecoveryPhaseOperatorIO
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_recovery='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'RECOVERY_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic)
+            _require(left>0,'RECOVERY_OUTER_DEADLINE_EXCEEDED')
+            return left
+        def call(callback,*args):
+            remaining();value=_call(callback,*args);remaining();return value
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'RECOVERY_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is RecoveryPhaseOperatorIO,'RECOVERY_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator)
+            _require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which,prior=None):
+            nonlocal execution
+            summary['stage']=which.upper()
+            operator=make(which,prior_execution=prior)
+            before=call(operator.runtime)
+            _registry_pin(expected_registry_sha256)
+            began=wall_clock()
+            # Update before the one-shot POST; late replies remain private custody.
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'RECOVERY_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'RECOVERY_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id']
+            metadata=dispatch['artifact'];event=dispatch['recovery_event']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,event['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'RECOVERY_OBJECTIVE_READ_FAILED')
+            observed_end=wall_clock()
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime)
+            _require(_equal(before,after),'RECOVERY_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which),submitted_request=_copy(operator._submitted_request),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=observed_end.isoformat()),prior_execution=prior)
+            execution=value # Retain originals before pure acceptance; no synthetic repair.
+            joined=validate_phase_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'RECOVERY_OBJECTIVE_READ_FAILED')),
+                'RECOVERY_OBJECTIVE_CHANGED')
+            return value,joined
+        prior,prior_join=produce(PRIOR_PHASE)
+        summary['controlled_failure_task_id']=prior_join['task_id']
+        corrected,joined=produce(CORRECTION_PHASE,prior)
+        execution=corrected
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory)
+        operator=make('review',execution=corrected,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock()
+        _registry_pin(expected_registry_sha256);summary['submission_attempts']+=1
+        submission=_response(call(operator.submit_objective,canonical_review_request(corrected,nonce=nonce)),202,
+            'RECOVERY_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'RECOVERY_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,REVIEW_ACTION))
+        after=call(operator.runtime);_require(_equal(before,after),'RECOVERY_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request=canonical_review_request(corrected,nonce=nonce),runtime=before,
+            runtime_after=after,submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+            artifact_content_utf8=raw.decode(),objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+        validate_reviewed_recovery(corrected,peer,**pins,now=wall_clock())
+        _registry_pin(expected_registry_sha256);remaining()
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(corrected)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=12,original_peer_rows=2,controlled_failure_retained=True)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,(CollectionError,)) else 'RECOVERY_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)
+
+
 def _contract(agent, capability, case):
     from app.agent_cert_tool_events import (SUPPORTED_CASES as TOOL_CASES,
         RESULT_SCHEMA as TOOL_RESULT_SCHEMA, oracle_id, tool_action_type)

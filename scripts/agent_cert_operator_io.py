@@ -513,3 +513,76 @@ class AgentCertOperatorIO:
             raise OperatorBindingError('ZERO_MODEL_EVENT_HAS_NO_QUEUE') from None
         return OperatorIO(self.authorize, self.runtime, self.submit_objective, objective,
             no_job, self.dispatch_reviewer, artifact, self.read_review_actions)
+
+
+class RecoveryPhaseOperatorIO(AgentCertOperatorIO):
+    """One original phase per existing bounded loopback transport instance.
+
+    The controlling collector creates exactly three instances in order and
+    shares its outer deadline. Each instance permits only one Objective POST;
+    no endpoint mutation is retried. This reuses transport framing and custody,
+    not another case's challenge or provenance.
+    """
+    def __init__(self, *, owner_token, which, expected_source_revision, expected_runtime_image,
+            prior_execution=None, execution=None, nonce=None,total_timeout_seconds=10,
+            request_timeout_seconds=2,connection_factory=http.client.HTTPConnection,
+            timer_factory=threading.Timer,monotonic=time.monotonic):
+        from app.agent_cert_recovery_events import (canonical_phase_spec,correction_request,canonical_review_request,
+            PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACTION,action_type)
+        _require(type(owner_token) is str and 16<=len(owner_token)<=4096
+            and all(33<=ord(char)<=126 for char in owner_token),'EXISTING_OWNER_CREDENTIAL_REQUIRED')
+        _require(type(expected_source_revision) is str and _SOURCE.fullmatch(expected_source_revision) is not None
+            and type(expected_runtime_image) is str and _IMAGE.fullmatch(expected_runtime_image) is not None,
+            'EXTERNALLY_OBSERVED_RUNTIME_PINS_REQUIRED')
+        _require(type(total_timeout_seconds) in (int,float) and math.isfinite(total_timeout_seconds)
+            and 0<total_timeout_seconds<=30 and type(request_timeout_seconds) in (int,float)
+            and math.isfinite(request_timeout_seconds) and 0<request_timeout_seconds<=2
+            and all(callable(v) for v in (connection_factory,timer_factory,monotonic)),
+            'BOUNDED_OPERATOR_TRANSPORT_REQUIRED')
+        _require(which in (PRIOR_PHASE,CORRECTION_PHASE,'review'),'RECOVERY_FIXED_PHASE_REQUIRED')
+        if which=='review':
+            _require(prior_execution is None and type(execution) is dict,'RECOVERY_REVIEW_ORIGINAL_REQUIRED')
+            request=canonical_review_request(execution,nonce=nonce)
+            self._spec=dict(phase='review',request=request)
+            self._subject_action_types={REVIEW_ACTION}
+        else:
+            _require(execution is None and nonce is None,'RECOVERY_PHASE_BINDING_INVALID')
+            self._spec=canonical_phase_spec(which)
+            if which==CORRECTION_PHASE:
+                request=correction_request(prior_execution)
+            else:
+                _require(prior_execution is None,'RECOVERY_PRECURSOR_BINDING_INVALID')
+                request=self._spec['request']
+            self._subject_action_types={action_type(which,step) for step in ('setup','read','result','full')}
+        self._submitted_request=json.loads(_canonical(request));self._phase=which
+        self._token=owner_token;self._source=expected_source_revision;self._image=expected_runtime_image
+        self._total_seconds=total_timeout_seconds;self._request_seconds=request_timeout_seconds
+        self._factory=connection_factory;self._timer_factory=timer_factory;self._clock=monotonic
+        self._deadline=None;self._authorized=False;self._post_attempts=set()
+        self._subject_task=self._review_task=self._review_action=None
+        self._artifact_ids=set();self._responses=[];self._response_bytes=0;self._response_limit=24
+        self._lock=threading.Lock()
+
+    def submit_objective(self,body):
+        _require(_canonical(body)==_canonical(self._submitted_request),'RECOVERY_CANONICAL_REQUEST_REQUIRED')
+        self.runtime()
+        status,value=self._request('POST','/api/agents/objectives',body=body)
+        if status==202 and _uuid(value.get('id')):
+            self._subject_task=value['id'];steps=value.get('steps')
+            dispatch=steps[0].get('dispatch') if type(steps) is list and len(steps)==1 and type(steps[0]) is dict else None
+            if type(dispatch) is dict:
+                self._remember_artifact(dispatch.get('artifact'))
+                event=dispatch.get('recovery_event')
+                if type(event) is dict:self._remember_artifact(event.get('input_artifact_metadata'))
+        return status,value
+
+    def read_objective(self,task):
+        _require(_uuid(task) and task==self._subject_task,'OWNED_OBJECTIVE_BINDING_REQUIRED')
+        return self._request('GET','/api/agents/objectives/'+task)
+
+    def read_artifact(self,identifier):
+        _require(type(identifier) is str and identifier in self._artifact_ids,'OWNED_ARTIFACT_BINDING_REQUIRED')
+        return self._request('GET','/api/artifacts/'+identifier,artifact=True)
+
+    def dispatch_reviewer(self,body):
+        raise OperatorBindingError('RECOVERY_PEER_REQUIRES_FRESH_PERSISTED_OBJECTIVE') from None

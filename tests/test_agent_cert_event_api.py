@@ -11,6 +11,7 @@ import pytest
 
 from app import agent_cert_event_api as api
 from app import agent_cert_tool_events as tool_events
+from app import agent_cert_recovery_events as recovery_events
 from app.action_records import ActionLedger, ActionRecord, DirectExecutor
 from app.artifact_factory import ArtifactFactory
 from app.deterministic_ops import DeterministicOps
@@ -22,6 +23,8 @@ RUNTIME = {'source_revision': SOURCE, 'image_digest': IMAGE,
 AUTH = {'Authorization': 'Bearer public-test-fixture-owner'}
 TOOL_FULL_ACTIONS = {tool_events.tool_action_type(case, phase='full')
                      for case in tool_events.SUPPORTED_CASES}
+RECOVERY_PHASES=(recovery_events.PRIOR_PHASE,recovery_events.CORRECTION_PHASE)
+RECOVERY_FULL_ACTIONS={recovery_events.action_type(phase,'full') for phase in RECOVERY_PHASES}
 
 
 @pytest.fixture
@@ -123,7 +126,7 @@ def test_runtime_uses_existing_domain_identity_not_public_readiness(env):
     assert not list(env.root.iterdir())
 
 
-@pytest.mark.parametrize('action', sorted(api._ACTIONS - TOOL_FULL_ACTIONS))
+@pytest.mark.parametrize('action', sorted(api._ACTIONS - TOOL_FULL_ACTIONS - RECOVERY_FULL_ACTIONS))
 def test_read_returns_exact_original_bytes_without_mutation_or_flush(env, monkeypatch, action):
     task, before = pair(env, action)
     response = env.client.get(url(task, action), headers=AUTH)
@@ -136,6 +139,34 @@ def test_read_returns_exact_original_bytes_without_mutation_or_flush(env, monkey
     assert (env.root / 'action-records.jsonl').read_bytes() == before
     assert not any(key in result for key in ('test_result', 'certification', 'attestation', 'health'))
     assert response.headers['cache-control'] == 'private, no-store'
+
+
+@pytest.mark.parametrize('phase',RECOVERY_PHASES)
+def test_recovery_virtual_full_rejects_two_row_pair_without_mutation(env,monkeypatch,phase):
+    action=recovery_events.action_type(phase,'full')
+    task,before=pair(env,action)
+    monkeypatch.setattr(ActionLedger,'flush',lambda *a,**k:pytest.fail('Read cannot flush'))
+    response=env.client.get(url(task,action),headers=AUTH)
+    assert response.status_code==503 and 'original_lines' not in response.json()
+    assert (env.root/'action-records.jsonl').read_bytes()==before
+
+
+@pytest.mark.parametrize('phase',RECOVERY_PHASES)
+def test_recovery_virtual_full_reads_six_actual_source_actions_exactly(env,monkeypatch,phase):
+    # Original action-feed fixture only. These callbacks do not create a
+    # recovery result, original Objective or certification case proof.
+    task=str(uuid.uuid4());ledger=ActionLedger(env.root/'action-records.jsonl')
+    for step in ('setup','read','result'):
+        record=ActionRecord(task,'a19',recovery_events.action_type(phase,step),'fixture-action-feed')
+        DirectExecutor(ledger).execute(record,lambda:{'public_fixture':True})
+    assert ledger.close() is True
+    before=(env.root/'action-records.jsonl').read_bytes()
+    assert len(before.splitlines())==6
+    monkeypatch.setattr(ActionLedger,'flush',lambda *a,**k:pytest.fail('Read cannot flush'))
+    response=env.client.get(url(task,recovery_events.action_type(phase,'full')),headers=AUTH)
+    assert response.status_code==200
+    assert ''.join(response.json()['original_lines']).encode()==before
+    assert (env.root/'action-records.jsonl').read_bytes()==before
 
 
 @pytest.mark.parametrize('case', tool_events.SUPPORTED_CASES)
