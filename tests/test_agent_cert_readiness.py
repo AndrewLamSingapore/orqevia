@@ -40,7 +40,7 @@ def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inve
     assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization',
         'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
         'collaboration:complete', 'recovery:complete', 'authority:complete', 'tools:complete', 'cross_verification:complete', 'health:complete', 'context_integrity:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
-        'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'evidence_integrity:complete', 'graceful_degradation:complete', 'independent_verification:complete', 'continuous_revalidation:complete', 'clean_room_audit:complete']
+        'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'evidence_integrity:complete', 'graceful_degradation:complete', 'independent_verification:complete', 'clean_room_audit:complete', 'continuous_revalidation:complete']
     assert len(row['source_pinned_cloud_transport_cases']) == 41
     assert 'broad_transfer:complete' in row['source_pinned_cloud_transport_cases']
     assert 'broad_transfer:complete' not in row['locally_actionable_missing_case_adapter_ids']
