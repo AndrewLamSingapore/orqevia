@@ -31,6 +31,8 @@ class _TrustedEventAdapter:
 _IDENTITY_ADAPTER = _TrustedEventAdapter(CASE, 'runtime.status.artifact', 'jarvis.runtime-status.v1')
 _INITIALIZATION_ADAPTER = _TrustedEventAdapter('baseline:initialization',
     'agent.certification.initialization.artifact', 'jarvis.agent-initialization.v1')
+_OWNED_CONTRACT_ADAPTER = _TrustedEventAdapter('baseline:contract',
+    'agent.certification.owned_contract.artifact','jarvis.owned-agent-contract.v1')
 _OWNED_IDENTITY_ADAPTER = _TrustedEventAdapter(CASE,
     'agent.certification.owned_identity.artifact', 'jarvis.owned-agent-identity.v1')
 
@@ -153,7 +155,7 @@ def read_action_span(path, task_id, action_type, max_bytes=8 * 1024 * 1024):
         require(valid_uuid(task_id) and action_type in {'runtime.status.artifact',
             'agent.certification.identity.review', 'agent.certification.initialization.artifact',
             'agent.certification.initialization.review', 'agent.certification.owned_identity.artifact',
-            'agent.certification.owned_identity.review'} and type(max_bytes) is int and
+            'agent.certification.owned_identity.review','agent.certification.owned_contract.artifact','agent.certification.owned_contract.review'} and type(max_bytes) is int and
             1 <= max_bytes <= 8 * 1024 * 1024, 'ACTION_READER_BINDING_INVALID')
         path = Path(path)
         require(path.is_absolute() and not any(p.is_symlink() for p in (path, *path.parents)),
@@ -189,12 +191,15 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
                               capability_id='responsibility.a19'):
     """Reuse joins only for the explicit fixed source-owned event adapters."""
     try:
-        require(any(_adapter is item for item in (_IDENTITY_ADAPTER, _INITIALIZATION_ADAPTER, _OWNED_IDENTITY_ADAPTER)),
+        require(any(_adapter is item for item in (_IDENTITY_ADAPTER, _INITIALIZATION_ADAPTER, _OWNED_IDENTITY_ADAPTER,_OWNED_CONTRACT_ADAPTER)),
                 'TRUSTED_EVENT_ADAPTER_REQUIRED')
         # Legacy identity retains its A19-only contract. Only explicit owned
         # initialization/identity adapters inspect another registered pair;
         # schema/action/oracle selection remains fixed in source.
-        if _adapter is _INITIALIZATION_ADAPTER:
+        if _adapter is _OWNED_CONTRACT_ADAPTER:
+            from .agent_cert_owned_contract import contract_objective
+            contract_objective(agent_id,capability_id)
+        elif _adapter is _INITIALIZATION_ADAPTER:
             from .agent_cert_initialization import initialization_objective
             initialization_objective(agent_id, capability_id)
         elif _adapter is _OWNED_IDENTITY_ADAPTER:
@@ -214,7 +219,10 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
             'IDENTITY_FIELDS_INVALID')
         from .agent_cert_cases import challenge
         from .agent_cert_execution import observe_cert_case
-        spec = challenge(_adapter.case, agent_id=agent_id, capability_id=capability_id)
+        if _adapter is _OWNED_CONTRACT_ADAPTER:
+            from .agent_cert_owned_contract import canonical_owned_contract_case
+            spec=canonical_owned_contract_case(agent_id,capability_id)
+        else:spec = challenge(_adapter.case, agent_id=agent_id, capability_id=capability_id)
         require(canonical(value['case_spec']) == canonical(spec), 'CANONICAL_IDENTITY_CASE_REQUIRED')
         runtime = value['runtime']
         require(type(runtime) is dict and set(runtime) == {'host_id', 'version', 'source_revision', 'image_digest'}
@@ -274,12 +282,14 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
                 and immutable.get('model_content_is_authoritative_metadata') is False
                 and immutable.get('provenance', {}).get('runtime') == 'IMMUTABLE_OBJECTIVE_RUNTIME',
                 'IDENTITY_IMMUTABLE_RUNTIME_REQUIRED')
-        if _adapter is _INITIALIZATION_ADAPTER or _adapter is _OWNED_IDENTITY_ADAPTER:
+        if _adapter in (_INITIALIZATION_ADAPTER,_OWNED_IDENTITY_ADAPTER,_OWNED_CONTRACT_ADAPTER):
             from .objective_api import inference_attempt_projection
             require(canonical(immutable.get('inference_attempts')) ==
                     canonical(inference_attempt_projection([])),
                     'ZERO_MODEL_EVENT_REQUIRED')
-            if _adapter is _OWNED_IDENTITY_ADAPTER:
+            if _adapter is _OWNED_CONTRACT_ADAPTER:
+                from .agent_cert_owned_contract import validate_contract_report as validate_report
+            elif _adapter is _OWNED_IDENTITY_ADAPTER:
                 from .agent_cert_owned_identity import validate_identity_report as validate_report
             else:
                 from .agent_cert_initialization import validate_initialization_report as validate_report
@@ -290,7 +300,7 @@ def _validate_event_execution(execution, *, source_revision, runtime_image_id,
             action_type=_adapter.action_type, schema=_adapter.report_schema, metadata=metadata,
             # Owned identity is captured inside the already-started artifact
             # action. Its dispatch observation bounds that whole action.
-            began=began if _adapter is _OWNED_IDENTITY_ADAPTER else utc(observation['captured_at']),
+            began=began if _adapter in (_OWNED_IDENTITY_ADAPTER,_OWNED_CONTRACT_ADAPTER) else utc(observation['captured_at']),
             ended=ended)
         require(canonical(chain) == canonical(value['action_chain_join'])
                 and began <= utc(immutable.get('created_at')) <= utc(observation['captured_at'])

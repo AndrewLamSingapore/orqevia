@@ -247,15 +247,20 @@ def _observe_runtime_artifact(spec, base, *, dispatch, get_artifact, get_runtime
 
 def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_runtime,
                                      expected_source_revision, expected_registry_sha256,
-                                     started, timeout_seconds, monotonic, wall_clock, owned_identity=False):
+                                     started, timeout_seconds, monotonic, wall_clock, owned_identity=False, owned_contract=False):
     """Observe the distinct owned-contract inspection, never an identity clone."""
     from .agent_cert_initialization import MAX_BYTES, validate_initialization_report
     if owned_identity:
         from .agent_cert_owned_identity import validate_identity_report as validate_initialization_report
+    if owned_contract:
+        from .agent_cert_owned_contract import validate_contract_report as validate_initialization_report
     agent, capability = spec.get('agent_id'), spec.get('capability_id')
-    fixed_case = 'baseline:identity' if owned_identity else 'baseline:initialization'
-    if _canonical(spec) != _canonical(challenge(fixed_case, agent_id=agent,
-                                                capability_id=capability)):
+    fixed_case = 'baseline:contract' if owned_contract else 'baseline:identity' if owned_identity else 'baseline:initialization'
+    if owned_contract:
+        from .agent_cert_owned_contract import canonical_owned_contract_case
+        expected_spec=canonical_owned_contract_case(agent,capability)
+    else:expected_spec=challenge(fixed_case,agent_id=agent,capability_id=capability)
+    if _canonical(spec) != _canonical(expected_spec):
         return {**base, 'state': 'REJECTED', 'reason': 'initialization_case_source_mismatch'}
     if (not callable(get_artifact) or not callable(get_runtime)
             or type(expected_source_revision) is not str
@@ -331,7 +336,7 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
             'result_sha256': metadata['sha256'],
             'artifact_metadata_sha256': hashlib.sha256(_canonical(metadata)).hexdigest(),
             'started_at': began.isoformat(), 'completed_at': ended.isoformat(),
-            'captured_at': captured.isoformat(), 'case_review': 'OWNED_IDENTITY_ARTIFACT_CHECK_PASS' if owned_identity else 'INITIALIZATION_ARTIFACT_CHECK_PASS',
+            'captured_at': captured.isoformat(), 'case_review': 'OWNED_CONTRACT_ARTIFACT_CHECK_PASS' if owned_contract else 'OWNED_IDENTITY_ARTIFACT_CHECK_PASS' if owned_identity else 'INITIALIZATION_ARTIFACT_CHECK_PASS',
             'review_errors': ()}
 
 
@@ -524,7 +529,7 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
-        if spec.get('case') in {'baseline:identity', 'baseline:initialization'}:
+        if spec.get('case') in {'baseline:identity', 'baseline:initialization','baseline:contract'}:
             if cloud_receipt is not None:
                 return {**base, 'state': 'REJECTED', 'reason': 'initialization_cloud_transport_forbidden'}
             return _observe_initialization_artifact(
@@ -532,7 +537,7 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock,
-                owned_identity=spec['case'] == 'baseline:identity')
+                owned_identity=spec['case'] == 'baseline:identity',owned_contract=spec['case']=='baseline:contract')
         from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
         if spec.get('case') in TOOL_CASES:
             if cloud_receipt is not None:

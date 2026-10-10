@@ -165,9 +165,18 @@ class AgentCertOperatorIO:
         try:
             _require(type(spec) is dict, 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
             canonical = canonical_case_spec(spec.get('agent_id'), spec.get('capability_id'), spec.get('case'))
+            if spec.get('case')=='baseline:contract':
+                from app.agent_cert_owned_contract import canonical_owned_contract_case
+                canonical=canonical_owned_contract_case(spec.get('agent_id'),spec.get('capability_id'))
             _require(_canonical(spec) == _canonical(canonical), 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
             agent, capability, case = canonical['agent_id'], canonical['capability_id'], canonical['case']
-            if case == 'baseline:initialization':
+            if case == 'baseline:contract':
+                from app.agent_cert_owned_contract import ACTION_TYPE,REVIEW_ACTION,REVIEW_OPERATION,contract_reviewer,contract_review_objective
+                self._action_type=ACTION_TYPE
+                self._reviewer,self._review_cap=contract_reviewer(agent,capability)
+                self._review_objective=contract_review_objective(agent,capability)
+                self._review_operation,self._review_action_type=REVIEW_OPERATION,REVIEW_ACTION
+            elif case == 'baseline:initialization':
                 from app.agent_cert_initialization import (
                     ACTION_TYPE, initialization_reviewer, initialization_review_objective,
                 )

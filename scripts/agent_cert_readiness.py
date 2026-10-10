@@ -38,7 +38,7 @@ SOURCE_FILES = (
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
-    'app/agent_cert_owned_identity.py',
+    'app/agent_cert_owned_identity.py','app/agent_cert_owned_contract.py',
     'app/agent_cert_transport.py', 'app/agent_dispatch_api.py',
     'app/production_entry.py', 'scripts/collect_agent_cert_case.py',
     'scripts/collect_agent_cert_event.py', 'scripts/agent_cert_operator_io.py',
@@ -46,7 +46,7 @@ SOURCE_FILES = (
     'governance/agent-cert-reviewed-cases.json',
     'governance/agent-cert-historical-admissions/a19-role-normal-signed-37613202210.json',
 )
-EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
+EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization','baseline:contract',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
     'evidence_integrity:complete', 'context_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized',
@@ -115,6 +115,9 @@ def _registry():
 
 def _supported(actor, capability, key):
     try:
+        if key=='baseline:contract':
+            from app.agent_cert_owned_contract import canonical_owned_contract_case
+            return canonical_owned_contract_case(actor,capability)
         return canonical_case_spec(actor, capability, key)
     except (ValueError, TypeError, KeyError):
         return None
