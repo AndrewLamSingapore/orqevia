@@ -39,7 +39,7 @@ def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inve
     assert len(row['canonical_adapter_oracle_ready_cases']) == 71
     assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization',
         'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
-        'collaboration:complete', 'recovery:complete', 'authority:complete', 'tools:complete', 'cross_verification:complete', 'fresh_challenge:complete', 'unseen_task:complete', 'health:complete', 'context_integrity:complete', 'conflict_resolution:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
+        'collaboration:complete', 'recovery:complete', 'authority:complete', 'tools:complete', 'cross_verification:complete', 'fresh_challenge:complete', 'health:complete', 'unseen_task:complete', 'context_integrity:complete', 'conflict_resolution:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
         'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'handoff_recovery:agent_failure', 'handoff_recovery:bounded_response', 'evidence_integrity:complete', 'cross_agent_conflict:complete', 'graceful_degradation:complete', 'independent_verification:complete', 'clean_room_audit:complete', 'continuous_revalidation:complete']
     assert len(row['source_pinned_cloud_transport_cases']) == 41
     assert 'broad_transfer:complete' in row['source_pinned_cloud_transport_cases']
@@ -139,3 +139,4 @@ def test_ready_plus_missing_partition_exact_contract_without_resetting_any_case(
         assert row['missing_adapter_state'] == 'OPEN_LOCAL_IMPLEMENTATION_NOT_EXTERNAL'
         assert row['certification_domain']['status'] == 'NOT_OBSERVED'
         assert row['certification_domain']['pass_fail_blocked_claim'] is None
+
