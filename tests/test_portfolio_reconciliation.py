@@ -79,6 +79,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only the independently reviewed, dated 10 October restart addition.
+    # All earlier observations and the frozen September baseline keep their pins.
+    restart_title = "## Owner-directed restart and certification resumption — 10 October 2026"
+    assert after.count(restart_title) == 1
+    restart_start = after.index(restart_title)
+    restart_end = after.index("## Light-production observation", restart_start)
+    restart_update = after[restart_start:restart_end].encode("utf-8")
+    assert len(restart_update) == 1791
+    assert hashlib.sha256(restart_update).hexdigest() == "7d2e68d50720c68d7ba56f6ac935a003922dd57ef8370da6cfec7817aee487d7"
+    after = after[:restart_start] + after[restart_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
