@@ -278,7 +278,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and all(canonical(read_tool_action_span(root, subject_task, case_id, phase=phase)) ==
                     canonical(execution[key]) for phase, key in (
                         ('setup', 'input_action_records'), ('read', 'failed_read_action_records'),
-                        ('full', 'original_action_records'))), 'TOOL_ORIGINAL_DOMAINS_REQUIRED')
+                        ('full', 'original_action_records')) + (
+                            (('available','available_read_action_records'),)
+                            if case_id == 'graceful_degradation:complete' else ())), 'TOOL_ORIGINAL_DOMAINS_REQUIRED')
         if artifact and case_id != 'general:artifact_produce':
             input_metadata = execution['dispatch']['artifact_event']['input_artifact_metadata']
             original_metadata, original_raw = retrieve_owned(input_metadata['artifact_id'])
@@ -315,7 +317,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 require(all(canonical(read_tool_action_span(root, subject_task, case_id, phase=phase)) ==
                     canonical(execution[key]) for phase, key in (
                         ('setup', 'input_action_records'), ('read', 'failed_read_action_records'),
-                        ('full', 'original_action_records'))), 'TOOL_DOMAINS_CHANGED_DURING_REVIEW')
+                        ('full', 'original_action_records')) + (
+                            (('available','available_read_action_records'),)
+                            if case_id == 'graceful_degradation:complete' else ())), 'TOOL_DOMAINS_CHANGED_DURING_REVIEW')
             if artifact and case_id != 'general:artifact_produce':
                 final_input_metadata, final_input_raw = retrieve_owned(input_metadata['artifact_id'])
                 require(canonical(final_input_metadata) == canonical(original_metadata)

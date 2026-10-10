@@ -50,10 +50,10 @@ def signer_row(result):
     reviewed = json.loads(result.review_bytes)
     now = datetime.now(timezone.utc)
     return dict(agent_id='a19', capability_id='responsibility.a19', dimension=reviewed['dimension'],
-        test_case=reviewed['test_case'], certification_test='tool-source-chain', test_version=events.CASE_VERSION,
+        test_case=reviewed['test_case'], certification_test='tool-source-chain', test_version=events.case_version(reviewed['dimension']+':'+reviewed['test_case']),
         test_result='PASS', verifier='a26', executor_identity='a19', source_revision=SOURCE,
         review_source_revision=SOURCE, reviewer_code_revision=CODE, authority_scope='advisory',
-        review_test_version=events.oracle_id('tool_recovery:' + reviewed['test_case']),
+        review_test_version=events.oracle_id(reviewed['dimension']+':' + reviewed['test_case']),
         review_run_id=reviewed['review_run_id'], certified_at=now.isoformat(), last_revalidated=now.isoformat(),
         expires_at=(now + timedelta(hours=1)).isoformat())
 
@@ -77,19 +77,20 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
         pytest.fail(json.dumps(result.summary, sort_keys=True) + '; requests=' + str(runtime.requests))
     execution = json.loads(result.execution_bytes)
     event = execution['dispatch']['tool_event']
-    assert calls == [(runtime.root / 'artifacts' / event['input_artifact_metadata']['artifact_id'], events.MISSING_SLOT)]
+    folder = runtime.root / 'artifacts' / event['input_artifact_metadata']['artifact_id']
+    assert calls == ([(folder,'artifact.json')] if case_id == events.DEGRADATION_CASE else []) + [(folder,events.MISSING_SLOT)]
     assert len({event['input_artifact_metadata']['artifact_id'], execution['artifact_metadata']['artifact_id'],
         result.summary['reviewer_artifact_id']}) == 3
     assert result.summary['subject_task_id'] != result.summary['review_task_id']
     assert result.summary['model_calls'] == 0 and result.summary['signature'] == 'NOT_PERFORMED'
-    assert len(execution['original_action_records']) == 6
+    assert len(execution['original_action_records']) == (8 if case_id == events.DEGRADATION_CASE else 6)
     last = events.parse(execution['failed_read_action_records'][-1].encode())
     assert last['success'] is False and last['error'] == 'FileNotFoundError' and 'result_summary' not in last
     assessment = json.loads(result.subject_artifact_bytes)['assessment']
-    assert assessment['read_attempts'] == 1 and assessment['retries'] == assessment['executed_followups'] == 0
+    assert assessment['read_attempts'] == (2 if case_id == events.DEGRADATION_CASE else 1) and assessment['retries'] == assessment['executed_followups'] == 0
     assert ('next_check_proposal' in assessment) == (case_id == events.SUPPORTED_CASES[1])
     assert [method for method, _ in runtime.requests].count('POST') == 2
-    assert len(runtime.operator.original_replies()) == 26
+    assert len(runtime.operator.original_replies()) == (27 if case_id == events.DEGRADATION_CASE else 26)
     row = signer_row(result)
     assert bridge._review(row, result.execution_bytes, result.review_bytes, source_revision=SOURCE,
         runtime_image_id=IMAGE, reviewer_code_revision=CODE, now=datetime.now(timezone.utc) + timedelta(minutes=6)) is True
@@ -98,8 +99,8 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
 def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     from app.agent_cert_transport import canonical_cert_case
     specs = [events.canonical_tool_case(case) for case in events.SUPPORTED_CASES]
-    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 2
-    assert len({spec['oracle_id'] for spec in specs}) == 2
+    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 3
+    assert len({spec['oracle_id'] for spec in specs}) == 3
     for case in events.SUPPORTED_CASES:
         assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_tool_case(case)
         assert contracts.review_case_output('a19', 'responsibility.a19', case, '{"PASS":true}') == (
@@ -233,9 +234,9 @@ def test_complete_original_chain_rejects_rehashed_retry_or_impossible_order(runt
         validate(execution, runtime)
 
 
-def test_response_count_extension_is_only_the_two_fixed_tool_events():
+def test_response_count_extension_is_only_the_fixed_original_event_cases():
     for case, expected in [('baseline:identity', 24), ('general:artifact_consume', 24),
-            ('authority:complete', 24), *((case, 26) for case in events.SUPPORTED_CASES)]:
+            ('authority:complete', 24), *((case, 28 if case == events.DEGRADATION_CASE else 26) for case in events.SUPPORTED_CASES)]:
         operator = AgentCertOperatorIO(owner_token=TOKEN,
             spec=contracts.canonical_case_spec('a19', 'responsibility.a19', case),
             expected_source_revision=SOURCE, expected_runtime_image=IMAGE,

@@ -39,7 +39,8 @@ _ARTIFACT_ACTIONS[artifact_action_type('evidence_integrity:complete', prior=True
 _ARTIFACT_ACTIONS[artifact_action_type('context_integrity:complete', prior=True)] = ('context_integrity:complete', False, True)
 _AUTHORITY_ACTIONS = {authority_action_type(case): case for case in AUTHORITY_CASES}
 _TOOL_ACTIONS = {tool_action_type(case, phase=phase): (case, phase)
-    for case in TOOL_CASES for phase in ('setup', 'read', 'result', 'full')}
+    for case in TOOL_CASES for phase in (('setup','available','read','result','full')
+        if case == 'graceful_degradation:complete' else ('setup','read','result','full'))}
 _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',

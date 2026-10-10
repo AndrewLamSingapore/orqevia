@@ -380,7 +380,7 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_identity_mismatch'}
     event_began, event_ended = _time(event.get('started_at')), _time(event.get('completed_at'))
     if (event.get('schema_version') != events.EVENT_SCHEMA or event.get('case') != fixed['case']
-            or event.get('case_version') != events.CASE_VERSION or event.get('task_id') != task
+            or event.get('case_version') != fixed['case_version'] or event.get('task_id') != task
             or event.get('source_revision') != expected_source_revision
             or event.get('registry_sha256') != expected_registry_sha256
             or event.get('case_spec_sha256') != events.sha(events.canonical(fixed))
@@ -403,6 +403,8 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         events.sha(events.canonical(events._snapshot(event.get('read_domains_before')))),
         admission=event.get('admission')) if authority
         else events.expected_artifact_bytes(fixed['case'], **(
+            {'available_bytes': events.input_bytes(fixed['case'])}
+            if tool and fixed['case'] == 'graceful_degradation:complete' else {}), **(
             {'registry_sha256': expected_registry_sha256}
             if fixed['case'] == 'context_integrity:complete' else {}), **(
             {'task_id': task, 'input_artifact': event.get('input_artifact_metadata'),
