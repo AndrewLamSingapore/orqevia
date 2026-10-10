@@ -37,6 +37,10 @@ CODE_FILES = (
     'app/agent_cert_cross_conflict_events.py',
     'app/agent_cert_owner_referral_events.py', 'app/owner_referrals.py', 'app/pwa_sessions.py',
     'app/client_auth.py', 'app/interface_server.py',
+    'app/agent_cert_resident_model.py', 'app/agent_cert_model_substitution_events.py',
+    'app/agent_cert_model_substitution_review.py', 'app/direct_stream.py',
+    'app/backend_admission.py', 'app/job_queue.py', 'app/compute_queue_api.py',
+    'app/compute_profile.py', 'app/settings.py', 'app/ssd_thermal.py', 
     'app/agent_cert_event_api.py', 'app/agent_cert_review_tool.py',
     'app/agent_dispatch_api.py', 'app/cloud_execution.py', 'app/hf_admission.py',
     'app/agent_cert_role_group_two.py', 'app/agent_cert_role_g1.py',
@@ -50,7 +54,7 @@ CODE_FILES = (
     'app/agent_cert_data_quality.py', 'app/agent_cert_portfolio.py',
     'app/agent_cert_cost.py', 'app/agent_cert_risk.py', 'app/agent_cert_release.py',
     'app/agent_cert_execution.py', 'app/runtime_status.py', 'app/compute_catalog.py',
-    'app/compute_queue_api.py', 'app/settings.py', 'app/job_queue.py',
+      
     'app/provider_runtime.py', 'app/provider_circuit.py', 'app/tier_router.py',
     'governance/agent-cert-verifier-azure-pins.json',
 )

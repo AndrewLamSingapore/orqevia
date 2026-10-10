@@ -34,6 +34,25 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
 
+def test_native_source_preparation_requires_actual_qualification_without_mock_credit(inventory):
+    rows = inventory['capability_rows']
+    preparations = [r['separate_native_source_preparation'] for r in rows
+                    if r['separate_native_source_preparation'] is not None]
+    assert len(preparations) == 1
+    preparation = preparations[0]
+    assert preparation['case'] == 'model_substitution:complete'
+    assert preparation['state'] == 'SOURCE_UNREADY_UNTIL_ACTUAL_BACKEND_QUALIFICATION'
+    assert preparation['counts_as_ready_case'] is False and preparation['zero_model_event'] is False
+    a19 = next(r for r in rows if r['capability_id'] == 'responsibility.a19')
+    assert preparation['case'] not in a19['canonical_adapter_oracle_ready_cases']
+    assert preparation['case'] not in a19['distinct_zero_model_event_adapter_cases']
+    for dependency in ('app/agent_cert_resident_model.py',
+                       'app/agent_cert_model_substitution_events.py',
+                       'app/agent_cert_model_substitution_review.py',
+                       'app/direct_stream.py', 'app/backend_admission.py', 'app/compute_profile.py'):
+        assert dependency in inventory['source_file_sha256']
+
+
 def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inventory):
     row = next(r for r in inventory['capability_rows'] if r['agent_id'] == 'a19')
     assert len(row['canonical_adapter_oracle_ready_cases']) == 73

@@ -7,7 +7,13 @@ import uuid
 from . import backend_admission
 
 
-async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False):
+async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,residency_contract=None):
+    if residency_contract is not None:
+        from .agent_cert_resident_model import ResidentAdmissionContract,require
+        require(type(residency_contract) is ResidentAdmissionContract,'RESIDENCY_EXACT_SOURCE_CONTRACT_REQUIRED')
+    def timeout():
+        ordinary=float(job['timeout_seconds'])
+        return ordinary if residency_contract is None else min(ordinary,residency_contract.window.remaining())
     endpoint = settings.ollama_base_url.rstrip('/')
     lease_id = str(job.get('id') or uuid.uuid4())
     db_path = job.get('_admission_db')
@@ -34,15 +40,20 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
         dispatched = False
         complete = False
         try:
+            admission=None
+            if residency_contract is not None:
+                admission=await residency_contract.observe(job,provider,settings,lambda:lease(backend_admission.check),phase='PRE_DISPATCH')
             lease(backend_admission.dispatch)
             dispatched = True
-            async with httpx.AsyncClient(timeout=float(job['timeout_seconds'])) as client:
-                async with client.stream('POST',settings.ollama_base_url+'/api/chat',json={
-                'model':provider.model,'messages':[{'role':'user','content':job['prompt']}],
+            payload={'model':provider.model,'messages':[{'role':'user','content':job['prompt']}],
                 'stream':True,'keep_alive':settings.keep_alive,'options':{
-                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()}}) as response:
+                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()}}
+            if residency_contract is not None:residency_contract.bind_chat_request(payload)
+            async with httpx.AsyncClient(timeout=timeout()) as client:
+                async with client.stream('POST',settings.ollama_base_url+'/api/chat',json=payload) as response:
                     response.raise_for_status();parts=[];final=None
-                    async for line in response.aiter_lines():
+                    lines=response.aiter_lines() if residency_contract is None else residency_contract.chat_lines(response)
+                    async for line in lines:
                         if not line:continue
                         capacity(provider.model)
                         lease(backend_admission.check)
@@ -60,6 +71,12 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                     result = {'result':''.join(parts),'input_tokens':int(final.get('prompt_eval_count',0)),
                         'output_tokens':int(final.get('eval_count',0)),'actual_cost_usd':0,
                         'model_load_ns':int(final.get('load_duration',0)), 'inference_ns':int(final.get('eval_duration',0))}
+                    if residency_contract is not None:
+                        completion=residency_contract.completion(final,provider.model)
+                        after=await residency_contract.observe(job,provider,settings,lambda:lease(backend_admission.check),phase='POST_DISPATCH')
+                        result['source_residency_admission']=dict(before=admission,after=after,completion=completion,
+                            native_chat_utf8=bytes(residency_contract._chat_raw).decode(),
+                            native_chat_request_utf8=bytes(residency_contract._chat_request_raw).decode())
                     lease(backend_admission.completed)
                     complete = True
                     return result
@@ -68,7 +85,7 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                 lease(backend_admission.cancel)
     task=asyncio.create_task(run())
     try:
-        async with asyncio.timeout(float(job['timeout_seconds'])):
+        async with asyncio.timeout(timeout()):
             while not task.done():
                 if cancelled():raise RuntimeError('Task cancelled by client')
                 await asyncio.wait({task},timeout=.05)

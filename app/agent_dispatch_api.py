@@ -97,7 +97,8 @@ class AgentRequest(BaseModel):
         'certification_conflict_reconciliation','certification_conflict_review',
         'certification_cross_conflict_code_proposal','certification_cross_conflict_fixture_finding',
         'certification_cross_conflict_separation','certification_cross_conflict_review',
-        'certification_owner_referral_proposal','certification_owner_referral_review'] | None = None
+        'certification_owner_referral_proposal','certification_owner_referral_review',
+        'certification_model_substitution','certification_model_substitution_review'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -687,6 +688,10 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
         raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     started = time.perf_counter()
+    model_substitution_window=None
+    if body.deterministic_operation in ('certification_model_substitution','certification_model_substitution_review'):
+        from .agent_cert_resident_model import ResidentCaseWindow
+        model_substitution_window=ResidentCaseWindow()
     blind_budget = None
     execution_input_budget = None
     if body.deterministic_operation == 'certification_tool_review':
@@ -726,6 +731,17 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         root=Path(os.getenv('PRIME_DATA_DIR','/data'))
         from .objective_api import runtime_snapshot
         runtime = runtime_snapshot()
+        if model_substitution_window is not None:
+            from .agent_cert_model_substitution_events import execute_producer,execute_review
+            try:
+                if body.deterministic_operation=='certification_model_substitution':
+                    from .compute_queue_api import queue
+                    return execute_producer(body,actor=actor,task_id=task_id,runtime=runtime,
+                        dispatch_window=model_substitution_window,ledger=action_ledger(),settings=SETTINGS,queue=queue)
+                return execute_review(body,actor=actor,task_id=task_id,runtime=runtime,
+                    dispatch_window=model_substitution_window,ledger=action_ledger())
+            except (ValueError,PermissionError,UnicodeError):
+                raise HTTPException(422,'Source model-substitution operation rejected') from None
         try:
             if body.deterministic_operation == 'certification_owned_identity':
                 from . import agent_registry

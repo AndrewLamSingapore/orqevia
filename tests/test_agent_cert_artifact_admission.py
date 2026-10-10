@@ -37,7 +37,7 @@ def test_artifact_custody_cannot_acquire_cloud_model_oracle_or_policy(case_id):
 
 
 def test_artifact_producer_and_validator_added_to_complete_protected_code_pins(tmp_path):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 72
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 79
     assert {'app/compute_queue_api.py','app/settings.py','app/job_queue.py'} <= set(loader.CODE_FILES)
     assert {'app/model_selection.py','app/agent_cert_model_selection.py'} <= set(loader.CODE_FILES)
     assert 'app/agent_cert_revalidation.py' in loader.CODE_FILES

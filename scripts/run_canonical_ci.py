@@ -127,6 +127,7 @@ def main():
     names.append('agent_cert_cross_agent_conflict')
     names.extend(('agent_cert_owner_referral_events','owner_referrals','agent_cert_owner_referral_collection'))
     names.append('agent_cert_model_selection')
+    names.extend(['agent_cert_resident_model','agent_cert_model_substitution_chain','agent_cert_model_substitution_review'])
     names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain', 'agent_cert_trust_denial'])
     names.append('agent_cert_hf_case_provider')
     names.append('backend_fault_diagnostics')
