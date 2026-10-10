@@ -32,8 +32,13 @@ TOOL_REVIEW_OBJECTIVE = ('Independently review one recorded A19 single failed co
 
 
 def tool_review_objective(case):
-    from .agent_cert_tool_events import PROPOSAL_CASE, canonical_tool_case
+    from .agent_cert_tool_events import PROPOSAL_CASE, INDEPENDENT_CASE, canonical_tool_case
     canonical_tool_case(case)
+    if case == INDEPENDENT_CASE:
+        return ('Independently review one original A19 supplied-context assessment and independent-confirmation proposal '
+            'against its original Objective, immutable artifacts and complete context-custody action span; '
+            'verify the current registered distinct A26 binding and required evidence only; confirmation is '
+            'NOT_PERFORMED and current health UNKNOWN. Do not execute a proposed check, confirm service health, certify or sign.')
     if case == PROPOSAL_CASE:
         return ('Independently review one original A19 provided-context assessment and unperformed read-only proposal '
             'against its original Objective, setup/result artifacts and complete context-custody action span; '

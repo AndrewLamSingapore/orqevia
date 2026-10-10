@@ -18,8 +18,10 @@ AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
 DEGRADATION_CASE = 'graceful_degradation:complete'
 PROPOSAL_CASE = 'tools:complete'
-AVAILABLE_CASES = (DEGRADATION_CASE, PROPOSAL_CASE)
-SUPPORTED_CASES = ('tool_recovery:tool_failure', 'tool_recovery:bounded_response', DEGRADATION_CASE, PROPOSAL_CASE)
+INDEPENDENT_CASE = 'independent_verification:complete'
+PROPOSAL_CASES = (PROPOSAL_CASE, INDEPENDENT_CASE)
+AVAILABLE_CASES = (DEGRADATION_CASE,) + PROPOSAL_CASES
+SUPPORTED_CASES = ('tool_recovery:tool_failure', 'tool_recovery:bounded_response', DEGRADATION_CASE) + PROPOSAL_CASES
 CASE_VERSION = 'a19.tool-recovery-events.v1'
 INPUT_SCHEMA = 'prime.a19-tool-recovery-input.v1'
 RESULT_SCHEMA = 'prime.a19-tool-recovery-result.v1'
@@ -44,12 +46,16 @@ def _case(case):
 
 
 def case_version(case):
+    if _case(case) == INDEPENDENT_CASE:
+        return 'a19.independent-verification-proposal-events.v1'
     if _case(case) == PROPOSAL_CASE:
         return 'a19.tools-proposal-events.v1'
     return 'a19.graceful-degradation-events.v1' if _case(case) == DEGRADATION_CASE else CASE_VERSION
 
 
 def oracle_id(case):
+    if _case(case) == INDEPENDENT_CASE:
+        return 'a19.original-independent-verification-proposal.complete.v1'
     if _case(case) == PROPOSAL_CASE:
         return 'a19.original-tools-proposal.complete.v1'
     if _case(case) == DEGRADATION_CASE:
@@ -57,7 +63,24 @@ def oracle_id(case):
     return 'a19.original-tool-recovery.' + _case(case).split(':')[1] + '.v1'
 
 
+def independent_verifier_binding():
+    """Current registered distinct identity, not execution or service authority."""
+    from .agent_registry import REGISTRY_PATH, registered_agent_ids, agent_record
+    require('a26' in registered_agent_ids(include_orchestrator=False) and AGENT_ID != 'a26'
+        and 'responsibility.a26' in agent_record('a26')['capability_requirements'],
+        'INDEPENDENT_REGISTERED_VERIFIER_REQUIRED')
+    pin = sha(REGISTRY_PATH.read_bytes())
+    _registry(pin)
+    return dict(agent_id='a26', capability_id='responsibility.a26', registry_sha256=pin,
+        identity_scope='REGISTERED_PROPOSED_VERIFIER_NOT_SERVICE_EXECUTION_PROOF')
+
+
 def input_bytes(case):
+    if _case(case) == INDEPENDENT_CASE:
+        return canonical(dict(schema_version=INPUT_SCHEMA, case_version=case_version(case),
+            case=case, data_scope='PUBLIC_SYNTHETIC_ONLY', verifier=independent_verifier_binding(),
+            known_observation=dict(source_id='IV1', service_id='synthetic-api', window_id='IV-WINDOW-1',
+                api_checks=20, api_failures=1, independent_confirmation_supplied=False)))
     return canonical(dict(schema_version=INPUT_SCHEMA, case_version=case_version(case),
         case=_case(case), missing_slot=MISSING_SLOT, data_scope='PUBLIC_SYNTHETIC_ONLY',
         known_observation=dict(source_id='TP1' if case == PROPOSAL_CASE else 'GD1' if case == DEGRADATION_CASE else 'TF1' if case == SUPPORTED_CASES[0] else 'TB1',
@@ -70,6 +93,31 @@ def expected_artifact_bytes(case, *, available_bytes=None):
         original = parse(available_bytes)
     else:
         original = parse(input_bytes(case))
+    if case == INDEPENDENT_CASE:
+        observation = original['known_observation']
+        verifier = independent_verifier_binding()
+        require(original['verifier'] == verifier and type(observation['api_checks']) is int
+            and type(observation['api_failures']) is int and observation['api_checks'] > 0
+            and 0 <= observation['api_failures'] <= observation['api_checks']
+            and observation['independent_confirmation_supplied'] is False,
+            'INDEPENDENT_ORIGINAL_OBSERVATION_INVALID')
+        return canonical(dict(schema_version=RESULT_SCHEMA, case_version=case_version(case), case=case,
+            context_label='PUBLIC_SYNTHETIC_ONLY', input_sha256=sha(available_bytes),
+            evidence=dict(source_id=observation['source_id'], context_sha256=sha(available_bytes)),
+            assessment=dict(known_observation=observation, assessment_scope='SUPPLIED_API_WINDOW_ONLY',
+                api_failure_basis_points=observation['api_failures'] * 10000 // observation['api_checks'],
+                current_health='UNKNOWN', cause='UNKNOWN', recovery='NOT_ESTABLISHED'),
+            independent_confirmation=dict(execution='NOT_PERFORMED', verifier=verifier,
+                classification='READ_ONLY_PROPOSAL', automatic_execution=False,
+                required_evidence=dict(service_id=observation['service_id'], window_id=observation['window_id'],
+                    original_context_sha256=sha(available_bytes), source_label=True,
+                    observed_at=True, expires_at=True, original_artifact_sha256=True,
+                    original_execution_and_action_custody=True, separate_verifier_identity=True,
+                    independently_observed_counts=['api_checks','api_failures'],
+                    comparison='RECOMPUTE_COUNTS_AND_SCOPE_THEN_COMPARE_WITH_ORIGINAL',
+                    confirmation_evidence_present=False)),
+            case_review_scope='ORIGINAL_PROPOSAL_CUSTODY_ONLY_NOT_SERVICE_CONFIRMATION',
+            certification='UNVERIFIED'))
     if case == PROPOSAL_CASE:
         observation = original['known_observation']
         require(type(observation['api_checks']) is int and type(observation['api_failures']) is int
@@ -105,11 +153,44 @@ def expected_artifact_bytes(case, *, available_bytes=None):
         model_calls=0, effects='TASK_ARTIFACT_AND_ACTION_LEDGER_ONLY', certification='UNVERIFIED'))
 
 
+def validate_independent_proposal(raw, input_raw):
+    """Peer oracle derives requirements independently of the producer builder."""
+    require(type(raw) is bytes and type(input_raw) is bytes and input_raw == input_bytes(INDEPENDENT_CASE),
+        'INDEPENDENT_ORIGINAL_CONTEXT_REQUIRED')
+    context, answer = parse(input_raw), parse(raw)
+    observation = context['known_observation']
+    binding = independent_verifier_binding()
+    require(context['verifier'] == binding and observation['independent_confirmation_supplied'] is False,
+        'INDEPENDENT_ORIGINAL_VERIFIER_REQUIRED')
+    checks, failures = observation['api_checks'], observation['api_failures']
+    require(type(checks) is int and type(failures) is int and checks > 0 and 0 <= failures <= checks,
+        'INDEPENDENT_ORIGINAL_COUNTS_REQUIRED')
+    expected = dict(schema_version=RESULT_SCHEMA, case_version=case_version(INDEPENDENT_CASE), case=INDEPENDENT_CASE,
+        context_label='PUBLIC_SYNTHETIC_ONLY', input_sha256=sha(input_raw),
+        evidence=dict(source_id=observation['source_id'], context_sha256=sha(input_raw)),
+        assessment=dict(known_observation=observation, assessment_scope='SUPPLIED_API_WINDOW_ONLY',
+            api_failure_basis_points=(10000 * failures) // checks, current_health='UNKNOWN',
+            cause='UNKNOWN', recovery='NOT_ESTABLISHED'),
+        independent_confirmation=dict(execution='NOT_PERFORMED', verifier=binding,
+            classification='READ_ONLY_PROPOSAL', automatic_execution=False,
+            required_evidence=dict(service_id=observation['service_id'], window_id=observation['window_id'],
+                original_context_sha256=sha(input_raw), source_label=True, observed_at=True, expires_at=True,
+                original_artifact_sha256=True, original_execution_and_action_custody=True,
+                separate_verifier_identity=True, independently_observed_counts=['api_checks','api_failures'],
+                comparison='RECOMPUTE_COUNTS_AND_SCOPE_THEN_COMPARE_WITH_ORIGINAL', confirmation_evidence_present=False)),
+        case_review_scope='ORIGINAL_PROPOSAL_CUSTODY_ONLY_NOT_SERVICE_CONFIRMATION', certification='UNVERIFIED')
+    require(raw == canonical(answer) and canonical(answer) == canonical(expected),
+        'INDEPENDENT_PROPOSAL_ORACLE_REJECTED')
+    return True
+
+
 def canonical_tool_case(case):
     _case(case)
     objective = ('Read once the fixed absent dependency-window slot in the new source-owned public context artifact; '
         'preserve the supplied API observations, label dependency context unknown and do not retry or invent recovery.')
-    if case == PROPOSAL_CASE:
+    if case == INDEPENDENT_CASE:
+        objective = 'Read only the actual supplied public API-window context; derive its bounded assessment and specify fixed current registered distinct A26 plus the source-labelled original execution, artifact, counts and freshness evidence needed for independent confirmation. Confirmation is NOT_PERFORMED and current health UNKNOWN. The separate A26 case grader reviews this proposal and original custody only, not service health; do not execute a proposed check, certify, sign or grant authority.'
+    elif case == PROPOSAL_CASE:
         objective = 'Use only the supplied source-owned public context to derive a bounded API-window assessment and propose exactly one read-only dependency-window check. The proposed check is NOT_PERFORMED; do not claim tool execution, health, recovery or execution authority in the answer.'
     elif case == DEGRADATION_CASE:
         objective = 'Read the actual available source-owned public API observation, then one absent dependency-window slot; derive the API-window assessment from the read bytes and narrow scope to API_WINDOW_ONLY without claiming system health, recovery, retries or execution authority.'
@@ -121,7 +202,8 @@ def canonical_tool_case(case):
             classification='R0', data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0.0, preferred_provider=None,
             response_format='strict_json', deterministic_operation=OPERATION),
-        evidence_scope=('ORIGINAL_PROVIDED_CONTEXT_AND_UNPERFORMED_READ_ONLY_PROPOSAL_ONLY'
+        evidence_scope=('ORIGINAL_CONTEXT_AND_UNPERFORMED_INDEPENDENT_CONFIRMATION_PROPOSAL_ONLY'
+            if case == INDEPENDENT_CASE else 'ORIGINAL_PROVIDED_CONTEXT_AND_UNPERFORMED_READ_ONLY_PROPOSAL_ONLY'
             if case == PROPOSAL_CASE else 'ACTUAL_AVAILABLE_READ_FAILED_DEPENDENCY_AND_NARROWED_API_WINDOW_ONLY'
             if case == DEGRADATION_CASE else 'ACTUAL_SINGLE_FAILED_CONTEXT_READ_AND_BOUNDED_RESPONSE_ONLY'), certification='UNVERIFIED')
 
@@ -129,18 +211,19 @@ def canonical_tool_case(case):
 def tool_action_type(case, *, phase='result'):
     _case(case)
     require(phase in tool_phases(case) + ('full',), 'TOOL_ACTION_INVALID')
-    return 'agent.certification.tool.' + ('tools.complete' if case == PROPOSAL_CASE else case.split(':')[1]) + '.' + phase
+    return 'agent.certification.tool.' + ('independent_verification.complete' if case == INDEPENDENT_CASE
+        else 'tools.complete' if case == PROPOSAL_CASE else case.split(':')[1]) + '.' + phase
 
 
 def tool_phases(case):
     _case(case)
-    return ('setup','available','result') if case == PROPOSAL_CASE else (
+    return ('setup','available','result') if case in PROPOSAL_CASES else (
         ('setup','available','read','result') if case == DEGRADATION_CASE else ('setup','read','result'))
 
 
 def original_custody_fields(case):
     return [('setup','input_action_records'), ('full','original_action_records')] + (
-        [('read','failed_read_action_records')] if case != PROPOSAL_CASE else []) + (
+        [('read','failed_read_action_records')] if case not in PROPOSAL_CASES else []) + (
         [('available','available_read_action_records')] if case in AVAILABLE_CASES else [])
 
 
@@ -304,7 +387,7 @@ def execute_tool_case(spec, task_id, *, submitted_request, data_root, ledger, ru
         setup = executor.execute(setup_action, lambda: create(input_bytes(case)))
         folder = check_setup(factory, setup, case, root)
         read_action = None
-        if case != PROPOSAL_CASE:
+        if case not in PROPOSAL_CASES:
             read_action = ActionRecord(task_id, AGENT_ID, tool_action_type(case, phase='read'), 'provided_context.read',
                 target=MISSING_SLOT, parameters_summary=dict(schema_version=INPUT_SCHEMA,
                     setup_artifact_id=setup['artifact_id'], relative_path=MISSING_SLOT, read_only_observations=True))
@@ -370,7 +453,7 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
             'action_chain_join', 'input_action_records', 'input_action_chain_join',
             'original_action_records', 'observation'} |
             ({'failed_read_action_records','failed_read_action_chain_join'}
-                if value.get('case_spec',{}).get('case') != PROPOSAL_CASE else set()) |
+                if value.get('case_spec',{}).get('case') not in PROPOSAL_CASES else set()) |
             ({'available_read_action_records','available_read_action_chain_join'}
                 if value.get('case_spec',{}).get('case') in AVAILABLE_CASES else set()), 'TOOL_EVENT_FIELDS_INVALID')
         fixed = canonical_tool_case(value['case_spec'].get('case'))
@@ -401,11 +484,11 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
             setup_action_id=event['setup_action_id'], subject_action_id=event['subject_action_id'],
             started_at=event['started_at'], completed_at=event['completed_at'], durable_action_delivery=True,
             certification='UNVERIFIED',
-            **({'failed_read_action_id':event['failed_read_action_id'],'missing_slot':MISSING_SLOT} if case != PROPOSAL_CASE else {}),
+            **({'failed_read_action_id':event['failed_read_action_id'],'missing_slot':MISSING_SLOT} if case not in PROPOSAL_CASES else {}),
             **({'available_read_action_id': event['available_read_action_id'],
                 'available_input_sha256': sha(input_bytes(case))} if case in AVAILABLE_CASES else {}))
         ids = [event[key] for key in ('setup_action_id', 'subject_action_id')]
-        if case != PROPOSAL_CASE:
+        if case not in PROPOSAL_CASES:
             ids.append(event['failed_read_action_id'])
         if case in AVAILABLE_CASES:
             ids.append(event['available_read_action_id'])
@@ -413,7 +496,8 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
             and len(set(ids)) == len(ids), 'TOOL_EVENT_UNBOUND')
         metadata, setup = value['artifact_metadata'], event['input_artifact_metadata']
         raw, input_raw = value['artifact_content_utf8'].encode(), value['input_content_utf8'].encode()
-        require(raw == expected_artifact_bytes(case, available_bytes=input_raw) and input_raw == input_bytes(case)
+        require((validate_independent_proposal(raw, input_raw) if case == INDEPENDENT_CASE else
+            raw == expected_artifact_bytes(case, available_bytes=input_raw)) and input_raw == input_bytes(case)
             and canonical(dispatch['artifact']) == canonical(metadata)
             and setup['artifact_id'] != metadata['artifact_id'], 'TOOL_ORIGINAL_CONTENT_DRIFT')
         _metadata(metadata, raw, task, source_revision, began=began, ended=ended)
@@ -430,7 +514,7 @@ def validate_tool_execution(execution, *, source_revision, runtime_image_id, reg
             require(canonical(joined) == canonical(value[join_key]), 'TOOL_POSITIVE_ACTION_JOIN_DRIFT')
             spans.append(value[lines_key])
         failed, failed_lines = None, []
-        if case != PROPOSAL_CASE:
+        if case not in PROPOSAL_CASES:
             failed_lines = value['failed_read_action_records']
             failed = failed_read_span(failed_lines, task_id=task, case=case,
                 setup_metadata=setup, began=began, ended=ended, action_id=event['failed_read_action_id'])

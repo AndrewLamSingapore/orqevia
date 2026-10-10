@@ -65,7 +65,7 @@ def tool_full(env, case):
         folder = env.root / 'artifacts' / setup['artifact_id']
         assert {path.name for path in folder.iterdir()} == {'artifact.json', 'metadata.json'}
         read = None
-        if case != tool_events.PROPOSAL_CASE:
+        if case not in tool_events.PROPOSAL_CASES:
             read = ActionRecord(task, 'a19', tool_events.tool_action_type(case, phase='read'), 'provided_context.read',
                 target=tool_events.MISSING_SLOT, parameters_summary={'schema_version': tool_events.INPUT_SCHEMA,
                     'setup_artifact_id': setup['artifact_id'], 'relative_path': tool_events.MISSING_SLOT,
@@ -148,7 +148,7 @@ def test_tool_full_returns_exact_actual_original_records_without_mutation_or_flu
     task, before = tool_full(env, case)
     lines = before.decode().splitlines(keepends=True)
     original = [json.loads(line) for line in lines]
-    phases = ('setup','available','result') if case == tool_events.PROPOSAL_CASE else (
+    phases = ('setup','available','result') if case in tool_events.PROPOSAL_CASES else (
         ('setup','available','read','result') if case == tool_events.DEGRADATION_CASE else ('setup','read','result'))
     if case == tool_events.DEGRADATION_CASE:
         assert len(original) == 8 and len({event['action_id'] for event in original}) == 4
