@@ -109,6 +109,7 @@ def main():
                   'agent_cert_secondary_integration', 'agent_cert_secondary_transport'])
     names.extend(['agent_cert_readiness', 'objective_domain_provenance'])
     names.append('collect_agent_cert_event')
+    names.extend(['agent_cert_owned_context','agent_cert_owned_context_events','agent_cert_owned_context_chain'])
     names.extend(['agent_cert_owned_contract','agent_cert_owned_contract_events','agent_cert_owned_contract_chain'])
     names.extend(['agent_cert_event_api', 'agent_cert_operator_io',
                   'agent_cert_a19_general', 'agent_cert_a19_general_integration'])

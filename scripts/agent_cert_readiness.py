@@ -38,7 +38,7 @@ SOURCE_FILES = (
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
-    'app/agent_cert_owned_identity.py','app/agent_cert_owned_contract.py',
+    'app/agent_cert_owned_identity.py','app/agent_cert_owned_contract.py','app/agent_cert_owned_context.py',
     'app/agent_cert_transport.py', 'app/agent_dispatch_api.py',
     'app/production_entry.py', 'scripts/collect_agent_cert_case.py',
     'scripts/collect_agent_cert_event.py', 'scripts/agent_cert_operator_io.py',
@@ -46,7 +46,7 @@ SOURCE_FILES = (
     'governance/agent-cert-reviewed-cases.json',
     'governance/agent-cert-historical-admissions/a19-role-normal-signed-37613202210.json',
 )
-EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization','baseline:contract',
+EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization','baseline:contract','baseline:context',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
     'evidence_integrity:complete', 'context_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized',
@@ -115,6 +115,9 @@ def _registry():
 
 def _supported(actor, capability, key):
     try:
+        if key=='baseline:context':
+            from app.agent_cert_owned_context import canonical_owned_context_case
+            return canonical_owned_context_case(actor,capability)
         if key=='baseline:contract':
             from app.agent_cert_owned_contract import canonical_owned_contract_case
             return canonical_owned_contract_case(actor,capability)
@@ -183,6 +186,9 @@ def build_source_readiness(*, source_revision, canonical_main_revision, now, roo
                     specs[key] = hashlib.sha256(canonical(spec)).hexdigest()
                     if key in EVENT_CASES:
                         event.append(key)
+                        # A19 retains its separate original model/cloud quality case.
+                        if key=='baseline:context' and agent['id']=='a19' and _cloud_supported(agent['id'],capability,key):
+                            cloud.append(key)
                     elif _cloud_supported(agent['id'], capability, key):
                         cloud.append(key)
             missing = [key for key in keys if key not in supported]
@@ -195,6 +201,7 @@ def build_source_readiness(*, source_revision, canonical_main_revision, now, roo
                 'canonical_case_sha256': specs,
                 'distinct_zero_model_event_adapter_cases': event,
                 'source_pinned_cloud_transport_cases': cloud,
+                'source_pinned_cloud_case_sha256': {key:hashlib.sha256(canonical(canonical_cert_case(agent['id'],capability,key))).hexdigest() for key in cloud},
                 'cloud_transport_missing_for_ready_quality_cases': [
                     key for key in supported if key not in event and key not in cloud],
                 'generic_queue_observer_quality_gap_cases': [

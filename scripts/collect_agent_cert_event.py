@@ -76,6 +76,11 @@ def _contract(agent, capability, case):
         _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
         return (artifact_action_type(case), RESULT_SCHEMA, ARTIFACT_REVIEW_SCHEMA,
             oracle_id(case), ARTIFACT_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), artifact_event_review_join)
+    if case == 'baseline:context':
+        from app.agent_cert_owned_context import ACTION_TYPE,SCHEMA,REVIEW_SCHEMA,ORACLE_ID,context_reviewer,context_review_objective,validate_owned_context_execution
+        def validate(value,**pins):
+            return validate_owned_context_execution(value,agent_id=agent,capability_id=capability,**pins)
+        return (ACTION_TYPE,SCHEMA,REVIEW_SCHEMA,ORACLE_ID,context_review_objective(agent,capability),context_reviewer(agent,capability),validate)
     if case == 'baseline:contract':
         from app.agent_cert_owned_contract import ACTION_TYPE,SCHEMA,REVIEW_SCHEMA,ORACLE_ID,contract_reviewer,contract_review_objective,validate_owned_contract_execution
         def validate(value,**pins):
@@ -193,6 +198,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         _registry_pin(expected_registry_sha256)
         _require(type(spec) is dict, 'CANONICAL_EVENT_REQUIRED')
         canonical = canonical_case_spec(spec.get('agent_id'), spec.get('capability_id'), spec.get('case'))
+        if spec.get('case')=='baseline:context' and spec.get('oracle_id')=='registered.owned-context.v1':
+            from app.agent_cert_owned_context import canonical_owned_context_case
+            canonical=canonical_owned_context_case(spec.get('agent_id'),spec.get('capability_id'))
         if spec.get('case')=='baseline:contract':
             from app.agent_cert_owned_contract import canonical_owned_contract_case
             canonical=canonical_owned_contract_case(spec.get('agent_id'),spec.get('capability_id'))
@@ -277,7 +285,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         event = (execution['dispatch'].get('tool_event') if tool_case else
             execution['dispatch'].get('authority_event') if authority_case else
             execution['dispatch'].get('artifact_event') if artifact_case else None)
-        action_began = utc(event['started_at'] if bounded_event else observation['started_at'] if case=='baseline:contract' else observation['captured_at'])
+        action_began = utc(event['started_at'] if bounded_event else observation['started_at'] if case in {'baseline:contract','baseline:context'} else observation['captured_at'])
         action_ended = utc(event['completed_at'] if bounded_event else observation['completed_at'])
         execution['action_chain_join'] = action_span(events, task_id=task, agent_id=agent,
             action_type=action_type, schema=report_schema, metadata=execution['artifact_metadata'],
@@ -353,7 +361,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             context=context, data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0, response_format='strict_json',
             deterministic_operation=TOOL_REVIEW_OPERATION if tool_case else AUTHORITY_REVIEW_OPERATION if authority_case else ARTIFACT_REVIEW_OPERATION if artifact_case else
-                'certification_owned_contract_review' if case=='baseline:contract' else 'certification_initialization_review' if case.endswith('initialization')
+                'certification_owned_context_review' if case=='baseline:context' else 'certification_owned_contract_review' if case=='baseline:contract' else 'certification_initialization_review' if case.endswith('initialization')
                 else 'certification_owned_identity_review' if (agent, capability) != ('a19', 'responsibility.a19')
                 else 'certification_identity_review')
         _registry_pin(expected_registry_sha256)
@@ -411,7 +419,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
             action_type=TOOL_REVIEW_ACTION if tool_case else AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
-                'agent.certification.owned_contract.review' if case=='baseline:contract' else 'agent.certification.' + case.split(':')[1] + '.review',
+                'agent.certification.owned_context.review' if case=='baseline:context' else 'agent.certification.owned_contract.review' if case=='baseline:contract' else 'agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),
             ended=now, action_id=result['review_action_id'], duration_limit_ms=120000)
         proof = dict(dispatch=result, artifact_content_utf8=raw.decode('utf-8'), action_records=lines,
@@ -432,7 +440,8 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             'OWNED_OBJECTIVE_READ_FAILED')), 'OWNED_OBJECTIVE_CHANGED')
         runtime()
         _registry_pin(expected_registry_sha256)
-        _require(_equal(canonical,canonical_owned_contract_case(agent,capability) if case=='baseline:contract'
+        from app.agent_cert_owned_context import canonical_owned_context_case
+        _require(_equal(canonical,canonical_owned_context_case(agent,capability) if case=='baseline:context' else canonical_owned_contract_case(agent,capability) if case=='baseline:contract'
             else canonical_case_spec(agent, capability, case)), 'CANONICAL_EVENT_CHANGED')
         bounded()
         summary.update(state='UNSIGNED_EVENT_EVIDENCE', stage='COLLECTED', reason=None,

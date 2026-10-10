@@ -29,15 +29,16 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert inventory['cases_per_capability'] == 74
     assert inventory['required_capability_cases'] == 2146
     assert len(set(inventory['existing_matrix_case_ids'])) == 74
-    assert inventory['source_canonical_adapter_oracle_count'] == 165
+    assert inventory['source_canonical_adapter_oracle_count'] == 193
     assert all('role:normal' in r['canonical_adapter_oracle_ready_cases'] for r in rows)
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
+    assert all('baseline:context' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
 
 def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inventory):
     row = next(r for r in inventory['capability_rows'] if r['agent_id'] == 'a19')
     assert len(row['canonical_adapter_oracle_ready_cases']) == 53
-    assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization','baseline:contract',
+    assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization','baseline:context','baseline:contract',
         'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
         'authority:complete', 'context_integrity:complete', 'unauthorized_rejection:authorized',
         'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'evidence_integrity:complete']
@@ -60,7 +61,7 @@ def test_eight_secondary_source_oracles_have_only_explicit_prepared_transport(in
     secondary = [r for r in inventory['capability_rows'] if not r['primary_capability']]
     assert len(secondary) == 8
     for row in secondary:
-        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:identity', 'baseline:initialization','baseline:contract', 'role:normal']
+        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:identity', 'baseline:initialization','baseline:context','baseline:contract', 'role:normal']
         assert row['source_pinned_cloud_transport_cases'] == ['role:normal']
         assert row['cloud_transport_missing_for_ready_quality_cases'] == []
         assert row['generic_queue_observer_quality_gap_cases'] == []
@@ -129,3 +130,15 @@ def test_ready_plus_missing_partition_exact_contract_without_resetting_any_case(
         assert row['missing_adapter_state'] == 'OPEN_LOCAL_IMPLEMENTATION_NOT_EXTERNAL'
         assert row['certification_domain']['status'] == 'NOT_OBSERVED'
         assert row['certification_domain']['pass_fail_blocked_claim'] is None
+
+
+def test_a19_context_quality_cloud_pin_is_separate_from_new_owned_event(inventory):
+ import hashlib
+ from app.agent_cert_transport import canonical_cert_case
+ from app.agent_cert_initialization import canonical
+ row=next(r for r in inventory['capability_rows'] if r['agent_id']=='a19')
+ key='baseline:context'
+ assert key in row['source_pinned_cloud_transport_cases'] and key in row['distinct_zero_model_event_adapter_cases']
+ expected=hashlib.sha256(canonical(canonical_cert_case('a19','responsibility.a19',key))).hexdigest()
+ assert row['source_pinned_cloud_case_sha256'][key]==expected
+ assert expected!=row['canonical_case_sha256'][key]

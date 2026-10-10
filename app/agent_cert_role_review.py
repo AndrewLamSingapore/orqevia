@@ -116,6 +116,9 @@ def canonical_case_spec(agent, capability, case_id):
     if case_id == 'baseline:contract' and (agent,capability)!=('a19','responsibility.a19'):
         from .agent_cert_owned_contract import canonical_owned_contract_case
         return canonical_owned_contract_case(agent,capability)
+    if case_id == 'baseline:context' and (agent,capability)!=('a19','responsibility.a19'):
+        from .agent_cert_owned_context import canonical_owned_context_case
+        return canonical_owned_context_case(agent,capability)
     if case_id == 'baseline:initialization':
         from .agent_cert_initialization import initialization_objective
         from .agent_cert_cases import challenge
@@ -164,6 +167,8 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:contract' and (agent,capability)!=('a19','responsibility.a19'):
         return False, ('owned_contract_event_evidence_required',)
+    if case_id == 'baseline:context' and (agent,capability)!=('a19','responsibility.a19'):
+        return False, ('owned_context_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
     from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES

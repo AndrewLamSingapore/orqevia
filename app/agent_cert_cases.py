@@ -300,6 +300,9 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             raise ValueError('Owned identity uses current Registry, not supplied context')
         from .agent_cert_owned_identity import canonical_owned_identity_case
         return canonical_owned_identity_case(agent_id, capability)
+    if case_id == 'baseline:context' and (agent_id,capability)!=('a19','responsibility.a19'):
+        from .agent_cert_owned_context import canonical_owned_context_case
+        return canonical_owned_context_case(agent_id,capability)
     if case_id == 'baseline:initialization':
         if context:
             raise ValueError('Initialization uses current owned contracts, not supplied context')

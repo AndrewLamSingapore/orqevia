@@ -131,6 +131,9 @@ def _case_spec(row):
     if type(dimension) is not str or type(test_case) is not str:
         _deny('CASE_ORACLE_UNSUPPORTED')
     try:
+        if dimension+':'+test_case=='baseline:context' and row.get('review_test_version')=='registered.owned-context.v1':
+            from app.agent_cert_owned_context import canonical_owned_context_case
+            return canonical_owned_context_case(row['agent_id'],row['capability_id'])
         if dimension+':'+test_case=='baseline:contract' and row.get('review_test_version')=='registered.owned-contract.v1':
             from app.agent_cert_owned_contract import canonical_owned_contract_case
             return canonical_owned_contract_case(row['agent_id'],row['capability_id'])
@@ -140,6 +143,9 @@ def _case_spec(row):
 
 
 def _oracle_id(agent, spec=None):
+    if spec is not None and spec.get('case') == 'baseline:context' and spec.get('oracle_id')=='registered.owned-context.v1':
+        from app.agent_cert_owned_context import ORACLE_ID
+        return ORACLE_ID
     if spec is not None and spec.get('case') == 'baseline:contract' and spec.get('oracle_id')=='registered.owned-contract.v1':
         from app.agent_cert_owned_contract import ORACLE_ID
         return ORACLE_ID
@@ -391,6 +397,10 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
         return _contract_event_review(row, primary, review, source_revision=source_revision,
             runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
             now=now, initialization=False, authority=True)
+    if row.get('dimension') == 'baseline' and row.get('test_case') == 'context' and row.get('review_test_version')=='registered.owned-context.v1':
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('CONTEXT_CLOUD_TRANSPORT_FORBIDDEN')
+        return _contract_event_review(row,primary,review,source_revision=source_revision,runtime_image_id=runtime_image_id,reviewer_code_revision=reviewer_code_revision,now=now,initialization=False,owned_context=True)
     if row.get('dimension') == 'baseline' and row.get('test_case') == 'contract' and row.get('review_test_version')=='registered.owned-contract.v1':
         if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
             _deny('CONTRACT_CLOUD_TRANSPORT_FORBIDDEN')
@@ -501,7 +511,7 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
 
 
 def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_image_id,
-                           reviewer_code_revision, now, initialization, artifact=False, authority=False, tool=False,owned_contract=False):
+                           reviewer_code_revision, now, initialization, artifact=False, authority=False, tool=False,owned_contract=False,owned_context=False):
     """Review a genuine artifact event; never manufacture a model queue job."""
     from app.agent_cert_identity_review import (
         ORACLE_ID, SCHEMA, action_span, validate_identity_execution,
@@ -510,7 +520,7 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     subject, capability = 'a19', 'responsibility.a19'
     reviewer, reviewer_capability = 'a26', 'responsibility.a26'
     dimension = 'baseline'
-    owned_identity = (not (tool or authority or artifact or initialization or owned_contract)
+    owned_identity = (not (tool or authority or artifact or initialization or owned_contract or owned_context)
         and (row.get('agent_id'), row.get('capability_id')) != ('a19', 'responsibility.a19'))
     if tool:
         from app.agent_cert_tool_events import oracle_id
@@ -538,6 +548,12 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         ORACLE_ID = initialization_oracle_id(subject, capability)
         event_case = 'initialization'
         review_action_type = 'agent.certification.initialization.review'
+    elif owned_context:
+        from app.agent_cert_owned_context import REVIEW_SCHEMA as SCHEMA,ORACLE_ID,context_reviewer,validate_owned_context_execution as validate_event
+        subject,capability=row.get('agent_id'),row.get('capability_id')
+        reviewer,reviewer_capability=context_reviewer(subject,capability)
+        event_case='context'
+        review_action_type='agent.certification.owned_context.review'
     elif owned_contract:
         from app.agent_cert_owned_contract import REVIEW_SCHEMA as SCHEMA,ORACLE_ID,contract_reviewer,validate_owned_contract_execution as validate_event
         subject,capability=row.get('agent_id'),row.get('capability_id')
@@ -572,9 +588,9 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     # Initialization recomputes the complete owned contracts from their actual
     # raw build bytes. Do not normalize its original report/pin into a match.
     registry_raw = REGISTRY_PATH.read_bytes()
-    registry_sha = _sha(registry_raw if initialization or owned_identity or owned_contract or artifact or authority or tool else registry_raw.replace(b'\r\n', b'\n'))
+    registry_sha = _sha(registry_raw if initialization or owned_identity or owned_contract or owned_context or artifact or authority or tool else registry_raw.replace(b'\r\n', b'\n'))
     event_review_time = now
-    if artifact or initialization or owned_identity or owned_contract or authority or tool:
+    if artifact or initialization or owned_identity or owned_contract or owned_context or authority or tool:
         # The runtime's 300-second consumption bound applies when the actual
         # registered peer reviewer read the original event/report. Later protected verification
         # must preserve that time, not claim a new execution or rereview. The
@@ -591,7 +607,7 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
             _deny('IDENTITY_REVIEW_TIME_INVALID')
     join = validate_event(execution, source_revision=source_revision,
         runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=event_review_time,
-        **({'agent_id': subject, 'capability_id': capability} if initialization or owned_identity or owned_contract else {}))
+        **({'agent_id': subject, 'capability_id': capability} if initialization or owned_identity or owned_contract or owned_context else {}))
     spec = _case_spec(row)
     if (artifact or authority or tool) and (join.get('case') != spec['case'] or
             join.get('case_spec_sha256') != _sha(_canonical(spec))):
