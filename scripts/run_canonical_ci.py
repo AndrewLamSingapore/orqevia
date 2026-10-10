@@ -120,7 +120,7 @@ def main():
     names.append('agent_cert_evidence_integrity_events')
     names.append('agent_cert_context_integrity_events')
     names.append('agent_cert_owned_identity_events')
-    names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain'])
+    names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain', 'agent_cert_trust_denial'])
     names.append('agent_cert_hf_case_provider')
     names.append('backend_fault_diagnostics')
     names.append('mlp_fabric')

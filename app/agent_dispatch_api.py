@@ -240,6 +240,11 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             root = _path(root)
             require(_path(root / 'objectives.db').is_file()
                 and _path(root / 'artifacts').is_dir(), 'ARTIFACT_ORIGINAL_DOMAINS_REQUIRED')
+        if authority and case_id == 'unauthorized_rejection:unauthorized':
+            from .agent_cert_authority_events import read_original_denial
+            authority_read_deadline = time.monotonic() + 2
+            read_original_denial(root, subject_task, execution['dispatch']['authority_event']['admission'],
+                deadline=authority_read_deadline)
         actual_objective = get_read_only(subject_task, authorization)
         require(canonical(actual_objective) == canonical(execution['objective_read'][1]),
                 'IDENTITY_OWNED_OBJECTIVE_REQUIRED')
@@ -326,6 +331,9 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             require(canonical(runtime_snapshot()) == canonical(runtime)
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
+        if authority and case_id == 'unauthorized_rejection:unauthorized':
+            read_original_denial(root, subject_task, execution['dispatch']['authority_event']['admission'],
+                deadline=authority_read_deadline)
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
             subject_capability_id=subject_capability,
             dimension=case_id.split(':')[0] if bounded_event else 'baseline', test_case=test_case,

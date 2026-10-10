@@ -27,6 +27,9 @@ CODE = 'f' * 40
 def runtime(configured, monkeypatch):
     from app import artifact_delivery, client_auth, compute_queue_api, objective_api
     from app.action_records import ActionLedger
+    from app.spine import SpineStore
+    monkeypatch.setenv('PRIME_SPINE_DB', str(configured.root / 'prime-spine.db'))
+    SpineStore(str(configured.root / 'prime-spine.db'))
     monkeypatch.setenv('PRIME_SPINE_TOKEN', TOKEN)
     for module in (dispatch, objective_api, api, artifact_delivery):
         monkeypatch.setattr(module, 'authenticate_owner', client_auth.authenticate_owner)
@@ -123,7 +126,7 @@ def test_authenticated_http_original_domains_separate_a26_review_and_pure_signer
     content = json.loads(result.reviewer_artifact_bytes)
     assert content['schema_version'] == contracts.AUTHORITY_REVIEW_SCHEMA
     assert content['dimension'] == review['dimension'] == case_id.split(':')[0]
-    assert content['subject_domain_join']['consequential_guard_denial_proven'] is False
+    assert content['subject_domain_join']['consequential_guard_denial_proven'] is (case_id == events.DENIAL_CASE)
     assert content['subject_domain_join']['completed_at'] == execution['dispatch']['authority_event']['completed_at']
     assert recompute(signer_row(result), result.execution_bytes, result.review_bytes) is True
     assert all(reply.body_complete for reply in runtime.operator.original_replies())

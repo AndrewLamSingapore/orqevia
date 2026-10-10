@@ -191,7 +191,7 @@ class AgentCertOperatorIO:
                 self._reviewer, self._review_cap = 'a26', 'responsibility.a26'
                 self._review_objective, self._review_operation = TOOL_REVIEW_OBJECTIVE, TOOL_REVIEW_OPERATION
                 self._review_action_type = TOOL_REVIEW_ACTION
-            elif case in {'authority:complete', 'unauthorized_rejection:authorized'}:
+            elif case in {'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized'}:
                 from app.agent_cert_authority_events import authority_action_type
                 from app.agent_cert_role_review import (
                     AUTHORITY_REVIEW_ACTION, AUTHORITY_REVIEW_OBJECTIVE, AUTHORITY_REVIEW_OPERATION,

@@ -22,7 +22,7 @@ ARTIFACT_REVIEW_OBJECTIVE = ('Independently review one recorded A19 artifact eve
 AUTHORITY_REVIEW_SCHEMA = 'prime.agent-cert-authority-review.v1'
 AUTHORITY_REVIEW_ACTION = 'agent.certification.authority.review'
 AUTHORITY_REVIEW_OPERATION = 'certification_authority_review'
-AUTHORITY_REVIEW_OBJECTIVE = ('Independently review one recorded A19 permitted authority-read event against '
+AUTHORITY_REVIEW_OBJECTIVE = ('Independently review one recorded A19 authority-read or trust-change denial event against '
     'the current owning Registry, original Objective, result artifact and action records; do not certify or sign.')
 TOOL_REVIEW_SCHEMA = 'prime.agent-cert-tool-review.v1'
 TOOL_REVIEW_ACTION = 'agent.certification.tool.review'
@@ -55,7 +55,7 @@ def artifact_event_review_join(execution, **pins):
 
 
 def authority_event_review_join(execution, **pins):
-    """Only the two owning permitted events; no generic PASS or guard-denial proof."""
+    """Only original owning authority events; submitted PASS never proves admission."""
     from .agent_cert_authority_events import validate_authority_execution
     joined = validate_authority_execution(execution, **pins)
     return {**joined, 'completed_at': execution['dispatch']['authority_event']['completed_at']}

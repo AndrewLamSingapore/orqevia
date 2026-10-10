@@ -400,7 +400,8 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
     metadata, raw = retrieved
     expected_raw = (events.expected_result_bytes(fixed['case'],
         events.current_authority_policy(expected_registry_sha256),
-        events.sha(events.canonical(events._snapshot(event.get('read_domains_before'))))) if authority
+        events.sha(events.canonical(events._snapshot(event.get('read_domains_before')))),
+        admission=event.get('admission')) if authority
         else events.expected_artifact_bytes(fixed['case'], **(
             {'registry_sha256': expected_registry_sha256}
             if fixed['case'] == 'context_integrity:complete' else {}), **(
