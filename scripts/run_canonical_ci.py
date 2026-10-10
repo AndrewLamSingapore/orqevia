@@ -130,6 +130,7 @@ def main():
     names.append('hf_admission')
     names.append('hf_prompt_scope')
     names.append('agent_cert_a19_cases')
+    names.append('agent_cert_a19_broad_transfer')
     names.extend(['agent_cert_a19_format_contract', 'agent_cert_role_review',
                   'agent_cert_review_tool_cases', 'agent_cert_transport_cases',
                   'agent_cert_case_bridge', 'agent_cert_case_bridge_independent',

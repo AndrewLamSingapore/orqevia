@@ -67,12 +67,12 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
     result = readiness.build_source_readiness(source_revision='a' * 40, canonical_main_revision='b' * 40,
         now=datetime.now(timezone.utc))
     a19 = next(row for row in result['capability_rows'] if row['agent_id'] == 'a19')
-    assert len(a19['canonical_adapter_oracle_ready_cases']) == 64
+    assert len(a19['canonical_adapter_oracle_ready_cases']) == 65
     assert set(events.SUPPORTED_CASES) <= set(a19['distinct_zero_model_event_adapter_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['source_pinned_cloud_transport_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['cloud_transport_missing_for_ready_quality_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['generic_queue_observer_quality_gap_cases'])
-    assert result['source_canonical_adapter_oracle_count'] == 148
+    assert result['source_canonical_adapter_oracle_count'] == 149
     assert 'health:complete' in a19['distinct_zero_model_event_adapter_cases']
     assert 'health:complete' not in a19['source_pinned_cloud_transport_cases']
     assert 'health:complete' not in a19['locally_actionable_missing_case_adapter_ids']

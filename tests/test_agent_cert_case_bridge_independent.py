@@ -157,11 +157,11 @@ def test_collector_no_weakening_for_missing_or_insufficient_bound_reservation(ba
 
 
 @pytest.mark.parametrize("change", [
-    {"dimension": "recovery", "test_case": "complete"},
+    {"agent_id": "a20", "capability_id": "responsibility.a20", "dimension": "recovery", "test_case": "complete"},
     # A19 now owns a genuine tools:complete oracle; borrowing it for another
     # permanent identity must still fail, rather than denying its actual owner.
     {"agent_id": "a20", "capability_id": "responsibility.a20", "dimension": "tools", "test_case": "complete"},
-    {"dimension": "clean_room_audit", "test_case": "complete"},
+    {"agent_id": "a20", "capability_id": "responsibility.a20", "dimension": "clean_room_audit", "test_case": "complete"},
     {"dimension": True, "test_case": "difficult"},
     {"agent_id": "a22", "capability_id": "responsibility.a22"},
 ])
