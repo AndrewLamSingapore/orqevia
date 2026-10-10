@@ -528,7 +528,7 @@ class RecoveryPhaseOperatorIO(AgentCertOperatorIO):
             request_timeout_seconds=2,connection_factory=http.client.HTTPConnection,
             timer_factory=threading.Timer,monotonic=time.monotonic):
         from app.agent_cert_recovery_events import (canonical_phase_spec,correction_request,canonical_review_request,
-            PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACTION,action_type)
+            PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACTION,action_type,CASE)
         _require(type(owner_token) is str and 16<=len(owner_token)<=4096
             and all(33<=ord(char)<=126 for char in owner_token),'EXISTING_OWNER_CREDENTIAL_REQUIRED')
         _require(type(expected_source_revision) is str and _SOURCE.fullmatch(expected_source_revision) is not None
@@ -543,7 +543,7 @@ class RecoveryPhaseOperatorIO(AgentCertOperatorIO):
         if which=='review':
             _require(prior_execution is None and type(execution) is dict,'RECOVERY_REVIEW_ORIGINAL_REQUIRED')
             request=canonical_review_request(execution,nonce=nonce)
-            self._spec=dict(phase='review',request=request)
+            self._spec=dict(case=CASE,phase='review',request=request)
             self._subject_action_types={REVIEW_ACTION}
         else:
             _require(execution is None and nonce is None,'RECOVERY_PHASE_BINDING_INVALID')

@@ -38,8 +38,8 @@ def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inve
     row = next(r for r in inventory['capability_rows'] if r['agent_id'] == 'a19')
     assert len(row['canonical_adapter_oracle_ready_cases']) == 63
     assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization',
-        'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery', 'recovery:complete',
-        'collaboration:complete', 'authority:complete', 'tools:complete', 'cross_verification:complete', 'health:complete', 'context_integrity:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
+        'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
+        'collaboration:complete', 'recovery:complete', 'authority:complete', 'tools:complete', 'cross_verification:complete', 'health:complete', 'context_integrity:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
         'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'evidence_integrity:complete', 'graceful_degradation:complete', 'independent_verification:complete', 'continuous_revalidation:complete']
     assert len(row['source_pinned_cloud_transport_cases']) == 40
     assert 'cross_verification:complete' in row['distinct_zero_model_event_adapter_cases']

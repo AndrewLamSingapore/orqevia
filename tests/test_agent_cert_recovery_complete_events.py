@@ -22,7 +22,7 @@ def collect(runtime):
 
 def test_actual_three_persisted_objectives_retained_failure_and_newer_correction(runtime):
     result=collect(runtime)
-    assert result.summary['state']=='UNSIGNED_EVENT_EVIDENCE',result.summary
+    assert result.summary['state']=='UNSIGNED_EVENT_EVIDENCE',{key:result.summary.get(key) for key in ('state','stage','reason','submission_attempts')}
     execution=json.loads(result.execution_bytes);peer=json.loads(result.peer_execution_bytes)
     prior=execution['prior_execution']
     prior_result=json.loads(prior['artifact_content_utf8']);corrected=json.loads(execution['artifact_content_utf8'])
