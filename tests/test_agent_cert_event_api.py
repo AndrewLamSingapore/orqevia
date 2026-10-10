@@ -87,8 +87,14 @@ def tool_full(env, case):
                 executor.execute(read, lambda: reader.retrieve_file(folder, tool_events.MISSING_SLOT))
             assert missing.value.errno == 2 and Path(missing.value.filename) == folder / tool_events.MISSING_SLOT
         assert factory.retrieve(setup['artifact_id']) == (setup, tool_events.input_bytes(case))
+        health_rows = None
+        if case == tool_events.HEALTH_CASE:
+            assert ledger.flush(timeout=1) is True
+            health_rows = (env.root / 'action-records.jsonl').read_text().splitlines(keepends=True)[-6:]
         result = executor.execute(record('result'), lambda: create(tool_events.expected_artifact_bytes(case,available_bytes=available_raw,
-            **({'source_revision':SOURCE} if case == tool_events.REVALIDATION_CASE else {}))))
+            **({'source_revision':SOURCE} if case == tool_events.REVALIDATION_CASE else
+                {'source_revision':SOURCE, 'original_health_rows':health_rows, 'task_id':task}
+                if case == tool_events.HEALTH_CASE else {}))))
         assert result['artifact_id'] != setup['artifact_id']
         assert ledger.flush(timeout=1) is True
     finally:
@@ -150,8 +156,8 @@ def test_tool_full_returns_exact_actual_original_records_without_mutation_or_flu
     lines = before.decode().splitlines(keepends=True)
     original = [json.loads(line) for line in lines]
     phases = ('setup','available','result') if case in tool_events.PROPOSAL_CASES else (
-        ('setup','available','read','result') if case == tool_events.DEGRADATION_CASE else ('setup','read','result'))
-    if case == tool_events.DEGRADATION_CASE:
+        ('setup','available','read','result') if case in (tool_events.DEGRADATION_CASE, tool_events.HEALTH_CASE) else ('setup','read','result'))
+    if case in (tool_events.DEGRADATION_CASE, tool_events.HEALTH_CASE):
         assert len(original) == 8 and len({event['action_id'] for event in original}) == 4
     else:
         assert len(original) == 6 and len({event['action_id'] for event in original}) == 3

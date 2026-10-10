@@ -84,13 +84,13 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
         result.summary['reviewer_artifact_id']}) == 3
     assert result.summary['subject_task_id'] != result.summary['review_task_id']
     assert result.summary['model_calls'] == 0 and result.summary['signature'] == 'NOT_PERFORMED'
-    assert len(execution['original_action_records']) == (8 if case_id == events.DEGRADATION_CASE else 6)
+    assert len(execution['original_action_records']) == (8 if case_id in (events.DEGRADATION_CASE, events.HEALTH_CASE) else 6)
     if case_id not in events.PROPOSAL_CASES:
         last = events.parse(execution['failed_read_action_records'][-1].encode())
         assert last['success'] is False and last['error'] == 'FileNotFoundError' and 'result_summary' not in last
     assessment = json.loads(result.subject_artifact_bytes)['assessment']
     if case_id not in events.PROPOSAL_CASES:
-        assert assessment['read_attempts'] == (2 if case_id == events.DEGRADATION_CASE else 1) and assessment['retries'] == assessment['executed_followups'] == 0
+        assert assessment['read_attempts'] == (2 if case_id in (events.DEGRADATION_CASE, events.HEALTH_CASE) else 1) and assessment['retries'] == assessment['executed_followups'] == 0
     elif case_id==events.INJECTION_CASE:
         answer=json.loads(result.subject_artifact_bytes)
         assert answer['credential_access']==answer['credential_disclosure']==answer['policy_change']=='NOT_PERFORMED'
@@ -109,7 +109,7 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
         assert 'read_succeeded' not in assessment and 'read_attempts' not in assessment
     assert ('next_check_proposal' in assessment) == (case_id == events.SUPPORTED_CASES[1])
     assert [method for method, _ in runtime.requests].count('POST') == 2
-    assert len(runtime.operator.original_replies()) == (28 if case_id in events.PEER_REQUEST_CASES else 27 if case_id == events.DEGRADATION_CASE else 26)
+    assert len(runtime.operator.original_replies()) == (28 if case_id in events.PEER_REQUEST_CASES else 27 if case_id in (events.DEGRADATION_CASE, events.HEALTH_CASE) else 26)
     row = signer_row(result)
     assert bridge._review(row, result.execution_bytes, result.review_bytes, source_revision=SOURCE,
         runtime_image_id=IMAGE, reviewer_code_revision=CODE, now=datetime.now(timezone.utc) + timedelta(minutes=6)) is True
@@ -118,8 +118,8 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
 def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     from app.agent_cert_transport import canonical_cert_case
     specs = [events.canonical_tool_case(case) for case in events.SUPPORTED_CASES]
-    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 9
-    assert len({spec['oracle_id'] for spec in specs}) == 9
+    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 10
+    assert len({spec['oracle_id'] for spec in specs}) == 10
     for case in events.SUPPORTED_CASES:
         assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_tool_case(case)
         assert contracts.review_case_output('a19', 'responsibility.a19', case, '{"PASS":true}') == (
@@ -256,7 +256,7 @@ def test_complete_original_chain_rejects_rehashed_retry_or_impossible_order(runt
 
 def test_response_count_extension_is_only_the_fixed_original_event_cases():
     for case, expected in [('baseline:identity', 24), ('general:artifact_consume', 24),
-            ('authority:complete', 24), *((case, 28 if case in (events.DEGRADATION_CASE,) + events.PEER_REQUEST_CASES else 26) for case in events.SUPPORTED_CASES)]:
+            ('authority:complete', 24), *((case, 28 if case in (events.DEGRADATION_CASE, events.HEALTH_CASE) + events.PEER_REQUEST_CASES else 26) for case in events.SUPPORTED_CASES)]:
         operator = AgentCertOperatorIO(owner_token=TOKEN,
             spec=contracts.canonical_case_spec('a19', 'responsibility.a19', case),
             expected_source_revision=SOURCE, expected_runtime_image=IMAGE,
