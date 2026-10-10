@@ -398,7 +398,13 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
             or type(retrieved[0]) is not dict or type(retrieved[1]) is not bytes):
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_read_invalid'}
     metadata, raw = retrieved
-    expected_raw = (events.expected_result_bytes(fixed['case'],
+    if tool and fixed['case'] == events.REVALIDATION_CASE:
+        from .agent_cert_revalidation import validate_assessment
+        validate_assessment(raw, fixed['request']['context'].encode(), expected_source_revision,
+            event_began, event_ended)
+        expected_raw = raw
+    else:
+        expected_raw = (events.expected_result_bytes(fixed['case'],
         events.current_authority_policy(expected_registry_sha256),
         events.sha(events.canonical(events._snapshot(event.get('read_domains_before')))),
         admission=event.get('admission')) if authority

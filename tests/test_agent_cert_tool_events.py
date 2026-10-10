@@ -97,7 +97,10 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
         assert answer['owner_authority']=='NOT_GRANTED' and answer['log_handling']['commands_followed'] is False
     else:
         answer = json.loads(result.subject_artifact_bytes)
-        if case_id == events.COLLABORATION_CASE:
+        if case_id == events.REVALIDATION_CASE:
+            assert assessment['temporal_status'] == 'EXPIRED' and assessment['fresh_check_required'] is True
+            assert assessment['renewal_performed'] is False
+        elif case_id == events.COLLABORATION_CASE:
             assert answer['peer_handoff']['service_confirmation'] == 'NOT_PERFORMED' and answer['peer_handoff']['authority_transfer'] is False
         elif case_id == events.CROSS_CASE:
             assert answer['second_check_request']['service_confirmation'] == 'NOT_PERFORMED'
@@ -115,8 +118,8 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
 def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     from app.agent_cert_transport import canonical_cert_case
     specs = [events.canonical_tool_case(case) for case in events.SUPPORTED_CASES]
-    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 8
-    assert len({spec['oracle_id'] for spec in specs}) == 8
+    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 9
+    assert len({spec['oracle_id'] for spec in specs}) == 9
     for case in events.SUPPORTED_CASES:
         assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_tool_case(case)
         assert contracts.review_case_output('a19', 'responsibility.a19', case, '{"PASS":true}') == (

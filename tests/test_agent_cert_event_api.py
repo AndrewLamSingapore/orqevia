@@ -87,7 +87,8 @@ def tool_full(env, case):
                 executor.execute(read, lambda: reader.retrieve_file(folder, tool_events.MISSING_SLOT))
             assert missing.value.errno == 2 and Path(missing.value.filename) == folder / tool_events.MISSING_SLOT
         assert factory.retrieve(setup['artifact_id']) == (setup, tool_events.input_bytes(case))
-        result = executor.execute(record('result'), lambda: create(tool_events.expected_artifact_bytes(case,available_bytes=available_raw)))
+        result = executor.execute(record('result'), lambda: create(tool_events.expected_artifact_bytes(case,available_bytes=available_raw,
+            **({'source_revision':SOURCE} if case == tool_events.REVALIDATION_CASE else {}))))
         assert result['artifact_id'] != setup['artifact_id']
         assert ledger.flush(timeout=1) is True
     finally:

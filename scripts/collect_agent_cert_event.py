@@ -288,14 +288,14 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             execution['input_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
                 action_type=tool_action_type(case, phase='setup'), schema=INPUT_SCHEMA, metadata=input_metadata,
                 began=action_began, ended=action_ended, action_id=event['setup_action_id'])
-            if case in {'graceful_degradation:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'collaboration:complete'}:
+            if case in {'graceful_degradation:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'}:
                 from app.agent_cert_tool_events import available_read_span
                 available_lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='available')))
                 execution['available_read_action_records'] = available_lines
                 execution['available_read_action_chain_join'] = available_read_span(available_lines, task_id=task,
                     case=case, setup_metadata=input_metadata, input_raw=raw, began=action_began, ended=action_ended,
                     action_id=event['available_read_action_id'])
-            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'cross_verification:complete', 'collaboration:complete'}:
+            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete'}:
                 lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='read')))
                 execution['failed_read_action_records'] = lines
                 execution['failed_read_action_chain_join'] = failed_read_span(lines, task_id=task, case=case,
