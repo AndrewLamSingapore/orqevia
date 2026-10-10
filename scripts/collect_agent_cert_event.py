@@ -572,14 +572,14 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             execution['input_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
                 action_type=tool_action_type(case, phase='setup'), schema=INPUT_SCHEMA, metadata=input_metadata,
                 began=action_began, ended=action_ended, action_id=event['setup_action_id'])
-            if case in {'graceful_degradation:complete','health:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
+            if case in {'graceful_degradation:complete','health:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
                 from app.agent_cert_tool_events import available_read_span
                 available_lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='available')))
                 execution['available_read_action_records'] = available_lines
                 execution['available_read_action_chain_join'] = available_read_span(available_lines, task_id=task,
                     case=case, setup_metadata=input_metadata, input_raw=raw, began=action_began, ended=action_ended,
                     action_id=event['available_read_action_id'])
-            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
+            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
                 lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='read')))
                 execution['failed_read_action_records'] = lines
                 execution['failed_read_action_chain_join'] = failed_read_span(lines, task_id=task, case=case,
@@ -719,7 +719,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             execution_model='DETERMINISTIC', subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
             subject_domain_join=join, certification='UNVERIFIED')
         peer_objective = None
-        if case in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
+        if case in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
             from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective,peer_review_fields
             peer_request = cross_peer_request(execution,nonce,expected_source_revision)
             receipt = content.get('peer_request_receipt')
@@ -790,3 +790,59 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
     return CollectedEvent(summary, primary, review_raw, holder['subject_raw'],
         holder['reviewer_raw'], subject_lines, reviewer_lines, holder['reviewer_dispatch'],
         holder['input_raw'], input_lines, holder['prior_raw'], prior_lines)
+
+@dataclass(frozen=True)
+class CollectedHandoffCase:
+    summary: dict
+    continuation: CollectedEvent | None = field(default=None,repr=False)
+    original_failure_bytes: bytes | None = field(default=None,repr=False)
+    original_http_replies: tuple = field(default=(),repr=False)
+
+
+def collect_handoff_case(*,case='handoff_recovery:bounded_response',operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,reviewer_code_revision,review_run_id,timeout_seconds=30,
+        monotonic=time.monotonic,wall_clock=lambda:datetime.now(timezone.utc),
+        nonce_factory=lambda:str(uuid.uuid4())):
+    """One supported original refusal then distinct continuation and A26 review."""
+    from app.agent_cert_handoff_gap import CASES,failure_request,validate_failed_original
+    from app.agent_cert_tool_events import canonical_tool_case
+    from scripts.agent_cert_operator_io import HandoffFailureOperatorIO,HandoffContinuationOperatorIO
+    summary=dict(state='INCOMPLETE',stage='FAILED_HANDOFF',case=case,certification='UNVERIFIED',
+        failure_scope='SUPPORTED_MISSING_EVIDENCE_HANDOFF_REFUSAL_NOT_AGENT_CRASH',failure_submission_attempts=0)
+    operators=[];failed=None;continuation=None
+    try:
+        _require(case in CASES and callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'HANDOFF_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic)
+            _require(left>0,'HANDOFF_OUTER_BOUND_EXCEEDED')
+            return left
+        failure=operator_factory(which='failure',case=case,total_timeout_seconds=min(30,remaining()))
+        _require(type(failure) is HandoffFailureOperatorIO,'HANDOFF_OWNED_FAILURE_TRANSPORT_REQUIRED')
+        operators.append(failure)
+        _require(failure.authorize() is None,'OWNER_AUTHENTICATION_FAILED')
+        before=failure.runtime();_registry_pin(expected_registry_sha256)
+        summary['failure_submission_attempts']=1
+        submission=_response(failure.submit_objective(failure_request(case)),202,'HANDOFF_ORIGINAL_REFUSAL_SUBMIT_FAILED')
+        failed=_response(failure.read_failed_objective(submission['id']),200,'HANDOFF_ORIGINAL_FAILED_READ_REQUIRED')
+        validate_failed_original(failed,runtime=before,registry_sha256=expected_registry_sha256,now=wall_clock())
+        _require(_equal(failed,_response(failure.read_failed_objective(submission['id']),200,
+            'HANDOFF_ORIGINAL_FAILED_READ_REQUIRED')) and _equal(before,failure.runtime()),'HANDOFF_FAILED_CUSTODY_DRIFT')
+        operator=operator_factory(which='continuation',case=case,original_failed_peer=failed,
+            total_timeout_seconds=min(30,remaining()))
+        _require(type(operator) is HandoffContinuationOperatorIO,'HANDOFF_OWNED_CONTINUATION_TRANSPORT_REQUIRED')
+        operators.append(operator);summary['stage']='CONTINUATION_AND_FRESH_REVIEW'
+        continuation=collect_event_case(canonical_tool_case(case),io=operator.io(),
+            read_subject_actions=operator.read_subject_actions,expected_source_revision=expected_source_revision,
+            expected_runtime_image=expected_runtime_image,expected_registry_sha256=expected_registry_sha256,
+            reviewer_code_revision=reviewer_code_revision,review_run_id=review_run_id,
+            timeout_seconds=min(30,remaining()),monotonic=monotonic,wall_clock=wall_clock,nonce_factory=nonce_factory)
+        remaining()
+        summary.update(continuation.summary,failure_submission_attempts=1,
+            failure_scope='SUPPORTED_MISSING_EVIDENCE_HANDOFF_REFUSAL_NOT_AGENT_CRASH',
+            original_failed_task_id=failed['id'],original_failed_objective_sha256=_sha(_canonical(failed)))
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,CollectionError) else 'HANDOFF_ORIGINAL_CHAIN_INCOMPLETE'
+    return CollectedHandoffCase(summary,continuation,None if failed is None else _canonical(failed),
+        tuple(reply for operator in operators for reply in operator.original_replies()))

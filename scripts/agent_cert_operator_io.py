@@ -183,7 +183,7 @@ class AgentCertOperatorIO:
                 self._reviewer, self._review_cap = identity_reviewer(agent, capability)
                 self._review_objective = identity_review_objective(agent, capability)
                 self._review_operation, self._review_action_type = REVIEW_OPERATION, REVIEW_ACTION
-            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
+            elif case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
                 from app.agent_cert_tool_events import tool_action_type
                 from app.agent_cert_role_review import TOOL_REVIEW_ACTION, tool_review_objective, TOOL_REVIEW_OPERATION
                 _require((agent, capability) == ('a19', 'responsibility.a19'), 'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')
@@ -227,7 +227,7 @@ class AgentCertOperatorIO:
                 self._review_operation = 'certification_identity_review'
                 self._review_action_type = 'agent.certification.identity.review'
             self._subject_action_types = {self._action_type}
-            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'}:
+            if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
                 from app.agent_cert_tool_events import tool_phases
                 self._subject_action_types.update(tool_action_type(case, phase=phase) for phase in tool_phases(case) + ('full',))
             if case in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
@@ -238,7 +238,7 @@ class AgentCertOperatorIO:
             # Tool events retain two extra spans; recovery/integrity add
             # an original prior artifact and its action-pair GET. Existing
             # artifact/handoff cases retain their measured 24-reply cap.
-            self._response_limit = 28 if case in {'graceful_degradation:complete','health:complete','cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'} else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
+            self._response_limit = 28 if case in {'graceful_degradation:complete','health:complete','cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} else 26 if case in {'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else 24
         except Exception:
             raise OperatorBindingError('CANONICAL_ZERO_MODEL_EVENT_REQUIRED') from None
         self._token = owner_token
@@ -290,7 +290,7 @@ class AgentCertOperatorIO:
             paths.update('/api/agent-cert-events/actions/' + self._subject_task + '?action_type=' + action
                 for action in self._subject_action_types)
         if self._review_task:
-            if self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
+            if self._spec['case'] in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
                 paths.add('/api/agents/objectives/'+self._review_task)
             paths.add('/api/agent-cert-events/actions/' + self._review_task + '?action_type=' + self._review_action_type)
         if self._spec['case'] == 'clean_room_audit:complete' and self._blind_task:
@@ -316,7 +316,7 @@ class AgentCertOperatorIO:
         request_deadline = self._now() + min(self._request_seconds, self._remaining())
         if method == 'POST':
             claim = path
-            if (self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'} and path == '/api/agents/objectives'
+            if (self._spec['case'] in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} and path == '/api/agents/objectives'
                     and body.get('capability') == self._review_cap
                     and body.get('deterministic_operation') == self._review_operation):
                 _require(_uuid(self._subject_task) and path in self._post_attempts,'CROSS_FIXED_PEER_REQUEST_REQUIRED')
@@ -449,9 +449,9 @@ class AgentCertOperatorIO:
             metadata = steps[0].get('dispatch', {}).get('artifact') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
             self._remember_artifact(metadata)
             if self._spec['case'] in {'general:artifact_consume', 'general:review', 'general:handoff', 'general:recovery',
-                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete', 'evidence_integrity:complete', 'context_integrity:complete'}:
                 dispatch = steps[0].get('dispatch') if type(steps) is list and len(steps) == 1 and type(steps[0]) is dict else None
-                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete', 'clean_room_audit:complete'} else 'artifact_event') if type(dispatch) is dict else None
+                event = dispatch.get('tool_event' if self._spec['case'] in {'tool_recovery:tool_failure','tool_recovery:bounded_response','graceful_degradation:complete','health:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} else 'artifact_event') if type(dispatch) is dict else None
                 if type(event) is dict:
                     self._remember_artifact(event.get('input_artifact_metadata'))
                     if self._spec['case'] == 'clean_room_audit:complete':
@@ -504,7 +504,7 @@ class AgentCertOperatorIO:
         except Exception:
             raise OperatorBindingError('FIXED_ZERO_MODEL_REVIEW_REQUIRED') from None
         self.runtime()
-        if self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
+        if self._spec['case'] in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
             status, envelope = self._request('POST','/api/agents/objectives',body=body)
             _require(status == 202 and _uuid(envelope.get('id')) and envelope['id'] != self._subject_task
                 and type(envelope.get('steps')) is list and len(envelope['steps']) == 1
@@ -551,7 +551,7 @@ class AgentCertOperatorIO:
     def io(self):
         def objective(task):
             _require(_uuid(task) and (task == self._subject_task or
-                (self._spec['case'] in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'} and task == self._review_task)
+                (self._spec['case'] in {'cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} and task == self._review_task)
                 or (self._spec['case'] == 'clean_room_audit:complete' and task == self._blind_task)), 'OWNED_OBJECTIVE_BINDING_REQUIRED')
             return self._request('GET', '/api/agents/objectives/' + task)
         def artifact(identifier):
@@ -742,3 +742,43 @@ class RecoveryPhaseOperatorIO(AgentCertOperatorIO):
 
     def dispatch_reviewer(self,body):
         raise OperatorBindingError('RECOVERY_PEER_REQUIRES_FRESH_PERSISTED_OBJECTIVE') from None
+class HandoffFailureOperatorIO(AgentCertOperatorIO):
+    """One actual supported missing-evidence refusal; no failed-task rewrite."""
+    def __init__(self, *,case='handoff_recovery:bounded_response',**kwargs):
+        from app.agent_cert_handoff_gap import CASES,failure_request
+        _require(case in CASES,'HANDOFF_FIXED_CASE_REQUIRED')
+        from app.agent_cert_tool_events import canonical_tool_case
+        super().__init__(spec=canonical_tool_case(case),**kwargs)
+        self._spec=dict(case=case,request=failure_request(case))
+        self._subject_action_types=set()
+
+    def submit_objective(self,body):
+        _require(_canonical(body)==_canonical(self._spec['request']),'HANDOFF_FIXED_FAILURE_REQUEST_REQUIRED')
+        self.runtime()
+        status,value=self._request('POST','/api/agents/objectives',body=body)
+        if status==202 and _uuid(value.get('id')):self._subject_task=value['id']
+        return status,value
+
+    def read_failed_objective(self,task):
+        _require(_uuid(task) and task==self._subject_task,'HANDOFF_OWNED_FAILED_TASK_REQUIRED')
+        return self._request('GET','/api/agents/objectives/'+task)
+
+
+class HandoffContinuationOperatorIO(AgentCertOperatorIO):
+    """Translate only fixed continuation into its original-failure wrapper."""
+    def __init__(self, *,original_failed_peer,case='handoff_recovery:bounded_response',**kwargs):
+        from app.agent_cert_handoff_gap import CASES,continuation_request
+        _require(case in CASES and original_failed_peer['steps'][0]['source_handoff_trace']['source_case']==case,
+            'HANDOFF_ORIGINAL_CASE_BINDING_REQUIRED')
+        from app.agent_cert_tool_events import canonical_tool_case
+        super().__init__(spec=canonical_tool_case(case),**kwargs)
+        self._canonical_request=self._spec['request']
+        self._submitted_request=continuation_request(original_failed_peer)
+
+    def submit_objective(self,body):
+        _require(_canonical(body)==_canonical(self._canonical_request),'HANDOFF_FIXED_CONTINUATION_REQUIRED')
+        fixed=self._spec
+        try:
+            self._spec=dict(fixed,request=self._submitted_request)
+            return super().submit_objective(self._submitted_request)
+        finally:self._spec=fixed

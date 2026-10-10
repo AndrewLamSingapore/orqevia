@@ -125,7 +125,7 @@ def joined_authority_review(body, authorization, *, actor, task_id, runtime):
 
 
 def _joined_contract_event_review(body, authorization, *, actor, task_id, runtime, initialization,
-                                  artifact=False, authority=False, tool=False, owned_identity=False):
+                                  artifact=False, authority=False, tool=False, owned_identity=False,handoff_budget=None):
     """Join the original zero-model event to its owning read-only domains.
 
     This operation supplies a separate registered reviewer artifact, never a
@@ -237,11 +237,16 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
         cross_receipt = None
-        if tool and case_id in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete'}:
+        if tool and case_id in {'cross_verification:complete','collaboration:complete', 'clean_room_audit:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure'}:
             from .agent_cert_tool_events import read_cross_peer_request,peer_review_fields
             cross_deadline = time.monotonic() + 1
             cross_receipt = read_cross_peer_request(Path(os.getenv('PRIME_DATA_DIR','/data')),task_id,
                 body.model_dump(),runtime,execution['dispatch']['task_id'],deadline=cross_deadline)
+            if case_id.startswith('handoff_recovery:'):
+                from .agent_cert_handoff_gap import case_remaining,_utc
+                require(type(handoff_budget) is dict,'HANDOFF_ORIGINAL_PEER_BUDGET_REQUIRED')
+                handoff_budget['started_at']=min(handoff_budget['started_at'],_utc(cross_receipt['created_at']))
+                require(case_remaining(handoff_budget)>0,'HANDOFF_PEER_BOUND_EXCEEDED')
         blind_original = None
         if tool and case_id == 'clean_room_audit:complete':
             from .agent_cert_clean_room import read_original_audit
@@ -273,6 +278,17 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         actual_objective = get_read_only(subject_task, authorization)
         require(canonical(actual_objective) == canonical(execution['objective_read'][1]),
                 'IDENTITY_OWNED_OBJECTIVE_REQUIRED')
+        handoff_receipt=None
+        if tool and case_id in {'handoff_recovery:bounded_response','handoff_recovery:agent_failure'}:
+            from .agent_cert_handoff_gap import reread_failed_original,read_failed_store
+            handoff_original=execution['dispatch']['tool_event']['original_failed_peer']
+            handoff_deadline=time.monotonic()+min(1,case_remaining(handoff_budget))
+            reread_failed_original(handoff_original,reader=lambda original:get_read_only(original,authorization),
+                runtime=runtime,registry_sha256=registry_sha,now=now,subject_task=subject_task)
+            handoff_receipt=read_failed_store(root,handoff_original,runtime=runtime,registry_sha256=registry_sha,
+                now=now,subject_task=subject_task,deadline=handoff_deadline)
+            require(canonical(handoff_receipt)==canonical(execution['dispatch']['tool_event']['original_failed_store']),
+                'HANDOFF_ORIGINAL_DENIAL_STORE_DRIFT')
         factory = ArtifactFactory(root / 'artifacts')
         def retrieve_owned(identifier):
             if bounded_event or owned_identity:
@@ -326,6 +342,12 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             # The last Objective read must not conceal a changed original
             # artifact or persisted action span. These are owning-store reads,
             # not a second validation of caller-supplied snapshots.
+            if handoff_receipt is not None:
+                reread_failed_original(handoff_original,reader=lambda original:get_read_only(original,authorization),
+                    runtime=runtime,registry_sha256=registry_sha,now=datetime.now(timezone.utc),subject_task=subject_task)
+                require(canonical(read_failed_store(root,handoff_original,runtime=runtime,registry_sha256=registry_sha,
+                    now=datetime.now(timezone.utc),subject_task=subject_task,deadline=handoff_deadline))==canonical(handoff_receipt),
+                    'HANDOFF_ORIGINAL_DENIAL_CHANGED_DURING_REVIEW')
             final_metadata, final_raw = retrieve_owned(joined['artifact_id'])
             require(canonical(final_metadata) == canonical(metadata) and final_raw == raw
                 and canonical(read_tool_action_span(root, subject_task, case_id) if tool else
@@ -364,6 +386,8 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                     'BLIND_AUDIT_CHANGED_DURING_COMPARISON')
             require(canonical(read_cross_peer_request(root,task_id,body.model_dump(),runtime,subject_task,
                 deadline=cross_deadline)) == canonical(cross_receipt),'CROSS_PEER_REQUEST_CHANGED_DURING_REVIEW')
+        if handoff_receipt is not None:
+            require(case_remaining(handoff_budget)>0,'HANDOFF_PEER_BOUND_EXCEEDED')
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
             subject_capability_id=subject_capability,
             dimension=case_id.split(':')[0] if bounded_event else 'baseline', test_case=test_case,
@@ -655,6 +679,14 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         if body.objective == blind_objective:
             from datetime import datetime, timezone
             blind_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
+    handoff_budget=None
+    if body.deterministic_operation=='certification_tool_review':
+        from .agent_cert_handoff_gap import parse as handoff_parse,CASES as handoff_cases,case_remaining as handoff_case_remaining
+        from datetime import datetime,timezone
+        try:handoff_case=handoff_parse(body.context.encode()).get('execution',{}).get('case_spec',{}).get('case')
+        except ValueError:handoff_case=None
+        if handoff_case in handoff_cases:
+            handoff_budget=dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
     from .runtime_status import is_runtime_status,build_report,validate_report
     runtime_status=not body.deterministic_operation and is_runtime_status(body.objective,body.context)
     try:
@@ -721,15 +753,18 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     else CORRECTION_PHASE,task_id,**arguments)
             elif body.deterministic_operation == 'certification_tool_event':
                 from . import agent_registry
-                from .agent_cert_tool_events import (SUPPORTED_CASES, canonical_tool_case, execute_tool_case, parse, sha)
+                from .agent_cert_tool_events import (SUPPORTED_CASES, HANDOFF_CASES,canonical_tool_case, execute_tool_case, parse, sha)
                 case_id = parse(body.context.encode()).get('case')
                 if (actor != 'a19' or body.capability != 'responsibility.a19'
                         or type(case_id) is not str or case_id not in SUPPORTED_CASES):
                     raise ValueError('TOOL_OWNING_CASE_REQUIRED')
+                from .objective_api import get_read_only
                 return execute_tool_case(canonical_tool_case(case_id), task_id, submitted_request=body.model_dump(),
                     data_root=root, ledger=action_ledger(), runtime=runtime, read_runtime=runtime_snapshot,
                     source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
-                    registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
+                    registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    **({'read_failed_peer':lambda original:get_read_only(original,authorization)}
+                        if case_id in HANDOFF_CASES else {}))
             elif body.deterministic_operation == 'certification_authority_event':
                 from . import agent_registry
                 from .agent_cert_authority_events import (SUPPORTED_CASES, canonical_authority_case,
@@ -757,7 +792,17 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
                     registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
             elif body.deterministic_operation == 'certification_artifact_review':
-                data=joined_artifact_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+                try:
+                    data=joined_artifact_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+                except HTTPException as original_denial:
+                    from .agent_cert_handoff_gap import is_failure_request,denial_detail,FAILURE_REASON,sha
+                    if (original_denial.status_code==422 and original_denial.detail==FAILURE_REASON
+                            and is_failure_request(body)):
+                        from . import agent_registry
+                        original_denial.source_handoff_trace=denial_detail(body,original_denial.detail,
+                            actor=actor,task_id=task_id,runtime=runtime,
+                            registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))['source_handoff_trace']
+                    raise
             elif body.deterministic_operation == 'certification_authority_review':
                 data=joined_authority_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_tool_review':
@@ -766,7 +811,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     data=execute_blind(body,authorization,actor=actor,task_id=task_id,runtime=runtime,budget=blind_budget)
                 else:
                     data=_joined_contract_event_review(body,authorization,actor=actor,task_id=task_id,
-                        runtime=runtime,initialization=False,tool=True)
+                        runtime=runtime,initialization=False,tool=True,handoff_budget=handoff_budget)
             elif body.deterministic_operation == 'certification_role_review':
                 data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_identity_review':
@@ -818,6 +863,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         blind_review = tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1'
         if blind_review and case_remaining(blind_budget) <= 0:
             raise HTTPException(422,'Blind audit case budget exhausted')
+        if handoff_budget is not None and handoff_case_remaining(handoff_budget)<=0:
+            raise HTTPException(422,'Handoff review case budget exhausted')
         review_ledger = None
         if runtime_status or role_review or identity_review or owned_identity_review or initialization or initialization_review or artifact_review or authority_review or tool_review:
             from .agent_cert_role_review import TOOL_REVIEW_ACTION
@@ -851,9 +898,11 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.
             result['review_action_id']=action.action_id
-            result['review_action_durable']=review_ledger.flush(timeout=case_remaining(blind_budget) if blind_review else 1) is True
+            result['review_action_durable']=review_ledger.flush(timeout=case_remaining(blind_budget) if blind_review else handoff_case_remaining(handoff_budget) if handoff_budget is not None else 1) is True
             if blind_review:
                 result['review_action_durable'] = result['review_action_durable'] and case_remaining(blind_budget) > 0
+            if handoff_budget is not None:
+                result['review_action_durable']=result['review_action_durable'] and handoff_case_remaining(handoff_budget)>0
             result['certification']='UNVERIFIED'
             if tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1':
                 result['blind_input_read_action_id']=data['input_read_action_id']

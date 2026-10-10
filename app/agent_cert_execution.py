@@ -398,7 +398,13 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
             or type(retrieved[0]) is not dict or type(retrieved[1]) is not bytes):
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_read_invalid'}
     metadata, raw = retrieved
-    if tool and fixed['case'] == events.HEALTH_CASE:
+    if tool and fixed['case'] in events.HANDOFF_CASES:
+        from .agent_cert_handoff_gap import validate_assessment
+        validate_assessment(raw,fixed['request']['context'].encode(),event['original_failed_peer'],
+            runtime=before,registry_sha256=expected_registry_sha256,task_id=task,
+            now=event_began)
+        expected_raw=raw
+    elif tool and fixed['case'] == events.HEALTH_CASE:
         events.validate_health_assessment(raw, fixed['request']['context'].encode(),
             events.parse(raw).get('observed_action_records'), task, expected_source_revision)
         expected_raw = raw

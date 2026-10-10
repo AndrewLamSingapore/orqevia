@@ -63,7 +63,9 @@ def validate(execution, runtime, *, now=None):
         registry_sha256=runtime.registry_sha, now=now or datetime.now(timezone.utc))
 
 
-@pytest.mark.parametrize('case_id', events.SUPPORTED_CASES)
+# Handoff needs an actual prior refused Objective; its three-task chain is
+# covered in test_agent_cert_handoff_gap, not this two-task fixture.
+@pytest.mark.parametrize('case_id', tuple(c for c in events.SUPPORTED_CASES if c not in events.HANDOFF_CASES))
 def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge(runtime, monkeypatch, case_id):
     from app.deterministic_ops import DeterministicOps
     original = DeterministicOps.retrieve_file
@@ -120,8 +122,8 @@ def test_actual_single_failed_read_distinct_artifacts_a26_review_and_pure_bridge
 def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     from app.agent_cert_transport import canonical_cert_case
     specs = [events.canonical_tool_case(case) for case in events.SUPPORTED_CASES]
-    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 11
-    assert len({spec['oracle_id'] for spec in specs}) == 11
+    assert len({events.sha(events.canonical(spec)) for spec in specs}) == 13
+    assert len({spec['oracle_id'] for spec in specs}) == 13
     for case in events.SUPPORTED_CASES:
         assert contracts.canonical_case_spec('a19', 'responsibility.a19', case) == events.canonical_tool_case(case)
         assert contracts.review_case_output('a19', 'responsibility.a19', case, '{"PASS":true}') == (
