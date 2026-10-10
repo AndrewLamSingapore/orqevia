@@ -7,6 +7,10 @@ from pathlib import Path
 import pytest
 
 from scripts import sign_admitted_agent_cases as loader
+from app.agent_registry import load_agent_registry
+
+OWNED_IDENTITY_PAIRS = [(a['id'],c) for a in load_agent_registry()['agents']
+    for c in a['capability_requirements'] if (a['id'],c) != ('a19','responsibility.a19')]
 
 
 SOURCE = 'd' * 40
@@ -108,9 +112,19 @@ def test_identity_admission_is_exact_event_scope_not_a_model_answer_or_duplicate
     assert loader.parse(manifest([identity])) == [identity]
     assert loader.parse(manifest([entry(), identity])) == [entry(), identity]
     wrong_agent = copy.deepcopy(identity)
-    wrong_agent['record'].update(agent_id='a20', capability_id='responsibility.a20')
+    wrong_agent['record'].update(agent_id='a20', capability_id='responsibility.a19')
     with pytest.raises(ValueError):
         loader.parse(manifest([wrong_agent]))
+
+
+@pytest.mark.parametrize('agent,capability',OWNED_IDENTITY_PAIRS)
+def test_owned_identity_manifest_accepts_only_exact_registered_pair_and_no_duplicates(agent,capability):
+    value = entry()
+    value['record'].update(agent_id=agent,capability_id=capability,dimension='baseline',test_case='identity')
+    assert loader.parse(manifest([value])) == [value]
+    with pytest.raises(ValueError): loader.parse(manifest([value,value]))
+    value['record']['capability_id'] = 'responsibility.a19'
+    with pytest.raises(ValueError): loader.parse(manifest([value]))
 
 
 @pytest.mark.parametrize('cloud,policy', [(None, 'f' * 64), ({}, None), ({}, 'f' * 64)])
@@ -127,9 +141,9 @@ def test_identity_admission_never_accepts_cloud_transport(cloud, policy):
     'app/agent_cert_initialization.py', 'app/agent_cert_initialization_review.py',
     'app/agent_cert_secondary_roles.py', 'app/agent_cert_a19_general.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_a19_baseline.py', 'app/agent_cert_authority_events.py',
-    'app/context_pack.py'])
+    'app/context_pack.py', 'app/agent_cert_owned_identity.py'])
 def test_original_identity_domain_dependencies_are_all_protected_code_inputs(tmp_path, dependency):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 52
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 53
     revisions = {}
     for name in loader.CODE_FILES:
         path = tmp_path / name
@@ -170,7 +184,7 @@ def separated_code(tmp_path):
 
 def test_new_verifier_bridge_preserves_original_runtime_review_provenance(tmp_path, monkeypatch):
     current, original = separated_code(tmp_path)
-    assert len(loader.CODE_FILES) == 52 and len(loader.RUNTIME_REVIEW_CODE_FILES) == 51
+    assert len(loader.CODE_FILES) == 53 and len(loader.RUNTIME_REVIEW_CODE_FILES) == 52
     assert set(loader.CODE_FILES) - set(loader.RUNTIME_REVIEW_CODE_FILES) == {'scripts/agent_cert_reviewed_signing.py'}
     value = entry()
     value['record']['reviewer_code_revision'] = REVIEW

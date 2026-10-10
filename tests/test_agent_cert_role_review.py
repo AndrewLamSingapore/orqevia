@@ -49,7 +49,6 @@ def test_delegates_exact_specific_a19_case(case):
     ("a19", "responsibility.a19", "recovery:normal"),
     ("a19", "responsibility.a19", "tools:normal"),
     ("a19", "responsibility.a19", "clean_room:normal"),
-    ("a20", "responsibility.a20", "baseline:identity"),
     ("a19", "responsibility.a19", True),
     ("a19", "responsibility.a19", ["role:difficult"]),
 ])
@@ -73,6 +72,26 @@ def test_a19_identity_has_exact_event_case_not_a_model_output_or_generic_pass():
     for response in ('{}', '{"test_result":"PASS"}', '{"agent_id":"a19","model_calls":0}'):
         assert review_case_output('a19', 'responsibility.a19', 'baseline:identity', response) == (
             False, ('identity_event_evidence_required',))
+
+
+def test_registered_owned_identity_requires_original_event_not_generic_answer():
+    from app.agent_registry import load_agent_registry
+    from app.agent_cert_owned_identity import canonical_owned_identity_case
+    pairs = [(a['id'],c) for a in load_agent_registry()['agents']
+        for c in a['capability_requirements'] if (a['id'],c) != ('a19','responsibility.a19')]
+    assert len(pairs) == 28
+    for agent,capability in pairs:
+        spec = canonical_case_spec(agent,capability,'baseline:identity')
+        assert canonical(spec) == canonical(canonical_owned_identity_case(agent,capability))
+        assert spec['request']['deterministic_operation'] == 'certification_owned_identity'
+        assert spec['request']['max_cost_usd'] == 0 and spec['request']['context'] == ''
+        for response in ('{}','{"test_result":"PASS"}','{"model_calls":0,"certification":"L7"}'):
+            assert review_case_output(agent,capability,'baseline:identity',response) == (
+                False,('identity_event_evidence_required',))
+    with pytest.raises(ValueError,match='INITIALIZATION_CAPABILITY_INVALID'):
+        canonical_case_spec('a20','responsibility.a19','baseline:identity')
+    assert review_case_output('a20','responsibility.a19','baseline:identity','{"test_result":"PASS"}') == (
+        False,('case_oracle_unsupported',))
 
 
 def test_initialization_requires_its_own_original_event_not_identity_or_answer_text():
