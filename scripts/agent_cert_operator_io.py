@@ -19,6 +19,8 @@ import json
 import math
 import re
 import socket
+import ssl
+from urllib.parse import urlsplit
 import threading
 import time
 import uuid
@@ -307,12 +309,13 @@ class AgentCertOperatorIO:
         return path in paths
 
     def _request(self, method, path, *, body=None, artifact=False):
+        owner_surface = isinstance(self, OwnerPhaseOperatorIO) and self._owner_path_allowed(method, path, body, artifact)
         _require(type(method) is str and type(path) is str and type(artifact) is bool
-            and ((method == 'GET' and body is None and self._allowed_get(path, artifact))
+            and (owner_surface or (method == 'GET' and body is None and self._allowed_get(path, artifact))
                  or (method == 'POST' and path in _POSTS and artifact is False and type(body) is dict)),
             'FIXED_OWNED_API_REQUIRED')
         self._remaining()
-        _require(len(self._responses) < self._response_limit and self._response_bytes < MAX_RESPONSE_CUSTODY,
+        _require(len(self._responses) < self._response_limit and self._response_bytes < getattr(self, '_custody_cap', MAX_RESPONSE_CUSTODY),
             'PRIVATE_RESPONSE_CUSTODY_BOUND_EXCEEDED')
         try:
             payload = _canonical(body) if body is not None else None
@@ -359,10 +362,21 @@ class AgentCertOperatorIO:
             'Authorization': 'Bearer ' + self._token, 'Accept-Encoding': 'identity'}
         if payload is not None:
             headers['Content-Type'] = 'application/json'
+        if owner_surface:
+            from app.pwa_sessions import pwa_origins
+            _require(self._pwa_origin in pwa_origins(),'EXISTING_CONFIGURED_PWA_ORIGIN_REQUIRED')
+            headers = {'Host': self._pwa_authority, 'Origin': self._pwa_origin,
+                'Cookie': self._pwa_cookie, 'Accept-Encoding': 'identity'}
+            if method == 'POST': headers['X-JARVIS-PWA'] = '1'
         connection = response = timer = transport_socket = None
         status, raw, recorded = None, bytearray(), False
         try:
-            connection = self._factory(HOST, PORT, timeout=self._remaining(request_deadline))
+            if owner_surface:
+                context = ssl.create_default_context()
+                connection = self._pwa_factory(self._pwa_host, self._pwa_port,
+                    timeout=self._remaining(request_deadline), context=context)
+            else:
+                connection = self._factory(HOST, PORT, timeout=self._remaining(request_deadline))
             connection.connect()
             transport_socket = connection.sock
             _require(transport_socket is not None, 'BOUNDED_SOCKET_REQUIRED')
@@ -398,7 +412,7 @@ class AgentCertOperatorIO:
             _require(0 < len(raw) <= cap, 'HTTP_RESPONSE_BOUND_EXCEEDED')
             _framing_complete(response, framing, len(raw))
             raw = bytes(raw)
-            _require(len(self._responses) < self._response_limit and self._response_bytes + len(raw) <= MAX_RESPONSE_CUSTODY,
+            _require(len(self._responses) < self._response_limit and self._response_bytes + len(raw) <= getattr(self, '_custody_cap', MAX_RESPONSE_CUSTODY),
                 'PRIVATE_RESPONSE_CUSTODY_BOUND_EXCEEDED')
             self._responses.append(OriginalHTTPReply(method, path, status, raw, True))
             recorded = True
@@ -422,7 +436,7 @@ class AgentCertOperatorIO:
             # response or proof. Preserve it if later deadline/shape checks fail.
             if not recorded and type(status) is int and raw and len(raw) <= MAX_JSON + 1:
                 original = bytes(raw)
-                if len(self._responses) < self._response_limit and self._response_bytes + len(original) <= MAX_RESPONSE_CUSTODY:
+                if len(self._responses) < self._response_limit and self._response_bytes + len(original) <= getattr(self, '_custody_cap', MAX_RESPONSE_CUSTODY):
                     self._responses.append(OriginalHTTPReply(method, path, status, original, False))
                     self._response_bytes += len(original)
             for obj, name in ((timer, 'cancel'), (response, 'close'), (connection, 'close')):
@@ -865,3 +879,87 @@ class HandoffContinuationOperatorIO(AgentCertOperatorIO):
             self._spec=dict(fixed,request=self._submitted_request)
             return super().submit_objective(self._submitted_request)
         finally:self._spec=fixed
+
+
+class OwnerPhaseOperatorIO(ConflictPhaseOperatorIO):
+    """Source-only original referral transport; explicit approved HTTPS target only."""
+    def __init__(self, *, owner_token, which, expected_source_revision, expected_runtime_image,
+            approved_pwa_origin, owner_session_cookie, execution=None, acknowledgment=None, nonce=None,
+            total_timeout_seconds=10, request_timeout_seconds=2,
+            connection_factory=http.client.HTTPConnection, pwa_connection_factory=http.client.HTTPSConnection,
+            timer_factory=threading.Timer, monotonic=time.monotonic):
+        from app.agent_cert_owner_referral_events import phase_request,canonical_phase_spec,steps,action_type
+        _require(type(owner_token) is str and 16<=len(owner_token)<=4096
+            and all(33<=ord(c)<=126 for c in owner_token),'EXISTING_OWNER_CREDENTIAL_REQUIRED')
+        _require(type(expected_source_revision) is str and _SOURCE.fullmatch(expected_source_revision) is not None
+            and type(expected_runtime_image) is str and _IMAGE.fullmatch(expected_runtime_image) is not None,
+            'EXTERNALLY_OBSERVED_RUNTIME_PINS_REQUIRED')
+        _require(type(total_timeout_seconds) in (int,float) and math.isfinite(total_timeout_seconds)
+            and 0<total_timeout_seconds<=30 and type(request_timeout_seconds) in (int,float)
+            and math.isfinite(request_timeout_seconds) and 0<request_timeout_seconds<=2
+            and all(callable(v) for v in (connection_factory,pwa_connection_factory,timer_factory,monotonic)),
+            'BOUNDED_OPERATOR_TRANSPORT_REQUIRED')
+        _require(type(approved_pwa_origin) is str and len(approved_pwa_origin)<=512
+            and all(33<=ord(c)<=126 for c in approved_pwa_origin),'EXPLICIT_APPROVED_HTTPS_ORIGIN_REQUIRED')
+        try:
+            parsed=urlsplit(approved_pwa_origin);port=443 if parsed.port is None else parsed.port
+            valid=(parsed.scheme=='https' and parsed.hostname is not None and parsed.username is None
+                and parsed.password is None and not parsed.path and not parsed.query and not parsed.fragment
+                and approved_pwa_origin=='https://'+parsed.netloc and 1<=port<=65535)
+        except Exception: valid=False
+        _require(valid,'EXPLICIT_APPROVED_HTTPS_ORIGIN_REQUIRED')
+        from app.pwa_sessions import pwa_origins
+        _require(approved_pwa_origin in pwa_origins(),'EXISTING_CONFIGURED_PWA_ORIGIN_REQUIRED')
+        _require(type(owner_session_cookie) is str and re.fullmatch(
+            r'__Host-JARVIS-PWA=[A-Za-z0-9_-]{16,4096}',owner_session_cookie) is not None,
+            'EXPLICIT_EXISTING_OWNER_COOKIE_REQUIRED')
+        request=phase_request(which,execution=execution,acknowledgment=acknowledgment,nonce=nonce)
+        self._spec=canonical_phase_spec(which);self._phase=which
+        self._submitted_request=json.loads(_canonical(request))
+        self._subject_action_types={action_type(which,step) for step in steps(which)+('full',)}
+        self._token=owner_token;self._source=expected_source_revision;self._image=expected_runtime_image
+        self._total_seconds=total_timeout_seconds;self._request_seconds=request_timeout_seconds
+        self._factory=connection_factory;self._timer_factory=timer_factory;self._clock=monotonic
+        self._deadline=None;self._authorized=False;self._post_attempts=set()
+        self._subject_task=self._review_task=self._review_action=None
+        self._artifact_ids=set();self._responses=[];self._response_bytes=0;self._response_limit=32
+        self._lock=threading.Lock();self._owner_referral_id=None;self._owner_proposal=None
+        self._pwa_origin=approved_pwa_origin;self._pwa_host=parsed.hostname;self._pwa_port=port
+        self._pwa_authority=parsed.netloc;self._pwa_cookie=owner_session_cookie;self._pwa_factory=pwa_connection_factory
+
+    def _owner_path_allowed(self,method,path,body,artifact):
+        if self._phase!='proposal' or not _uuid(self._owner_referral_id) or not _uuid(self._subject_task):return False
+        base='/pwa/api/owner-referrals/'+self._owner_referral_id
+        return artifact is False and body is None and ((method=='GET' and path==base)
+            or (method=='POST' and path==base+'/acknowledge'))
+
+    def submit_objective(self,body):
+        _require(_canonical(body)==_canonical(self._submitted_request),'OWNER_CANONICAL_REQUEST_REQUIRED')
+        self.runtime();status,value=self._request('POST','/api/agents/objectives',body=body)
+        if status==202 and _uuid(value.get('id')):
+            self._subject_task=value['id'];rows=value.get('steps')
+            dispatch=rows[0].get('dispatch') if type(rows) is list and len(rows)==1 and type(rows[0]) is dict else None
+            if type(dispatch) is dict:
+                self._remember_artifact(dispatch.get('artifact'));event=dispatch.get('owner_referral_event')
+                if type(event) is dict:
+                    self._remember_artifact(event.get('input_artifact_metadata'))
+                    proposal=event.get('proposal')
+                    if type(proposal) is dict and _uuid(proposal.get('proposal',{}).get('referral_id')):
+                        self._owner_proposal=json.loads(_canonical(proposal))
+                        self._owner_referral_id=proposal['proposal']['referral_id']
+        return status,value
+
+    def acknowledge_owner_referral(self):
+        _require(self._phase=='proposal' and self._authorized and self._owner_proposal is not None,
+            'OWNER_ORIGINAL_PROPOSAL_REQUIRED')
+        base='/pwa/api/owner-referrals/'+self._owner_referral_id
+        status,before=self._request('GET',base)
+        _require(status==200 and _canonical(before)==_canonical(self._owner_proposal),'OWNER_HTTP_PROPOSAL_DRIFT')
+        status,ack=self._request('POST',base+'/acknowledge')
+        _require(status==200 and type(ack) is dict and ack.get('state')=='ACKNOWLEDGED_NOT_APPROVED'
+            and ack.get('execution_authority')=='NONE' and ack.get('execution_performed') is False
+            and _canonical(ack.get('proposal'))==_canonical(before['proposal'])
+            and ack.get('proposal_sha256')==before['proposal_sha256'], 'OWNER_HTTP_ACK_NOT_APPROVAL_REQUIRED')
+        status,after=self._request('GET',base)
+        _require(status==200 and _canonical(after)==_canonical(ack),'OWNER_HTTP_ACK_CHANGED')
+        return ack

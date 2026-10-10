@@ -38,6 +38,8 @@ SOURCE_FILES = (
     'app/agent_cert_recovery_events.py', 'app/agent_cert_clean_room.py',
     'app/agent_cert_conflict_events.py',
     'app/agent_cert_cross_conflict_events.py',
+    'app/agent_cert_owner_referral_events.py', 'app/owner_referrals.py', 'app/pwa_sessions.py',
+    'app/client_auth.py', 'app/interface_server.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
@@ -53,7 +55,7 @@ EVENT_CASES = frozenset({'baseline:identity', 'baseline:initialization',
     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
     'evidence_integrity:complete', 'context_integrity:complete',
     'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
-    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'recovery:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete','conflict_resolution:complete','cross_agent_conflict:complete','fresh_challenge:complete','unseen_task:complete'})
+    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'recovery:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete','conflict_resolution:complete','cross_agent_conflict:complete','unauthorized_rejection:owner_only','fresh_challenge:complete','unseen_task:complete'})
 GROUP_TWO = frozenset({'a15', 'a16', 'a19', 'a20', 'a26'})
 
 

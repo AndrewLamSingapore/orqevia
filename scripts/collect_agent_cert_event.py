@@ -846,3 +846,98 @@ def collect_handoff_case(*,case='handoff_recovery:bounded_response',operator_fac
         summary['reason']=str(error) if isinstance(error,CollectionError) else 'HANDOFF_ORIGINAL_CHAIN_INCOMPLETE'
     return CollectedHandoffCase(summary,continuation,None if failed is None else _canonical(failed),
         tuple(reply for operator in operators for reply in operator.original_replies()))
+
+
+def collect_owner_referral_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Two actual stored Objectives and an original HTTPS Owner acknowledgment; retain every bounded original HTTP reply."""
+    from app.agent_cert_owner_referral_events import (CASE,canonical_phase_spec,
+        phase_request,action_type,validate_execution,validate_reviewed_owner_case)
+    from scripts.agent_cert_operator_io import OwnerPhaseOperatorIO,OperatorBindingError
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_health='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'OWNER_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic);_require(left>0,'OWNER_OUTER_DEADLINE_EXCEEDED');return left
+        def call(callback,*args):
+            remaining();custody_bound()
+            target=getattr(callback,'__self__',None)
+            if type(target) is OwnerPhaseOperatorIO:
+                used=sum(len(reply.raw) for op in operators for reply in op.original_replies())
+                target._custody_cap=target._response_bytes+24*1024*1024-used
+            value=_call(callback,*args);remaining();custody_bound();return value
+        def custody_bound():
+            _require(sum(len(reply.raw) for op in operators for reply in op.original_replies())<=24*1024*1024,
+                'OWNER_TOTAL_RESPONSE_CUSTODY_BOUND')
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'OWNER_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is OwnerPhaseOperatorIO,'OWNER_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator);_require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which):
+            nonlocal execution
+            summary['stage']=which.upper();operator=make(which)
+            before=call(operator.runtime);_registry_pin(expected_registry_sha256);began=wall_clock()
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'OWNER_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'OWNER_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id'];metadata=dispatch['artifact']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,dispatch['owner_referral_event']['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'OWNER_OBJECTIVE_READ_FAILED')
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime);_require(_equal(before,after),'OWNER_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which),submitted_request_sha256=_sha(_canonical(operator._submitted_request)),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+            execution=value
+            joined=validate_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'OWNER_OBJECTIVE_READ_FAILED')),
+                'OWNER_OBJECTIVE_CHANGED')
+            return value,joined
+        resolved,joined=produce('proposal');execution=resolved
+        acknowledgment=call(operators[0].acknowledge_owner_referral)
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory);operator=make('review',execution=resolved,acknowledgment=acknowledgment,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock();_registry_pin(expected_registry_sha256)
+        summary['submission_attempts']+=1
+        request=phase_request('review',execution=resolved,acknowledgment=acknowledgment,nonce=nonce)
+        submission=_response(call(operator.submit_objective,request),202,'OWNER_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'OWNER_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,action_type('review','review')))
+        after=call(operator.runtime);_require(_equal(before,after),'OWNER_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request_sha256=_sha(_canonical(request)),runtime=before,runtime_after=after,
+            submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+            objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()),
+            owner_acknowledgment=acknowledgment)
+        validate_reviewed_owner_case(resolved,peer,**pins,now=wall_clock());remaining();_registry_pin(expected_registry_sha256)
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(resolved)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=8,original_peer_rows=2,owner_acknowledgment="NOT_APPROVED",
+            owner_identity_scope="CURRENT_SERVER_ISSUED_ROLE_NOT_LAM_IDENTITY",execution_performed=False)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,(CollectionError,OperatorBindingError)) else 'OWNER_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)

@@ -195,7 +195,7 @@ def test_population_and_owning_age_limits_are_not_expanded():
     from scripts.sign_admitted_agent_cases import CODE_FILES, RUNTIME_REVIEW_CODE_FILES
     assert len(PAIRS) == 29 and len({agent for agent, _ in PAIRS}) == 21
     assert initialization.MAX_AGE_SECONDS == authority.MAX_AGE_SECONDS == artifact.MAX_AGE_SECONDS == 300
-    assert len(CODE_FILES) == 62 and len(RUNTIME_REVIEW_CODE_FILES) == 61
+    assert len(CODE_FILES) == 67 and len(RUNTIME_REVIEW_CODE_FILES) == 66
     assert 'app/agent_cert_fresh_input.py' in CODE_FILES and 'app/agent_cert_fresh_input.py' in RUNTIME_REVIEW_CODE_FILES
     for dependency in ('app/spine.py', 'app/generated/portfolio_contracts.py'):
         assert dependency in CODE_FILES and dependency in RUNTIME_REVIEW_CODE_FILES

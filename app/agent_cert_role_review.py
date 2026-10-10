@@ -161,6 +161,9 @@ def canonical_case_spec(agent, capability, case_id):
     if agent=='a19' and case_id=='cross_agent_conflict:complete':
         from .agent_cert_cross_conflict_events import canonical_cross_conflict_case
         return canonical_cross_conflict_case()
+    if agent=='a19' and case_id=='unauthorized_rejection:owner_only':
+        from .agent_cert_owner_referral_events import canonical_owner_case
+        return canonical_owner_case()
     if agent=='a19' and case_id=='conflict_resolution:complete':
         from .agent_cert_conflict_events import canonical_conflict_case
         return canonical_conflict_case()
@@ -207,6 +210,8 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('initialization_event_evidence_required',)
     if case_id=='cross_agent_conflict:complete':
         return False,('original_four_task_unresolved_conflict_evidence_required',)
+    if case_id=='unauthorized_rejection:owner_only':
+        return False,('original_owner_referral_ack_and_distinct_review_required',)
     if case_id=='conflict_resolution:complete':
         return False,('original_four_task_conflict_evidence_required',)
     if case_id=='recovery:complete':

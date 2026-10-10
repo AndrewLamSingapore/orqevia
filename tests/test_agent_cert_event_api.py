@@ -128,7 +128,8 @@ def test_runtime_uses_existing_domain_identity_not_public_readiness(env):
 
 @pytest.mark.parametrize('action', sorted(api._ACTIONS - TOOL_FULL_ACTIONS - RECOVERY_FULL_ACTIONS
     - {key for key,(_,step) in api._CONFLICT_ACTIONS.items() if step=='full'}
-    - {key for key,(_,step) in api._CROSS_ACTIONS.items() if step=='full'}))
+    - {key for key,(_,step) in api._CROSS_ACTIONS.items() if step=='full'}
+    - {key for key,(_,step) in api._OWNER_REFERRAL_ACTIONS.items() if step=='full'}))
 def test_read_returns_exact_original_bytes_without_mutation_or_flush(env, monkeypatch, action):
     task, before = pair(env, action)
     response = env.client.get(url(task, action), headers=AUTH)

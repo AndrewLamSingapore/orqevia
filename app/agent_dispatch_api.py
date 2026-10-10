@@ -96,7 +96,8 @@ class AgentRequest(BaseModel):
         'certification_conflict_code_proposal','certification_conflict_fixture_finding',
         'certification_conflict_reconciliation','certification_conflict_review',
         'certification_cross_conflict_code_proposal','certification_cross_conflict_fixture_finding',
-        'certification_cross_conflict_separation','certification_cross_conflict_review'] | None = None
+        'certification_cross_conflict_separation','certification_cross_conflict_review',
+        'certification_owner_referral_proposal','certification_owner_referral_review'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -716,6 +717,17 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     submitted_request=body.model_dump(), data_root=root, ledger=action_ledger(), runtime=runtime,
                     read_runtime=runtime_snapshot, source_revision=runtime['source_revision'],
                     runtime_image_id=runtime['image_digest'], registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
+            elif body.deterministic_operation in {'certification_owner_referral_proposal','certification_owner_referral_review'}:
+                from . import agent_registry
+                from .agent_cert_owner_referral_events import execute_proposal,execute_review,ACTORS,sha
+                from .objective_api import get_read_only
+                which=body.deterministic_operation.removeprefix('certification_owner_referral_')
+                if (actor,body.capability)!=ACTORS[which]:raise ValueError('OWNER_REFERRAL_FIXED_OWNER_REQUIRED')
+                arguments=dict(actor=actor,submitted_request=body.model_dump(),data_root=root,ledger=action_ledger(),
+                    runtime=runtime,read_runtime=runtime_snapshot,source_revision=runtime['source_revision'],
+                    runtime_image_id=runtime['image_digest'],registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    read_objective=lambda original:get_read_only(original,authorization))
+                return execute_review(task_id,**arguments) if which=='review' else execute_proposal(task_id,**arguments)
             elif body.deterministic_operation in {'certification_conflict_code_proposal','certification_conflict_fixture_finding',
                     'certification_conflict_reconciliation','certification_conflict_review'}:
                 from . import agent_registry

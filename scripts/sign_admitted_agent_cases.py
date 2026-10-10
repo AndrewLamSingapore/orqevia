@@ -35,6 +35,8 @@ CODE_FILES = (
     'app/agent_cert_recovery_events.py',
     'app/agent_cert_conflict_events.py',
     'app/agent_cert_cross_conflict_events.py',
+    'app/agent_cert_owner_referral_events.py', 'app/owner_referrals.py', 'app/pwa_sessions.py',
+    'app/client_auth.py', 'app/interface_server.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_review_tool.py',
     'app/agent_dispatch_api.py', 'app/cloud_execution.py', 'app/hf_admission.py',
     'app/agent_cert_role_group_two.py', 'app/agent_cert_role_g1.py',
@@ -107,7 +109,7 @@ def parse(raw):
                     'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
                     'evidence_integrity:complete', 'context_integrity:complete',
                     'authority:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized',
-                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'recovery:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete','conflict_resolution:complete','cross_agent_conflict:complete'} and (entry['cloud_policy'] is not None or
+                    'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'graceful_degradation:complete','health:complete', 'recovery:complete', 'tools:complete', 'independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete','conflict_resolution:complete','cross_agent_conflict:complete','unauthorized_rejection:owner_only'} and (entry['cloud_policy'] is not None or
                     entry['owner_policy_sha256'] is not None):
                 deny()
             identity = (agent, row.get('capability_id'), case_id)

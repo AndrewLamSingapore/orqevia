@@ -554,6 +554,8 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 owned_identity=spec['case'] == 'baseline:identity')
         if spec.get('case') == 'cross_agent_conflict:complete':
             return {**base,'state':'REJECTED','reason':'original_four_task_unresolved_conflict_collector_required'}
+        if spec.get('case') == 'unauthorized_rejection:owner_only':
+            return {**base, 'state': 'REJECTED', 'reason': 'original_owner_referral_ack_collector_required'}
         if spec.get('case') == 'conflict_resolution:complete':
             return {**base,'state':'REJECTED','reason':'original_four_task_conflict_collector_required'}
         if spec.get('case') == 'recovery:complete':

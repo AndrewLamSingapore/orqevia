@@ -43,6 +43,11 @@ from .agent_cert_cross_conflict_events import (PHASES as CROSS_PHASES,steps as c
     read_action_span as read_cross_span,validate_full_action_span as validate_cross_full_span)
 
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
+from .agent_cert_owner_referral_events import (ACTORS as OWNER_REFERRAL_PHASES,steps as owner_referral_steps,
+    action_type as owner_referral_action,read_action_span as read_owner_referral_span,
+    validate_full_action_span as validate_owner_referral_full)
+_OWNER_REFERRAL_ACTIONS={owner_referral_action(which,step):(which,step)
+    for which in OWNER_REFERRAL_PHASES for step in owner_referral_steps(which)+('full',)}
 _read_slot = threading.BoundedSemaphore(1)
 _ARTIFACT_ACTIONS = {
     artifact_action_type(case): (case, False, False) for case in ARTIFACT_CASES
@@ -63,7 +68,7 @@ _CROSS_ACTIONS={cross_action_type(which,step):(which,step)
     for which in CROSS_PHASES for step in cross_steps(which)+('full',)}
 _EXECUTION_INPUT_ACTIONS = {execution_input_read_action(stage) for stage in ('source','audit')} | {
     execution_input_output_action(stage) for stage in EXECUTION_INPUT_STAGES}
-_ACTIONS = frozenset({
+_ACTIONS = frozenset(set(_OWNER_REFERRAL_ACTIONS)|{
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
@@ -143,6 +148,9 @@ def actions(task_id: str, response: Response, action_type: str = '',
             lines=read_cross_span(root,task_id,which,step=step)
         elif action_type==CROSS_REVIEW_ACTION:
             lines=read_cross_span(root,task_id,'review',step='review')
+        elif action_type in _OWNER_REFERRAL_ACTIONS:
+            which,step=_OWNER_REFERRAL_ACTIONS[action_type]
+            lines=read_owner_referral_span(root,task_id,which,step=step)
         elif action_type in _CONFLICT_ACTIONS:
             which,step=_CONFLICT_ACTIONS[action_type]
             lines=read_conflict_span(root,task_id,which,step=step)
@@ -171,6 +179,8 @@ def actions(task_id: str, response: Response, action_type: str = '',
             lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
         if action_type in _CROSS_ACTIONS and _CROSS_ACTIONS[action_type][1]=='full':
             validate_cross_full_span(lines,task_id,_CROSS_ACTIONS[action_type][0])
+        elif action_type in _OWNER_REFERRAL_ACTIONS and _OWNER_REFERRAL_ACTIONS[action_type][1]=='full':
+            validate_owner_referral_full(lines,task_id,_OWNER_REFERRAL_ACTIONS[action_type][0])
         elif action_type in _CONFLICT_ACTIONS and _CONFLICT_ACTIONS[action_type][1]=='full':
             validate_conflict_full_span(lines,task_id,_CONFLICT_ACTIONS[action_type][0])
         elif action_type in _RECOVERY_ACTIONS and _RECOVERY_ACTIONS[action_type][1]=='full':

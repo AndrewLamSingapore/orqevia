@@ -140,6 +140,9 @@ def _oracle_id(agent, spec=None):
     if agent == 'a19' and spec is not None and spec.get('case') == 'cross_agent_conflict:complete':
         from app.agent_cert_cross_conflict_events import ORACLE
         return ORACLE
+    if agent == 'a19' and spec is not None and spec.get('case') == 'unauthorized_rejection:owner_only':
+        from app.agent_cert_owner_referral_events import ORACLE
+        return ORACLE
     if agent == 'a19' and spec is not None and spec.get('case') == 'conflict_resolution:complete':
         from app.agent_cert_conflict_events import ORACLE
         return ORACLE
@@ -424,6 +427,11 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
             _deny('CROSS_CONFLICT_CLOUD_TRANSPORT_FORBIDDEN')
         return _cross_conflict_review(row,primary,review,source_revision=source_revision,runtime_image_id=runtime_image_id,
             reviewer_code_revision=reviewer_code_revision,now=now)
+    if (row.get('dimension'),row.get('test_case'))==('unauthorized_rejection','owner_only'):
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('OWNER_REFERRAL_CLOUD_OR_POLICY_FORBIDDEN')
+        return _owner_referral_review(row,primary,review,source_revision=source_revision,
+            runtime_image_id=runtime_image_id,reviewer_code_revision=reviewer_code_revision,now=now)
     if (row.get('dimension'),row.get('test_case'))==('conflict_resolution','complete'):
         if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
             _deny('CONFLICT_CLOUD_TRANSPORT_FORBIDDEN')
@@ -890,3 +898,26 @@ def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
     except Exception:
         # Never forward result text, path, provider exception or injected bearer.
         _deny('REVIEWED_CASE_SIGNING_REJECTED')
+
+def _owner_referral_review(row,primary,reviewed,*,source_revision,runtime_image_id,reviewer_code_revision,now):
+    """Original referral, separate Owner acknowledgment and persisted peer only."""
+    from app.agent_cert_owner_referral_events import VERSION,ORACLE,validate_reviewed_owner_case
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id')!='a19' or row.get('capability_id')!='responsibility.a19'
+            or row.get('executor_identity')!='a19' or row.get('verifier')!='a26'
+            or row.get('authority_scope')!=agent_record('a19')['authority']
+            or row.get('source_revision')!=source_revision or row.get('review_source_revision')!=source_revision
+            or row.get('reviewer_code_revision')!=reviewer_code_revision or row.get('test_result')!='PASS'
+            or row.get('test_version')!=VERSION or row.get('review_test_version')!=ORACLE
+            or any(type(row.get(key)) is not str or not 1<=len(row[key])<=100
+                for key in ('certification_test','review_run_id'))):
+        _deny('OWNER_REFERRAL_RECORD_BINDING_INVALID')
+    execution,peer=_json(primary),_json(reviewed);raw=peer.get('artifact_content_utf8')
+    if type(raw) is not str or not 1<=len(raw.encode())<=65536:_deny('OWNER_REFERRAL_ORIGINAL_PEER_REQUIRED')
+    reviewed_at=_utc(_json(raw.encode()).get('reviewed_at'))
+    completed=_utc(peer.get('observation',{}).get('completed_at'))
+    if not (reviewed_at<=completed<=_utc(row.get('certified_at'))<=_utc(row.get('last_revalidated'))
+            <=now<_utc(row.get('expires_at'))):_deny('OWNER_REFERRAL_RECORD_TIME_INVALID')
+    validate_reviewed_owner_case(execution,peer,source_revision=source_revision,runtime_image_id=runtime_image_id,
+        registry_sha256=_sha(REGISTRY_PATH.read_bytes()),now=completed)
+    return True
