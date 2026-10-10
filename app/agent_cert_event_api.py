@@ -31,6 +31,10 @@ from .agent_cert_recovery_events import (PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACT
     read_review_action_span as read_recovery_review_span,validate_full_action_span as validate_recovery_full_span)
 from .agent_cert_clean_room import INPUT_READ_ACTION as BLIND_INPUT_READ_ACTION, input_action_span as blind_input_span
 
+from .agent_cert_conflict_events import (PHASES as CONFLICT_PHASES,steps as conflict_steps,
+    action_type as conflict_action_type,REVIEW_ACTION as CONFLICT_REVIEW_ACTION,
+    read_action_span as read_conflict_span,validate_full_action_span as validate_conflict_full_span)
+
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
 _read_slot = threading.BoundedSemaphore(1)
 _ARTIFACT_ACTIONS = {
@@ -46,13 +50,15 @@ _TOOL_ACTIONS = {tool_action_type(case, phase=phase): (case, phase)
     for case in TOOL_CASES for phase in tool_phases(case) + ('full',)}
 _RECOVERY_ACTIONS={recovery_action_type(which,step):(which,step)
     for which in (PRIOR_PHASE,CORRECTION_PHASE) for step in ('setup','read','result','full')}
+_CONFLICT_ACTIONS={conflict_action_type(which,step):(which,step)
+    for which in CONFLICT_PHASES for step in conflict_steps(which)+('full',)}
 _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
     'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
-    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,
-} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS))
+    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,CONFLICT_REVIEW_ACTION,
+} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS))
 
 
 def _headers(response):
@@ -119,7 +125,12 @@ def actions(task_id: str, response: Response, action_type: str = '',
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if action_type in _RECOVERY_ACTIONS:
+        if action_type in _CONFLICT_ACTIONS:
+            which,step=_CONFLICT_ACTIONS[action_type]
+            lines=read_conflict_span(root,task_id,which,step=step)
+        elif action_type==CONFLICT_REVIEW_ACTION:
+            lines=read_conflict_span(root,task_id,'review',step='review')
+        elif action_type in _RECOVERY_ACTIONS:
             which,step=_RECOVERY_ACTIONS[action_type]
             lines=read_recovery_action_span(root,task_id,which,step=step)
         elif action_type==RECOVERY_REVIEW_ACTION:
@@ -140,7 +151,9 @@ def actions(task_id: str, response: Response, action_type: str = '',
             lines = read_artifact_action_span(root, task_id, case, setup=setup, prior=prior)
         else:
             lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
-        if action_type in _RECOVERY_ACTIONS and _RECOVERY_ACTIONS[action_type][1]=='full':
+        if action_type in _CONFLICT_ACTIONS and _CONFLICT_ACTIONS[action_type][1]=='full':
+            validate_conflict_full_span(lines,task_id,_CONFLICT_ACTIONS[action_type][0])
+        elif action_type in _RECOVERY_ACTIONS and _RECOVERY_ACTIONS[action_type][1]=='full':
             validate_recovery_full_span(lines,task_id,_RECOVERY_ACTIONS[action_type][0])
         elif action_type in _TOOL_ACTIONS and _TOOL_ACTIONS[action_type][1] == 'full':
             validate_full_span(lines, task_id, _TOOL_ACTIONS[action_type][0])

@@ -546,6 +546,8 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock,
                 owned_identity=spec['case'] == 'baseline:identity')
+        if spec.get('case') == 'conflict_resolution:complete':
+            return {**base,'state':'REJECTED','reason':'original_four_task_conflict_collector_required'}
         if spec.get('case') == 'recovery:complete':
             # This case owns two persisted subject tasks and a third persisted
             # peer Objective. A single generic dispatch cannot observe that

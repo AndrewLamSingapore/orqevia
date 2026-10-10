@@ -156,6 +156,9 @@ def canonical_case_spec(agent, capability, case_id):
             'baseline:identity'}:
         from .agent_cert_cases import challenge
         return challenge(case_id, agent_id=agent, capability_id=capability)
+    if agent=='a19' and case_id=='conflict_resolution:complete':
+        from .agent_cert_conflict_events import canonical_conflict_case
+        return canonical_conflict_case()
     if agent=='a19' and case_id=='recovery:complete':
         from .agent_cert_recovery_events import canonical_recovery_case
         return canonical_recovery_case()
@@ -194,6 +197,8 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
+    if case_id=='conflict_resolution:complete':
+        return False,('original_four_task_conflict_evidence_required',)
     if case_id=='recovery:complete':
         return False,('original_two_task_recovery_evidence_required',)
     from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
