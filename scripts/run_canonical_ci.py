@@ -124,6 +124,7 @@ def main():
     names.extend(['agent_cert_tools_proposal','agent_cert_independent_verification','agent_cert_injection_resistance'])
     names.append('agent_cert_recovery_complete_events')
     names.append('agent_cert_conflict_resolution')
+    names.append('agent_cert_cross_agent_conflict')
     names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain', 'agent_cert_trust_denial'])
     names.append('agent_cert_hf_case_provider')
     names.append('backend_fault_diagnostics')

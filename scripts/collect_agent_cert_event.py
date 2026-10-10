@@ -152,6 +152,92 @@ def collect_conflict_case(*,operator_factory,expected_source_revision,expected_r
         None if peer is None else _canonical(peer),replies)
 
 
+def collect_cross_conflict_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,variant='standard',timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Four actual stored Objectives; retain every bounded original HTTP reply."""
+    from app.agent_cert_cross_conflict_events import (CASE,PHASES,orientation,canonical_phase_spec,
+        phase_request,action_type,REVIEW_ACTION,validate_execution,validate_reviewed_conflict)
+    from scripts.agent_cert_operator_io import CrossConflictPhaseOperatorIO
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_health='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        orientation(variant)
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'CROSS_CONFLICT_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic);_require(left>0,'CROSS_CONFLICT_OUTER_DEADLINE_EXCEEDED');return left
+        def call(callback,*args):
+            remaining();value=_call(callback,*args);remaining();return value
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'CROSS_CONFLICT_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,variant=variant,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is CrossConflictPhaseOperatorIO,'CROSS_CONFLICT_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator);_require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which,originals=None):
+            nonlocal execution
+            summary['stage']=which.upper();operator=make(which,peer_executions=originals)
+            before=call(operator.runtime);_registry_pin(expected_registry_sha256);began=wall_clock()
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'CROSS_CONFLICT_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'CROSS_CONFLICT_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id'];metadata=dispatch['artifact']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,dispatch['conflict_event']['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'CROSS_CONFLICT_OBJECTIVE_READ_FAILED')
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime);_require(_equal(before,after),'CROSS_CONFLICT_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which,variant),submitted_request_sha256=_sha(_canonical(operator._submitted_request)),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()),peer_executions=originals)
+            execution=value
+            joined=validate_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'CROSS_CONFLICT_OBJECTIVE_READ_FAILED')),
+                'CROSS_CONFLICT_OBJECTIVE_CHANGED')
+            return value,joined
+        first,_=produce(PHASES[0]);second,_=produce(PHASES[1])
+        resolved,joined=produce(PHASES[2],[first,second]);execution=resolved
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory);operator=make('review',execution=resolved,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock();_registry_pin(expected_registry_sha256)
+        summary['submission_attempts']+=1
+        request=phase_request('review',variant,execution=resolved,nonce=nonce)
+        submission=_response(call(operator.submit_objective,request),202,'CROSS_CONFLICT_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'CROSS_CONFLICT_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,REVIEW_ACTION))
+        after=call(operator.runtime);_require(_equal(before,after),'CROSS_CONFLICT_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request_sha256=_sha(_canonical(request)),runtime=before,runtime_after=after,
+            submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+            objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+        validate_reviewed_conflict(resolved,peer,**pins,now=wall_clock());remaining();_registry_pin(expected_registry_sha256)
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,orientation=variant,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(resolved)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=24,original_peer_rows=2,both_recommendations_retained=True)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,CollectionError) else 'CROSS_CONFLICT_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)
+
+
 def collect_recovery_case(*,operator_factory,expected_source_revision,expected_runtime_image,
         expected_registry_sha256,timeout_seconds=30,monotonic=time.monotonic,
         wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):

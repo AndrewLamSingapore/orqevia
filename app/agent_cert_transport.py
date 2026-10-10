@@ -170,6 +170,8 @@ def canonical_cert_case(agent_id: str, capability_id: str,
         raise ValueError('original two-task recovery events forbid cloud transport')
     if case_id=='conflict_resolution:complete':
         raise ValueError('original four-task source conflict events forbid cloud transport')
+    if case_id=='cross_agent_conflict:complete':
+        raise ValueError('original four-task unresolved peer conflict events forbid cloud transport')
     from .agent_cert_a19_cases import CASE_VERSION, ORACLE_ID, SUPPORTED_CASES
     from .agent_cert_a19_general import (CASE_VERSION as GENERAL_VERSION,
         ORACLE_ID as GENERAL_ORACLE, SUPPORTED_CASES as GENERAL_CASES)

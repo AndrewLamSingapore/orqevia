@@ -35,6 +35,10 @@ from .agent_cert_conflict_events import (PHASES as CONFLICT_PHASES,steps as conf
     action_type as conflict_action_type,REVIEW_ACTION as CONFLICT_REVIEW_ACTION,
     read_action_span as read_conflict_span,validate_full_action_span as validate_conflict_full_span)
 
+from .agent_cert_cross_conflict_events import (PHASES as CROSS_PHASES,steps as cross_steps,
+    action_type as cross_action_type,REVIEW_ACTION as CROSS_REVIEW_ACTION,
+    read_action_span as read_cross_span,validate_full_action_span as validate_cross_full_span)
+
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
 _read_slot = threading.BoundedSemaphore(1)
 _ARTIFACT_ACTIONS = {
@@ -52,13 +56,15 @@ _RECOVERY_ACTIONS={recovery_action_type(which,step):(which,step)
     for which in (PRIOR_PHASE,CORRECTION_PHASE) for step in ('setup','read','result','full')}
 _CONFLICT_ACTIONS={conflict_action_type(which,step):(which,step)
     for which in CONFLICT_PHASES for step in conflict_steps(which)+('full',)}
+_CROSS_ACTIONS={cross_action_type(which,step):(which,step)
+    for which in CROSS_PHASES for step in cross_steps(which)+('full',)}
 _ACTIONS = frozenset({
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
     'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
-    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,CONFLICT_REVIEW_ACTION,
-} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS))
+    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,CONFLICT_REVIEW_ACTION,CROSS_REVIEW_ACTION,
+} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS)|set(_CROSS_ACTIONS))
 
 
 def _headers(response):
@@ -125,7 +131,12 @@ def actions(task_id: str, response: Response, action_type: str = '',
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if action_type in _CONFLICT_ACTIONS:
+        if action_type in _CROSS_ACTIONS:
+            which,step=_CROSS_ACTIONS[action_type]
+            lines=read_cross_span(root,task_id,which,step=step)
+        elif action_type==CROSS_REVIEW_ACTION:
+            lines=read_cross_span(root,task_id,'review',step='review')
+        elif action_type in _CONFLICT_ACTIONS:
             which,step=_CONFLICT_ACTIONS[action_type]
             lines=read_conflict_span(root,task_id,which,step=step)
         elif action_type==CONFLICT_REVIEW_ACTION:
@@ -151,7 +162,9 @@ def actions(task_id: str, response: Response, action_type: str = '',
             lines = read_artifact_action_span(root, task_id, case, setup=setup, prior=prior)
         else:
             lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
-        if action_type in _CONFLICT_ACTIONS and _CONFLICT_ACTIONS[action_type][1]=='full':
+        if action_type in _CROSS_ACTIONS and _CROSS_ACTIONS[action_type][1]=='full':
+            validate_cross_full_span(lines,task_id,_CROSS_ACTIONS[action_type][0])
+        elif action_type in _CONFLICT_ACTIONS and _CONFLICT_ACTIONS[action_type][1]=='full':
             validate_conflict_full_span(lines,task_id,_CONFLICT_ACTIONS[action_type][0])
         elif action_type in _RECOVERY_ACTIONS and _RECOVERY_ACTIONS[action_type][1]=='full':
             validate_recovery_full_span(lines,task_id,_RECOVERY_ACTIONS[action_type][0])

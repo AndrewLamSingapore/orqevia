@@ -28,3 +28,4 @@ governance/updated-golden-selection.json text eol=lf
 # New original-recovery oracle is part of the exact verifier/runtime closure.
 app/agent_cert_recovery_events.py text eol=lf
 app/agent_cert_conflict_events.py text eol=lf
+app/agent_cert_cross_conflict_events.py text eol=lf

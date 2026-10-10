@@ -127,7 +127,8 @@ def test_runtime_uses_existing_domain_identity_not_public_readiness(env):
 
 
 @pytest.mark.parametrize('action', sorted(api._ACTIONS - TOOL_FULL_ACTIONS - RECOVERY_FULL_ACTIONS
-    - {key for key,(_,step) in api._CONFLICT_ACTIONS.items() if step=='full'}))
+    - {key for key,(_,step) in api._CONFLICT_ACTIONS.items() if step=='full'}
+    - {key for key,(_,step) in api._CROSS_ACTIONS.items() if step=='full'}))
 def test_read_returns_exact_original_bytes_without_mutation_or_flush(env, monkeypatch, action):
     task, before = pair(env, action)
     response = env.client.get(url(task, action), headers=AUTH)
@@ -170,6 +171,26 @@ def test_conflict_virtual_full_rejects_pair_and_reads_actual_complete_bytes(env,
     lines=response.json()['original_lines']
     assert len(lines)==2*len(conflict.steps(phase))
     assert ''.join(lines).encode()==original[len(before):]
+    assert (env.root/'action-records.jsonl').read_bytes()==original
+
+
+@pytest.mark.parametrize('phase',['code_proposal','fixture_finding','separation'])
+def test_cross_conflict_feed_reads_actual_full_and_rejects_pair(env,monkeypatch,phase):
+    from app import agent_cert_cross_conflict_events as cross
+    action=cross.action_type(phase,'full');task,before=pair(env,action)
+    response=env.client.get(url(task,action),headers=AUTH)
+    assert response.status_code==503 and (env.root/'action-records.jsonl').read_bytes()==before
+    actual=str(uuid.uuid4());ledger=ActionLedger(env.root/'action-records.jsonl')
+    for step in cross.steps(phase):
+        DirectExecutor(ledger).execute(ActionRecord(actual,cross.ACTORS[phase][0],
+            cross.action_type(phase,step),'fixture-action-feed'),lambda:{'public_fixture':True})
+    assert ledger.close() is True
+    original=(env.root/'action-records.jsonl').read_bytes()
+    monkeypatch.setattr(ActionLedger,'flush',lambda *a,**k:pytest.fail('Read cannot flush'))
+    response=env.client.get(url(actual,action),headers=AUTH)
+    assert response.status_code==200
+    lines=response.json()['original_lines']
+    assert len(lines)==2*len(cross.steps(phase)) and ''.join(lines).encode()==original[len(before):]
     assert (env.root/'action-records.jsonl').read_bytes()==original
 
 
