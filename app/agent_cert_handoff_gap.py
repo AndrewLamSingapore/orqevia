@@ -118,7 +118,7 @@ def read_failed_store(data_root, original, *, runtime,registry_sha256,now,subjec
         now=now,subject_task=subject_task)
     root=_path(data_root);path=_path(root/'objectives.db');used=0
     require(path.is_file(),'HANDOFF_ORIGINAL_STORE_REQUIRED')
-    for suffix in ('','-wal','-journal'):
+    for suffix in ('','-wal','-shm','-journal'):
         item=_path(root/('objectives.db'+suffix))
         if item.exists():
             require(item.is_file(),'HANDOFF_ORIGINAL_STORE_TYPE')

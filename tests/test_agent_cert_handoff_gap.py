@@ -226,3 +226,32 @@ def test_actual_final_peer_artifact_delay_cannot_reset_original_five_seconds(run
     assert len(delayed)==1
     assert result.summary['state']!='UNSIGNED_EVENT_EVIDENCE'
     assert (runtime.root/'artifacts'/delayed[0]/'artifact.json').is_file()
+
+
+@pytest.mark.parametrize('defect',('oversized','redirected'))
+def test_actual_native_failed_store_rejects_shm_sidecar(runtime,monkeypatch,defect):
+    import os,subprocess
+    original=gap.read_failed_store;observed=[]
+    sidecar=runtime.root/'objectives.db-shm'
+    target=runtime.root/'private-shm-target';target.mkdir()
+    def guarded(*args,**kwargs):
+        if not observed:
+            if defect=='oversized':
+                with sidecar.open('wb') as stream:stream.truncate(8*1024*1024+1)
+            elif os.name=='nt':
+                result=subprocess.run(['cmd','/c','mklink','/J',str(sidecar),str(target)],capture_output=True)
+                assert result.returncode==0,'Disposable junction creation failed'
+            else:sidecar.symlink_to(target,target_is_directory=True)
+            try:
+                with pytest.raises(ValueError):original(*args,**kwargs)
+                observed.append(defect)
+                raise ValueError('Original native sidecar custody rejected')
+            finally:
+                if defect=='redirected' and os.name=='nt':os.rmdir(sidecar)
+                else:sidecar.unlink()
+        return original(*args,**kwargs)
+    monkeypatch.setattr(gap,'read_failed_store',guarded)
+    result=collect(runtime)
+    assert observed==[defect]
+    assert result.summary['state']!='UNSIGNED_EVENT_EVIDENCE'
+    assert runtime.ledger.status()['persisted']==0
