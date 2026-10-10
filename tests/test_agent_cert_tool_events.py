@@ -132,7 +132,8 @@ def test_exact_source_cases_distinct_and_not_generic_text_or_cloud():
     'duration_boolean', 'future', 'duplicate_pair', 'missing_pair'])
 def test_narrow_failed_read_rejects_rehashed_counterevidence(runtime, defect):
     result = collect(runtime)
-    assert result.summary['state'] == 'UNSIGNED_EVENT_EVIDENCE', result.summary
+    assert result.summary['state'] == 'UNSIGNED_EVENT_EVIDENCE', {
+        key: result.summary.get(key) for key in ('state', 'stage', 'reason', 'agent_id', 'case')}
     execution = json.loads(result.execution_bytes)
     event = execution['dispatch']['tool_event']
     values = [events.parse(line.encode()) for line in execution['failed_read_action_records']]
