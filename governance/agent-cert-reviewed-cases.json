@@ -15,8 +15,8 @@
         "evidence": "execution.json",
         "evidence_sha256": "43a7afd9f9e4c249d0b2a38df8eeb7128232bb47bf68bdc36ed4f3faf69facf4",
         "certified_at": "2026-10-08T10:18:46.368031+00:00",
-        "last_revalidated": "2026-10-08T10:18:46.368031+00:00",
-        "expires_at": "2026-10-08T11:18:46.368031+00:00",
+        "last_revalidated": "2026-10-09T10:06:39.933624+00:00",
+        "expires_at": "2026-10-09T11:06:39.933624+00:00",
         "source_revision": "61335a96293be627b240488debfb94294cdf9b34",
         "authority_scope": "advisory",
         "review_evidence": "review.json",
@@ -32,7 +32,7 @@
       "execution_source_revision": "61335a96293be627b240488debfb94294cdf9b34",
       "runtime_image_id": "sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68",
       "reviewer_code_revision": "61335a96293be627b240488debfb94294cdf9b34",
-      "verifier_code_revision": "5781bd060d99eab9279875d4c90af4fe4cef4cfd",
+      "verifier_code_revision": "59605b8279345dbb4373e6d79d52a2d4ad152888",
       "cloud_policy": null,
       "owner_policy_sha256": null
     }
