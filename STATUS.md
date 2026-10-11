@@ -213,7 +213,7 @@ If you are an AI agent updating this file:
 - Owner-approved PR #206 at `e87e6f25588707369edcf42da8ff770ebb9e4576`
   passed all five exact-head cloud gates and merged as
   `5ebeb55d3236ee508c5de94a7653d0a17c597d29`, with an identical source tree.
-  Protected Azure run [37613202210](https://github.com/AndrewLamSingapore/orqevia/actions/runs/37613202210)
+  Protected Azure run [37613202210](https://github.com/AndrewLamSingapore/prime/actions/runs/37613202210)
   then signed one real A19 role-normal case, independently reviewed by permanent
   A26. The signing service is separate from both agents. Independent offline
   ES256 verification and thirteen tamper-denial checks passed against the actual

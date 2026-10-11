@@ -116,11 +116,11 @@ def assess_static(
         result.error("status must be CURRENT or STALE")
     canonical = value.get("canonical_machine_source")
     if canonical != {
-        "repository": "AndrewLamSingapore/prime",
+        "repository": "AndrewLamSingapore/orqevia",
         "branch": "main",
         "path": "governance/operational-manifest.json",
     }:
-        result.error("canonical_machine_source is not the PRIME main manifest")
+        result.error("canonical_machine_source is not the ORQEVIA main manifest")
 
     # Source unification must never promote historical Dell identity to ABEX.
     abex = value.get("abex_runtime", {})
