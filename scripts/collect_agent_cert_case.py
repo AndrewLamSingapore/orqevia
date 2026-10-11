@@ -214,7 +214,16 @@ def _route(job, request, prepared=None):
         'max_cost_usd': request['max_cost_usd'], 'allow_cloud': 1 if prepared else 0}
     if prepared:
         expected.update(preferred_provider=prepared['provider_id'], model=prepared['model'])
-    _require(all(_equal(job.get(key), value) for key, value in expected.items()),
+    # SQLite REAL columns serialize an authorized zero ceiling as 0.0. Compare
+    # money numerically while retaining exact types/contracts for other fields.
+    cost, ceiling = job.get('max_cost_usd'), expected['max_cost_usd']
+    _require(type(cost) in (int, float) and type(ceiling) in (int, float)
+             and math.isfinite(cost) and math.isfinite(ceiling)
+             and cost >= 0 and ceiling >= 0
+             and Decimal(str(cost)) == Decimal(str(ceiling)),
+             'QUEUE_ROUTE_MISMATCH')
+    _require(all(_equal(job.get(key), value) for key, value in expected.items()
+                 if key != 'max_cost_usd'),
              'QUEUE_ROUTE_MISMATCH')
     _require(type(job.get('preferred_provider')) is str and
              bool(re.fullmatch(r'[A-Za-z0-9_-]{1,80}', job['preferred_provider'])) and
@@ -225,7 +234,8 @@ def _route(job, request, prepared=None):
                  'UNBOUND_LOCAL_PROVIDER')
     if job.get('status') in {'running', 'completed'}:
         _require(job.get('provider') == job['preferred_provider'], 'QUEUE_PROVIDER_MISMATCH')
-    return {key: job.get(key) for key in expected} | {
+    return {key: (expected[key] if key == 'max_cost_usd' else job.get(key))
+            for key in expected} | {
         'preferred_provider': job['preferred_provider'], 'model': job['model'],
         'prompt_sha256': _sha(job['prompt'].encode('utf-8'))}
 
