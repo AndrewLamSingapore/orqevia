@@ -1,9 +1,10 @@
 """Real Git checkout discriminator; public source test, never certification."""
+import ast
 from pathlib import Path
 import subprocess
 
 from scripts.audit_initialization_package import MAIN, ROOT
-from scripts.sign_admitted_agent_cases import CODE_FILES
+
 
 
 def git(root, *args):
@@ -20,7 +21,13 @@ def test_autocrlf_checkout_preserves_all_47_protected_git_blob_bytes(tmp_path):
     git(repository,'config','user.name','Source custody test')
     git(repository,'config','user.email','source-custody@example.invalid')
     git(repository,'config','core.autocrlf','false')
-    original={path:git(ROOT,'show',MAIN+':'+path) for path in CODE_FILES}
+    historical=ast.parse(git(ROOT,'show',MAIN+':scripts/sign_admitted_agent_cases.py').decode())
+    assignments=[node for node in historical.body if isinstance(node,ast.Assign)
+        and any(isinstance(target,ast.Name) and target.id=='CODE_FILES' for target in node.targets)]
+    assert len(assignments)==1
+    code_files=ast.literal_eval(assignments[0].value)
+    assert type(code_files) is tuple and len(set(code_files))==47
+    original={path:git(ROOT,'show',MAIN+':'+path) for path in code_files}
     assert len(original)==47
     for path,raw in original.items():
         target=repository/path
