@@ -13,8 +13,16 @@ from pathlib import Path
 from scripts.agent_cert_reviewed_signing import _contract_event_review
 from scripts.sign_admitted_agent_cases import unchanged_reviewer_code, unchanged_runtime_reviewer_code
 
-MAIN='d9a4e0bdd733a4908e9fa239f6b24bef3c2dce79'
-ORIGINAL='61335a96293be627b240488debfb94294cdf9b34'
+# CANDIDATE RE-PIN — INVALID UNTIL ABEX RE-RUNS PROTECTED VALIDATION.
+# The fresh29 initialization batch (run 38116584735) was executed and reviewed
+# at ORIGINAL/MAIN below its original revisions. The ORQEVIA rebrand changed
+# app/agent_dispatch_api.py inside the pinned reviewer closure, so the audit
+# now fails closed. This is the mechanical re-pin only; it MUST be accompanied
+# by a new protected one-shot run at the revision shown here (new batch, new
+# plan digest, new evidence) before it becomes valid. Dell prepared this diff;
+# ABEX alone authorizes the actual re-validation and re-pin.
+MAIN='8da9a4554cf26ed2d9164ad37cc07da881dc8e4a'
+ORIGINAL='8da9a4554cf26ed2d9164ad37cc07da881dc8e4a'
 ROOT=Path(__file__).resolve().parents[1]
 
 
