@@ -394,6 +394,15 @@ def test_parallel_receipt_credits_only_confirmed_residents_and_retains_cancelled
         c.commit()
     finally:
         c.close()
+    # Windows time.time() can return the same tick as the dispatch above,
+    # which would make the receipt appear not-strictly-newer and skip the
+    # second job's resident credit. Wait until the clock advances past it.
+    with sqlite3.connect(q.db_path) as db:
+        second_dispatched_at = db.execute(
+            'SELECT dispatched_at FROM backend_admission WHERE job_id=?',
+            (second['id'],)).fetchone()[0]
+    while time.time() <= second_dispatched_at:
+        time.sleep(0.001)
     parallel_receipt(backend, residents=[first['id'], second['id']], available=3000)
     c = admission.transaction(q.db_path)
     try:
