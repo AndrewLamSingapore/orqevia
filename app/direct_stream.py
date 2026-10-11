@@ -69,7 +69,7 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                             if not isinstance(value, dict) or normalized:
                                 raise ValueError('JSON object required')
                             json.dumps(value, allow_nan=False)
-                        except (StructuredOutputError, ValueError, OverflowError):
+                        except (StructuredOutputError, ValueError, OverflowError, RecursionError):
                             contract_error = 'STRICT_JSON_CONTRACT_FAILED'
                     result = {'result':''.join(parts),'input_tokens':int(final.get('prompt_eval_count',0)),
                         'output_tokens':int(final.get('eval_count',0)),'actual_cost_usd':0,
