@@ -660,6 +660,105 @@ class AgentCertOperatorIO:
             no_job, self.dispatch_reviewer, artifact, self.read_review_actions)
 
 
+class ModelRoleOperatorIO(AgentCertOperatorIO):
+    """Canonical LOCAL_ONLY model role: fixed60s observation, original framing.
+
+    Separate from zero-model events; no proxy initialization or deadline reset.
+    No transport or credential lookup occurs during construction.
+    """
+    def __init__(self, *, owner_token, spec, expected_source_revision,
+                 expected_runtime_image, total_timeout_seconds=60,
+                 request_timeout_seconds=2, connection_factory=http.client.HTTPConnection,
+                 timer_factory=threading.Timer, monotonic=time.monotonic, review_action_reader=None):
+        _require(type(owner_token) is str and 16<=len(owner_token)<=4096
+            and all(33<=ord(char)<=126 for char in owner_token),'EXISTING_OWNER_CREDENTIAL_REQUIRED')
+        _require(type(expected_source_revision) is str and _SOURCE.fullmatch(expected_source_revision) is not None
+            and type(expected_runtime_image) is str and _IMAGE.fullmatch(expected_runtime_image) is not None,
+            'EXTERNALLY_OBSERVED_RUNTIME_PINS_REQUIRED')
+        _require(type(total_timeout_seconds) in (int,float) and total_timeout_seconds==60
+            and type(request_timeout_seconds) in (int,float) and math.isfinite(request_timeout_seconds)
+            and 0<request_timeout_seconds<=2 and all(callable(x) for x in (connection_factory,timer_factory,monotonic)),
+            'FIXED_MODEL_ROLE_TRANSPORT_REQUIRED')
+        try:
+            canonical=canonical_case_spec(spec['agent_id'],spec['capability_id'],'role:normal')
+            _require(spec['case']=='role:normal' and _canonical(spec)==_canonical(canonical)
+                and canonical['request']['data_classification']=='LOCAL_ONLY'
+                and canonical['request']['max_cost_usd']==0
+                and not canonical['request'].get('deterministic_operation'),'CANONICAL_LOCAL_MODEL_ROLE_REQUIRED')
+        except Exception:raise OperatorBindingError('CANONICAL_LOCAL_MODEL_ROLE_REQUIRED') from None
+        self._spec=json.loads(_canonical(canonical));self._token=owner_token
+        self._source,self._image=expected_source_revision,expected_runtime_image
+        self._total_seconds,self._request_seconds=60,request_timeout_seconds
+        self._factory,self._timer_factory,self._clock=connection_factory,timer_factory,monotonic
+        self._deadline=None;self._last_clock=None;self._authorized=False;self._post_attempts=set()
+        self._subject_task=self._review_task=self._review_action=self._job=None
+        self._blind_task=self._blind_action=self._blind_read=self._blind_input_meta=None
+        self._last_runtime=None;self._artifact_ids=set();self._responses=[];self._response_bytes=0
+        self._response_limit=80;self._custody_cap=8*1024*1024;self._lock=threading.Lock()
+        self._execution_input=None;self._execution_input_body=None;self._execution_input_tasks={}
+        self._reviewer,self._review_cap=('a18','responsibility.a27') if spec['agent_id']=='a26' else ('a26','responsibility.a26')
+        self._review_operation='certification_role_review';self._review_action_type='agent.certification.role.review'
+        self._subject_action_types=set();self._review_action_reader=review_action_reader
+        _require(review_action_reader is None or callable(review_action_reader),'ORIGINAL_REVIEW_READER_REQUIRED')
+    def _now(self):
+        now=super()._now()
+        _require(self._last_clock is None or now>=self._last_clock,'CLOCK_INVALID')
+        self._last_clock=now;return now
+    def activate_execution_input(self,*args,**kwargs):
+        raise OperatorBindingError('MODEL_ROLE_EXECUTION_INPUT_NOT_PERMITTED')
+    def _allowed_get(self,path,artifact):
+        return super()._allowed_get(path,artifact) or (not artifact and _uuid(self._job)
+            and path=='/api/compute-queue/jobs/'+self._job)
+    def submit_objective(self,body):
+        _require(_canonical(body)==_canonical(self._spec['request']),'CANONICAL_ROLE_REQUIRED')
+        self.runtime();status,value=self._request('POST','/api/agents/objectives',body=body)
+        if status==202:
+            steps=value.get('steps');task=value.get('id')
+            _require(_uuid(task) and type(steps) is list and len(steps)==1,'OWNED_SUBMISSION_REQUIRED')
+            job=steps[0].get('dispatch',{}).get('job',{}).get('id')
+            _require(_uuid(job),'OWNED_QUEUE_ID_REQUIRED');self._subject_task,self._job=task,job
+        return status,value
+    def dispatch_reviewer(self,body):
+        from scripts.collect_agent_cert_case import ROLE_REVIEW_OBJECTIVE
+        expected=dict(classification='R0',capability=self._review_cap,objective=ROLE_REVIEW_OBJECTIVE,
+            data_classification='LOCAL_ONLY',minimum_tier='NANO',priority='low',task_class='planning',
+            max_cost_usd=0,response_format='strict_json',deterministic_operation=self._review_operation)
+        _require(type(body) is dict and set(body)==set(expected)|{'context'}
+            and all(body[k]==v for k,v in expected.items()),'FIXED_ROLE_REVIEW_REQUIRED')
+        context=_decode(body['context'].encode());execution=context['execution']
+        _require(context['subject_objective_id']==self._subject_task
+            and execution['dispatch']['job']['id']==self._job
+            and _canonical(execution['case_spec'])==_canonical(self._spec)
+            and context['expected_execution_sha256']==hashlib.sha256(_canonical(execution)).hexdigest()
+            and context['expected_source_revision']==self._source,'OWNED_REVIEW_JOIN_REQUIRED')
+        self.runtime();status,value=self._request('POST','/api/agents/dispatch',body=body)
+        if status==202:
+            self._review_task=value.get('task_id');self._review_action=value.get('review_action_id')
+            _require(_uuid(self._review_task) and self._review_task!=self._subject_task
+                and _uuid(self._review_action),'DISTINCT_ROLE_REVIEW_REQUIRED')
+            self._remember_artifact(value.get('artifact'))
+        return status,value
+    def read_review_actions(self,identifier):
+        _require(identifier==self._review_action and _uuid(identifier) and _uuid(self._review_task),'OWNED_REVIEW_ACTION_REQUIRED')
+        # The existing role action is a native owning feed, not the zero-model HTTP allowlist.
+        _require(callable(self._review_action_reader),'ORIGINAL_REVIEW_READER_REQUIRED')
+        self._remaining();lines=self._review_action_reader(self._review_task,identifier);self._remaining()
+        _require(type(lines) in (list,tuple) and 2<=len(lines)<=128
+            and all(type(x) is str and x.endswith('\n') and 0<len(x.encode())<=65536 for x in lines)
+            and sum(len(x.encode()) for x in lines)<=MAX_JSON,'ORIGINAL_ACTION_FEED_BOUND_EXCEEDED')
+        return lines
+    def io(self):
+        old=super().io()
+        def read_job(identifier):
+            _require(identifier==self._job and _uuid(identifier),'OWNED_JOB_REQUIRED')
+            status,value=self._request('GET','/api/compute-queue/jobs/'+identifier)
+            if status==200:_require(type(value.get('allow_cloud')) is int and value.get('allow_cloud')==0 and value.get('max_cost_usd')==0
+                and value.get('max_retries')==0,'LOCAL_ZERO_COST_NO_RETRY_REQUIRED')
+            return status,value
+        return OperatorIO(self.authorize,self.runtime,self.submit_objective,old.read_objective,
+            read_job,self.dispatch_reviewer,old.read_artifact,self.read_review_actions)
+
+
 class ConflictPhaseOperatorIO(AgentCertOperatorIO):
     """One fixed original source-quality Objective per bounded transport."""
     def __init__(self,*,owner_token,which,expected_source_revision,expected_runtime_image,
