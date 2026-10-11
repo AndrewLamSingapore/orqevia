@@ -207,6 +207,15 @@ input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); out
 .agent-card .agent-name { font-weight: 700; color: var(--accent-2); }
 .agent-card .agent-purpose { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
 
+.gods-eye-frame {
+  width: 100%;
+  height: calc(100vh - 230px);
+  min-height: 480px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #0b1118;
+}
+
 .checklist li { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .checklist input { width: auto; }
 

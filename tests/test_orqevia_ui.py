@@ -21,7 +21,7 @@ def test_manifest_has_required_views_and_boundaries():
     assert data["name"] == "ORQEVIA · 奥启维亚"
     expected_views = {
         "home", "intelligence", "ideas", "architecture", "build", "test",
-        "deploy", "present", "evidence", "agents", "settings",
+        "deploy", "present", "evidence", "agents", "gods-eye", "settings",
     }
     assert set(data["views"]) == expected_views
     boundaries = data["boundaries"]
@@ -77,3 +77,45 @@ def test_read_only_paths_are_exactly_as_expected():
         "api/agents",
         "api/control-surface/manifest",
     }
+
+
+def test_gods_eye_is_embedded_in_unified_navigation():
+    client = TestClient(app)
+    html = client.get("/").text
+    assert 'data-view="gods-eye"' in html
+    assert 'id="view-gods-eye"' in html
+    assert 'src="/gods-eye/"' in html
+
+
+def test_gods_eye_client_assets_are_served():
+    client = TestClient(app)
+    index = client.get("/gods-eye/")
+    assert index.status_code == 200
+    assert "GOD'S EYE" in index.text
+    css = client.get("/gods-eye/gods-eye.css")
+    assert css.status_code == 200
+    js = client.get("/gods-eye/gods-eye.js")
+    assert js.status_code == 200
+    # The embedded client must read through ORQEVIA's own read-only endpoints.
+    assert "/api/orqevia/gods-eye" in js.text
+
+
+def test_gods_eye_snapshot_fails_safe_to_unavailable():
+    client = TestClient(app)
+    res = client.get("/api/orqevia/gods-eye")
+    assert res.status_code == 503
+    body = res.json()
+    assert body["status"] == "UNAVAILABLE"
+    assert body["source"] == "ORQEVIA_READ_ONLY_SURFACE"
+
+
+def test_gods_eye_drilldown_endpoints_fail_safe():
+    client = TestClient(app)
+    for path in (
+        "/api/orqevia/gods-eye/why?agent_id=a01",
+        "/api/orqevia/gods-eye/dependencies?subject=a01",
+        "/api/orqevia/gods-eye/proof?task_id=00000000-0000-0000-0000-000000000000",
+    ):
+        res = client.get(path)
+        assert res.status_code == 503
+        assert res.json()["status"] == "UNAVAILABLE"

@@ -41,6 +41,7 @@
       <button class="nav-btn" data-view="present">Present</button>
       <button class="nav-btn" data-view="evidence">Evidence</button>
       <button class="nav-btn" data-view="agents">Agents</button>
+      <button class="nav-btn" data-view="gods-eye">GOD'S EYE</button>
       <button class="nav-btn" data-view="settings">Settings</button>
     </nav>
 
@@ -175,6 +176,12 @@
         <h2 id="h-agents">Agents</h2>
         <p class="muted">The existing 21-agent registry and its actual roles are read live from PRIME. Roles are never invented by this interface.</p>
         <div id="agent-grid" class="agent-grid"></div>
+      </section>
+
+      <section id="view-gods-eye" class="view" aria-labelledby="h-gods-eye">
+        <h2 id="h-gods-eye">GOD'S EYE</h2>
+        <p class="muted">Bounded, read-only owner observatory: what is happening, what is proven, and what remains unknown. When the formal owner-authorized projection is not wired, this view reports UNKNOWN / UNAVAILABLE — it never fabricates live state or zero-counts.</p>
+        <iframe class="gods-eye-frame" src="/gods-eye/" title="GOD'S EYE observatory" loading="lazy"></iframe>
       </section>
 
       <section id="view-settings" class="view" aria-labelledby="h-settings">

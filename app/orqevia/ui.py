@@ -50,6 +50,7 @@ VIEWS = [
     "present",
     "evidence",
     "agents",
+    "gods-eye",
     "settings",
 ]
 
@@ -74,6 +75,55 @@ def manifest() -> dict:
             "sensitive_operations_require_human_approval": True,
         },
     }
+
+
+def _gods_eye_unavailable(reason: str) -> JSONResponse:
+    """Fail closed: the read-only surface never invents an observatory projection."""
+    return JSONResponse(
+        {
+            "status": "UNAVAILABLE",
+            "reason": reason,
+            "source": "ORQEVIA_READ_ONLY_SURFACE",
+            "currentness": "UNKNOWN",
+            "disclosure": "GOD'S EYE is integrated as a view; live observatory data requires the formal owner-authorized projection.",
+        },
+        status_code=503,
+    )
+
+
+@app.get("/api/orqevia/gods-eye")
+async def gods_eye_snapshot() -> JSONResponse:
+    """Read-only GOD'S EYE projection endpoint.
+
+    The formal projection (``app.gods_eye_api``) lives on the separate
+    ``feat/prime-gods-eye-semantic-20261007`` branch and requires owner-bearer
+    authorization plus the RDF/SHACL/OWL semantic stack. When that stack is not
+    present, this endpoint fails closed to UNAVAILABLE rather than fabricating
+    observatory data or zero-counts.
+    """
+    try:
+        import app.gods_eye_api  # noqa: F401  (present only when formal stack is wired)
+        formal_wired = True
+    except Exception:
+        formal_wired = False
+    if not formal_wired:
+        return _gods_eye_unavailable("GODS_EYE_FORMAL_STACK_NOT_WIRED")
+    return _gods_eye_unavailable("GODS_EYE_OWNER_BEARER_REQUIRED")
+
+
+@app.get("/api/orqevia/gods-eye/why")
+async def gods_eye_why(agent_id: str) -> JSONResponse:
+    return _gods_eye_unavailable("GODS_EYE_SEMANTIC_WHY_UNAVAILABLE")
+
+
+@app.get("/api/orqevia/gods-eye/dependencies")
+async def gods_eye_dependencies(subject: str) -> JSONResponse:
+    return _gods_eye_unavailable("GODS_EYE_SEMANTIC_DEPENDENCIES_UNAVAILABLE")
+
+
+@app.get("/api/orqevia/gods-eye/proof")
+async def gods_eye_proof(task_id: str) -> JSONResponse:
+    return _gods_eye_unavailable("GODS_EYE_EVIDENCE_PROOF_UNAVAILABLE")
 
 
 @app.get("/")
