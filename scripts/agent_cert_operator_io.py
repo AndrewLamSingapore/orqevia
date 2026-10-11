@@ -660,6 +660,68 @@ class AgentCertOperatorIO:
             no_job, self.dispatch_reviewer, artifact, self.read_review_actions)
 
 
+class OwnedContractPhaseOperatorIO(AgentCertOperatorIO):
+    """Exactly one prospective owned-contract Objective; never generic dispatch."""
+    def __init__(self, *, owner_token, agent_id, capability_id, which,
+            expected_source_revision, expected_runtime_image, execution=None, nonce=None,
+            total_timeout_seconds=10, request_timeout_seconds=2,
+            connection_factory=http.client.HTTPConnection, timer_factory=threading.Timer,
+            monotonic=time.monotonic):
+        from app.agent_cert_owned_contract import canonical_case, review_request, action_type, REVIEW_ACTION
+        _require(type(owner_token) is str and 16 <= len(owner_token) <= 4096
+            and all(33 <= ord(char) <= 126 for char in owner_token), 'EXISTING_OWNER_CREDENTIAL_REQUIRED')
+        _require(type(expected_source_revision) is str and _SOURCE.fullmatch(expected_source_revision) is not None
+            and type(expected_runtime_image) is str and _IMAGE.fullmatch(expected_runtime_image) is not None,
+            'EXTERNALLY_OBSERVED_RUNTIME_PINS_REQUIRED')
+        _require(type(total_timeout_seconds) in (int,float) and math.isfinite(total_timeout_seconds)
+            and 0 < total_timeout_seconds <= 30 and type(request_timeout_seconds) in (int,float)
+            and math.isfinite(request_timeout_seconds) and 0 < request_timeout_seconds <= 2
+            and all(callable(value) for value in (connection_factory,timer_factory,monotonic)),
+            'BOUNDED_OPERATOR_TRANSPORT_REQUIRED')
+        _require(which in ('subject','review'), 'OWNED_CONTRACT_FIXED_PHASE_REQUIRED')
+        self._spec = canonical_case(agent_id,capability_id); self._phase = which
+        if which == 'review':
+            _require(type(execution) is dict and _canonical(execution.get('case_spec')) == _canonical(self._spec),
+                'OWNED_CONTRACT_PEER_SPEC_REQUIRED')
+        else:
+            _require(execution is None and nonce is None,'OWNED_CONTRACT_SUBJECT_INPUT_REQUIRED')
+        request = self._spec['request'] if which == 'subject' else review_request(execution,nonce)
+        self._submitted_request = json.loads(_canonical(request))
+        self._subject_action_types = {action_type(step) for step in ('setup','read','result')} if which == 'subject' else {REVIEW_ACTION}
+        self._token=owner_token; self._source=expected_source_revision; self._image=expected_runtime_image
+        self._total_seconds=total_timeout_seconds; self._request_seconds=request_timeout_seconds
+        self._factory=connection_factory; self._timer_factory=timer_factory; self._clock=monotonic
+        self._deadline=None; self._authorized=False; self._post_attempts=set()
+        self._subject_task=self._review_task=self._review_action=None
+        self._execution_input=None; self._execution_input_body=None; self._execution_input_tasks={}
+        self._artifact_ids=set(); self._responses=[]; self._response_bytes=0; self._response_limit=24
+        self._lock=threading.Lock()
+
+    def submit_objective(self,body):
+        _require(_canonical(body) == _canonical(self._submitted_request),'OWNED_CONTRACT_CANONICAL_REQUEST_REQUIRED')
+        self.runtime()
+        status,value = self._request('POST','/api/agents/objectives',body=body)
+        if status == 202 and _uuid(value.get('id')):
+            self._subject_task = value['id']; steps=value.get('steps')
+            dispatch=steps[0].get('dispatch') if type(steps) is list and len(steps)==1 and type(steps[0]) is dict else None
+            if type(dispatch) is dict:
+                self._remember_artifact(dispatch.get('artifact'))
+                event=dispatch.get('owned_contract_event')
+                if type(event) is dict: self._remember_artifact(event.get('input_artifact_metadata'))
+        return status,value
+
+    def read_objective(self,task):
+        _require(_uuid(task) and task == self._subject_task,'OWNED_OBJECTIVE_BINDING_REQUIRED')
+        return self._request('GET','/api/agents/objectives/'+task)
+
+    def read_artifact(self,identifier):
+        _require(type(identifier) is str and identifier in self._artifact_ids,'OWNED_ARTIFACT_BINDING_REQUIRED')
+        return self._request('GET','/api/artifacts/'+identifier,artifact=True)
+
+    def dispatch_reviewer(self,body):
+        raise OperatorBindingError('OWNED_CONTRACT_PEER_REQUIRES_FRESH_PERSISTED_OBJECTIVE') from None
+
+
 class ConflictPhaseOperatorIO(AgentCertOperatorIO):
     """One fixed original source-quality Objective per bounded transport."""
     def __init__(self,*,owner_token,which,expected_source_revision,expected_runtime_image,

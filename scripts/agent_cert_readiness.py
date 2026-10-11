@@ -49,6 +49,7 @@ SOURCE_FILES = (
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
     'app/agent_cert_owned_identity.py',
+    'app/agent_cert_owned_contract.py', 'app/agent_cert_owned_contract_review.py',
     'app/agent_cert_transport.py', 'app/agent_dispatch_api.py',
     'app/production_entry.py', 'scripts/collect_agent_cert_case.py',
     'scripts/collect_agent_cert_event.py', 'scripts/collect_agent_cert_fresh_input.py', 'scripts/agent_cert_operator_io.py',
@@ -125,6 +126,10 @@ def _registry():
 
 def _supported(actor, capability, key):
     try:
+        # An implemented structural inspection does not establish the Registry's
+        # prose semantics; do not count this partial preparation as a full oracle.
+        if actor != 'a19' and key == 'baseline:contract':
+            return None
         return canonical_case_spec(actor, capability, key)
     except (ValueError, TypeError, KeyError):
         return None
@@ -211,6 +216,8 @@ def build_source_readiness(*, source_revision, canonical_main_revision, now, roo
                 'collection_paths': {
                     'quality': 'scripts/collect_agent_cert_case.py (actual job/oracle + registered review joins)',
                     'zero_model_event': 'app/agent_cert_execution.py + owned event validator; operator collection required',
+                    'owned_contract': ('scripts.collect_agent_cert_event.collect_owned_contract_case; actual registered contract structural inspection only, prose semantics and role quality NOT_ESTABLISHED'
+                        if agent['id'] != 'a19' else 'Original A19 quality contract adapter unchanged'),
                 },
                 'separate_native_source_preparation': ({
                     'case': 'model_substitution:complete',
@@ -223,6 +230,16 @@ def build_source_readiness(*, source_revision, canonical_main_revision, now, roo
                     'counts_as_ready_case': False,
                     'required_qualification': 'Actual permitted native fallback on exact reviewed integrated source, original owning A19 Objective/native jobs/artifacts/actions, and distinct persisted A26 twice-original review; mocks never qualify',
                 } if agent['id'] == 'a19' and capability == 'responsibility.a19' else None),
+                'separate_owned_contract_structural_preparation': ({
+                    'case': 'baseline:contract', 'case_version': 'registered.owned-contract-structural.v1',
+                    'state': 'PARTIAL_STRUCTURAL_SOURCE_ADAPTER', 'counts_as_ready_case': False,
+                    'canonical_request': 'app.agent_cert_owned_contract.canonical_case(agent_id, capability_id)',
+                    'collector': 'scripts.collect_agent_cert_event.collect_owned_contract_case',
+                    'independent_original_oracle': 'app.agent_cert_owned_contract_review.validate_original_execution',
+                    'zero_model_event': True, 'prose_semantics': 'NOT_ESTABLISHED',
+                    'role_result_quality': 'NOT_ESTABLISHED',
+                    'required_full_contract_proof': 'Original owned objective matching, labelled constraint/credential boundaries, grounded advisory result and absence of unsupported execution claims; structural fields alone cannot qualify the full case',
+                } if agent['id'] != 'a19' else None),
                 'missing_case_adapter_oracle_ids': missing,
                 'locally_actionable_missing_case_adapter_ids': missing,
                 'missing_adapter_state': 'OPEN_LOCAL_IMPLEMENTATION_NOT_EXTERNAL',

@@ -96,6 +96,25 @@ def test_eight_secondary_source_oracles_have_only_explicit_prepared_transport(in
         assert row['generic_queue_observer_quality_gap_cases'] == []
 
 
+def test_owned_contract_is_explicit_structural_event_without_a19_quality_relabel(inventory):
+    rows=inventory['capability_rows']
+    owned=[row for row in rows if row['agent_id']!='a19']
+    assert len(owned)==28 and len({row['agent_id'] for row in owned})==20
+    for row in owned:
+        assert 'baseline:contract' not in row['distinct_zero_model_event_adapter_cases']
+        assert 'baseline:contract' not in row['canonical_adapter_oracle_ready_cases']
+        prepared=row['separate_owned_contract_structural_preparation']
+        assert prepared['state']=='PARTIAL_STRUCTURAL_SOURCE_ADAPTER'
+        assert prepared['counts_as_ready_case'] is False and prepared['zero_model_event'] is True
+        assert prepared['prose_semantics']==prepared['role_result_quality']=='NOT_ESTABLISHED'
+        assert 'baseline:contract' not in row['source_pinned_cloud_transport_cases']
+        assert 'baseline:contract' not in row['generic_queue_observer_quality_gap_cases']
+    legacy=next(row for row in rows if row['agent_id']=='a19')
+    assert 'baseline:contract' in legacy['source_pinned_cloud_transport_cases']
+    assert 'baseline:contract' not in legacy['distinct_zero_model_event_adapter_cases']
+    assert {'app/agent_cert_owned_contract.py','app/agent_cert_owned_contract_review.py'} <= set(inventory['source_file_sha256'])
+
+
 def test_source_readiness_never_awards_live_signature_or_l7(inventory):
     assert inventory['source_generated_certification_claims'] == 0
     assert inventory['runtime_observation'] == inventory['host_observation'] == 'NOT_PERFORMED'

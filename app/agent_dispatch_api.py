@@ -90,6 +90,7 @@ class AgentRequest(BaseModel):
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
         'certification_owned_identity','certification_owned_identity_review',
+        'certification_owned_contract','certification_owned_contract_review',
         'certification_artifact_review','certification_authority_event',
         'certification_authority_review','certification_tool_event','certification_tool_review',
         'certification_recovery_controlled_prior','certification_recovery_correction','certification_recovery_review',
@@ -747,7 +748,14 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             except (ValueError,PermissionError,UnicodeError):
                 raise HTTPException(422,'Source model-substitution operation rejected') from None
         try:
-            if body.deterministic_operation == 'certification_owned_identity':
+            if body.deterministic_operation in {'certification_owned_contract','certification_owned_contract_review'}:
+                from .agent_cert_owned_contract import execute_producer,execute_review,registry_digest
+                operation = execute_review if body.deterministic_operation == 'certification_owned_contract_review' else execute_producer
+                return operation(task_id,actor=actor,submitted_request=body.model_dump(),data_root=root,
+                    ledger=action_ledger(),runtime=runtime,read_runtime=runtime_snapshot,
+                    source_revision=runtime['source_revision'],runtime_image_id=runtime['image_digest'],
+                    registry_sha256=registry_digest())
+            elif body.deterministic_operation == 'certification_owned_identity':
                 from . import agent_registry
                 from .agent_cert_owned_identity import canonical_owned_identity_case, execute_owned_identity_case, sha
                 return execute_owned_identity_case(canonical_owned_identity_case(actor, body.capability), task_id,

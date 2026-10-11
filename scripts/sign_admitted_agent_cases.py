@@ -23,6 +23,7 @@ CODE_FILES = (
     'app/agent_cert_identity_review.py', 'app/action_records.py',
     'app/agent_cert_initialization.py', 'app/agent_cert_initialization_review.py',
     'app/agent_cert_owned_identity.py',
+    'app/agent_cert_owned_contract.py', 'app/agent_cert_owned_contract_review.py',
     'app/agent_cert_secondary_roles.py',
     'app/artifact_factory.py', 'app/objective_api.py',
     'app/agent_cert_a19_cases.py', 'app/agent_cert_a19_general.py',

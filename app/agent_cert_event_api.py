@@ -73,6 +73,8 @@ _ACTIONS = frozenset(set(_OWNER_REFERRAL_ACTIONS)|{
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
     'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
+    'agent.certification.owned_contract.setup', 'agent.certification.owned_contract.read',
+    'agent.certification.owned_contract.result', 'agent.certification.owned_contract.review',
     AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,CONFLICT_REVIEW_ACTION,CROSS_REVIEW_ACTION,
 } | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS)|set(_CROSS_ACTIONS)|_EXECUTION_INPUT_ACTIONS)
 
@@ -141,7 +143,11 @@ def actions(task_id: str, response: Response, action_type: str = '',
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if action_type in _EXECUTION_INPUT_ACTIONS:
+        if action_type in {'agent.certification.owned_contract.setup','agent.certification.owned_contract.read',
+                'agent.certification.owned_contract.result','agent.certification.owned_contract.review'}:
+            from .agent_cert_owned_contract import read_action_span as read_owned_contract_span
+            lines=read_owned_contract_span(root,task_id,action_type)
+        elif action_type in _EXECUTION_INPUT_ACTIONS:
             lines = execution_input_span(root,task_id,action_type)
         elif action_type in _CROSS_ACTIONS:
             which,step=_CROSS_ACTIONS[action_type]

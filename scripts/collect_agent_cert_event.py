@@ -66,6 +66,92 @@ class CollectedRecoveryCase:
     original_http_replies: tuple = field(default=(),repr=False)
 
 
+def collect_owned_contract_case(*, operator_factory, agent_id, capability_id,
+        expected_source_revision, expected_runtime_image, expected_registry_sha256,
+        timeout_seconds=30, monotonic=time.monotonic,
+        wall_clock=lambda: datetime.now(timezone.utc), nonce_factory=lambda: str(uuid.uuid4())):
+    """Two original stored Objectives; source-only structural contract evidence.
+
+    Exact new-case transport instances each admit one POST. Unknown mutation
+    outcome is retained without retry. No model or generic role route is used.
+    """
+    import math
+    from app.agent_cert_owned_contract import canonical_case, review_request, action_type, REVIEW_ACTION
+    from app.agent_cert_owned_contract_review import validate_execution, validate_reviewed_execution
+    from scripts.agent_cert_operator_io import OwnedContractPhaseOperatorIO
+    summary=dict(state='INCOMPLETE',stage='PRECHECK',case='baseline:contract',agent_id=agent_id,
+        capability_id=capability_id,submission_attempts=0,scope='STRUCTURAL_INSPECTION_ONLY',
+        certification='UNVERIFIED',prose_semantics='NOT_ESTABLISHED',role_result_quality='NOT_ESTABLISHED')
+    operators=[]; execution=peer=None
+    try:
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and math.isfinite(timeout_seconds) and 0 < timeout_seconds <= 30,
+            'OWNED_CONTRACT_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic); _require(left > 0,'OWNED_CONTRACT_OUTER_DEADLINE_EXCEEDED'); return left
+        def call(callback,*args):
+            remaining(); value=_call(callback,*args); remaining(); return value
+        spec=canonical_case(agent_id,capability_id)
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def make(which,**kwargs):
+            value=operator_factory(which=which,agent_id=agent_id,capability_id=capability_id,
+                total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(value) is OwnedContractPhaseOperatorIO,'OWNED_CONTRACT_OWNED_TRANSPORT_REQUIRED')
+            operators.append(value); _require(call(value.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return value
+        def artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0 < len(response[1]) <= 65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'OWNED_CONTRACT_ORIGINAL_ARTIFACT_REQUIRED')
+            return response[1]
+        def phase(which,request,**kwargs):
+            operator=make(which,**kwargs); before=call(operator.runtime)
+            _registry_pin(expected_registry_sha256); began=wall_clock()
+            summary['stage']=which.upper(); summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,request),202,'OWNED_CONTRACT_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1 and type(submission['steps'][0]) is dict
+                and type(submission['steps'][0].get('dispatch')) is dict,'OWNED_CONTRACT_SUBJECT_EVENT_INCOMPLETE')
+            dispatch=submission['steps'][0]['dispatch']; task=dispatch['task_id']; metadata=dispatch['artifact']
+            raw=artifact(operator,metadata)
+            original=_response(call(operator.read_objective,task),200,'OWNED_CONTRACT_OBJECTIVE_READ_FAILED')
+            actions=[]
+            for kind in ([action_type(step) for step in ('setup','read','result')] if which=='subject' else [REVIEW_ACTION]):
+                actions.extend(_lines(call(operator.read_subject_actions,task,kind)))
+            input_raw=artifact(operator,dispatch['owned_contract_event']['input_artifact_metadata']) if which=='subject' else None
+            after=call(operator.runtime); _require(_equal(before,after),'OWNED_CONTRACT_RUNTIME_CHANGED')
+            result=dict(submitted_request=request,runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+                objective_read=[200,original],original_action_records=actions,
+                observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+            if which=='subject':result.update(case_spec=spec,input_content_utf8=input_raw.decode())
+            _require(_equal(original,_response(call(operator.read_objective,task),200,'OWNED_CONTRACT_OBJECTIVE_READ_FAILED')),
+                'OWNED_CONTRACT_OBJECTIVE_CHANGED')
+            _require(artifact(operator,metadata)==raw,'OWNED_CONTRACT_RESULT_CHANGED')
+            if input_raw is not None:
+                _require(artifact(operator,dispatch['owned_contract_event']['input_artifact_metadata'])==input_raw,
+                    'OWNED_CONTRACT_INPUT_CHANGED')
+            return result
+        execution=phase('subject',spec['request'])
+        validate_execution(execution,**pins,now=wall_clock())
+        nonce=call(nonce_factory); peer_request=review_request(execution,nonce)
+        peer=phase('review',peer_request,execution=execution,nonce=nonce)
+        validate_reviewed_execution(execution,peer,**pins,now=wall_clock())
+        _registry_pin(expected_registry_sha256); remaining()
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',subject_task_id=execution['dispatch']['task_id'],
+            peer_task_id=peer['dispatch']['task_id'],source_revision=expected_source_revision,
+            runtime_image_id=expected_runtime_image,execution_sha256=_sha(_canonical(execution)),
+            peer_execution_sha256=_sha(_canonical(peer)),original_producer_rows=6,original_peer_rows=2)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,CollectionError) else 'OWNED_CONTRACT_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)
+
+
 def collect_conflict_case(*,operator_factory,expected_source_revision,expected_runtime_image,
         expected_registry_sha256,variant='standard',timeout_seconds=30,monotonic=time.monotonic,
         wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
