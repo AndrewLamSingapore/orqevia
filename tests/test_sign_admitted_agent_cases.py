@@ -141,10 +141,11 @@ def test_identity_admission_never_accepts_cloud_transport(cloud, policy):
     'app/agent_cert_initialization.py', 'app/agent_cert_initialization_review.py',
     'app/agent_cert_secondary_roles.py', 'app/agent_cert_a19_general.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_a19_baseline.py', 'app/agent_cert_authority_events.py',
-    'app/context_pack.py', 'app/agent_cert_owned_identity.py', 'app/agent_cert_clean_room.py', 'app/agent_cert_fresh_input.py', 'app/spine.py', 'app/generated/portfolio_contracts.py',
+    'app/context_pack.py', 'app/agent_cert_owned_identity.py', 'app/agent_cert_owned_contract.py',
+    'app/agent_cert_owned_contract_review.py', 'app/agent_cert_clean_room.py', 'app/agent_cert_fresh_input.py', 'app/spine.py', 'app/generated/portfolio_contracts.py',
     'app/model_selection.py','app/agent_cert_model_selection.py','app/compute_queue_api.py','app/settings.py','app/job_queue.py'])
 def test_original_identity_domain_dependencies_are_all_protected_code_inputs(tmp_path, dependency):
-    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 79
+    assert len(loader.CODE_FILES) == len(set(loader.CODE_FILES)) == 81
     revisions = {}
     for name in loader.CODE_FILES:
         path = tmp_path / name
@@ -186,7 +187,8 @@ def separated_code(tmp_path):
 def test_new_verifier_bridge_preserves_original_runtime_review_provenance(tmp_path, monkeypatch):
     current, original = separated_code(tmp_path)
     assert 'app/agent_cert_clean_room.py' in loader.CODE_FILES and 'app/agent_cert_clean_room.py' in loader.RUNTIME_REVIEW_CODE_FILES
-    assert len(loader.CODE_FILES) == 79 and len(loader.RUNTIME_REVIEW_CODE_FILES) == 78
+    assert len(loader.CODE_FILES) == 81 and len(loader.RUNTIME_REVIEW_CODE_FILES) == 80
+    assert {'app/agent_cert_owned_contract.py','app/agent_cert_owned_contract_review.py'} <= set(loader.RUNTIME_REVIEW_CODE_FILES)
     assert 'app/agent_cert_fresh_input.py' in loader.CODE_FILES and 'app/agent_cert_fresh_input.py' in loader.RUNTIME_REVIEW_CODE_FILES
     assert set(loader.CODE_FILES) - set(loader.RUNTIME_REVIEW_CODE_FILES) == {'scripts/agent_cert_reviewed_signing.py'}
     value = entry()

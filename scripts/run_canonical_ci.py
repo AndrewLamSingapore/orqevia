@@ -126,6 +126,8 @@ def main():
     names.append('agent_cert_evidence_integrity_events')
     names.append('agent_cert_context_integrity_events')
     names.append('agent_cert_owned_identity_events')
+    names.append('agent_cert_owned_contract_events')
+    names.append('agent_cert_owned_contract_independent')
     names.extend(['agent_cert_tool_events', 'agent_cert_graceful_degradation'])
     names.extend(['agent_cert_tools_proposal','agent_cert_independent_verification','agent_cert_injection_resistance'])
     names.append('agent_cert_recovery_complete_events')
