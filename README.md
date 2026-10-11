@@ -1,7 +1,7 @@
-# JARVIS PRIME
+# ORQEVIA · 奥启维亚
 
 Read [STATUS.md](STATUS.md) for current portfolio status claims, then the
-[machine-readable operational reference](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json) and
+[machine-readable operational reference](https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json) and
 [the shared channel contract](governance/CHANNEL_CONTRACT.md).
 
 Each product owns its source, configuration, contracts, and domain records in its
@@ -33,7 +33,7 @@ the sealed ABEX baseline. Historical source and migration evidence remain in Git
 
 ## Public experience and connected projects
 
-[Explore JARVIS PRIME](https://authority-engine-app.vercel.app/jarvis) presents curated decision examples and the public agent registry. [Discuss a use case with Andrew](https://authority-engine-app.vercel.app/contact?source=jarvis&intent=collaboration).
+[Explore ORQEVIA](https://authority-engine-app.vercel.app/jarvis) presents curated decision examples and the public agent registry. [Discuss a use case with Andrew](https://authority-engine-app.vercel.app/contact?source=jarvis&intent=collaboration).
 
 The public contract is `governance/public-experience.json`. Authority Engine, The Portal, Living Worlds, Sky Tablet and VELYQUA link to that experience. Navigation and enquiry context do not grant private runtime access or merge product databases.
 

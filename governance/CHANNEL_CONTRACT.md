@@ -1,21 +1,21 @@
 # Shared channel reading contract
 
-PRIME component reference: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
+ORQEVIA component reference: https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json
 
 Lam's 15 September 2026 instruction requires ChatGPT, Codex, Sol, Astra, ABEX
-and Dell to reconcile the same evidence. PRIME owns shared orchestration and
+and Dell to reconcile the same evidence. ORQEVIA owns shared orchestration and
 cross-product contracts; each product repository owns its own source,
 configuration, contracts and domain records. STATUS.md records portfolio
-status claims. The operational manifest provides dated PRIME component and
+status claims. The operational manifest provides dated ORQEVIA component and
 observation references; neither this contract nor that manifest establishes
 current deployment status.
 
-1. Resolve PRIME `main` once and pin that commit for shared PRIME references.
-   Read the operational manifest, PRIME product manifest and architecture
+1. Resolve ORQEVIA `main` once and pin that commit for shared ORQEVIA references.
+   Read the operational manifest, ORQEVIA product manifest and architecture
    references at that commit. Resolve each relevant product's owning repository
    separately; do not mix files from different commits or rely on chat memory.
-2. The operational manifest records PRIME architecture references and dated
-   observations; `system.manifest.json` binds PRIME components. STATUS.md
+2. The operational manifest records ORQEVIA architecture references and dated
+   observations; `system.manifest.json` binds ORQEVIA components. STATUS.md
    records portfolio status claims and their evidence classification. No
    parallel portfolio status pointer is maintained.
 3. ABEX/PRIME owns runtime coordination. Dell is an authenticated client,
@@ -34,7 +34,7 @@ current deployment status.
    differences. Source identity and operational freshness are different fields.
    All channels must preserve that distinction and dated outstanding priorities.
 8. Make changes through each owning repository's source and controls. Regenerate
-   the PRIME resume mirror when its input manifest changes. Older exports,
+   the ORQEVIA resume mirror when its input manifest changes. Older exports,
    installers and architecture documents remain historical evidence.
 
 Domain data remains with its system of record: VELYQUA owns aquarium observations,

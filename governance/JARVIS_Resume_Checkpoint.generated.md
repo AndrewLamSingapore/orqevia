@@ -1,8 +1,8 @@
-# JARVIS / PRIME — Recorded Resume Checkpoint
+# ORQEVIA — Recorded Resume Checkpoint
 
-> Generated mirror of dated PRIME observations, not a current-status authority. Read STATUS.md for portfolio status claims and each owning repository for product source.
+> Generated mirror of dated ORQEVIA observations, not a current-status authority. Read STATUS.md for portfolio status claims and each owning repository for product source.
 
-- PRIME component reference: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
+- ORQEVIA component reference: https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json
 - Recorded architecture release: `jarvis-prime-unified-2026-09-15`
 - Manifest snapshot state: **STALE** (dated, not a current runtime verdict)
 - Source observation: `2026-09-26T07:48:05Z`
@@ -22,7 +22,7 @@
 | sky | `e0c4f4847a9e` | `e0c4f4847a9e` | `e0c4f4847a9e` | ALIGNED_VERIFIED |
 | velyqua | `4ecf65eec8dc` | `4ecf65eec8dc` | `4ecf65eec8dc` | ALIGNED_VERIFIED |
 
-This manifest records prior independent PRIME runtime acceptance at source `17fad78d410dca5d9101483cb777a2b9b619bac3` and image `prime:sha-17fad78`. This dated mirror does not establish current deployment; consult STATUS.md and live receipts. Historical Dell evidence is retained separately.
+This manifest records prior independent ORQEVIA runtime acceptance at source `17fad78d410dca5d9101483cb777a2b9b619bac3` and image `prime:sha-17fad78`. This dated mirror does not establish current deployment; consult STATUS.md and live receipts. Historical Dell evidence is retained separately.
 
 ## Priorities recorded in the manifest
 
@@ -38,4 +38,4 @@ This manifest records prior independent PRIME runtime acceptance at source `17fa
 
 ## Resume contract
 
-Resolve PRIME main and read governance/CHANNEL_CONTRACT.md at that same commit for shared PRIME references. STATUS.md records portfolio status claims; each product repository owns its source, configuration, contracts and domain records. The immutable Golden manifest records generation architecture identity. This mirror and its input operational manifest are dated component and observation references. system.manifest.json binds PRIME components. No parallel portfolio status pointer is maintained. Earlier exports and installer bundles remain historical evidence.
+Resolve ORQEVIA main and read governance/CHANNEL_CONTRACT.md at that same commit for shared ORQEVIA references. STATUS.md records portfolio status claims; each product repository owns its source, configuration, contracts and domain records. The immutable Golden manifest records generation architecture identity. This mirror and its input operational manifest are dated component and observation references. system.manifest.json binds ORQEVIA components. No parallel portfolio status pointer is maintained. Earlier exports and installer bundles remain historical evidence.
