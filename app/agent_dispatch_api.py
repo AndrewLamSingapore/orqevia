@@ -612,6 +612,10 @@ def inference_prompt(body: AgentRequest, tier: Tier) -> str:
                 'For an operation identifier, use the supplied operation vocabulary; '
                 'do not substitute a service label or invent an identifier. '
                 'Do not claim actions were executed or certification was earned. '
+                'Before emitting JSON, independently verify your draft against the supplied evidence '
+                'and requested rules. Check field types and representations, recompute quantitative '
+                'relationships, test stated boundaries and constraints, and distinguish observations '
+                'from unsupported claims. Return only the final requested JSON. '
                 'Role: '+responsibility['description']+'. Objective:\n'+body.objective+'\nContext:\n'+body.context)
     # Small context-free Nano tasks already contain the complete instruction.
     # Role/advisory boilerplate measurably distorted an otherwise correct label.
