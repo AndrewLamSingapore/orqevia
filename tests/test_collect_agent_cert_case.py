@@ -225,6 +225,24 @@ def test_one_local_objective_and_real_shaped_registered_review_unsigned_only():
     assert 'corrected_condition' not in repr(result)
 
 
+def test_sqlite_real_zero_cost_ceiling_keeps_local_case_collectable():
+    state = SyntheticOperator()
+    state.job['max_cost_usd'] = 0.0
+    result = state.run()
+    assert result.summary['state'] == 'UNSIGNED_CASE_EVIDENCE', result.summary
+    assert state.calls.count('submit') == state.calls.count('review') == 1
+
+
+@pytest.mark.parametrize('value', [True, False, '0', None, -0.01, 0.000001,
+                                  float('inf'), float('nan')])
+def test_cost_ceiling_types_and_exact_zero_remain_fail_closed(value):
+    from scripts.collect_agent_cert_case import _route
+    state = SyntheticOperator()
+    state.job['max_cost_usd'] = value
+    with pytest.raises(CollectionError, match='QUEUE_ROUTE_MISMATCH'):
+        _route(state.job, state.spec['request'])
+
+
 @pytest.mark.parametrize('agent', ['a18', 'a19', 'a20', 'a26'])
 @pytest.mark.parametrize('cloud', [False, True])
 def test_exact_signing_bridge_compatibility_without_signing(agent, cloud):
