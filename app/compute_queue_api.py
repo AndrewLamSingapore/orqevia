@@ -111,9 +111,38 @@ def _execute(job: dict, provider: Provider) -> dict:
         return execute_cloud(job,provider,DATA,lambda:queue.get(job['id'])['status']=='cancelled')
     record=ActionRecord(job['id'],job['agent'],'inference.run','ollama',
         classification=job.get('classification','R0'),model_backend=provider.model)
-    return DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
-        settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
-        cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+    from .agent_dispatch_api import local_model_backends
+    selected = next((backend for backend in local_model_backends(SETTINGS)
+        if backend.name == provider.name and backend.model == provider.model), None)
+    started = time.monotonic()
+    answer = None
+    failure = 'LOCAL_INFERENCE_FAILED'
+    try:
+        answer = DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
+            settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
+            cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+        failure = 'STRICT_JSON_CONTRACT_FAILED' if answer.get('error') == 'STRICT_JSON_CONTRACT_FAILED' else (
+            'LOCAL_INFERENCE_FAILED' if answer.get('error') else None)
+        return answer
+    finally:
+        if selected is not None:
+            try:
+                import uuid
+                from .outcome_metrics import OutcomeMetrics
+                OutcomeMetrics(DATA/'compute-ledger.db').record(attempt_id=uuid.uuid4().hex,
+                    task_id=job['id'],task_class=job.get('task_class','auto'),tier=selected.tier.name,
+                    seconds=time.monotonic()-started,
+                    input_tokens=answer.get('input_tokens') if answer is not None else None,
+                    output_tokens=answer.get('output_tokens') if answer is not None else None,
+                    cost=answer.get('actual_cost_usd') if answer is not None else None,
+                    agent_id=job['agent'],provider=provider.name,model=provider.model,retries=0,
+                    requested_tier=selected.tier.name,requested_provider=provider.name,
+                    requested_model=provider.model,fallback_route=[],error_classifications=[failure] if failure else [],
+                    success=answer is not None and failure is None,failure_kind=failure)
+            except Exception:
+                # Missing accounting never discards inference or replays a model call.
+                import logging
+                logging.getLogger(__name__).warning('Local inference attempt evidence unavailable')
 
 
 pool=WorkerPool(queue,providers(),_execute)
