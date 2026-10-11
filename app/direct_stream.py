@@ -51,7 +51,8 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,
             payload={'model':provider.model,'messages':[{'role':'user','content':job['prompt']}],
                 **({'format':'json'} if response_format == 'strict_json' else {}),
                 'stream':True,'keep_alive':settings.keep_alive,'options':{
-                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()}}
+                    'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,
+                    **({'temperature':0} if response_format == 'strict_json' else {}),**options()}}
             if residency_contract is not None:residency_contract.bind_chat_request(payload)
             async with httpx.AsyncClient(timeout=timeout()) as client:
                 async with client.stream('POST',settings.ollama_base_url+'/api/chat',json=payload) as response:
