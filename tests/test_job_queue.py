@@ -38,6 +38,41 @@ def test_unknown_agent_is_rejected(tmp_path):
     else:
         raise AssertionError("unregistered compute agent must fail closed")
 
+
+def test_response_format_survives_queue_restart_without_changing_old_jobs(tmp_path):
+    q=queue(tmp_path)
+    ordinary=q.submit(agent='a19',prompt='ordinary')
+    strict=q.submit(agent='a19',prompt='object',response_format='strict_json')
+    reopened=JobQueue(tmp_path/'q.db',q.policy)
+    assert reopened.get(ordinary['id'])['response_format']=='text'
+    assert reopened.get(strict['id'])['response_format']=='strict_json'
+    with pytest.raises(ValueError,match='invalid response_format'):
+        reopened.submit(agent='a19',prompt='invalid',response_format='invented')
+
+
+def test_old_queue_schema_migrates_format_without_rewriting_job_content(tmp_path):
+    q=queue(tmp_path)
+    original=q.submit(agent='a19',prompt='unfinished source',priority='low')
+    with q.connect() as c:
+        c.execute('ALTER TABLE compute_jobs DROP COLUMN response_format')
+    reopened=JobQueue(tmp_path/'q.db',q.policy)
+    restored=reopened.get(original['id'])
+    assert restored['response_format']=='text'
+    assert restored['id']==original['id'] and restored['prompt']==original['prompt']
+    assert restored['status']==original['status'] and restored['created_at']==original['created_at']
+
+
+def test_rejected_strict_output_is_preserved_without_replay(tmp_path):
+    q=queue(tmp_path)
+    job=q.submit(agent='a19',prompt='object',response_format='strict_json',max_retries=2)
+    assert q.claim('worker',[LOCAL])['id']==job['id']
+    raw='```json\n{"wrong":true}\n```'
+    failed=q.finish(job['id'],result=raw,error='STRICT_JSON_CONTRACT_FAILED',
+                    retryable=False,input_tokens=2,output_tokens=3,actual_cost_usd=0)
+    assert failed['status']=='failed' and failed['result']==raw
+    assert failed['attempts']==1 and failed['input_tokens']==2 and failed['output_tokens']==3
+    assert q.claim('worker',[LOCAL]) is None
+
 def test_cloud_is_direct_and_only_fallback(tmp_path):
     q=queue(tmp_path)
     job=q.submit(agent="analyst",prompt="large",model="large",vram_mb=8000,allow_cloud=True,
