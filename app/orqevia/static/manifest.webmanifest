@@ -1,0 +1,17 @@
+{
+  "name": "ORQEVIA · 奥启维亚 — Unified Interface",
+  "short_name": "ORQEVIA",
+  "description": "Read-only unified operational interface for the sovereign PRIME platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#0a1628",
+  "icons": [
+    {
+      "src": "/assets/orqevia/generated-original.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
