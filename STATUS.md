@@ -36,6 +36,37 @@ If you are an AI agent updating this file:
 
 ---
 
+## Repository and brand rename — prime → orqevia, JARVIS PRIME → ORQEVIA — 11 October 2026
+
+### Claimed, not independently checked
+
+- On 11 October 2026 Lam instructed the GitHub rename. The private repository
+  `AndrewLamSingapore/prime` was renamed to `AndrewLamSingapore/orqevia`; the old
+  URL redirects automatically. The JARVIS and JARVIS PRIME brand is retired and
+  folded into ORQEVIA | 奥启维亚, alongside VELYQUA | 维澜 as a separate brand.
+- Canonical repository-identity references were updated from
+  `AndrewLamSingapore/prime` to `AndrewLamSingapore/orqevia`: the status-authority
+  URL and component-reference URLs in README, AGENTS, governance/README,
+  CHANNEL_CONTRACT and the generated resume checkpoint, the operational manifest
+  `status_authority`, `canonical_machine_source.repository` and control-plane
+  repository field, and the repository registry remote/identity for the
+  control plane.
+- Human-facing titles changed from "JARVIS PRIME" / "JARVIS / PRIME" to "ORQEVIA"
+  / "ORQEVIA · 奥启维亚". Internal runtime identifiers remain unchanged: ABEX
+  PRIME, ABEX/PRIME, PRIME_DATA_DIR, PRIME_COMPUTE_QUEUE_DB, frozen golden-manifest
+  references and the preserved JARVIS-PRIME-* document filenames. No golden
+  manifest, hash pin, deployment identity, signing authority or production state
+  was changed.
+- The approved brand register `governance/BRAND_MASTER_REGISTER.md` (on the
+  `brand-master-register-2026-10-10` branch) remains the brand authority. This
+  rename does not authorize any deployment, website rebrand, enrollment reset,
+  role change or production promotion.
+- The local status-authority check and the resume-checkpoint consistency check
+  were re-run and passed after the rename; the check script now points at
+  `orqevia`.
+
+---
+
 ## Light-production observation and dated HF evidence repair — 8 October 2026
 
 ### Claimed, not independently checked
@@ -182,7 +213,7 @@ If you are an AI agent updating this file:
 - Owner-approved PR #206 at `e87e6f25588707369edcf42da8ff770ebb9e4576`
   passed all five exact-head cloud gates and merged as
   `5ebeb55d3236ee508c5de94a7653d0a17c597d29`, with an identical source tree.
-  Protected Azure run [37613202210](https://github.com/AndrewLamSingapore/prime/actions/runs/37613202210)
+  Protected Azure run [37613202210](https://github.com/AndrewLamSingapore/orqevia/actions/runs/37613202210)
   then signed one real A19 role-normal case, independently reviewed by permanent
   A26. The signing service is separate from both agents. Independent offline
   ES256 verification and thirteen tamper-denial checks passed against the actual

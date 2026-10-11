@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-STATUS_URL = 'https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md'
-SOURCE_URL = 'https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json'
+STATUS_URL = 'https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md'
+SOURCE_URL = 'https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json'
 
 
 def validate_status_authority(root: Path = ROOT) -> None:
@@ -18,7 +18,7 @@ def validate_status_authority(root: Path = ROOT) -> None:
     manifest = json.loads((root / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
     assert manifest['status_authority'] == STATUS_URL
     assert manifest['canonical_machine_source'] == {
-        'repository': 'AndrewLamSingapore/prime',
+        'repository': 'AndrewLamSingapore/orqevia',
         'branch': 'main',
         'path': 'governance/operational-manifest.json',
     }
