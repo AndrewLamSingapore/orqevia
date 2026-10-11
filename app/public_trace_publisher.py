@@ -21,7 +21,7 @@ from typing import Any, Callable
 from .release_gate import release_gates
 
 LOGGER = logging.getLogger("prime.public_trace_publisher")
-DEFAULT_RELAY_URL = "https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/jarvis-trace-relay"
+DEFAULT_RELAY_URL = "https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/orqevia-trace-relay"
 DEFAULT_PUBLISHER_ID = ""
 
 
