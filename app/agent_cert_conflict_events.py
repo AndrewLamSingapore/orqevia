@@ -101,6 +101,10 @@ def phase_request(which,variant='standard',*,peer_executions=None,execution=None
         body['peer_executions']=peer_executions
     elif which=='review':
         require(type(execution) is dict and peer_executions is None and _uuid(nonce),'CONFLICT_REVIEW_BINDING_REQUIRED')
+        # The full fixed challenge already belongs to the unchanged originals.
+        # Bind its owning bytes without duplicating them in the bounded review.
+        body.pop('fixed_challenge')
+        body['fixed_challenge_sha256']=sha(challenge_bytes())
         body.update(execution=execution,expected_execution_sha256=sha(canonical(execution)),review_nonce=nonce)
     else:require(peer_executions is None and execution is None and nonce is None,'CONFLICT_PEER_REQUEST_DRIFT')
     request['context']=canonical(body).decode()
@@ -558,8 +562,9 @@ def execute_review(task_id,*,actor,submitted_request,data_root,ledger,runtime,re
             left=min(deadline-time.monotonic(),5-(datetime.now(timezone.utc)-began).total_seconds())
             require(left>0,'CONFLICT_REVIEW_SHARED_BOUND_EXCEEDED');return left
         envelope=parse(submitted_request['context'].encode(),80000)
-        require(set(envelope)=={'fixed_challenge','orientation','execution','expected_execution_sha256','review_nonce'},
+        require(set(envelope)=={'fixed_challenge_sha256','orientation','execution','expected_execution_sha256','review_nonce'},
             'CONFLICT_REVIEW_FIELDS')
+        require(envelope['fixed_challenge_sha256']==sha(challenge_bytes()),'CONFLICT_REVIEW_CHALLENGE_DRIFT')
         execution=envelope['execution'];variant=orientation(envelope['orientation'])
         require(canonical(submitted_request)==canonical(phase_request('review',variant,
             execution=execution,nonce=envelope['review_nonce']))
