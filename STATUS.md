@@ -36,6 +36,29 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dell GitHub reconciliation and dependency-PR tidy-up - 11 October 2026
+
+### Claimed, not independently checked
+
+- Full GitHub reconciliation from the Dell (`DESKTOP-IPV4PH9`) on 11 October 2026.
+  Reported by Codex, not yet spot-checked by Lam:
+  - Closed 10 stale Dependabot dependency-bump PRs with a closing comment:
+    authority-engine #80-#84, the-portal #82, velyqua #80-#83. The dependency
+    upgrades themselves were not applied; unreviewed upgrades remain a separate
+    per-repository review decision.
+  - `prime` holds 75 open PRs, all non-Dependabot (mostly the draft A19
+    certification ladder and related candidates). None were closed or merged;
+    they remain active certification work (P0 under the 10 October directive).
+  - Local Dell checkouts under `JARVIS\repos` were clean on `main`; `prime`
+    local `main` was 341 commits behind and was fast-forwarded to `d338e44`
+    (current `origin/main`).
+  - The BCG RISE capstone repo (`bcg-rise-wave-19-group-1`, AWS CodeCommit
+    remote) had 7 untracked files on branch `Andrew_EDA`; they were committed
+    locally on 11 October 2026 and not pushed to CodeCommit.
+  - Independent verification of `399ec859` and the 21-agent / 29-capability
+    matrices from this same day are recorded separately (Dell evidence
+    directory `work/orqevia-verify-evidence-20261011`).
+
 ## Light-production observation and dated HF evidence repair — 8 October 2026
 
 ### Claimed, not independently checked
