@@ -12,6 +12,16 @@ from app.settings import PrimeSettings
 
 
 class AgentDispatchTests(HarnessApiTests):
+    def test_strict_json_contract_reaches_durable_queue(self):
+        request={'capability':'responsibility.a19','objective':'Classify yes or no.',
+                 'task_class':'classification','response_format':'strict_json'}
+        denied=self.client.post('/api/agents/dispatch',json=request)
+        assert denied.status_code==401
+        accepted=self.client.post('/api/agents/dispatch',headers=self.headers,json=request)
+        assert accepted.status_code==202,accepted.text
+        identifier=accepted.json()['job']['id']
+        assert compute_queue_api.queue.get(identifier)['response_format']=='strict_json'
+
     def setUp(self):
         super().setUp()
         os.environ['PRIME_REGISTRY_V1_ENABLED']='1'

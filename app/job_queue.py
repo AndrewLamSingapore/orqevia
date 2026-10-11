@@ -144,7 +144,7 @@ class JobQueue:
             if 'harness_envelope' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
                 c.execute('ALTER TABLE compute_jobs ADD COLUMN harness_envelope TEXT')
             columns={r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}
-            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'")]:
+            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'"),('response_format',"TEXT DEFAULT 'text'")]:
                 if name not in columns:c.execute(f'ALTER TABLE compute_jobs ADD COLUMN {name} {definition}')
 
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
@@ -155,8 +155,9 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto') -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text') -> dict:
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
+        if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')
         try:
             canonical_agent = canonical_agent_id(agent)
         except RegistryError as exc:
@@ -179,6 +180,7 @@ class JobQueue:
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
             c.execute('UPDATE compute_jobs SET classification=? WHERE id=?',(classification,jid))
             c.execute('UPDATE compute_jobs SET preferred_provider=?,data_classification=?,task_class=? WHERE id=?',(preferred_provider,data_classification,task_class,jid))
+            c.execute('UPDATE compute_jobs SET response_format=? WHERE id=?',(response_format,jid))
             if harness_envelope is not None:
                 c.execute('UPDATE compute_jobs SET harness_envelope=? WHERE id=?',
                           (json.dumps(harness_envelope,sort_keys=True),jid))
