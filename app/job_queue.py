@@ -325,9 +325,11 @@ class JobQueue:
             )
             # Rank the complete queue, then stream rows to bound Python memory.
             # A blocked oldest job must not conceal eligible work in its lane.
+            # Equal timestamps must tie-break by insertion order (rowid), never
+            # by the random job id, so FIFO scheduling stays deterministic.
             cursor=c.execute("""SELECT * FROM compute_jobs WHERE status='queued'
                 ORDER BY effective_priority(priority,created_at) DESC,
-                         priority DESC,created_at,id""")
+                         priority DESC,created_at,rowid""")
             def candidates():
                 while rows := cursor.fetchmany(1000):
                     yield from rows
