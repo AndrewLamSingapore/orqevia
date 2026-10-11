@@ -284,6 +284,16 @@ def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend)
     finally:
         c.close()
     assert q.claim('two', [LOCAL]) is None  # receipt predates completion
+    # Windows time.time() can return the same tick as completion above, which
+    # would make the receipt appear not-strictly-newer and skip the completed
+    # job's memory credit. Wait until the clock advances past completion, then
+    # write a strictly-newer observation with the intended headroom.
+    with sqlite3.connect(q.db_path) as db:
+        completed_at = db.execute(
+            'SELECT captured_after FROM backend_admission_refresh WHERE endpoint=?',
+            (ENDPOINT,)).fetchone()[0]
+    while time.time() <= completed_at:
+        time.sleep(0.001)
     receipt(backend, available=4000)
     assert q.claim('two', [LOCAL])['id'] == next_job['id']
 
