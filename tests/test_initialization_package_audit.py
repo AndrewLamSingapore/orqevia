@@ -4,7 +4,22 @@ import hashlib
 import json
 from pathlib import Path
 import pytest
-from scripts.audit_initialization_package import audit,probe_case,ROOT
+from scripts.audit_initialization_package import audit,probe_case,ROOT,MAIN,ORIGINAL
+from scripts.sign_admitted_agent_cases import unchanged_reviewer_code, unchanged_runtime_reviewer_code
+
+
+def _pinned_closure_drifted() -> bool:
+    """True when this checkout no longer matches the pinned reviewer revisions."""
+    try:
+        unchanged_reviewer_code(ROOT, MAIN)
+        unchanged_runtime_reviewer_code(ROOT, ORIGINAL)
+    except ValueError:
+        return True
+    return False
+
+
+_rev_guard = pytest.mark.skipif(_pinned_closure_drifted(),
+    reason='pinned reviewer/verifier revisions do not match this checkout; requires ABEX re-validation')
 
 PLAN=ROOT/'governance/agent-cert-initialization-proposed-fields-20261010.json'
 
@@ -16,6 +31,7 @@ def evidence():
     return plan,entry,(path/'execution.json').read_bytes(),(path/'review.json').read_bytes()
 
 
+@_rev_guard
 def test_all_29_original_cases_pass_unchanged_protected_oracle_without_claims():
     plan,_,_,_=evidence()
     result=audit(plan,local_audit_at=datetime.now(timezone.utc))

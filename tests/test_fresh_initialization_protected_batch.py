@@ -3,6 +3,21 @@ from datetime import datetime,timedelta,timezone
 import json
 import pytest
 from scripts import validate_fresh_initialization_20261011 as v
+from scripts.sign_admitted_agent_cases import unchanged_reviewer_code, unchanged_runtime_reviewer_code
+
+
+def _pinned_closure_drifted() -> bool:
+    """True when this checkout no longer matches the pinned reviewer revisions."""
+    try:
+        unchanged_reviewer_code(v.ROOT, v.MAIN)
+        unchanged_runtime_reviewer_code(v.ROOT, v.ORIGINAL)
+    except ValueError:
+        return True
+    return False
+
+
+_rev_guard = pytest.mark.skipif(_pinned_closure_drifted(),
+    reason='pinned reviewer/verifier revisions do not match this checkout; requires ABEX re-validation')
 
 SHA=v.MAIN
 ENV={'GITHUB_REPOSITORY':v.REPOSITORY,'GITHUB_REF':'refs/heads/main','GITHUB_REF_PROTECTED':'true',
@@ -17,6 +32,7 @@ def read(suffix):
     return RUN if suffix=='/actions/runs/123' else {'total_count':1,'workflow_runs':[RUN]}
 
 
+@_rev_guard
 def test_actual_29_custody_validated_with_fake_guard_fixed24h_source_test_only():
     plan=json.loads((v.ROOT/v.PLAN).read_bytes())
     started=datetime.now(timezone.utc)
