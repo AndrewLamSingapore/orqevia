@@ -7,6 +7,7 @@ import hashlib
 import time
 from dataclasses import replace
 from pathlib import Path
+from typing import Literal
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException
@@ -124,6 +125,7 @@ def authorize(authorization: str | None) -> None:
 
 
 class SubmitJob(BaseModel):
+    response_format: Literal['text', 'strict_json'] = 'text'
     agent: str=Field(min_length=1,max_length=80)
     prompt: str=Field(min_length=1,max_length=120000)
     priority: str|int="normal"
