@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $EnvPath = Join-Path $RepoRoot ".env"
 $ComposePath = Join-Path $RepoRoot "docker-compose.yml"
-$RelayUrl = "https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/jarvis-trace-relay"
+$RelayUrl = "https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/orqevia-trace-relay"
 
 function Read-EnvMap([string]$Path) {
     $map = [ordered]@{}
