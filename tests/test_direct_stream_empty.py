@@ -9,7 +9,8 @@ from app.direct_stream import infer
 @pytest.mark.parametrize('content,ok', [('{"ok":true}',True),
     ('```json\n{"ok":true}\n```',False), ('[]',False),
     ('{"ok":true,"ok":false}',False), ('{"value":NaN}',False),
-    ('{"value":1e400}',False), ('not json',False)])
+    ('{"value":1e400}',False), ('not json',False),
+    pytest.param('{"nested":' + '[' * 20000 + '0' + ']' * 20000 + '}',False, id='nested-recursion')])
 def test_strict_json_is_requested_and_invalid_outputs_are_not_completed(content,ok,monkeypatch,tmp_path):
     import json
     for name in ('PRIME_LOCAL_ADMISSION_MODE','PRIME_BACKEND_MEMORY_RECEIPT',
