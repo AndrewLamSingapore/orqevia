@@ -361,7 +361,8 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
     authenticate_owner(authorization)
     from .operational_workflows import from_objective, execute_workflow
     from .system_architecture import architecture_answer,is_architecture_question
-    architecture=architecture_answer(body.objective) if not body.deterministic_operation and is_architecture_question(body.objective) else None
+    architecture=architecture_answer(body.objective) if (not body.deterministic_operation
+        and body.capability=='auto' and not body.capabilities and is_architecture_question(body.objective)) else None
     workflow_body=from_objective(body.objective,body.context) if architecture is None and not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
     capabilities=list(dict.fromkeys(body.capabilities or ([body.capability] if body.capability!='auto' else select_capabilities(body.objective))))
     from .runtime_status import is_runtime_status
