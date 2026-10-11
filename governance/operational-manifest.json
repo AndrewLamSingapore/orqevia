@@ -47,9 +47,9 @@
     "overall": "STALE"
   },
   "shared_contract": {
-    "version": "2.0.0",
+    "version": "3.0.0",
     "repository": "AndrewLamSingapore/AndrewLamSingapore",
-    "source_sha": "a05fa2e3df80733af9ed87068b3526768d4a8394",
+    "source_sha": "bc8a53567c274676cbdfe195f9a1ac00cf373ea4",
     "path": "portfolio-contracts/manifest.json",
     "verified_at_utc": "2026-09-16T12:39:34.111Z"
   },
