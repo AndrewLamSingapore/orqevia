@@ -244,3 +244,56 @@ def test_exhausted_original_shared_budget_no_flush_or_peer(runtime,monkeypatch):
     result=collect(runtime)
     assert result.summary['state']=='INCOMPLETE' and flushes==[]
     assert len([p for m,p in runtime.requests if m=='POST'])==1
+
+
+def test_original_78354_byte_execution_uses_compact_review_with_unchanged_cap():
+    from pathlib import Path
+    import hashlib
+    raw=(Path(__file__).parent/'fixtures/conflict-source-execution-78354.json').read_bytes()
+    assert len(raw)==78354 and hashlib.sha256(raw).hexdigest()=='1c4f2b99e613773ec94cdc8b13efc94ed31b044a82cd1ee5c0b5b3f9c3629e09'
+    execution=json.loads(raw)
+    request=events.phase_request('review',execution=execution,nonce=NONCE)
+    context=json.loads(request['context'])
+    assert context['execution']==execution
+    assert context['expected_execution_sha256']==hashlib.sha256(raw).hexdigest()
+    assert context['fixed_challenge_sha256']==events.sha(events.challenge_bytes())
+    assert len(request['context'].encode())<=80000
+    operator=ConflictPhaseOperatorIO(owner_token=TOKEN,which='review',execution=execution,
+        nonce=NONCE,expected_source_revision=SOURCE,expected_runtime_image=IMAGE)
+    assert operator._submitted_request==request  # Constructor only: no authentication/network.
+    execution['oversized_transport']='x'*80000
+    with pytest.raises(events.ConflictEventError,match='CONFLICT_CONTEXT_BOUND'):
+        events.phase_request('review',execution=execution,nonce=NONCE)
+
+
+@pytest.mark.parametrize('family',['conflict','cross_agent_conflict'])
+def test_actual_four_objectives_with_full_source_domain_identity(runtime,monkeypatch,family):
+    monkeypatch.setenv('PRIME_INTERFACE_HOST_ID','SOURCE_DOMAIN_8c7130c9-340d-4aa0-865c-06149f3491f7')
+    monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_VERSION','SOURCE_QUALIFICATION')
+    if family=='conflict':result=collect(runtime)
+    else:
+        from tests.test_agent_cert_cross_agent_conflict import collect as collect_cross
+        result=collect_cross(runtime)
+    assert result.summary['state']=='UNSIGNED_EVENT_EVIDENCE',result.summary
+    assert result.summary['submission_attempts']==4
+    assert len([path for method,path in runtime.requests if method=='POST'])==4
+
+
+@pytest.mark.parametrize('fault',['foreign_hash','missing_hash'])
+def test_compact_challenge_drift_rejected_before_original_review_writes(runtime,fault):
+    result=collect(runtime)
+    assert result.summary['state']=='UNSIGNED_EVENT_EVIDENCE',result.summary
+    request=events.phase_request('review',execution=json.loads(result.execution_bytes),nonce=NONCE)
+    context=json.loads(request['context'])
+    if fault=='foreign_hash':context['fixed_challenge_sha256']='0'*64
+    else:context.pop('fixed_challenge_sha256')
+    request['context']=events.canonical(context).decode()
+    before=runtime.ledger.status()['persisted']
+    artifacts=set((runtime.root/'artifacts').rglob('*'))
+    reply=runtime.client.post('/api/agents/objectives',json=request,
+        headers={'Authorization':'Bearer '+TOKEN})
+    assert reply.status_code==202 and reply.json()['steps'][0]['state']=='blocked'
+    assert runtime.ledger.status()['persisted']==before
+    assert set((runtime.root/'artifacts').rglob('*'))==artifacts
+    assert not any(json.loads(line).get('task_id')==reply.json()['id']
+        for line in (runtime.root/'action-records.jsonl').read_text().splitlines())
