@@ -276,3 +276,19 @@ def test_n1_baseline_has_no_background_reserve(tmp_path):
     assert q.claim("w2", [LOCAL, CLOUD]) is None
     q.finish(background["id"], result="done")
     assert q.claim("w1", [LOCAL, CLOUD])["id"] == owner["id"]
+
+
+def test_equal_timestamps_tiebreak_keeps_submission_order(tmp_path, monkeypatch):
+    # The Windows clock can produce identical created_at strings for
+    # back-to-back submissions. The claim ordering must fall back to
+    # insertion order, never to a random UUID tie-break.
+    monkeypatch.setattr("app.job_queue.utcnow", lambda: "2026-10-11T00:00:00.000000+00:00")
+    policy = QueuePolicy(global_concurrency=8, per_agent_concurrency=1,
+                         local_ram_mb=8192, local_vram_mb=4096)
+    q = JobQueue(tmp_path / "tiebreak-order.db", policy)
+    backend = Provider("ollama", "local", "fast", 8192, 4096, 8)
+    agents = ("a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10")
+    submitted = [q.submit(agent=agent, prompt=f"tie-{agent}", priority="background")
+                 for agent in agents]
+    claimed = [q.claim(f"worker-{index}", [backend]) for index in range(len(agents))]
+    assert [job["id"] for job in claimed] == [job["id"] for job in submitted]
