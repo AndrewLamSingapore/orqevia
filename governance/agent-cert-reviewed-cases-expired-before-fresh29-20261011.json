@@ -1,0 +1,40 @@
+{
+  "schema_version": "prime.protected-reviewed-cases.v1",
+  "cases": [
+    {
+      "record": {
+        "agent_id": "a19",
+        "capability_id": "responsibility.a19",
+        "dimension": "general",
+        "test_case": "artifact_produce",
+        "certification_test": "general-artifact_produce",
+        "test_version": "a19.artifact-events.v1",
+        "test_result": "PASS",
+        "verifier": "a26",
+        "executor_identity": "a19",
+        "evidence": "execution.json",
+        "evidence_sha256": "43a7afd9f9e4c249d0b2a38df8eeb7128232bb47bf68bdc36ed4f3faf69facf4",
+        "certified_at": "2026-10-08T10:18:46.368031+00:00",
+        "last_revalidated": "2026-10-09T10:06:39.933624+00:00",
+        "expires_at": "2026-10-09T11:06:39.933624+00:00",
+        "source_revision": "61335a96293be627b240488debfb94294cdf9b34",
+        "authority_scope": "advisory",
+        "review_evidence": "review.json",
+        "review_evidence_sha256": "7666fef8a1e14034082a762ff321fd6de15e9e4549238c353754bb8ff140501c",
+        "review_run_id": "pr212-artifact-f639a2c1-c193-4f0a-823b-bc9470228492",
+        "review_test_version": "a19.original-artifact-events.v1",
+        "review_source_revision": "61335a96293be627b240488debfb94294cdf9b34",
+        "reviewer_code_revision": "61335a96293be627b240488debfb94294cdf9b34"
+      },
+      "evidence_directory": "governance/agent-cert-case-evidence/a19-61335a9-artifact-produce-20261008",
+      "execution_sha256": "43a7afd9f9e4c249d0b2a38df8eeb7128232bb47bf68bdc36ed4f3faf69facf4",
+      "review_sha256": "7666fef8a1e14034082a762ff321fd6de15e9e4549238c353754bb8ff140501c",
+      "execution_source_revision": "61335a96293be627b240488debfb94294cdf9b34",
+      "runtime_image_id": "sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68",
+      "reviewer_code_revision": "61335a96293be627b240488debfb94294cdf9b34",
+      "verifier_code_revision": "59605b8279345dbb4373e6d79d52a2d4ad152888",
+      "cloud_policy": null,
+      "owner_policy_sha256": null
+    }
+  ]
+}
