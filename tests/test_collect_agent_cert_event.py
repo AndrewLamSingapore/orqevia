@@ -158,6 +158,53 @@ def test_identity_uses_original_a19_contract_and_never_a_queue(operator):
     assert len(result.subject_actions) == len(result.reviewer_actions) == 2
 
 
+@pytest.mark.parametrize('late_observation_start', [False, True])
+def test_owned_identity_collector_uses_outer_observation_without_admitting_earlier_actions(
+        operator, monkeypatch, late_observation_start):
+    from scripts import collect_agent_cert_event as collector
+    from app.agent_cert_owned_identity import REVIEW_ACTION
+    from app import agent_cert_owned_identity
+    from app.agent_cert_identity_review import utc
+    import time
+    original_report = agent_cert_owned_identity.build_identity_report
+    def delayed_report(*args, **kwargs):
+        # Real elapsed producer work makes the ordering deterministic even
+        # when the Windows clock gives consecutive operations equal times.
+        time.sleep(0.003)
+        return original_report(*args, **kwargs)
+    monkeypatch.setattr(agent_cert_owned_identity, 'build_identity_report', delayed_report)
+    original = collector.observe_cert_case
+    observed = []
+    def observe(*args, **kwargs):
+        value = original(*args, **kwargs)
+        observed.append(deepcopy(value))
+        if late_observation_start:
+            # Keep genuine original ledger/artifact bytes; narrow only the
+            # offered outer observation to exclude the already-started action.
+            value['started_at'] = value['captured_at']
+        return value
+    monkeypatch.setattr(collector, 'observe_cert_case', observe)
+    def review_actions(action):
+        operator.calls.append('review_actions')
+        assert action == operator.review['review_action_id']
+        operator.review_lines = read_action_span(operator.ledger.path,
+            operator.review['task_id'], REVIEW_ACTION)
+        return list(operator.review_lines)
+    io = replace(operator.io(), read_review_actions=review_actions)
+    result = collect(operator, agent='a01', cap='responsibility.a01',
+        case='baseline:identity', io=io)
+    first = json.loads(operator.subject_lines[0])
+    assert utc(observed[0]['started_at']) <= utc(first['timestamp']) < utc(observed[0]['captured_at'])
+    if late_observation_start:
+        reject(result, operator, submits=1)
+        assert result.summary['stage'] == 'SUBJECT_JOIN'
+    else:
+        assert result.summary['state'] == 'UNSIGNED_EVENT_EVIDENCE', json.dumps(result.summary,sort_keys=True)
+        assert operator.calls.count('submit') == operator.calls.count('review') == 1
+        assert result.subject_actions == tuple(operator.subject_lines)
+        assert result.reviewer_actions == tuple(operator.review_lines)
+
+
 @pytest.mark.parametrize('field,value', [
     ('expected_source_revision', 'UNKNOWN'), ('expected_runtime_image', IMAGE.upper()),
     ('expected_registry_sha256', False), ('reviewer_code_revision', 'a'*39),

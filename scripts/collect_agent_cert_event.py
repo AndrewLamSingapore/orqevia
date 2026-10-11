@@ -554,7 +554,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         event = (execution['dispatch'].get('tool_event') if tool_case else
             execution['dispatch'].get('authority_event') if authority_case else
             execution['dispatch'].get('artifact_event') if artifact_case else None)
-        action_began = utc(event['started_at'] if bounded_event else observation['captured_at'])
+        owned_identity = case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19')
+        action_began = utc(event['started_at'] if bounded_event else
+            observation['started_at'] if owned_identity else observation['captured_at'])
         action_ended = utc(event['completed_at'] if bounded_event else observation['completed_at'])
         execution['action_chain_join'] = action_span(events, task_id=task, agent_id=agent,
             action_type=action_type, schema=report_schema, metadata=execution['artifact_metadata'],
@@ -741,6 +743,7 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
             action_type=TOOL_REVIEW_ACTION if tool_case else AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
+                'agent.certification.owned_identity.review' if owned_identity else
                 'agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),
             ended=now, action_id=result['review_action_id'], duration_limit_ms=120000)
