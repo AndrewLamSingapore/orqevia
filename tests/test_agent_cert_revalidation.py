@@ -181,14 +181,25 @@ def test_actual_distinct_peer_second_original_read_rejects_drift(runtime, monkey
     assert (runtime.ledger.status()['persisted'], set((runtime.root/'artifacts').iterdir())) == before
 
 
-def test_all_five_prior_case_bytes_preserved():
+@pytest.mark.parametrize('line_ending', [b'\n', b'\r\n'])
+def test_all_five_prior_case_bytes_preserved(tmp_path, monkeypatch, line_ending):
     from app import agent_cert_tool_events as events
+    from app import agent_registry
+    # The proposal binds exact registry bytes. Exercise both Git checkout
+    # encodings without changing the live registry or accepting arbitrary pins.
+    raw = agent_registry.REGISTRY_PATH.read_bytes().replace(b'\r\n', b'\n')
+    registry = tmp_path / 'registry.json'
+    registry.write_bytes(raw.replace(b'\n', line_ending))
+    monkeypatch.setattr(agent_registry, 'REGISTRY_PATH', registry)
     expected = {
         'tool_recovery:tool_failure':'0f34ccd882d68b9347d4504c2236c7e55ac764cd8f232b4db4e8d937aceb8d46',
         'tool_recovery:bounded_response':'f6e2c123aeb13ee77b032ff9336daf9abe564b37a539b1695cc03e1877f04707',
         'graceful_degradation:complete':'191006e9f939564fb234e18f880a1fc33452f49afb208780e34b2144369cfdfb',
         'tools:complete':'2152b2d3e180a9becb3e21e48117a41c382d4ed5df3325f5a98545d98503befa',
-        'independent_verification:complete':'50713d536f4fca236ddaf2dffa6b3be752d4deeec2ef99234a87ed8639d5688b',
+        'independent_verification:complete': (
+            '50713d536f4fca236ddaf2dffa6b3be752d4deeec2ef99234a87ed8639d5688b'
+            if line_ending == b'\r\n' else
+            '0e69b1487df6cd2a002131b40f51f0b4cea173b63e140b1aca96f747b62265f0'),
     }
     assert {case:events.sha(canonical(events.canonical_tool_case(case))) for case in expected} == expected
 
