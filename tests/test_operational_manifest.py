@@ -92,7 +92,7 @@ def test_missing_deployment_authentication_cannot_prove_current(monkeypatch):
             import base64
             if '/sky-tablet/' in url:
                 return {"content": base64.b64encode(b'sky artifact').decode()}
-            return {"content": base64.b64encode(b'{"contract_version":"2.0.0"}').decode()}
+            return {"content": base64.b64encode(b'{"contract_version":"3.0.0"}').decode()}
         for system in manifest['systems'].values():
             if url == system.get('health_url'): return {'ok': True, 'revision': system['runtime_sha']}
             if '/repos/' + system['repository'] + '/commits/' in url:
