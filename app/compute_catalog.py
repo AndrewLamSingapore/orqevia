@@ -38,10 +38,14 @@ def task_tier(objective, task_class='auto'):
     return Tier.MINI
 
 
-def load_catalog(path=None):
+def load_catalog(path=None,*,raw_bytes=None):
     name=path or os.getenv('PRIME_PROVIDER_CATALOG','')
-    if not name:return []
-    data=json.loads(Path(name).read_text())
+    if raw_bytes is None:
+        if not name:return []
+        data=json.loads(Path(name).read_text())
+    else:
+        if type(raw_bytes) is not bytes:raise ValueError('Original catalog bytes required')
+        data=json.loads(raw_bytes)
     entries=data.get('models',[])
     if len(entries)>32:raise ValueError('Too many configured model entries')
     seen=set()

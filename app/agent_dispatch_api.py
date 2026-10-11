@@ -89,8 +89,16 @@ class AgentRequest(BaseModel):
     deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review',
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
+        'certification_owned_identity','certification_owned_identity_review',
         'certification_artifact_review','certification_authority_event',
-        'certification_authority_review'] | None = None
+        'certification_authority_review','certification_tool_event','certification_tool_review',
+        'certification_recovery_controlled_prior','certification_recovery_correction','certification_recovery_review',
+        'certification_conflict_code_proposal','certification_conflict_fixture_finding',
+        'certification_conflict_reconciliation','certification_conflict_review',
+        'certification_cross_conflict_code_proposal','certification_cross_conflict_fixture_finding',
+        'certification_cross_conflict_separation','certification_cross_conflict_review',
+        'certification_owner_referral_proposal','certification_owner_referral_review',
+        'certification_model_substitution','certification_model_substitution_review'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -119,7 +127,7 @@ def joined_authority_review(body, authorization, *, actor, task_id, runtime):
 
 
 def _joined_contract_event_review(body, authorization, *, actor, task_id, runtime, initialization,
-                                  artifact=False, authority=False):
+                                  artifact=False, authority=False, tool=False, owned_identity=False,handoff_budget=None,models_budget=None):
     """Join the original zero-model event to its owning read-only domains.
 
     This operation supplies a separate registered reviewer artifact, never a
@@ -134,8 +142,15 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
     from .objective_api import get_read_only, runtime_snapshot
     # Only fixed source-owned event contracts are selectable. The request
     # cannot supply a replacement validator, event type, schema or verdict.
-    bounded_event = artifact or authority
-    if authority:
+    bounded_event = artifact or authority or tool
+    if tool:
+        from .agent_cert_artifact_events import MAX_BYTES, _path
+        from .agent_cert_tool_events import (SUPPORTED_CASES, tool_action_type, read_tool_action_span, original_custody_fields,
+            oracle_id, check_setup)
+        from .agent_cert_role_review import (TOOL_REVIEW_SCHEMA as SCHEMA,
+            TOOL_REVIEW_OBJECTIVE as expected_objective, tool_review_objective, tool_event_review_join as validate_event)
+        test_case = None
+    elif authority:
         from .agent_cert_artifact_events import MAX_BYTES, _path
         from .agent_cert_authority_events import (SUPPORTED_CASES, authority_action_type,
             read_authority_action_span, ORACLE_ID)
@@ -155,6 +170,12 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             initialization_reviewer, initialization_oracle_id, initialization_review_objective)
         expected_objective = INITIALIZATION_REVIEW_OBJECTIVE
         test_case = 'initialization'
+    elif owned_identity:
+        from .agent_cert_owned_identity import (REVIEW_SCHEMA as SCHEMA, ORACLE_ID,
+            ACTION_TYPE as subject_action, validate_owned_identity_execution as validate_event,
+            identity_reviewer, identity_review_objective, MAX_BYTES)
+        from .agent_cert_artifact_events import _path
+        test_case = 'identity'
     else:
         validate_event = validate_identity_execution
         subject_action = 'runtime.status.artifact'
@@ -165,14 +186,21 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         # been validated below. Resolve only the fixed owned reviewer now, then
         # bind every subsequent original domain read to that same pair.
         subject_actor, subject_capability = 'a19', 'responsibility.a19'
-        if initialization:
+        if tool:
+            preliminary = parse(body.context.encode('utf-8'))
+            expected_objective = tool_review_objective(preliminary.get('execution', {}).get('case_spec', {}).get('case'))
+        if initialization or owned_identity:
             preliminary = parse(body.context.encode('utf-8'))
             subject_spec = preliminary.get('execution', {}).get('case_spec', {})
             require(type(subject_spec) is dict, 'IDENTITY_REVIEW_FIELDS_INVALID')
             subject_actor, subject_capability = subject_spec.get('agent_id'), subject_spec.get('capability_id')
-            reviewer_actor, reviewer_capability = initialization_reviewer(subject_actor, subject_capability)
-            ORACLE_ID = initialization_oracle_id(subject_actor, subject_capability)
-            expected_objective = initialization_review_objective(subject_actor, subject_capability)
+            if owned_identity:
+                reviewer_actor, reviewer_capability = identity_reviewer(subject_actor, subject_capability)
+                expected_objective = identity_review_objective(subject_actor, subject_capability)
+            else:
+                reviewer_actor, reviewer_capability = initialization_reviewer(subject_actor, subject_capability)
+                ORACLE_ID = initialization_oracle_id(subject_actor, subject_capability)
+                expected_objective = initialization_review_objective(subject_actor, subject_capability)
         else:
             reviewer_actor, reviewer_capability = 'a26', 'responsibility.a26'
         reviewer = agent_record(actor)
@@ -184,7 +212,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and body.classification == 'R0' and body.data_classification == 'LOCAL_ONLY'
                 and body.priority == 'low' and body.max_cost_usd == 0
                 and body.preferred_provider is None, 'IDENTITY_REVIEW_POLICY_REQUIRED')
-        if bounded_event:
+        if bounded_event or owned_identity:
             require(body.minimum_tier == 'NANO' and body.task_class == 'classification'
                 and body.response_format == 'strict_json', 'ARTIFACT_REVIEW_POLICY_REQUIRED')
         envelope = parse(body.context.encode('utf-8'))
@@ -195,10 +223,13 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             case_id = execution.get('case_spec', {}).get('case')
             require(type(case_id) is str and case_id in SUPPORTED_CASES,
                 'ARTIFACT_REVIEW_CASE_REQUIRED')
-            subject_action = authority_action_type(case_id) if authority else artifact_action_type(case_id)
+            subject_action = tool_action_type(case_id) if tool else authority_action_type(case_id) if authority else artifact_action_type(case_id)
             test_case = case_id.split(':')[1]
             if artifact:
-                from .agent_cert_artifact_events import ORACLE_ID
+                from .agent_cert_artifact_events import oracle_id
+                ORACLE_ID = oracle_id(case_id)
+            if tool:
+                ORACLE_ID = oracle_id(case_id)
         require(type(envelope['expected_execution_sha256']) is str
                 and re.fullmatch('[0-9a-f]{64}', envelope['expected_execution_sha256']) is not None
                 and sha(canonical(execution)) == envelope['expected_execution_sha256']
@@ -207,24 +238,72 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 'IDENTITY_REVIEW_BINDING_INVALID')
         registry_sha = sha(agent_registry.REGISTRY_PATH.read_bytes())
         now = datetime.now(timezone.utc)
+        cross_receipt = None
+        if tool and case_id in {'models:complete','cross_verification:complete','collaboration:complete', 'clean_room_audit:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure'}:
+            from .agent_cert_tool_events import read_cross_peer_request,peer_review_fields
+            cross_deadline = time.monotonic() + 1
+            cross_receipt = read_cross_peer_request(Path(os.getenv('PRIME_DATA_DIR','/data')),task_id,
+                body.model_dump(),runtime,execution['dispatch']['task_id'],deadline=cross_deadline)
+            if case_id=='models:complete':
+                from .agent_cert_model_selection import case_remaining as models_remaining
+                from .agent_cert_artifact_events import _utc
+                require(type(models_budget) is dict,'MODELS_ORIGINAL_PEER_BUDGET_REQUIRED')
+                models_budget['started_at']=min(models_budget['started_at'],_utc(cross_receipt['created_at']))
+                require(models_remaining(models_budget)>0,'MODELS_PEER_BOUND_EXCEEDED')
+            if case_id.startswith('handoff_recovery:'):
+                from .agent_cert_handoff_gap import case_remaining,_utc
+                require(type(handoff_budget) is dict,'HANDOFF_ORIGINAL_PEER_BUDGET_REQUIRED')
+                handoff_budget['started_at']=min(handoff_budget['started_at'],_utc(cross_receipt['created_at']))
+                require(case_remaining(handoff_budget)>0,'HANDOFF_PEER_BOUND_EXCEEDED')
+        blind_original = None
+        if tool and case_id == 'clean_room_audit:complete':
+            from .agent_cert_clean_room import read_original_audit
+            from .agent_cert_artifact_events import _utc
+            blind_original = read_original_audit(Path(os.getenv('PRIME_DATA_DIR','/data')),execution.get('blind_audit'),
+                input_metadata=execution['dispatch']['tool_event']['input_artifact_metadata'],
+                input_raw=execution['input_content_utf8'].encode(),runtime=runtime,registry=registry_sha,
+                authorization=authorization,now=now)
+            require(execution['blind_audit']['dispatch']['task_id'] not in {task_id,execution['dispatch']['task_id']}
+                and _utc(execution['blind_audit']['artifact_metadata']['timestamp']) <= _utc(cross_receipt['created_at']),
+                'BLIND_AUDIT_MUST_PRECEDE_COMPARISON')
         joined = validate_event(execution, source_revision=runtime['source_revision'],
             runtime_image_id=runtime['image_digest'], registry_sha256=registry_sha, now=now,
-            **({'agent_id': subject_actor, 'capability_id': subject_capability} if initialization else {}))
+            **({'agent_id': subject_actor, 'capability_id': subject_capability} if initialization or owned_identity else {}))
         require(canonical(execution['runtime']) == canonical(runtime),
                 'IDENTITY_CURRENT_RUNTIME_REQUIRED')
         subject_task = joined['task_id']
         require(subject_task != task_id, 'IDENTITY_REVIEW_TASK_MUST_BE_DISTINCT')
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if bounded_event:
+        if bounded_event or owned_identity:
             root = _path(root)
             require(_path(root / 'objectives.db').is_file()
                 and _path(root / 'artifacts').is_dir(), 'ARTIFACT_ORIGINAL_DOMAINS_REQUIRED')
+        if authority and case_id == 'unauthorized_rejection:unauthorized':
+            from .agent_cert_authority_events import read_original_denial
+            authority_read_deadline = time.monotonic() + 2
+            read_original_denial(root, subject_task, execution['dispatch']['authority_event']['admission'],
+                deadline=authority_read_deadline)
         actual_objective = get_read_only(subject_task, authorization)
         require(canonical(actual_objective) == canonical(execution['objective_read'][1]),
                 'IDENTITY_OWNED_OBJECTIVE_REQUIRED')
+        handoff_receipt=None
+        if tool and case_id in {'handoff_recovery:bounded_response','handoff_recovery:agent_failure'}:
+            from .agent_cert_handoff_gap import reread_failed_original,read_failed_store
+            handoff_original=execution['dispatch']['tool_event']['original_failed_peer']
+            handoff_deadline=time.monotonic()+min(1,case_remaining(handoff_budget))
+            reread_failed_original(handoff_original,reader=lambda original:get_read_only(original,authorization),
+                runtime=runtime,registry_sha256=registry_sha,now=now,subject_task=subject_task)
+            handoff_receipt=read_failed_store(root,handoff_original,runtime=runtime,registry_sha256=registry_sha,
+                now=now,subject_task=subject_task,deadline=handoff_deadline)
+            require(canonical(handoff_receipt)==canonical(execution['dispatch']['tool_event']['original_failed_store']),
+                'HANDOFF_ORIGINAL_DENIAL_STORE_DRIFT')
+        if tool and case_id=='models:complete':
+            from .agent_cert_model_selection import reread_native_snapshot
+            models_original=execution['dispatch']['tool_event']['original_model_snapshot']
+            reread_native_snapshot(models_original,deadline=time.monotonic()+models_remaining(models_budget))
         factory = ArtifactFactory(root / 'artifacts')
         def retrieve_owned(identifier):
-            if bounded_event:
+            if bounded_event or owned_identity:
                 # Use the substrate's owning-path guard, including Windows
                 # reparse parents. Never follow submitted paths or large files.
                 folder = root / 'artifacts' / identifier
@@ -237,11 +316,20 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
         require(canonical(metadata) == canonical(execution['artifact_metadata'])
                 and raw == execution['artifact_content_utf8'].encode('utf-8'),
                 'IDENTITY_OWNED_ARTIFACT_REQUIRED')
-        original_lines = (read_authority_action_span(root, subject_task, case_id) if authority else
+        original_lines = (read_tool_action_span(root, subject_task, case_id) if tool else
+            read_authority_action_span(root, subject_task, case_id) if authority else
             read_artifact_action_span(root, subject_task, case_id) if artifact
             else read_action_span(root / 'action-records.jsonl', subject_task, subject_action))
         require(canonical(original_lines) == canonical(execution['action_records']),
                 'IDENTITY_ORIGINAL_ACTIONS_REQUIRED')
+        if tool:
+            input_metadata = execution['dispatch']['tool_event']['input_artifact_metadata']
+            check_setup(factory, input_metadata, case_id, root)
+            original_metadata, original_raw = retrieve_owned(input_metadata['artifact_id'])
+            require(canonical(original_metadata) == canonical(input_metadata)
+                and original_raw == execution['input_content_utf8'].encode()
+                and all(canonical(read_tool_action_span(root, subject_task, case_id, phase=phase)) ==
+                    canonical(execution[key]) for phase, key in original_custody_fields(case_id)), 'TOOL_ORIGINAL_DOMAINS_REQUIRED')
         if artifact and case_id != 'general:artifact_produce':
             input_metadata = execution['dispatch']['artifact_event']['input_artifact_metadata']
             original_metadata, original_raw = retrieve_owned(input_metadata['artifact_id'])
@@ -249,30 +337,72 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 and original_raw == execution['input_content_utf8'].encode('utf-8')
                 and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                     canonical(execution['input_action_records']), 'ARTIFACT_ORIGINAL_INPUT_REQUIRED')
+        if artifact and case_id in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
+            prior_metadata = execution['dispatch']['artifact_event']['prior_artifact_metadata']
+            original_prior_metadata, original_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
+            require(canonical(original_prior_metadata) == canonical(prior_metadata)
+                and original_prior_raw == execution['prior_artifact_content_utf8'].encode('utf-8')
+                and canonical(read_artifact_action_span(root, subject_task, case_id, prior=True)) ==
+                    canonical(execution['prior_action_records']), 'RECOVERY_ORIGINAL_PRIOR_REQUIRED')
         # Revalidate immutable Objective and current identity after all reads;
         # source/registry changes cannot be concealed by a submitted snapshot.
         require(canonical(get_read_only(subject_task, authorization)) == canonical(actual_objective)
                 and canonical(runtime_snapshot()) == canonical(runtime)
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'IDENTITY_DOMAINS_CHANGED_DURING_REVIEW')
-        if bounded_event:
+        if bounded_event or owned_identity:
             # The last Objective read must not conceal a changed original
             # artifact or persisted action span. These are owning-store reads,
             # not a second validation of caller-supplied snapshots.
+            if handoff_receipt is not None:
+                reread_failed_original(handoff_original,reader=lambda original:get_read_only(original,authorization),
+                    runtime=runtime,registry_sha256=registry_sha,now=datetime.now(timezone.utc),subject_task=subject_task)
+                require(canonical(read_failed_store(root,handoff_original,runtime=runtime,registry_sha256=registry_sha,
+                    now=datetime.now(timezone.utc),subject_task=subject_task,deadline=handoff_deadline))==canonical(handoff_receipt),
+                    'HANDOFF_ORIGINAL_DENIAL_CHANGED_DURING_REVIEW')
             final_metadata, final_raw = retrieve_owned(joined['artifact_id'])
             require(canonical(final_metadata) == canonical(metadata) and final_raw == raw
-                and canonical(read_authority_action_span(root, subject_task, case_id) if authority else
-                    read_artifact_action_span(root, subject_task, case_id)) ==
+                and canonical(read_tool_action_span(root, subject_task, case_id) if tool else
+                    read_authority_action_span(root, subject_task, case_id) if authority else
+                    read_artifact_action_span(root, subject_task, case_id) if artifact else
+                    read_action_span(root / 'action-records.jsonl', subject_task, subject_action)) ==
                     canonical(original_lines), 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
+            if tool:
+                check_setup(factory, input_metadata, case_id, root)
+                require(all(canonical(read_tool_action_span(root, subject_task, case_id, phase=phase)) ==
+                    canonical(execution[key]) for phase, key in original_custody_fields(case_id)), 'TOOL_DOMAINS_CHANGED_DURING_REVIEW')
             if artifact and case_id != 'general:artifact_produce':
                 final_input_metadata, final_input_raw = retrieve_owned(input_metadata['artifact_id'])
                 require(canonical(final_input_metadata) == canonical(original_metadata)
                     and final_input_raw == original_raw
                     and canonical(read_artifact_action_span(root, subject_task, case_id, setup=True)) ==
                         canonical(execution['input_action_records']), 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
+            if artifact and case_id in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
+                final_prior_metadata, final_prior_raw = retrieve_owned(prior_metadata['artifact_id'])
+                require(canonical(final_prior_metadata) == canonical(original_prior_metadata)
+                    and final_prior_raw == original_prior_raw
+                    and canonical(read_artifact_action_span(root, subject_task, case_id, prior=True)) ==
+                        canonical(execution['prior_action_records']), 'RECOVERY_DOMAINS_CHANGED_DURING_REVIEW')
             require(canonical(runtime_snapshot()) == canonical(runtime)
                 and sha(agent_registry.REGISTRY_PATH.read_bytes()) == registry_sha,
                 'ARTIFACT_DOMAINS_CHANGED_DURING_REVIEW')
+        if authority and case_id == 'unauthorized_rejection:unauthorized':
+            read_original_denial(root, subject_task, execution['dispatch']['authority_event']['admission'],
+                deadline=authority_read_deadline)
+        if cross_receipt is not None:
+            if blind_original is not None:
+                require(canonical(read_original_audit(root,execution['blind_audit'],
+                    input_metadata=execution['dispatch']['tool_event']['input_artifact_metadata'],
+                    input_raw=execution['input_content_utf8'].encode(),runtime=runtime,registry=registry_sha,
+                    authorization=authorization,now=datetime.now(timezone.utc))) == canonical(blind_original),
+                    'BLIND_AUDIT_CHANGED_DURING_COMPARISON')
+            require(canonical(read_cross_peer_request(root,task_id,body.model_dump(),runtime,subject_task,
+                deadline=cross_deadline)) == canonical(cross_receipt),'CROSS_PEER_REQUEST_CHANGED_DURING_REVIEW')
+        if tool and case_id=='models:complete':
+            reread_native_snapshot(models_original,deadline=time.monotonic()+models_remaining(models_budget))
+            require(models_remaining(models_budget)>0,'MODELS_PEER_BOUND_EXCEEDED')
+        if handoff_receipt is not None:
+            require(case_remaining(handoff_budget)>0,'HANDOFF_PEER_BOUND_EXCEEDED')
         return dict(schema_version=SCHEMA, subject_agent_id=subject_actor,
             subject_capability_id=subject_capability,
             dimension=case_id.split(':')[0] if bounded_event else 'baseline', test_case=test_case,
@@ -284,9 +414,11 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
             oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0,
             execution_model='DETERMINISTIC',
             subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
-            subject_domain_join=joined, certification='UNVERIFIED')
+            subject_domain_join=joined, certification='UNVERIFIED',
+            **(peer_review_fields(case_id,cross_receipt) if cross_receipt is not None else {}))
     except Exception:
-        detail = ('Independent authority review requires current joined event evidence' if authority else
+        detail = ('Independent tool review requires current joined event evidence' if tool else
+                  'Independent authority review requires current joined event evidence' if authority else
                   'Independent artifact review requires current joined event evidence' if artifact else
                   'Independent initialization review requires current joined event evidence'
                   if initialization else 'Independent identity review requires current joined event evidence')
@@ -556,6 +688,33 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
         raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     started = time.perf_counter()
+    model_substitution_window=None
+    if body.deterministic_operation in ('certification_model_substitution','certification_model_substitution_review'):
+        from .agent_cert_resident_model import ResidentCaseWindow
+        model_substitution_window=ResidentCaseWindow()
+    blind_budget = None
+    execution_input_budget = None
+    if body.deterministic_operation == 'certification_tool_review':
+        from .agent_cert_clean_room import OBJECTIVE as blind_objective
+        from .agent_cert_fresh_input import OBJECTIVES as execution_input_objectives
+        if body.objective in execution_input_objectives.values():
+            from datetime import datetime, timezone
+            execution_input_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
+        if body.objective == blind_objective:
+            from datetime import datetime, timezone
+            blind_budget = dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
+    models_budget=None
+    handoff_budget=None
+    if body.deterministic_operation=='certification_tool_review':
+        from .agent_cert_handoff_gap import parse as handoff_parse,CASES as handoff_cases,case_remaining as handoff_case_remaining
+        from datetime import datetime,timezone
+        try:handoff_case=handoff_parse(body.context.encode()).get('execution',{}).get('case_spec',{}).get('case')
+        except ValueError:handoff_case=None
+        if handoff_case=='models:complete':
+            from .agent_cert_model_selection import case_remaining as models_case_remaining
+            models_budget=dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
+        if handoff_case in handoff_cases:
+            handoff_budget=dict(deadline=time.monotonic()+5,started_at=datetime.now(timezone.utc))
     from .runtime_status import is_runtime_status,build_report,validate_report
     runtime_status=not body.deterministic_operation and is_runtime_status(body.objective,body.context)
     try:
@@ -572,8 +731,91 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         root=Path(os.getenv('PRIME_DATA_DIR','/data'))
         from .objective_api import runtime_snapshot
         runtime = runtime_snapshot()
+        if model_substitution_window is not None:
+            from .agent_cert_model_substitution_events import execute_producer,execute_review
+            try:
+                if body.deterministic_operation=='certification_model_substitution':
+                    from .compute_queue_api import queue
+                    return execute_producer(body,actor=actor,task_id=task_id,runtime=runtime,
+                        dispatch_window=model_substitution_window,ledger=action_ledger(),settings=SETTINGS,queue=queue)
+                return execute_review(body,actor=actor,task_id=task_id,runtime=runtime,
+                    dispatch_window=model_substitution_window,ledger=action_ledger())
+            except (ValueError,PermissionError,UnicodeError):
+                raise HTTPException(422,'Source model-substitution operation rejected') from None
         try:
-            if body.deterministic_operation == 'certification_authority_event':
+            if body.deterministic_operation == 'certification_owned_identity':
+                from . import agent_registry
+                from .agent_cert_owned_identity import canonical_owned_identity_case, execute_owned_identity_case, sha
+                return execute_owned_identity_case(canonical_owned_identity_case(actor, body.capability), task_id,
+                    submitted_request=body.model_dump(), data_root=root, ledger=action_ledger(), runtime=runtime,
+                    read_runtime=runtime_snapshot, source_revision=runtime['source_revision'],
+                    runtime_image_id=runtime['image_digest'], registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
+            elif body.deterministic_operation in {'certification_owner_referral_proposal','certification_owner_referral_review'}:
+                from . import agent_registry
+                from .agent_cert_owner_referral_events import execute_proposal,execute_review,ACTORS,sha
+                from .objective_api import get_read_only
+                which=body.deterministic_operation.removeprefix('certification_owner_referral_')
+                if (actor,body.capability)!=ACTORS[which]:raise ValueError('OWNER_REFERRAL_FIXED_OWNER_REQUIRED')
+                arguments=dict(actor=actor,submitted_request=body.model_dump(),data_root=root,ledger=action_ledger(),
+                    runtime=runtime,read_runtime=runtime_snapshot,source_revision=runtime['source_revision'],
+                    runtime_image_id=runtime['image_digest'],registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    read_objective=lambda original:get_read_only(original,authorization))
+                return execute_review(task_id,**arguments) if which=='review' else execute_proposal(task_id,**arguments)
+            elif body.deterministic_operation in {'certification_conflict_code_proposal','certification_conflict_fixture_finding',
+                    'certification_conflict_reconciliation','certification_conflict_review'}:
+                from . import agent_registry
+                from .agent_cert_conflict_events import execute_phase,execute_review,ACTORS,sha
+                from .objective_api import get_read_only
+                which=body.deterministic_operation.removeprefix('certification_conflict_')
+                if (actor,body.capability)!=ACTORS[which]:
+                    raise ValueError('CONFLICT_FIXED_OWNER_REQUIRED')
+                arguments=dict(actor=actor,submitted_request=body.model_dump(),data_root=root,ledger=action_ledger(),
+                    runtime=runtime,read_runtime=runtime_snapshot,source_revision=runtime['source_revision'],
+                    runtime_image_id=runtime['image_digest'],registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    read_objective=lambda original:get_read_only(original,authorization))
+                return execute_review(task_id,**arguments) if which=='review' else execute_phase(which,task_id,**arguments)
+            elif body.deterministic_operation in {'certification_cross_conflict_code_proposal','certification_cross_conflict_fixture_finding',
+                    'certification_cross_conflict_separation','certification_cross_conflict_review'}:
+                from . import agent_registry
+                from .agent_cert_cross_conflict_events import execute_phase,execute_review,ACTORS,sha
+                from .objective_api import get_read_only
+                which=body.deterministic_operation.removeprefix('certification_cross_conflict_')
+                if (actor,body.capability)!=ACTORS[which]:
+                    raise ValueError('CROSS_CONFLICT_FIXED_OWNER_REQUIRED')
+                arguments=dict(actor=actor,submitted_request=body.model_dump(),data_root=root,ledger=action_ledger(),
+                    runtime=runtime,read_runtime=runtime_snapshot,source_revision=runtime['source_revision'],
+                    runtime_image_id=runtime['image_digest'],registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    read_objective=lambda original:get_read_only(original,authorization))
+                return execute_review(task_id,**arguments) if which=='review' else execute_phase(which,task_id,**arguments)
+            elif body.deterministic_operation in {'certification_recovery_controlled_prior','certification_recovery_correction','certification_recovery_review'}:
+                from . import agent_registry
+                from .agent_cert_recovery_events import execute_phase,execute_review,PRIOR_PHASE,CORRECTION_PHASE,sha
+                from .objective_api import get_read_only
+                arguments=dict(submitted_request=body.model_dump(),data_root=root,ledger=action_ledger(),runtime=runtime,
+                    read_runtime=runtime_snapshot,source_revision=runtime['source_revision'],runtime_image_id=runtime['image_digest'],
+                    registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    read_objective=lambda original:get_read_only(original,authorization))
+                if body.deterministic_operation=='certification_recovery_review':
+                    return execute_review(task_id,actor=actor,**arguments)
+                if actor!='a19' or body.capability!='responsibility.a19':
+                    raise ValueError('RECOVERY_FIXED_OWNER_REQUIRED')
+                return execute_phase(PRIOR_PHASE if body.deterministic_operation=='certification_recovery_controlled_prior'
+                    else CORRECTION_PHASE,task_id,**arguments)
+            elif body.deterministic_operation == 'certification_tool_event':
+                from . import agent_registry
+                from .agent_cert_tool_events import (SUPPORTED_CASES, HANDOFF_CASES,canonical_tool_case, execute_tool_case, parse, sha)
+                case_id = parse(body.context.encode()).get('case')
+                if (actor != 'a19' or body.capability != 'responsibility.a19'
+                        or type(case_id) is not str or case_id not in SUPPORTED_CASES):
+                    raise ValueError('TOOL_OWNING_CASE_REQUIRED')
+                from .objective_api import get_read_only
+                return execute_tool_case(canonical_tool_case(case_id), task_id, submitted_request=body.model_dump(),
+                    data_root=root, ledger=action_ledger(), runtime=runtime, read_runtime=runtime_snapshot,
+                    source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
+                    registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()),
+                    **({'read_failed_peer':lambda original:get_read_only(original,authorization)}
+                        if case_id in HANDOFF_CASES else {}))
+            elif body.deterministic_operation == 'certification_authority_event':
                 from . import agent_registry
                 from .agent_cert_authority_events import (SUPPORTED_CASES, canonical_authority_case,
                     execute_authority_case, parse, sha)
@@ -600,13 +842,37 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                     source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
                     registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
             elif body.deterministic_operation == 'certification_artifact_review':
-                data=joined_artifact_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+                try:
+                    data=joined_artifact_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+                except HTTPException as original_denial:
+                    from .agent_cert_handoff_gap import is_failure_request,denial_detail,FAILURE_REASON,sha
+                    if (original_denial.status_code==422 and original_denial.detail==FAILURE_REASON
+                            and is_failure_request(body)):
+                        from . import agent_registry
+                        original_denial.source_handoff_trace=denial_detail(body,original_denial.detail,
+                            actor=actor,task_id=task_id,runtime=runtime,
+                            registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))['source_handoff_trace']
+                    raise
             elif body.deterministic_operation == 'certification_authority_review':
                 data=joined_authority_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+            elif body.deterministic_operation == 'certification_tool_review':
+                from .agent_cert_fresh_input import OBJECTIVES as execution_input_objectives,dispatch as dispatch_execution_input
+                if body.objective in execution_input_objectives.values():
+                    return dispatch_execution_input(body,authorization,actor=actor,task_id=task_id,runtime=runtime,
+                        budget=execution_input_budget)
+                from .agent_cert_clean_room import OBJECTIVE as blind_objective,execute_blind,case_remaining
+                if body.objective == blind_objective:
+                    data=execute_blind(body,authorization,actor=actor,task_id=task_id,runtime=runtime,budget=blind_budget)
+                else:
+                    data=_joined_contract_event_review(body,authorization,actor=actor,task_id=task_id,
+                        runtime=runtime,initialization=False,tool=True,handoff_budget=handoff_budget,models_budget=models_budget)
             elif body.deterministic_operation == 'certification_role_review':
                 data=joined_role_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_identity_review':
                 data=joined_identity_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
+            elif body.deterministic_operation == 'certification_owned_identity_review':
+                data=_joined_contract_event_review(body,authorization,actor=actor,task_id=task_id,
+                    runtime=runtime,initialization=False,owned_identity=True)
             elif body.deterministic_operation == 'certification_initialization_review':
                 data=joined_initialization_review(body,authorization,actor=actor,task_id=task_id,runtime=runtime)
             elif body.deterministic_operation == 'certification_initialization':
@@ -642,14 +908,24 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                 runtime_revision=runtime_revision)
         role_review = body.deterministic_operation == 'certification_role_review'
         identity_review = body.deterministic_operation == 'certification_identity_review'
+        owned_identity_review = body.deterministic_operation == 'certification_owned_identity_review'
         initialization = body.deterministic_operation == 'certification_initialization'
         initialization_review = body.deterministic_operation == 'certification_initialization_review'
         artifact_review = body.deterministic_operation == 'certification_artifact_review'
         authority_review = body.deterministic_operation == 'certification_authority_review'
+        tool_review = body.deterministic_operation == 'certification_tool_review'
+        blind_review = tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1'
+        if blind_review and case_remaining(blind_budget) <= 0:
+            raise HTTPException(422,'Blind audit case budget exhausted')
+        if models_budget is not None and models_case_remaining(models_budget)<=0:
+            raise HTTPException(422,'Model selection review case budget exhausted')
+        if handoff_budget is not None and handoff_case_remaining(handoff_budget)<=0:
+            raise HTTPException(422,'Handoff review case budget exhausted')
         review_ledger = None
-        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review:
+        if runtime_status or role_review or identity_review or owned_identity_review or initialization or initialization_review or artifact_review or authority_review or tool_review:
+            from .agent_cert_role_review import TOOL_REVIEW_ACTION
             from .agent_cert_role_review import ARTIFACT_REVIEW_ACTION, AUTHORITY_REVIEW_ACTION
-            action_type = (AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
+            action_type = ('agent.certification.owned_identity.review' if owned_identity_review else TOOL_REVIEW_ACTION if tool_review else AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
                            'agent.certification.initialization.review' if initialization_review else
                            'agent.certification.initialization.artifact' if initialization else
                            'agent.certification.identity.review' if identity_review else
@@ -674,12 +950,20 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             'execution_model':'DETERMINISTIC','agent_id':actor,
             'capability':'responsibility.a19' if runtime_status else body.capability,
             'runtime_source_revision':runtime_revision}
-        if role_review or identity_review or initialization_review or artifact_review or authority_review:
+        if role_review or identity_review or owned_identity_review or initialization_review or artifact_review or authority_review or tool_review:
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.
             result['review_action_id']=action.action_id
-            result['review_action_durable']=review_ledger.flush(timeout=1) is True
+            result['review_action_durable']=review_ledger.flush(timeout=case_remaining(blind_budget) if blind_review else handoff_case_remaining(handoff_budget) if handoff_budget is not None else models_case_remaining(models_budget) if models_budget is not None else 1) is True
+            if blind_review:
+                result['review_action_durable'] = result['review_action_durable'] and case_remaining(blind_budget) > 0
+            if models_budget is not None:
+                result['review_action_durable']=result['review_action_durable'] and models_case_remaining(models_budget)>0
+            if handoff_budget is not None:
+                result['review_action_durable']=result['review_action_durable'] and handoff_case_remaining(handoff_budget)>0
             result['certification']='UNVERIFIED'
+            if tool_review and data.get('schema_version') == 'prime.a26-clean-room-input-audit.v1':
+                result['blind_input_read_action_id']=data['input_read_action_id']
         return result
     # This deployment admits one measured NANO model. Larger tiers are not
     # inferred from agent identity or from an unqualified installed model.
@@ -687,31 +971,9 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     from .compute_catalog import load_catalog,task_tier,choose
     from .compute_queue_api import providers
     configured=load_catalog();available={p.name for p in providers()}
-    selected=next((x for x in configured if x['id']==body.preferred_provider),None) if body.preferred_provider else None
-    if body.preferred_provider and (selected is None or not selected.get('enabled') or selected['id'] not in available):
-        raise HTTPException(422,'Selected provider is unavailable')
-    if selected and selected.get('provider_kind')=='huggingface' and (
-        body.data_classification!='CLOUD_PERMITTED' or body.max_cost_usd<=0
-    ):
-        raise HTTPException(422,'Hugging Face requires explicit disclosure and cost opt-in')
-    tier=max(Tier[body.minimum_tier],task_tier(body.objective,body.task_class),required_tier(body.objective,body.context))
-    backends=local_model_backends()+tuple(Backend(x['id'],x['model'],Tier[x['tier']],x['location']) for x in configured
-        if x.get('enabled') and x['id'] in available and
-        (x.get('provider_kind')!='huggingface' or x['id']==body.preferred_provider))
-    if body.preferred_provider:
-        backends=tuple(x for x in backends if x.name==body.preferred_provider)
-    route = select_direct_route(backends,
-                         minimum_tier=tier,classification=body.data_classification,
-                         text=body.objective+'\n'+body.context)
-    measured=choose([x for x in configured if x['id'] in available and x.get('measurement_evidence') and x.get('expected_seconds') is not None
-        and (x.get('provider_kind')!='huggingface' or x['id']==body.preferred_provider)
-        and (not body.preferred_provider or x['id']==body.preferred_provider)],tier,body.data_classification,body.objective+'\n'+body.context)
-    # Use a measured alternative only when every eligible available backend is
-    # measured. Unknown performance is never treated as slower by assumption.
-    eligible={b.name for b in backends if b.tier>=tier and (b.location=='local' or body.data_classification=='CLOUD_PERMITTED')}
-    if measured and eligible.issubset({x['id'] for x in measured}):
-        item=measured[0]
-        route=Route('READY','Fastest measured sufficient backend within data locality',Backend(item['id'],item['model'],Tier[item['tier']],item['location']))
+    from .model_selection import select_final_model
+    route,tier=select_final_model(body,configured=configured,available=available,
+        local_backends=local_model_backends)
     model_selection_ms=(time.perf_counter()-selection_started)*1000
     if route.state not in {'READY','QUEUED'}:
         raise HTTPException(409,{'state':route.state,'reason':route.reason})

@@ -137,19 +137,40 @@ def _case_spec(row):
 
 
 def _oracle_id(agent, spec=None):
+    if agent == 'a19' and spec is not None and spec.get('case') == 'cross_agent_conflict:complete':
+        from app.agent_cert_cross_conflict_events import ORACLE
+        return ORACLE
+    if agent == 'a19' and spec is not None and spec.get('case') == 'unauthorized_rejection:owner_only':
+        from app.agent_cert_owner_referral_events import ORACLE
+        return ORACLE
+    if agent == 'a19' and spec is not None and spec.get('case') == 'conflict_resolution:complete':
+        from app.agent_cert_conflict_events import ORACLE
+        return ORACLE
+    if agent == 'a19' and spec is not None and spec.get('case') == 'recovery:complete':
+        from app.agent_cert_recovery_events import ORACLE
+        return ORACLE
     if spec is not None and spec.get('case') == 'baseline:initialization':
         from app.agent_cert_initialization import initialization_oracle_id
         return initialization_oracle_id(agent, spec['capability_id'])
     if agent == 'a19' and spec is not None and spec.get('case') == 'baseline:identity':
         from app.agent_cert_identity_review import ORACLE_ID
         return ORACLE_ID
+    if spec is not None and spec.get('case') == 'baseline:identity':
+        from app.agent_cert_owned_identity import ORACLE_ID
+        return ORACLE_ID
     if spec is not None:
+        from app.agent_cert_fresh_input import CASES as FRESH_CASES, ORACLE_ID as FRESH_ORACLE
+        if spec.get('case') in FRESH_CASES:
+            return FRESH_ORACLE
+        from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES, oracle_id
+        if spec.get('case') in TOOL_CASES:
+            return oracle_id(spec['case'])
         from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES, ORACLE_ID as AUTHORITY_ORACLE
         if spec.get('case') in AUTHORITY_CASES:
             return AUTHORITY_ORACLE
-        from app.agent_cert_artifact_events import SUPPORTED_CASES, ORACLE_ID
+        from app.agent_cert_artifact_events import SUPPORTED_CASES, oracle_id
         if spec.get('case') in SUPPORTED_CASES:
-            return ORACLE_ID
+            return oracle_id(spec['case'])
     if spec is not None and spec.get('case') != 'role:normal':
         from app.agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, ORACLE_ID as BASELINE_ORACLE
         if spec.get('case') in BASELINE_CASES:
@@ -362,9 +383,78 @@ def _reviewer_execution(proof, *, row, job, spec, execution_sha256,
                          reviewed_at=reviewed_at, certified_at=certified_at)
 
 
+def _fresh_input_review(row,primary,review,*,source_revision,runtime_image_id,reviewer_code_revision,now):
+    from app import agent_cert_fresh_input as fresh
+    from app.agent_registry import REGISTRY_PATH
+    case = str(row.get('dimension'))+':'+str(row.get('test_case'))
+    if (case not in fresh.CASES or row.get('agent_id') != 'a19'
+        or row.get('capability_id') != 'responsibility.a19' or row.get('verifier') != 'a26'
+        or row.get('executor_identity') != 'a19' or row.get('authority_scope') != agent_record('a19')['authority']
+        or row.get('test_result') != 'PASS' or row.get('test_version') != fresh.CASE_VERSION
+        or row.get('review_test_version') != fresh.ORACLE_ID or row.get('source_revision') != source_revision
+        or row.get('review_source_revision') != source_revision or row.get('reviewer_code_revision') != reviewer_code_revision
+        or any(type(row.get(k)) is not str or not 1 <= len(row[k]) <= 100
+            for k in ('certification_test','review_run_id'))):
+        _deny('EXECUTION_INPUT_RECORD_BINDING_INVALID')
+    execution,envelope = _json(primary),_json(review)
+    registry = _sha(REGISTRY_PATH.read_bytes())
+    try:
+        comparison = execution['comparison']
+        reviewed_at = _utc(comparison['objective_read'][1]['execution_metadata']['updated_at'])
+        if reviewed_at > now:_deny('EXECUTION_INPUT_REVIEW_TIME_INVALID')
+        join = fresh.validate_execution(execution,source_revision=source_revision,
+            runtime_image_id=runtime_image_id,registry_sha256=registry,now=reviewed_at)
+        if execution['case_spec']['case'] != case:_deny('EXECUTION_INPUT_CASE_MISMATCH')
+        expected = dict(schema_version=fresh.REVIEW_SCHEMA,execution_sha256=_sha(primary),case=case,
+            registry_sha256=registry,reviewer_code_revision=reviewer_code_revision,review_run_id=row['review_run_id'],
+            oracle_id=fresh.ORACLE_ID,oracle_pass=True,subject_agent_id='a19',subject_capability_id='responsibility.a19',
+            reviewer_agent_id='a26',reviewer_capability_id='responsibility.a26',subject_domain_join=join,
+            reviewer_execution=comparison,model_calls=0,certification='UNVERIFIED',
+            service_confirmation='NOT_PERFORMED',live_unfamiliarity='NOT_PROVEN')
+        if _canonical(envelope) != _canonical(expected):_deny('EXECUTION_INPUT_ORIGINAL_REVIEW_UNBOUND')
+        if not (_utc(join['completed_at']) <= reviewed_at <= _utc(row['certified_at'])
+            <= _utc(row['last_revalidated']) <= now < _utc(row['expires_at'])):
+            _deny('EXECUTION_INPUT_RECORD_TIME_INVALID')
+    except (KeyError,TypeError,ValueError,UnicodeError):
+        _deny('EXECUTION_INPUT_ORIGINAL_REVIEW_INVALID')
+
+
 def _review(row, primary, review, *, source_revision, runtime_image_id,
             reviewer_code_revision, now, cloud_binding=None, cloud_policy=None,
             expected_owner_policy_sha256=None):
+    if (row.get('dimension'),row.get('test_case'))==('cross_agent_conflict','complete'):
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('CROSS_CONFLICT_CLOUD_TRANSPORT_FORBIDDEN')
+        return _cross_conflict_review(row,primary,review,source_revision=source_revision,runtime_image_id=runtime_image_id,
+            reviewer_code_revision=reviewer_code_revision,now=now)
+    if (row.get('dimension'),row.get('test_case'))==('unauthorized_rejection','owner_only'):
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('OWNER_REFERRAL_CLOUD_OR_POLICY_FORBIDDEN')
+        return _owner_referral_review(row,primary,review,source_revision=source_revision,
+            runtime_image_id=runtime_image_id,reviewer_code_revision=reviewer_code_revision,now=now)
+    if (row.get('dimension'),row.get('test_case'))==('conflict_resolution','complete'):
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('CONFLICT_CLOUD_TRANSPORT_FORBIDDEN')
+        return _conflict_review(row,primary,review,source_revision=source_revision,runtime_image_id=runtime_image_id,
+            reviewer_code_revision=reviewer_code_revision,now=now)
+    if (row.get('dimension'), row.get('test_case')) == ('recovery', 'complete'):
+        if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+            _deny('RECOVERY_CLOUD_TRANSPORT_FORBIDDEN')
+        return _recovery_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision, now=now)
+    from app.agent_cert_fresh_input import CASES as FRESH_CASES
+    if str(row.get('dimension'))+':'+str(row.get('test_case')) in FRESH_CASES:
+        if any(value is not None for value in (cloud_binding,cloud_policy,expected_owner_policy_sha256)):
+            _deny('EXECUTION_INPUT_CLOUD_TRANSPORT_FORBIDDEN')
+        return _fresh_input_review(row,primary,review,source_revision=source_revision,
+            runtime_image_id=runtime_image_id,reviewer_code_revision=reviewer_code_revision,now=now)
+    from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
+    if str(row.get('dimension')) + ':' + str(row.get('test_case')) in TOOL_CASES:
+        if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
+            _deny('TOOL_CLOUD_TRANSPORT_FORBIDDEN')
+        return _contract_event_review(row, primary, review, source_revision=source_revision,
+            runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
+            now=now, initialization=False, tool=True)
     from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
     if str(row.get('dimension')) + ':' + str(row.get('test_case')) in AUTHORITY_CASES:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
@@ -379,8 +469,7 @@ def _review(row, primary, review, *, source_revision, runtime_image_id,
             runtime_image_id=runtime_image_id, reviewer_code_revision=reviewer_code_revision,
             now=now, initialization=row['test_case'] == 'initialization')
     from app.agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
-    if (row.get('dimension') == 'general' and
-            'general:' + str(row.get('test_case')) in ARTIFACT_CASES):
+    if str(row.get('dimension')) + ':' + str(row.get('test_case')) in ARTIFACT_CASES:
         if any(value is not None for value in (cloud_binding, cloud_policy, expected_owner_policy_sha256)):
             _deny('ARTIFACT_CLOUD_TRANSPORT_FORBIDDEN')
         return _contract_event_review(row, primary, review, source_revision=source_revision,
@@ -479,7 +568,7 @@ def _identity_review(row, primary, reviewed, *, source_revision, runtime_image_i
 
 
 def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_image_id,
-                           reviewer_code_revision, now, initialization, artifact=False, authority=False):
+                           reviewer_code_revision, now, initialization, artifact=False, authority=False, tool=False):
     """Review a genuine artifact event; never manufacture a model queue job."""
     from app.agent_cert_identity_review import (
         ORACLE_ID, SCHEMA, action_span, validate_identity_execution,
@@ -488,17 +577,25 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     subject, capability = 'a19', 'responsibility.a19'
     reviewer, reviewer_capability = 'a26', 'responsibility.a26'
     dimension = 'baseline'
-    if authority:
+    owned_identity = (not (tool or authority or artifact or initialization)
+        and (row.get('agent_id'), row.get('capability_id')) != ('a19', 'responsibility.a19'))
+    if tool:
+        from app.agent_cert_tool_events import oracle_id
+        from app.agent_cert_role_review import (TOOL_REVIEW_SCHEMA as SCHEMA,
+            TOOL_REVIEW_ACTION as review_action_type, tool_event_review_join as validate_event)
+        event_case, dimension = row.get('test_case'), row.get('dimension')
+        ORACLE_ID = oracle_id(str(dimension) + ':' + str(event_case))
+    elif authority:
         from app.agent_cert_authority_events import ORACLE_ID
         from app.agent_cert_role_review import (AUTHORITY_REVIEW_SCHEMA as SCHEMA,
             AUTHORITY_REVIEW_ACTION as review_action_type, authority_event_review_join as validate_event)
         event_case, dimension = row.get('test_case'), row.get('dimension')
     elif artifact:
-        from app.agent_cert_artifact_events import ORACLE_ID
+        from app.agent_cert_artifact_events import oracle_id
         from app.agent_cert_role_review import (ARTIFACT_REVIEW_SCHEMA as SCHEMA,
             ARTIFACT_REVIEW_ACTION as review_action_type, artifact_event_review_join as validate_event)
-        event_case = row.get('test_case')
-        dimension = 'general'
+        event_case, dimension = row.get('test_case'), row.get('dimension')
+        ORACLE_ID = oracle_id(str(dimension) + ':' + str(event_case))
     elif initialization:
         from app.agent_cert_initialization_review import (SCHEMA,
             validate_initialization_execution as validate_event)
@@ -508,6 +605,13 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         ORACLE_ID = initialization_oracle_id(subject, capability)
         event_case = 'initialization'
         review_action_type = 'agent.certification.initialization.review'
+    elif owned_identity:
+        from app.agent_cert_owned_identity import (REVIEW_SCHEMA as SCHEMA, ORACLE_ID,
+            REVIEW_ACTION as review_action_type, identity_reviewer,
+            validate_owned_identity_execution as validate_event)
+        subject, capability = row.get('agent_id'), row.get('capability_id')
+        reviewer, reviewer_capability = identity_reviewer(subject, capability)
+        event_case = 'identity'
     else:
         validate_event = validate_identity_execution
         event_case = 'identity'
@@ -529,9 +633,9 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
     # Initialization recomputes the complete owned contracts from their actual
     # raw build bytes. Do not normalize its original report/pin into a match.
     registry_raw = REGISTRY_PATH.read_bytes()
-    registry_sha = _sha(registry_raw if initialization or artifact or authority else registry_raw.replace(b'\r\n', b'\n'))
+    registry_sha = _sha(registry_raw if initialization or owned_identity or artifact or authority or tool else registry_raw.replace(b'\r\n', b'\n'))
     event_review_time = now
-    if artifact or initialization or authority:
+    if artifact or initialization or owned_identity or authority or tool:
         # The runtime's 300-second consumption bound applies when the actual
         # registered peer reviewer read the original event/report. Later protected verification
         # must preserve that time, not claim a new execution or rereview. The
@@ -548,9 +652,9 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
             _deny('IDENTITY_REVIEW_TIME_INVALID')
     join = validate_event(execution, source_revision=source_revision,
         runtime_image_id=runtime_image_id, registry_sha256=registry_sha, now=event_review_time,
-        **({'agent_id': subject, 'capability_id': capability} if initialization else {}))
+        **({'agent_id': subject, 'capability_id': capability} if initialization or owned_identity else {}))
     spec = _case_spec(row)
-    if (artifact or authority) and (join.get('case') != spec['case'] or
+    if (artifact or authority or tool) and (join.get('case') != spec['case'] or
             join.get('case_spec_sha256') != _sha(_canonical(spec))):
         _deny('ARTIFACT_REVIEW_CASE_MISMATCH')
     expected_observations = dict(execution_task_id=join['task_id'], result_sha256=join['result_sha256'],
@@ -562,7 +666,8 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
             or any(_canonical(observations.get(k)) != _canonical(v) for k, v in expected_observations.items())):
         _deny('IDENTITY_REVIEW_OBSERVATIONS_INVALID')
     proof = observations['reviewer_execution']
-    if type(proof) is not dict or set(proof) != {'dispatch', 'artifact_content_utf8', 'transport', 'action_records'}:
+    if type(proof) is not dict or set(proof) != ({'dispatch', 'artifact_content_utf8', 'transport', 'action_records'} |
+            ({'peer_objective_read','peer_request_body'} if tool and str(dimension)+':'+str(event_case) in {'models:complete','cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'} else set())):
         _deny('REGISTERED_IDENTITY_REVIEW_REQUIRED')
     dispatch = proof['dispatch']
     if (type(dispatch) is not dict or set(dispatch) != {'task_id', 'state', 'artifact', 'model_calls',
@@ -606,6 +711,28 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         oracle_id=ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0, execution_model='DETERMINISTIC',
         subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED', subject_domain_join=join,
         certification='UNVERIFIED')
+    if tool and str(dimension)+':'+str(event_case) in {'models:complete','cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
+        from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective,peer_review_fields
+        peer_request = cross_peer_request(execution,content.get('review_nonce'),source_revision)
+        receipt = content.get('peer_request_receipt')
+        validate_cross_peer_receipt(receipt,peer_task=dispatch['task_id'],subject_task=join['task_id'],
+            request=peer_request,runtime=execution['runtime'],now=_utc(content.get('reviewed_at')))
+        peer_read = proof.get('peer_objective_read')
+        if (_canonical(proof.get('peer_request_body')) != _canonical(peer_request)
+                or type(peer_read) is not list or len(peer_read) != 2 or peer_read[0] != 200):
+            _deny('CROSS_ORIGINAL_PEER_REQUEST_REQUIRED')
+        validate_cross_peer_objective(peer_read[1],dispatch=dispatch,runtime=execution['runtime'],receipt=receipt,
+            now=_utc(row['certified_at']))
+        if str(dimension)+':'+str(event_case) == 'clean_room_audit:complete':
+            from app.agent_cert_clean_room import validate_audit
+            blind = execution.get('blind_audit')
+            validate_audit(blind,input_metadata=execution['dispatch']['tool_event']['input_artifact_metadata'],
+                input_raw=execution['input_content_utf8'].encode(),runtime=execution['runtime'],
+                registry=registry_sha,now=_utc(content.get('reviewed_at')))
+            if (blind['dispatch']['task_id'] in {dispatch['task_id'],join['task_id']}
+                or _utc(blind['artifact_metadata']['timestamp']) > _utc(receipt['created_at'])):
+                _deny('BLIND_AUDIT_MUST_PRECEDE_COMPARISON')
+        expected.update(peer_review_fields(str(dimension)+':'+str(event_case),receipt))
     if (set(content) != set(expected) | {'review_nonce', 'reviewed_at'} or not _uuid(content.get('review_nonce'))
             or any(_canonical(content.get(k)) != _canonical(v) for k, v in expected.items())):
         _deny('REGISTERED_IDENTITY_REVIEW_CONTENT_INVALID')
@@ -617,6 +744,87 @@ def _contract_event_review(row, primary, reviewed, *, source_revision, runtime_i
         action_type=review_action_type, schema=SCHEMA, metadata=metadata,
         began=_utc(content['reviewed_at']), ended=certified,
         action_id=dispatch['review_action_id'], duration_limit_ms=120000)
+    return True
+
+
+def _conflict_review(row,primary,reviewed,*,source_revision,runtime_image_id,reviewer_code_revision,now):
+    """Original four-task proof; current record interval cannot renew its event."""
+    from app.agent_cert_conflict_events import VERSION,ORACLE,validate_reviewed_conflict
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id')!='a19' or row.get('capability_id')!='responsibility.a19'
+            or row.get('executor_identity')!='a19' or row.get('verifier')!='a26'
+            or row.get('authority_scope')!=agent_record('a19')['authority']
+            or row.get('source_revision')!=source_revision or row.get('review_source_revision')!=source_revision
+            or row.get('reviewer_code_revision')!=reviewer_code_revision or row.get('test_result')!='PASS'
+            or row.get('test_version')!=VERSION or row.get('review_test_version')!=ORACLE
+            or any(type(row.get(key)) is not str or not 1<=len(row[key])<=100
+                for key in ('certification_test','review_run_id'))):
+        _deny('CONFLICT_RECORD_BINDING_INVALID')
+    execution,peer=_json(primary),_json(reviewed);raw=peer.get('artifact_content_utf8')
+    if type(raw) is not str or not 1<=len(raw.encode())<=65536:_deny('CONFLICT_ORIGINAL_PEER_REQUIRED')
+    reviewed_at=_utc(_json(raw.encode()).get('reviewed_at'))
+    completed=_utc(peer.get('observation',{}).get('completed_at'))
+    if not (reviewed_at<=completed<=_utc(row.get('certified_at'))<=_utc(row.get('last_revalidated'))
+            <=now<_utc(row.get('expires_at'))):_deny('CONFLICT_RECORD_TIME_INVALID')
+    validate_reviewed_conflict(execution,peer,source_revision=source_revision,runtime_image_id=runtime_image_id,
+        registry_sha256=_sha(REGISTRY_PATH.read_bytes()),now=completed)
+    return True
+
+
+def _cross_conflict_review(row,primary,reviewed,*,source_revision,runtime_image_id,reviewer_code_revision,now):
+    """Original four-task proof; current record interval cannot renew its event."""
+    from app.agent_cert_cross_conflict_events import VERSION,ORACLE,validate_reviewed_conflict
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id')!='a19' or row.get('capability_id')!='responsibility.a19'
+            or row.get('executor_identity')!='a19' or row.get('verifier')!='a26'
+            or row.get('authority_scope')!=agent_record('a19')['authority']
+            or row.get('source_revision')!=source_revision or row.get('review_source_revision')!=source_revision
+            or row.get('reviewer_code_revision')!=reviewer_code_revision or row.get('test_result')!='PASS'
+            or row.get('test_version')!=VERSION or row.get('review_test_version')!=ORACLE
+            or any(type(row.get(key)) is not str or not 1<=len(row[key])<=100
+                for key in ('certification_test','review_run_id'))):
+        _deny('CROSS_CONFLICT_RECORD_BINDING_INVALID')
+    execution,peer=_json(primary),_json(reviewed);raw=peer.get('artifact_content_utf8')
+    if type(raw) is not str or not 1<=len(raw.encode())<=65536:_deny('CROSS_CONFLICT_ORIGINAL_PEER_REQUIRED')
+    reviewed_at=_utc(_json(raw.encode()).get('reviewed_at'))
+    completed=_utc(peer.get('observation',{}).get('completed_at'))
+    if not (reviewed_at<=completed<=_utc(row.get('certified_at'))<=_utc(row.get('last_revalidated'))
+            <=now<_utc(row.get('expires_at'))):_deny('CROSS_CONFLICT_RECORD_TIME_INVALID')
+    validate_reviewed_conflict(execution,peer,source_revision=source_revision,runtime_image_id=runtime_image_id,
+        registry_sha256=_sha(REGISTRY_PATH.read_bytes()),now=completed)
+    return True
+
+
+def _recovery_review(row, primary, reviewed, *, source_revision, runtime_image_id,
+                     reviewer_code_revision, now):
+    """Consume the original two tasks and persisted peer, never renew their time."""
+    from app.agent_cert_recovery_events import VERSION, ORACLE, validate_reviewed_recovery
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id') != 'a19' or row.get('capability_id') != 'responsibility.a19'
+            or row.get('executor_identity') != 'a19' or row.get('verifier') != 'a26'
+            or row.get('authority_scope') != agent_record('a19')['authority']
+            or row.get('source_revision') != source_revision
+            or row.get('review_source_revision') != source_revision
+            or row.get('reviewer_code_revision') != reviewer_code_revision
+            or row.get('test_result') != 'PASS' or row.get('test_version') != VERSION
+            or row.get('review_test_version') != ORACLE
+            or any(type(row.get(key)) is not str or not 1 <= len(row[key]) <= 100
+                   for key in ('certification_test', 'review_run_id'))):
+        _deny('RECOVERY_RECORD_BINDING_INVALID')
+    execution, peer = _json(primary), _json(reviewed)
+    raw = peer.get('artifact_content_utf8')
+    if type(raw) is not str or not 1 <= len(raw.encode('utf-8')) <= 65536:
+        _deny('RECOVERY_ORIGINAL_PEER_REQUIRED')
+    original_review_time = _utc(_json(raw.encode('utf-8')).get('reviewed_at'))
+    peer_completed = _utc(peer.get('observation', {}).get('completed_at'))
+    if not (original_review_time <= peer_completed <= _utc(row.get('certified_at'))
+            <= _utc(row.get('last_revalidated')) <= now < _utc(row.get('expires_at'))):
+        _deny('RECOVERY_RECORD_TIME_INVALID')
+    # The peer's actual completed observation binds the historical consumption
+    # check; current time governs only the record interval above.
+    validate_reviewed_recovery(execution, peer, source_revision=source_revision,
+        runtime_image_id=runtime_image_id, registry_sha256=_sha(REGISTRY_PATH.read_bytes()),
+        now=peer_completed)
     return True
 
 
@@ -690,3 +898,26 @@ def sign_reviewed_case(row, *, evidence_root: Path, execution_sha256: str,
     except Exception:
         # Never forward result text, path, provider exception or injected bearer.
         _deny('REVIEWED_CASE_SIGNING_REJECTED')
+
+def _owner_referral_review(row,primary,reviewed,*,source_revision,runtime_image_id,reviewer_code_revision,now):
+    """Original referral, separate Owner acknowledgment and persisted peer only."""
+    from app.agent_cert_owner_referral_events import VERSION,ORACLE,validate_reviewed_owner_case
+    from app.agent_registry import REGISTRY_PATH
+    if (row.get('agent_id')!='a19' or row.get('capability_id')!='responsibility.a19'
+            or row.get('executor_identity')!='a19' or row.get('verifier')!='a26'
+            or row.get('authority_scope')!=agent_record('a19')['authority']
+            or row.get('source_revision')!=source_revision or row.get('review_source_revision')!=source_revision
+            or row.get('reviewer_code_revision')!=reviewer_code_revision or row.get('test_result')!='PASS'
+            or row.get('test_version')!=VERSION or row.get('review_test_version')!=ORACLE
+            or any(type(row.get(key)) is not str or not 1<=len(row[key])<=100
+                for key in ('certification_test','review_run_id'))):
+        _deny('OWNER_REFERRAL_RECORD_BINDING_INVALID')
+    execution,peer=_json(primary),_json(reviewed);raw=peer.get('artifact_content_utf8')
+    if type(raw) is not str or not 1<=len(raw.encode())<=65536:_deny('OWNER_REFERRAL_ORIGINAL_PEER_REQUIRED')
+    reviewed_at=_utc(_json(raw.encode()).get('reviewed_at'))
+    completed=_utc(peer.get('observation',{}).get('completed_at'))
+    if not (reviewed_at<=completed<=_utc(row.get('certified_at'))<=_utc(row.get('last_revalidated'))
+            <=now<_utc(row.get('expires_at'))):_deny('OWNER_REFERRAL_RECORD_TIME_INVALID')
+    validate_reviewed_owner_case(execution,peer,source_revision=source_revision,runtime_image_id=runtime_image_id,
+        registry_sha256=_sha(REGISTRY_PATH.read_bytes()),now=completed)
+    return True

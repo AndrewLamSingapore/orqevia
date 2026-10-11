@@ -1,4 +1,4 @@
-"""Dedicated thin-client ASGI surface; deliberately excludes owner/legacy routes.
+"""Thin-client ASGI surface with advisory Owner referrals, excluding legacy execution.
 
 Deploy only behind actual TLS with forwarded-header trust disabled. The owner
 server remains responsible for starting the single shared worker pool. This
@@ -17,6 +17,8 @@ from fastapi.staticfiles import StaticFiles
 app=FastAPI(title='JARVIS ABEX Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None)
 app.include_router(router)
 app.include_router(pwa_sessions.router)
+from .owner_referrals import router as owner_referrals_router
+app.include_router(owner_referrals_router)
 app.add_middleware(pwa_sessions.PWASessionMiddleware)
 from .product_handoff import router as product_handoff_router
 app.include_router(product_handoff_router)

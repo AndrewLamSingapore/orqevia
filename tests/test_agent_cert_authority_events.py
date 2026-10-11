@@ -29,6 +29,9 @@ def domain(tmp_path, monkeypatch):
     monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_VERSION', RUNTIME['version'])
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
     from app import agent_registry, objective_api, agent_dispatch_api
+    from app.spine import SpineStore
+    monkeypatch.setenv('PRIME_SPINE_DB', str(tmp_path / 'prime-spine.db'))
+    SpineStore(str(tmp_path / 'prime-spine.db'))
     # Authentication integration is separately tested below; no real credential.
     monkeypatch.setattr(objective_api, 'authenticate_owner', lambda _: None)
     monkeypatch.setattr(agent_dispatch_api, 'authenticate_owner', lambda _: None)
@@ -109,9 +112,9 @@ def test_import_is_io_free(monkeypatch):
 
 def test_two_distinct_fixed_inputs_and_two_consequential_cases_remain_unready():
     specs = [events.canonical_authority_case(case_id) for case_id in events.SUPPORTED_CASES]
-    assert len({spec['case_input_sha256'] for spec in specs}) == 2
-    assert len({events.authority_action_type(spec['case']) for spec in specs}) == 2
-    assert all(spec['consequential_guard_denial_proven'] is False for spec in specs)
+    assert len({spec['case_input_sha256'] for spec in specs}) == 3
+    assert len({events.authority_action_type(spec['case']) for spec in specs}) == 3
+    assert [spec['consequential_guard_denial_proven'] for spec in specs] == [False, False, True]
     for case_id in events.UNREADY_CASES:
         with pytest.raises(events.AuthorityEventError, match='AUTHORITY_OWNING_CASE_REQUIRED'):
             events.canonical_authority_case(case_id)
@@ -126,7 +129,7 @@ def test_original_owning_policy_artifact_action_and_objective_join(domain, case_
     result = events.validate_authority_execution(execution, **pins)
     report = json.loads(execution['artifact_content_utf8'])
     assert result['certification'] == 'UNVERIFIED'
-    assert result['consequential_guard_denial_proven'] is False
+    assert result['consequential_guard_denial_proven'] is (case_id == events.DENIAL_CASE)
     assert report['registered_authority']['execution_authority'] == 'none inherited from Registry'
     assert report['registered_authority']['consequential_requires_owner_approval'] is True
     assert report['registered_authority']['provided_context_read_eligible'] is True
@@ -144,8 +147,10 @@ def test_original_owning_policy_artifact_action_and_objective_join(domain, case_
     assert all('inference.' not in line for line in execution['action_records'])
     if case_id == events.SUPPORTED_CASES[0]:
         assert report['assessment']['actual_consequential_guard_denial'] == 'NOT_PROVEN'
-    else:
+    elif case_id == events.SUPPORTED_CASES[1]:
         assert report['assessment']['failure_basis_points'] == 500
+    else:
+        assert report['assessment']['admission']['audit_row']['execution_status'] == 'BLOCKED'
 
 
 @pytest.mark.parametrize('defect', ('actor', 'capability', 'objective', 'context', 'classification',
@@ -299,5 +304,5 @@ def test_existing_objective_submit_dispatch_and_read_create_the_original_join(do
     result = events.validate_authority_execution(execution, source_revision=SOURCE, runtime_image_id=IMAGE,
         registry_sha256=events.sha(agent_registry.REGISTRY_PATH.read_bytes()), now=ended)
     assert result['case'] == case_id and result['task_id'] == submitted['id']
-    assert result['certification'] == 'UNVERIFIED' and result['consequential_guard_denial_proven'] is False
+    assert result['certification'] == 'UNVERIFIED' and result['consequential_guard_denial_proven'] is (case_id == events.DENIAL_CASE)
     assert ledger.status()['persisted'] == 2

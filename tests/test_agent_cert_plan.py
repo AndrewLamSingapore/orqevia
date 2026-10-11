@@ -45,22 +45,36 @@ def test_partial_dimension_preserves_valid_case_and_only_schedules_missing(tmp_p
     assert manifest.read_bytes() == original
 
 
-def test_bounded_first_round_covers_21_agents_and_requires_case_context(tmp_path):
+def test_bounded_first_round_covers_21_agents_with_fixed_owned_identity_events(tmp_path):
     registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION)
     plan = plan_missing_cases(registry, max_jobs=21, now=NOW)
     expected = {a["id"] for a in load_agent_registry()["agents"]}
     assert len(plan) == 21
     assert {p["agent_id"] for p in plan} == expected
-    assert {p["state"] for p in plan} == {"NEEDS_CASE_CONTEXT"}
-    assert all(p["challenge"] is None for p in plan)
+    assert {p["state"] for p in plan} == {"READY_FOR_DISPATCH"}
+    assert all(p['challenge']['request']['context'] == '' for p in plan)
+    assert all(p['challenge']['certification'] == 'UNVERIFIED' for p in plan)
+    assert all(p['challenge']['request']['max_cost_usd'] == 0 for p in plan)
     assert all(p["wave"] == 1 and p["case"] == "baseline:identity" for p in plan)
     selected = plan[0]
     key = (selected["agent_id"], selected["capability_id"], selected["case"])
-    prepared = plan_missing_cases(registry, max_jobs=1,
-                                  case_contexts={key: "SYNTHETIC distinct identity case"}, now=NOW)
-    assert prepared[0]["state"] == "READY_FOR_DISPATCH"
-    assert prepared[0]["challenge"]["certification"] == "UNVERIFIED"
-    assert prepared[0]["challenge"]["request"]["context"] == "SYNTHETIC distinct identity case"
+    with pytest.raises(ValueError, match='reject supplied context'):
+        plan_missing_cases(registry, max_jobs=1,
+            case_contexts={key: 'SYNTHETIC distinct identity case'}, now=NOW)
+
+
+def test_model_case_still_requires_distinct_supplied_context(tmp_path, monkeypatch):
+    registry = AgentCertificationRegistry(tmp_path, source_revision=REVISION)
+    item = dict(agent_id='a20', capability_id='responsibility.a20', case='role:normal')
+    monkeypatch.setattr(registry,'pending_waves',lambda **_: [[item]])
+    missing = plan_missing_cases(registry,max_jobs=1,now=NOW)[0]
+    assert missing['state'] == 'NEEDS_CASE_CONTEXT' and missing['challenge'] is None
+    key = ('a20','responsibility.a20','role:normal')
+    prepared = plan_missing_cases(registry,max_jobs=1,
+        case_contexts={key:'SYNTHETIC revenue=2000; variable_cost=1200'},now=NOW)[0]
+    assert prepared['state'] == 'READY_FOR_DISPATCH'
+    assert prepared['challenge']['request']['context'] == 'SYNTHETIC revenue=2000; variable_cost=1200'
+    assert prepared['challenge']['certification'] == 'UNVERIFIED'
 
 
 @pytest.mark.parametrize("limit", [0, -1, True, 1.2])

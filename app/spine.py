@@ -8,9 +8,10 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import time
 import uuid
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -106,16 +107,55 @@ class Verification:
 class SpineStore:
     """SQLite-backed personal store. Separate tables preserve store semantics."""
 
-    def __init__(self, path: str | None = None):
+    def __init__(self, path: str | None = None, *, initialize: bool = True, deadline: float | None = None):
         self.path = path or os.getenv("PRIME_SPINE_DB") or "/tmp/prime-spine.db"
-        parent = Path(self.path).parent
-        parent.mkdir(parents=True, exist_ok=True)
-        self._init()
+        self._existing_only = not initialize
+        self._deadline = deadline if deadline is not None else time.monotonic() + 2
+        if initialize:
+            parent = Path(self.path).parent
+            parent.mkdir(parents=True, exist_ok=True)
+            self._init()
+        else:
+            # Existing owning admission stores must never be created or repaired
+            # as a side effect of certification collection/review.
+            with closing(self._connection(read_only=True)) as db:
+                names = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 65")}
+                if len(names) > 64:
+                    raise ValueError('Existing Spine schema bound exceeded')
+                required = {
+                    'trust_registry': {'action_type','policy_state','trust_score','clean_successes','failures','platform_locked','metadata_json','updated_at'},
+                    'trust_evidence': {'id','action_type','idempotency_key','execution_status','verification_json','evidence_json','created_at'},
+                    'approvals': {'idempotency_key','correlation_id','action_type','status','envelope_json','decision_json','decided_at','decision_note','created_at'},
+                    'audit_trail': {'id','correlation_id','idempotency_key','action_type','policy_state','execution_status','verification_json','envelope_json','decision_record_json','created_at'},
+                    'event_bus': {'id','correlation_id','event_type','aggregate_id','payload_json','created_at'},
+                }
+                if not required.keys() <= names or any(
+                        {row[1] for row in db.execute('PRAGMA table_info(' + table + ')')} != columns
+                        for table, columns in required.items()):
+                    raise ValueError('Existing Spine domain schema required')
+                if time.monotonic() >= self._deadline:
+                    raise TimeoutError('Existing Spine operation deadline exceeded')
+
+    def _connection(self, *, read_only=False):
+        if self._existing_only:
+            if time.monotonic() >= self._deadline:
+                raise TimeoutError('Existing Spine operation deadline exceeded')
+            conn = sqlite3.connect(Path(self.path).resolve().as_uri() +
+                ('?mode=ro' if read_only else '?mode=rw'), uri=True,
+                timeout=min(0.1, max(0.001, self._deadline - time.monotonic())))
+            # Bound SQLite value allocation before rows enter Python; preserve
+            # normal live WAL semantics (never immutable=1).
+            conn.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, 1024 * 1024)
+            conn.setlimit(sqlite3.SQLITE_LIMIT_SQL_LENGTH, 16384)
+            conn.setlimit(sqlite3.SQLITE_LIMIT_COLUMN, 64)
+            conn.set_progress_handler(lambda: int(time.monotonic() >= self._deadline), 1000)
+            return conn
+        return sqlite3.connect(self.path)
 
     @contextmanager
-    def connect(self) -> Iterator[sqlite3.Connection]:
+    def connect(self, *, read_only=False) -> Iterator[sqlite3.Connection]:
         """Commit or roll back, then release the connection on every exit."""
-        conn = sqlite3.connect(self.path)
+        conn = self._connection(read_only=read_only)
         try:
             conn.row_factory = sqlite3.Row
             with conn:

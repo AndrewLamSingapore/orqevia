@@ -79,6 +79,9 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Integration preserves canonical STATUS; source readiness does not authorize
+    # inserting the candidate's historical restart claim into current status.
+    assert "## Owner-directed restart and certification resumption — 10 October 2026" not in after
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.

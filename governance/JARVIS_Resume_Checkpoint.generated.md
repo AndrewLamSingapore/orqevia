@@ -26,10 +26,10 @@ This manifest records prior independent PRIME runtime acceptance at source `17fa
 
 ## Priorities recorded in the manifest
 
-- Keep qualified Golden Gen 2 non-audio PRIME production in quiet observation.
-- Keep Read Aloud/iOS audio parked until separately authorized; do not infer audible success from Web Speech lifecycle state.
-- Complete Wuhan/Mainland-China physical verification when geographically available.
-- Refresh unrelated public-system evidence before claiming global CURRENT status.
+- Read governance/OWNER_EXECUTION_20261010.md and governance/updated-golden-selection.json before resuming PRIME.
+- Complete genuine 21/21 L7 certification with 29 owned capabilities; A19 first, independent safe fleet work concurrently.
+- Keep historical Golden, failures, credentials, identities and current writes recoverable.
+- Keep unrelated expansion paused; stability, SOUP and provider work support certification only.
 
 ## Unresolved evidence
 

@@ -1,7 +1,8 @@
 """Read-only, bounded preparation of missing certification cases.
 
 This module makes no runtime calls, evidence records, grades, or attestations.
-The caller must supply a discriminating, case-specific context before dispatch.
+Model challenges require supplied discriminating context. Deterministic identity
+and initialization events use only their fixed current owned source inputs.
 """
 from __future__ import annotations
 
@@ -26,8 +27,9 @@ def plan_missing_cases(
     """Select missing cases in dependency waves, fairly across agents.
 
     A planned case has no result. A dispatch request is prepared only when its
-    exact agent/capability/case has a supplied, nonblank context. This prevents
-    a generic catalog fixture from becoming a mass certification exercise.
+    exact agent/capability/case has a supplied, nonblank context, except fixed
+    identity and initialization events whose inputs are the actual Registry and
+    runtime. Preparation never dispatches or supplies certification evidence.
     """
     if not isinstance(max_jobs, int) or isinstance(max_jobs, bool) or max_jobs < 1:
         raise ValueError("max_jobs must be a positive integer")
@@ -44,9 +46,13 @@ def plan_missing_cases(
                     del by_agent[agent_id]
                 key = (item["agent_id"], item["capability_id"], item["case"])
                 context = contexts.get(key)
+                fixed_event = item['case'] in {'baseline:identity', 'baseline:initialization'}
+                if fixed_event and context:
+                    raise ValueError('Fixed identity and initialization events reject supplied context')
                 prepared = challenge(item["case"], agent_id=item["agent_id"],
                                      capability_id=item["capability_id"],
-                                     context=context) if isinstance(context, str) and context.strip() else None
+                                     context=None if fixed_event else context) if fixed_event or (
+                                         isinstance(context, str) and context.strip()) else None
                 planned.append({**item, "wave": wave_number,
                                 "state": "READY_FOR_DISPATCH" if prepared else "NEEDS_CASE_CONTEXT",
                                 "challenge": prepared})

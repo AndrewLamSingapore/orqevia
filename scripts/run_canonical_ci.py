@@ -115,13 +115,27 @@ def main():
                   'agent_cert_artifact_events'])
     names.extend(['agent_cert_artifact_paths', 'agent_cert_artifact_signing',
                   'agent_cert_artifact_admission', 'agent_cert_operator_artifact'])
-    names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain'])
+    names.append('agent_cert_handoff_events')
+    names.append('agent_cert_recovery_events')
+    names.append('agent_cert_evidence_integrity_events')
+    names.append('agent_cert_context_integrity_events')
+    names.append('agent_cert_owned_identity_events')
+    names.extend(['agent_cert_tool_events', 'agent_cert_graceful_degradation'])
+    names.extend(['agent_cert_tools_proposal','agent_cert_independent_verification','agent_cert_injection_resistance'])
+    names.append('agent_cert_recovery_complete_events')
+    names.append('agent_cert_conflict_resolution')
+    names.append('agent_cert_cross_agent_conflict')
+    names.extend(('agent_cert_owner_referral_events','owner_referrals','agent_cert_owner_referral_collection'))
+    names.append('agent_cert_model_selection')
+    names.extend(['agent_cert_resident_model','agent_cert_model_substitution_chain','agent_cert_model_substitution_review'])
+    names.extend(['agent_cert_authority_events', 'agent_cert_authority_chain', 'agent_cert_trust_denial'])
     names.append('agent_cert_hf_case_provider')
     names.append('backend_fault_diagnostics')
     names.append('mlp_fabric')
     names.append('hf_admission')
     names.append('hf_prompt_scope')
     names.append('agent_cert_a19_cases')
+    names.append('agent_cert_a19_broad_transfer')
     names.extend(['agent_cert_a19_format_contract', 'agent_cert_role_review',
                   'agent_cert_review_tool_cases', 'agent_cert_transport_cases',
                   'agent_cert_case_bridge', 'agent_cert_case_bridge_independent',

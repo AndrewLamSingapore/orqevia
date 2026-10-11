@@ -1,0 +1,15 @@
+{
+  "active_compute_jobs": 0,
+  "container_id": "a7aabd03b7acf587fe4cbbae605d6d1e4de44e7e086ff17bae5f2927cb1a5591",
+  "counts": {
+    "backend_leases": {},
+    "jobs": {
+      "completed": 88,
+      "failed": 1
+    }
+  },
+  "inference_calls": 0,
+  "observed_at": "2026-10-10T00:09:26.258809+00:00",
+  "read_only": true,
+  "schema": "abex.shutdown.queue-observation.v1"
+}

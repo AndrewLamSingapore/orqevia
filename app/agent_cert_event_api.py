@@ -23,21 +23,58 @@ from .agent_cert_authority_events import (
     SUPPORTED_CASES as AUTHORITY_CASES, authority_action_type, read_authority_action_span,
 )
 from .agent_cert_role_review import AUTHORITY_REVIEW_ACTION, read_authority_review_action_span
+from .agent_cert_tool_events import (SUPPORTED_CASES as TOOL_CASES, tool_action_type,
+    read_tool_action_span, validate_full_span, tool_phases)
+from .agent_cert_role_review import TOOL_REVIEW_ACTION, read_tool_review_action_span
+from .agent_cert_recovery_events import (PRIOR_PHASE,CORRECTION_PHASE,REVIEW_ACTION as RECOVERY_REVIEW_ACTION,
+    action_type as recovery_action_type,read_action_span as read_recovery_action_span,
+    read_review_action_span as read_recovery_review_span,validate_full_action_span as validate_recovery_full_span)
+from .agent_cert_clean_room import INPUT_READ_ACTION as BLIND_INPUT_READ_ACTION, input_action_span as blind_input_span
+from .agent_cert_fresh_input import (STAGES as EXECUTION_INPUT_STAGES,
+    read_action as execution_input_read_action, output_action as execution_input_output_action,
+    read_span as execution_input_span)
+
+from .agent_cert_conflict_events import (PHASES as CONFLICT_PHASES,steps as conflict_steps,
+    action_type as conflict_action_type,REVIEW_ACTION as CONFLICT_REVIEW_ACTION,
+    read_action_span as read_conflict_span,validate_full_action_span as validate_conflict_full_span)
+
+from .agent_cert_cross_conflict_events import (PHASES as CROSS_PHASES,steps as cross_steps,
+    action_type as cross_action_type,REVIEW_ACTION as CROSS_REVIEW_ACTION,
+    read_action_span as read_cross_span,validate_full_action_span as validate_cross_full_span)
 
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
+from .agent_cert_owner_referral_events import (ACTORS as OWNER_REFERRAL_PHASES,steps as owner_referral_steps,
+    action_type as owner_referral_action,read_action_span as read_owner_referral_span,
+    validate_full_action_span as validate_owner_referral_full)
+_OWNER_REFERRAL_ACTIONS={owner_referral_action(which,step):(which,step)
+    for which in OWNER_REFERRAL_PHASES for step in owner_referral_steps(which)+('full',)}
 _read_slot = threading.BoundedSemaphore(1)
 _ARTIFACT_ACTIONS = {
-    artifact_action_type(case): (case, False) for case in ARTIFACT_CASES
+    artifact_action_type(case): (case, False, False) for case in ARTIFACT_CASES
 }
-_ARTIFACT_ACTIONS.update({artifact_action_type(case, setup=True): (case, True)
+_ARTIFACT_ACTIONS.update({artifact_action_type(case, setup=True): (case, True, False)
     for case in ARTIFACT_CASES if case != 'general:artifact_produce'})
+_ARTIFACT_ACTIONS[artifact_action_type('general:recovery', prior=True)] = ('general:recovery', False, True)
+_ARTIFACT_ACTIONS[artifact_action_type('evidence_integrity:complete', prior=True)] = ('evidence_integrity:complete', False, True)
+_ARTIFACT_ACTIONS[artifact_action_type('context_integrity:complete', prior=True)] = ('context_integrity:complete', False, True)
 _AUTHORITY_ACTIONS = {authority_action_type(case): case for case in AUTHORITY_CASES}
-_ACTIONS = frozenset({
+_TOOL_ACTIONS = {tool_action_type(case, phase=phase): (case, phase)
+    for case in TOOL_CASES for phase in tool_phases(case) + ('full',)}
+_RECOVERY_ACTIONS={recovery_action_type(which,step):(which,step)
+    for which in (PRIOR_PHASE,CORRECTION_PHASE) for step in ('setup','read','result','full')}
+_CONFLICT_ACTIONS={conflict_action_type(which,step):(which,step)
+    for which in CONFLICT_PHASES for step in conflict_steps(which)+('full',)}
+_CROSS_ACTIONS={cross_action_type(which,step):(which,step)
+    for which in CROSS_PHASES for step in cross_steps(which)+('full',)}
+_EXECUTION_INPUT_ACTIONS = {execution_input_read_action(stage) for stage in ('source','audit')} | {
+    execution_input_output_action(stage) for stage in EXECUTION_INPUT_STAGES}
+_ACTIONS = frozenset(set(_OWNER_REFERRAL_ACTIONS)|{
     'runtime.status.artifact', 'agent.certification.identity.review',
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
-    AUTHORITY_REVIEW_ACTION,
-} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS))
+    'agent.certification.owned_identity.artifact', 'agent.certification.owned_identity.review',
+    AUTHORITY_REVIEW_ACTION, TOOL_REVIEW_ACTION,RECOVERY_REVIEW_ACTION, BLIND_INPUT_READ_ACTION,CONFLICT_REVIEW_ACTION,CROSS_REVIEW_ACTION,
+} | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS) | set(_TOOL_ACTIONS)|set(_RECOVERY_ACTIONS)|set(_CONFLICT_ACTIONS)|set(_CROSS_ACTIONS)|_EXECUTION_INPUT_ACTIONS)
 
 
 def _headers(response):
@@ -104,16 +141,54 @@ def actions(task_id: str, response: Response, action_type: str = '',
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
         root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
-        if action_type in _AUTHORITY_ACTIONS:
+        if action_type in _EXECUTION_INPUT_ACTIONS:
+            lines = execution_input_span(root,task_id,action_type)
+        elif action_type in _CROSS_ACTIONS:
+            which,step=_CROSS_ACTIONS[action_type]
+            lines=read_cross_span(root,task_id,which,step=step)
+        elif action_type==CROSS_REVIEW_ACTION:
+            lines=read_cross_span(root,task_id,'review',step='review')
+        elif action_type in _OWNER_REFERRAL_ACTIONS:
+            which,step=_OWNER_REFERRAL_ACTIONS[action_type]
+            lines=read_owner_referral_span(root,task_id,which,step=step)
+        elif action_type in _CONFLICT_ACTIONS:
+            which,step=_CONFLICT_ACTIONS[action_type]
+            lines=read_conflict_span(root,task_id,which,step=step)
+        elif action_type==CONFLICT_REVIEW_ACTION:
+            lines=read_conflict_span(root,task_id,'review',step='review')
+        elif action_type in _RECOVERY_ACTIONS:
+            which,step=_RECOVERY_ACTIONS[action_type]
+            lines=read_recovery_action_span(root,task_id,which,step=step)
+        elif action_type==RECOVERY_REVIEW_ACTION:
+            lines=read_recovery_review_span(root,task_id)
+        elif action_type == BLIND_INPUT_READ_ACTION:
+            lines = blind_input_span(root,task_id)
+        elif action_type in _TOOL_ACTIONS:
+            case, phase = _TOOL_ACTIONS[action_type]
+            lines = read_tool_action_span(root, task_id, case, phase=phase)
+        elif action_type == TOOL_REVIEW_ACTION:
+            lines = read_tool_review_action_span(root, task_id)
+        elif action_type in _AUTHORITY_ACTIONS:
             lines = read_authority_action_span(root, task_id, _AUTHORITY_ACTIONS[action_type])
         elif action_type == AUTHORITY_REVIEW_ACTION:
             lines = read_authority_review_action_span(root, task_id)
         elif action_type in _ARTIFACT_ACTIONS:
-            case, setup = _ARTIFACT_ACTIONS[action_type]
-            lines = read_artifact_action_span(root, task_id, case, setup=setup)
+            case, setup, prior = _ARTIFACT_ACTIONS[action_type]
+            lines = read_artifact_action_span(root, task_id, case, setup=setup, prior=prior)
         else:
             lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
-        _original_chain(lines, task_id, action_type)
+        if action_type in _CROSS_ACTIONS and _CROSS_ACTIONS[action_type][1]=='full':
+            validate_cross_full_span(lines,task_id,_CROSS_ACTIONS[action_type][0])
+        elif action_type in _OWNER_REFERRAL_ACTIONS and _OWNER_REFERRAL_ACTIONS[action_type][1]=='full':
+            validate_owner_referral_full(lines,task_id,_OWNER_REFERRAL_ACTIONS[action_type][0])
+        elif action_type in _CONFLICT_ACTIONS and _CONFLICT_ACTIONS[action_type][1]=='full':
+            validate_conflict_full_span(lines,task_id,_CONFLICT_ACTIONS[action_type][0])
+        elif action_type in _RECOVERY_ACTIONS and _RECOVERY_ACTIONS[action_type][1]=='full':
+            validate_recovery_full_span(lines,task_id,_RECOVERY_ACTIONS[action_type][0])
+        elif action_type in _TOOL_ACTIONS and _TOOL_ACTIONS[action_type][1] == 'full':
+            validate_full_span(lines, task_id, _TOOL_ACTIONS[action_type][0])
+        else:
+            _original_chain(lines, task_id, action_type)
         after = runtime_snapshot()
         if canonical(before) != canonical(after) or before.get('source_revision') == 'UNKNOWN':
             raise ValueError('Runtime identity unavailable')

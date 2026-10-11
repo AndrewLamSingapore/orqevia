@@ -86,6 +86,17 @@ ANSWERS = {
 }
 
 
+ANSWERS["broad_transfer:complete"] = {
+    "evidence_refs": ["BT-GRAPH", "BT-MAIL", "BT-CACHE"], "failed_node": "mailer",
+    "potentially_affected_nodes": ["ingress", "splitter", "jobs"],
+    "unobserved_nodes": ["ingress", "splitter", "jobs", "archive"],
+    "independent_branch_node": "cache", "independent_branch_sample": "PASS",
+    "actual_propagation_proven": False, "current_health": "UNKNOWN", "cause_known": False,
+    "global_failure_proven": False, "general_model_transfer_proven": False,
+    "topology_scope": "SUPPLIED_GRAPH_POTENTIAL_IMPACT", "next_read_only_check": "align_dependency_windows",
+}
+
+
 def answer(case_id):
     return {"case_id": case_id, "restart_authorized": False, "actions_executed": False,
             **copy.deepcopy(ANSWERS[case_id])}
@@ -103,8 +114,9 @@ def test_each_distinct_checkable_case_has_exact_correct_quality_answer(case_id):
 def test_exact_existing_case_population_not_a_new_matrix_or_normal_case():
     expected = {f"role:{name}" for name in ("difficult", "edge", "invalid_input", "failure")}
     expected |= {case for case in case_ids() if case.startswith(("logic_quality:", "adversarial:"))}
+    expected.add("broad_transfer:complete")
     assert set(SUPPORTED_CASES) == expected
-    assert len(SUPPORTED_CASES) == 19
+    assert len(SUPPORTED_CASES) == 20
     assert "role:normal" not in SUPPORTED_CASES
 
 

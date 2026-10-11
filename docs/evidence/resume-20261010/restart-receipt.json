@@ -1,0 +1,95 @@
+{
+  "started_at": "2026-10-10T00:08:53.191591+00:00",
+  "scope": "EXACT_EXISTING_SERVICE_RESTART",
+  "services": [
+    {
+      "before": {
+        "name": "prime-epoch-20260919-ollama-1",
+        "id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+        "image": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+        "status": "exited",
+        "health": "unhealthy",
+        "oom": false,
+        "restart_count": 0,
+        "started_at": "2026-10-09T08:46:52.616704251Z",
+        "volumes": [
+          "prime-epoch-20260919-ollama"
+        ]
+      },
+      "after": {
+        "name": "prime-epoch-20260919-ollama-1",
+        "id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+        "image": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+        "status": "running",
+        "health": "healthy",
+        "oom": false,
+        "restart_count": 0,
+        "started_at": "2026-10-10T00:08:53.905965852Z",
+        "volumes": [
+          "prime-epoch-20260919-ollama"
+        ]
+      }
+    },
+    {
+      "before": {
+        "name": "prime-epoch-20260919-prime-1",
+        "id": "a7aabd03b7acf587fe4cbbae605d6d1e4de44e7e086ff17bae5f2927cb1a5591",
+        "image": "sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68",
+        "status": "exited",
+        "health": "unhealthy",
+        "oom": false,
+        "restart_count": 0,
+        "started_at": "2026-10-09T08:46:59.768292334Z",
+        "volumes": [
+          "prime-epoch-20260919-data"
+        ]
+      },
+      "after": {
+        "name": "prime-epoch-20260919-prime-1",
+        "id": "a7aabd03b7acf587fe4cbbae605d6d1e4de44e7e086ff17bae5f2927cb1a5591",
+        "image": "sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68",
+        "status": "running",
+        "health": "healthy",
+        "oom": false,
+        "restart_count": 0,
+        "started_at": "2026-10-10T00:09:01.255496733Z",
+        "volumes": [
+          "prime-epoch-20260919-data"
+        ]
+      }
+    },
+    {
+      "before": {
+        "name": "prime-epoch-20260919-interface-1",
+        "id": "6d58a20a60a70b723c8822f5331ef6e917180c58611a51250c3b5fd60383939d",
+        "image": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+        "status": "exited",
+        "health": "unhealthy",
+        "oom": false,
+        "restart_count": 0,
+        "started_at": "2026-10-09T08:47:06.74822463Z",
+        "volumes": [
+          "prime-epoch-20260919-data"
+        ]
+      },
+      "after": {
+        "name": "prime-epoch-20260919-interface-1",
+        "id": "6d58a20a60a70b723c8822f5331ef6e917180c58611a51250c3b5fd60383939d",
+        "image": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+        "status": "running",
+        "health": "healthy",
+        "oom": false,
+        "restart_count": 0,
+        "started_at": "2026-10-10T00:09:08.425030381Z",
+        "volumes": [
+          "prime-epoch-20260919-data"
+        ]
+      }
+    }
+  ],
+  "inference_calls": 0,
+  "recreations": 0,
+  "restores": 0,
+  "state": "PASS_EXACT_RESTART_HEALTH_ONLY_NOT_L7_OR_STABILITY_QUALIFICATION",
+  "completed_at": "2026-10-10T00:09:15.305406+00:00"
+}

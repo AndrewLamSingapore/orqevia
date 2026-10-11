@@ -408,7 +408,17 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                 request=AgentRequest(**{**body.model_dump(exclude={'capabilities'}),'capability':capability})
                 return {'capability':capability,'dispatch':dispatch_request(request,authorization,parent_task_id=task_id)}
             except HTTPException as exc:
-                return {'capability':capability,'state':'blocked','reason':exc.detail}
+                blocked={'capability':capability,'state':'blocked','reason':exc.detail}
+                trace=getattr(exc,'source_handoff_trace',None)
+                if trace is not None:
+                    from .agent_cert_handoff_gap import denial_detail,canonical,sha
+                    from . import agent_registry
+                    expected=denial_detail(request,exc.detail,actor='a26',task_id=task_id,
+                        runtime=runtime_snapshot(),registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
+                    if exc.status_code!=422 or canonical(trace)!=canonical(expected['source_handoff_trace']):
+                        raise ValueError('HANDOFF_SERVER_DENIAL_TRACE_INVALID')
+                    blocked['source_handoff_trace']=trace
+                return blocked
             except Exception as exc:
                 # No automatic retry: the authority/queue may already have accepted
                 # this step. Preserve an indeterminate result for reconciliation.
