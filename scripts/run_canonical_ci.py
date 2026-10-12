@@ -33,6 +33,7 @@ def main():
     names.append('structured_output')
     names.append('structured_output_verifier')
     names.append('semantic_evidence_adversarial')
+    names.extend(['exposure_intelligence', 'exposure_api'])
     names.append('authoritative_result_metadata')
     names.append('supreme_integration')
     names.append('supreme_integration_verifier')
@@ -135,7 +136,6 @@ def main():
     names.append('hf_observation_api')
     names.append('hf_qa_execution')
     names.append('system_architecture')
-    names.extend(['exposure_intelligence', 'exposure_api'])
     names.extend(['response_schema', 'role_structured_execution',
                   'agent_cert_structured_roles','agent_cert_structured_input_roles'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
