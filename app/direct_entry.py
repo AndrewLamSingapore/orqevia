@@ -12,6 +12,7 @@ from .action_records import action_ledger,close_ledgers
 from .client_auth import authenticate_owner
 from .agent_registry import registered_agent_ids
 from .agent_cert_event_api import router as certification_events
+from .financial_simulation_api import router as financial_simulation
 
 
 @asynccontextmanager
@@ -24,7 +25,7 @@ async def lifespan(app):
 
 
 app=FastAPI(title='PRIME direct-execution candidate',lifespan=lifespan)
-for router in (agents,objectives,engineering,artifacts,interface,dell_interface,compute,certification_events):app.include_router(router)
+for router in (agents,objectives,engineering,artifacts,interface,dell_interface,compute,certification_events,financial_simulation):app.include_router(router)
 
 
 @app.get('/health')

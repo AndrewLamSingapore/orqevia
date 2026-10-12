@@ -90,7 +90,7 @@ class AgentRequest(BaseModel):
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
         'certification_artifact_review','certification_authority_event',
-        'certification_authority_review'] | None = None
+        'certification_authority_review','financial_simulation'] | None = None
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -577,7 +577,10 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         from .objective_api import runtime_snapshot
         runtime = runtime_snapshot()
         try:
-            if body.deterministic_operation == 'certification_authority_event':
+            if body.deterministic_operation == 'financial_simulation':
+                from .financial_simulation import execute_objective
+                data=execute_objective(body,actor=actor,task_id=task_id,root=root)
+            elif body.deterministic_operation == 'certification_authority_event':
                 from . import agent_registry
                 from .agent_cert_authority_events import (SUPPORTED_CASES, canonical_authority_case,
                     execute_authority_case, parse, sha)
@@ -650,17 +653,18 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         initialization_review = body.deterministic_operation == 'certification_initialization_review'
         artifact_review = body.deterministic_operation == 'certification_artifact_review'
         authority_review = body.deterministic_operation == 'certification_authority_review'
+        financial_simulation = body.deterministic_operation == 'financial_simulation'
         review_ledger = None
-        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review:
+        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review or financial_simulation:
             from .agent_cert_role_review import ARTIFACT_REVIEW_ACTION, AUTHORITY_REVIEW_ACTION
-            action_type = (AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
+            action_type = ('financial.simulation.artifact' if financial_simulation else AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
                            'agent.certification.initialization.review' if initialization_review else
                            'agent.certification.initialization.artifact' if initialization else
                            'agent.certification.identity.review' if identity_review else
                            'agent.certification.role.review' if role_review else 'runtime.status.artifact')
             action=ActionRecord(task_id,actor,action_type,'artifact-factory',
                 classification=body.classification,model_backend='deterministic',
-                parameters_summary={'schema_version':data['schema_version'],'read_only_observations':True})
+                parameters_summary={'schema_version':data['schema_version'],'read_only_observations':not financial_simulation})
             review_ledger = action_ledger()
             artifact=DirectExecutor(review_ledger).execute(action,create_artifact)
         else:artifact=create_artifact()
