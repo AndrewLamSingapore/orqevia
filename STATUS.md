@@ -36,6 +36,44 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX frozen candidate closure supplement — 12 October 2026
+
+### Claimed, not independently checked
+
+- Candidate `66a5d9056ac13c69f73de8d8a986c91164bf8937` completed its own
+  source-specific normal-role cohort: 21 actual local executions, 8 PASS,
+  13 FAIL and 0 BLOCKED. All 21 receipt and execution-trace hashes were checked
+  against the frozen closure. This supersedes earlier latest-cohort wording;
+  historical source `18ec939` remains a separate 7 PASS / 14 FAIL run. Results
+  are not pooled, and no 21/21 competence claim follows.
+- The frozen semantic review identifies arithmetic/comparison, identifier,
+  source-row, review, field-contract, Boolean-boundary and latest-sample errors
+  in the 13 rejected outputs. It proves no new pipeline implementation defect
+  and does not establish what caused the changed pass count. The failed outputs,
+  original assertions and earlier failures remain preserved; no replay occurred.
+- Exact candidate-source upstream runs completed successfully: status authority,
+  the public verifier and quality. Quality reports 4,887 PASS, 1 SKIP and
+  10 passing subtests. These are source checks, separate from role competence,
+  live provider/billing evidence, runtime acceptance and production readiness.
+- Twelve actual isolated candidate-browser checks passed, covering validated
+  TLS, unauthenticated denial, a candidate MEMBER flow, identity-bound telemetry,
+  unavailable unmeasured gauges, mobile viewport interaction, OWNER denial,
+  reload continuity, injected offline clearing, reconnect, logout and JavaScript.
+  This browser client is not Dell or either physical iPhone. Natural eight-hour
+  expiry, installed phone PWA, task/result and restart acceptance are separate
+  checks and are not claimed by this browser receipt.
+- The new supplementary observation supersedes only the manifest's latest
+  receipt-index reference. Every original manifest field and expiry remains
+  unchanged; the earlier dated observation stays intact. Manifest freshness
+  remains STALE with 12 reasons; current runtime acceptance remains UNVERIFIED.
+  Golden and the candidate source are preserved. Promotion remains BLOCKED;
+  no L7, Dell, physical iPhone or production acceptance is awarded here.
+- Evidence paths, per-role verdicts, CI links and immutable SHA-256 references
+  are recorded in `governance/observations/abex-candidate-closure-66a5d90-20261012.json`.
+  No item is moved into Verified and no earlier Known broken / open fact is removed.
+
+---
+
 ## ABEX independent post-restart receipts — 12 October 2026
 
 ### Claimed, not independently checked
