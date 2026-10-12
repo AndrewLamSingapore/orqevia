@@ -96,13 +96,10 @@ def role_case(agent_id: str) -> dict:
     objective, context, expected = _CASES[agent_id]
     spec = challenge("role:normal", agent_id=agent_id,
                      capability_id=f"responsibility.{agent_id}")
-    from .agent_cert_response_contracts import normal_role_response_contract
-    contract = normal_role_response_contract(agent_id)
     return {**spec,
             **({"case_version": "a19-role-normal-operation-id.v2"} if agent_id == "a19" else {}),
-            "request": {**spec["request"], "objective": objective + '\nResponse contract clarification: ' + contract['clarification'],
-                        "context": context, "response_format": "strict_json",
-                        "response_schema": contract['schema']},
+            "request": {**spec["request"], "objective": objective,
+                        "context": context, "response_format": "strict_json"},
             "independent_review": (*spec["independent_review"],
                                    "group_two_exact_role_oracle"),
             "expected_discriminants": tuple(expected),

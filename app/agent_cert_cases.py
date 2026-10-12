@@ -508,15 +508,6 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
             review += ("exact_release_oracle",)
         if agent_id in {"a02", "a06", "a07", "a09", "a10", "a13"} and case_id == "role:normal" and not context:
             review += ("exact_role_g1_oracle",)
-    response_contract = {}
-    if (case_id == 'role:normal' and not context
-            and capability == f'responsibility.{agent_id}'):
-        from .agent_cert_response_contracts import REGISTERED_ROLE_IDS, normal_role_response_contract
-        if agent_id in REGISTERED_ROLE_IDS:
-            contract = normal_role_response_contract(agent_id)
-            objective += '\nResponse contract clarification: ' + contract['clarification']
-            response_contract = {'response_format': 'strict_json',
-                                 'response_schema': contract['schema']}
     return {
         "agent_id": agent_id,
         "capability_id": capability,
@@ -548,7 +539,6 @@ def challenge(case_id: str, *, agent_id: str = AGENT_ID,
                                               ("a09", "responsibility.a09"),
                                               ("a10", "responsibility.a10"),
                                               ("a13", "responsibility.a13")} else {}),
-            **response_contract,
         },
         "independent_review": review,
         "expected_discriminants": discriminants,

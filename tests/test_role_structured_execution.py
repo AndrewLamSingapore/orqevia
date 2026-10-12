@@ -82,12 +82,12 @@ def test_shape_contract_does_not_supply_semantic_answers():
 
 def test_all_current_normal_cases_declare_types_without_changing_registry():
     from app.agent_registry import registered_agent_ids
-    from app.agent_cert_role_review import canonical_case_spec
+    from app.agent_cert_structured_roles import structured_role_case
     from app.agent_cert_response_contracts import declared_normal_role_ids
     ids = registered_agent_ids(include_orchestrator=False)
     assert set(ids) == set(declared_normal_role_ids())
     for agent in ids:
-        spec = canonical_case_spec(agent, f'responsibility.{agent}', 'role:normal')
+        spec = structured_role_case(agent)
         assert spec['request']['response_format'] == 'strict_json'
         assert canonicalize_schema(spec['request']['response_schema'])
         assert spec['request']['data_classification'] == 'LOCAL_ONLY'
