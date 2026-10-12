@@ -132,7 +132,12 @@ def main():
     names.append('hf_observation_api')
     names.append('hf_qa_execution')
     names.append('system_architecture')
+<<<<<<< HEAD
     names.extend(['response_schema', 'role_structured_execution', 'agent_cert_structured_roles'])
+=======
+    names.extend(['response_schema', 'role_structured_execution',
+                  'agent_cert_structured_roles'])
+>>>>>>> 47ab26cbdee8ae55e7ea904b412600e189f88015
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

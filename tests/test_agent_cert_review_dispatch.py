@@ -42,7 +42,8 @@ def bind_mock_inference_request(job, original):
     from app.direct_stream import inference_request
     from app.compute_profile import generation_options
     job['response_format'] = original.response_format
-    job['response_schema'] = json.dumps(original.response_schema)
+    job['response_schema'] = (json.dumps(original.response_schema)
+                              if original.response_schema is not None else None)
     _, _, receipt = inference_request(job, SimpleNamespace(model=job['model']),
                                      settings=dispatch.SETTINGS, options=generation_options)
     job['inference_receipt'] = json.dumps(receipt)
