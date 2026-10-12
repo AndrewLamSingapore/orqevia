@@ -70,7 +70,9 @@ def collect(runtime, case_id=events.SUPPORTED_CASES[0], **changes):
     operator = AgentCertOperatorIO(owner_token=TOKEN, spec=spec,
         expected_source_revision=SOURCE, expected_runtime_image=IMAGE,
         connection_factory=runtime.transport, timer_factory=FakeTimer,
-        total_timeout_seconds=30)
+        # Fake responses/timers model no network elapsed time. Deadline behavior
+        # belongs to the dedicated operator transport tests, not CI host speed.
+        total_timeout_seconds=30, monotonic=lambda: 0.0)
     options = dict(io=operator.io(), read_subject_actions=operator.read_subject_actions,
         expected_source_revision=SOURCE, expected_runtime_image=IMAGE,
         expected_registry_sha256=runtime.registry_sha, reviewer_code_revision=CODE,
@@ -180,8 +182,16 @@ def test_pure_signer_rejects_rehashed_binding_tamper(runtime, defect):
     elif defect == 'review_boolean': review['observations']['reviewer_execution']['dispatch']['model_calls'] = False
     elif defect == 'review_not_durable': review['observations']['reviewer_execution']['dispatch']['review_action_durable'] = False
     elif defect == 'stale':
+        # Protected verification may be later; the original registered review
+        # itself must still consume the event within the owning 300-second bound.
+        proof = review['observations']['reviewer_execution']
+        content = json.loads(proof['artifact_content_utf8'])
+        content['reviewed_at'] = (events._utc(execution['dispatch']['authority_event']['completed_at'])
+            + timedelta(seconds=301)).isoformat()
+        proof['artifact_content_utf8'] = events.canonical(content).decode()
         with pytest.raises(events.AuthorityEventError, match='AUTHORITY_EVENT_STALE_OR_UNBOUNDED'):
-            recompute(row, result.execution_bytes, result.review_bytes, now=datetime.now(timezone.utc) + timedelta(seconds=301))
+            recompute(row, result.execution_bytes, events.canonical(review),
+                now=datetime.now(timezone.utc) + timedelta(minutes=6))
         return
     elif defect == 'model_substitution': execution['job'] = {'result': '{"PASS":true}'}
     primary = events.canonical(execution)
@@ -202,6 +212,27 @@ def test_review_policy_rejected_without_new_artifact_or_actions(runtime, field, 
     reply = runtime.client.post('/api/agents/dispatch', json=request, headers={'Authorization': 'Bearer ' + TOKEN})
     assert reply.status_code == 422
     assert (runtime.ledger.status()['persisted'], set((runtime.root / 'artifacts').iterdir())) == before
+
+
+def test_policy_rejection_fixture_isolates_fake_transport_from_host_elapsed_time(runtime, monkeypatch):
+    elapsed = SimpleNamespace(value=0.0)
+    original_operator = AgentCertOperatorIO
+    def busy_host_default(**options):
+        # Model a slow host's otherwise-real default clock, without sleeping or
+        # changing event/review UTC evidence. The helper must supply its own
+        # logical clock for the already-fake timer and HTTP transport.
+        options.setdefault('monotonic', lambda: elapsed.value)
+        return original_operator(**options)
+    monkeypatch.setitem(globals(), 'AgentCertOperatorIO', busy_host_default)
+    original_handler = runtime.transport.handler
+    def elapsed_response(method, path, body):
+        reply = original_handler(method, path, body)
+        if method == 'POST' and path == '/api/agents/dispatch':
+            elapsed.value = 2.1
+        return reply
+    runtime.transport.handler = elapsed_response
+    test_review_policy_rejected_without_new_artifact_or_actions(runtime, 'minimum_tier', 'MINI')
+    assert elapsed.value == 2.1
 
 
 @pytest.mark.parametrize('defect', ['supplied_pass', 'source', 'unsupported_case', 'objective', 'forged_action'])

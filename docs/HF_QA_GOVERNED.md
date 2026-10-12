@@ -17,6 +17,9 @@ rates/context/output limits, existing backpressure, a shared total deadline and
 zero retries/fallbacks. `primary_timeout_seconds` applies only to direct mode.
 
 Router-only work has the distinct source-owned `question_answering` task class.
+Direct QA and its separately reserved router fallback also use this class.
+Both routes reject classification-only qualification before credential resolution;
+each persisted reservation retains its actual question-answering scope.
 It must satisfy the selected entry's actual task/prompt/agent scope; a
 classification-only allowlist or unrelated prompt binding does not authorize
 it. No catalog, activation or quality qualification is supplied by this mode.

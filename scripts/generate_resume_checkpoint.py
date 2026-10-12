@@ -21,9 +21,9 @@ def generate(value: dict[str, Any]) -> str:
     release=value['canonical_release']
     source=value['canonical_machine_source']
     source_url=f"https://github.com/{source['repository']}/blob/{source['branch']}/{source['path']}"
-    lines=['# JARVIS / PRIME — Recorded Resume Checkpoint','',
-        '> Generated mirror of dated PRIME observations, not a current-status authority. Read STATUS.md for portfolio status claims and each owning repository for product source.', '',
-        f'- PRIME component reference: {source_url}',
+    lines=['# ORQEVIA — Recorded Resume Checkpoint','',
+        '> Generated mirror of dated ORQEVIA observations, not a current-status authority. Read STATUS.md for portfolio status claims and each owning repository for product source.', '',
+        f'- ORQEVIA component reference: {source_url}',
         f"- Recorded architecture release: `{release['id']}`",
         f"- Manifest snapshot state: **{value['status']}** (dated, not a current runtime verdict)",
         f"- Source observation: `{value['as_of_utc']}`",
@@ -38,16 +38,16 @@ def generate(value: dict[str, Any]) -> str:
         lines.append(f"| {name} | `{short(system.get('source_head_sha'))}` | `{short(system.get('release_sha'))}` | `{short(system.get('runtime_sha'))}` | {system['state']} |")
     runtime = value['abex_runtime']
     if runtime['state'] == 'VERIFIED':
-        runtime_summary = f"This manifest records prior independent PRIME runtime acceptance at source `{runtime['source_sha']}` and image `{runtime['observed_image']}`. This dated mirror does not establish current deployment; consult STATUS.md and live receipts. Historical Dell evidence is retained separately."
+        runtime_summary = f"This manifest records prior independent ORQEVIA runtime acceptance at source `{runtime['source_sha']}` and image `{runtime['observed_image']}`. This dated mirror does not establish current deployment; consult STATUS.md and live receipts. Historical Dell evidence is retained separately."
     else:
-        runtime_summary = 'This manifest has no accepted PRIME runtime fields. Consult STATUS.md and live receipts for current deployment. Historical Dell evidence is retained separately. Recorded ABEX state: '+runtime['state']+'.'
+        runtime_summary = 'This manifest has no accepted ORQEVIA runtime fields. Consult STATUS.md and live receipts for current deployment. Historical Dell evidence is retained separately. Recorded ABEX state: '+runtime['state']+'.'
     lines += ['', runtime_summary,
         '', '## Priorities recorded in the manifest', '']
     lines += [f'- {item}' for item in value['next_actions']]
     lines += ['', '## Unresolved evidence', '']
     lines += ['- '+reason for reason in value['verification']['stale_reasons']]
     lines += ['', '## Resume contract', '',
-        f"Resolve PRIME {source['branch']} and read governance/CHANNEL_CONTRACT.md at that same commit for shared PRIME references. STATUS.md records portfolio status claims; each product repository owns its source, configuration, contracts and domain records. The immutable Golden manifest records generation architecture identity. This mirror and its input operational manifest are dated component and observation references. system.manifest.json binds PRIME components. No parallel portfolio status pointer is maintained. Earlier exports and installer bundles remain historical evidence.", '']
+        f"Resolve ORQEVIA {source['branch']} and read governance/CHANNEL_CONTRACT.md at that same commit for shared ORQEVIA references. STATUS.md records portfolio status claims; each product repository owns its source, configuration, contracts and domain records. The immutable Golden manifest records generation architecture identity. This mirror and its input operational manifest are dated component and observation references. system.manifest.json binds ORQEVIA components. No parallel portfolio status pointer is maintained. Earlier exports and installer bundles remain historical evidence.", '']
     return "\n".join(lines)
 
 

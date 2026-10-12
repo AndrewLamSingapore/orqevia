@@ -1,11 +1,11 @@
 {
   "schema_version": "4.3.0",
-  "status_authority": "https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md",
+  "status_authority": "https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md",
   "superseded_note": "Status claims in this file are superseded by STATUS.md as of 2026-09-22. This file is retained as a machine-readable component, release and observation reference only: it cannot select current status or promote anything to verified.",
   "status": "STALE",
   "as_of_utc": "2026-09-26T07:48:05Z",
   "canonical_machine_source": {
-    "repository": "AndrewLamSingapore/prime",
+    "repository": "AndrewLamSingapore/orqevia",
     "branch": "main",
     "path": "governance/operational-manifest.json"
   },
@@ -47,9 +47,9 @@
     "overall": "STALE"
   },
   "shared_contract": {
-    "version": "2.0.0",
+    "version": "3.0.0",
     "repository": "AndrewLamSingapore/AndrewLamSingapore",
-    "source_sha": "a05fa2e3df80733af9ed87068b3526768d4a8394",
+    "source_sha": "bc8a53567c274676cbdfe195f9a1ac00cf373ea4",
     "path": "portfolio-contracts/manifest.json",
     "verified_at_utc": "2026-09-16T12:39:34.111Z"
   },
@@ -125,8 +125,8 @@
       "verification_scope": "Vercel production alias, Git source revision, public health/content and read-only Ethereum Sepolia Evidence Lab journey; no wallet, signing, transaction submission, deployment, token, escrow or real-fund capability. Physical-device acceptance unverified."
     },
     "prime": {
-      "role": "only cognitive control plane for JARVIS",
-      "repository": "AndrewLamSingapore/prime",
+      "role": "only cognitive control plane for ORQEVIA",
+      "repository": "AndrewLamSingapore/orqevia",
       "source_head_sha": null,
       "source_head_resolution": "live",
       "source_head_observed_before_manifest_commit_sha": "1bd2be98adf91df3bc4df22d7a2348848181b8b8",

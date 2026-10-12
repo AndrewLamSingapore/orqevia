@@ -24,7 +24,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 DEPLOYMENT_ID = re.compile(r"^dpl_[A-Za-z0-9]+$")
 EXPECTED_SCHEMA_VERSION = "4.3.0"
 EXPECTED_ACTIVE = {"control", "authority", "game", "portal", "prime", "sky", "velyqua"}
-EXPECTED_CONTRACT_SHA = "a05fa2e3df80733af9ed87068b3526768d4a8394"
+EXPECTED_CONTRACT_SHA = "bc8a53567c274676cbdfe195f9a1ac00cf373ea4"
 EXPECTED_PROJECTS = {
     "velyqua": "prj_SixsxN06HC8wtBVwGpF4eukIXfY2",
     "authority": "prj_bpSxvAZetd54FAZlL9N7VkKttdJk",
@@ -116,11 +116,11 @@ def assess_static(
         result.error("status must be CURRENT or STALE")
     canonical = value.get("canonical_machine_source")
     if canonical != {
-        "repository": "AndrewLamSingapore/prime",
+        "repository": "AndrewLamSingapore/orqevia",
         "branch": "main",
         "path": "governance/operational-manifest.json",
     }:
-        result.error("canonical_machine_source is not the PRIME main manifest")
+        result.error("canonical_machine_source is not the ORQEVIA main manifest")
 
     # Source unification must never promote historical Dell identity to ABEX.
     abex = value.get("abex_runtime", {})
@@ -140,8 +140,8 @@ def assess_static(
         result.error("resumed software scope must not retain parked exclusions")
 
     shared = value.get("shared_contract", {})
-    if shared.get("version") != "2.0.0":
-        result.error("shared contract version must be 2.0.0")
+    if shared.get("version") != "3.0.0":
+        result.error("shared contract version must be 3.0.0")
     if shared.get("source_sha") != EXPECTED_CONTRACT_SHA:
         result.error("shared contract source_sha is not the canonical publication commit")
     if shared.get("repository") != "AndrewLamSingapore/AndrewLamSingapore":

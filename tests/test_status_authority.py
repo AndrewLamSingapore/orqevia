@@ -108,7 +108,7 @@ def test_resume_canonical_link_is_derived_from_manifest():
     manifest['canonical_machine_source']['branch'] = 'isolated-fixture'
     text = generate(manifest)
     assert '/blob/isolated-fixture/governance/operational-manifest.json' in text
-    assert 'Resolve PRIME isolated-fixture ' in text
+    assert 'Resolve ORQEVIA isolated-fixture ' in text
     assert 'SSOT.json' not in text
-    assert 'This manifest records prior independent PRIME runtime acceptance' in text
+    assert 'This manifest records prior independent ORQEVIA runtime acceptance' in text
     assert 'This dated mirror does not establish current deployment' in text

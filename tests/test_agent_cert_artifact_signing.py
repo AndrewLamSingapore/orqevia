@@ -144,6 +144,68 @@ def test_original_temporary_artifacts_actions_and_distinct_reviewer_sign_only_on
     assert state.execution['objective_read'][1]['execution_metadata']['jobs'] == []
 
 
+@pytest.mark.parametrize('case_id', events.SUPPORTED_CASES)
+def test_later_protected_verification_preserves_original_fresh_review_and_binds_verifier_code(domain, tmp_path, case_id):
+    state = prepared(domain, case_id, tmp_path)
+    original = deepcopy(state.row), state.primary, state.review_bytes
+    later = datetime.now(timezone.utc) + timedelta(minutes=6)
+    verifier_code = 'f' * 40
+    signed = sign(state, now=later, verifier_code_revision=verifier_code)
+    assert (state.row, state.primary, state.review_bytes) == original
+    assert len(state.calls) == 1
+    assert signed['reviewer_code_revision'] == CODE
+    assert signed['verifier_code_revision'] == verifier_code
+    verifier = AzureES256CertificationVerifier({SERVICE: {KEY: state.pin['jwk']}})
+    assert verifier(signed) is True
+    assert verifier(dict(signed, verifier_code_revision=CODE)) is False
+    projection = AgentCertificationRegistry(state.root, source_revision=SOURCE,
+        verify_record=verifier)._project_from_rows('a19', 'responsibility.a19', later,
+            [signed], agent_record('a19'))
+    assert projection['valid_cases'] == [case_id]
+    assert len(projection['missing_cases']) == 73 and projection['level'] == 'L0'
+    assert projection['trust_state'] != 'L7-CURRENT'
+
+
+@pytest.mark.parametrize('review_delay_seconds', [-1, events.MAX_AGE_SECONDS + 1])
+def test_original_review_cannot_consume_future_or_already_stale_event(domain, tmp_path, review_delay_seconds):
+    state = prepared(domain, events.SUPPORTED_CASES[1], tmp_path)
+    completed = events._utc(state.execution['dispatch']['artifact_event']['completed_at'])
+    reviewed = completed + timedelta(seconds=review_delay_seconds)
+    with pytest.raises(events.ArtifactEventError, match='ARTIFACT_EVENT_STALE_OR_UNBOUNDED'):
+        artifact_event_review_join(state.execution, source_revision=SOURCE,
+            runtime_image_id=IMAGE, registry_sha256=state.review['observations']['registry_sha256'], now=reviewed)
+    mutate_reviewer_artifact(state, lambda content: content.update(reviewed_at=reviewed.isoformat()))
+    persist(state)
+    with pytest.raises(CertificationReviewError):
+        sign(state, now=completed + timedelta(minutes=10))
+    assert state.calls == []
+
+
+@pytest.mark.parametrize('defect', ['unbound_timestamp', 'future_review', 'review_after_artifact',
+    'review_after_certification', 'expired_record'])
+def test_later_verification_still_rejects_review_time_custody_order_and_current_expiry(domain, tmp_path, defect):
+    state = prepared(domain, events.SUPPORTED_CASES[1], tmp_path)
+    proof = state.review['observations']['reviewer_execution']
+    content = json.loads(proof['artifact_content_utf8'])
+    later = datetime.now(timezone.utc) + timedelta(minutes=6)
+    if defect == 'unbound_timestamp':
+        content['reviewed_at'] = (events._utc(content['reviewed_at']) + timedelta(microseconds=1)).isoformat()
+        proof['artifact_content_utf8'] = json.dumps(content, ensure_ascii=False)
+    elif defect == 'future_review':
+        mutate_reviewer_artifact(state, lambda value: value.update(reviewed_at=(later + timedelta(seconds=1)).isoformat()))
+    elif defect == 'review_after_artifact':
+        stamp = events._utc(proof['dispatch']['artifact']['timestamp']) + timedelta(seconds=1)
+        mutate_reviewer_artifact(state, lambda value: value.update(reviewed_at=stamp.isoformat()))
+    elif defect == 'review_after_certification':
+        state.row['certified_at'] = (events._utc(content['reviewed_at']) - timedelta(microseconds=1)).isoformat()
+    else:
+        later = events._utc(state.row['expires_at'])
+    persist(state)
+    with pytest.raises(CertificationReviewError):
+        sign(state, now=later)
+    assert state.calls == []
+
+
 @pytest.mark.parametrize('defect', ['self_review', 'source', 'image', 'case', 'borrowed_oracle',
     'model_boolean', 'missing_subject_actions', 'missing_input_actions', 'raw_output', 'new_queue_job',
     'review_action_type', 'review_nonce', 'reviewer_artifact_subject', 'review_join', 'review_zero_boolean',

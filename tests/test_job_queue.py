@@ -38,6 +38,41 @@ def test_unknown_agent_is_rejected(tmp_path):
     else:
         raise AssertionError("unregistered compute agent must fail closed")
 
+
+def test_response_format_survives_queue_restart_without_changing_old_jobs(tmp_path):
+    q=queue(tmp_path)
+    ordinary=q.submit(agent='a19',prompt='ordinary')
+    strict=q.submit(agent='a19',prompt='object',response_format='strict_json')
+    reopened=JobQueue(tmp_path/'q.db',q.policy)
+    assert reopened.get(ordinary['id'])['response_format']=='text'
+    assert reopened.get(strict['id'])['response_format']=='strict_json'
+    with pytest.raises(ValueError,match='invalid response_format'):
+        reopened.submit(agent='a19',prompt='invalid',response_format='invented')
+
+
+def test_old_queue_schema_migrates_format_without_rewriting_job_content(tmp_path):
+    q=queue(tmp_path)
+    original=q.submit(agent='a19',prompt='unfinished source',priority='low')
+    with q.connect() as c:
+        c.execute('ALTER TABLE compute_jobs DROP COLUMN response_format')
+    reopened=JobQueue(tmp_path/'q.db',q.policy)
+    restored=reopened.get(original['id'])
+    assert restored['response_format']=='text'
+    assert restored['id']==original['id'] and restored['prompt']==original['prompt']
+    assert restored['status']==original['status'] and restored['created_at']==original['created_at']
+
+
+def test_rejected_strict_output_is_preserved_without_replay(tmp_path):
+    q=queue(tmp_path)
+    job=q.submit(agent='a19',prompt='object',response_format='strict_json',max_retries=2)
+    assert q.claim('worker',[LOCAL])['id']==job['id']
+    raw='```json\n{"wrong":true}\n```'
+    failed=q.finish(job['id'],result=raw,error='STRICT_JSON_CONTRACT_FAILED',
+                    retryable=False,input_tokens=2,output_tokens=3,actual_cost_usd=0)
+    assert failed['status']=='failed' and failed['result']==raw
+    assert failed['attempts']==1 and failed['input_tokens']==2 and failed['output_tokens']==3
+    assert q.claim('worker',[LOCAL]) is None
+
 def test_cloud_is_direct_and_only_fallback(tmp_path):
     q=queue(tmp_path)
     job=q.submit(agent="analyst",prompt="large",model="large",vram_mb=8000,allow_cloud=True,
@@ -276,3 +311,19 @@ def test_n1_baseline_has_no_background_reserve(tmp_path):
     assert q.claim("w2", [LOCAL, CLOUD]) is None
     q.finish(background["id"], result="done")
     assert q.claim("w1", [LOCAL, CLOUD])["id"] == owner["id"]
+
+
+def test_equal_timestamps_tiebreak_keeps_submission_order(tmp_path, monkeypatch):
+    # The Windows clock can produce identical created_at strings for
+    # back-to-back submissions. The claim ordering must fall back to
+    # insertion order, never to a random UUID tie-break.
+    monkeypatch.setattr("app.job_queue.utcnow", lambda: "2026-10-11T00:00:00.000000+00:00")
+    policy = QueuePolicy(global_concurrency=8, per_agent_concurrency=1,
+                         local_ram_mb=8192, local_vram_mb=4096)
+    q = JobQueue(tmp_path / "tiebreak-order.db", policy)
+    backend = Provider("ollama", "local", "fast", 8192, 4096, 8)
+    agents = ("a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10")
+    submitted = [q.submit(agent=agent, prompt=f"tie-{agent}", priority="background")
+                 for agent in agents]
+    claimed = [q.claim(f"worker-{index}", [backend]) for index in range(len(agents))]
+    assert [job["id"] for job in claimed] == [job["id"] for job in submitted]

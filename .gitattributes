@@ -20,3 +20,56 @@ docs/evidence/HF_TASK_SCOPE_CANDIDATE_INDEPENDENT_REVIEW_20261007.json -text
 governance/agent-cert-reviewed-cases.json -text
 governance/agent-cert-historical-admissions/*.json -text
 governance/agent-cert-case-evidence/a19-5b3dd3a-role-normal-20261007/** -text
+governance/agent-cert-case-evidence/a19-61335a9-artifact-produce-20261008/** -text
+
+# Preserve exact original29case execution/review evidence bytes.
+governance/agent-cert-case-evidence/*-613-init-20261010/** -text
+
+# Preserve the protected verifier/runtime closure as exact Git blob bytes.
+scripts/agent_cert_reviewed_signing.py -text
+app/agent_cert_role_review.py -text
+app/agent_cert_identity_review.py -text
+app/action_records.py -text
+app/agent_cert_initialization.py -text
+app/agent_cert_initialization_review.py -text
+app/agent_cert_secondary_roles.py -text
+app/artifact_factory.py -text
+app/objective_api.py -text
+app/agent_cert_a19_cases.py -text
+app/agent_cert_a19_general.py -text
+app/agent_cert_a19_baseline.py -text
+app/agent_cert_artifact_events.py -text
+app/agent_cert_authority_events.py -text
+app/agent_cert_event_api.py -text
+app/agent_cert_review_tool.py -text
+app/agent_dispatch_api.py -text
+app/cloud_execution.py -text
+app/hf_admission.py -text
+app/agent_cert_role_group_two.py -text
+app/agent_cert_role_g1.py -text
+app/agent_cert_cases.py -text
+app/agent_cert_transport.py -text
+app/agent_certification.py -text
+app/agent_cert_azure_signer.py -text
+app/agent_cert_azure_es256.py -text
+app/agent_cert_ed25519.py -text
+app/agent_registry.py -text
+config/agent_registry.json -text
+config/agent_registry_migration.json -text
+app/agent_cert_numeric.py -text
+app/agent_cert_rates.py -text
+app/agent_cert_weighted.py -text
+app/agent_cert_boundary.py -text
+app/agent_cert_a17_boundary.py -text
+app/agent_cert_data_quality.py -text
+app/agent_cert_portfolio.py -text
+app/agent_cert_cost.py -text
+app/agent_cert_risk.py -text
+app/agent_cert_release.py -text
+app/agent_cert_execution.py -text
+app/runtime_status.py -text
+app/compute_catalog.py -text
+app/provider_runtime.py -text
+app/provider_circuit.py -text
+app/tier_router.py -text
+governance/agent-cert-verifier-azure-pins.json -text

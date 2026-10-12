@@ -2,10 +2,12 @@
 import copy
 from datetime import datetime, timezone
 import json
+from pathlib import Path
 
 import pytest
 
 from scripts import agent_cert_readiness as readiness
+from scripts import sign_admitted_agent_cases as admission
 
 
 NOW = datetime(2026, 10, 8, 1, 0, tzinfo=timezone.utc)
@@ -66,7 +68,9 @@ def test_eight_secondary_source_oracles_have_only_explicit_prepared_transport(in
 def test_source_readiness_never_awards_live_signature_or_l7(inventory):
     assert inventory['source_generated_certification_claims'] == 0
     assert inventory['runtime_observation'] == inventory['host_observation'] == 'NOT_PERFORMED'
-    assert inventory['active_protected_admission_count'] == 0
+    root = Path(__file__).resolve().parents[1]
+    active = admission.parse((root / admission.MANIFEST).read_bytes())
+    assert inventory['active_protected_admission_count'] == len(active)
     historical = inventory['inspected_historical_signed_evidence']
     assert len(historical['records']) == 1
     assert historical['records'][0]['expired'] is True

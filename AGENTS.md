@@ -1,20 +1,20 @@
-# JARVIS status and domain ownership
+# ORQEVIA status and domain ownership
 
-For JARVIS/PRIME and portfolio work, review current status claims in
-[STATUS.md](https://github.com/AndrewLamSingapore/prime/blob/main/STATUS.md) in the
-private PRIME repository. It is a portfolio status record, not a source for
+For ORQEVIA and portfolio work, review current status claims in
+[STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the
+private ORQEVIA repository. It is a portfolio status record, not a source for
 product code, configuration, contracts, or domain data. Each product owns those
 records in its own repository.
 Only Lam may move an item into its "Verified" sections.
 
-Then resolve the latest canonical PRIME `main` commit and read governance/operational-manifest.json
+Then resolve the latest canonical ORQEVIA `main` commit and read governance/operational-manifest.json
 and governance/CHANNEL_CONTRACT.md at that same commit as component and
 observation references: they describe recorded architecture and observed
-revisions, and cannot establish current status. On PRIME itself, a clean checkout
+revisions, and cannot establish current status. On ORQEVIA itself, a clean checkout
 of `main` provides the same files. A working branch is a candidate, never a
 second current version.
 
-Canonical entrypoint: https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json
+Canonical entrypoint: https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json
 
 This applies equally to ChatGPT, Codex, Sol, Astra and other assistants. Prior
 chat, memory, exported documents, screenshots, old branches and model identity
@@ -23,10 +23,10 @@ status or owning source cannot be checked, mark that claim UNVERIFIED and use ca
 only as explicitly dated context; do not invent freshness or request routine
 approval merely to continue reversible work already authorized by Lam.
 
-PRIME governs shared orchestration and cross-product contracts. Product-specific
+ORQEVIA governs shared orchestration and cross-product contracts. Product-specific
 code, configuration, contracts, and domain records remain in their owning
 repositories. Reconcile cross-product claims against each owner's source and
-observed deployment without transferring domain authority to PRIME. Runtime status
+observed deployment without transferring domain authority to ORQEVIA. Runtime status
 requires observed runtime identity and evidence; a merge or CI pass is not a
 deployment receipt. Never substitute historical Dell identity for ABEX identity.
 
@@ -60,3 +60,17 @@ after every edit or test.
 Default to useful execution with maximum functional capability and minimum process overhead. A `BLOCKER` requires concrete current evidence that it prevents the **specific requested operation**, or that continuing that operation creates material risk that cannot reasonably be contained or reversed. State its smallest affected scope. A failed probe is a failed probe, not automatic system failure; `UNKNOWN` is neither `FAIL` nor `BLOCKER`. Historical incidents are retained as evidence and monitored for recurrence, not made permanent global stops. Backlog, optional qualification, unavailable auxiliary peers and future optimizations are not operational blockers merely because they are unfinished.
 
 Continue independent work when one lane is blocked. Classify observations as `PASS`, `FAIL`, `MONITOR`, `DEFERRED`, `EXTERNAL`, `NOT APPLICABLE` or a justified localized `BLOCKER`. Test to learn or verify relevant behavior, not to satisfy invented gates. Do not disable probes, tools, agents, models, networking or other functioning capability to make a status clean. Preserve authentication, authorization, secrets, data integrity, recoverability and known-good production. Prefer the simplest reversible solution; request Owner intervention only for an actual physical, credential, financial, external-access or irreversible decision dependency. This doctrine governs classifications and execution priority; it does not turn an untested candidate into deployed or verified production.
+
+## Verified useful outcomes — Owner quality directive (9 October 2026)
+
+For significant outputs, check correctness, necessity, independently inspectable evidence,
+defined acceptance criteria, maintainability, efficiency, security and measurable value.
+Use existing checks and risk-appropriate validation; do not add a governance subsystem.
+Keep generation separate from independent review for consequential work. Preserve real
+failures and original receipts; label fixtures, source readiness, CI, deployment and live
+certification separately. Do not self-certify, fabricate receipts or turn activity counts
+into progress. Define each agent's objective, authorized scope, resource/retry bounds and
+stop condition; prevent circular delegation or new permanent agents. Make focused,
+evidence-backed changes, retain product/domain ownership, and obtain required authority
+for spending, security changes and production promotion. Continuous improvement requires
+a measured problem, relevant before/after tests and a reversible acceptance decision.

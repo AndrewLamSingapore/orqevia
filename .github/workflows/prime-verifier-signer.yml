@@ -47,12 +47,42 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install bounded verification dependency
-        run: python -m pip install --disable-pip-version-check cryptography==50.0.2 httpx==0.28.1
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.2 httpx==0.28.1 fastapi==0.116.1
+      - name: Check owning initialization verification imports (no signing)
+        env:
+          PRIME_DATA_DIR: ${{ runner.temp }}/prime-verifier-domains
+          PRIME_COMPUTE_QUEUE_DB: ${{ runner.temp }}/prime-verifier-domains/compute-queue.db
+        run: |
+          python - <<'PY'
+          from app.agent_dispatch_api import AgentRequest
+          from app.objective_api import inference_attempt_projection
+          from app.compute_queue_api import pool, queue
+          from app import agent_registry, agent_cert_initialization as initialization
+
+          assert AgentRequest.model_json_schema()['type'] == 'object'
+          projection = inference_attempt_projection([])
+          assert projection['status'] == 'NOT_APPLICABLE' and projection['attempts'] == []
+          assert projection['verification'] == 'UNVERIFIED'
+          registry_sha = initialization.sha(agent_registry.REGISTRY_PATH.read_bytes())
+          pairs = [(item['id'], capability)
+                   for item in agent_registry.load_agent_registry()['agents']
+                   for capability in item['capability_requirements']]
+          assert len(pairs) == 29 and len({agent for agent, _ in pairs}) == 21
+          for agent, capability in pairs:
+              initialization._owned_domains(registry_sha, agent, capability)
+          assert pool.threads == []
+          with queue.connect() as connection:
+              assert connection.execute('SELECT COUNT(*) FROM compute_jobs').fetchone()[0] == 0
+          print('Initialization verification imports ready; source check only, no signing')
+          PY
       - name: Protected Azure sign, public verification, tamper rejection
         run: python -m scripts.azure_verifier_live_canary
       - name: Sign reviewed non-certifying A18 observation
         run: python -m scripts.azure_verifier_observation_canary
       - name: Sign only fixed independently reviewed admitted cases
+        env:
+          PRIME_DATA_DIR: ${{ runner.temp }}/prime-verifier-domains
+          PRIME_COMPUTE_QUEUE_DB: ${{ runner.temp }}/prime-verifier-domains/compute-queue.db
         run: python -m scripts.sign_admitted_agent_cases
       - name: Preserve signed case evidence (not an L7 award)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

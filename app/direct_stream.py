@@ -25,6 +25,9 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
             c.close()
 
     async def run():
+        response_format = job.get('response_format', 'text')
+        if response_format not in {'text', 'strict_json'}:
+            raise RuntimeError('Invalid response format')
         backend_admission.require_model(provider.model)
         capacity(provider.model)
         if db_path:
@@ -39,6 +42,7 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
             async with httpx.AsyncClient(timeout=float(job['timeout_seconds'])) as client:
                 async with client.stream('POST',settings.ollama_base_url+'/api/chat',json={
                 'model':provider.model,'messages':[{'role':'user','content':job['prompt']}],
+                **({'format':'json'} if response_format == 'strict_json' else {}),
                 'stream':True,'keep_alive':settings.keep_alive,'options':{
                     'num_ctx':settings.context_tokens,'num_predict':settings.max_output_tokens,**options()}}) as response:
                     response.raise_for_status();parts=[];final=None
@@ -57,9 +61,23 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                         parts.append(message.get('content',''))
                         if item.get('done') is True:final=item
                     if final is None or not ''.join(parts).strip():raise RuntimeError('Incomplete or empty model response')
+                    contract_error = ''
+                    if response_format == 'strict_json':
+                        from .structured_output import parse_json, StructuredOutputError
+                        try:
+                            value, normalized = parse_json(''.join(parts), allow_fence_normalization=False)
+                            if not isinstance(value, dict) or normalized:
+                                raise ValueError('JSON object required')
+                            json.dumps(value, allow_nan=False)
+                        except (StructuredOutputError, ValueError, OverflowError, RecursionError):
+                            contract_error = 'STRICT_JSON_CONTRACT_FAILED'
                     result = {'result':''.join(parts),'input_tokens':int(final.get('prompt_eval_count',0)),
                         'output_tokens':int(final.get('eval_count',0)),'actual_cost_usd':0,
                         'model_load_ns':int(final.get('load_duration',0)), 'inference_ns':int(final.get('eval_duration',0))}
+                    if contract_error:
+                        # Preserve original rejected output and actual usage in
+                        # the queue; fail the job without an automatic retry.
+                        result.update(error=contract_error, retryable=False)
                     lease(backend_admission.completed)
                     complete = True
                     return result

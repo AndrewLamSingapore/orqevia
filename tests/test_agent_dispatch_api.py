@@ -12,6 +12,33 @@ from app.settings import PrimeSettings
 
 
 class AgentDispatchTests(HarnessApiTests):
+    def test_strict_json_source_grounding_is_generic_and_preserves_request(self):
+        request=AgentRequest(capability='responsibility.a19',
+            objective='Return the supplied timestamp and operation identifier.',
+            context='timestamp=07:43Z; operation vocabulary=[retry.submit]; service=sample-service',
+            response_format='strict_json')
+        original=request.model_dump_json()
+        prompt=inference_prompt(request,Tier.MINI)
+        assert 'Copy evidence tokens exactly' in prompt
+        assert 'Never add a missing date' in prompt
+        assert 'use the supplied operation vocabulary' in prompt
+        assert 'do not substitute a service label' in prompt
+        assert prompt.endswith('Objective:\n'+request.objective+'\nContext:\n'+request.context)
+        assert request.model_dump_json()==original
+        instructions=prompt.split('Role:',1)[0]
+        assert '07:43Z' not in instructions and 'retry.submit' not in instructions
+        assert 'sample-service' not in instructions and '2024' not in instructions
+
+    def test_strict_json_contract_reaches_durable_queue(self):
+        request={'capability':'responsibility.a19','objective':'Classify yes or no.',
+                 'task_class':'classification','response_format':'strict_json'}
+        denied=self.client.post('/api/agents/dispatch',json=request)
+        assert denied.status_code==401
+        accepted=self.client.post('/api/agents/dispatch',headers=self.headers,json=request)
+        assert accepted.status_code==202,accepted.text
+        identifier=accepted.json()['job']['id']
+        assert compute_queue_api.queue.get(identifier)['response_format']=='strict_json'
+
     def setUp(self):
         super().setUp()
         os.environ['PRIME_REGISTRY_V1_ENABLED']='1'

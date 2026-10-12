@@ -1,4 +1,4 @@
-> Portfolio authority: [one current JARVIS SSOT](https://github.com/AndrewLamSingapore/prime/blob/main/governance/operational-manifest.json). This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
+> Portfolio status authority: [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the private ORQEVIA repository. This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
 
 # PRIME Cross-Project Contracts
 
