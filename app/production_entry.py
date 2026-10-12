@@ -190,6 +190,13 @@ def hf_observation(task_id: str | None = None,
     return inspect_hf(authorization, task_id=task_id)
 
 
+@app.get('/control/api/exposure-intelligence')
+def exposure_intelligence(authorization=Depends(local_authorization)):
+    # Same local Owner control boundary; no new public/PWA route or token.
+    from .exposure_api import exposure_view
+    return exposure_view()
+
+
 @app.get('/control/api/jobs/{job_id}')
 def job(job_id: str, authorization=Depends(local_authorization)):
     return compute_queue_api.get_job(job_id, authorization)
