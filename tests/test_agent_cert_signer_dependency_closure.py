@@ -72,7 +72,6 @@ socket.socket.connect = forbidden
 socket.create_connection = forbidden
 urllib.request.urlopen = forbidden
 http.client.HTTPConnection.connect = forbidden
-subprocess.Popen.__init__ = forbidden
 threading.Thread.start = forbidden
 pins, check, mode = json.loads(sys.argv[1])
 normalize = lambda name: re.sub(r'[-_.]+', '-', name).lower()
@@ -88,6 +87,9 @@ while pending:
         required = Requirement(requirement)
         if required.marker is None or required.marker.evaluate({'extra': ''}):
             pending.append(required.name)
+# Windows marker evaluation may query its OS version through a subprocess.
+# Finish metadata-only setup before prohibiting processes in application imports.
+subprocess.Popen.__init__ = forbidden
 # packaging is test-only marker parsing, never an extra application dependency.
 for name in list(sys.modules):
     if name == 'packaging' or name.startswith('packaging.'):
@@ -178,3 +180,10 @@ def test_exact_inline_cloud_check_is_offline_and_owning_source(tmp_path):
     code = inline_check()
     assert ast.dump(ast.parse(code)) == ast.dump(ast.parse(IMPORT_CHECK))
     assert 'INSTALLED_CLOSURE_ONLY_NOT_LINUX_CI' in probe(tmp_path, declared_pins(), code)
+
+
+def test_application_import_probe_still_rejects_process_start(tmp_path):
+    import pytest
+    code = "import subprocess, sys; subprocess.run([sys.executable, '-c', 'pass'])"
+    with pytest.raises(AssertionError, match='OFFLINE_IMPORT_CANNOT_CONNECT_START_SIGN_OR_GENERATE_KEYS'):
+        probe(tmp_path, declared_pins(), code)

@@ -16,13 +16,19 @@ def evidence():
     return plan,entry,(path/'execution.json').read_bytes(),(path/'review.json').read_bytes()
 
 
-def test_all_29_original_cases_pass_unchanged_protected_oracle_without_claims():
-    plan,_,_,_=evidence()
-    result=audit(plan,local_audit_at=datetime.now(timezone.utc))
+def test_all_29_original_cases_pass_unchanged_protected_oracle_without_claims(tmp_path):
+    from tests.historical_initialization_fixture import historical_validation
+    result=historical_validation(tmp_path, 'audit')
     assert len(result['cases'])==29
     assert result['signatures']==result['certification_records']==result['runtime_calls']==0
     assert result['protected_validation_at'] is None
     assert result['time_scope']=='LOCAL_NONPROTECTED_AUDIT_ONLY'
+
+
+def test_current_changed_closure_rejects_the_original_package():
+    plan,_,_,_=evidence()
+    with pytest.raises(ValueError, match='Protected reviewed-case admission rejected'):
+        audit(plan,local_audit_at=datetime.now(timezone.utc))
 
 
 def test_raw_hash_tampering_denied():
