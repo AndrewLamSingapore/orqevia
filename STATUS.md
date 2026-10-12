@@ -90,6 +90,15 @@ If you are an AI agent updating this file:
   not be deleted merely because their names appear overlapping.
 - DELL share access is denied. No direct DELL filesystem, latest local receipts,
   authentication or remote execution has been verified in this session.
+- Network recovery at 01:10 UTC verified ABEX Wi-Fi `192.168.1.23`, gateway
+  `192.168.1.254`, and the original LAN HTTPS listener on TCP 8443. The existing
+  CA validated the IP-bound TLS certificate; `/pwa/` returned 200 and protected
+  Interface endpoints returned 401 without credentials. Backend TCP 8000 remains
+  loopback-only. Firewall stays enabled on all profiles; existing Docker rules
+  were observed but not changed. No SSH service or TCP 22 listener was observed.
+- The running Interface's configured thin-client policy map is empty. DELL-origin
+  authenticated health is NOT TESTED; network reachability does not establish
+  enrollment. No credentials were minted, scopes expanded or clients re-enrolled.
 - Seven-day autonomous operation, reboot/network recovery, full 21-agent
   qualification, simulated-wallet acceptance, off-device restoration and
   DigitalOcean operational migration remain unproven by this sweep.
