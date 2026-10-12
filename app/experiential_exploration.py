@@ -48,9 +48,15 @@ class ExplorationSandbox:
     """
 
     def __init__(self, root: str | Path, *, max_trials: int = 12,
+                 max_agent_runs: int = 2, max_agent_trials: int = 24,
+                 max_sandbox_runs: int = 42, max_sandbox_trials: int = 504,
                  promotion_verifier=None, clock=time.time):
         if type(max_trials) is not int or not 9 <= max_trials <= 100:
             raise ValueError("trial budget must be 9..100")
+        limits = dict(max_agent_runs=max_agent_runs, max_agent_trials=max_agent_trials,
+                      max_sandbox_runs=max_sandbox_runs, max_sandbox_trials=max_sandbox_trials)
+        if any(type(value) is not int or not 1 <= value <= 10_000 for value in limits.values()):
+            raise ValueError("finite run and trial ceilings required")
         original = Path(root).absolute()
         if any(parent.is_symlink() or getattr(parent, "is_junction", lambda: False)()
                for parent in (original, *original.parents)):
@@ -88,7 +94,23 @@ class ExplorationSandbox:
                 primary key(agent_id,version));
               create table if not exists exploration_authorizations(
                 receipt_hash text primary key, binding_hash text not null);
+              create table if not exists exploration_limits(id integer primary key, body text not null);
+              create table if not exists exploration_budgets(
+                scope text primary key, runs integer not null, trials integer not null);
             """)
+            db.execute("insert or ignore into exploration_limits values(1,?)", (canonical(limits),))
+            self.limits = json.loads(db.execute("select body from exploration_limits where id=1").fetchone()[0])
+            db.execute("insert or ignore into exploration_budgets select agent_id,count(*),coalesce(sum(trials),0) from exploration_runs group by agent_id")
+            db.execute("insert or ignore into exploration_budgets select 'sandbox',count(*),coalesce(sum(trials),0) from exploration_runs")
+
+    def _reserve(self, db, agent: str, resource: str) -> None:
+        for scope, prefix in ((agent, "agent"), ("sandbox", "sandbox")):
+            db.execute("insert or ignore into exploration_budgets values(?,0,0)", (scope,))
+            current = db.execute("select runs,trials from exploration_budgets where scope=?", (scope,)).fetchone()
+            if current[resource] >= self.limits[f"max_{prefix}_{resource}"]:
+                raise ValueError(f"persistent {prefix} {resource} ceiling exhausted")
+            # resource is an internal constant selected only by start/observe.
+            db.execute(f"update exploration_budgets set {resource}={resource}+1 where scope=?", (scope,))
 
     def _agent(self, agent: str) -> dict:
         if agent not in registered_agent_ids(include_orchestrator=False):
@@ -101,6 +123,9 @@ class ExplorationSandbox:
 
     def start(self, agent: str) -> str:
         self._agent(agent)
+        with self.memory.connect() as db:
+            db.execute("begin immediate")
+            self._reserve(db, agent, "runs")
         objective = self.kernel.create_objective(
             objective="Explore permutation-preserving ordering in the isolated symbolic environment",
             success_criteria=["Preserve attributable observations, including counterexamples"],
@@ -124,6 +149,7 @@ class ExplorationSandbox:
             self._agent(row["agent_id"])
             if row["trials"] >= row["trial_limit"]:
                 raise ValueError("persistent trial budget exhausted")
+            self._reserve(db, row["agent_id"], "trials")
             db.execute("update exploration_runs set trials=trials+1 where run_id=?", (run_id,))
         episode = self.memory.record_episode(event_type="exploration_observation",
             content={"run_id": run_id, "agent_id": row["agent_id"], "strategy": strategy,
@@ -245,16 +271,15 @@ class ExplorationSandbox:
     def admit(self, candidate_id: str, *, authorization: dict) -> int:
         candidate = self.candidate(candidate_id)
         self._review(candidate_id)
-        binding = {"operation": "sandbox-skill-admission", "candidate_id": candidate_id,
-                   "scope": "simulation_fixture", "agent_id": candidate["agent_id"]}
-        if self.verify_promotion(authorization, binding) is not True:
-            raise PermissionError("separate admission authorization required")
         with self.memory.connect() as db:
             db.execute("begin immediate")
-            db.execute("insert into exploration_authorizations values(?,?)",
-                       (digest(authorization), digest(binding)))
             version = db.execute("select coalesce(max(version),0)+1 from exploration_versions where agent_id=?",
                                  (candidate["agent_id"],)).fetchone()[0]
+            binding = self._admission_binding(candidate_id, candidate["agent_id"], version)
+            if self.verify_promotion(authorization, binding) is not True:
+                raise PermissionError("separate admission authorization required")
+            db.execute("insert into exploration_authorizations values(?,?)",
+                       (digest(authorization), digest(binding)))
             db.execute("update exploration_versions set active=0 where agent_id=?", (candidate["agent_id"],))
             db.execute("insert into exploration_versions values(?,?,?,?,1)",
                        (candidate["agent_id"], version, candidate_id, digest(authorization)))
@@ -264,6 +289,28 @@ class ExplorationSandbox:
             content={**binding, "version": version}, source="verified-sandbox-admission")
         return version
 
+    @staticmethod
+    def _admission_binding(candidate_id: str, agent: str, version: int) -> dict:
+        return {"operation": "sandbox-skill-admission", "candidate_id": candidate_id,
+                "scope": "simulation_fixture", "agent_id": agent, "version": version}
+
+    def admission_binding(self, candidate_id: str) -> dict:
+        candidate = self.candidate(candidate_id)
+        with self.memory.connect() as db:
+            version = db.execute("select coalesce(max(version),0)+1 from exploration_versions where agent_id=?",
+                                 (candidate["agent_id"],)).fetchone()[0]
+        return self._admission_binding(candidate_id, candidate["agent_id"], version)
+
+    def _admission_witness(self, row) -> dict:
+        candidate = self.candidate(row["candidate_id"]); self._review(row["candidate_id"])
+        binding = self._admission_binding(row["candidate_id"], row["agent_id"], row["version"])
+        with self.memory.connect() as db:
+            witness = db.execute("select binding_hash from exploration_authorizations where receipt_hash=?",
+                                 (row["authorization_hash"],)).fetchone()
+        if candidate["agent_id"] != row["agent_id"] or witness is None or witness[0] != digest(binding):
+            raise PermissionError("version-bound admission witness required")
+        return candidate
+
     def rollback(self, agent: str, version: int, *, authorization: dict) -> None:
         self._agent(agent)
         binding = {"operation": "sandbox-skill-rollback", "agent_id": agent,
@@ -272,11 +319,11 @@ class ExplorationSandbox:
             raise PermissionError("separate rollback authorization required")
         with self.memory.connect() as db:
             db.execute("begin immediate")
-            target = db.execute("select candidate_id from exploration_versions where agent_id=? and version=?",
+            target = db.execute("select * from exploration_versions where agent_id=? and version=?",
                                 (agent, version)).fetchone()
             if target is None:
                 raise ValueError("unknown skill version")
-            self.candidate(target[0]); self._review(target[0])
+            self._admission_witness(target)
             db.execute("insert into exploration_authorizations values(?,?)",
                        (digest(authorization), digest(binding)))
             db.execute("update exploration_versions set active=(version=?) where agent_id=?", (version, agent))
@@ -297,9 +344,7 @@ class ExplorationSandbox:
             row = db.execute("select * from exploration_versions where agent_id=? and active=1", (producer,)).fetchone()
         if row is None:
             raise PermissionError("unadmitted skill cannot propagate")
-        candidate = self.candidate(row["candidate_id"]); self._review(row["candidate_id"])
-        if candidate["agent_id"] != producer:
-            raise ValueError("skill ownership provenance changed")
+        candidate = self._admission_witness(row)
         result = simulate(candidate["strategy"], values)
         self.memory.record_episode(event_type="validated_sandbox_transfer", source="canonical-consultation",
             content={"producer": producer, "consumer": consumer, "candidate_id": row["candidate_id"],
@@ -311,6 +356,7 @@ class ExplorationSandbox:
         if type(limit) is not int or not 1 <= limit <= 1000 or len(query) > 1000:
             raise ValueError("bounded history query required")
         with self.memory.connect() as db:
-            rows = db.execute("select content_json from episodic_memory where event_type='exploration_observation'").fetchall()
+            rows = db.execute("select content_json from episodic_memory where event_type='exploration_observation' and json_extract(content_json,'$.agent_id')=? and instr(lower(content_json),?)>0 order by created_at desc limit ?",
+                              (agent, query.casefold(), limit)).fetchall()
         return [json.loads(row[0]) for row in rows
                 if json.loads(row[0])["agent_id"] == agent and query.casefold() in row[0].casefold()][:limit]

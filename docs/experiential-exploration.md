@@ -28,7 +28,12 @@ symbolic-link/junction paths are refused. The directory contains a scope marker
 and separate memory, continuity and authority SQLite databases. No runtime
 environment variable silently selects a production database.
 
-Each run reserves at most 9–100 trials persistently (default 12); failed episode
+Each run reserves at most 9–100 trials persistently (default 12). Independently,
+the sandbox persists trusted-caller ceilings: default two runs/24 trials per
+agent and 42 runs/504 trials for the sandbox. Restart or a new run cannot reset
+these ceilings; atomic reservations prevent concurrent oversubscription. A
+failed objective/episode write consumes its reserved slot. History retrieval
+filters the agent/query and applies its read limit in SQL. Failed episode
 writes consume their reserved trial. Input length, magnitude and strategy are
 bounded; no shell, arbitrary code, subprocess, network or model operation is
 available in the library. The evaluation CLI starts two bounded subprocesses
@@ -39,7 +44,11 @@ Candidate hashes bind observations and episode provenance. Local reviews bind
 the candidate, held-out cases, reviewer and simulation scope. Admission is denied
 by default. A host can inject its existing authorization verifier; its accepted
 receipt must bind the exact admission or rollback operation. Receipts are
-single-use. The evaluation harness injects **synthetic fixture authorization**,
+single-use and bind the exact candidate, agent and skill version. Transfer and
+rollback recheck the persisted version-bound admission witness; a reviewed but
+unadmitted candidate cannot propagate through a forged version row. This is not
+a tamperproof database against actors who control its raw files. The evaluation
+harness injects **synthetic fixture authorization**,
 which must never be used as a production trust boundary.
 
 Sandbox procedural versions retain the complete candidate and authorization

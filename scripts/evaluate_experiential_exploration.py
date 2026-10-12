@@ -48,9 +48,7 @@ def main():
             candidate = sandbox.explore(sandbox.start(agent))
             challenge = sandbox.challenge(candidate['candidate_id'], reviewer(agent))
             assert challenge['disposition'] == 'STORE'
-            authorization = {'fixture_authorization': {
-                'operation': 'sandbox-skill-admission', 'candidate_id': candidate['candidate_id'],
-                'scope': 'simulation_fixture', 'agent_id': agent}}
+            authorization = {'fixture_authorization': sandbox.admission_binding(candidate['candidate_id'])}
             version = sandbox.admit(candidate['candidate_id'], authorization=authorization)
             rows.append({'agent_id': agent, 'candidate_id': candidate['candidate_id'],
                          'reviewer': reviewer(agent), 'version': version})
