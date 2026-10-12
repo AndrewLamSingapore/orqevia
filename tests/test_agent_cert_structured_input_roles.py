@@ -31,6 +31,7 @@ def test_new_contract_is_explicit_independent_source_bound_and_local_only(agent)
     assert new['agent_id'] == legacy['agent_id'] and new['capability_id'] == legacy['capability_id']
     assert new['request']['data_classification'] == 'LOCAL_ONLY'
     assert new['request']['max_cost_usd'] == 0
+    assert new['request']['response_schema_order'] == 'declared'
     assert new['request']['objective'].startswith(legacy['request']['objective'])
     context = json.loads(new['request']['context'])
     assert context['original_source_context'] == legacy['request']['context']
@@ -79,3 +80,91 @@ def test_wire_field_order_survives_sorted_storage_without_changing_semantic_dige
 def test_primary_structured_contract_cannot_borrow_another_responsibility():
     with pytest.raises(ValueError):
         canonical_case_spec('a18', 'responsibility.a27', CASE_ID)
+
+
+def test_published_shape_contract_keeps_default_canonical_transport():
+    from app.agent_dispatch_api import AgentRequest
+    from app.agent_cert_structured_roles import structured_role_case
+    from app.response_schema import canonicalize_schema
+    spec = structured_role_case('a04')
+    assert 'response_schema_order' not in spec['request']
+    request = AgentRequest(**spec['request'])
+    assert request.response_schema_order == 'canonical'
+    assert request.response_schema == canonicalize_schema(spec['request']['response_schema'])
+    assert 'response_schema_order' not in request.transport_dump()
+
+
+def test_explicit_order_survives_authenticated_request_and_actual_queue_storage(tmp_path, monkeypatch):
+    from app.agent_dispatch_api import AgentRequest
+    from app.job_queue import JobQueue
+    from app.direct_stream import inference_request, validate_owned_inference_request
+    from types import SimpleNamespace
+    spec = canonical_case_spec('a04', 'responsibility.a04', CASE_ID)
+    request = AgentRequest(**json.loads(json.dumps(spec['request'], sort_keys=True)))
+    assert request.transport_dump()['response_schema_order'] == 'declared'
+    fields = list(spec['request']['response_schema']['properties'])
+    path = tmp_path / 'queue.db'
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(path))
+    queue = JobQueue(path)
+    job = queue.submit(agent='a04', prompt='source fixture only', model='gemma3:4b',
+        response_format='strict_json', response_schema=request.response_schema,
+        response_schema_order=request.response_schema_order, max_retries=0)
+    restored = queue.get(job['id'])
+    assert restored['response_schema_order'] == 'declared'
+    provider = SimpleNamespace(model='gemma3:4b')
+    settings = SimpleNamespace(keep_alive=0, context_tokens=256, max_output_tokens=64)
+    payload, _, receipt = inference_request(restored, provider, settings=settings, options=lambda: {})
+    assert list(payload['format']['properties']) == fields
+    assert payload['format']['required'] == fields
+    assert receipt['response_schema_order'] == 'declared'
+    restored['inference_receipt'] = json.dumps(receipt)
+    validate_owned_inference_request(restored, request, provider, settings=settings, options=lambda: {})
+    altered = copy.deepcopy(restored)
+    altered['response_schema_order'] = 'canonical'
+    with pytest.raises(ValueError, match='Owned response schema order changed'):
+        validate_owned_inference_request(altered, request, provider, settings=settings, options=lambda: {})
+    altered = copy.deepcopy(restored)
+    altered_schema = json.loads(altered['response_schema'])
+    altered_schema['required'].reverse()
+    altered['response_schema'] = json.dumps(altered_schema)
+    with pytest.raises(ValueError):
+        validate_owned_inference_request(altered, request, provider, settings=settings, options=lambda: {})
+
+
+@pytest.mark.parametrize('order', ['guessed', True, None, 1])
+def test_schema_order_rejects_unrecognized_or_untyped_metadata(order, tmp_path):
+    from app.agent_dispatch_api import AgentRequest
+    from app.job_queue import JobQueue
+    from app.direct_stream import inference_request
+    from types import SimpleNamespace
+    spec = canonical_case_spec('a04', 'responsibility.a04', CASE_ID)
+    with pytest.raises(ValueError):
+        AgentRequest(**{**spec['request'], 'response_schema_order': order})
+    with pytest.raises(ValueError):
+        JobQueue(tmp_path / 'queue.db').submit(agent='a04', prompt='fixture',
+            response_format='strict_json', response_schema=spec['request']['response_schema'],
+            response_schema_order=order)
+    with pytest.raises(RuntimeError):
+        inference_request({'prompt': 'fixture', 'response_format': 'strict_json',
+            'response_schema': spec['request']['response_schema'], 'response_schema_order': order},
+            SimpleNamespace(model='fixture'),
+            settings=SimpleNamespace(keep_alive=0, context_tokens=256, max_output_tokens=64), options=lambda: {})
+
+
+def test_declared_order_requires_schema_and_idempotency_binds_order(tmp_path):
+    from app.agent_dispatch_api import AgentRequest
+    from app.job_queue import JobQueue
+    with pytest.raises(ValueError):
+        AgentRequest(capability='responsibility.a04', objective='fixture', response_schema_order='declared')
+    queue = JobQueue(tmp_path / 'queue.db')
+    with pytest.raises(ValueError):
+        queue.submit(agent='a04', prompt='fixture', response_schema_order='declared')
+    schema = canonical_case_spec('a04', 'responsibility.a04', CASE_ID)['request']['response_schema']
+    original = queue.submit(agent='a04', prompt='fixture', response_format='strict_json',
+        response_schema=schema, idempotency_key='fixture-order')
+    repeated = queue.submit(agent='a04', prompt='fixture', response_format='strict_json',
+        response_schema=schema, response_schema_order='canonical', idempotency_key='fixture-order')
+    assert repeated['id'] == original['id']
+    with pytest.raises(ValueError, match='conflicts'):
+        queue.submit(agent='a04', prompt='fixture', response_format='strict_json',
+            response_schema=schema, response_schema_order='declared', idempotency_key='fixture-order')

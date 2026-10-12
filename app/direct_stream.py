@@ -13,8 +13,13 @@ def inference_request(job, provider, *, settings, options):
     response_format = job.get('response_format', 'text')
     if response_format not in {'text', 'strict_json'}:
         raise RuntimeError('Invalid response format')
-    from .response_schema import validated_wire_schema
+    from .response_schema import canonicalize_schema, validated_wire_schema
+    schema_order = job.get('response_schema_order', 'canonical')
+    if type(schema_order) is not str or schema_order not in {'canonical', 'declared'}:
+        raise RuntimeError('Invalid response schema order')
     schema = job.get('response_schema')
+    if schema is None and schema_order != 'canonical':
+        raise RuntimeError('Declared schema order requires a response schema')
     if schema is not None:
         if response_format != 'strict_json':
             raise RuntimeError('Response schema requires strict_json')
@@ -22,7 +27,7 @@ def inference_request(job, provider, *, settings, options):
             if len(schema.encode('utf-8')) > 16384:
                 raise RuntimeError('Response schema exceeds budget')
             schema = json.loads(schema)
-        schema = validated_wire_schema(schema)
+        schema = (validated_wire_schema(schema) if schema_order == 'declared' else canonicalize_schema(schema))
     effective_options = dict(options())
     if response_format == 'strict_json':
         effective_options.setdefault('temperature', 0)
@@ -62,6 +67,8 @@ def inference_request(job, provider, *, settings, options):
         'message_roles': [message['role'] for message in messages],
         'sampling_repeatability': 'EXPLICIT_SETTINGS_NOT_A_DETERMINISM_GUARANTEE',
     }
+    if schema_order != 'canonical':
+        inference_receipt['response_schema_order'] = schema_order
     return payload, schema, inference_receipt
 
 
@@ -71,14 +78,19 @@ def validate_owned_inference_request(actual, original, provider, *, settings, op
     Hashes are observed execution metadata, not a signature or agent competence
     verdict. Historical requests without schemas retain their previous path.
     """
+    original_order = getattr(original, 'response_schema_order', 'canonical')
+    if actual.get('response_schema_order', 'canonical') != original_order:
+        raise ValueError('Owned response schema order changed')
     if original.response_schema is None:
         return
-    from .response_schema import validated_wire_schema
+    from .response_schema import canonicalize_schema, validated_wire_schema
     if actual.get('response_format') != original.response_format:
         raise ValueError('Owned response format changed')
     _, observed_schema, expected_receipt = inference_request(
         actual, provider, settings=settings, options=options)
-    if observed_schema != validated_wire_schema(original.response_schema):
+    expected_schema = (validated_wire_schema(original.response_schema) if original_order == 'declared'
+                       else canonicalize_schema(original.response_schema))
+    if observed_schema != expected_schema:
         raise ValueError('Owned response schema changed')
     recorded = actual.get('inference_receipt')
     if type(recorded) is not str or len(recorded.encode('utf-8')) > 16384:

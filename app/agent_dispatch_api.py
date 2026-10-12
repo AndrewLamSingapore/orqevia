@@ -87,6 +87,7 @@ class AgentRequest(BaseModel):
     preferred_provider: str | None = Field(default=None,min_length=1,max_length=100)
     response_format: Literal['text','strict_json'] = 'text'
     response_schema: dict | None = None
+    response_schema_order: Literal['canonical', 'declared'] = 'canonical'
     deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review',
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
@@ -96,10 +97,13 @@ class AgentRequest(BaseModel):
     @model_validator(mode='after')
     def validate_response_schema(self):
         if self.response_schema is not None:
-            from .response_schema import validated_wire_schema
+            from .response_schema import canonicalize_schema, validated_wire_schema
             if self.response_format != 'strict_json':
                 raise ValueError('Response schema requires strict_json')
-            self.response_schema = validated_wire_schema(self.response_schema)
+            self.response_schema = (validated_wire_schema(self.response_schema) if self.response_schema_order == 'declared'
+                                    else canonicalize_schema(self.response_schema))
+        elif self.response_schema_order != 'canonical':
+            raise ValueError('Declared schema order requires a response schema')
         return self
 
     def transport_dump(self, *, exclude=None):
@@ -115,6 +119,8 @@ class AgentRequest(BaseModel):
         value = super().model_dump(*args, **kwargs)
         if self.response_schema is None:
             value.pop('response_schema', None)
+        if self.response_schema_order == 'canonical':
+            value.pop('response_schema_order', None)
         return value
 
 
@@ -515,7 +521,7 @@ def inference_prompt(body: AgentRequest, tier: Tier) -> str:
                 'or the candidate\'s claim with independent evidence. '
                 'A more detailed role description never overrides the requested output contract. '
                 + ('Output schema (types and structure, not an answer):\n' +
-                   json.dumps(body.response_schema, sort_keys=False, separators=(',', ':')) + '\n'
+                   json.dumps(body.response_schema, sort_keys=body.response_schema_order == 'canonical', separators=(',', ':')) + '\n'
                    if body.response_schema is not None else '') +
                 'Role: '+responsibility['description']+'. Objective:\n'+body.objective+'\nContext:\n'+body.context)
     # Small context-free Nano tasks already contain the complete instruction.
@@ -784,7 +790,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         priority=body.priority,model_role='auto',model=route.backend.model,preferred_provider=route.backend.name,
         allow_cloud=route.backend.location=='cloud',data_classification=body.data_classification,task_class=body.task_class,
         max_cost_usd=body.max_cost_usd,max_retries=0,classification=body.classification,
-        response_format=body.response_format,response_schema=body.response_schema))
+        response_format=body.response_format,response_schema=body.response_schema,
+        response_schema_order=body.response_schema_order))
     return {'job':job,'correlation_id':task_id,'execution_model':'DIRECT_OBSERVED',
         'classification':body.classification,'agent_path':path,'registry_version':'1.0.0',
         'capability':body.capability,'tier':tier.name,'routing_ms':routing_ms,'model_selection_ms':model_selection_ms,

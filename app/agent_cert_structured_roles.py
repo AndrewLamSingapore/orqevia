@@ -52,4 +52,5 @@ def structured_normal_role_spec(agent: str, capability: str) -> dict:
     request['context'] = normal_role_raw_input_context(agent, legacy['request']['context'])
     request['response_format'] = 'strict_json'
     request['response_schema'] = contract['schema']
+    request['response_schema_order'] = 'declared'
     return spec
