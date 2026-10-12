@@ -1,0 +1,193 @@
+{
+  "observed_at_utc": "2026-10-12T01:07:55.930570+00:00",
+  "host": "DESKTOP-27LKJ2V",
+  "host_role": "ABEX",
+  "tested_orqevia_source": "8da9a4554cf26ed2d9164ad37cc07da881dc8e4a",
+  "runtime": {
+    "observed_at_utc": "2026-10-12T01:05:04.634173+00:00",
+    "observation_exit_code": 0,
+    "live": {
+      "health_ok": true,
+      "health_fields": [
+        "ok"
+      ],
+      "queue_status_counts": {
+        "completed": 89,
+        "failed": 1
+      },
+      "registry_agent_ids": [
+        "a01",
+        "a02",
+        "a04",
+        "a05",
+        "a06",
+        "a07",
+        "a09",
+        "a10",
+        "a12",
+        "a13",
+        "a14",
+        "a15",
+        "a16",
+        "a17",
+        "a18",
+        "a19",
+        "a20",
+        "a21",
+        "a26",
+        "a28",
+        "a29"
+      ]
+    },
+    "containers": [
+      {
+        "name": "/prime-epoch-20260919-prime-1",
+        "id": "a7aabd03b7acf587fe4cbbae605d6d1e4de44e7e086ff17bae5f2927cb1a5591",
+        "image_id": "sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68",
+        "source_revision": "61335a96293be627b240488debfb94294cdf9b34",
+        "state": "running",
+        "health": "healthy",
+        "started_at": "2026-10-12T01:04:43.535042021Z",
+        "restart_policy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "ports": {
+          "8000/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "8000"
+            }
+          ]
+        }
+      },
+      {
+        "name": "/prime-epoch-20260919-interface-1",
+        "id": "6d58a20a60a70b723c8822f5331ef6e917180c58611a51250c3b5fd60383939d",
+        "image_id": "sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5",
+        "source_revision": "b171253566e7c879283d2aacf699ae6c1ec8988e",
+        "state": "running",
+        "health": "healthy",
+        "started_at": "2026-10-12T01:04:43.947088106Z",
+        "restart_policy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "ports": {
+          "8443/tcp": [
+            {
+              "HostIp": "192.168.1.23",
+              "HostPort": "8443"
+            }
+          ]
+        }
+      },
+      {
+        "name": "/prime-epoch-20260919-ollama-1",
+        "id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+        "image_id": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+        "source_revision": null,
+        "state": "running",
+        "health": "healthy",
+        "started_at": "2026-10-12T01:04:42.950851914Z",
+        "restart_policy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "ports": {}
+      }
+    ]
+  },
+  "source_test_receipts": [
+    {
+      "receipt": "queue-admission-control.xml",
+      "sha256": "e8bc2dbe648e9a156a1ca00d5a949f76eafaa2cd11be0674f02c686cc94d715c",
+      "tests": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "receipt": "mlp-hf.xml",
+      "sha256": "10f69864c775c814302cc003c7c4480b2adde63fddb97fd3e6350e7765f49fd7",
+      "tests": 285,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "receipt": "ui.xml",
+      "sha256": "732edce8550888f1548a019c0eba22cfb1a728b9d4644947f73b9724c331216e",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "receipt": "autonomy-source.xml",
+      "sha256": "511e361fd6cecd6554a0a469105cbe792b7d19a349ae13a59a979ac8717c6457",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "handoffs": [
+    {
+      "lane": "Queue/full-suite failures",
+      "state": "Scoped source PASS",
+      "finding": "PR243 merged; FIFO and strict receipt-clock guard present on current main; 66 queue/admission/control tests passed",
+      "next": "Preserve original full-suite failures; no duplicate cherry-pick; full-suite PASS not claimed"
+    },
+    {
+      "lane": "MLP/Hugging Face",
+      "state": "Scoped source PASS",
+      "finding": "Current-main combined MLP/HF selection: 284 passed, 1 skipped",
+      "next": "Genuine target-provider/agent execution remains separate"
+    },
+    {
+      "lane": "Operational manifest",
+      "state": "FAIL freshness",
+      "finding": "12 stale reasons; no new deployment/physical/Dell receipts",
+      "next": "Collect fresh owning-system evidence before updating freshness timestamps"
+    },
+    {
+      "lane": "UI/GODS EYE",
+      "state": "Draft/source PASS",
+      "finding": "PR244 open draft, exact6be32da:10 tests pass; observatory fails closed",
+      "next": "Independent UI review/visual QA and release acceptance; no merge/public deployment from this sweep"
+    },
+    {
+      "lane": "Workflow identity",
+      "state": "FAIL exact identity",
+      "finding": "Protected initialization/signer bindings retain retired prime repository; two initialization files bind distinct batches",
+      "next": "Reviewed protected identity migration; no deletion/dispatch/replay/signature renewal"
+    },
+    {
+      "lane": "Dependencies",
+      "state": "Reconciled metadata; assessment pending",
+      "finding": "Authority versions match; scoped search returns no open Dependabot PR. VELYQUA73 is a current SDK57 patch proposal, not evidence of a stale SDK58 request",
+      "next": "Assess owning VELYQUA PR; do not close unknown/stale refs blindly"
+    },
+    {
+      "lane": "21-agent readiness",
+      "state": "Partial historical evidence",
+      "finding": "21 preserved receipt+batch digests verified; historical834 roles3PASS/18FAIL; live21registry IDs; L7zero",
+      "next": "Fresh reviewed semantic/backend improvement before new bounded qualification; never replay consumed claims"
+    },
+    {
+      "lane": "Hardware/WiFi handoff",
+      "state": "Inventory complete; direct Dell access BLOCKED",
+      "finding": "ABEX27LKJ2V hardware matches saved receipts; DellIPV4PH9 resolves192.168.1.17; SMB access denied",
+      "next": "Existing authenticated Dell share/connection required; secure boot/TPM/BitLocker probes UNKNOWN"
+    },
+    {
+      "lane": "Shared contracts Windows check",
+      "state": "Repair published draft",
+      "finding": "CRLF caused false stale check; canonical LF fix passed fresh autocrlf=true generation+conformance",
+      "next": "Review portfolio PR25; no merge or schema changes"
+    }
+  ],
+  "portfolio_repair_pr": "https://github.com/AndrewLamSingapore/AndrewLamSingapore/pull/25",
+  "boundaries": "No forced Git changes, production source promotion, paid calls, signing, cloud provisioning or evidence resets."
+}

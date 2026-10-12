@@ -36,6 +36,66 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX restoration and DELL handoff reconciliation — 12 October 2026
+
+### Claimed, not independently checked
+
+- Live ABEX identifies as `DESKTOP-27LKJ2V`, matching retained ABEX identity and
+  hardware receipts from 27 September and 8 October. The received DELL handoff's
+  `DESKTOP-BGD97NB` ABEX label conflicts with those observations. DELL resolves
+  separately as `DESKTOP-IPV4PH9`. DELL's SMB port responds, but share enumeration
+  returns access denied; direct DELL file reconciliation has not succeeded.
+- The three existing accepted backend, Interface and Ollama containers were
+  started with their preserved configuration and volumes. At 01:05 UTC all three
+  reported healthy. Backend source remains `61335a96293be627b240488debfb94294cdf9b34`;
+  Interface source remains `b171253566e7c879283d2aacf699ae6c1ec8988e`.
+  This was a service restart, not a source promotion or cloud migration.
+- The backend's genuine read-only health response was `ok: true`; its registry
+  contains 21 agent IDs. Its queue contains 89 completed and one failed job,
+  with no active jobs in the coherent stopped inspection or live observation.
+  The failed job remains preserved. Presence and health do not qualify agents.
+- Source `8da9a4554cf26ed2d9164ad37cc07da881dc8e4a` passed 66 queue/admission/control
+  tests, 284 MLP/Hugging Face tests (one skipped), and 19 autonomy-source tests.
+  UI candidate `6be32da9e5cb2bc84acf0449513845f027315b92` passed 10 UI tests.
+  These are scoped source checks, not a full-suite or live autonomy result.
+- Queue and receipt-clock repairs are already integrated through merged PR #243;
+  neither DELL commit should be blindly cherry-picked again. UI PR #244 and
+  qualification PR #251 remain draft/unmerged. UI checks do not establish
+  production or public-surface acceptance.
+- All 21 retained normal-role receipt and batch-record hashes match their saved
+  matrix. That historical `83461362fe7179ac1c92014d87154678e669814d` run remains
+  three PASS (A05, A16, A28) and 18 FAIL. No failures, signing expiry or claims
+  were rewritten. L7 remains 0/21; sustained seven-day independence is NOT TESTED.
+- The shared-contract generator's initial Windows stale result was reproduced
+  and traced to CRLF checkout conversion: regeneration produces no semantic
+  Git diff. Portfolio draft PR #25 pins generated validators and the hash
+  manifest to LF. A fresh `core.autocrlf=true` export passed generation check and
+  contract conformance. No schema/version/hash or production promotion changed.
+- Authority Engine at `f58033a2033c6a735789959a79807904465a4459` passed 46 source
+  tests. Current Authority Engine dependency versions match the received DELL
+  report, with no open Dependabot PR returned by the scoped search. VELYQUA
+  PR #73 proposes SDK 57 patch updates and requires its own assessment; the old
+  instruction to close stale dependency references does not establish its status.
+
+### Known broken / open
+
+- The current operational manifest still reports STALE with 12 reasons. Source
+  tests cannot refresh public deployment, DELL runtime or physical WebGL evidence.
+- Protected initialization and signer workflows still bind repository identity
+  to `AndrewLamSingapore/prime`, while the repository now identifies as
+  `AndrewLamSingapore/orqevia`. Those strict bindings fail closed. A protected
+  identity migration requires review; do not weaken identity checks, dispatch
+  signing workflows, replay one-shot batches or renew expired receipts.
+- The two initialization workflows bind distinct immutable batches; they must
+  not be deleted merely because their names appear overlapping.
+- DELL share access is denied. No direct DELL filesystem, latest local receipts,
+  authentication or remote execution has been verified in this session.
+- Seven-day autonomous operation, reboot/network recovery, full 21-agent
+  qualification, simulated-wallet acceptance, off-device restoration and
+  DigitalOcean operational migration remain unproven by this sweep.
+
+---
+
 ## Repository and brand rename — prime → orqevia, JARVIS PRIME → ORQEVIA — 11 October 2026
 
 ### Claimed, not independently checked
