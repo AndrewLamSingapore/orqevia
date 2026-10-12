@@ -13,6 +13,25 @@ sys.path.insert(0, str(ROOT))
 from app.jarvis_response_contract import validate_user_facing_answer
 
 
+def canonical_pwa_branding(pwa: Path) -> bool:
+    """Verify the preserved private PWA identity and exact install asset family."""
+    try:
+        manifest = json.loads((pwa / 'manifest.webmanifest').read_text(encoding='utf-8'))
+        icons = manifest['icons']
+        expected = {'/pwa/icons/orqevia-v1-192.png': '192x192',
+                    '/pwa/icons/orqevia-v1-512.png': '512x512'}
+        return (manifest['name'] == 'ORQEVIA · 奥启维亚'
+                and manifest['short_name'] == 'ORQEVIA'
+                and manifest['id'] == manifest['scope'] == manifest['start_url'] == '/pwa/'
+                and type(icons) is list and len(icons) == len(expected)
+                and {icon['src']: icon['sizes'] for icon in icons} == expected
+                and all(icon['type'] == 'image/png' and icon['purpose'] == 'any'
+                        and (pwa / icon['src'].removeprefix('/pwa/')).is_file()
+                        for icon in icons))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def verify() -> dict[str, object]:
     node = subprocess.run(["node", "--test", "clients/pwa/tests.mjs", "clients/pwa/followup-tests.mjs", "clients/pwa/revision-tests.mjs", "clients/pwa/candidate-tests.mjs"], cwd=ROOT, text=True, capture_output=True, check=False)
     pwa = ROOT / "clients" / "pwa"
@@ -23,7 +42,7 @@ def verify() -> dict[str, object]:
         "read_aloud_uses_governed_result": "voice.speak(spokenText(currentTask))" in (pwa / "app.mjs").read_text(encoding="utf-8"),
         "authoritative_session_refresh": "setInterval(" in (pwa / "app.mjs").read_text(encoding="utf-8") and "verifiedAt" in (pwa / "core.mjs").read_text(encoding="utf-8"),
         "deterministic_startup_recovery": (pwa / "recovery.js").is_file() and "startup-recovery" in (pwa / "index.html").read_text(encoding="utf-8"),
-        "canonical_branding": all("jarvis-prime-v1-" in icon["src"] for icon in json.loads((pwa / "manifest.webmanifest").read_text(encoding="utf-8"))["icons"]),
+        "canonical_branding": canonical_pwa_branding(pwa),
     }
     return {"verifier": "jarvis-candidate-v1", "checks": checks, "passed": sum(checks.values()), "total": len(checks), "production_touched": False, "physical_phone_tested": False, "node_output_tail": node.stdout.splitlines()[-6:]}
 
