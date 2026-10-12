@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "status": "PREPARATION_ONLY",
+  "resources_created": false,
+  "spend_authorized": false,
+  "deployment_performed": false,
+  "migration_performed": false,
+  "source_reference": "8da9a4554cf26ed2d9164ad37cc07da881dc8e4a",
+  "existing_runtime_owner": "ABEX",
+  "existing_image_entrypoint": "app.production_entry:app",
+  "existing_internal_port": 8000,
+  "persistent_domain_ownership": {
+    "registry": "config/agent_registry.json in ORQEVIA",
+    "queue": "existing ABEX compute-queue.db",
+    "cost_and_outcomes": "existing ABEX compute-ledger.db",
+    "action_records": "existing ABEX action-records.jsonl",
+    "simulated_treasury": "separate financial simulation domain; never provider billing"
+  },
+  "candidate_cloud_role": "Optional bounded text inference adapter execution only after authenticated transport and deployment approval; no independent coordinator or copied queue",
+  "provider_boundaries": {
+    "openai": {"secret_reference": "env:OPENAI_API_KEY", "outbound_endpoint": "https://api.openai.com/v1/responses"},
+    "deepseek": {"secret_reference": "env:DEEPSEEK_API_KEY", "outbound_endpoint": "https://api.deepseek.com/chat/completions"},
+    "secret_distribution": "Server-only runtime secret store; never Codex ChatGPT session credentials, Git, client PWA, build arguments, telemetry or email billing linkage",
+    "data_locality": "Existing CLOUD_PERMITTED classification and secret screening required for every selected/fallback route"
+  },
+  "app_platform_full_runtime_ready": false,
+  "readiness_reasons": [
+    "Existing queue and outcome storage are SQLite/WAL and action records are local files; no durable cloud storage adapter or validated migration has been implemented",
+    "Existing production_entry protects local transport and requires owning runtime identity; it is not an immediately deployable public cloud facade",
+    "App Platform ephemeral local filesystem cannot be treated as durable queue storage; newer NFS documentation does not establish SQLite/WAL suitability or acceptance",
+    "No account, target, region, instance size, cost envelope, authenticated ABEX/cloud transport or rollback receipt has been verified"
+  ],
+  "future_activation_requirements": [
+    "Owner-selected exact model and verified capability/rate receipts per provider",
+    "Existing queue caps and explicit cloud disclosure opt-in",
+    "DigitalOcean account access, exact target and approved resource cost",
+    "Durable storage and single-writer recovery design if coordinator ownership ever moves",
+    "Authenticated private transport that preserves current ABEX enrollment and credentials",
+    "Pinned image/source, retained previous deployment and validated rollback",
+    "Independent post-deployment health, source identity and role evidence; not inferred from an HTTP port"
+  ],
+  "official_references": [
+    "https://docs.digitalocean.com/products/app-platform/reference/app-spec/",
+    "https://docs.digitalocean.com/products/app-platform/how-to/use-environment-variables/",
+    "https://docs.digitalocean.com/products/app-platform/how-to/store-data/"
+  ]
+}

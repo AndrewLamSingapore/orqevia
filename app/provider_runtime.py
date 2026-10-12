@@ -133,6 +133,12 @@ class ChatCompletionProvider:
                 'stream_options':{'include_usage':True},
                 'max_completion_tokens':output_tokens,'store':False}
 
+    def normalize_stream_item(self, item):
+        return item
+
+    def stream_ended(self, item):
+        return False
+
     async def stream(self, model, messages, output_tokens):
         try:key=self.resolve(self.secret_ref)
         except Exception:raise ProviderFailure('CREDENTIAL_UNAVAILABLE',pre_execution=True) from None
@@ -146,7 +152,7 @@ class ChatCompletionProvider:
                         try:delay=max(0,min(30,float(response.headers.get('Retry-After','0'))))
                         except ValueError:delay=0
                         if not math.isfinite(delay):delay=0
-                        code='RATE_LIMIT' if response.status_code==429 else 'AUTHENTICATION' if response.status_code in (401,403) else 'PROVIDER_HTTP_FAILURE'
+                        code='RATE_LIMIT' if response.status_code==429 else 'AUTHENTICATION' if response.status_code in (401,403) else 'INSUFFICIENT_BALANCE' if response.status_code==402 else 'PROVIDER_HTTP_FAILURE'
                         if response.status_code in (429,503):
                             raw=bytearray();oversized=False
                             async for chunk in response.aiter_bytes():
@@ -178,6 +184,8 @@ class ChatCompletionProvider:
                         try:item=_decode_wire_json(value)
                         except (ValueError,UnicodeError,RecursionError,TypeError):raise ProviderFailure('MALFORMED_STREAM') from None
                         if not isinstance(item,dict):raise ProviderFailure('MALFORMED_STREAM')
+                        terminal=self.stream_ended(item)
+                        item=self.normalize_stream_item(item)
                         if item.get('error'):
                             # A 200 streaming response has been admitted. Even if it
                             # contains no visible tokens, execution may have occurred.
@@ -211,6 +219,9 @@ class ChatCompletionProvider:
                             if content is not None and not isinstance(content,str):raise ProviderFailure('MALFORMED_STREAM')
                             if content and finished and reason!='stop':raise ProviderFailure('MALFORMED_STREAM')
                             if content:yield Chunk(text=content)
+                        if terminal:
+                            ended=True
+                            break
                     if not ended or not finished:raise ProviderFailure('INCOMPLETE_STREAM')
                     yield Chunk(complete=True)
         except httpx.TimeoutException:raise ProviderFailure('PROVIDER_TIMEOUT') from None
