@@ -92,6 +92,14 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only the exact dated closure observation; all history pins remain.
+    closure_start = after.index("## Coordinated closure observation - 12 October 2026")
+    assert after.count("## Coordinated closure observation - 12 October 2026") == 1
+    closure_end = after.index("## Repository and brand rename", closure_start)
+    closure_update = after[closure_start:closure_end].encode("utf-8")
+    assert len(closure_update) == 3595
+    assert hashlib.sha256(closure_update).hexdigest() == "83856c29408145c35837c910edfae964fc61ddebcdd9602220cb2edd8cec2c37"
+    after = after[:closure_start] + after[closure_end:]
     # Admit exactly this new dated rename/rebrand record before the byte-pinned
     # 8 October observation; every prior section pin stays unchanged.
     rebrand_start = after.index("## Repository and brand rename")

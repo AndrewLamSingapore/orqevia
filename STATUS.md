@@ -36,6 +36,64 @@ If you are an AI agent updating this file:
 
 ---
 
+## Coordinated closure observation - 12 October 2026
+
+### Claimed, not independently checked
+
+- Canonical GitHub main was read at `8da9a4554cf26ed2d9164ad37cc07da881dc8e4a`.
+  Existing ABEX repository roots include stale checkouts; their HEADs are not
+  current deployment identities. The fresh read-only census records seven
+  repositories and 155 worktrees, including existing uncommitted work.
+- Actual candidate `18ec93990eeccdbde60b85b32f5f5e0f0cb7849d` receipts retain
+  **7 PASS / 14 FAIL** normal roles. Independent offline replay reproduced that
+  result and verified all 21 receipt/model-output hashes. This replay is not
+  21 fresh inferences. The 14 semantic failures remain open. L7 remains 0/21;
+  candidate promotion is BLOCKED.
+- Source successor `1a4e1698d3fbad18fc88d57f23697a51c8d126d8` preserves historical
+  A19 case bytes and introduces an explicit structured local contract version.
+  Focused regressions passed 259 checks; separate review passed 102 checks.
+  Legacy protected transport rejects the new case bytes. No historical receipt,
+  hash pin, policy or semantic oracle was replaced. Exact-head cloud quality
+  and fresh live role acceptance remain required.
+- An isolated dashboard patch repairs late session responses, stale provenance,
+  44-pixel mobile targets and bounded telemetry reads. Offline PWA, session-race
+  and telemetry regressions passed; original dirty PWA work was preserved.
+  This patch is not deployed and does not prove browser or physical acceptance.
+- Scoped fresh product/source checks: Authority 47 tests, Sky 21 tests,
+  Game 17 command segments, Portal six portfolio segments, HF/MLP 284 tests
+  with one skip. Fixture learning/admission tests do not prove live model
+  capability. Game's recorded backend INACTIVE/NXDOMAIN and authenticated
+  Portal journeys remain open; VELYQUA physical sensors stay parked.
+
+### Known broken / open
+
+- Current sandbox cannot access Docker's named pipe or privileged host probes.
+  Fresh role inference, live provider routing/usage and runtime identity were
+  not reverified here. OpenAI-only credential/model/budget and provider evidence
+  are needed; no DeepSeek inference or charges were activated.
+- Dell authenticated TLS/artifact retrieval, owner/member physical iPhone
+  acceptance and real off-device restoration remain BLOCKED by device/session,
+  independent destination/key-custody and actual execution dependencies.
+  Server-side persistence evidence is distinct from those acceptance gates.
+- Manifest observations remain stale. Historical SFC/DISM/Defender/SSD and
+  Reliability evidence retain dates and limitations. No source pass refreshed
+  deployment, physical-device or host-health receipts.
+- Numbers #272 and #273 are pull requests. #272 contains source-vs-live and
+  obsolete body-pin claims requiring correction. #273 changes display names,
+  leaving old repository guards and an inaccurate workflow-deletion statement.
+  Drafts #215, #244 and #270 retain their live-provider, integration and simulated
+  finance limits. No unsafe merge, signing, deployment or trust widening occurred.
+
+Evidence package: `C:/Users/Admin/Documents/ABEX/test-runs/orqevia-closure-20261012`.
+The baseline is `BASELINE-20261012T055650Z.json`, SHA-256
+`45a2c923133e6ce78baba9f7ee17b95161cec627130d077467e3fe7349bb31b0`.
+Raw reports: `roles/ROLE-FAILURE-DIAGNOSIS.json`,
+`roles/INDEPENDENT-REVIEW-1a4e169.json`, `dashboard/acceptance.md`,
+`operations/ACCEPTANCE.md`, `operations/DEVICE-AND-RESTORE-ACCEPTANCE.md`.
+Only Lam may promote these claims to Verified. Six product boundaries remain.
+
+---
+
 ## Repository and brand rename — prime → orqevia, JARVIS PRIME → ORQEVIA — 11 October 2026
 
 ### Claimed, not independently checked
