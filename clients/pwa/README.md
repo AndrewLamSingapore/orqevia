@@ -22,6 +22,22 @@ The paired backend supplies:
 
 No browser bearer-token storage, provider API call, caller-selected authority, or frontend cloud credential exists. HttpOnly session cookies are not read by JavaScript. Enrollment codes are cleared immediately after submission and are not persisted.
 
+The candidate dashboard uses `GET /interface/v1/telemetry` under the existing
+`health.read` permission. Responses are bound to the authenticated client and
+marked `no-store`. Counts are explicitly shared workspace aggregates,
+not a projection of another user's task bodies. Read-only SQLite observations
+have lock and query budgets; unavailable or interrupted observations stay
+unavailable. Registry membership does not prove role competence, heartbeat or
+readiness. Host utilization and balances remain unavailable without collectors.
+
+Session validation rejects superseded responses. Task, history, upload and
+artifact rendering carry the originating client and session generation, so an
+account change cannot render an earlier account's late response. Ordinary
+same-client refresh preserves its owned result. The functional candidate uses
+shell `jarvis-shell-v16` while preserving `/pwa/`, the manifest and icon identity,
+cookie names and existing client-scoped IndexedDB references. A shell update is
+source readiness until an installed browser/PWA update is observed.
+
 ## Recovery and integrity
 
 The task view offers **Follow up on this task** for a completed task with a server revision. This explicitly switches the composer from a new objective to a continuation of that same task ID. Typed text and reviewed browser dictation use the same path. **Switch to new objective** returns to the normal composer. Attachments are disabled in continuation mode because this route does not yet ingest uploads.
