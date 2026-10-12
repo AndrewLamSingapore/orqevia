@@ -42,6 +42,8 @@ def bind_mock_inference_request(job, original):
     from app.direct_stream import inference_request
     from app.compute_profile import generation_options
     job['response_format'] = original.response_format
+    if original.response_schema_order != 'canonical':
+        job['response_schema_order'] = original.response_schema_order
     job['response_schema'] = (json.dumps(original.response_schema)
                               if original.response_schema is not None else None)
     _, _, receipt = inference_request(job, SimpleNamespace(model=job['model']),

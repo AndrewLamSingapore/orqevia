@@ -150,6 +150,7 @@ def authorize(authorization: str | None) -> None:
 class SubmitJob(BaseModel):
     response_format: Literal['text', 'strict_json'] = 'text'
     response_schema: dict | None = None
+    response_schema_order: Literal['canonical', 'declared'] = 'canonical'
     agent: str=Field(min_length=1,max_length=80)
     prompt: str=Field(min_length=1,max_length=120000)
     priority: str|int="normal"
@@ -169,10 +170,13 @@ class SubmitJob(BaseModel):
     @model_validator(mode='after')
     def validate_response_schema(self):
         if self.response_schema is not None:
-            from .response_schema import validated_wire_schema
+            from .response_schema import canonicalize_schema, validated_wire_schema
             if self.response_format != 'strict_json' or self.allow_cloud or self.external_execution:
                 raise ValueError('Response schema requires local strict_json execution')
-            self.response_schema = validated_wire_schema(self.response_schema)
+            self.response_schema = (validated_wire_schema(self.response_schema) if self.response_schema_order == 'declared'
+                                    else canonicalize_schema(self.response_schema))
+        elif self.response_schema_order != 'canonical':
+            raise ValueError('Declared schema order requires a response schema')
         return self
 
 

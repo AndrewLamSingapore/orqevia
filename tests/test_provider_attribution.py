@@ -6,6 +6,7 @@ from app.outcome_metrics import OutcomeMetrics
 from tests.test_provider_runtime import MODEL,stream_response
 from tests.test_objective_inference_evidence import evidence
 from app import objective_api
+from app.openai_deepseek_providers import OpenAIResponsesProvider
 
 def run(body,headers=None):
     provider=ChatCompletionProvider('https://fixture.invalid/v1/chat/completions','env:FIXTURE',
@@ -27,6 +28,20 @@ def test_missing_metadata_and_usage_stay_unknown():
     result=run(stream_response(usage=False))
     assert result['provider_trace']==dict(request_id=None,response_id=None,reported_model=None)
     assert result['cost_usd'] is None and result['cost_basis']=='unknown'
+
+def test_openai_responses_retains_nested_response_metadata_and_provider_usage():
+    response={'id':'resp_fixture','model':'provider-resolved-model','status':'completed',
+        'output':[{'type':'message','role':'assistant','content':[{'type':'output_text','text':'OK'}]}],
+        'usage':{'input_tokens':7,'output_tokens':2,'input_tokens_details':{'cached_tokens':1}}}
+    frames=[{'type':'response.created','response':{'id':response['id'],'model':response['model']}},
+        {'type':'response.output_text.delta','delta':'OK'}, {'type':'response.completed','response':response}]
+    body=''.join('data: '+json.dumps(frame)+'\n\n' for frame in frames)
+    adapter=OpenAIResponsesProvider(secret_resolver=lambda _: 'fixture-only',
+        transport=httpx.MockTransport(lambda _:httpx.Response(200,text=body,headers={'x-request-id':'req_fixture'})))
+    result=asyncio.run(complete(adapter,MODEL,[],output_tokens=16,max_retries=0))
+    assert result['text']=='OK' and result['usage'].input_tokens==7 and result['usage'].output_tokens==2
+    assert result['provider_trace']=={'request_id':'req_fixture','response_id':'resp_fixture','reported_model':'provider-resolved-model'}
+    assert result['billing_status']=='unreconciled'
 
 @pytest.mark.parametrize('value',['sk-sensitive','Bearersecret','bad id','x'*201])
 def test_bad_header_is_not_logged(value):
