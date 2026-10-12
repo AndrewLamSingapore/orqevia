@@ -36,6 +36,41 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dell independent verification - 12 October 2026
+
+### Claimed, not independently checked
+
+- Dell (DESKTOP-IPV4PH9, Latitude 7320) hardware inventory: Intel Core
+  i7-1185G7 (4 cores / 8 threads), 32 GB LPDDR4X-4267 (soldered, no upgrade),
+  512 GB WDC PC SN530 NVMe (Healthy), Intel Iris Xe iGPU (WDDM 3.2,
+  DirectX 12.1), no discrete GPU, no NPU. Windows 11 Pro 26H2 build 26300.9550.
+- Dell benchmarks (non-destructive, bounded): sequential SSD read about
+  1500 MB/s; CPU synthetic loop single 1.61 s / multi 1.45 s. The desktop
+  stayed responsive at full CPU load. Reported by Dell Codex, not yet
+  independently checked by Lam.
+- DirectML GPU inference verified on Dell after owner-approved installation of
+  onnxruntime-directml into an isolated venv: a small ONNX MLP executed
+  exclusively on the Intel Iris Xe DML provider. For tiny models the CPU is
+  faster (dispatch overhead); the GPU benefit applies only to larger models.
+- Four sovereign systems re-verified green and fast-forwarded to GitHub main:
+  the-portal 4d0643d, sky-tablet 7480bf0, game-platform 6b4e415, velyqua
+  bf25a06. Authority Engine passed 46/46 tests plus a production build on its
+  feature branch. Reported by Dell Codex, not yet spot-checked by Lam.
+- GitHub reconciliation: the repository was already renamed from prime to
+  orqevia and SSOT retired in favor of STATUS.md; Dell local checkouts now
+  match origin/main.
+- Draft branch checks reproduced locally by Dell Codex: simulation PR #270
+  640/640, gateway PR #215 68/68, UI PR #244 10/10. All three remain unmerged
+  drafts and are not production.
+- ABEX hardware values remain REPORTED (not freshly verified): the ABEX host
+  did not serve Dell-facing services during this session, and the prime.runtime
+  acceptance receipt remains unpublished.
+- Bug sweep (Dell Codex): the STATUS.md byte-pin history test is brittle and
+  fails on legitimate STATUS.md edits (observed on PR #268). The
+  authority-engine README STATUS-authority reference gap was already fixed.
+
+---
+
 ## Repository and brand rename — prime → orqevia, JARVIS PRIME → ORQEVIA — 11 October 2026
 
 ### Claimed, not independently checked

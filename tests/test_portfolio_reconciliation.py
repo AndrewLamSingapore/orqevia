@@ -92,6 +92,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit exactly this new 12 October Dell verification record; every prior
+    # section pin stays unchanged.
+    dell_title = "## Dell independent verification - 12 October 2026"
+    assert after.count(dell_title) == 1
+    dell_start = after.index(dell_title)
+    dell_end = after.index("## Repository and brand rename", dell_start)
+    dell_update = after[dell_start:dell_end].encode("utf-8")
+    assert len(dell_update) == 2020
+    assert hashlib.sha256(dell_update).hexdigest() == "c6134b4fb43d7f0e0ac665242a3adf8934dde23fb2907c4aa9b170ede3afabbd"
+    after = after[:dell_start] + after[dell_end:]
     # Admit exactly this new dated rename/rebrand record before the byte-pinned
     # 8 October observation; every prior section pin stays unchanged.
     rebrand_start = after.index("## Repository and brand rename")
