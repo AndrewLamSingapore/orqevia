@@ -111,9 +111,32 @@ def _execute(job: dict, provider: Provider) -> dict:
         return execute_cloud(job,provider,DATA,lambda:queue.get(job['id'])['status']=='cancelled')
     record=ActionRecord(job['id'],job['agent'],'inference.run','ollama',
         classification=job.get('classification','R0'),model_backend=provider.model)
-    return DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
-        settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
-        cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+    # Persist actual local usage before the queue exposes completion. A later
+    # peer read must not create/change the subject's accounting projection.
+    from .outcome_metrics import OutcomeMetrics
+    from .agent_dispatch_api import local_model_backends
+    import uuid
+    tier=next((backend.tier.name for backend in local_model_backends()
+               if backend.name==provider.name and backend.model==provider.model),None)
+    if tier is None:
+        raise PermissionError('Local provider is not an existing configured role')
+    metrics=OutcomeMetrics(DATA/'compute-ledger.db')
+    started=time.monotonic();answer=None;failure='LOCAL_INFERENCE_FAILED'
+    try:
+        answer=DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
+            settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
+            cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+        failure='STRICT_JSON_CONTRACT_FAILED' if answer.get('error')=='STRICT_JSON_CONTRACT_FAILED' else None
+        return answer
+    finally:
+        metrics.record(attempt_id=uuid.uuid4().hex,task_id=job['id'],task_class=job.get('task_class','auto'),
+            tier=tier,seconds=time.monotonic()-started,
+            input_tokens=answer.get('input_tokens') if answer else None,
+            output_tokens=answer.get('output_tokens') if answer else None,cost=0,
+            agent_id=job['agent'],provider=provider.name,model=provider.model,retries=0,
+            requested_tier=tier,requested_provider=provider.name,requested_model=provider.model,
+            fallback_route=[],error_classifications=[failure] if failure else [],
+            success=answer is not None and failure is None,failure_kind=failure)
 
 
 pool=WorkerPool(queue,providers(),_execute)
