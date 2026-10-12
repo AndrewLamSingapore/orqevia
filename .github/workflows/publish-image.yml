@@ -1,4 +1,4 @@
-name: Publish PRIME Image
+name: Publish ORQEVIA Image
 
 on:
   workflow_dispatch:

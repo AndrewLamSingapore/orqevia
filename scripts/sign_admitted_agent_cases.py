@@ -196,8 +196,8 @@ def run(raw, *, root, protected_source_revision, public_pin, sign_digest, now,
 def main():
     try:
         from scripts.azure_verifier_live_canary import _azure_token, _oidc, _sign
-        expected = 'AndrewLamSingapore/prime/.github/workflows/prime-verifier-oidc.yml@refs/heads/main'
-        if (os.environ.get('GITHUB_REPOSITORY') != 'AndrewLamSingapore/prime' or
+        expected = 'AndrewLamSingapore/orqevia/.github/workflows/prime-verifier-oidc.yml@refs/heads/main'
+        if (os.environ.get('GITHUB_REPOSITORY') != 'AndrewLamSingapore/orqevia' or
                 os.environ.get('GITHUB_REF') != 'refs/heads/main' or
                 os.environ.get('GITHUB_REF_PROTECTED') != 'true' or
                 os.environ.get('GITHUB_EVENT_NAME') != 'workflow_dispatch' or

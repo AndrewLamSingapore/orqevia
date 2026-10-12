@@ -3,6 +3,19 @@ import hashlib,json,re,subprocess
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+
+_SECRET_PATTERNS = (
+    ('private_key', rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----(?:\r?\n|\\n|\\r\\n)[A-Za-z0-9+/=]{32}'),
+    # A credential prefix starts a token; the suffix of "task-UUID" does not.
+    # Underscores, hyphens, path separators and punctuation can precede a key.
+    ('openai_key', rb'(?<![A-Za-z0-9])sk-[A-Za-z0-9_-]{40,}'),
+    ('github_token', rb'gh[pousr]_[A-Za-z0-9]{30,}'),
+)
+
+def secret_pattern_labels(raw):
+    """Identify credential patterns without returning or logging their contents."""
+    return tuple(label for label, pattern in _SECRET_PATTERNS if re.search(pattern, raw))
+
 def component_hash_matches(path, expected):
     raw=path.read_bytes()
     lf=raw.replace(b'\r\n',b'\n')
@@ -31,8 +44,7 @@ def validate():
         if path.suffix=='.py':compile(raw,str(path),'exec')
         if path.suffix=='.json':json.loads(raw)
         # Report paths only: never print matched secret material.
-        patterns=[rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----\r?\n[A-Za-z0-9+/=]{32}',rb'sk-[A-Za-z0-9_-]{40,}',rb'gh[pousr]_[A-Za-z0-9]{30,}']
-        if any(re.search(p,raw) for p in patterns):findings.append(name)
+        if secret_pattern_labels(raw):findings.append(name)
     assert not findings,{'suspected_secret_paths':findings}
     for name in ('contracts/task-v1.schema.json','contracts/artifact-v1.schema.json','config/agent_registry_v1.schema.json'):
         schema=json.loads((ROOT/name).read_text())

@@ -27,7 +27,7 @@ def test_pinned_canary_sign_verify_and_tamper(monkeypatch, capsys):
     private = ec.generate_private_key(ec.SECP256R1())
     pin = {"key_id": KEY_ID, "jwk": _public(private)}
     calls = []
-    monkeypatch.setenv("GITHUB_REPOSITORY", "AndrewLamSingapore/prime")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "AndrewLamSingapore/orqevia")
     monkeypatch.setenv("GITHUB_REF", "refs/heads/main")
     monkeypatch.setenv("GITHUB_REF_PROTECTED", "true")
     monkeypatch.setenv("GITHUB_EVENT_NAME", "workflow_dispatch")
@@ -88,7 +88,7 @@ def test_oidc_reusable_revision_must_match_checkout(monkeypatch):
     claims = {
         "iss": "https://token.actions.githubusercontent.com",
         "aud": canary.AUDIENCE, "sub": canary.SUBJECT,
-        "repository": "AndrewLamSingapore/prime",
+        "repository": "AndrewLamSingapore/orqevia",
         "repository_id": "1345668764", "repository_owner_id": "313231443",
         "ref": "refs/heads/main", "ref_protected": "true",
         "workflow_ref": canary.CALLER, "job_workflow_ref": canary.SIGNER,
@@ -138,7 +138,7 @@ class CanaryTests(unittest.TestCase):
                 canary._decode(value)
 
     def test_non_main_cannot_request_identity(self):
-        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "AndrewLamSingapore/prime",
+        with patch.dict(os.environ, {"GITHUB_REPOSITORY": "AndrewLamSingapore/orqevia",
                                   "GITHUB_REF": "refs/heads/feature",
                                   "GITHUB_REF_PROTECTED": "true",
                                   "GITHUB_EVENT_NAME": "workflow_dispatch"}):

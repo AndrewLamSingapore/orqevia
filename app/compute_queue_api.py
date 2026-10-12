@@ -11,7 +11,7 @@ from typing import Literal
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
@@ -111,9 +111,32 @@ def _execute(job: dict, provider: Provider) -> dict:
         return execute_cloud(job,provider,DATA,lambda:queue.get(job['id'])['status']=='cancelled')
     record=ActionRecord(job['id'],job['agent'],'inference.run','ollama',
         classification=job.get('classification','R0'),model_backend=provider.model)
-    return DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
-        settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
-        cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+    # Persist actual local usage before the queue exposes completion. A later
+    # peer read must not create/change the subject's accounting projection.
+    from .outcome_metrics import OutcomeMetrics
+    from .agent_dispatch_api import local_model_backends
+    import uuid
+    tier=next((backend.tier.name for backend in local_model_backends()
+               if backend.name==provider.name and backend.model==provider.model),None)
+    if tier is None:
+        raise PermissionError('Local provider is not an existing configured role')
+    metrics=OutcomeMetrics(DATA/'compute-ledger.db')
+    started=time.monotonic();answer=None;failure='LOCAL_INFERENCE_FAILED'
+    try:
+        answer=DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
+            settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
+            cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+        failure='STRICT_JSON_CONTRACT_FAILED' if answer.get('error')=='STRICT_JSON_CONTRACT_FAILED' else None
+        return answer
+    finally:
+        metrics.record(attempt_id=uuid.uuid4().hex,task_id=job['id'],task_class=job.get('task_class','auto'),
+            tier=tier,seconds=time.monotonic()-started,
+            input_tokens=answer.get('input_tokens') if answer else None,
+            output_tokens=answer.get('output_tokens') if answer else None,cost=0,
+            agent_id=job['agent'],provider=provider.name,model=provider.model,retries=0,
+            requested_tier=tier,requested_provider=provider.name,requested_model=provider.model,
+            fallback_route=[],error_classifications=[failure] if failure else [],
+            success=answer is not None and failure is None,failure_kind=failure)
 
 
 pool=WorkerPool(queue,providers(),_execute)
@@ -126,6 +149,8 @@ def authorize(authorization: str | None) -> None:
 
 class SubmitJob(BaseModel):
     response_format: Literal['text', 'strict_json'] = 'text'
+    response_schema: dict | None = None
+    response_schema_order: Literal['canonical', 'declared'] = 'canonical'
     agent: str=Field(min_length=1,max_length=80)
     prompt: str=Field(min_length=1,max_length=120000)
     priority: str|int="normal"
@@ -140,6 +165,19 @@ class SubmitJob(BaseModel):
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
     preferred_provider: str|None=None
+    idempotency_key: str|None=Field(default=None,min_length=1,max_length=128,pattern=r'^[A-Za-z0-9._:-]+$')
+
+    @model_validator(mode='after')
+    def validate_response_schema(self):
+        if self.response_schema is not None:
+            from .response_schema import canonicalize_schema, validated_wire_schema
+            if self.response_format != 'strict_json' or self.allow_cloud or self.external_execution:
+                raise ValueError('Response schema requires local strict_json execution')
+            self.response_schema = (validated_wire_schema(self.response_schema) if self.response_schema_order == 'declared'
+                                    else canonicalize_schema(self.response_schema))
+        elif self.response_schema_order != 'canonical':
+            raise ValueError('Declared schema order requires a response schema')
+        return self
 
 
 class Approval(BaseModel):
@@ -199,6 +237,13 @@ def provider_health(authorization: str|None=Header(None)):
     authorize(authorization)
     from .cloud_execution import configured_provider_health
     return configured_provider_health()
+
+
+@router.get('/providers/usage')
+def provider_usage(authorization: str|None=Header(None)):
+    authorize(authorization)
+    from .provider_usage import usage_projection
+    return usage_projection(DATA/'compute-ledger.db',POLICY)
 
 
 def start_compute_queue() -> None: pool.start()

@@ -34,6 +34,23 @@ def digest(value):
     return hashlib.sha256(value).hexdigest()
 
 
+def bind_mock_inference_request(job, original):
+    """Represent the new structural metadata in this explicit source fixture."""
+    if original.response_schema is None:
+        # Legacy task fixtures keep their original schema-less transport.
+        return
+    from app.direct_stream import inference_request
+    from app.compute_profile import generation_options
+    job['response_format'] = original.response_format
+    if original.response_schema_order != 'canonical':
+        job['response_schema_order'] = original.response_schema_order
+    job['response_schema'] = (json.dumps(original.response_schema)
+                              if original.response_schema is not None else None)
+    _, _, receipt = inference_request(job, SimpleNamespace(model=job['model']),
+                                     settings=dispatch.SETTINGS, options=generation_options)
+    job['inference_receipt'] = json.dumps(receipt)
+
+
 @pytest.fixture
 def configured(tmp_path, monkeypatch):
     global compute_queue_api, objective_api
@@ -68,6 +85,7 @@ def configured(tmp_path, monkeypatch):
                completed_at=(now - timedelta(seconds=1)).isoformat())
     original = dispatch.AgentRequest(**canonical_role_spec('a19', 'responsibility.a19')['request'])
     job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION)
+    bind_mock_inference_request(job, original)
     monkeypatch.setattr(compute_queue_api, 'providers', lambda: [
         SimpleNamespace(name='ollama-deep', kind='local', model='fixture-model')])
     def get_job(key):
@@ -214,6 +232,7 @@ def test_existing_opt_in_context_and_skill_prefixes_are_reconstructed(configured
     original = dispatch.AgentRequest(**canonical_role_spec('a19', 'responsibility.a19')['request'])
     skills = select_skill_pack('a19', original.task_class, Tier.MINI) if skills_on else None
     configured.job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION, skills)
+    bind_mock_inference_request(configured.job, original)
     result = run(configured)
     assert result['review_action_durable'] is True and result['certification'] == 'UNVERIFIED'
 
@@ -370,4 +389,38 @@ def test_final_owned_objective_read_must_succeed_before_review_artifact(configur
             raise KeyError('synthetic lost owned state')
         return original(*args, **kwargs)
     monkeypatch.setattr(objective_api, 'get_read_only', read_once)
+    reject(configured)
+
+
+def test_explicit_structured_case_reconstructs_owned_prompt_and_keeps_legacy_identity(configured):
+    """Mock source regression only; no live model or runtime acceptance."""
+    from app.agent_cert_role_review import canonical_case_spec
+    from app.agent_cert_structured_roles import CASE_ID
+    spec = canonical_case_spec('a19', 'responsibility.a19', CASE_ID)
+    execution = configured.payload['execution']
+    execution['test_case'] = 'normal_structured'
+    execution['case_spec'] = spec
+    original = dispatch.AgentRequest(**spec['request'])
+    configured.job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION)
+    bind_mock_inference_request(configured.job, original)
+    configured.payload['expected_execution_sha256'] = digest(canonical(execution))
+    result = run(configured)
+    assert result['state'] == 'COMPLETED'
+    from app.artifact_factory import ArtifactFactory
+    _, raw = ArtifactFactory(configured.root / 'artifacts').retrieve(result['artifact']['artifact_id'])
+    review = json.loads(raw)
+    assert review['test_case'] == 'normal_structured'
+    assert review['oracle_id'] == 'group_two_exact_role_oracle/v1'
+    assert review['case_spec_sha256'] == digest(canonical(spec))
+    assert review['certification'] == 'UNVERIFIED'
+
+
+def test_structured_case_cannot_change_owned_source_to_obtain_acceptance(configured):
+    from app.agent_cert_role_review import canonical_case_spec
+    from app.agent_cert_structured_roles import CASE_ID
+    execution = configured.payload['execution']
+    execution['test_case'] = 'normal_structured'
+    execution['case_spec'] = canonical_case_spec('a19', 'responsibility.a19', CASE_ID)
+    execution['case_spec']['request']['context'] = 'altered source facts'
+    configured.payload['expected_execution_sha256'] = digest(canonical(execution))
     reject(configured)

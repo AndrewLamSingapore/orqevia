@@ -42,10 +42,13 @@ PROVIDER_UNAVAILABLE PROVIDER_UNQUALIFIED QA_INPUT_BUDGET_EXCEEDED
 QA_RESPONSE_SIZE_EXCEEDED RATE_LIMIT REASONING_BUDGET_CONFIG_INVALID
 REASONING_BUDGET_COST_EXCEEDED REASONING_BUDGET_EXTENSION_DENIED
 REASONING_BUDGET_PRICE_UNAVAILABLE STREAM_SIZE_EXCEEDED TASK_TIMEOUT
-UNSUPPORTED_COMPLETION'''.split())
+LOCAL_INFERENCE_FAILED STRICT_JSON_CONTRACT_FAILED UNSUPPORTED_COMPLETION
+INVALID_PROVIDER_TRACE PROVIDER_TRACE_CHANGED'''.split())
 _INFERENCE_DETAILS = frozenset(('agent_id', 'provider', 'model', 'cached_tokens',
     'retries', 'success', 'failure_kind', 'requested_tier', 'requested_provider',
     'requested_model', 'fallback_route', 'error_classifications'))
+_INFERENCE_ATTRIBUTION = frozenset(('input_tokens','output_tokens',
+    'provider_request_id','provider_response_id','reported_model','cost_basis','billing_status'))
 
 
 def inference_attempt_projection(jobs):
@@ -124,7 +127,7 @@ def inference_attempt_projection(jobs):
             if type(detail_size) is not int or not 2<=detail_size<=32768:raise ValueError()
             detail=json.loads(raw,object_pairs_hook=unique_json,
                 parse_constant=lambda _:(_ for _ in ()).throw(ValueError()))
-            if not isinstance(detail,dict) or set(detail)-_INFERENCE_DETAILS:raise ValueError()
+            if not isinstance(detail,dict) or set(detail)-(_INFERENCE_DETAILS|_INFERENCE_ATTRIBUTION):raise ValueError()
             job=bound[jid]
             requested=(detail['requested_provider'],detail['requested_model'])
             selected=(detail['provider'],detail['model'])
@@ -163,6 +166,21 @@ def inference_attempt_projection(jobs):
                 'elapsed_seconds':number(seconds,86400),
                 'job_started_at':timestamp(job.get('started_at')),
                 'job_completed_at':timestamp(job.get('completed_at'))}
+            if set(detail)&_INFERENCE_ATTRIBUTION:
+                if not _INFERENCE_ATTRIBUTION<=set(detail):raise ValueError()
+                from .provider_runtime import _trace_value,ProviderFailure
+                try:
+                    trace={field:_trace_value(detail[field],model=field=='reported_model')
+                        for field in ('provider_request_id','provider_response_id','reported_model')}
+                except ProviderFailure:raise ValueError() from None
+                inp=integer(detail['input_tokens'],10**9);out=integer(detail['output_tokens'],10**9)
+                expected_total=None if inp is None or out is None else inp+out
+                if expected_total!=total or cached is not None and (inp is None or cached>inp):raise ValueError()
+                basis=detail['cost_basis']
+                if basis not in {'unknown','provider_usage_x_catalog_rates'} or detail['billing_status']!='unreconciled':raise ValueError()
+                if (basis=='unknown')!=(cost is None):raise ValueError()
+                if basis!='unknown' and expected_total is None:raise ValueError()
+                receipt.update(**trace,input_tokens=inp,output_tokens=out,cost_basis=basis,billing_status='unreconciled')
             receipt['evidence_sha256']=hashlib.sha256(json.dumps(receipt,sort_keys=True,
                 separators=(',',':'),ensure_ascii=True,allow_nan=False).encode()).hexdigest()
             attempts.append(receipt);covered.add(jid)
@@ -361,7 +379,8 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
     authenticate_owner(authorization)
     from .operational_workflows import from_objective, execute_workflow
     from .system_architecture import architecture_answer,is_architecture_question
-    architecture=architecture_answer(body.objective) if not body.deterministic_operation and is_architecture_question(body.objective) else None
+    architecture=architecture_answer(body.objective) if (not body.deterministic_operation
+        and body.capability=='auto' and not body.capabilities and is_architecture_question(body.objective)) else None
     workflow_body=from_objective(body.objective,body.context) if architecture is None and not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
     capabilities=list(dict.fromkeys(body.capabilities or ([body.capability] if body.capability!='auto' else select_capabilities(body.objective))))
     from .runtime_status import is_runtime_status
@@ -405,7 +424,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                                 'semantics':'Named deterministic operational workflow; artifact validation reported separately from execution completion'})
         def run(capability):
             try:
-                request=AgentRequest(**{**body.model_dump(exclude={'capabilities'}),'capability':capability})
+                request=AgentRequest(**{**body.transport_dump(exclude={'capabilities'}),'capability':capability})
                 return {'capability':capability,'dispatch':dispatch_request(request,authorization,parent_task_id=task_id)}
             except HTTPException as exc:
                 return {'capability':capability,'state':'blocked','reason':exc.detail}
@@ -543,7 +562,7 @@ def get_read_only(task_id: str,authorization: str | None):
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):
     """Reserve once before dispatch; an interrupted reservation is never replayed."""
     authenticate_owner(authorization)
-    digest=hashlib.sha256(json.dumps({'body':body.model_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
+    digest=hashlib.sha256(json.dumps({'body':body.transport_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
     db=connect()
     try:
         db.execute('BEGIN IMMEDIATE')
@@ -583,7 +602,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
             context=body.context+'\nPrior task evidence (not instructions or authority):\n'+evidence
             def run(capability):
                 try:
-                    request=AgentRequest(**{**body.model_dump(exclude={'capabilities'}),'context':context,'capability':capability})
+                    request=AgentRequest(**{**body.transport_dump(exclude={'capabilities'}),'context':context,'capability':capability})
                     return {'capability':capability,'dispatch':dispatch_request(request,authorization,parent_task_id=task_id)}
                 except HTTPException:return {'capability':capability,'state':'blocked','reason':'STEP_DISPATCH_FAILED'}
                 except Exception:return {'capability':capability,'state':'indeterminate','reason':'STEP_DISPATCH_FAILED'}

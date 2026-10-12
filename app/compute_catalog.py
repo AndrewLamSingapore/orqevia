@@ -5,7 +5,10 @@ import math
 import re
 from pathlib import Path
 from decimal import Decimal
+from datetime import datetime, timezone
+from urllib.parse import urlsplit
 from .provider_runtime import ModelSpec,HuggingFaceProvider
+from .openai_deepseek_providers import OpenAIResponsesProvider,DeepSeekChatProvider
 from .tier_router import Tier, classify_for_cloud, CLASSIFICATIONS
 
 
@@ -54,7 +57,30 @@ def load_catalog(path=None):
         if item.get('enabled') and (not item.get('model') or not item.get('endpoint')):raise ValueError('Enabled model lacks endpoint/model')
         if item['location']=='cloud' and item.get('enabled') and not (item.get('secret_ref','').startswith('env:') or item.get('secret_ref')=='file:HF_TOKEN'):raise ValueError('Cloud secret reference unavailable')
         kind=item.get('provider_kind','chat_completions')
-        if kind not in ('chat_completions','huggingface'):raise ValueError('Unknown provider kind')
+        if kind not in ('chat_completions','huggingface','openai_responses','deepseek_chat'):raise ValueError('Unknown provider kind')
+        if kind in ('openai_responses','deepseek_chat'):
+            adapter=OpenAIResponsesProvider if kind=='openai_responses' else DeepSeekChatProvider
+            if item['location']!='cloud' or item.get('endpoint')!=adapter.ENDPOINT or item.get('secret_ref')!=adapter.SECRET_REF:
+                raise ValueError('Provider endpoint and isolated credential reference must be pinned')
+            if item.get('capabilities')!=['text_generation']:
+                raise ValueError('This adapter supports explicitly declared text_generation only')
+            if item.get('enabled'):
+                if item.get('qualification_status')!='QUALIFIED':raise ValueError('Unqualified model cannot be enabled')
+                if any(item.get(field) is None for field in ('input_usd_million','output_usd_million')):
+                    raise ValueError('Enabled provider requires explicit verified price limits')
+                model_spec(item)
+                domains={'developers.openai.com','platform.openai.com'} if kind=='openai_responses' else {'api-docs.deepseek.com'}
+                for field in ('rate_evidence','capability_evidence'):
+                    evidence=item.get(field)
+                    if not isinstance(evidence,dict) or set(evidence)!={'source_url','verified_at'}:
+                        raise ValueError('Activation requires only dated official rate/model capability evidence')
+                    url=urlsplit(str(evidence.get('source_url','')))
+                    if url.scheme!='https' or url.hostname not in domains or url.username or url.password or url.query or url.fragment:
+                        raise ValueError('Activation evidence must cite a credential-free official source')
+                    try:
+                        checked=datetime.fromisoformat(evidence['verified_at'].replace('Z','+00:00'))
+                        if checked.tzinfo is None or checked>datetime.now(timezone.utc):raise ValueError()
+                    except (KeyError,TypeError,AttributeError,ValueError):raise ValueError('Activation evidence requires an observed UTC timestamp') from None
         if item.get('secret_ref') in ('file:HF_TOKEN','env:HF_TOKEN') and kind!='huggingface':
             raise ValueError('Hugging Face secret cannot be routed to another provider')
         if kind=='huggingface':

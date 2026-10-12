@@ -14,7 +14,7 @@ from urllib import request
 from scripts.audit_initialization_package import audit,MAIN,ORIGINAL,ROOT
 from scripts.sign_admitted_agent_cases import parse
 
-REPOSITORY='AndrewLamSingapore/prime'
+REPOSITORY='AndrewLamSingapore/orqevia'
 WORKFLOW='prime-initialization-validation.yml'
 BATCH='9792f8d3ef5f9a72ca4d9ef0501ed74ce7a7363d5555e39151d59eb9b26d98d5'
 PLAN='governance/agent-cert-initialization-proposed-fields-20261010.json'

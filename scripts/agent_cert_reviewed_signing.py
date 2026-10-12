@@ -150,7 +150,7 @@ def _oracle_id(agent, spec=None):
         from app.agent_cert_artifact_events import SUPPORTED_CASES, ORACLE_ID
         if spec.get('case') in SUPPORTED_CASES:
             return ORACLE_ID
-    if spec is not None and spec.get('case') != 'role:normal':
+    if spec is not None and spec.get('case') not in {'role:normal', 'role:normal_structured'}:
         from app.agent_cert_a19_baseline import SUPPORTED_CASES as BASELINE_CASES, ORACLE_ID as BASELINE_ORACLE
         if spec.get('case') in BASELINE_CASES:
             return BASELINE_ORACLE
@@ -170,7 +170,7 @@ def _review_version(agent, spec=None):
     # Official oracle IDs may contain '/'; the protected signer's provenance
     # grammar deliberately does not. Keep the domain oracle identity intact in
     # observations and bind a separate, fixed signing-provenance version.
-    if spec is not None and spec.get('case') != 'role:normal':
+    if spec is not None and spec.get('case') not in {'role:normal', 'role:normal_structured'}:
         return _oracle_id(agent, spec)
     if spec is not None:
         from app.agent_cert_secondary_roles import SUPPORTED_CAPABILITIES, ORACLE_ID

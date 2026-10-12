@@ -89,6 +89,9 @@ def canonical_case_spec(agent, capability, case_id):
     """
     if type(case_id) is not str:
         raise ValueError('CASE_ORACLE_UNSUPPORTED')
+    if case_id == 'role:normal_structured':
+        from .agent_cert_structured_roles import structured_normal_role_spec
+        return structured_normal_role_spec(agent, capability)
     if case_id == 'role:normal':
         return canonical_role_spec(agent, capability)
     if case_id == 'baseline:initialization':
@@ -125,7 +128,8 @@ def review_case_output(agent, capability, case_id, response):
         canonical_case_spec(agent, capability, case_id)
     except (ValueError, TypeError):
         return False, ('case_oracle_unsupported',)
-    if case_id == 'role:normal':
+    if case_id in {'role:normal', 'role:normal_structured'}:
+        # The new task contract retains the established semantic oracle.
         return review_role_output(agent, capability, response)
     if case_id == 'baseline:identity':
         # Identity is an Objective/artifact/action event, not a model answer.

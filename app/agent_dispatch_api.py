@@ -7,7 +7,7 @@ import json
 from typing import Literal
 
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .client_auth import authenticate_owner
 from .action_records import ActionRecord, DirectExecutor, action_ledger
@@ -86,11 +86,42 @@ class AgentRequest(BaseModel):
     max_cost_usd: float = Field(default=0,ge=0,le=100)
     preferred_provider: str | None = Field(default=None,min_length=1,max_length=100)
     response_format: Literal['text','strict_json'] = 'text'
+    response_schema: dict | None = None
+    response_schema_order: Literal['canonical', 'declared'] = 'canonical'
     deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review',
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
         'certification_artifact_review','certification_authority_event',
         'certification_authority_review'] | None = None
+
+    @model_validator(mode='after')
+    def validate_response_schema(self):
+        if self.response_schema is not None:
+            from .response_schema import canonicalize_schema, validated_wire_schema
+            if self.response_format != 'strict_json':
+                raise ValueError('Response schema requires strict_json')
+            self.response_schema = (validated_wire_schema(self.response_schema) if self.response_schema_order == 'declared'
+                                    else canonicalize_schema(self.response_schema))
+        elif self.response_schema_order != 'canonical':
+            raise ValueError('Declared schema order requires a response schema')
+        return self
+
+    def transport_dump(self, *, exclude=None):
+        """Keep legacy no-schema request bindings stable across an upgrade."""
+        omitted = set(exclude or ())
+        if self.response_schema is None:
+            omitted.add('response_schema')
+        return self.model_dump(exclude=omitted)
+
+    def model_dump(self, *args, **kwargs):
+        # An absent optional schema must not rewrite legacy canonical request
+        # bytes, event bindings or idempotency inputs after a source upgrade.
+        value = super().model_dump(*args, **kwargs)
+        if self.response_schema is None:
+            value.pop('response_schema', None)
+        if self.response_schema_order == 'canonical':
+            value.pop('response_schema_order', None)
+        return value
 
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
@@ -398,6 +429,11 @@ def joined_role_review(body, authorization, *, actor, task_id, runtime):
                 or actual.get('data_classification') != ('CLOUD_PERMITTED' if locality == 'CLOUD' else 'LOCAL_ONLY')):
             raise ValueError()
         backend_binding = (backend.name, backend.kind, backend.model)
+        if locality == 'LOCAL':
+            from .direct_stream import validate_owned_inference_request
+            from .compute_profile import generation_options
+            validate_owned_inference_request(actual, original, backend,
+                                             settings=SETTINGS, options=generation_options)
         if locality == 'CLOUD':
             proof = execution.get('cloud_transport')
             if type(proof) is not dict or type(proof.get('queue_route')) is not dict:
@@ -480,6 +516,13 @@ def inference_prompt(body: AgentRequest, tier: Tier) -> str:
                 'For an operation identifier, use the supplied operation vocabulary; '
                 'do not substitute a service label or invent an identifier. '
                 'Do not claim actions were executed or certification was earned. '
+                'Verify calculations and comparisons before returning the result. '
+                'Do not confuse counts with rates, totals with incremental values, '
+                'or the candidate\'s claim with independent evidence. '
+                'A more detailed role description never overrides the requested output contract. '
+                + ('Output schema (types and structure, not an answer):\n' +
+                   json.dumps(body.response_schema, sort_keys=body.response_schema_order == 'canonical', separators=(',', ':')) + '\n'
+                   if body.response_schema is not None else '') +
                 'Role: '+responsibility['description']+'. Objective:\n'+body.objective+'\nContext:\n'+body.context)
     # Small context-free Nano tasks already contain the complete instruction.
     # Role/advisory boilerplate measurably distorted an otherwise correct label.
@@ -586,7 +629,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                         or type(case_id) is not str or case_id not in SUPPORTED_CASES):
                     raise ValueError('AUTHORITY_OWNING_CASE_REQUIRED')
                 spec = canonical_authority_case(case_id)
-                return execute_authority_case(spec, task_id, submitted_request=body.model_dump(),
+                return execute_authority_case(spec, task_id, submitted_request=body.transport_dump(),
                     data_root=root, ledger=action_ledger(), runtime=runtime, read_runtime=runtime_snapshot,
                     source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
                     registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
@@ -599,7 +642,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                         or type(case_id) is not str or case_id not in SUPPORTED_CASES):
                     raise ValueError('ARTIFACT_OWNING_CASE_REQUIRED')
                 spec = canonical_artifact_case(case_id)
-                return execute_artifact_case(spec, task_id, submitted_request=body.model_dump(),
+                return execute_artifact_case(spec, task_id, submitted_request=body.transport_dump(),
                     data_root=root, ledger=action_ledger(), runtime=runtime, read_runtime=runtime_snapshot,
                     source_revision=runtime['source_revision'], runtime_image_id=runtime['image_digest'],
                     registry_sha256=sha(agent_registry.REGISTRY_PATH.read_bytes()))
@@ -728,6 +771,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         except SkillRegistryError as exc:
             raise HTTPException(503,'Advisory skill registry unavailable') from exc
     prompt = packed_inference_prompt(body, tier, actor, task_id, skill_pack)
+    if body.response_schema is not None and route.backend.location != 'local':
+        raise HTTPException(422, 'Selected provider does not support this response schema contract')
     prompt_bytes = len(prompt.encode('utf-8'))
     budget_bytes = input_budget_bytes(body)
     if prompt_bytes > budget_bytes:
@@ -744,7 +789,9 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     job=DirectExecutor(ledger).execute(action,lambda:queue.submit(agent=actor,prompt=prompt,
         priority=body.priority,model_role='auto',model=route.backend.model,preferred_provider=route.backend.name,
         allow_cloud=route.backend.location=='cloud',data_classification=body.data_classification,task_class=body.task_class,
-        max_cost_usd=body.max_cost_usd,max_retries=0,classification=body.classification,response_format=body.response_format))
+        max_cost_usd=body.max_cost_usd,max_retries=0,classification=body.classification,
+        response_format=body.response_format,response_schema=body.response_schema,
+        response_schema_order=body.response_schema_order))
     return {'job':job,'correlation_id':task_id,'execution_model':'DIRECT_OBSERVED',
         'classification':body.classification,'agent_path':path,'registry_version':'1.0.0',
         'capability':body.capability,'tier':tier.name,'routing_ms':routing_ms,'model_selection_ms':model_selection_ms,

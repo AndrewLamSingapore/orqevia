@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import ValidationError, BaseModel, ConfigDict, Field
 
 from . import interface_node as node
@@ -81,6 +81,14 @@ def identity(request: Request):
 def health(request: Request):
     client, auth = authorize(request, 'health.read')
     return node.health(client, auth)
+
+
+@router.get('/telemetry')
+def telemetry(request: Request):
+    client, _ = authorize(request, 'health.read')
+    from .interface_telemetry import snapshot
+    return JSONResponse(snapshot(client, node.client_policy(client).get('role', 'UNKNOWN')),
+                        headers={'Cache-Control': 'private, no-store'})
 
 
 def task_wire(value, request, task_id=None):

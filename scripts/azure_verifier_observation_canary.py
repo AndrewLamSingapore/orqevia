@@ -116,7 +116,7 @@ def run(pin: dict) -> None:
     # Only the protected signer job needs the Azure/cryptography dependency.
     from scripts.azure_verifier_live_canary import (KEY_PREFIX, _azure_token, _oidc,
                                                     _public, _sign, verify)
-    if (os.environ.get("GITHUB_REPOSITORY") != "AndrewLamSingapore/prime"
+    if (os.environ.get("GITHUB_REPOSITORY") != "AndrewLamSingapore/orqevia"
             or os.environ.get("GITHUB_REF") != "refs/heads/main"
             or os.environ.get("GITHUB_REF_PROTECTED") != "true"
             or os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"):

@@ -15,7 +15,7 @@ def main():
         @pytest.fixture
         def tmp_path(self):
             path=data/('test-'+uuid.uuid4().hex);path.mkdir();return path
-    names=['status_authority','canonical_state','operational_manifest','registry_v1','dell_node_sync','truth_reconciler','agent_registry','task_continuation','interface_contract','pwa_sessions',
+    names=['status_authority','canonical_state','operational_manifest','registry_v1','dell_node_sync','truth_reconciler','agent_registry','task_continuation','interface_contract','pwa_sessions','interface_telemetry','interface_telemetry_counts',
            'product_handoff','operational_workflows','workflow_objective_integration',
            'cloud_capacity_recovery','huggingface_provider','hf_file_secret','production_compatibility','public_task_errors',
            'interface_server','consequential_intent','stable_spine','sink_guard',
@@ -29,6 +29,7 @@ def main():
     names.append('governed_knowledge')
     names.append('governed_knowledge_durability')
     names.append('memory_durability_verifier')
+    names.append('canonical_secret_scan')
     names.append('structured_output')
     names.append('structured_output_verifier')
     names.append('semantic_evidence_adversarial')
@@ -43,6 +44,8 @@ def main():
     names.append('jarvis_response_contract')
     names.append('jarvis_candidate_verifier')
     names.append('application_boundaries')
+    names.append('repository_workflow_identity')
+    names.append('external_work_receipts')
     names.append('capability_register')
     names.append('cross_domain_security_closure')
     names.append('engineering_verification_gate')
@@ -127,10 +130,13 @@ def main():
                   'agent_cert_case_bridge', 'agent_cert_case_bridge_independent',
                   'agent_cert_dispatch_cases'])
     names.append('provider_rejection_ambiguity')
+    names.append('provider_attribution')
     names.extend(['hf_fallback','provider_circuit','provider_circuit_integration','hf_serverless','objective_inference_evidence'])
     names.append('hf_observation_api')
     names.append('hf_qa_execution')
     names.append('system_architecture')
+    names.extend(['response_schema', 'role_structured_execution',
+                  'agent_cert_structured_roles','agent_cert_structured_input_roles'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

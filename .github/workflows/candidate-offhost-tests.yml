@@ -58,6 +58,8 @@ jobs:
           node clients/pwa/revision-tests.mjs
           node clients/pwa/candidate-tests.mjs
           node clients/pwa/followup-tests.mjs
+          node clients/pwa/dashboard-tests.mjs
+          node --test clients/pwa/dashboard-race-tests.mjs clients/pwa/session-race-tests.mjs clients/pwa/sw-update-tests.mjs
           node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
 
   image-smoke:
