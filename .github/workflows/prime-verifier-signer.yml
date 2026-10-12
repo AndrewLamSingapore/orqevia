@@ -1,4 +1,4 @@
-name: PRIME independent verifier signer
+name: ORQEVIA independent verifier signer
 
 # A reusable protected-code boundary. The caller may not supply code, secrets,
 # signing payloads, or parameters. Only fixed protected reviewed admissions

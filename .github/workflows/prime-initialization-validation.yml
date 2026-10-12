@@ -1,4 +1,4 @@
-name: PRIME fixed29 initialization public validation
+name: ORQEVIA fixed29 initialization public validation
 
 on:
   workflow_dispatch:

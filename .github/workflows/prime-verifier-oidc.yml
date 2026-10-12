@@ -1,4 +1,4 @@
-name: PRIME independent verifier OIDC preflight
+name: ORQEVIA independent verifier OIDC preflight
 
 # No pull-request or feature-ref execution is permitted.
 on:

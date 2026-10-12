@@ -1,4 +1,4 @@
-name: Canonical PRIME v1 CI
+name: ORQEVIA v1 CI
 on:
   workflow_call:
   pull_request:
