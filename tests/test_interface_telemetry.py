@@ -47,6 +47,24 @@ def test_container_packages_every_dashboard_shell_asset():
         assert (root/'clients/pwa'/name).is_file()
 
 
+def test_dashboard_styles_are_allowed_by_the_existing_real_csp(monkeypatch):
+    from pathlib import Path
+    from fastapi.staticfiles import StaticFiles
+    from app import pwa_sessions
+    pwa=Path(__file__).parents[1]/'clients/pwa'
+    monkeypatch.setenv('PRIME_PWA_ORIGIN','https://testserver')
+    app=FastAPI();app.add_middleware(pwa_sessions.PWASessionMiddleware)
+    app.mount('/pwa',StaticFiles(directory=pwa,html=True))
+    with TestClient(app,base_url='https://testserver') as client:response=client.get('/pwa/')
+    assert response.status_code==200
+    assert "default-src 'self'" in response.headers['content-security-policy']
+    assert 'unsafe-inline' not in response.headers['content-security-policy']
+    assert '<style' not in response.text
+    assert 'style=' not in response.text
+    assert '<link rel="stylesheet" href="/pwa/dashboard.css">' in response.text
+    assert 'padding-top:max(env(safe-area-inset-top),0px)' in (pwa/'dashboard.css').read_text(encoding='utf-8')
+
+
 def test_endpoint_preserves_auth_expiry_scope_and_no_store(monkeypatch, tmp_path):
     from app.interface_contract import router
     monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
