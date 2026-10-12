@@ -14,6 +14,7 @@ from .action_records import ActionRecord,DirectExecutor,action_ledger
 from .reasoning_budgets import select_budget,verify_reserved_cost
 from .hf_admission import require_hf_admission,require_hf_fallback_policy
 from .provider_circuit import ProviderCircuits
+from .openai_deepseek_providers import OpenAIResponsesProvider,DeepSeekChatProvider
 
 PROVIDER_CIRCUITS=ProviderCircuits()
 
@@ -24,11 +25,16 @@ def _dispatch_binding(entry):
         'enabled','qualification_status','context_tokens','output_tokens',
         'input_usd_million','output_usd_million','cached_usd_million',
         'task_budgets','allowed_task_classes','allowed_prompt_bindings',
-        'fallback_ids','hf_fallback_policy','max_retries')
+        'fallback_ids','hf_fallback_policy','max_retries','capabilities',
+        'rate_evidence','capability_evidence')
     return deepcopy({field:entry.get(field) for field in fields})
 
 
 def adapter_for(entry):
+    if entry.get('provider_kind')=='openai_responses':
+        return OpenAIResponsesProvider(entry['secret_ref'],secret_resolver=resolve_secret)
+    if entry.get('provider_kind')=='deepseek_chat':
+        return DeepSeekChatProvider(entry['secret_ref'],secret_resolver=resolve_secret)
     if entry.get('provider_kind')=='huggingface':
         return HuggingFaceProvider(entry['secret_ref'],secret_resolver=resolve_secret)
     # A HF credential must never reach an unrelated host, even if a malformed
@@ -38,12 +44,20 @@ def adapter_for(entry):
     return ChatCompletionProvider(entry['endpoint'],entry['secret_ref'],secret_resolver=resolve_secret)
 
 
+def require_text_admission(entry,job):
+    if entry.get('provider_kind') in {'openai_responses','deepseek_chat'} and (
+        job.get('response_format','text')!='text' or job.get('model_role')=='embedding'
+    ):
+        raise ProviderFailure('UNSUPPORTED_CAPABILITY',pre_execution=True)
+
+
 def require_fallback_admission(primary,target,job):
     """Revalidate every alternate before credential resolution or disclosure."""
     if not target.get('enabled') or target.get('qualification_status')!='QUALIFIED':
         raise ProviderFailure('FALLBACK_UNQUALIFIED',pre_execution=True)
     if target.get('location')!='cloud':
         raise ProviderFailure('FALLBACK_POLICY_DENIED',pre_execution=True)
+    require_text_admission(target,job)
     if primary.get('provider_kind')=='huggingface':
         require_hf_fallback_policy(primary,job,target)
         require_hf_admission(target,job,target['id'],primary=primary)
@@ -79,6 +93,7 @@ def execute_cloud(job,provider,data,cancelled):
     entries=[x for x in catalog if x['id']==provider.name and x.get('enabled')]
     if not entries:raise ProviderFailure('PROVIDER_UNAVAILABLE')
     entry=entries[0]
+    require_text_admission(entry,job)
     require_hf_admission(entry,job,provider.name)
     spec=model_spec(entry);metrics=OutcomeMetrics(data/'compute-ledger.db')
     started=time.monotonic();answer=None;failure=None;selected=entry;failure_retries=0;failure_routes=[]
@@ -118,6 +133,7 @@ def execute_cloud(job,provider,data,cancelled):
                     primary,target=primaries[0],targets[0]
                     if _dispatch_binding(primary)!=bindings[entry['id']] or _dispatch_binding(target)!=bindings[candidate.provider]:return False
                     if target['id']==primary['id']:
+                        require_text_admission(target,job)
                         require_hf_admission(target,job,target['id'])
                         if not target.get('enabled') or target.get('qualification_status')!='QUALIFIED':return False
                     else:require_fallback_admission(primary,target,job)

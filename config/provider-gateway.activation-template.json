@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "status": "PREPARATION_ONLY_NOT_ACTIVATED",
+  "models": [],
+  "activation_templates": {
+    "openai_responses": {
+      "provider_kind": "openai_responses",
+      "endpoint": "https://api.openai.com/v1/responses",
+      "secret_ref": "env:OPENAI_API_KEY",
+      "enabled": false,
+      "qualification_status": "UNVERIFIED",
+      "capabilities": ["text_generation"],
+      "model": null,
+      "context_tokens": null,
+      "output_tokens": null,
+      "input_usd_million": null,
+      "output_usd_million": null,
+      "cached_usd_million": null,
+      "rate_evidence": null,
+      "capability_evidence": null
+    },
+    "deepseek_chat": {
+      "provider_kind": "deepseek_chat",
+      "endpoint": "https://api.deepseek.com/chat/completions",
+      "secret_ref": "env:DEEPSEEK_API_KEY",
+      "enabled": false,
+      "qualification_status": "UNVERIFIED",
+      "capabilities": ["text_generation"],
+      "model": null,
+      "context_tokens": null,
+      "output_tokens": null,
+      "input_usd_million": null,
+      "output_usd_million": null,
+      "cached_usd_million": null,
+      "rate_evidence": null,
+      "capability_evidence": null
+    }
+  }
+}

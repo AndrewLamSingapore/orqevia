@@ -140,6 +140,7 @@ class SubmitJob(BaseModel):
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
     preferred_provider: str|None=None
+    idempotency_key: str|None=Field(default=None,min_length=1,max_length=128,pattern=r'^[A-Za-z0-9._:-]+$')
 
 
 class Approval(BaseModel):
@@ -199,6 +200,13 @@ def provider_health(authorization: str|None=Header(None)):
     authorize(authorization)
     from .cloud_execution import configured_provider_health
     return configured_provider_health()
+
+
+@router.get('/providers/usage')
+def provider_usage(authorization: str|None=Header(None)):
+    authorize(authorization)
+    from .provider_usage import usage_projection
+    return usage_projection(DATA/'compute-ledger.db',POLICY)
 
 
 def start_compute_queue() -> None: pool.start()

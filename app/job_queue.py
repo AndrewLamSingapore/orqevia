@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import re
 import math
 import os
 import sqlite3
@@ -133,6 +135,9 @@ class JobQueue:
             CREATE TABLE IF NOT EXISTS compute_events(
               id TEXT PRIMARY KEY, job_id TEXT, event_type TEXT NOT NULL,
               details_json TEXT NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS compute_submission_keys(
+              agent TEXT NOT NULL, key_sha256 TEXT NOT NULL, request_sha256 TEXT NOT NULL,
+              job_id TEXT NOT NULL, PRIMARY KEY(agent,key_sha256));
             """)
             # executescript commits implicitly; keep the admission key migration
             # and subsequent column upgrades in one SQLite write transaction.
@@ -155,7 +160,15 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text') -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', idempotency_key: str | None = None) -> dict:
+        # Bind the complete submitted request before local normalization. Reusing
+        # a key with a changed request must never disclose or dispatch a new job.
+        if idempotency_key is not None:
+            if not isinstance(idempotency_key,str) or not re.fullmatch(r'[A-Za-z0-9._:-]{1,128}',idempotency_key):
+                raise ValueError('invalid idempotency_key')
+            submitted={key:value for key,value in locals().items() if key not in {'self','idempotency_key'}}
+            request_hash=hashlib.sha256(json.dumps(submitted,sort_keys=True,allow_nan=False,separators=(',',':')).encode()).hexdigest()
+            key_hash=hashlib.sha256(idempotency_key.encode()).hexdigest()
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')
         try:
@@ -170,6 +183,14 @@ class JobQueue:
         approval = "not_required"  # retained database column; never a prerequisite
         jid, ts = str(uuid.uuid4()), utcnow()
         with self.lock, self.connect() as c:
+            if idempotency_key is not None:
+                # Serialize competing submissions across independent processes,
+                # before reading the key. The binding and job commit atomically.
+                c.execute('BEGIN IMMEDIATE')
+                prior=c.execute('SELECT request_sha256,job_id FROM compute_submission_keys WHERE agent=? AND key_sha256=?',(canonical_agent,key_hash)).fetchone()
+                if prior:
+                    if prior['request_sha256']!=request_hash:raise ValueError('idempotency_key conflicts with an existing request')
+                    return dict(c.execute('SELECT * FROM compute_jobs WHERE id=?',(prior['job_id'],)).fetchone())
             c.execute("""INSERT INTO compute_jobs
               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,timeout_seconds,max_retries,
                max_cost_usd,allow_cloud,external_execution,status,approval_status,created_at,updated_at)
@@ -184,6 +205,8 @@ class JobQueue:
             if harness_envelope is not None:
                 c.execute('UPDATE compute_jobs SET harness_envelope=? WHERE id=?',
                           (json.dumps(harness_envelope,sort_keys=True),jid))
+            if idempotency_key is not None:
+                c.execute('INSERT INTO compute_submission_keys VALUES(?,?,?,?)',(canonical_agent,key_hash,request_hash,jid))
         self.wake.set()
         return self.get(jid)
 
