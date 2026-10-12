@@ -53,12 +53,17 @@ If you are an AI agent updating this file:
   A19 case bytes and introduces an explicit structured local contract version.
   Focused regressions passed 259 checks; separate review passed 102 checks.
   Legacy protected transport rejects the new case bytes. No historical receipt,
-  hash pin, policy or semantic oracle was replaced. Exact-head cloud quality
-  and fresh live role acceptance remain required.
+  hash pin, policy or semantic oracle was replaced. GitHub successor `47ab26cbdee8ae55e7ea904b412600e189f88015` passed
+  quality, STATUS and Observatory checks; fresh live role acceptance remains
+  required. The published tree exactly matches the tested local tree.
 - An isolated dashboard patch repairs late session responses, stale provenance,
   44-pixel mobile targets and bounded telemetry reads. Offline PWA, session-race
   and telemetry regressions passed; original dirty PWA work was preserved.
-  This patch is not deployed and does not prove browser or physical acceptance.
+  Real Edge source-fixture browser checks passed 24 assertions at desktop,
+  390 and 320 pixels; 49 backend checks and six Node suites passed. Draft #278
+  head `426cc6c25d4b5c845533009b2b3fd45ac456ef3b` passed all three source CI
+  workflows after repairing an obsolete install-identity verifier. The original
+  CI failure is preserved. No live authenticated or physical acceptance claimed.
 - Scoped fresh product/source checks: Authority 47 tests, Sky 21 tests,
   Game 17 command segments, Portal six portfolio segments, HF/MLP 284 tests
   with one skip. Fixture learning/admission tests do not prove live model
@@ -75,14 +80,26 @@ If you are an AI agent updating this file:
   acceptance and real off-device restoration remain BLOCKED by device/session,
   independent destination/key-custody and actual execution dependencies.
   Server-side persistence evidence is distinct from those acceptance gates.
+- Owner parked device/live OpenAI checks while the remaining work continued.
+  A retained Defender quick-scan receipt completed at 2026-10-12T05:37:32Z
+  with antivirus/realtime protection enabled; it is not a full scan or proof
+  of permanent host stability. Fresh privileged probes here were denied.
 - Manifest observations remain stale. Historical SFC/DISM/Defender/SSD and
   Reliability evidence retain dates and limitations. No source pass refreshed
   deployment, physical-device or host-health receipts.
 - Numbers #272 and #273 are pull requests. #272 contains source-vs-live and
   obsolete body-pin claims requiring correction. #273 changes display names,
   leaving old repository guards and an inaccurate workflow-deletion statement.
+  Both PR bodies were corrected. Draft #277 fixes active guards and passed
+  three source CI workflows at `54f105f3236917b3dd2049b4460170df92e4bcc3`;
+  134 related tests passed. Complete custody selection remains 66 PASS / 2 FAIL,
+  reproduced on unchanged main: dispatch code differs from the frozen reviewed
+  closure. Original pins stay unchanged; a fresh independent admission is needed.
   Drafts #215, #244 and #270 retain their live-provider, integration and simulated
-  finance limits. No unsafe merge, signing, deployment or trust widening occurred.
+  finance limits. Fresh pinned draft tests passed: #215 143 source checks,
+  #244 10 UI checks and #270 640 simulation checks. No live provider capability
+  or financial authority follows from them. No unsafe merge, signing, deployment
+  or trust widening occurred.
 
 Evidence package: `C:/Users/Admin/Documents/ABEX/test-runs/orqevia-closure-20261012`.
 The baseline is `BASELINE-20261012T055650Z.json`, SHA-256

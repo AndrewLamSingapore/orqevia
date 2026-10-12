@@ -97,8 +97,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert after.count("## Coordinated closure observation - 12 October 2026") == 1
     closure_end = after.index("## Repository and brand rename", closure_start)
     closure_update = after[closure_start:closure_end].encode("utf-8")
-    assert len(closure_update) == 3595
-    assert hashlib.sha256(closure_update).hexdigest() == "83856c29408145c35837c910edfae964fc61ddebcdd9602220cb2edd8cec2c37"
+    assert len(closure_update) == 4923
+    assert hashlib.sha256(closure_update).hexdigest() == "bb6df6abc9279309c43f2dd92ce0619ad31c6649c04123cebadd2acb3d7b938d"
     after = after[:closure_start] + after[closure_end:]
     # Admit exactly this new dated rename/rebrand record before the byte-pinned
     # 8 October observation; every prior section pin stays unchanged.
