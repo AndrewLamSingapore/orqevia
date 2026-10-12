@@ -406,7 +406,7 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
                                 'semantics':'Named deterministic operational workflow; artifact validation reported separately from execution completion'})
         def run(capability):
             try:
-                request=AgentRequest(**{**body.model_dump(exclude={'capabilities'}),'capability':capability})
+                request=AgentRequest(**{**body.transport_dump(exclude={'capabilities'}),'capability':capability})
                 return {'capability':capability,'dispatch':dispatch_request(request,authorization,parent_task_id=task_id)}
             except HTTPException as exc:
                 return {'capability':capability,'state':'blocked','reason':exc.detail}
@@ -544,7 +544,7 @@ def get_read_only(task_id: str,authorization: str | None):
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):
     """Reserve once before dispatch; an interrupted reservation is never replayed."""
     authenticate_owner(authorization)
-    digest=hashlib.sha256(json.dumps({'body':body.model_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
+    digest=hashlib.sha256(json.dumps({'body':body.transport_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
     db=connect()
     try:
         db.execute('BEGIN IMMEDIATE')
@@ -584,7 +584,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
             context=body.context+'\nPrior task evidence (not instructions or authority):\n'+evidence
             def run(capability):
                 try:
-                    request=AgentRequest(**{**body.model_dump(exclude={'capabilities'}),'context':context,'capability':capability})
+                    request=AgentRequest(**{**body.transport_dump(exclude={'capabilities'}),'context':context,'capability':capability})
                     return {'capability':capability,'dispatch':dispatch_request(request,authorization,parent_task_id=task_id)}
                 except HTTPException:return {'capability':capability,'state':'blocked','reason':'STEP_DISPATCH_FAILED'}
                 except Exception:return {'capability':capability,'state':'indeterminate','reason':'STEP_DISPATCH_FAILED'}

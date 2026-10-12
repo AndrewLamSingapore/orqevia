@@ -11,7 +11,7 @@ from typing import Literal
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
@@ -149,6 +149,7 @@ def authorize(authorization: str | None) -> None:
 
 class SubmitJob(BaseModel):
     response_format: Literal['text', 'strict_json'] = 'text'
+    response_schema: dict | None = None
     agent: str=Field(min_length=1,max_length=80)
     prompt: str=Field(min_length=1,max_length=120000)
     priority: str|int="normal"
@@ -164,6 +165,15 @@ class SubmitJob(BaseModel):
     data_classification: str='LOCAL_ONLY'
     preferred_provider: str|None=None
     idempotency_key: str|None=Field(default=None,min_length=1,max_length=128,pattern=r'^[A-Za-z0-9._:-]+$')
+
+    @model_validator(mode='after')
+    def validate_response_schema(self):
+        if self.response_schema is not None:
+            from .response_schema import canonicalize_schema
+            if self.response_format != 'strict_json' or self.allow_cloud or self.external_execution:
+                raise ValueError('Response schema requires local strict_json execution')
+            self.response_schema = canonicalize_schema(self.response_schema)
+        return self
 
 
 class Approval(BaseModel):

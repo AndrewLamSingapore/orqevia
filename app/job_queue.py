@@ -149,7 +149,7 @@ class JobQueue:
             if 'harness_envelope' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
                 c.execute('ALTER TABLE compute_jobs ADD COLUMN harness_envelope TEXT')
             columns={r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}
-            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'"),('response_format',"TEXT DEFAULT 'text'")]:
+            for name,definition in [('preferred_provider','TEXT'),('data_classification',"TEXT DEFAULT 'LOCAL_ONLY'"),('task_class',"TEXT DEFAULT 'auto'"),('response_format',"TEXT DEFAULT 'text'"),('response_schema','TEXT'),('inference_receipt','TEXT')]:
                 if name not in columns:c.execute(f'ALTER TABLE compute_jobs ADD COLUMN {name} {definition}')
 
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
@@ -160,17 +160,23 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', idempotency_key: str | None = None) -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', response_schema: dict | None = None, idempotency_key: str | None = None) -> dict:
         # Bind the complete submitted request before local normalization. Reusing
         # a key with a changed request must never disclose or dispatch a new job.
         if idempotency_key is not None:
             if not isinstance(idempotency_key,str) or not re.fullmatch(r'[A-Za-z0-9._:-]{1,128}',idempotency_key):
                 raise ValueError('invalid idempotency_key')
-            submitted={key:value for key,value in locals().items() if key not in {'self','idempotency_key'}}
+            submitted={key:value for key,value in locals().items() if key not in {'self','idempotency_key'}
+                       and not (key == 'response_schema' and value is None)}
             request_hash=hashlib.sha256(json.dumps(submitted,sort_keys=True,allow_nan=False,separators=(',',':')).encode()).hexdigest()
             key_hash=hashlib.sha256(idempotency_key.encode()).hexdigest()
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')
+        if response_schema is not None:
+            from .response_schema import canonicalize_schema
+            if response_format != 'strict_json' or allow_cloud or external_execution:
+                raise ValueError('Response schema requires local strict_json execution')
+            response_schema = canonicalize_schema(response_schema)
         try:
             canonical_agent = canonical_agent_id(agent)
         except RegistryError as exc:
@@ -202,6 +208,9 @@ class JobQueue:
             c.execute('UPDATE compute_jobs SET classification=? WHERE id=?',(classification,jid))
             c.execute('UPDATE compute_jobs SET preferred_provider=?,data_classification=?,task_class=? WHERE id=?',(preferred_provider,data_classification,task_class,jid))
             c.execute('UPDATE compute_jobs SET response_format=? WHERE id=?',(response_format,jid))
+            if response_schema is not None:
+                c.execute('UPDATE compute_jobs SET response_schema=? WHERE id=?',
+                          (json.dumps(response_schema,sort_keys=True,separators=(',',':')),jid))
             if harness_envelope is not None:
                 c.execute('UPDATE compute_jobs SET harness_envelope=? WHERE id=?',
                           (json.dumps(harness_envelope,sort_keys=True),jid))
@@ -404,12 +413,16 @@ class JobQueue:
 
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
                output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,
-               model_load_ns: int = 0, inference_ns: int = 0) -> dict:
+               model_load_ns: int = 0, inference_ns: int = 0,
+               inference_receipt: dict | None = None) -> dict:
         with self.lock, self.connect() as c:
             row=c.execute("SELECT * FROM compute_jobs WHERE id=?",(job_id,)).fetchone()
             if not row: raise KeyError(job_id)
             if row["status"]=="cancelled":return dict(row)
             if row["status"]!="running": raise ValueError("job is not running")
+            if inference_receipt is not None:
+                c.execute('UPDATE compute_jobs SET inference_receipt=? WHERE id=?',
+                          (json.dumps(inference_receipt,sort_keys=True,separators=(',',':'),allow_nan=False),job_id))
             backend_admission.cancel(c,self.backend_endpoint,job_id)
             cost=None if actual_cost_usd is None else max(0.0,float(actual_cost_usd)); ts=utcnow()
             budget_cost=row['estimated_cost_usd'] if cost is None else cost

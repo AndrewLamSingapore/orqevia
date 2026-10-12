@@ -34,6 +34,17 @@ def digest(value):
     return hashlib.sha256(value).hexdigest()
 
 
+def bind_mock_inference_request(job, original):
+    """Represent the new structural metadata in this explicit source fixture."""
+    from app.direct_stream import inference_request
+    from app.compute_profile import generation_options
+    job['response_format'] = original.response_format
+    job['response_schema'] = json.dumps(original.response_schema)
+    _, _, receipt = inference_request(job, SimpleNamespace(model=job['model']),
+                                     settings=dispatch.SETTINGS, options=generation_options)
+    job['inference_receipt'] = json.dumps(receipt)
+
+
 @pytest.fixture
 def configured(tmp_path, monkeypatch):
     global compute_queue_api, objective_api
@@ -68,6 +79,7 @@ def configured(tmp_path, monkeypatch):
                completed_at=(now - timedelta(seconds=1)).isoformat())
     original = dispatch.AgentRequest(**canonical_role_spec('a19', 'responsibility.a19')['request'])
     job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION)
+    bind_mock_inference_request(job, original)
     monkeypatch.setattr(compute_queue_api, 'providers', lambda: [
         SimpleNamespace(name='ollama-deep', kind='local', model='fixture-model')])
     def get_job(key):
@@ -214,6 +226,7 @@ def test_existing_opt_in_context_and_skill_prefixes_are_reconstructed(configured
     original = dispatch.AgentRequest(**canonical_role_spec('a19', 'responsibility.a19')['request'])
     skills = select_skill_pack('a19', original.task_class, Tier.MINI) if skills_on else None
     configured.job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION, skills)
+    bind_mock_inference_request(configured.job, original)
     result = run(configured)
     assert result['review_action_durable'] is True and result['certification'] == 'UNVERIFIED'
 
