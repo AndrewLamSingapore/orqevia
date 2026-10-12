@@ -36,6 +36,124 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX frozen candidate closure supplement — 12 October 2026
+
+### Claimed, not independently checked
+
+- Candidate `66a5d9056ac13c69f73de8d8a986c91164bf8937` completed its own
+  source-specific normal-role cohort: 21 actual local executions, 8 PASS,
+  13 FAIL and 0 BLOCKED. All 21 receipt and execution-trace hashes were checked
+  against the frozen closure. This supersedes earlier latest-cohort wording;
+  historical source `18ec939` remains a separate 7 PASS / 14 FAIL run. Results
+  are not pooled, and no 21/21 competence claim follows.
+- The frozen semantic review identifies arithmetic/comparison, identifier,
+  source-row, review, field-contract, Boolean-boundary and latest-sample errors
+  in the 13 rejected outputs. It proves no new pipeline implementation defect
+  and does not establish what caused the changed pass count. The failed outputs,
+  original assertions and earlier failures remain preserved; no replay occurred.
+- Exact candidate-source upstream runs completed successfully: status authority,
+  the public verifier and quality. Quality reports 4,887 PASS, 1 SKIP and
+  10 passing subtests. These are source checks, separate from role competence,
+  live provider/billing evidence, runtime acceptance and production readiness.
+- Twelve actual isolated candidate-browser checks passed, covering validated
+  TLS, unauthenticated denial, a candidate MEMBER flow, identity-bound telemetry,
+  unavailable unmeasured gauges, mobile viewport interaction, OWNER denial,
+  reload continuity, injected offline clearing, reconnect, logout and JavaScript.
+  This browser client is not Dell or either physical iPhone. Natural eight-hour
+  expiry, installed phone PWA, task/result and restart acceptance are separate
+  checks and are not claimed by this browser receipt.
+- The new supplementary observation supersedes only the manifest's latest
+  receipt-index reference. Every original manifest field and expiry remains
+  unchanged; the earlier dated observation stays intact. Manifest freshness
+  remains STALE with 12 reasons; current runtime acceptance remains UNVERIFIED.
+  Golden and the candidate source are preserved. Promotion remains BLOCKED;
+  no L7, Dell, physical iPhone or production acceptance is awarded here.
+- Evidence paths, per-role verdicts, CI links and immutable SHA-256 references
+  are recorded in `governance/observations/abex-candidate-closure-66a5d90-20261012.json`.
+  No item is moved into Verified and no earlier Known broken / open fact is removed.
+
+---
+
+## ABEX independent post-restart receipts — 12 October 2026
+
+### Claimed, not independently checked
+
+- Elevated `sfc /verifyonly` and `DISM /Online /Cleanup-Image /ScanHealth`
+  completed on ABEX at 13:58:03 and 13:59:39 SGT with exit 0. Raw outputs state
+  no integrity violations and no component-store corruption. No repair ran.
+- The retained minidump records bugcheck `0x4e`, subtype `0x99`, with Docker
+  Desktop process context and `ntkrnlmp.exe`. These observations do not identify
+  the corrupting driver or prove a physical-memory fault; crash causality remains
+  open. No driver change, Driver Verifier or memory-test reboot was performed.
+- Codex reports `codex-cli 0.162.0-alpha.17.2` and `Logged in using ChatGPT`.
+  Its existing authentication bytes still match the fresh ABEX baseline. Normal
+  interactive launch and managed-daemon package completeness remain unverified.
+  OpenAI-only billing remains required; no DeepSeek inference is activated.
+- The latest completed practical role cohort remains source `18ec93990eeccdbde60b85b32f5f5e0f0cb7849d`:
+  7 PASS / 14 FAIL from 21 executions. The original failures are preserved.
+  PR #275 successor `47ab26cbdee8ae55e7ea904b412600e189f88015` has source-check
+  evidence but no fresh live role-competence batch. No 21/21 claim is made.
+- Lam confirmed Dell is unavailable for fresh client checks. Supplied Dell-side
+  TLS/MEMBER/task reports remain separate from ABEX's actual post-reboot server
+  retrieval of task `0eb81828-8e61-4d48-b07f-150702a4c2b7`, result `MEMBER-OK`,
+  artifact SHA-256 `a7d7bedfb26d5394e56daf96d82ae4629cbf5a85dd2173c4678984df82de7a9b`.
+  Fresh Dell reauthentication, authorization, restart and retrieval receipts are
+  pending; both physical iPhones remain deferred. No new enrollment code was issued.
+- The operational manifest still has 12 stale reasons. Its original source,
+  verification/expiry timestamps and recorded system states remain unchanged.
+  Its new supplementary observation reference does not establish CURRENT status
+  or runtime acceptance. Golden remains preserved; candidate promotion is BLOCKED.
+  Public branding, cloud migration, Azure L7 and GPU acceleration remain deferred.
+- Raw receipt paths, SHA-256 references and evidence limits are indexed in
+  `governance/observations/abex-post-restart-20261012.json`. This is dated ABEX
+  evidence, not Lam's independent verification; all earlier open facts remain.
+
+---
+
+## Dell independent verification - 12 October 2026
+
+### Claimed, not independently checked
+
+- Dell (DESKTOP-IPV4PH9, Latitude 7320) hardware inventory: Intel Core
+  i7-1185G7 (4 cores / 8 threads), 32 GB LPDDR4X-4267 (soldered, no upgrade),
+  512 GB WDC PC SN530 NVMe (Healthy), Intel Iris Xe iGPU (WDDM 3.2,
+  DirectX 12.1), no discrete GPU, no NPU. Windows 11 Pro 26H2 build 26300.9550.
+- Dell benchmarks (non-destructive, bounded): sequential SSD read about
+  1500 MB/s; CPU synthetic loop single 1.61 s / multi 1.45 s. The desktop
+  stayed responsive at full CPU load. Reported by Dell Codex, not yet
+  independently checked by Lam.
+- DirectML GPU inference verified on Dell after owner-approved installation of
+  onnxruntime-directml into an isolated venv: a small ONNX MLP executed
+  exclusively on the Intel Iris Xe DML provider. For tiny models the CPU is
+  faster on the tested tiny workload. A benefit for larger models has not been
+  verified; GPU acceleration remains parked.
+- Dell reports source checks and local fast-forwards to GitHub main for four
+  independent products: the-portal 4d0643d, sky-tablet 7480bf0, game-platform
+  6b4e415 and velyqua bf25a06. Authority Engine reportedly passed 46/46 source
+  tests plus a build on its feature branch. These are source/build observations,
+  not fresh production, authenticated journey or physical-device acceptance.
+  Reported by Dell Codex, not yet spot-checked by Lam.
+- GitHub reconciliation: the repository was already renamed from prime to
+  orqevia and SSOT retired in favor of STATUS.md; Dell local checkouts now
+  match origin/main.
+- Draft branch checks reproduced locally by Dell Codex: simulation PR #270
+  640/640, gateway PR #215 68/68, UI PR #244 10/10. These are unit/integration
+  checks for those three drafts, not 21-agent role-competence acceptance. ABEX
+  reported 18 failed role tests on the earlier source-specific candidate; those
+  results must not be transferred to current main or a later candidate. No 21/21
+  or release-ready claim is made here.
+- ABEX hardware values remain REPORTED (not freshly verified). The ABEX HTTPS
+  interface is now reachable from Dell and Dell TLS trust is established (ABEX
+  CA installed in Current User trusted roots). Enrollment was pending at that
+  Dell report boundary; subsequent ABEX enrollment and task receipts must be
+  evaluated separately. TLS trust alone does not prove an authenticated session.
+  The prime.runtime acceptance receipt remains unverified without fresh evidence.
+- Bug sweep (Dell Codex): the STATUS.md byte-pin history test fails when
+  STATUS.md is edited without updating its pins (observed on PR #268). The
+  authority-engine README STATUS-authority reference gap was already fixed.
+
+---
+
 ## Repository and brand rename — prime → orqevia, JARVIS PRIME → ORQEVIA — 11 October 2026
 
 ### Claimed, not independently checked

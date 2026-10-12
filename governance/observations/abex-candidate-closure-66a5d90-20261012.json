@@ -1,0 +1,516 @@
+{
+  "schema": "orqevia.supplementary-local-observation.v1",
+  "compiled_at_utc": "2026-10-12T07:18:14.275719+00:00",
+  "classification": "CLAIMED_NOT_OWNER_VERIFIED",
+  "record_role": "DATED_RECEIPT_INDEX_NOT_CURRENT_ACCEPTANCE",
+  "starting_pr272_head": "270674f5af60672e5874f5bdd12102f845a6e917",
+  "candidate_source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+  "candidate_source_frozen": true,
+  "supersedes_latest_observation_only": {
+    "record": "governance/observations/abex-post-restart-20261012.json",
+    "record_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+    "historical_record_preserved": true
+  },
+  "roles": {
+    "observed_at": "2026-10-12T06:56:43.722071+00:00",
+    "state": "CLOSED_SOURCE_SPECIFIC_STRUCTURED_ROLE_COHORT",
+    "pass": 8,
+    "fail": 13,
+    "blocked": 0,
+    "executed": 21,
+    "role_competence_21_of_21": false,
+    "historical_18ec939": {
+      "source_sha": "18ec93990eeccdbde60b85b32f5f5e0f0cb7849d",
+      "pass": 7,
+      "fail": 14,
+      "pooled": false
+    },
+    "rows": [
+      {
+        "role_id": "a01",
+        "name": "Strategy Lead",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "c8ae6854-f9db-41c2-b14b-0cfd81d86c47",
+        "job_id": "0a285c29-6b1e-4228-aa15-b9b3288404d3",
+        "started_at": "2026-10-12T06:45:39.429611+00:00",
+        "completed_at": "2026-10-12T06:46:19.853668+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a01-role-72000e3d-7745-4301-8c10-450c062da6e2.json",
+        "receipt_sha256": "980510111f0c51d7b1ff3295b5f7bfe5507d930a67b26cc79985464466cac195",
+        "result_sha256": "39c5abb23403fcde290aaa7540f1ad6e67d62efa0a928955c04e5203cf52ea37"
+      },
+      {
+        "role_id": "a02",
+        "name": "Planning and Roadmap Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "b3776226-e2a7-4c9e-983d-d7660a01f18d",
+        "job_id": "05c16008-a905-4f0a-aa9c-9f6eff677df4",
+        "started_at": "2026-10-12T06:46:19.863658+00:00",
+        "completed_at": "2026-10-12T06:46:42.521182+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a02-role-fe35e7e5-3894-4149-8336-bbbb0fa0a1f5.json",
+        "receipt_sha256": "77a0897e1e44f90111697e41f758e14c76448c3518e0095764de9c7aa807cd1b",
+        "result_sha256": "c6de6a0c90dbfc7b6f9b206befd10ed1608f392f6aee135417d10975883db0ee"
+      },
+      {
+        "role_id": "a04",
+        "name": "Decision and Comparison Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "d778767c-013b-4f66-a6b5-a5cb6fff3950",
+        "job_id": "b53f8229-bda2-44ec-84bc-b54e131bb632",
+        "started_at": "2026-10-12T06:46:42.534413+00:00",
+        "completed_at": "2026-10-12T06:47:05.438698+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a04-role-fdbb19c3-645d-4cc7-8076-7a39d9837d06.json",
+        "receipt_sha256": "15263c9c8f36f523773fa8ac51399b7129239df6bc7d6c2b77c7ebe8e2b8c7bf",
+        "result_sha256": "17d58c551400a49fc7ca1b114e7ed84066bbd6109d72f8a45f1be35975855589"
+      },
+      {
+        "role_id": "a05",
+        "name": "Portfolio and Capacity Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "6468336f-9b6c-4536-b274-a7ade060ccb4",
+        "job_id": "73e33c2f-cc09-475b-9ce0-27cb8fdaaa55",
+        "started_at": "2026-10-12T06:47:05.451319+00:00",
+        "completed_at": "2026-10-12T06:47:31.326037+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a05-role-5b5a90e7-f203-47f9-bfcc-4351c248b7ef.json",
+        "receipt_sha256": "1f3ac496c93b3deb6ea07dd816ad617d458e865795264d53cab437c84567aeea",
+        "result_sha256": "a34f99d733927761c0165b09fafcddfb9c9b6e14ae499e97dece407bcd6988a5"
+      },
+      {
+        "role_id": "a06",
+        "name": "Research Lead",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "7ae9eb16-a6fc-455d-9f85-603a3f9ecd71",
+        "job_id": "42065de3-4125-4a04-afaf-1d3d650f26d9",
+        "started_at": "2026-10-12T06:47:31.342066+00:00",
+        "completed_at": "2026-10-12T06:47:56.666580+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a06-role-fc58a200-0b1f-4505-95f3-1565763c9ee1.json",
+        "receipt_sha256": "54344d13a4691a5d26e132a6c35628b8c4b19ce0adde80ce1df2127eb908f6b7",
+        "result_sha256": "68342150179aa9d4fb37c9f4ca9bf466e5e88ef63f45d6735d9abac8a3324852"
+      },
+      {
+        "role_id": "a07",
+        "name": "Evidence Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "9c8fbf9d-eb4e-4137-8f0a-58ab10a1eb4a",
+        "job_id": "5f217358-81dc-4ba7-b5d2-e76862a43979",
+        "started_at": "2026-10-12T06:47:56.678232+00:00",
+        "completed_at": "2026-10-12T06:48:22.557981+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a07-role-c8196023-453b-455d-891f-55e34bec2675.json",
+        "receipt_sha256": "543d5976858d39c392e8e540235a596b968d462799ce2b74444a1ce176deb0ad",
+        "result_sha256": "1afa2f440f184a1e166d55cc822cda625137373f7eb0716108cd22913c21ce8c"
+      },
+      {
+        "role_id": "a09",
+        "name": "Knowledge Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "dea5baa8-50a8-4d82-be74-0168bef82f66",
+        "job_id": "1893fad3-17e9-4f62-b98b-71196ca55129",
+        "started_at": "2026-10-12T06:48:22.557981+00:00",
+        "completed_at": "2026-10-12T06:48:47.443093+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a09-role-328dba64-4a0e-417d-9c9e-845d11c94230.json",
+        "receipt_sha256": "0c1fd85238c686500b5bc8664276ee3e1311f2f5d448c5952e3b03ab0b3bc956",
+        "result_sha256": "19dbbb19b53cb8b97ac0bf211e8ba71aae5c506ec56e46fbbc034294935e98eb"
+      },
+      {
+        "role_id": "a10",
+        "name": "Data Lead",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "7ef03ea4-0633-45e6-a07c-ff930a9ca78f",
+        "job_id": "362ebd51-04e4-4ff9-9738-c95d558e7023",
+        "started_at": "2026-10-12T06:48:47.448039+00:00",
+        "completed_at": "2026-10-12T06:49:13.492224+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a10-role-6abf2e0d-20b6-4719-afed-e2bd9336e73e.json",
+        "receipt_sha256": "d709a5e8464472b53bd98a6b363e4dce0a716598451c309af2f4a733d73c36e5",
+        "result_sha256": "9ca32669b574bbf530b358c9a435711fdc02edc20edb14dcadaa84326a206a0d"
+      },
+      {
+        "role_id": "a12",
+        "name": "Metrics and Analysis Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "237c2b2c-7ffa-461b-bff5-01a9a00ed426",
+        "job_id": "446f66ab-4c8a-4549-afa8-350d36871652",
+        "started_at": "2026-10-12T06:49:13.514598+00:00",
+        "completed_at": "2026-10-12T06:49:40.965550+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a12-role-bea059f0-f7db-4c18-aa20-7ece8ef1f3c5.json",
+        "receipt_sha256": "2f6b812b91572a28d39dac912c9fcde4a13e60b77065bd0992c49a2884d1a468",
+        "result_sha256": "4a7db0d788214af59ef3314c72b417cfd66eaa7a314aed5143f40326202eb96c"
+      },
+      {
+        "role_id": "a13",
+        "name": "Forecast Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "465d230f-be96-4271-a965-a9e1ea5ef640",
+        "job_id": "7ee1a25c-22cc-4cb4-8713-648891220bf5",
+        "started_at": "2026-10-12T06:49:40.978306+00:00",
+        "completed_at": "2026-10-12T06:50:06.827485+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a13-role-a9dd7eab-aac7-45d4-9594-d650996be044.json",
+        "receipt_sha256": "85fd165d89849d4a635b9f3df8af2e4f3fcbf128720342bc34d3d02a995243d1",
+        "result_sha256": "3fcbb9cc36f837cb88de58a40130d60348d96528d55515971709713ad19c66f6"
+      },
+      {
+        "role_id": "a14",
+        "name": "Data Quality Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "df2c07be-5ebe-4839-90eb-ff75c1167700",
+        "job_id": "3e0c4a86-1009-4664-ba76-07e61d5d6b7d",
+        "started_at": "2026-10-12T06:50:06.834073+00:00",
+        "completed_at": "2026-10-12T06:50:30.568594+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a14-role-d8a81c4e-9aeb-4b35-bffe-14b264b50f87.json",
+        "receipt_sha256": "6694ec2fd2509075cb855ef387bb5b2f6480363334222a2b6e20b773eee047ad",
+        "result_sha256": "18b5b7a4c4cc892c52e2f34864580cf2e15e0146a8f2cfabe7e321faad43589d"
+      },
+      {
+        "role_id": "a15",
+        "name": "Engineering Lead",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "69f5b9d1-0c04-49a9-8ed7-8a37646734c0",
+        "job_id": "b5b37191-ffff-4068-a1be-4b06f41b1f1c",
+        "started_at": "2026-10-12T06:50:30.584664+00:00",
+        "completed_at": "2026-10-12T06:50:48.083728+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a15-role-bd4ead2a-f471-4e3a-9a70-31d8a770ea5c.json",
+        "receipt_sha256": "8073065dda563844da06526c57ba2e34339ff145cbf38de232c07a41325b6f3a",
+        "result_sha256": "658ea810aa2cd95419be4c41f10dc860ba1e02e16c7155cf11ff4f8f35867952"
+      },
+      {
+        "role_id": "a16",
+        "name": "Architecture Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "7ea941e2-399a-4385-b482-efe0c34de969",
+        "job_id": "95397854-fcee-45f2-a87a-33a5a2bf3d1f",
+        "started_at": "2026-10-12T06:50:48.090218+00:00",
+        "completed_at": "2026-10-12T06:51:10.425753+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a16-role-6c4f8b74-020c-4ead-8127-b4d3d6b84284.json",
+        "receipt_sha256": "2336f5aa73abac4f2caa962a82177988294f93900e57ff93bc3414cbef861ba6",
+        "result_sha256": "001289ebf3233071196d2d59a20d9a08736839c074167688064337da611f44bc"
+      },
+      {
+        "role_id": "a17",
+        "name": "Implementation Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "2965c69d-3d83-4f50-ba95-326d611c92e4",
+        "job_id": "afd872ca-02bd-46f8-91be-59a98b0aff17",
+        "started_at": "2026-10-12T06:51:10.425753+00:00",
+        "completed_at": "2026-10-12T06:51:35.269327+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a17-role-b9668a03-2898-43e5-b402-5d539f15565f.json",
+        "receipt_sha256": "adf8c4428d5c72ad4af0c49e2c49d2dceb8cfa3b9824283111459bcfebbc12dd",
+        "result_sha256": "04ee1b562cc695eecaf2e7d517b1644e8abf82a91af113c7df27213b0dcb08a0"
+      },
+      {
+        "role_id": "a18",
+        "name": "Test and Verification Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "147fe136-967d-426a-8888-b76ecfb967ee",
+        "job_id": "ddaff2a8-e39f-4483-8df7-1a813b2a4bff",
+        "started_at": "2026-10-12T06:51:35.277360+00:00",
+        "completed_at": "2026-10-12T06:52:00.206778+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a18-role-b94fe723-70ea-4f99-884b-e7a6e3da12a8.json",
+        "receipt_sha256": "e732ebd68ed228a2901ecd0a5a9a78edcabe330e6e81831da0edd2a813f73764",
+        "result_sha256": "2a9e6f430a2c75aed585701b1489c3e31998554dceb78bf8b2a6eb228d962648"
+      },
+      {
+        "role_id": "a19",
+        "name": "Reliability Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "0a969ff9-b409-4407-819b-646ee269365f",
+        "job_id": "8d70ffc5-9316-44b8-9ae6-6ad6496036ec",
+        "started_at": "2026-10-12T06:52:00.222453+00:00",
+        "completed_at": "2026-10-12T06:52:23.286122+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a19-role-9b7518f5-c062-49b3-9085-a7f9b854836d.json",
+        "receipt_sha256": "59819ffd7ddd548c2ce9252f185fde4ef8ac623f4a22e79a1eb6b7ce5d24b724",
+        "result_sha256": "9828c917908e34c6a19a21d09267dc540405c76c16bcfd85c733ce8c287d4a1e"
+      },
+      {
+        "role_id": "a20",
+        "name": "Commercial and Economic Lead",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "f1fef576-0f72-476e-873c-fcc6a562a04a",
+        "job_id": "a7893894-d59b-44af-bf8f-9298c6b53265",
+        "started_at": "2026-10-12T06:52:23.299256+00:00",
+        "completed_at": "2026-10-12T06:52:49.364196+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a20-role-87f1ca63-f4fd-42f7-947f-9eea0a56382f.json",
+        "receipt_sha256": "44588fd3a8fd84a26dd0fe88adbfdb9e905a2b89e9ef805e0e21c211e7e3f879",
+        "result_sha256": "88d858ef5e75886565f59c7b6b25c75a05cdf8ddeed1c612b82dcf9667f02200"
+      },
+      {
+        "role_id": "a21",
+        "name": "Cost and Value Agent",
+        "status": "FAIL",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "a735afc7-2a82-4480-aa03-7277cebf4783",
+        "job_id": "d8805e2e-9210-4956-bb26-aef08882e193",
+        "started_at": "2026-10-12T06:52:49.364196+00:00",
+        "completed_at": "2026-10-12T06:53:17.603329+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a21-role-c15f6e9d-9ea4-44d8-b9d6-c16a198816de.json",
+        "receipt_sha256": "a46135b4e0a806e0fad9e3112b0ed32369931f6137f737b1536f572f04d80459",
+        "result_sha256": "bceb05c554557fbf4a5433b0ad49d6825ddb0fb36f19af26c8393b17f013f670"
+      },
+      {
+        "role_id": "a26",
+        "name": "Independent Quality Lead",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "445a55de-6ade-4673-83b4-1a90ab3544f0",
+        "job_id": "b659d133-6a7d-458f-9051-68fc09dfa0db",
+        "started_at": "2026-10-12T06:53:17.603329+00:00",
+        "completed_at": "2026-10-12T06:53:40.265595+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a26-role-14d0bc33-2c92-45d7-a365-e04012774161.json",
+        "receipt_sha256": "448436958dbb31ac0d89709f19e853abcad095d6b986910d2858bf6aa6fcac80",
+        "result_sha256": "2ff7b0b5b5072d0c1a09ecad29bc67def98343e71f1daeca4ec7c03dfb13ca43"
+      },
+      {
+        "role_id": "a28",
+        "name": "Risk Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "9b77b015-0090-4a25-aa9c-8747c7136c9f",
+        "job_id": "3c8c8a91-de4e-44c6-9dbe-943c2fb08f57",
+        "started_at": "2026-10-12T06:53:40.271951+00:00",
+        "completed_at": "2026-10-12T06:54:05.651337+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a28-role-5ae46e06-7de8-4a7b-951e-094e8e9362ce.json",
+        "receipt_sha256": "dd429f11c5b809b11e0906da1f2d3f7fa03d9adabf1a43852f53e559bdebd8e6",
+        "result_sha256": "2d3ca0378ee301e70f666ec24f19efc10c02e8c9177e8f6689366b48592a7077"
+      },
+      {
+        "role_id": "a29",
+        "name": "Release Agent",
+        "status": "PASS",
+        "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+        "task_id": "05db887d-d924-4abf-a6d9-b6d5b5c45136",
+        "job_id": "c698e05c-6cc8-4ee9-819d-0b7dcb914c14",
+        "started_at": "2026-10-12T06:54:05.662558+00:00",
+        "completed_at": "2026-10-12T06:54:33.225469+00:00",
+        "receipt_path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\source-native-66a5d90-a29-role-ad7025a7-2f67-49ee-98c3-4cc46dde81f2.json",
+        "receipt_sha256": "c69f4241e241b9047d8ce7e284d70bdc0d42ffd3d52892e4f3c67c79ab28e10b",
+        "result_sha256": "c781091c2cd02175c6f747d60ad8789c2c6eb2225bb144d48d87f4d73440957f"
+      }
+    ]
+  },
+  "semantic_failure_review": {
+    "observed_at": "2026-10-12T07:07:00.022591+00:00",
+    "state": "FROZEN_READ_ONLY_SEMANTIC_FAILURE_DIAGNOSIS",
+    "failure_categories": [
+      {
+        "role_id": "a01",
+        "category": "ARITHMETIC_AND_COMPARISON"
+      },
+      {
+        "role_id": "a04",
+        "category": "ARITHMETIC_AND_COMPARISON"
+      },
+      {
+        "role_id": "a06",
+        "category": "EXACT_IDENTIFIER_BINDING"
+      },
+      {
+        "role_id": "a09",
+        "category": "EXACT_IDENTIFIER_BINDING"
+      },
+      {
+        "role_id": "a10",
+        "category": "EXACT_IDENTIFIER_BINDING"
+      },
+      {
+        "role_id": "a12",
+        "category": "ARITHMETIC_AND_COMPARISON"
+      },
+      {
+        "role_id": "a14",
+        "category": "SOURCE_ROW_SEMANTICS"
+      },
+      {
+        "role_id": "a15",
+        "category": "REVIEW_REQUIREMENT_COMPLIANCE"
+      },
+      {
+        "role_id": "a17",
+        "category": "FORMAL_FIELD_CONTRACT"
+      },
+      {
+        "role_id": "a18",
+        "category": "BOOLEAN_BOUNDARY_REASONING"
+      },
+      {
+        "role_id": "a19",
+        "category": "LATEST_SOURCE_SAMPLE_SELECTION"
+      },
+      {
+        "role_id": "a20",
+        "category": "ARITHMETIC_AND_COMPARISON"
+      },
+      {
+        "role_id": "a21",
+        "category": "ARITHMETIC_AND_COMPARISON"
+      }
+    ],
+    "new_pipeline_implementation_defects_proven": [],
+    "causal_attribution_of_net_change": "NOT_PROVEN_BY_ONE_CHANGED_COHORT",
+    "source_modified": false,
+    "model_calls_by_analysis": 0,
+    "failed_outputs_remain_rejected": true
+  },
+  "upstream_ci": {
+    "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+    "fetched_at_utc": "2026-10-12 07:00:31 UTC",
+    "quality": "4887 PASS / 1 SKIP / 10 subtests PASS",
+    "scope": "SOURCE_CHECKS_NOT_ROLE_OR_PRODUCTION_ACCEPTANCE",
+    "runs": [
+      {
+        "id": 38214467178,
+        "name": "STATUS authority consistency",
+        "conclusion": "success",
+        "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/38214467178"
+      },
+      {
+        "id": 38214467176,
+        "name": "Observatory public verifier off-host",
+        "conclusion": "success",
+        "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/38214467176"
+      },
+      {
+        "id": 38214467193,
+        "name": "Canonical PRIME v1 CI",
+        "conclusion": "success",
+        "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/38214467193"
+      }
+    ]
+  },
+  "browser": {
+    "source_sha": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+    "observed_at": "2026-10-12T07:00:31.464Z",
+    "scope": "ACTUAL_ISOLATED_BROWSER_NOT_DELL_OR_PHYSICAL_IPHONE",
+    "pass": 12,
+    "checks": [
+      {
+        "item": "TLS and real candidate shell",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:29.620Z"
+      },
+      {
+        "item": "Unauthenticated telemetry denied",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:29.631Z"
+      },
+      {
+        "item": "Supported candidate MEMBER enrollment",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:29.881Z"
+      },
+      {
+        "item": "Telemetry bound to authenticated client and pinned candidate",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:29.981Z"
+      },
+      {
+        "item": "Unmeasured host gauges remain unavailable",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:29.982Z"
+      },
+      {
+        "item": "Mobile account dialog",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:30.258Z"
+      },
+      {
+        "item": "Candidate MEMBER owner check",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:30.258Z"
+      },
+      {
+        "item": "Same MEMBER reload continuity",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:31.107Z"
+      },
+      {
+        "item": "Real browser offline clears current telemetry",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:31.140Z"
+      },
+      {
+        "item": "Reconnect obtains current authenticated telemetry",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:31.257Z"
+      },
+      {
+        "item": "Real supported logout clears authentication",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:31.464Z"
+      },
+      {
+        "item": "JavaScript runtime",
+        "verdict": "PASS",
+        "at": "2026-10-12T07:00:31.464Z"
+      }
+    ],
+    "limits": [
+      "Task execution and restart persistence are a separate subsequent test.",
+      "Controlled offline is an injected browser network fault; no device/cloud acceptance claim.",
+      "Natural eight-hour session expiry and installed phone PWA remain pending."
+    ],
+    "dell_acceptance": false,
+    "physical_iphone_acceptance": false,
+    "task_result_and_restart_acceptance": "NOT_INCLUDED_PENDING_SEPARATE_RECEIPTS"
+  },
+  "candidate_promotion": "BLOCKED",
+  "current_runtime_acceptance": "UNVERIFIED",
+  "l7_certification": "NOT_ESTABLISHED",
+  "manifest_effective_status": "STALE",
+  "existing_verification_timestamps_or_expiry_renewed": false,
+  "fresh_dell_client_acceptance": "PENDING_OWNER_CONFIRMED_UNAVAILABLE",
+  "deferred": [
+    "both physical iPhones",
+    "public branding",
+    "DigitalOcean migration",
+    "Azure L7",
+    "GPU acceleration"
+  ],
+  "receipts": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\ROLE-ACCEPTANCE-CLOSURE.json",
+      "sha256": "510def3cbe481c9559c48e293db6f2446af72d16c9c3abcd95098f069ef266ed"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\ROLE-ACCEPTANCE-CLOSURE.md",
+      "sha256": "3b7ee588302f8b9709ac881ed19c1bee12fe6407e25fa6ebafcf2a2ff4382804"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\SEMANTIC-FAILURE-ANALYSIS-20261012T070700Z.json",
+      "sha256": "d7a75d0476adef45b99edf49269485cac6177640514520bd8a9c55879601dfed"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\browser-20261012T070026Z-594f814a\\BROWSER-RECEIPT.json",
+      "sha256": "2f92b0143d2a572240adb8b9c6db931d4880550e181a89fac036de780484eef8"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\UPSTREAM-CI-66a5d90.json",
+      "sha256": "b11a28acf4430bdc08606af07e0378f648956239272219d70536ced1b3867b7d"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\UPSTREAM-CI-66a5d90-quality.raw.log",
+      "sha256": "0f326c1d7f21353c819eebe5b8c5a6757c01ce92b6e8ea613651886512c53ca2"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\fresh-normal21-independent-native-audit.json",
+      "sha256": "722c58cf7044adcbfee39d131ade700acd7946afe9b2f1c03152b2f5e4976a6a"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\candidate-66a5d90-145f3f74\\collection-final.json",
+      "sha256": "ce4bad89493f48449597f0c0b77950e0a487dba0b9b1f4a4ef96ca6360a634c7"
+    }
+  ]
+}

@@ -73,3 +73,8 @@ app/provider_runtime.py -text
 app/provider_circuit.py -text
 app/tier_router.py -text
 governance/agent-cert-verifier-azure-pins.json -text
+
+# These dated receipt indexes were hashed from their original Windows CRLF bytes.
+# Keep that recorded checkout form on every platform; never renew their claims.
+governance/observations/abex-post-restart-20261012.json text eol=crlf
+governance/observations/abex-candidate-closure-66a5d90-20261012.json text eol=crlf

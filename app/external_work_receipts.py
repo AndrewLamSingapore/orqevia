@@ -25,12 +25,24 @@ from .client_auth import authenticate_owner
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 WORK_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}\Z")
 REPOSITORY = re.compile(r"AndrewLamSingapore/[A-Za-z0-9._-]{1,80}\Z")
-AUDITED_REPOSITORIES = frozenset({
-    "AndrewLamSingapore/prime", "AndrewLamSingapore/velyqua",
+CONTROL_REPOSITORY = "AndrewLamSingapore/orqevia"
+CANONICAL_AUDITED_REPOSITORIES = frozenset({
+    CONTROL_REPOSITORY, "AndrewLamSingapore/velyqua",
     "AndrewLamSingapore/the-portal", "AndrewLamSingapore/sky-tablet",
     "AndrewLamSingapore/game-platform", "AndrewLamSingapore/authority-engine",
     "AndrewLamSingapore/AndrewLamSingapore",
 })
+# The verified rename retained GitHub repository ID 1345668764. This one
+# historical spelling is the same control-plane identity, never another product.
+# Keep exact recorded names/URLs; normalization is only for caps and selection.
+HISTORICAL_REPOSITORY_ALIASES = {"AndrewLamSingapore/prime": CONTROL_REPOSITORY}
+AUDITED_REPOSITORIES = CANONICAL_AUDITED_REPOSITORIES | frozenset(HISTORICAL_REPOSITORY_ALIASES)
+
+
+def _repository_identity(repository: str) -> str:
+    return HISTORICAL_REPOSITORY_ALIASES.get(repository, repository)
+
+
 # Scope selection is a narrow advisory routing default, not tool eligibility.
 ROLE_SCOPES = {
     "a01": frozenset({"SOURCE", "CI", "PR", "DEPLOYMENT"}),
@@ -185,11 +197,9 @@ def record_github_audit(item: GithubAuditSnapshot, *, db_path: Path | None = Non
         db.execute("BEGIN IMMEDIATE")
         if not db.execute("SELECT 1 FROM external_work_receipts WHERE work_id=?", (item.work_id,)).fetchone():
             raise KeyError(item.work_id)
-        count = db.execute("SELECT COUNT(DISTINCT repository) FROM external_github_audits WHERE work_id=?",
-                           (item.work_id,)).fetchone()[0]
-        exists = db.execute("SELECT 1 FROM external_github_audits WHERE work_id=? AND repository=?",
-                            (item.work_id, item.repository)).fetchone()
-        if count >= 7 and not exists:
+        identities = {_repository_identity(row[0]) for row in db.execute(
+            "SELECT DISTINCT repository FROM external_github_audits WHERE work_id=?", (item.work_id,))}
+        if len(identities) >= 7 and _repository_identity(item.repository) not in identities:
             raise ValueError("repository audit cap reached")
         try:
             db.execute("INSERT INTO external_github_audits VALUES(?,?,?,?,?,?,?,?,?)",
@@ -203,7 +213,7 @@ def record_github_audit(item: GithubAuditSnapshot, *, db_path: Path | None = Non
 
 
 def github_audit_digest(work_id: str, *, db_path: Path | None = None) -> dict:
-    """Return at most 28 bounded reference rows (seven repos x four scopes)."""
+    """Return at most 32 rows: seven identities, one historical alias, four scopes."""
     if not WORK_ID.fullmatch(work_id):
         raise ValueError("invalid work id")
     path = db_path or _db_path()
@@ -225,7 +235,7 @@ def github_audit_digest(work_id: str, *, db_path: Path | None = None) -> dict:
 def select_github_audits(work_id: str, agent_id: str, repositories: tuple[str, ...],
                          *, db_path: Path | None = None, max_items: int = 4,
                          allow_private_prime: bool = False) -> dict:
-    """Select task-specific cited facts; private PRIME is excluded by default.
+    """Select task-specific cited facts; the private control plane is excluded by default.
 
     The caller must supply the repositories relevant to the task. This selector
     never injects raw source into prompts or grants the agent GitHub access.
@@ -239,8 +249,9 @@ def select_github_audits(work_id: str, agent_id: str, repositories: tuple[str, .
         raise ValueError("max_items must be 1 to 4")
     scopes = ROLE_SCOPES.get(agent_id, frozenset())
     rows = github_audit_digest(work_id, db_path=db_path)["snapshots"]
-    selected = [row for row in rows if row["repository"] in repositories and row["scope"] in scopes
-                and (allow_private_prime or row["repository"] != "AndrewLamSingapore/prime")]
+    identities = {_repository_identity(repository) for repository in repositories}
+    selected = [row for row in rows if _repository_identity(row["repository"]) in identities and row["scope"] in scopes
+                and (allow_private_prime or _repository_identity(row["repository"]) != CONTROL_REPOSITORY)]
     return {"work_id": work_id, "agent_id": agent_id, "authority": "UNTRUSTED_CITED_DATA_ONLY",
             "citations": selected[:max_items], "omitted": len(selected[max_items:]),
             "private_prime_excluded": not allow_private_prime}

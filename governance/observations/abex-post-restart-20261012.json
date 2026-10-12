@@ -1,0 +1,135 @@
+{
+  "schema": "orqevia.supplementary-local-observation.v1",
+  "compiled_at_utc": "2026-10-12T06:44:28.814945+00:00",
+  "classification": "CLAIMED_NOT_OWNER_VERIFIED",
+  "record_role": "DATED_RECEIPT_INDEX_NOT_CURRENT_ACCEPTANCE",
+  "canonical_main_observed": "8da9a4554cf26ed2d9164ad37cc07da881dc8e4a",
+  "pr272_starting_head": "325c65323df03de1a1a7a12a50b76b3d20bf9bea",
+  "host": "DESKTOP-27LKJ2V",
+  "candidate_promotion": "BLOCKED",
+  "current_runtime_acceptance": "UNVERIFIED",
+  "windows_integrity": {
+    "commands": [
+      {
+        "Stdout": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\SFC-stdout.txt",
+        "StartedAt": "2026-10-12T13:56:47.6224687+08:00",
+        "ExitCode": 0,
+        "Stderr": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\SFC-stderr.txt",
+        "FinishedAt": "2026-10-12T13:58:03.9653708+08:00",
+        "Command": "C:\\Windows\\System32\\sfc.exe /verifyonly"
+      },
+      {
+        "Stdout": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\DISM-stdout.txt",
+        "StartedAt": "2026-10-12T13:58:03.9710932+08:00",
+        "ExitCode": 0,
+        "Stderr": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\DISM-stderr.txt",
+        "FinishedAt": "2026-10-12T13:59:39.6657110+08:00",
+        "Command": "C:\\Windows\\System32\\Dism.exe /Online /Cleanup-Image /ScanHealth"
+      }
+    ],
+    "sfc_observed": "No integrity violations",
+    "dism_observed": "No component store corruption",
+    "repair_performed": false
+  },
+  "crash_context": {
+    "dump_sha256": "34e55ef50dc6adb964b70ba13e9a7aa66e8823a842b5ac2c4365328259fda5bf",
+    "bugcheck": "0x4e",
+    "subtype": "0x99",
+    "process_context": "Docker Desktop",
+    "kernel_image": "ntkrnlmp.exe",
+    "causal_attribution": "UNESTABLISHED; context does not identify a corrupting driver or physical memory fault"
+  },
+  "codex": {
+    "version": "0.162.0-alpha.17.2",
+    "authentication": "Logged in using ChatGPT",
+    "existing_authentication_file_unchanged_against_baseline": true,
+    "billing_policy": "OPENAI_ONLY",
+    "application_openai_routing": "BLOCKED_NO_AUTHORIZED_API_CREDENTIAL_OR_CATALOG_ROUTE",
+    "normal_interactive_daemon_package": "UNVERIFIED"
+  },
+  "roles": {
+    "latest_completed_run_source": "18ec93990eeccdbde60b85b32f5f5e0f0cb7849d",
+    "pass": 7,
+    "fail": 14,
+    "tested": 21,
+    "role_competence_21_of_21": false,
+    "pr275_successor_observed": "47ab26cbdee8ae55e7ea904b412600e189f88015",
+    "successor_live_acceptance": "NOT_TESTED"
+  },
+  "dell": {
+    "fresh_client_check": "PENDING_OWNER_CONFIRMED_UNAVAILABLE",
+    "supplied_evidence": "Dell/owner reports TLS trust, MEMBER enrollment and returned task; original client receipts not inspected here",
+    "abex_server_persistence": "PASS_DATED_SERVER_RECEIPT_ONLY",
+    "task_id": "0eb81828-8e61-4d48-b07f-150702a4c2b7",
+    "job_id": "f13896ba-2517-4e55-aee2-5008c35fad87",
+    "result": "MEMBER-OK",
+    "artifact_id": "28606f6d90334208afeb78163dc64a1f",
+    "artifact_sha256": "a7d7bedfb26d5394e56daf96d82ae4629cbf5a85dd2173c4678984df82de7a9b",
+    "communication_receipt_sha256": "936c20bff58b144902b2b27150fbeb33b729d59ce916d1431527c1bb69580944"
+  },
+  "manifest": {
+    "effective_status": "STALE",
+    "stale_reasons": [
+      "global_public_system_evidence_expired",
+      "sky_webgl_device_acceptance_unverified",
+      "verification_expired:authority",
+      "verification_expired:control",
+      "verification_expired:dell_runtime",
+      "verification_expired:game",
+      "verification_expired:manifest",
+      "verification_expired:portal",
+      "verification_expired:prime",
+      "verification_expired:shared_contract",
+      "verification_expired:sky",
+      "verification_expired:velyqua"
+    ],
+    "historical_verification_expiry_unchanged": true,
+    "prior_system_state_fields_are_dated_observations_not_fresh_acceptance": true
+  },
+  "deferred": [
+    "both physical iPhones",
+    "public branding",
+    "DigitalOcean migration",
+    "Azure L7 assessment or live exchange/signing",
+    "GPU acceleration",
+    "VELYQUA physical sensors"
+  ],
+  "receipts": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\RESULT.json",
+      "sha256": "c26874cabc31f39e272cbbdbc81ea01d97f549843e3f1b68904040e33a9d49a1"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\SFC-stdout.txt",
+      "sha256": "a1a68d4523579496e3576d4b4cb0bc1c1dfb2fdff33e64513c545111b24bf92a"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\windows-20261012T135645-5b731bb0\\DISM-stdout.txt",
+      "sha256": "2f38d6b5bf35925b5a99ef9e72596a9b5f254a234918fa23c060ca1ef0f8ea23"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\WINDOWS-DUMP-TRIAGE-20261012T060503Z-79894760.json",
+      "sha256": "649210fa311233f4452805a69287f05e83fd5abbe234ee41025d33c0eb9641ef"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\baseline-20261012T055521Z-f50e3a9a\\BASELINE.json",
+      "sha256": "bc51f493d5f202c623d66d972d8ecaedaadad484b61c04abc4c86c7436544661"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\dell-enrollment\\task-0eb81828-8e61-4d48-b07f-150702a4c2b7-20261012T060631Z\\ABEX-MEMBER-TASK-RECEIPT.json",
+      "sha256": "176852c9cfa71ed32bc17de9393a183ace8fb545bd7365f569c711ed478f1850"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\coordinated-closure\\communication-20261012T062017Z-cee5858a\\RECEIPT.json",
+      "sha256": "936c20bff58b144902b2b27150fbeb33b729d59ce916d1431527c1bb69580944"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\ops-closure-20261012\\MANIFEST-AUDIT.json",
+      "sha256": "e1ef7ad0d7c5f95da45e0471cc5beaf1c508ca9f8b47da5126371b9bbb6b7ace"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\role-competence\\live-18ec939\\ROLE-ACCEPTANCE-CLOSURE.json",
+      "sha256": "342e7583204eeadd2f9d231d20dd74b3017dd0dd15fa329bf3f5d8f251f575f9"
+    }
+  ]
+}
