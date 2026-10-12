@@ -169,10 +169,10 @@ class SubmitJob(BaseModel):
     @model_validator(mode='after')
     def validate_response_schema(self):
         if self.response_schema is not None:
-            from .response_schema import canonicalize_schema
+            from .response_schema import validated_wire_schema
             if self.response_format != 'strict_json' or self.allow_cloud or self.external_execution:
                 raise ValueError('Response schema requires local strict_json execution')
-            self.response_schema = canonicalize_schema(self.response_schema)
+            self.response_schema = validated_wire_schema(self.response_schema)
         return self
 
 

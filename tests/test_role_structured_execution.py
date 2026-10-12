@@ -10,7 +10,7 @@ import pytest
 
 from app.direct_stream import infer, inference_request, validate_owned_inference_request
 from app.job_queue import JobQueue
-from app.response_schema import canonicalize_schema, validate_response_value
+from app.response_schema import canonicalize_schema, validated_wire_schema, validate_response_value
 
 
 def isolated_schema():
@@ -54,7 +54,9 @@ def test_schema_survives_queue_and_rejected_bytes_usage_remain(raw, accepted, mo
                                    options=lambda: {'num_ctx': 999999, 'num_predict': 999999}))
     assert len(payloads) == 1
     payload = payloads[0]
-    assert payload['format'] == canonicalize_schema(isolated_schema())
+    assert payload['format'] == validated_wire_schema(isolated_schema())
+    assert list(payload['format']['properties']) == ['measured', 'available']
+    assert payload['format']['required'] == ['measured', 'available']
     assert payload['options'] == {'temperature': 0, 'seed': 0, 'num_ctx': 128, 'num_predict': 32}
     assert [message['role'] for message in payload['messages']] == ['system', 'user']
     encoded = json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
@@ -87,14 +89,14 @@ def test_all_current_normal_cases_declare_types_without_changing_registry():
     ids = registered_agent_ids(include_orchestrator=False)
     assert set(ids) == set(declared_normal_role_ids())
     for agent in ids:
-        spec = canonical_case_spec(agent, f'responsibility.{agent}', 'role:normal')
+        spec = canonical_case_spec(agent, f'responsibility.{agent}', 'role:normal_structured')
         assert spec['request']['response_format'] == 'strict_json'
         assert canonicalize_schema(spec['request']['response_schema'])
         assert spec['request']['data_classification'] == 'LOCAL_ONLY'
         assert spec['request']['max_cost_usd'] == 0
 
 
-@pytest.mark.parametrize('mutation', ['schema_removed', 'schema_changed', 'format_changed',
+@pytest.mark.parametrize('mutation', ['schema_removed', 'schema_changed', 'schema_field_order', 'format_changed',
                                      'payload_digest', 'prompt_digest', 'model', 'options', 'scalar_type'])
 def test_owned_peer_rejects_schema_or_receipt_changes(mutation):
     from copy import deepcopy
@@ -116,6 +118,10 @@ def test_owned_peer_rejects_schema_or_receipt_changes(mutation):
         altered['response_schema'] = json.dumps(other)
     elif mutation == 'format_changed':
         altered['response_format'] = 'text'
+    elif mutation == 'schema_field_order':
+        other = deepcopy(schema)
+        other['required'].reverse()
+        altered['response_schema'] = json.dumps(other)
     else:
         wire = json.loads(altered['inference_receipt'])
         if mutation == 'payload_digest': wire['request_payload_sha256'] = '0' * 64

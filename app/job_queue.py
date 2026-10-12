@@ -173,10 +173,10 @@ class JobQueue:
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')
         if response_schema is not None:
-            from .response_schema import canonicalize_schema
+            from .response_schema import validated_wire_schema
             if response_format != 'strict_json' or allow_cloud or external_execution:
                 raise ValueError('Response schema requires local strict_json execution')
-            response_schema = canonicalize_schema(response_schema)
+            response_schema = validated_wire_schema(response_schema)
         try:
             canonical_agent = canonical_agent_id(agent)
         except RegistryError as exc:

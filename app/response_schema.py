@@ -46,7 +46,8 @@ def _bounded_key(key: Any) -> None:
         raise ResponseSchemaError("Schema property name exceeds limit")
 
 
-def canonicalize_schema(schema: Any, *, require_object_root: bool = True) -> dict[str, Any]:
+def canonicalize_schema(schema: Any, *, require_object_root: bool = True,
+                        preserve_field_order: bool = False) -> dict[str, Any]:
     """Validate the entire schema, return an independent deterministic copy.
 
     Closed objects default to additionalProperties:false. Omitted required is
@@ -97,9 +98,15 @@ def canonicalize_schema(schema: Any, *, require_object_root: bool = True) -> dic
                     raise ResponseSchemaError("Required keys must be distinct declared properties")
                 if node.get("additionalProperties", False) is not False:
                     raise ResponseSchemaError("Only closed object schemas are supported")
+                # Canonical semantic hashes remain independent of field order.
+                # At the generation boundary, required's declared array order
+                # is also the recoverable wire order after JSON/DB round trips.
+                # Input/calculation fields may then precede derived decisions.
+                order = (required + [name for name in properties if name not in required]
+                         if preserve_field_order else sorted(properties))
                 result["properties"] = {name: visit(properties[name], depth + 1)
-                                        for name in sorted(properties)}
-                result["required"] = sorted(required)
+                                        for name in order}
+                result["required"] = list(required) if preserve_field_order else sorted(required)
                 result["additionalProperties"] = False
             elif kind == "array":
                 if "items" not in node:
@@ -120,6 +127,11 @@ def canonicalize_schema(schema: Any, *, require_object_root: bool = True) -> dic
                       separators=(",", ":"), allow_nan=False).encode("utf-8")) > MAX_SCHEMA_BYTES:
         raise ResponseSchemaError("Schema exceeds byte limit")
     return result
+
+
+def validated_wire_schema(schema: Any) -> dict[str, Any]:
+    """Validate shape while retaining declared generation order; no answers."""
+    return canonicalize_schema(schema, preserve_field_order=True)
 
 
 def canonical_schema_json(schema: Any, *, require_object_root: bool = True) -> str:

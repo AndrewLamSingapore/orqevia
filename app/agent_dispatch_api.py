@@ -96,10 +96,10 @@ class AgentRequest(BaseModel):
     @model_validator(mode='after')
     def validate_response_schema(self):
         if self.response_schema is not None:
-            from .response_schema import canonicalize_schema
+            from .response_schema import validated_wire_schema
             if self.response_format != 'strict_json':
                 raise ValueError('Response schema requires strict_json')
-            self.response_schema = canonicalize_schema(self.response_schema)
+            self.response_schema = validated_wire_schema(self.response_schema)
         return self
 
     def transport_dump(self, *, exclude=None):
@@ -515,7 +515,7 @@ def inference_prompt(body: AgentRequest, tier: Tier) -> str:
                 'or the candidate\'s claim with independent evidence. '
                 'A more detailed role description never overrides the requested output contract. '
                 + ('Output schema (types and structure, not an answer):\n' +
-                   json.dumps(body.response_schema, sort_keys=True, separators=(',', ':')) + '\n'
+                   json.dumps(body.response_schema, sort_keys=False, separators=(',', ':')) + '\n'
                    if body.response_schema is not None else '') +
                 'Role: '+responsibility['description']+'. Objective:\n'+body.objective+'\nContext:\n'+body.context)
     # Small context-free Nano tasks already contain the complete instruction.

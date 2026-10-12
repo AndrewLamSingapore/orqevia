@@ -13,7 +13,7 @@ def inference_request(job, provider, *, settings, options):
     response_format = job.get('response_format', 'text')
     if response_format not in {'text', 'strict_json'}:
         raise RuntimeError('Invalid response format')
-    from .response_schema import canonicalize_schema
+    from .response_schema import validated_wire_schema
     schema = job.get('response_schema')
     if schema is not None:
         if response_format != 'strict_json':
@@ -22,7 +22,7 @@ def inference_request(job, provider, *, settings, options):
             if len(schema.encode('utf-8')) > 16384:
                 raise RuntimeError('Response schema exceeds budget')
             schema = json.loads(schema)
-        schema = canonicalize_schema(schema)
+        schema = validated_wire_schema(schema)
     effective_options = dict(options())
     if response_format == 'strict_json':
         effective_options.setdefault('temperature', 0)
@@ -73,12 +73,12 @@ def validate_owned_inference_request(actual, original, provider, *, settings, op
     """
     if original.response_schema is None:
         return
-    from .response_schema import canonicalize_schema
+    from .response_schema import validated_wire_schema
     if actual.get('response_format') != original.response_format:
         raise ValueError('Owned response format changed')
     _, observed_schema, expected_receipt = inference_request(
         actual, provider, settings=settings, options=options)
-    if observed_schema != canonicalize_schema(original.response_schema):
+    if observed_schema != validated_wire_schema(original.response_schema):
         raise ValueError('Owned response schema changed')
     recorded = actual.get('inference_receipt')
     if type(recorded) is not str or len(recorded.encode('utf-8')) > 16384:

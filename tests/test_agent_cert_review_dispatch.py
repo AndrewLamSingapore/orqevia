@@ -36,6 +36,9 @@ def digest(value):
 
 def bind_mock_inference_request(job, original):
     """Represent the new structural metadata in this explicit source fixture."""
+    if original.response_schema is None:
+        # Legacy task fixtures keep their original schema-less transport.
+        return
     from app.direct_stream import inference_request
     from app.compute_profile import generation_options
     job['response_format'] = original.response_format
@@ -383,4 +386,38 @@ def test_final_owned_objective_read_must_succeed_before_review_artifact(configur
             raise KeyError('synthetic lost owned state')
         return original(*args, **kwargs)
     monkeypatch.setattr(objective_api, 'get_read_only', read_once)
+    reject(configured)
+
+
+def test_explicit_structured_case_reconstructs_owned_prompt_and_keeps_legacy_identity(configured):
+    """Mock source regression only; no live model or runtime acceptance."""
+    from app.agent_cert_role_review import canonical_case_spec
+    from app.agent_cert_structured_roles import CASE_ID
+    spec = canonical_case_spec('a19', 'responsibility.a19', CASE_ID)
+    execution = configured.payload['execution']
+    execution['test_case'] = 'normal_structured'
+    execution['case_spec'] = spec
+    original = dispatch.AgentRequest(**spec['request'])
+    configured.job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION)
+    bind_mock_inference_request(configured.job, original)
+    configured.payload['expected_execution_sha256'] = digest(canonical(execution))
+    result = run(configured)
+    assert result['state'] == 'COMPLETED'
+    from app.artifact_factory import ArtifactFactory
+    _, raw = ArtifactFactory(configured.root / 'artifacts').retrieve(result['artifact']['artifact_id'])
+    review = json.loads(raw)
+    assert review['test_case'] == 'normal_structured'
+    assert review['oracle_id'] == 'group_two_exact_role_oracle/v1'
+    assert review['case_spec_sha256'] == digest(canonical(spec))
+    assert review['certification'] == 'UNVERIFIED'
+
+
+def test_structured_case_cannot_change_owned_source_to_obtain_acceptance(configured):
+    from app.agent_cert_role_review import canonical_case_spec
+    from app.agent_cert_structured_roles import CASE_ID
+    execution = configured.payload['execution']
+    execution['test_case'] = 'normal_structured'
+    execution['case_spec'] = canonical_case_spec('a19', 'responsibility.a19', CASE_ID)
+    execution['case_spec']['request']['context'] = 'altered source facts'
+    configured.payload['expected_execution_sha256'] = digest(canonical(execution))
     reject(configured)
