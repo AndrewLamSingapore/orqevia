@@ -4,6 +4,8 @@ import httpx,pytest
 from app.provider_runtime import ChatCompletionProvider,complete,ProviderFailure
 from app.outcome_metrics import OutcomeMetrics
 from tests.test_provider_runtime import MODEL,stream_response
+from tests.test_objective_inference_evidence import evidence
+from app import objective_api
 
 def run(body,headers=None):
     provider=ChatCompletionProvider('https://fixture.invalid/v1/chat/completions','env:FIXTURE',
@@ -44,3 +46,27 @@ def test_ledger_retains_task_agent_tokens_and_trace_without_claiming_verificatio
     with sqlite3.connect(path) as c:row=c.execute('select task_id,tokens,cost,verified,details from reasoning_attempts').fetchone()
     assert row[:4]==('task',12,.000028,0)
     assert json.loads(row[4])['provider_request_id']=='req_fixture'
+
+def attach_attribution(evidence,**changes):
+    detail={**evidence['detail'],'provider_request_id':'req_fixture','provider_response_id':'chatcmpl_fixture',
+        'reported_model':'provider-resolved-model','input_tokens':5,'output_tokens':3,
+        'cost_basis':'provider_usage_x_catalog_rates','billing_status':'unreconciled',**changes}
+    with sqlite3.connect(evidence['path']) as c:c.execute('update reasoning_attempts set details=?',(json.dumps(detail),))
+
+def test_owned_objective_projection_exports_safe_attribution(evidence):
+    attach_attribution(evidence)
+    result=objective_api.inference_attempt_projection([evidence['job']])
+    assert result['status']=='OBSERVED' and result['verification']=='UNVERIFIED'
+    attempt=result['attempts'][0]
+    assert attempt['provider_request_id']=='req_fixture' and attempt['input_tokens']==5
+    assert attempt['reported_model']=='provider-resolved-model' and attempt['selected_model']=='organization/alternate:provider'
+    assert attempt['billing_status']=='unreconciled'
+
+@pytest.mark.parametrize('change',[{'provider_request_id':'sk-never-export-this'},
+    {'input_tokens':4},{'billing_status':'verified'},{'cost_basis':'billed'},
+    {'reported_model':'Bearer never-export-this'},{'input_tokens':None}])
+def test_bad_ledger_attribution_is_rejected_without_export(evidence,change):
+    attach_attribution(evidence,**change)
+    result=objective_api.inference_attempt_projection([evidence['job']])
+    assert result['status']=='INVALID' and not result['attempts']
+    assert 'never-export-this' not in json.dumps(result)

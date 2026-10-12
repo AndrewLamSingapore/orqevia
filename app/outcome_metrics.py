@@ -22,7 +22,7 @@ class OutcomeMetrics:
         if cost is not None and (not math.isfinite(float(cost)) or float(cost)<0):raise ValueError('Invalid cost')
         if verified and not (metrics.get('artifact_id') and metrics.get('artifact_validation')=='PASS' and metrics.get('success')):raise ValueError('Verified outcome needs actual artifact acceptance')
         tokens=None if input_tokens is None or output_tokens is None else input_tokens+output_tokens
-        metrics.update(input_tokens=input_tokens,output_tokens=output_tokens)
+        if 'cost_basis' in metrics:metrics.update(input_tokens=input_tokens,output_tokens=output_tokens)
         with self.connect() as c:c.execute('INSERT INTO reasoning_attempts VALUES(?,?,?,?,?,?,?,?,?)',(attempt_id,task_id,task_class,tier,seconds,tokens,None if cost is None else float(cost),int(verified),json.dumps(metrics,sort_keys=True)))
     def summary(self,task_class):
         with self.connect() as c:rows=c.execute('SELECT task_id,seconds,tokens,cost,verified FROM reasoning_attempts WHERE task_class=?',(task_class,)).fetchall()
