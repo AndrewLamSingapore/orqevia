@@ -1,0 +1,13 @@
+{
+  "master_source": "f03ce95d1752f316bca92257b0f7349a48863472:assets/brands/orqevia/generated-original.png",
+  "master_sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+  "derivation": "Pillow12.3.0 RGB Lanczos resizing; full approved raster preserved, no crop/redraw",
+  "derived_sha256": {
+    "orqevia-v1-192.png": "2fab5940548b8c9fcf9fab9b0d73dac0465410f7002059af4fa9915fd3ab1440",
+    "orqevia-v1-512.png": "4413a5df1e6a3758fb7c14f5a9510af47b1f40267b7c8cfb53e4ce92f09934b3",
+    "orqevia-v1-apple-touch.png": "49fb17ee128b0857d3b903e5cff33db0d5897ab8a41bd4a626078e6039526ceb"
+  },
+  "production_deployed": false,
+  "physical_owner_iphone": "DEFERRED_PHYSICAL_DEVICE_VERIFICATION",
+  "physical_member_iphone": "DEFERRED_PHYSICAL_DEVICE_VERIFICATION"
+}
