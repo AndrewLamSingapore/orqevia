@@ -136,6 +136,7 @@ def main():
     names.append('hf_observation_api')
     names.append('hf_qa_execution')
     names.append('system_architecture')
+    names.extend(['authorized_assessment_regressions', 'quality_role_routing_regressions'])
     names.extend(['response_schema', 'role_structured_execution',
                   'agent_cert_structured_roles','agent_cert_structured_input_roles'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
