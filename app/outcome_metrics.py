@@ -14,6 +14,7 @@ class OutcomeMetrics:
     def connect(self):return sqlite3.connect(self.path,timeout=15)
     def record(self,*,attempt_id,task_id,task_class,tier,seconds,input_tokens=None,output_tokens=None,cost=None,verified=False,**metrics):
         allowed={'agent_id','workflow_id','provider','model','cached_tokens','retrieved_context_bytes','retries','escalations','success','artifact_id','artifact_validation','handoff_accuracy','context_preservation','role_adherence','tool_selection_precision','schema_adherence','repair_cycles','redundant_work','human_interventions','failure_kind','requested_tier','requested_provider','requested_model','fallback_route','error_classifications'}
+        allowed.update({'input_tokens','output_tokens','provider_request_id','provider_response_id','reported_model','cost_basis','billing_status'})
         if set(metrics)-allowed:raise ValueError('Unrecognized metrics; raw prompts/reasoning are not accepted')
         if not math.isfinite(seconds) or seconds<0:raise ValueError('Invalid duration')
         for value in (input_tokens,output_tokens):
@@ -21,6 +22,7 @@ class OutcomeMetrics:
         if cost is not None and (not math.isfinite(float(cost)) or float(cost)<0):raise ValueError('Invalid cost')
         if verified and not (metrics.get('artifact_id') and metrics.get('artifact_validation')=='PASS' and metrics.get('success')):raise ValueError('Verified outcome needs actual artifact acceptance')
         tokens=None if input_tokens is None or output_tokens is None else input_tokens+output_tokens
+        metrics.update(input_tokens=input_tokens,output_tokens=output_tokens)
         with self.connect() as c:c.execute('INSERT INTO reasoning_attempts VALUES(?,?,?,?,?,?,?,?,?)',(attempt_id,task_id,task_class,tier,seconds,tokens,None if cost is None else float(cost),int(verified),json.dumps(metrics,sort_keys=True)))
     def summary(self,task_class):
         with self.connect() as c:rows=c.execute('SELECT task_id,seconds,tokens,cost,verified FROM reasoning_attempts WHERE task_class=?',(task_class,)).fetchall()

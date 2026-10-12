@@ -127,6 +127,7 @@ def main():
                   'agent_cert_case_bridge', 'agent_cert_case_bridge_independent',
                   'agent_cert_dispatch_cases'])
     names.append('provider_rejection_ambiguity')
+    names.append('provider_attribution')
     names.extend(['hf_fallback','provider_circuit','provider_circuit_integration','hf_serverless','objective_inference_evidence'])
     names.append('hf_observation_api')
     names.append('hf_qa_execution')

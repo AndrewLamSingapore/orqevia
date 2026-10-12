@@ -170,6 +170,8 @@ def execute_cloud(job,provider,data,cancelled):
         action=ActionRecord(job['id'],job['agent'],'inference.run',provider.name,classification=job.get('classification','R0'),model_backend=spec.name,execution_location='cloud')
         answer=DirectExecutor(action_ledger()).execute(action,operation)
         usage=answer['usage']
+        # Preserve the JobQueue.finish wire contract. Attribution is recorded in
+        # the task/agent-bound ledger below, rather than extra queue kwargs.
         return {'result':answer['text'],'input_tokens':usage.input_tokens,'output_tokens':usage.output_tokens,'actual_cost_usd':None if answer['cost_usd'] is None else float(answer['cost_usd'])}
     except SecretUnavailable:failure='CREDENTIAL_UNAVAILABLE';raise ProviderFailure(failure) from None
     except ProviderFailure as exc:
@@ -182,4 +184,8 @@ def execute_cloud(job,provider,data,cancelled):
             requested_tier=entry['tier'],requested_provider=entry['id'],requested_model=entry['model'],
             fallback_route=answer.get('fallback_failures',[]) if answer else failure_routes,
             error_classifications=sorted(set(([x['code'] for x in answer.get('fallback_failures',[])]+answer.get('retry_errors',[])) if answer else ([x['code'] for x in failure_routes]+([failure] if failure else [])))),
-            cached_tokens=usage.cached_tokens if usage else None,success=answer is not None,failure_kind=failure)
+            cached_tokens=usage.cached_tokens if usage else None,success=answer is not None,failure_kind=failure,
+            provider_request_id=answer.get('provider_trace',{}).get('request_id') if answer else None,
+            provider_response_id=answer.get('provider_trace',{}).get('response_id') if answer else None,
+            reported_model=answer.get('provider_trace',{}).get('reported_model') if answer else None,
+            cost_basis=answer.get('cost_basis','unknown') if answer else 'unknown',billing_status='unreconciled')

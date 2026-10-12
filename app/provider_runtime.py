@@ -40,10 +40,27 @@ class Usage:
 
 
 @dataclass(frozen=True)
+class ProviderTrace:
+    request_id: str | None = None
+    response_id: str | None = None
+    reported_model: str | None = None
+
+
+def _trace_value(value, *, model=False):
+    """Bounded opaque provider metadata, never arbitrary headers/error bodies."""
+    if value is None:return None
+    pattern=r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}' if model else r'[A-Za-z0-9][A-Za-z0-9_-]{0,199}'
+    if not isinstance(value,str) or not re.fullmatch(pattern,value) or value.lower().startswith(('sk-','sk_','bearer')):
+        raise ProviderFailure('INVALID_PROVIDER_TRACE')
+    return value
+
+
+@dataclass(frozen=True)
 class Chunk:
     text: str = ''
     usage: Usage | None = None
     complete: bool = False
+    trace: ProviderTrace | None = None
 
 
 class ProviderFailure(RuntimeError):
@@ -176,6 +193,8 @@ class ChatCompletionProvider:
                         # absence of visible tokens cannot authorize replay.
                         raise ProviderFailure(code)
                     ended=False;finished=False
+                    request_id=_trace_value(response.headers.get('x-request-id'))
+                    yield Chunk(trace=ProviderTrace(request_id=request_id))
                     async for line in response.aiter_lines():
                         if len(line)>1_000_000:raise ProviderFailure('STREAM_SIZE_EXCEEDED')
                         if not line.startswith('data:'):continue
@@ -185,6 +204,10 @@ class ChatCompletionProvider:
                         except (ValueError,UnicodeError,RecursionError,TypeError):raise ProviderFailure('MALFORMED_STREAM') from None
                         if not isinstance(item,dict):raise ProviderFailure('MALFORMED_STREAM')
                         terminal=self.stream_ended(item)
+                        metadata=item.get('response') if isinstance(item.get('response'),dict) else item
+                        yield Chunk(trace=ProviderTrace(request_id=request_id,
+                            response_id=_trace_value(metadata.get('id')),
+                            reported_model=_trace_value(metadata.get('model'),model=True)))
                         item=self.normalize_stream_item(item)
                         if item.get('error'):
                             # A 200 streaming response has been admitted. Even if it
@@ -267,6 +290,7 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
         retry_errors=[]
         for attempt in range(max_retries+1):
             parts=[];usage=Usage();done=False;saw_usage=False;output_bytes=0
+            trace={'request_id':None,'response_id':None,'reported_model':None}
             permit=None
             try:
                 if circuits is not None:
@@ -277,6 +301,13 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
                     if not isinstance(chunk,Chunk) or not isinstance(chunk.text,str) or type(chunk.complete) is not bool:
                         raise ProviderFailure('MALFORMED_STREAM')
                     if done:raise ProviderFailure('MALFORMED_STREAM')
+                    if chunk.trace is not None:
+                        if not isinstance(chunk.trace,ProviderTrace):raise ProviderFailure('INVALID_PROVIDER_TRACE')
+                        for field in trace:
+                            value=_trace_value(getattr(chunk.trace,field),model=field=='reported_model')
+                            if value is None:continue
+                            if trace[field] is not None and trace[field]!=value:raise ProviderFailure('PROVIDER_TRACE_CHANGED')
+                            trace[field]=value
                     if chunk.text:
                         output_bytes+=len(chunk.text.encode())
                         if output_bytes>4_000_000:raise ProviderFailure('STREAM_SIZE_EXCEEDED')
@@ -289,7 +320,10 @@ async def complete(provider,model,messages,*,output_tokens,timeout=60,cancelled=
                         usage=chunk.usage;saw_usage=True
                     done=done or chunk.complete
                 if not done or not ''.join(parts).strip():raise ProviderFailure('EMPTY_OR_INCOMPLETE_RESPONSE')
-                result={'text':''.join(parts),'usage':usage,'cost_usd':usage.cost(model),'retries':attempt,'retry_errors':retry_errors}
+                cost=usage.cost(model)
+                result={'text':''.join(parts),'usage':usage,'cost_usd':cost,'retries':attempt,'retry_errors':retry_errors,
+                    'provider_trace':trace,'cost_basis':'provider_usage_x_catalog_rates' if cost is not None else 'unknown',
+                    'billing_status':'unreconciled'}
                 if permit is not None:
                     circuits.succeed(permit);permit=None
                 return result
