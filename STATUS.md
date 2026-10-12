@@ -60,13 +60,16 @@ If you are an AI agent updating this file:
   orqevia and SSOT retired in favor of STATUS.md; Dell local checkouts now
   match origin/main.
 - Draft branch checks reproduced locally by Dell Codex: simulation PR #270
-  640/640, gateway PR #215 68/68, UI PR #244 10/10. All three remain unmerged
-  drafts and are not production.
-- ABEX hardware values remain REPORTED (not freshly verified): the ABEX host
-  did not serve Dell-facing services during this session, and the prime.runtime
-  acceptance receipt remains unpublished.
-- Bug sweep (Dell Codex): the STATUS.md byte-pin history test is brittle and
-  fails on legitimate STATUS.md edits (observed on PR #268). The
+  640/640, gateway PR #215 68/68, UI PR #244 10/10. These are unit/integration
+  checks for those three drafts, not 21-agent role-competence acceptance. ABEX
+  reports 18 failed role tests still pending repair; no 21/21 or release-ready
+  claim is made here.
+- ABEX hardware values remain REPORTED (not freshly verified). The ABEX HTTPS
+  interface is now reachable from Dell and Dell TLS trust is established (ABEX
+  CA installed in Current User trusted roots); enrollment still awaits a fresh
+  MEMBER code. The prime.runtime acceptance receipt remains unpublished.
+- Bug sweep (Dell Codex): the STATUS.md byte-pin history test fails when
+  STATUS.md is edited without updating its pins (observed on PR #268). The
   authority-engine README STATUS-authority reference gap was already fixed.
 
 ---

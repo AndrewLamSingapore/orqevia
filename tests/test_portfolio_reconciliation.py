@@ -99,8 +99,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     dell_start = after.index(dell_title)
     dell_end = after.index("## Repository and brand rename", dell_start)
     dell_update = after[dell_start:dell_end].encode("utf-8")
-    assert len(dell_update) == 2020
-    assert hashlib.sha256(dell_update).hexdigest() == "c6134b4fb43d7f0e0ac665242a3adf8934dde23fb2907c4aa9b170ede3afabbd"
+    assert len(dell_update) == 2284
+    assert hashlib.sha256(dell_update).hexdigest() == "7f5867a51b66609e8bf6a6097bf0a537e629a11261e85a157d3d1f594e470f14"
     after = after[:dell_start] + after[dell_end:]
     # Admit exactly this new dated rename/rebrand record before the byte-pinned
     # 8 October observation; every prior section pin stays unchanged.
