@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.repository == 'AndrewLamSingapore/prime' && github.ref == 'refs/heads/main' && github.ref_protected && github.event_name == 'workflow_dispatch' && github.run_attempt == 1
+    if: github.repository == 'AndrewLamSingapore/orqevia' && github.ref == 'refs/heads/main' && github.ref_protected && github.event_name == 'workflow_dispatch' && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

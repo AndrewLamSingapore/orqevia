@@ -16,9 +16,9 @@ from cryptography.hazmat.primitives.asymmetric import ec, utils
 CLIENT_ID = "d3779443-01fe-4bdc-9986-9db3ae98893e"
 TENANT_ID = "067196c1-a282-4f8d-a7c5-753ca4ae5b48"
 AUDIENCE = "api://AzureADTokenExchange"
-SUBJECT = "repo:AndrewLamSingapore@313231443/prime@1345668764:ref:refs/heads/main"
-CALLER = "AndrewLamSingapore/prime/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
-SIGNER = "AndrewLamSingapore/prime/.github/workflows/prime-verifier-signer.yml@refs/heads/main"
+SUBJECT = "repo:AndrewLamSingapore@313231443/orqevia@1345668764:ref:refs/heads/main"
+CALLER = "AndrewLamSingapore/orqevia/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
+SIGNER = "AndrewLamSingapore/orqevia/.github/workflows/prime-verifier-signer.yml@refs/heads/main"
 KEY_PREFIX = "https://abexprimeverify26.vault.azure.net/keys/prime-agent-cert-verifier/"
 
 
@@ -83,7 +83,7 @@ def _oidc():
     required = {
         "iss": "https://token.actions.githubusercontent.com",
         "aud": AUDIENCE, "sub": SUBJECT,
-        "repository": "AndrewLamSingapore/prime",
+        "repository": "AndrewLamSingapore/orqevia",
         "repository_id": "1345668764", "repository_owner_id": "313231443",
         "ref": "refs/heads/main", "ref_protected": "true",
         "workflow_ref": CALLER, "job_workflow_ref": SIGNER,
@@ -160,7 +160,7 @@ def run(pin):
     if not isinstance(key_id, str) or not re.fullmatch(re.escape(KEY_PREFIX) + r"[0-9a-f]{32}", key_id):
         raise ValueError("reviewed versioned key pin required")
     public = _public(pin.get("jwk", {}))
-    if (os.environ.get("GITHUB_REPOSITORY") != "AndrewLamSingapore/prime"
+    if (os.environ.get("GITHUB_REPOSITORY") != "AndrewLamSingapore/orqevia"
             or os.environ.get("GITHUB_REF") != "refs/heads/main"
             or os.environ.get("GITHUB_REF_PROTECTED") != "true"
             or os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"):

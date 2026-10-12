@@ -26,9 +26,9 @@ jobs:
           python - <<'PY'
           import os
 
-          expected = "AndrewLamSingapore/prime/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
+          expected = "AndrewLamSingapore/orqevia/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
           if not (
-              os.environ["REPOSITORY"] == "AndrewLamSingapore/prime"
+              os.environ["REPOSITORY"] == "AndrewLamSingapore/orqevia"
               and os.environ["REF"] == "refs/heads/main"
               and os.environ["REF_PROTECTED"] == "true"
               and os.environ["EVENT_NAME"] == "workflow_dispatch"
