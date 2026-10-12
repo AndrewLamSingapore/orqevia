@@ -43,6 +43,8 @@ def main():
     names.append('jarvis_response_contract')
     names.append('jarvis_candidate_verifier')
     names.append('application_boundaries')
+    names.append('repository_workflow_identity')
+    names.append('external_work_receipts')
     names.append('capability_register')
     names.append('cross_domain_security_closure')
     names.append('engineering_verification_gate')
@@ -131,8 +133,6 @@ def main():
     names.append('hf_observation_api')
     names.append('hf_qa_execution')
     names.append('system_architecture')
-    names.append('repository_workflow_identity')
-    names.append('external_work_receipts')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]
