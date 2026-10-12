@@ -1,5 +1,13 @@
 'use strict';
 const el=id=>document.getElementById(id);
+el('exposure-refresh').onclick=async()=>{
+  el('exposure-results').textContent='Reading…';
+  try {
+    const response=await fetch('/control/api/exposure-intelligence');
+    if(!response.ok) throw new Error('Unavailable');
+    el('exposure-results').textContent=JSON.stringify(await response.json(),null,2);
+  } catch {el('exposure-results').textContent='Exposure evidence unavailable.';}
+};
 async function call(path, body) {
   el('message').textContent='Working…';
   try {

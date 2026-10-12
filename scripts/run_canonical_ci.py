@@ -33,6 +33,7 @@ def main():
     names.append('structured_output')
     names.append('structured_output_verifier')
     names.append('semantic_evidence_adversarial')
+    names.extend(['exposure_intelligence', 'exposure_api'])
     names.append('authoritative_result_metadata')
     names.append('supreme_integration')
     names.append('supreme_integration_verifier')
