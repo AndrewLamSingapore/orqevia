@@ -544,5 +544,13 @@
     "accepted_scope": "PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
     "former_generation": "jarvis-prime-golden-gen1-20260926",
     "dell_post_promotion": "PROMOTION_VERIFICATION_PASS"
+  },
+  "latest_observation": {
+    "record": "governance/observations/abex-post-restart-20261012.json",
+    "record_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+    "role": "SUPPLEMENTARY_DATED_RECEIPT_INDEX_NOT_CURRENT_ACCEPTANCE",
+    "current_acceptance": "UNVERIFIED",
+    "historical_freshness_status": "STALE",
+    "renews_existing_verification": false
   }
 }

@@ -15,6 +15,35 @@ INDEX = json.loads((PORTFOLIO / "source-index-20260927.json").read_text(encoding
 EXPECTED_IDS = {"prime", "velyqua", "the-portal", "sky-tablet", "game-platform", "authority-engine"}
 
 
+def test_supplementary_observation_does_not_renew_historical_manifest():
+    manifest = json.loads((ROOT / "governance/operational-manifest.json").read_text(encoding="utf-8"))
+    original = json.loads(subprocess.check_output(
+        ["git", "show", "325c65323df03de1a1a7a12a50b76b3d20bf9bea:governance/operational-manifest.json"], cwd=ROOT))
+    reference = manifest.pop("latest_observation")
+    assert manifest == original
+    assert manifest["status"] == "STALE"
+    assert reference["current_acceptance"] == "UNVERIFIED"
+    assert reference["renews_existing_verification"] is False
+    assert reference["role"] == "SUPPLEMENTARY_DATED_RECEIPT_INDEX_NOT_CURRENT_ACCEPTANCE"
+    raw = (ROOT / reference["record"]).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == reference["record_sha256"]
+
+
+def test_latest_receipt_index_preserves_role_and_client_evidence_limits():
+    observation = json.loads((ROOT / "governance/observations/abex-post-restart-20261012.json").read_text())
+    assert observation["classification"] == "CLAIMED_NOT_OWNER_VERIFIED"
+    assert observation["candidate_promotion"] == "BLOCKED"
+    assert observation["current_runtime_acceptance"] == "UNVERIFIED"
+    assert observation["roles"]["latest_completed_run_source"] == "18ec93990eeccdbde60b85b32f5f5e0f0cb7849d"
+    assert (observation["roles"]["pass"], observation["roles"]["fail"], observation["roles"]["tested"]) == (7, 14, 21)
+    assert observation["roles"]["successor_live_acceptance"] == "NOT_TESTED"
+    assert observation["dell"]["fresh_client_check"] == "PENDING_OWNER_CONFIRMED_UNAVAILABLE"
+    assert observation["dell"]["abex_server_persistence"] == "PASS_DATED_SERVER_RECEIPT_ONLY"
+    assert observation["codex"]["billing_policy"] == "OPENAI_ONLY"
+    assert observation["windows_integrity"]["repair_performed"] is False
+    assert observation["crash_context"]["causal_attribution"].startswith("UNESTABLISHED")
+
+
 def test_exactly_six_products_and_lens_is_a_capability():
     assert len(INDEX["products"]) == 6
     assert {p["id"] for p in INDEX["products"]} == EXPECTED_IDS
@@ -94,13 +123,22 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert after.startswith(title + interpretation)
     # Admit exactly this new 12 October Dell verification record; every prior
     # section pin stays unchanged.
+    # Admit only this exact new dated receipt index; historical sections stay pinned.
+    local_title = "## ABEX independent post-restart receipts — 12 October 2026"
+    assert after.count(local_title) == 1
+    local_start = after.index(local_title)
+    local_end = after.index("## Dell independent verification - 12 October 2026", local_start)
+    local_update = after[local_start:local_end].encode("utf-8")
+    assert len(local_update) == 2436
+    assert hashlib.sha256(local_update).hexdigest() == "a58bd9753a6ded69cb24051fa14a998a0d39afecfbaaf12746b1e4a8380af0a3"
+    after = after[:local_start] + after[local_end:]
     dell_title = "## Dell independent verification - 12 October 2026"
     assert after.count(dell_title) == 1
     dell_start = after.index(dell_title)
     dell_end = after.index("## Repository and brand rename", dell_start)
     dell_update = after[dell_start:dell_end].encode("utf-8")
-    assert len(dell_update) == 2284
-    assert hashlib.sha256(dell_update).hexdigest() == "7f5867a51b66609e8bf6a6097bf0a537e629a11261e85a157d3d1f594e470f14"
+    assert len(dell_update) == 2743
+    assert hashlib.sha256(dell_update).hexdigest() == "d87a085d906c5394419df35ba84476db395d0d3ec486467f5be1ac55aefb8316"
     after = after[:dell_start] + after[dell_end:]
     # Admit exactly this new dated rename/rebrand record before the byte-pinned
     # 8 October observation; every prior section pin stays unchanged.
