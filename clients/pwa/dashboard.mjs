@@ -7,6 +7,15 @@ export function telemetryFreshness(value, now=Date.now()) {
   return now-timestamp>ttl*1000?'STALE':'OBSERVED';
 }
 
+export function coachingStatus(value, now=Date.now()) {
+  if(value===null||typeof value!=='object'||!Array.isArray(value.agents)) return 'UNKNOWN';
+  if(value.status==='UNAVAILABLE') return 'UNAVAILABLE';
+  const timestamp=Date.parse(value.last_event_at||'');
+  if(!Number.isFinite(timestamp)) return 'UNKNOWN';
+  if(timestamp>now+5000) return 'UNKNOWN';
+  return now-timestamp>60000?'STALE':'OBSERVED';
+}
+
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
   let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, generation=null;
@@ -16,6 +25,7 @@ if(typeof document!=='undefined') {
     $('dashboard').classList.toggle('hidden',name!=='home');
     $('task-workspace').classList.toggle('hidden',!['objective','evidence','data & tools'].includes(name));
     $('capability-view').classList.toggle('hidden',['home','objective'].includes(name));
+    $('coaching-view').classList.toggle('hidden',name!=='coaching');
     text('capability-title',name==='objective'?'New objective':name[0].toUpperCase()+name.slice(1));
     const descriptions={agents:'Registry membership is verified separately from readiness. Individual live execution and heartbeat evidence is unavailable.',evidence:'Open your owned task to retrieve its original result and integrity-checked artifacts. Other accounts’ tasks are not exposed.','data & tools':'Upload TXT, Markdown or JSON through the existing authenticated objective interface. Host CPU, memory, disk and network collectors are not configured.',settings:'Manage the existing server session and permissions through Your connection.',intelligence:'Use the existing objective interface for bounded analysis. Every returned result retains its own execution record.',ideas:'Submit an objective through the existing orchestrator. Results and evidence remain attached to the original task.',architecture:'Request architectural analysis through the existing authorized objective interface.',build:'A dedicated build runner is unavailable. Advisory objectives are available; a response is not proof that code was built.',test:'A dedicated test runner is unavailable. Source tests and genuine execution receipts are classified separately.',deploy:'Production deployment remains an owner-authorized operation; this interface has no deployment adapter.',present:'A presentation execution adapter is unavailable. Existing objectives can request a draft; no completed deck is invented.'};
     text('capability-description',descriptions[name]||'Use the existing owned objective and task interfaces.');
@@ -29,8 +39,23 @@ if(typeof document!=='undefined') {
   for(const button of document.querySelectorAll('[data-new-objective]'))button.addEventListener('click',()=>view('objective'));
   for(const button of document.querySelectorAll('[data-open-task]'))button.addEventListener('click',()=>{view('evidence');$('resume-button').click();});
   for(const button of document.querySelectorAll('[data-profile]'))button.addEventListener('click',()=>$('account-button').click());
+  function renderCoaching(coaching){
+    const list=$('coaching-roles'), summary=$('coaching-summary');
+    const empty=(msg)=>{if(list){list.replaceChildren();const d=document.createElement('div');d.className='empty-record';d.textContent=msg;list.append(d);}};
+    if(summary)summary.replaceChildren();
+    if(coaching===null||typeof coaching!=='object'){text('coaching-state','UNAVAILABLE');text('coaching-source','Older Interface endpoint: no coaching observation field.');empty('Coaching telemetry is unavailable in this Interface version.');return;}
+    const state=coachingStatus(coaching);text('coaching-state',state);
+    const src=typeof coaching.cohort_source_revision==='string'?('source '+coaching.cohort_source_revision.slice(0,7)):'source UNKNOWN';
+    const assessment=coaching.last_event_at?new Date(coaching.last_event_at).toLocaleString():'no assessment time';
+    const controller=coaching.controller?.last_state||coaching.controller?.availability||'UNKNOWN';
+    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - assessed ${assessment} - controller ${controller}`);
+    if(summary){for(const [label,value] of [['Baseline pass',coaching.baseline_pass_count],['Acceptance pass',coaching.acceptance_pass_count],['Completed',coaching.completed_count]]){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=(value===null||value===undefined)?'-':String(value);const l=document.createElement('small');l.textContent=label;c.append(s,l);summary.append(c);}}
+    if(!Array.isArray(coaching.agents)||coaching.agents.length===0){empty('No per-role observation (cohort unavailable or partial registry).');return;}
+    if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`B${m('baseline_pass')} P${m('practice_pass')} A${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');t.textContent=agent.last_transition_at?new Date(agent.last_transition_at).toLocaleString():'no assessment time';row.append(head,t);list.append(row);}}
+  }
   function unavailable(state){latest=null;$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');text('telemetry-source','No current authenticated measurement');}
   function render(){
+    renderCoaching(latest?.coaching??null);
     const state=telemetryFreshness(latest);
     if(state!=='OBSERVED'){unavailable(state);return;}
     text('telemetry-state',state);text('mobile-system-state','Observations received');
