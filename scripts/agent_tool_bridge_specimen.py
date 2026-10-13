@@ -222,7 +222,7 @@ def run(args):
     if args.stage == 'packet':
         files = []
         for path in sorted(root.rglob('*')):
-            if path.is_file() and path.name != 'azure-assessment-packet.json' and '.next' not in path.name:
+            if path.is_file() and not path.name.startswith('azure-assessment-packet') and '.next' not in path.name:
                 files.append({'path': path.relative_to(root).as_posix(),
                               'sha256': sha(path.read_bytes()), 'bytes': path.stat().st_size})
         required = ['scenario.json', 'generation-job.json', 'public-tool-receipt.json',
@@ -232,12 +232,24 @@ def run(args):
             'files': files, 'missing_evidence': [name for name in required if not (root / name).exists()],
             'observed_specimen_state': state, 'full_role_accepted_count': 0, 'full_role_denominator': 21,
             'independent_azure_assessment': 'NOT_ESTABLISHED', 'signed_cases': [],
-            'signing_or_credentials_used': False, 'assessment_decision': 'ASSIGNED_TO_INDEPENDENT_ASSESSOR',
+            'azure_signing_or_credentials_used': False,
+            'existing_owner_credentials_used_for_loopback_auth': bool(state.get('generation_job_id')),
+            'independent_review_receipts': [item for item in files
+                if 'independent-review' in Path(item['path']).name],
+            'missing_assessment_scope_evidence': [
+                'Passing independent semantic result-use review for this exact objective.',
+                'Independent Azure verdict and attestation bound to the exact case, runtime source, authority and execution/review artifact digests.',
+                'Remaining owned-capability exact-case evidence for all21 full agent roles.'],
+            'assessment_decision': 'ASSIGNED_TO_INDEPENDENT_ASSESSOR',
             'limits': ['This packet supplies no Azure-issued results or attestation.',
                 'A single specimen does not cover all a07 responsibilities or all21 agents.',
                 'Request shape is supplied; actual source contents and task answers are not.',
                 'The independent reviewer must inspect original model output and raw source bytes.',
                 'Missing runtime or inference pins remain unknown; caller-provided image pin needs separate Docker evidence.']}
+        # Keep each assembly immutable; a later review may add evidence without
+        # erasing the earlier manifest or recursively hashing prior manifests.
+        packet_sha = sha(encoded(packet))
+        retain(root / ('azure-assessment-packet-' + packet_sha + '.json'), packet)
         atomic(root / 'azure-assessment-packet.json', packet)
         return {'packet_path': str(root / 'azure-assessment-packet.json'),
                 'missing_evidence': packet['missing_evidence'], 'files': len(files)}

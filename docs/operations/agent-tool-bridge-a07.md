@@ -55,6 +55,13 @@ the running server environment or admission policy.
 6. Run `--stage packet` against that retained directory to create the hashed
    Azure assessment evidence manifest. It explicitly lists missing files and
    issues no signatures, credentials, Azure results or acceptance decision.
+   Existing Owner credentials are used for loopback authentication and are
+   recorded separately from Azure credentials or signing. Each assembly has an
+   immutable hash-named manifest; the unversioned filename points to the latest
+   assembly. To reproduce the custody check, read each listed path as bytes,
+   compare its length and SHA-256 with the manifest, and then inspect the original
+   scenario, inference and tool receipts against the independent review. This
+   check requires neither inference nor internet access.
 
 Independent review must check that the actual synthesis uses supported source
 facts, preserves the retrieved URL/hash/bytes and observation time, separates
@@ -83,3 +90,15 @@ tool calls. Root then authorized one final `--attempt 3`: the identical clarifie
 prompt and criteria use the already configured local deep model/provider. The
 bridge feedback still uses its fixed existing local fast model. No fourth
 same-failure attempt is authorized by this driver or scenario.
+
+The third original request was valid and executed one guarded public read. Its
+server-fixed local fast feedback completed, but independent inspection found
+that it confused an internal receipt reference with the source and omitted
+required provenance and missing-evidence distinctions. That original output and
+session remain unchanged. Root then authorized one separate local deep-model
+diagnostic using the exact original feedback prompt, facts and criteria, without
+another public read. On 13 October 2026, that one diagnostic failed after its
+60-second bound with `LOCAL_EXECUTION_FAILED`, no result or inference receipt,
+one attempt and recorded queue cost zero. No retry follows. Neither completion
+of the public read nor the diagnostic establishes full a07, 21-agent or Azure
+acceptance.

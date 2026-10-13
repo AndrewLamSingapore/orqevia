@@ -22,6 +22,9 @@ def test_preparation_and_packet_do_not_submit_or_supply_task_answers(tmp_path, m
     assert 'generation-job.json' in packet['missing_evidence']
     result = json.loads((tmp_path / 'azure-assessment-packet.json').read_text())
     assert result['signed_cases'] == [] and result['full_role_accepted_count'] == 0
+    assert result['azure_signing_or_credentials_used'] is False
+    assert result['existing_owner_credentials_used_for_loopback_auth'] is False
+    assert len(list(tmp_path.glob('azure-assessment-packet-*.json'))) == 1
 
 
 @pytest.mark.parametrize('stage', ['submit', 'collect', 'feedback', 'finish'])
