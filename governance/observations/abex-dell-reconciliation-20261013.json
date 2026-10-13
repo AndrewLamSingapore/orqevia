@@ -1,0 +1,371 @@
+{
+  "schema": "orqevia.dated-reconciliation.v1",
+  "reconciled_at_utc": "2026-10-13T03:48:07.060Z",
+  "orqevia_source_before_update": "f5543d06476246bb288ff385d422c8bdb3f46c42",
+  "classification": "CLAIMED_NOT_OWNER_VERIFIED",
+  "owning_sources": [
+    {
+      "repository": "AndrewLamSingapore/AndrewLamSingapore",
+      "main": "bc8a53567c274676cbdfe195f9a1ac00cf373ea4"
+    },
+    {
+      "repository": "AndrewLamSingapore/authority-engine",
+      "main": "f58033a2033c6a735789959a79807904465a4459"
+    },
+    {
+      "repository": "AndrewLamSingapore/the-portal",
+      "main": "4d0643d4fd9cd4924a52da83fd70ae012df34473"
+    },
+    {
+      "repository": "AndrewLamSingapore/velyqua",
+      "main": "bf25a061cb126d4291e15cc7eb664ba2e0066b36"
+    },
+    {
+      "repository": "AndrewLamSingapore/game-platform",
+      "main": "6b4e415f4daff9a19ec6149162d4dbaeaadc9299"
+    },
+    {
+      "repository": "AndrewLamSingapore/sky-tablet",
+      "main": "7480bf002ef70e09fc9bfba87cb06dfa42643bd7"
+    }
+  ],
+  "source_integrations": {
+    "controller286": {
+      "merged": "f5543d06476246bb288ff385d422c8bdb3f46c42",
+      "candidate": "cdba1a6bac049831cbab91eee1a5634b1fb643a4",
+      "tree": "6ee8b6d2b54f03669167310165c1632411b304cb",
+      "independent_review": "https://github.com/AndrewLamSingapore/orqevia/issues/284#issuecomment-6137401105",
+      "tests": 48,
+      "subtests": 77,
+      "installed": false
+    },
+    "dashboard288": {
+      "head": "909f0a6b43d66fa9c046bf3d98ed743e22abeeee",
+      "tree": "c0bc3679bed8a1d97aaaf42b21266fca99826e17",
+      "pr": "https://github.com/AndrewLamSingapore/orqevia/pull/288",
+      "source_workflows": "ALL_THREE_SUCCESS",
+      "offline_command_groups": 6,
+      "race_session_worker_tests": 22,
+      "independent_review": "DELL_CLAIMED_PENDING_RESULT",
+      "installed": false
+    },
+    "dell_successors": [
+      {
+        "repo": "game-platform",
+        "pr": 42,
+        "head": "fcc91560e0f0be63ec689c2efb11ac72277ca100",
+        "reported_tests": 18
+      },
+      {
+        "repo": "orqevia",
+        "pr": 289,
+        "head": "3389b1924f0a19026ecfb1e6eaf68346bb6aac30",
+        "reported_tests": 212
+      },
+      {
+        "repo": "orqevia",
+        "pr": 290,
+        "head": "0bec08179290ac7b543cf0216e57a931343c6d26",
+        "reported_tests": 12
+      }
+    ]
+  },
+  "backend": {
+    "project_id": "vtrfgckzpjgtmqsnumur",
+    "name": "Game Platform",
+    "region": "ap-southeast-1",
+    "transition": [
+      "INACTIVE",
+      "COMING_UP",
+      "ACTIVE_HEALTHY"
+    ],
+    "restored_existing_project": true,
+    "read_only_probe": {
+      "sql": "SELECT 1 AS database_reachable, CURRENT_TIMESTAMP AS observed_at_utc;",
+      "database_reachable": 1,
+      "observed_at_utc": "2026-10-13T03:42:22.654323Z"
+    },
+    "schema_or_auth_changes": false,
+    "authenticated_app_acceptance": "UNVERIFIED"
+  },
+  "coaching": {
+    "current_21_of_21": null,
+    "status": "UNVERIFIED_RUNTIME_ACCESS_UNAVAILABLE",
+    "historical_start": {
+      "observed_at_utc": "2026-10-13T02:14:56.692802Z",
+      "controller_source": "2da92fceadf30c86b5e6fb86a128cdcaf0348596",
+      "executor_source": "81f2d1dcb238f39c26af153d2e870cc16674993f",
+      "sessions": 21,
+      "submitted_jobs": 1
+    },
+    "historical_last_completed_cohort": {
+      "source": "66a5d9056ac13c69f73de8d8a986c91164bf8937",
+      "pass": 8,
+      "fail": 13
+    },
+    "last_recorded_L7": "0/21",
+    "certification_awarded": false
+  },
+  "fabrics": {
+    "source_components": [
+      "MLP",
+      "HF/provider",
+      "compute/admission/ledger",
+      "event",
+      "portfolio compute",
+      "Stable Spine",
+      "PXI exposure"
+    ],
+    "current_end_to_end": "UNVERIFIED",
+    "source_is_not_live_acceptance": true
+  },
+  "sweep": {
+    "initial_open_prs_observed": 96,
+    "latest_returned_workflows": {
+      "success": 89,
+      "failure": 3,
+      "no_PR_workflow_returned": 4
+    },
+    "coverage": "First page latest returned PR-triggered workflow per name; no required-check completeness guarantee",
+    "failed_heads": [
+      268,
+      242,
+      208
+    ],
+    "triage_owner": "DELL",
+    "local_checkouts_observed": 68,
+    "untracked_and_tracked_changes_returned": 0,
+    "default_checkout_scope": "Older preserved feature branches, not current main"
+  },
+  "public_deployments": [
+    {
+      "project": "authority-engine-app",
+      "deployments": [
+        {
+          "id": "dpl_3oFG8vciQscMuEBR4ygwv1gGvyxr",
+          "url": "authority-engine-gg1b2mg8m-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791708246292,
+          "sha": "f58033a2033c6a735789959a79807904465a4459",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/authority-engine-app/3oFG8vciQscMuEBR4ygwv1gGvyxr"
+        },
+        {
+          "id": "dpl_GAQ5bk5S4xX565N1pDwDjdECvhJB",
+          "url": "authority-engine-jdcg6yav8-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791707816406,
+          "sha": "0163289225c6d3f77a67e746cadc93e0d8107f14",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/authority-engine-app/GAQ5bk5S4xX565N1pDwDjdECvhJB"
+        },
+        {
+          "id": "dpl_9BaGNLqcxAtPmancQG64EyH3JQyQ",
+          "url": "authority-engine-ivmif3v8q-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791707386045,
+          "sha": "01bc978fc55332c981e660132d34ebc6e0153fc4",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/authority-engine-app/9BaGNLqcxAtPmancQG64EyH3JQyQ"
+        }
+      ]
+    },
+    {
+      "project": "velyqua",
+      "deployments": [
+        {
+          "id": "dpl_GSo5X86DLCVGYC3teQEnyAhWV9ri",
+          "url": "velyqua-h0u5pnfya-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791017171155,
+          "sha": "bf25a061cb126d4291e15cc7eb664ba2e0066b36",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/velyqua/GSo5X86DLCVGYC3teQEnyAhWV9ri"
+        },
+        {
+          "id": "dpl_ED5WV56ZWNq6Xx2JaMy1JQnWRV7G",
+          "url": "velyqua-dgmu63tta-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791002677145,
+          "sha": "59b448af0e4134d2b3ea419f393b99ccaa8d946d",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/velyqua/ED5WV56ZWNq6Xx2JaMy1JQnWRV7G"
+        },
+        {
+          "id": "dpl_6qFerHf4cEkNVXo2Qi5wByBXqYPK",
+          "url": "velyqua-oic9vhw7e-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1790998433432,
+          "sha": "88dcafa78f972d052e081a34d0208ba718ae7fb1",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/velyqua/6qFerHf4cEkNVXo2Qi5wByBXqYPK"
+        }
+      ]
+    },
+    {
+      "project": "sky-tablet",
+      "deployments": [
+        {
+          "id": "dpl_384V1z6dKhCWTDUhmBVCvyqDrSLB",
+          "url": "sky-tablet-dyjymu1xa-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791017168259,
+          "sha": "7480bf002ef70e09fc9bfba87cb06dfa42643bd7",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/sky-tablet/384V1z6dKhCWTDUhmBVCvyqDrSLB"
+        },
+        {
+          "id": "dpl_DcQRrM6yeSzvuJV7jSXr9fMyJ54C",
+          "url": "sky-tablet-jufi0k2tp-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791010617696,
+          "sha": "9b65920ffed8b219c7c253f0c522a8d2567e1040",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/sky-tablet/DcQRrM6yeSzvuJV7jSXr9fMyJ54C"
+        },
+        {
+          "id": "dpl_kDWcKtA1K34eHEWfGsE8XC3JhT4x",
+          "url": "sky-tablet-ras31exh8-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791002574577,
+          "sha": "367140f3c67d85ca770c69fbbe46994e5f5aef93",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/sky-tablet/kDWcKtA1K34eHEWfGsE8XC3JhT4x"
+        }
+      ]
+    },
+    {
+      "project": "game-platform",
+      "deployments": [
+        {
+          "id": "dpl_4P8wJ3ft5K9q9UtgjwqzLC6uo4Yh",
+          "url": "game-platform-e3rbnncam-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791017165844,
+          "sha": "6b4e415f4daff9a19ec6149162d4dbaeaadc9299",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/game-platform/4P8wJ3ft5K9q9UtgjwqzLC6uo4Yh"
+        },
+        {
+          "id": "dpl_ZWBMNXCSBsR8Mcm5b13uAoVYyBU4",
+          "url": "game-platform-p2dfvgt6w-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791010615380,
+          "sha": "422380979ac2a93b2704a13770da3648d0307ac4",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/game-platform/ZWBMNXCSBsR8Mcm5b13uAoVYyBU4"
+        },
+        {
+          "id": "dpl_86UUuTHTUsGAaCwP3bJkVvmhYByF",
+          "url": "game-platform-h31ttoefg-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791009944311,
+          "sha": "0f00a18b09c3c7d3c26bd6dd01268b0e5537dcd7",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/game-platform/86UUuTHTUsGAaCwP3bJkVvmhYByF"
+        }
+      ]
+    },
+    {
+      "project": "the-portal",
+      "deployments": [
+        {
+          "id": "dpl_Fn4aJiwummSYdXtxUg3L74vf9zGk",
+          "url": "the-portal-cwjzq67j2-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791017163129,
+          "sha": "4d0643d4fd9cd4924a52da83fd70ae012df34473",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/the-portal/Fn4aJiwummSYdXtxUg3L74vf9zGk"
+        },
+        {
+          "id": "dpl_D1aKYXSMNr7we1xMH6JJqos81Qar",
+          "url": "the-portal-44id46zqj-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1791002578997,
+          "sha": "aef9fce7fa67ea36c2c359a8a00397585281432c",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/the-portal/D1aKYXSMNr7we1xMH6JJqos81Qar"
+        },
+        {
+          "id": "dpl_3ApWu9rLWZEzDvuxdJLmJWfTP7gc",
+          "url": "the-portal-ee9gjncv8-andrew-lam-singapore.vercel.app",
+          "state": "READY",
+          "target": "production",
+          "created": 1790125146658,
+          "sha": "f9932b5a76fa50d58b7b21c95852dd35749c54b9",
+          "branch": "main",
+          "inspector": "https://vercel.com/andrew-lam-singapore/the-portal/3ApWu9rLWZEzDvuxdJLmJWfTP7gc"
+        }
+      ]
+    }
+  ],
+  "host": {
+    "crash_event_observations": [
+      {
+        "utc": "2026-10-13T02:21:49Z",
+        "bugcheck": "0x0A"
+      },
+      {
+        "utc": "2026-10-13T00:33:58Z",
+        "bugcheck": "0x3B"
+      },
+      {
+        "utc": "2026-10-12T09:05:30Z",
+        "bugcheck": "0x1A"
+      }
+    ],
+    "cause": "UNVERIFIED",
+    "current_Docker_probe": "Config access denied; engine pipe not found on latest retry, not proof of host-wide state"
+  },
+  "recovery": {
+    "encrypted_capture_present": true,
+    "historical_capture_failures": 1320,
+    "full_archive_verification_file_at_original_root": false,
+    "off_device_restore": "UNVERIFIED",
+    "cancelled_helpers_replayed": false
+  },
+  "permissions": {
+    "owner_requested_permanent_full_access": true,
+    "actual_change_performed": false,
+    "effective_session": "MANAGED_WORKSPACE_WRITE_WITH_ESCALATION_DISALLOWED",
+    "local_user_config_observation": "windows.sandbox=elevated; no matching top-level default_permissions/sandbox_mode/approval_policy line found",
+    "source_work_authorized": true,
+    "blocking_scope": "Current local runtime observation/installation only; independent source and connected API operations continue"
+  },
+  "coordination": {
+    "mailbox": "https://github.com/AndrewLamSingapore/orqevia/issues/284",
+    "latest_dell_ack": "https://github.com/AndrewLamSingapore/orqevia/issues/284#issuecomment-6137738942",
+    "ABEX_owns": [
+      "backend restoration",
+      "controller/Interface installation via an actual authorized channel",
+      "coaching/fabric runtime verification",
+      "STATUS/evidence reconciliation"
+    ],
+    "DELL_owns": [
+      "CI failure triage",
+      "288 independent review",
+      "fabric matrix",
+      "HF/tool/A19 isolated source"
+    ],
+    "always_sync": true,
+    "secrets_shared": false
+  },
+  "evidence_dates_rewritten": false,
+  "verified_sections_changed": false,
+  "historical_manifest_expiry_renewed": false
+}

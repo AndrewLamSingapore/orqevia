@@ -81,3 +81,6 @@ governance/observations/abex-candidate-closure-66a5d90-20261012.json text eol=cr
 
 # Synchronization copies retain original native evidence bytes on both PCs.
 docs/evidence/autonomy-20261013/** -text
+
+# Preserve the dated reconciliation observation on both PCs.
+governance/observations/abex-dell-reconciliation-20261013.json -text
