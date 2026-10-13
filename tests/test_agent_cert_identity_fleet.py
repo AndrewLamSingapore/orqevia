@@ -202,3 +202,31 @@ def test_event_collector_selects_fixed_new_contract_and_legacy_remains_distinct(
                       identity.VERSION, identity.identity_review_objective('a26', 'responsibility.a25'),
                       identity.identity_reviewer('a26', 'responsibility.a25'))
     assert _contract('a19', 'responsibility.a19', identity.CASE)[0] == 'runtime.status.artifact'
+
+
+def test_legacy_owned_initialization_dispatch_and_action_feed_do_not_import_candidate_modules(configured, monkeypatch):
+    import builtins
+    from fastapi import Response
+    from app import agent_cert_event_api, agent_cert_initialization
+    from tests.test_collect_agent_cert_event import TemporaryOperator
+    operator = TemporaryOperator(configured, monkeypatch)
+    monkeypatch.setattr(agent_cert_event_api, 'authenticate_owner', dispatch.authenticate_owner)
+    real_import = builtins.__import__
+    def guarded(name, *args, **kwargs):
+        assert not any(part in name for part in ('agent_cert_identity_fleet',
+            'agent_cert_logic_quality_fleet', 'agent_cert_role_numeric_variants'))
+        return real_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, '__import__', guarded)
+    try:
+        spec = canonical_case_spec('a19', 'responsibility.a19', 'baseline:initialization')
+        status, reply = operator.submit(spec['request'])
+        assert status == 202 and reply['steps'][0]['dispatch']['model_calls'] == 0
+        feed = agent_cert_event_api.actions(reply['id'], Response(), agent_cert_initialization.ACTION_TYPE, 'fixture-owner')
+        assert len(feed['original_lines']) == 2
+        with pytest.raises(HTTPException) as error:
+            dispatch.dispatch_request(dispatch.AgentRequest(capability='responsibility.a26',
+                objective='Unrelated malformed identity review', context='{}', priority='low',
+                deterministic_operation='certification_identity_review'), 'fixture-owner')
+        assert error.value.status_code == 422
+    finally:
+        operator.ledger.close()

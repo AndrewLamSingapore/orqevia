@@ -97,17 +97,18 @@ def canonical_case_spec(agent, capability, case_id):
     if case_id == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
         from .agent_cert_identity_fleet import canonical_identity_case
         return canonical_identity_case(agent_id=agent, capability_id=capability)
-    from .agent_cert_logic_quality_fleet import SUPPORTED_CASES as LOGIC_FLEET_CASES, canonical_logic_quality_case
-    if agent != 'a19' and case_id in LOGIC_FLEET_CASES:
-        return canonical_logic_quality_case(case_id, agent_id=agent, capability_id=capability)
-    from .agent_cert_role_numeric_variants import PRIMARY_PAIRS, SUPPORTED_CASES as NUMERIC_CASES, canonical_numeric_variant_case
-    if (agent, capability) in PRIMARY_PAIRS and case_id in NUMERIC_CASES:
-        return canonical_numeric_variant_case(case_id, agent_id=agent, capability_id=capability)
     if case_id == 'baseline:initialization':
         from .agent_cert_initialization import initialization_objective
         from .agent_cert_cases import challenge
         initialization_objective(agent, capability)  # Exact registered ownership.
         return challenge(case_id, agent_id=agent, capability_id=capability)
+    if agent != 'a19' and case_id.startswith('logic_quality:'):
+        from .agent_cert_logic_quality_fleet import canonical_logic_quality_case
+        return canonical_logic_quality_case(case_id, agent_id=agent, capability_id=capability)
+    if agent != 'a19' and case_id in {'role:difficult', 'role:edge', 'role:invalid_input', 'role:failure'}:
+        from .agent_cert_role_numeric_variants import PRIMARY_PAIRS, canonical_numeric_variant_case
+        if (agent, capability) in PRIMARY_PAIRS:
+            return canonical_numeric_variant_case(case_id, agent_id=agent, capability_id=capability)
     _primary(agent, capability)
     if agent == 'a19' and capability == 'responsibility.a19' and case_id in {
             'baseline:identity'}:
@@ -157,12 +158,13 @@ def review_case_output(agent, capability, case_id, response):
         return False, ('identity_event_evidence_required',)
     if case_id == 'baseline:initialization':
         return False, ('initialization_event_evidence_required',)
-    from .agent_cert_logic_quality_fleet import SUPPORTED_CASES as LOGIC_FLEET_CASES, review_logic_quality_output
-    if agent != 'a19' and case_id in LOGIC_FLEET_CASES:
+    if agent != 'a19' and case_id.startswith('logic_quality:'):
+        from .agent_cert_logic_quality_fleet import review_logic_quality_output
         return review_logic_quality_output(agent, capability, case_id, response)
-    from .agent_cert_role_numeric_variants import PRIMARY_PAIRS, SUPPORTED_CASES as NUMERIC_CASES, review_numeric_variant_output
-    if (agent, capability) in PRIMARY_PAIRS and case_id in NUMERIC_CASES:
-        return review_numeric_variant_output(agent, capability, case_id, response)
+    if agent != 'a19' and case_id in {'role:difficult', 'role:edge', 'role:invalid_input', 'role:failure'}:
+        from .agent_cert_role_numeric_variants import PRIMARY_PAIRS, review_numeric_variant_output
+        if (agent, capability) in PRIMARY_PAIRS:
+            return review_numeric_variant_output(agent, capability, case_id, response)
     from .agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
     if case_id in AUTHORITY_CASES:
         return False, ('authority_event_evidence_required',)

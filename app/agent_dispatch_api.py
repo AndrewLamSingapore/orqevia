@@ -126,13 +126,14 @@ class AgentRequest(BaseModel):
 
 ROLE_REVIEW_OBJECTIVE = 'Independently review one recorded public synthetic role result against its existing oracle; do not certify or sign.'
 IDENTITY_REVIEW_OBJECTIVE = 'Independently review one recorded A19 zero-model identity event against its original Objective, artifact and action records; do not certify or sign.'
+OWNED_IDENTITY_REVIEW_PREFIX = 'Independently review one recorded owned-identity event for '
 INITIALIZATION_REVIEW_OBJECTIVE = 'Independently review one recorded A19 initialization event against its current owned contracts, original Objective, artifact and action records; do not certify or sign.'
 
 
 def joined_identity_review(body, authorization, *, actor, task_id, runtime):
     return _joined_contract_event_review(body, authorization, actor=actor,
         task_id=task_id, runtime=runtime, initialization=False,
-        owned_identity=body.objective != IDENTITY_REVIEW_OBJECTIVE)
+        owned_identity=body.objective.startswith(OWNED_IDENTITY_REVIEW_PREFIX))
 
 
 def joined_initialization_review(body, authorization, *, actor, task_id, runtime):
@@ -620,8 +621,9 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     started = time.perf_counter()
     from .runtime_status import is_runtime_status,build_report,validate_report
     runtime_status=not body.deterministic_operation and is_runtime_status(body.objective,body.context)
-    from .agent_cert_identity_fleet import PREFIX as owned_identity_prefix
-    owned_identity = not body.deterministic_operation and body.objective.startswith(owned_identity_prefix)
+    # Classify only; the new branch below still checks its exact owned policy.
+    # Legacy operations must not load source-only candidate validators.
+    owned_identity = not body.deterministic_operation and body.objective.startswith('Inspect current registered-owned identity ')
     try:
         actor = responsibility_owner('responsibility.a19' if runtime_status else body.capability)
         record = agent_record(actor)
@@ -722,7 +724,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                 runtime_revision=runtime_revision)
         role_review = body.deterministic_operation == 'certification_role_review'
         identity_review = body.deterministic_operation == 'certification_identity_review'
-        owned_identity_review = identity_review and body.objective != IDENTITY_REVIEW_OBJECTIVE
+        owned_identity_review = identity_review and body.objective.startswith(OWNED_IDENTITY_REVIEW_PREFIX)
         initialization = body.deterministic_operation == 'certification_initialization'
         initialization_review = body.deterministic_operation == 'certification_initialization_review'
         artifact_review = body.deterministic_operation == 'certification_artifact_review'
@@ -730,7 +732,8 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         review_ledger = None
         if runtime_status or owned_identity or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review:
             from .agent_cert_role_review import ARTIFACT_REVIEW_ACTION, AUTHORITY_REVIEW_ACTION
-            from .agent_cert_identity_fleet import ACTION_TYPE as owned_identity_action, REVIEW_ACTION as owned_identity_review_action
+            if owned_identity or owned_identity_review:
+                from .agent_cert_identity_fleet import ACTION_TYPE as owned_identity_action, REVIEW_ACTION as owned_identity_review_action
             action_type = (owned_identity_action if owned_identity else owned_identity_review_action if owned_identity_review else
                            AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
                            'agent.certification.initialization.review' if initialization_review else

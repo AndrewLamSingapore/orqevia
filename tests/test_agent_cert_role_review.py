@@ -114,6 +114,29 @@ def test_original_103_canonical_specs_and_structured_normal_admission_are_unchan
     assert hashlib.sha256(canonical(original)).hexdigest() == '5e1b399a68bee6f92bdb37e9b8ce0fe260e56a530b1731a7f971323d51a762dd'
 
 
+def test_all_original_specs_and_a19_reviews_do_not_load_unadmitted_candidate_modules(monkeypatch):
+    import builtins
+    from app.agent_cert_cases import case_ids
+    from app.agent_cert_role_review import canonical_admitted_case_spec
+    real_import = builtins.__import__
+    blocked = ('agent_cert_identity_fleet', 'agent_cert_logic_quality_fleet', 'agent_cert_role_numeric_variants')
+    def guarded(name, *args, **kwargs):
+        assert not any(part in name for part in blocked), 'Unadmitted candidate import: '+name
+        return real_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, '__import__', guarded)
+    specs = 0
+    for agent, cap in OWNED_PAIRS:
+        for case in case_ids():
+            try:
+                canonical_admitted_case_spec(agent, cap, case)
+            except ValueError:
+                continue
+            specs += 1
+            if agent == 'a19':
+                review_case_output(agent, cap, case, '{}')
+    assert specs == 103
+
+
 def test_a19_identity_has_exact_event_case_not_a_model_output_or_generic_pass():
     from app.agent_cert_cases import challenge
     assert canonical(canonical_case_spec('a19', 'responsibility.a19', 'baseline:identity')) == canonical(
