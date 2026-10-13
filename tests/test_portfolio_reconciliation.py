@@ -174,6 +174,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only this exact dated sweep supplement; all prior bytes stay pinned.
+    sweep_title = "## Portfolio bug sweep and STATUS reference reconciliation - 13 October 2026"
+    assert after.count(sweep_title) == 1
+    sweep_start = after.index(sweep_title)
+    sweep_end = after.index("\n## ", sweep_start + len(sweep_title)) + 1
+    sweep = after[sweep_start:sweep_end].encode("utf-8")
+    assert len(sweep) == 3090
+    assert hashlib.sha256(sweep).hexdigest() == "99b5d8085249869991190d2d0131741fa89e47777be20c7c5024012e8039dea1"
+    after = after[:sweep_start] + after[sweep_end:]
     # Admit only this exact integration follow-up, preserving historical bytes.
     followup_title = "## Completed source integrations and remaining runtime work - 13 October 2026"
     assert after.count(followup_title) == 1
@@ -370,6 +379,7 @@ def test_light_observation_and_failure_reject_inflated_claims(monkeypatch, origi
 
 @pytest.mark.parametrize("original,replacement", [
     ("## Course study", "## Course study — unaccounted history edit"),
+    ("No hardware cause is established.", "The hardware cause is established."),
     ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
     ("Fully L7 certified remains **0/21**.", "Fully L7 certified remains **1/21**."),
     ("candidate has not changed Golden, Interface, Ollama", "candidate has deployed to Golden, Interface, Ollama"),
