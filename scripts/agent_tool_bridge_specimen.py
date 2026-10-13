@@ -158,7 +158,7 @@ def initial_job_bound(job, body):
     fields = ('agent', 'prompt', 'model', 'preferred_provider', 'data_classification',
               'response_format', 'max_retries', 'max_cost_usd')
     return (all(job.get(key) == body[key] for key in fields) and
-        job.get('provider') == 'ollama-fast' and job.get('attempts') == 1 and
+        job.get('provider') == body['preferred_provider'] and job.get('attempts') == 1 and
         job.get('allow_cloud') == 0 and job.get('external_execution') == 0 and
         job.get('started_at') is not None and job.get('completed_at') is not None and
         json.loads(job.get('response_schema') or 'null') == body['response_schema'] and
@@ -249,9 +249,11 @@ def run(args):
         from app.settings import SETTINGS
         from app.agent_registry import agent_record
         assert agent_record(AGENT)['name'] == 'Evidence Agent'
+        initial_model = SETTINGS.deep_model if attempt == 3 else SETTINGS.fast_model
+        initial_provider = 'ollama-deep' if attempt == 3 else 'ollama-fast'
         body = {'agent': AGENT, 'prompt': prompt(attempt), 'response_schema': response_schema(),
-            'response_format': 'strict_json', 'priority': 'low', 'model_role': 'fast',
-            'model': SETTINGS.fast_model, 'preferred_provider': 'ollama-fast',
+            'response_format': 'strict_json', 'priority': 'low', 'model_role': 'deep' if attempt == 3 else 'fast',
+            'model': initial_model, 'preferred_provider': initial_provider,
             'ram_mb': 1024, 'timeout_seconds': 60, 'max_retries': 0, 'max_cost_usd': 0,
             'allow_cloud': False, 'external_execution': False,
             'data_classification': 'CLOUD_PERMITTED', 'classification': 'R0',
@@ -262,6 +264,7 @@ def run(args):
         body['response_schema'] = canonicalize_schema(body['response_schema'])
         retain(root / 'initial-submission.json', body)
         state['submission_attempt_recorded'] = True
+        state['feedback_model_expected'] = SETTINGS.fast_model
         save()  # Persist the deterministic key before an ambiguous HTTP result.
         job = rpc('POST', '/api/compute-queue/jobs', body)
         state['generation_job_id'] = job['id']
@@ -328,9 +331,8 @@ def run(args):
         if job['status'] not in {'completed', 'failed', 'cancelled', 'budget_blocked'}:
             return {'state': job['status'], 'new_model_submissions': 0}
         retain(root / 'feedback-job.json', job)
-        initial_body = json.loads((root / 'initial-submission.json').read_text())
         state['feedback_job_binding_checked'] = (job.get('agent') == AGENT and
-            job.get('provider') == 'ollama-fast' and job.get('model') == initial_body['model'] and
+            job.get('provider') == 'ollama-fast' and job.get('model') == state['feedback_model_expected'] and
             job.get('attempts') == 1 and job.get('allow_cloud') == 0 and job.get('external_execution') == 0 and
             job.get('data_classification') == 'LOCAL_ONLY' and job.get('max_retries') == 0 and
             job.get('max_cost_usd') == 0 and sha(job['prompt'].encode()) == state['feedback_input_sha256'] and

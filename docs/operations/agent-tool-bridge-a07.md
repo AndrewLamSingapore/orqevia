@@ -76,3 +76,10 @@ that diagnosis. `--attempt 2` uses a distinct directory and submission key and
 adds only the exact identifier grammar to the original prompt. It supplies no
 source contents, task answer or identifier repair. Do not reuse an earlier
 attempt's directory or pool the failed and later results.
+
+The second actual gemma3:1b request repeated the same invalid numeric identifier
+despite that clarification and was also retained and rejected, with zero public
+tool calls. Root then authorized one final `--attempt 3`: the identical clarified
+prompt and criteria use the already configured local deep model/provider. The
+bridge feedback still uses its fixed existing local fast model. No fourth
+same-failure attempt is authorized by this driver or scenario.
