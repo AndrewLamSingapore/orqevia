@@ -13,8 +13,10 @@ def main():
     parser.add_argument('--expected-revision', required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--container', default='prime-epoch-20260919-prime-1')
+    parser.add_argument('--local-a21', action='store_true', help='One independent local probe after retained cloud timeout')
     args = parser.parse_args()
-    source = Path(__file__).with_name('identity_probe_21_runtime.py').read_text(encoding='utf-8')
+    runner = 'identity_a21_local_runtime.py' if args.local_a21 else 'identity_probe_21_runtime.py'
+    source = Path(__file__).with_name(runner).read_text(encoding='utf-8')
     docker = 'C:/Program Files/Docker/Docker/resources/bin/docker.exe'
 
     def identity():
@@ -36,7 +38,8 @@ def main():
     report['runtime_identity_stable'] = before == after
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-    path = args.output_dir/('IDENTITY-PROBE-21-'+stamp+'.json')
+    prefix = 'IDENTITY-A21-LOCAL-' if args.local_a21 else 'IDENTITY-PROBE-21-'
+    path = args.output_dir/(prefix+stamp+'.json')
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
     if before != after:
         raise RuntimeError('runtime identity changed during observation; original receipt retained')
