@@ -160,6 +160,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only this exact dated reconciliation; preserve every historical pin.
+    reconciliation_title = '## ABEX\u2013DELL end-to-end reconciliation \u2014 13 October 2026'
+    assert after.count(reconciliation_title) == 1
+    reconciliation_start = after.index(reconciliation_title)
+    reconciliation_end = after.index("\n## ", reconciliation_start + len(reconciliation_title)) + 1
+    reconciliation_update = after[reconciliation_start:reconciliation_end].encode("utf-8")
+    assert len(reconciliation_update) == 6743
+    assert hashlib.sha256(reconciliation_update).hexdigest() == "87e5825e0263e0a8f96e37ad96dc7a652d3c6e48f90691bd9c8bae0afee77a47"
+    after = after[:reconciliation_start] + after[reconciliation_end:]
     # Admit exactly this new 12 October Dell verification record; every prior
     # section pin stays unchanged.
     # This source-specific supplement leaves the first dated observation untouched.
