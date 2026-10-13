@@ -29,10 +29,10 @@ async function fixture(){
   await import('data:text/javascript;base64,'+encoded);
   return {nodes,listeners,documentListeners,intervals,requests,
     session(value){listeners.get('orqevia-session')({detail:value?{...value,clientId:'fixture-client',generation:1}:null});},
-    respond(i,instance='CURRENT',observed=Date.now(),audience='fixture-client'){
+    respond(i,instance='CURRENT',observed=Date.now(),audience='fixture-client',coaching=null){
       requests[i].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date(observed).toISOString(),freshness_seconds:60,
         audience:{client_id:audience},metrics:[{metric_id:'registered_agents',collection_status:'OBSERVED',value:21}],source:{instance,revision:'a'.repeat(40)},
-        agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,name:'fixture',registration:'REGISTERED',availability:'UNKNOWN'}))}),
+        coaching,agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,name:'fixture',registration:'REGISTERED',availability:'UNKNOWN'}))}),
         {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
     }
   };
@@ -103,4 +103,30 @@ test('Visibility suspension releases a pending slot without accepting the old re
   assert.equal(f.requests.length,2);f.respond(1,'FOREGROUND');await settle();f.respond(0,'BACKGROUND');await settle();
   assert.match(f.nodes.get('telemetry-source').textContent,/FOREGROUND/);
   assert.doesNotMatch(f.nodes.get('telemetry-source').textContent,/BACKGROUND/);
+});
+
+function coachingFixture(){return {status:'OBSERVED',last_event_at:new Date().toISOString(),cohort_id:'fixture-cohort',cohort_source_revision:'a'.repeat(40),controller:{availability:'OBSERVED',last_state:'WAITING'},agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,phase:'practice',state:'READY',baseline_pass:n===0?true:null,practice_pass:null,acceptance_pass:null,last_transition_at:new Date().toISOString()}))};}
+
+test('Logout clears the previously rendered coaching panel immediately',async()=>{
+  const f=await fixture();f.session({role:'MEMBER'});f.respond(0,'CURRENT',Date.now(),'fixture-client',coachingFixture());await settle();
+  assert.equal(f.nodes.get('coaching-roles').children.length,21);
+  f.session(null);
+  assert.equal(f.nodes.get('coaching-roles').children.length,0);
+  assert.equal(f.nodes.get('coaching-summary').children.length,0);
+  assert.equal(f.nodes.get('coaching-state').textContent,'UNAUTHORIZED');
+});
+
+test('Offline clears coaching data as well as existing agent provenance',async()=>{
+  const f=await fixture();f.session({role:'MEMBER'});f.respond(0,'CURRENT',Date.now(),'fixture-client',coachingFixture());await settle();
+  navigator.onLine=false;f.listeners.get('offline')();
+  assert.equal(f.nodes.get('coaching-roles').children.length,0);
+  assert.equal(f.nodes.get('coaching-state').textContent,'OFFLINE');
+});
+
+test('Parent telemetry expiry clears coaching before returning from render',async()=>{
+  const f=await fixture();f.session({role:'MEMBER'});f.respond(0,'CURRENT',Date.now()-59000,'fixture-client',coachingFixture());await settle();
+  const originalNow=Date.now;
+  try{Date.now=()=>originalNow()+2000;f.intervals.find(x=>x.ms===5000).fn();}finally{Date.now=originalNow;}
+  assert.equal(f.nodes.get('coaching-roles').children.length,0);
+  assert.equal(f.nodes.get('coaching-state').textContent,'STALE');
 });
