@@ -13,6 +13,7 @@ from app.agent_cert_role_review import canonical_case_spec
 from scripts import agent_cert_operator_io as binding
 from tests.test_agent_cert_review_dispatch import configured, SOURCE, IMAGE
 from tests.test_collect_agent_cert_event import operator, collect
+from tests.test_agent_cert_identity_fleet import PAIRS as IDENTITY_PAIRS
 
 
 TOKEN = 'fixture-existing-owner-token-not-real'
@@ -355,7 +356,8 @@ def test_reviewer_cannot_post_when_no_original_subject_task_was_captured():
     assert not any(method == 'POST' for method, _, _ in transport.calls)
 
 
-def test_complete_zero_model_collection_through_fake_http_and_actual_temporary_domains(operator):
+@pytest.mark.parametrize('case', ['baseline:initialization', 'baseline:identity'])
+def test_complete_zero_model_collection_through_fake_http_and_actual_temporary_domains(operator, monkeypatch, case):
     # Root's new server feeds are represented as wire fakes here. They are
     # not deployed routes or live authenticated transport in this source test.
     subject_task = [None]
@@ -377,12 +379,22 @@ def test_complete_zero_model_collection_through_fake_http_and_actual_temporary_d
             return FakeResponse(status, original, {'X-Artifact-SHA256': digest})
         task = path.split('/actions/')[1].split('?')[0]
         action = path.split('?action_type=')[1]
-        lines = operator.subject_actions(task, action) if task == subject_task[0] else operator.reviewer_actions(operator.review['review_action_id'])
+        if case == 'baseline:identity':
+            from fastapi import Response
+            from app import agent_cert_event_api, agent_dispatch_api
+            monkeypatch.setattr(agent_cert_event_api, 'authenticate_owner', agent_dispatch_api.authenticate_owner)
+            lines = agent_cert_event_api.actions(task, Response(), action, 'fixture-owner')['original_lines']
+            if task == subject_task[0]:
+                operator.subject_lines = lines
+            else:
+                operator.review_lines = lines
+        else:
+            lines = operator.subject_actions(task, action) if task == subject_task[0] else operator.reviewer_actions(operator.review['review_action_id'])
         return FakeResponse(body=raw(dict(schema='prime.original-action-span.v1', task_id=task,
             action_type=action, source_revision=SOURCE, original_lines=lines)))
     transport = FakeTransport(handler)
-    item = client(transport, spec=canonical_case_spec('a26', 'responsibility.a25', 'baseline:initialization'))
-    result = collect(operator, agent='a26', cap='responsibility.a25', io=item.io(), actions=item.read_subject_actions)
+    item = client(transport, spec=canonical_case_spec('a26', 'responsibility.a25', case))
+    result = collect(operator, agent='a26', cap='responsibility.a25', case=case, io=item.io(), actions=item.read_subject_actions)
     assert result.summary['state'] == 'UNSIGNED_EVENT_EVIDENCE', result.summary
     assert result.summary['reviewer_identity'] == 'a18'
     assert result.summary['model_calls'] == 0 and result.summary['signature'] == 'NOT_PERFORMED'
@@ -394,6 +406,19 @@ def test_complete_zero_model_collection_through_fake_http_and_actual_temporary_d
     assert all(timer.cancelled for timer in FakeTimer.all)
     assert TOKEN not in repr(item.original_replies())
     assert not any(path == '/health' or path.startswith('/control') for _, path, _ in transport.calls)
+
+
+@pytest.mark.parametrize('agent,cap', IDENTITY_PAIRS)
+def test_owned_identity_transport_constructor_has_exact_source_contract_without_connecting(agent, cap):
+    from app import agent_cert_identity_fleet as identity
+    transport = FakeTransport()
+    item = client(transport, spec=canonical_case_spec(agent, cap, identity.CASE))
+    assert transport.connections == [] and item.original_replies() == ()
+    assert item._subject_action_types == {identity.ACTION_TYPE}
+    assert (item._reviewer, item._review_cap) == identity.identity_reviewer(agent, cap)
+    assert item._reviewer != agent and item._review_objective == identity.identity_review_objective(agent, cap)
+    assert item._review_action_type == identity.REVIEW_ACTION
+    assert item._review_operation == 'certification_identity_review'
 
 
 def test_source_interface_has_no_credential_or_ledger_file_reader():

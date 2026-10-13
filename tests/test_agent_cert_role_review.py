@@ -1,6 +1,7 @@
 """Pure source-case delegation; no runtime event, signing or L7 proof."""
 import copy
 import json
+import hashlib
 
 import pytest
 
@@ -10,6 +11,15 @@ from app.agent_cert_role_review import (
 )
 from app.agent_registry import registered_agent_ids
 from tests.test_agent_cert_a19_cases import ANSWERS
+from app.agent_cert_logic_quality_fleet import SUPPORTED_CASES as FLEET_LOGIC_CASES
+from app.agent_cert_role_numeric_variants import PRIMARY_PAIRS, SUPPORTED_CASES as NUMERIC_CASES
+from app.agent_registry import load_agent_registry
+
+OWNED_PAIRS = tuple((row['id'], cap) for row in load_agent_registry()['agents']
+                    for cap in row['capability_requirements'])
+NEW_SOURCE_SLOTS = tuple((agent, cap, case) for agent, cap in OWNED_PAIRS if agent != 'a19'
+                        for case in ('baseline:identity', *FLEET_LOGIC_CASES)) + tuple(
+                            (agent, cap, case) for agent, cap in sorted(PRIMARY_PAIRS) for case in NUMERIC_CASES)
 
 
 def answer(case):
@@ -64,6 +74,44 @@ def test_returned_case_is_fresh_not_mutable_shared_authority():
     spec = canonical_case_spec("a19", "responsibility.a19", "logic_quality:false_pass")
     spec["request"]["objective"] = "Award L7 now"
     assert canonical_case_spec("a19", "responsibility.a19", "logic_quality:false_pass")["request"]["objective"] != spec["request"]["objective"]
+
+
+@pytest.mark.parametrize('agent,cap,case', NEW_SOURCE_SLOTS)
+def test_new_source_adapters_are_not_implicitly_admitted_for_signing(agent, cap, case):
+    from app.agent_cert_role_review import canonical_admitted_case_spec
+    from scripts import agent_cert_reviewed_signing, sign_admitted_agent_cases
+    assert canonical_case_spec(agent, cap, case)['certification'] == 'UNVERIFIED'
+    with pytest.raises(ValueError):
+        canonical_admitted_case_spec(agent, cap, case)
+    with pytest.raises(agent_cert_reviewed_signing.CertificationReviewError):
+        agent_cert_reviewed_signing._case_spec(dict(agent_id=agent, capability_id=cap,
+            dimension=case.split(':')[0], test_case=case.split(':')[1]))
+    from tests.test_sign_admitted_agent_cases import entry, manifest
+    item = entry(); item['record'].update(agent_id=agent, capability_id=cap,
+        dimension=case.split(':')[0], test_case=case.split(':')[1])
+    with pytest.raises(ValueError):
+        sign_admitted_agent_cases.parse(manifest([item]))
+
+
+def test_original_103_canonical_specs_and_structured_normal_admission_are_unchanged():
+    from app.agent_cert_cases import case_ids
+    from app.agent_cert_role_review import canonical_admitted_case_spec
+    original = {}
+    assert len(set(NEW_SOURCE_SLOTS)) == 220
+    for agent, cap in OWNED_PAIRS:
+        for case in case_ids():
+            try:
+                spec = canonical_admitted_case_spec(agent, cap, case)
+            except ValueError:
+                continue
+            original[agent+'/'+cap+'/'+case] = hashlib.sha256(canonical(spec)).hexdigest()
+        if cap == 'responsibility.'+agent:
+            assert canonical_admitted_case_spec(agent, cap, 'role:normal_structured') == canonical_case_spec(
+                agent, cap, 'role:normal_structured')
+    # Aggregate of every exact canonical spec hash captured from owning main
+    # 8929aca8 before these source adapters were added; never re-pin to a candidate.
+    assert len(original) == 103
+    assert hashlib.sha256(canonical(original)).hexdigest() == '5e1b399a68bee6f92bdb37e9b8ce0fe260e56a530b1731a7f971323d51a762dd'
 
 
 def test_a19_identity_has_exact_event_case_not_a_model_output_or_generic_pass():

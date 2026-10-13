@@ -200,6 +200,15 @@ class AgentCertOperatorIO:
                 self._review_objective = ARTIFACT_REVIEW_OBJECTIVE
                 self._review_operation = ARTIFACT_REVIEW_OPERATION
                 self._review_action_type = ARTIFACT_REVIEW_ACTION
+            elif case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+                from app.agent_cert_identity_fleet import (
+                    ACTION_TYPE, REVIEW_ACTION, identity_reviewer, identity_review_objective,
+                )
+                self._action_type = ACTION_TYPE
+                self._reviewer, self._review_cap = identity_reviewer(agent, capability)
+                self._review_objective = identity_review_objective(agent, capability)
+                self._review_operation = 'certification_identity_review'
+                self._review_action_type = REVIEW_ACTION
             else:
                 _require((agent, capability, case) == ('a19', 'responsibility.a19', 'baseline:identity'),
                     'CANONICAL_ZERO_MODEL_EVENT_REQUIRED')

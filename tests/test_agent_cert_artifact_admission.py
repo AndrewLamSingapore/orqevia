@@ -60,7 +60,7 @@ def test_inventory_counts_artifact_events_without_inference_or_certification_cla
     assert not set(events.SUPPORTED_CASES) & set(a19['source_pinned_cloud_transport_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['cloud_transport_missing_for_ready_quality_cases'])
     assert not set(events.SUPPORTED_CASES) & set(a19['generic_queue_observer_quality_gap_cases'])
-    assert result['source_canonical_adapter_oracle_count'] == 103
+    assert result['source_canonical_adapter_oracle_count'] == 323
     assert {'authority:complete', 'unauthorized_rejection:authorized'} <= set(
         a19['distinct_zero_model_event_adapter_cases'])
     assert {'unauthorized_rejection:unauthorized', 'unauthorized_rejection:owner_only'} <= set(

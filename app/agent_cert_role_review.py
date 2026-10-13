@@ -131,6 +131,17 @@ def canonical_case_spec(agent, capability, case_id):
     return canonical_a19_case(case_id)
 
 
+def canonical_admitted_case_spec(agent, capability, case_id):
+    """Preserve existing protected scope independently of source candidates.
+
+    New adapters are collectable, not implicitly admitted for signing. Adding
+    their source selector must not expand the protected manifest or verifier.
+    """
+    if agent != 'a19' and case_id not in {'role:normal', 'role:normal_structured', 'baseline:initialization'}:
+        raise ValueError('CASE_ORACLE_UNSUPPORTED')
+    return canonical_case_spec(agent, capability, case_id)
+
+
 def review_case_output(agent, capability, case_id, response):
     """Review the specific source-owned case without promoting its evidence."""
     try:

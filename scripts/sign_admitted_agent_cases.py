@@ -89,7 +89,7 @@ def parse(raw):
                     or type(entry['record']) is not dict):
                 deny()
             agent = entry['record'].get('agent_id')
-            from app.agent_cert_role_review import canonical_case_spec
+            from app.agent_cert_role_review import canonical_admitted_case_spec as canonical_case_spec
             row = entry['record']
             case_id = str(row.get('dimension')) + ':' + str(row.get('test_case'))
             # A bounded batch may contain multiple distinct cases for the same

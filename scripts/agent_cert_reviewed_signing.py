@@ -22,7 +22,7 @@ from app.agent_cert_azure_signer import ProtectedAzureES256Signer, _read_subject
 from app.agent_cert_ed25519 import _REQUIRED_RECORD_FIELDS
 from app.agent_cert_role_group_two import _CASES as GROUP_TWO_CASES
 from app.agent_cert_role_review import (
-    canonical_case_spec, canonical_role_spec, review_case_output, review_role_output,
+    canonical_admitted_case_spec as canonical_case_spec, canonical_role_spec, review_case_output, review_role_output,
 )
 from app.agent_certification import LOGIC_SIGNALS
 from app.agent_registry import agent_record, canonical_agent_id, responsibility_owner

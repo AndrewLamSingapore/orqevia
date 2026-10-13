@@ -23,6 +23,8 @@ from .agent_cert_authority_events import (
     SUPPORTED_CASES as AUTHORITY_CASES, authority_action_type, read_authority_action_span,
 )
 from .agent_cert_role_review import AUTHORITY_REVIEW_ACTION, read_authority_review_action_span
+from .agent_cert_identity_fleet import (ACTION_TYPE as OWNED_IDENTITY_ACTION,
+    REVIEW_ACTION as OWNED_IDENTITY_REVIEW_ACTION, read_action_span as read_owned_identity_actions)
 
 router = APIRouter(prefix='/api/agent-cert-events', tags=['owner-certification-evidence'])
 _read_slot = threading.BoundedSemaphore(1)
@@ -37,6 +39,7 @@ _ACTIONS = frozenset({
     'agent.certification.initialization.artifact',
     'agent.certification.initialization.review',
     AUTHORITY_REVIEW_ACTION,
+    OWNED_IDENTITY_ACTION, OWNED_IDENTITY_REVIEW_ACTION,
 } | set(_ARTIFACT_ACTIONS) | set(_AUTHORITY_ACTIONS))
 
 
@@ -111,6 +114,8 @@ def actions(task_id: str, response: Response, action_type: str = '',
         elif action_type in _ARTIFACT_ACTIONS:
             case, setup = _ARTIFACT_ACTIONS[action_type]
             lines = read_artifact_action_span(root, task_id, case, setup=setup)
+        elif action_type in {OWNED_IDENTITY_ACTION, OWNED_IDENTITY_REVIEW_ACTION}:
+            lines = read_owned_identity_actions(root / 'action-records.jsonl', task_id, action_type)
         else:
             lines = read_action_span(root / 'action-records.jsonl', task_id, action_type)
         _original_chain(lines, task_id, action_type)
