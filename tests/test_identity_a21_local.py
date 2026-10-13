@@ -20,6 +20,14 @@ def test_changed_identity_prompt_is_rejected():
         local_request({**original, 'prompt': 'tampered'})
 
 
+def test_deep_model_change_does_not_change_the_exact_identity_prompt_or_enable_cloud():
+    original = next(item for item in build_requests() if item['agent'] == 'a21')
+    request, prompt = local_request(original, 'deep')
+    assert prompt == original['prompt']
+    assert request.preferred_provider == 'ollama-deep' and request.minimum_tier == 'MINI'
+    assert request.data_classification == 'LOCAL_ONLY' and request.max_cost_usd == 0
+
+
 def test_revision_mismatch_cannot_submit_local_or_cloud_probe(monkeypatch):
     monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'b'*40)
     with pytest.raises(ValueError, match='exact installed runtime revision'):

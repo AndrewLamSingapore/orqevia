@@ -20,9 +20,10 @@ def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False).encode()
 
 
-def local_request(original):
+def local_request(original, local_role='fast'):
+    provider = 'ollama-deep' if local_role == 'deep' else 'ollama-fast'
     request = AgentRequest.model_validate({**original['request'], 'data_classification': 'LOCAL_ONLY',
-        'minimum_tier': 'NANO', 'preferred_provider': 'ollama-fast', 'max_cost_usd': 0})
+        'minimum_tier': 'MINI' if local_role == 'deep' else 'NANO', 'preferred_provider': provider, 'max_cost_usd': 0})
     # Keep the exact prior source prompt while selecting the existing local model.
     prompt = inference_prompt(request, Tier.MINI)
     if prompt != original['prompt']:
@@ -30,7 +31,7 @@ def local_request(original):
     return request, prompt
 
 
-def run(mode, revision):
+def run(mode, revision, local_role='fast'):
     if not re.fullmatch(r'[a-f0-9]{40}', revision) or os.getenv('PRIME_RUNTIME_REVISION') != revision:
         raise ValueError('exact installed runtime revision required')
     root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
@@ -38,29 +39,44 @@ def run(mode, revision):
     planned = json.loads((prior/'plan.json').read_text())
     original = next(item for item in planned['jobs'] if item['agent'] == 'a21')
     submitted = json.loads((prior/'submitted.json').read_text())
-    request, prompt = local_request(original)
+    if local_role not in ('fast', 'deep'):
+        raise ValueError('existing fast or deep local role required')
+    provider = 'ollama-deep' if local_role == 'deep' else 'ollama-fast'
+    model = SETTINGS.deep_model if local_role == 'deep' else SETTINGS.fast_model
+    request, prompt = local_request(original, local_role)
     db = sqlite3.connect((root/'compute-queue.db').resolve().as_uri()+'?mode=ro', uri=True, timeout=.2)
     db.row_factory = sqlite3.Row
     try:
         failed = dict(db.execute('SELECT * FROM compute_jobs WHERE id=?', (submitted['a21'],)).fetchone())
         if failed['status'] != 'failed' or failed['error'] != 'TASK_TIMEOUT' or failed['prompt'] != prompt:
             raise ValueError('retained actual cloud timeout required')
-        record_path = prior/'a21-independent-local.json'
+        record_path = prior/('a21-independent-local-deep.json' if local_role == 'deep' else 'a21-independent-local.json')
         if mode == 'tick' and not record_path.exists():
-            if db.execute("SELECT 1 FROM compute_jobs WHERE status IN "
-                "('queued','running','held','awaiting_approval') OR cloud_inflight=1 LIMIT 1").fetchone():
+            if local_role == 'deep':
+                fast = json.loads((prior/'a21-independent-local.json').read_text())
+                first = dict(db.execute('SELECT * FROM compute_jobs WHERE id=?', (fast['job_id'],)).fetchone())
+                if first['status'] != 'completed' or not validate_user_facing_answer(original['request']['objective'], first['result']):
+                    raise ValueError('observed fast-model identity failure required before changing local model')
+            active = db.execute("SELECT agent,status,allow_cloud,cloud_inflight FROM compute_jobs WHERE status IN "
+                "('queued','running','held','awaiting_approval') OR cloud_inflight=1").fetchall()
+            # Owner explicitly allows the deep probe to queue behind one local
+            # a07 acceptance job. Existing backend admission still serializes it.
+            coordinated_a07 = (local_role == 'deep' and len(active) == 1 and active[0]['agent'] == 'a07'
+                and active[0]['status'] in ('queued', 'running') and active[0]['allow_cloud'] == 0
+                and active[0]['cloud_inflight'] == 0)
+            if active and not coordinated_a07:
                 raise ValueError('queue must be idle before independent local probe')
-            body = {'agent': 'a21', 'prompt': prompt, 'priority': 'normal', 'model_role': 'fast',
-                'model': SETTINGS.fast_model, 'preferred_provider': 'ollama-fast', 'timeout_seconds': 60,
+            body = {'agent': 'a21', 'prompt': prompt, 'priority': 'normal', 'model_role': local_role,
+                'model': model, 'preferred_provider': provider, 'timeout_seconds': 60,
                 'max_retries': 0, 'max_cost_usd': 0, 'allow_cloud': False, 'external_execution': False,
                 'data_classification': 'LOCAL_ONLY', 'task_class': 'planning', 'response_format': 'text',
-                'idempotency_key': 'identity-a21-independent-local:'+revision+':v1'}
+                'idempotency_key': 'identity-a21-independent-local'+('-deep' if local_role == 'deep' else '')+':'+revision+':v1'}
             headers = {'Authorization': 'Bearer '+os.environ['PRIME_SPINE_TOKEN'], 'Content-Type': 'application/json'}
             job = json.load(urllib.request.urlopen(urllib.request.Request(
                 'http://127.0.0.1:8000/api/compute-queue/jobs', data=canonical(body), headers=headers), timeout=15))
             record = {'job_id': job['id'], 'original_failed_cloud_job_id': failed['id'],
                 'runtime_source_revision': revision, 'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(),
-                'model': SETTINGS.fast_model, 'provider': 'ollama-fast', 'request': request.transport_dump()}
+                'model': model, 'provider': provider, 'request': request.transport_dump()}
             temporary = record_path.with_suffix('.next.json'); temporary.write_bytes(canonical(record)); temporary.replace(record_path)
         report = {'scope': 'INDEPENDENT_LOCAL_A21_IDENTITY_PROBE_NOT_CLOUD_REPLAY_OR_NORMAL_OR_FULL_ACCEPTANCE',
             'runtime_source_revision': revision, 'observed_at_utc': datetime.now(timezone.utc).isoformat(),
@@ -73,11 +89,11 @@ def run(mode, revision):
             record = json.loads(record_path.read_text())
             actual = dict(db.execute('SELECT * FROM compute_jobs WHERE id=?', (record['job_id'],)).fetchone())
             bound = (actual['agent'] == 'a21' and actual['prompt'] == prompt and actual['model'] == record['model']
-                and actual['preferred_provider'] == 'ollama-fast' and actual['allow_cloud'] == 0
+                and actual['preferred_provider'] == provider and actual['allow_cloud'] == 0
                 and actual['external_execution'] == 0 and actual['data_classification'] == 'LOCAL_ONLY'
                 and actual['max_cost_usd'] == 0 and actual['max_retries'] == 0 and actual['response_format'] == 'text')
             if actual['status'] == 'completed':
-                bound = bound and actual['provider'] == 'ollama-fast' and actual['attempts'] == 1
+                bound = bound and actual['provider'] == provider and actual['attempts'] == 1
             passed = None
             errors = []
             if actual['status'] == 'completed' and bound:
@@ -111,8 +127,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=('prepare', 'tick', 'collect'))
     parser.add_argument('--expected-revision', required=True)
+    parser.add_argument('--local-role', choices=('fast', 'deep'), default='fast')
     args = parser.parse_args()
-    print(json.dumps(run(args.mode, args.expected_revision), ensure_ascii=False))
+    print(json.dumps(run(args.mode, args.expected_revision, args.local_role), ensure_ascii=False))
 
 
 if __name__ == '__main__':
