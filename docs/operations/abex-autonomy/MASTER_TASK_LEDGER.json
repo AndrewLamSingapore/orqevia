@@ -1,6 +1,6 @@
 {
   "schema": "abex.master-task-ledger.v1",
-  "updated_at_utc": "2026-10-13T08:50:25.462637+00:00",
+  "updated_at_utc": "2026-10-13T11:57:26.475419+00:00",
   "tasks": [
     {
       "task_id": "ABEX-REC-001",
@@ -21,20 +21,34 @@
           "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
           "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
           "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\NORMAL-CURRENT-AGGREGATE-20261013T1042Z.json",
+          "sha256": "4d5daab90686d3a5f27a4e6ee11c28237b6df845d88801de6adcb64234b7e3ea",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
         }
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "",
-      "next_executable_action": "Reconcile current per-agent receipts, continue bounded corrections and regression.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Complete unchanged role-specific tools, negative cases and independently reviewed end-to-end acceptance; do not repeat completed normal wave.",
       "priority": "P1",
       "completion_acceptance_criteria": "Exact unchanged role criteria met for 21/21 with retained failures; separate gates B/C.",
       "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
       "latest_observation": {
-        "at_utc": "2026-10-13T08:50:25.462637+00:00",
-        "status": "IN_PROGRESS",
-        "scope": "Retained baseline 15/21; targeted practice and unchanged semantic reassessment running. Full acceptance 0/21 established."
-      }
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_NORMAL21_FULL0",
+        "scope": "Latest bound normal-role results21/21 PASS after A01 and A19 corrections; original15/21, followup20/21 and v2wave20/21 retained. Full responsibility acceptance0/21.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": [
+        {
+          "at_utc": "2026-10-13T09:42:46.159109+00:00",
+          "status": "IN_PROGRESS",
+          "scope": "Retained baseline 15/21; targeted practice and unchanged semantic reassessment running. Full acceptance 0/21 established."
+        }
+      ],
+      "historical_blockers": ""
     },
     {
       "task_id": "ABEX-REC-002",
@@ -81,11 +95,18 @@
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "",
-      "next_executable_action": "Map eligible tools, aliases, handlers, production composition and authenticated paths.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Independently review retained a07 failure and diagnosed separate synthesis result; continue bounded per-role live scenarios.",
       "priority": "P1",
       "completion_acceptance_criteria": "Real tool receipts for all required roles, preserved authorization boundaries.",
-      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_LIVE_BRIDGE",
+        "scope": "Authenticated bridge installed; actual a07 model-generated valid request and public517byte retrieval; original fast feedback synthesis failed. Other20 model-to-tool paths and role-specific production sinks remain open.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": ""
     },
     {
       "task_id": "ABEX-REC-004",
@@ -168,11 +189,18 @@
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "Last dated full L7 0/21; access/assessor availability must be checked.",
-      "next_executable_action": "Inventory authentic assessor-issued results and prepare reproducible package.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Obtain genuine assessor access and independent challenge; preserve all existing signing/consumed-run constraints.",
       "priority": "P2",
       "completion_acceptance_criteria": "Independent Azure-issued gate C results distinct from local certification.",
-      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PREPARED_NOT_ASSESSED",
+        "scope": "Independent Azure evidence package prepared with exact source/runtime/hash scopes; independent assessment not established and no signing pins changed.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Last dated full L7 0/21; access/assessor availability must be checked."
     },
     {
       "task_id": "ABEX-REC-007",
@@ -186,20 +214,34 @@
           "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
           "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
           "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
         }
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "",
-      "next_executable_action": "Check root controller/restart/task receipts and before-login boot recovery gap.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Qualify interruption/reboot recovery without weakening Owner control; preserve fresh heartbeat evidence.",
       "priority": "P2",
       "completion_acceptance_criteria": "Independent background execution after session exit, controlled restart and authorized reboot receipts; no overlapping writers.",
       "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
       "latest_observation": {
-        "at_utc": "2026-10-13T08:50:25.462637+00:00",
-        "status": "PARTIAL",
-        "scope": "Finite follow-up controller installed with exclusive lock and durable state; logon supervisor active. Pre-logon reboot and post-session execution remain unverified."
-      }
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_CONTROLLED_RESTART_PASS",
+        "scope": "Installed read-only latest-normal observer revalidates21/21 against real queue+unchanged oracle fingerprints. Core/interface restart and22pad/board readbacks PASS. Pre-logon host reboot unestablished.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": [
+        {
+          "at_utc": "2026-10-13T09:42:46.159109+00:00",
+          "status": "PARTIAL",
+          "scope": "Finite follow-up controller installed with exclusive lock and durable state; logon supervisor active. Pre-logon reboot and post-session execution remain unverified."
+        }
+      ],
+      "historical_blockers": ""
     },
     {
       "task_id": "ABEX-REC-008",
@@ -223,7 +265,7 @@
       "completion_acceptance_criteria": "Measured real parallel provider execution with cost/admission/thermal bounds; serial tests not N=2/N=3 local.",
       "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
       "latest_observation": {
-        "at_utc": "2026-10-13T08:50:25.462637+00:00",
+        "at_utc": "2026-10-13T09:42:46.159109+00:00",
         "status": "PARTIAL",
         "scope": "Two scoped cloud lanes enabled, baseline provider execution proven; full mixed local/cloud qualification remains open."
       }
@@ -352,11 +394,18 @@
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "Off-ABEX key custody/provider/budget not established; local online DB backups alone insufficient.",
-      "next_executable_action": "Reconcile local capture failures, SQLite snapshots and identity/TLS inventory; plan isolated restoration.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Complete coherent whole-system capture, artifact/config/keys inventory and approved independent off-device restoration.",
       "priority": "P2",
       "completion_acceptance_criteria": "Coherent state/config/key custody, encrypted off-device custody and actual isolated restore prove representative data/identity.",
-      "owner_approval_requirement": "Explicit destination/budget/custody approval before paid storage or sensitive upload; destructive restore requires approval."
+      "owner_approval_requirement": "Explicit destination/budget/custody approval before paid storage or sensitive upload; destructive restore requires approval.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_ISOLATED_LOCAL_RESTORE",
+        "scope": "Retained11165612onlineSQLite files restored in isolatedcopy; latest11510213onlineSQLite backups include newbridgeDB. Files captured sequentially; off-device encrypted complete custody/point-in-time restore not established.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Off-ABEX key custody/provider/budget not established; local online DB backups alone insufficient."
     },
     {
       "task_id": "ABEX-REC-013",
@@ -526,11 +575,18 @@
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "Dated 90 PR audit not defect count; #268/#242/#208 failures, #240/#239/#234/#143 no returned PR runs.",
-      "next_executable_action": "Review exact net deltas, ancestry/reversions and current source union for each candidate.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Review draft299 plus Portal85/VELYQUA91/Game46/Sky20 and remaining unique successor deltas.",
       "priority": "P4",
       "completion_acceptance_criteria": "Unique work integrated with tests or explicitly superseded using final-source equivalence; failure history retained.",
-      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_SOURCE_PR_PUBLISHED",
+        "scope": "Primary and four owning consumer rebrand drafts retain source ownership, compatibility and original histories. Canonical risky changes not automatically merged.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Dated 90 PR audit not defect count; #268/#242/#208 failures, #240/#239/#234/#143 no returned PR runs."
     },
     {
       "task_id": "ABEX-REC-019",
@@ -667,15 +723,27 @@
           "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
           "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
           "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\CANONICAL-REVIEW.json",
+          "sha256": "1264ba5778803e607e82bcc8340631bb5f5c72f200b3b73a205a813e969a49fe",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
         }
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "",
-      "next_executable_action": "Append scoped fresh evidence in Claimed/Open, preserve Lam Verified and stale historical receipts.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Recheck canonical main and exact runtime before future claims; only Lam writes Verified.",
       "priority": "P4",
       "completion_acceptance_criteria": "Owning canonical source and generated resume mirror consistent, runtime/source/CI/acceptance separated.",
-      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_RECONCILED",
+        "scope": "Canonical main5026ad4 read with same-revision STATUS/manifest/channel contract; additive claimed observation and49-entry task memory prepared.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": ""
     },
     {
       "task_id": "ABEX-REC-024",
@@ -1127,16 +1195,397 @@
       ],
       "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
       "dependencies": [],
-      "blockers": "",
-      "next_executable_action": "Merge this recovery inventory into existing ledger/checkpoint and validate atomic writes.",
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Load and validate checkpoint, reconcile current receipts and execute open ledger tasks without replaying completed or ambiguous jobs.",
       "priority": "P4",
       "completion_acceptance_criteria": "Every obligation retained with evidence, safe next action and restart-readable checkpoint; actual restart mechanism separately tested.",
       "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
       "latest_observation": {
-        "at_utc": "2026-10-13T08:50:25.462637+00:00",
-        "status": "PARTIAL",
-        "scope": "Repository-backed ledger and hash-validated checkpoint created. Discovery limitations and 197 untriaged markers remain; no exhaustive-history claim."
-      }
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_DURABLE_MEMORY",
+        "scope": "All48 original obligations preserved plus explicit rebrand49th; hash-validated checkpoint, original memory snapshots and next actions retained. This does not launch Codex by itself.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": [
+        {
+          "at_utc": "2026-10-13T09:42:46.159109+00:00",
+          "status": "PARTIAL",
+          "scope": "Repository-backed ledger and hash-validated checkpoint created. Discovery limitations and 197 untriaged markers remain; no exhaustive-history claim."
+        }
+      ],
+      "historical_blockers": ""
+    },
+    {
+      "task_id": "ABEX-OWNER-001",
+      "project": "ORQEVIA / all 21 agents",
+      "original_objective": "Implement common internet/private API/infrastructure/secrets/code/cloud/delegation capability request interface for all 21 agents with role-scoped authority and independent security evidence",
+      "verified_status": "OPEN_IMPLEMENTATION",
+      "status_scope": "Explicit new Owner requirement; not implemented or accepted by inference or connectivity alone",
+      "evidence_sources": [
+        {
+          "path": "operations/coaching-priority-20261013/new-owner-obligations.json",
+          "timestamp": "2026-10-13T09:20:00Z"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "dependencies": [
+        "ABEX-REC-003",
+        "ABEX-REC-004",
+        "ABEX-REC-007"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Commission role-appropriate configured services and allowed/denied cases with real scoped credentials.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "21/21 actual public internet paths, independently tested appropriate private/infrastructure/execution paths; identity and task binding, least privilege, protected secrets, SSRF/injection/code isolation, irreversible approval gates and retained successful/denied operation receipts",
+      "owner_approval_requirement": "Source work and bounded authorized reads/execution approved; no new purchases, secret dissemination, destructive changes or production cutover without required authority",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_COMMON_BROKER_INSTALLED",
+        "scope": "Guarded common broker and model-tool bridge installed;22 principal publicHTTPS reads and durable action/source bindings PASS. PrivateAPI/cloud/infra/secrets paths separately unqualified.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Private/cloud/managed-secret production paths require actual configured scoped credentials; absence must be recorded per service, not disguised as a pass"
+    },
+    {
+      "task_id": "ABEX-OWNER-002",
+      "project": "ABEX Windows",
+      "original_objective": "Disable screen saver and automatic Windows power-saving suspension, preserve security and updates, sustain independent execution",
+      "verified_status": "PARTIAL_SETTINGS_APPLIED_MODERN_STANDBY_UNRESOLVED",
+      "status_scope": "Screen saver disabled via registry and SPI API; AC/DC sleep, hibernate and display idle timeouts zero. Native SystemRequired/ExecutionRequired requests accepted on AC but explicit monitor-off still caused suspension; do not claim continuous display-off execution",
+      "evidence_sources": [
+        {
+          "path": "operations/coaching-priority-20261013/HOST-POWER-GAP-EVENTS.json",
+          "timestamp": "2026-10-13"
+        }
+      ],
+      "dependencies": [
+        "ABEX-REC-007",
+        "ABEX-REC-014"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Retain display-independent holder/heartbeats and obtain physicalTV/host restart observation when authorized.",
+      "priority": "P0",
+      "completion_acceptance_criteria": "Original settings preserved, fresh settings verified, durable service startup and bounded recovery; real uninterrupted heartbeat/telemetry while physical TV off or validated display-off path, no concealed gap; security/update protections unchanged",
+      "owner_approval_requirement": "Settings and reversible helper changes authorized; actual UAC secure-desktop intervention, physical TV observation or reboot must be identified if required",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_AC_EXECUTION_HOLDER_ACTIVE",
+        "scope": "Fresh AC PowerCreateRequest SystemRequired and ExecutionRequired holder independent of display; supervisor/controller healthy. ActualTV off and pre-logon recovery unverified.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Medium-integrity token cannot inspect elevated power requests or install a SYSTEM holder. Explicit SC_MONITORPOWER triggers S0 Modern Standby despite successful user-process power requests"
+    },
+    {
+      "task_id": "ABEX-OWNER-003",
+      "project": "ORQEVIA Core",
+      "original_objective": "Verify independent Core DNS/HTTPS/search/public documentation/authenticated APIs/GitHub/DigitalOcean/Azure-assessment paths, network diagnostics, pooled bounded transport, retries/circuits and provenance",
+      "verified_status": "OPEN",
+      "status_scope": "Core is separate from 21 agents; public/HF historic network calls do not prove full requested framework",
+      "dependencies": [
+        "ABEX-OWNER-001"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Use exact configured Core authenticated service scopes; record missing credentials narrowly.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Separate live Core receipts for required paths and bounded security/recovery tests; no inferred PASS from agent gateway",
+      "owner_approval_requirement": "Authorized bounded reads/source work; no cloud purchase, production cutover or secret distribution",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\core-collective-owner-obligations.json",
+          "sha256": "1a19037df7c16d4d8d66fda5be3af34d10f8b97f9c565314135c29f227249d3d",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_CORE_PUBLIC_INTERNET_PASS",
+        "scope": "Core publicHTTPS read and sourcehash/custody PASS; GitHub/DigitalOcean/private/managedstore/Azure paths require separate real receipts.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Actual scoped GitHub/DigitalOcean/managed-store/Azure assessor credentials and integrations not all established"
+    },
+    {
+      "task_id": "ABEX-OWNER-004",
+      "project": "ORQEVIA 21 agents",
+      "original_objective": "Individually verify real agent-generated public/current retrieval, authorized APIs, source validation, network permissions, tool use and failure recovery",
+      "verified_status": "OPEN",
+      "status_scope": "Operator actor-labelled gateway calls are insufficient; current individual internet commissioning count not established",
+      "dependencies": [
+        "ABEX-OWNER-001",
+        "ABEX-OWNER-003"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Complete separate bounded per-agent model-tool-validation evidence without manufactured request IDs or lowered assertions.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Exactly21 canonical agents with live individual receipts; failures/unknowns not counted; Core separate",
+      "owner_approval_requirement": "Existing bounded HF credit authorization applies; no additional purchase",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\core-collective-owner-obligations.json",
+          "sha256": "1a19037df7c16d4d8d66fda5be3af34d10f8b97f9c565314135c29f227249d3d",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL22_TRANSPORT_0FULL",
+        "scope": "All21 agent-bound publicHTTPS reads+Core22/22 commissioned at authenticated handler layer. Actual model-generated a07 chain retrieves source but original feedback fails; no21/21 model-tool acceptance.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Common broker candidate not installed; actual agent model/tool chain receipts not yet commissioned"
+    },
+    {
+      "task_id": "ABEX-OWNER-005",
+      "project": "ORQEVIA Core and21 agents",
+      "original_objective": "Extraordinary durable objective continuation with checkpoints, transactional leases, idempotency, backoff, stall detection, partial-execution reconciliation, dependency preservation and controlled reassignment",
+      "verified_status": "PARTIAL_SOURCE_AND_EXISTING_SERVICES",
+      "status_scope": "Existing coaching/supervisor/queue recovery narrower than full requested persistence; reboot-before-logon and Modern Standby unresolved",
+      "dependencies": [
+        "ABEX-REC-007",
+        "ABEX-OWNER-002",
+        "ABEX-OWNER-006",
+        "ABEX-OWNER-007"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Execute independent bounded partial-interruption, stall/yield and recovery scenarios with original failures preserved.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Separate Core/21 matrices and actual A-L interruption/recovery cases; bounded retries, no lost tasks or duplicated irreversible effects, human STOP respected",
+      "owner_approval_requirement": "Reversible isolated/process tests authorized; physical/production-impacting reboot or offline test requires appropriate explicit scope",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\core-collective-owner-obligations.json",
+          "sha256": "1a19037df7c16d4d8d66fda5be3af34d10f8b97f9c565314135c29f227249d3d",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_PROCESS_RECOVERY_PASS",
+        "scope": "22pads/board delivery state/handoff preserved across controlled Core/interface restart. Broader extraordinary persistence, stall/network/process sacrifice/host reboot qualification incomplete.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Actual reboot and network-interruption qualification not complete"
+    },
+    {
+      "task_id": "ABEX-OWNER-006",
+      "project": "ORQEVIA22 principals",
+      "original_objective": "Install22 persistent isolated digital engineering sketchpads, one separate Core pad and one per canonical agent",
+      "verified_status": "SOURCE_CANDIDATE_TESTED_NOT_INSTALLED",
+      "status_scope": "CollectiveWorkspace candidate source28 focused/41 adjacent tests; not live acceptance",
+      "dependencies": [
+        "ABEX-OWNER-001"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Verify remaining live revision/search/archive/CAS and independently initiated role operations.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Core pad separate;21/21 individual pad operations; immutable revisions/CAS/search/checkpoints/evidence and uncertainty; cross-owner modification denied; no credentials or hidden model reasoning stored",
+      "owner_approval_requirement": "Bounded local source/storage operations authorized; no new external custody",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\core-collective-owner-obligations.json",
+          "sha256": "1a19037df7c16d4d8d66fda5be3af34d10f8b97f9c565314135c29f227249d3d",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL22_PADS_LIVE_PASS",
+        "scope": "22 separate pads write/own readback PASS, cross-principal read denied403;22 readbacks survive controlled restart. Commissioning actor-bound API operations are not spontaneous model planning proof.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Authenticated API composition, deployment and real role-invoked read/write/checkpoint evidence outstanding"
+    },
+    {
+      "task_id": "ABEX-OWNER-007",
+      "project": "ORQEVIA collective communication",
+      "original_objective": "Install durable GLOBAL/TASKS/RESEARCH/ENGINEERING/INCIDENTS/DECISIONS/EVIDENCE/BLOCKERS/HANDOFFS/CERTIFICATION boards with attribution/threading/task-evidence refs/search/subscriptions/delivery/ack/idempotency/access/audit/replay/concurrency/retention",
+      "verified_status": "SOURCE_CANDIDATE_TESTED_NOT_INSTALLED",
+      "status_scope": "Source storage methods not actual agent participation proof",
+      "dependencies": [
+        "ABEX-OWNER-006"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Commission constructive threaded findings/challenge/reconciliation across required boards.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Durable collective system,21/21 real participation plus Core; no in-memory-only authority; revisions/conflicts/evidence history preserved",
+      "owner_approval_requirement": "Authorized internal boards only; no unsolicited Slack/email/third-party messages",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\core-collective-owner-obligations.json",
+          "sha256": "1a19037df7c16d4d8d66fda5be3af34d10f8b97f9c565314135c29f227249d3d",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL22_GLOBAL_DELIVERY_PASS",
+        "scope": "Durable boards installed. GLOBAL subscribe/deliver/read/ack22/22 PASS, retained after restart; other-board multi-task participation and retention coverage remain separate.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Authenticated runtime/worker composition and live participation/restart evidence outstanding"
+    },
+    {
+      "task_id": "ABEX-OWNER-008",
+      "project": "ORQEVIA collective control",
+      "original_objective": "Execute collective objective-decomposition-assignment-private planning-published findings-challenge-authorized work-evidence-Core reconciliation protocol with constructive disagreement and safe self-sacrifice",
+      "verified_status": "OPEN",
+      "status_scope": "Agreement never establishes correctness; existing role/29-capability and self-improvement/self-preservation/security programs remain open",
+      "dependencies": [
+        "ABEX-OWNER-005",
+        "ABEX-OWNER-006",
+        "ABEX-OWNER-007",
+        "ABEX-REC-001",
+        "ABEX-REC-005"
+      ],
+      "blockers": "See current scoped observation and next action; historical blocker strings retained explicitly and in memory-before snapshot. Unfinished criteria remain open.",
+      "next_executable_action": "Verify voluntary resource yielding/STOP/quarantine and collective independent evidence reconciliation.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Separate coordination/interruption/reboot/collective/self-sacrifice/security/role/end-to-end/Azure gates with original receipts; no circular delegation or human-control override",
+      "owner_approval_requirement": "Safe authorized internal tests; preserve Owner STOP, approval gates and parked physical dependencies",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\core-collective-owner-obligations.json",
+          "sha256": "1a19037df7c16d4d8d66fda5be3af34d10f8b97f9c565314135c29f227249d3d",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+          "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+          "read_at_utc": "2026-10-13T11:57:26.475419+00:00"
+        }
+      ],
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_SAFE_HANDOFF_PASS",
+        "scope": "Controlled a17 toCore handoff transitions READY,RUNNING,HANDOFF,RUNNING,DONE preserved; physical/process self-sacrifice and full collective task acceptance not established.",
+        "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED"
+      },
+      "historical_blockers": "Real tool/delegation/end-to-end receipts and independent criteria review incomplete"
+    },
+    {
+      "task_id": "ABEX-MARK-001",
+      "project": "ORQEVIA / ABEX",
+      "original_objective": "Execute and independently evidence physical Black Start without Internet/cloud AI/Codex/GitHub, preserving durable queues and identity/authority",
+      "verified_status": "DEFERRED_HISTORICAL_UNVERIFIED_CURRENT",
+      "priority": "P2",
+      "parent_task_ids": [
+        "ABEX-REC-005",
+        "ABEX-REC-007"
+      ],
+      "dependencies": [
+        "ABEX-REC-012",
+        "ABEX-REC-007"
+      ],
+      "blockers": "No fresh evidence establishes completion; source describes unexecuted/deferred qualification.",
+      "next_executable_action": "Reconcile prepared procedure with current runtime/backups; prepare reversible recovery test before any physical restart.",
+      "completion_acceptance_criteria": "Actual physical shutdown/start, isolated offline operation, deferred queues, restore and unchanged authority receipts; simulation insufficient.",
+      "owner_approval_requirement": "Physical shutdown/reboot or production-impacting offline test requires authorization; preparation authorized.",
+      "evidence_marker_ids": [
+        "ABEX-MARKER-deee47d48edb",
+        "ABEX-MARKER-d5a3d8e67b15",
+        "ABEX-MARKER-2bb7275bbc0d",
+        "ABEX-MARKER-96377f4bf0ce"
+      ],
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\marker-triage.json",
+          "sha256": "c650f92ca9c55b736051ea12b592b3332c2602ed369e1f1816b2416eb356623a",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        }
+      ],
+      "status_scope": "Historical source obligation; marker reviewed, execution not freshly qualified."
+    },
+    {
+      "task_id": "ABEX-MARK-002",
+      "project": "ORQEVIA / ABEX",
+      "original_objective": "Qualify metacognitive counterfactual reasoning, tool/model selection and calibration with attributable real outcomes",
+      "verified_status": "DEFERRED_HISTORICAL_UNVERIFIED_CURRENT",
+      "priority": "P5",
+      "parent_task_ids": [
+        "ABEX-REC-005"
+      ],
+      "dependencies": [
+        "ABEX-REC-003",
+        "ABEX-REC-008"
+      ],
+      "blockers": "No fresh evidence establishes completion; source describes unexecuted/deferred qualification.",
+      "next_executable_action": "Reconcile current implementation and retained evaluations; define separately attributable representative tests.",
+      "completion_acceptance_criteria": "Reproducible held-out counterfactual/model/tool-selection results and real-outcome calibration with independent review before production claims.",
+      "owner_approval_requirement": "Isolated evaluation within existing budgets authorized; production promotion or additional spend requires scope.",
+      "evidence_marker_ids": [
+        "ABEX-MARKER-89ce8aeb5c5f",
+        "ABEX-MARKER-861a4cf05db3",
+        "ABEX-MARKER-521ff94c3681",
+        "ABEX-MARKER-c7187b6ee6a8",
+        "ABEX-MARKER-3eaab101df42",
+        "ABEX-MARKER-a5578c3746ed"
+      ],
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\marker-triage.json",
+          "sha256": "c650f92ca9c55b736051ea12b592b3332c2602ed369e1f1816b2416eb356623a",
+          "read_at_utc": "2026-10-13T09:42:46.159109+00:00"
+        }
+      ],
+      "status_scope": "Historical source obligation; marker reviewed, execution not freshly qualified."
+    },
+    {
+      "task_id": "ABEX-OWNER-009",
+      "project": "ORQEVIA \u00b7 \u5965\u542f\u7ef4\u4e9a",
+      "original_objective": "Migrate existing JARVIS PRIME public application and operational identity to ORQEVIA while preserving enrollment, APIs, history and all existing engineering acceptance criteria.",
+      "verified_status": "OWNER_DIRECTIVE_IN_PROGRESS",
+      "latest_observation": {
+        "at_utc": "2026-10-13T11:57:26.475419+00:00",
+        "status": "PARTIAL_SOFTWARE_BRAND_PASS_PHYSICAL_PENDING",
+        "scope": "Live software rebrand and21/21 actual identities PASS. Physical Safari/home-screen acceptance not performed; consumer drafts not deployed."
+      },
+      "dependencies": [
+        "ABEX-REC-001",
+        "ABEX-REC-010",
+        "ABEX-REC-023",
+        "ABEX-OWNER-004"
+      ],
+      "blockers": "Physical iPhone Safari/home-screen observation unavailable. Existing installation retained; no credential reset.",
+      "next_executable_action": "Complete physical Safari and installed/additional PWA checks using exact safe instructions; keep original installation until new Owner task/artifact flow confirmed.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Consistent ORQEVIA current surfaces/icons/notifications/21agents; unchanged enrollment, compatibility, safe caches and actual physical owner/member/task/artifact flows.",
+      "owner_approval_requirement": "Brand migration explicitly approved; only real physical/external dependencies require Owner participation.",
+      "evidence_sources": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\FINAL-ACCEPTANCE.json",
+          "sha256": "1b8bafcb022e34e09142819c858ffb828207fe089f339295d68545d6a54e5878",
+          "read_at_utc": "2026-10-13T12:03:55.577214+00:00"
+        }
+      ]
     }
   ],
   "discovery_limits": [
@@ -1146,8 +1595,10 @@
     "External design/capture references in Documents/Codex were recovered as references; their full contents and complete historical inventory not audited in this worker scope.",
     "Existing source reports have inconsistent dated counts. Root must overlay latest runtime/CI receipts; no inferred current pass.",
     "No fresh host security/SMART/hardware or authenticated product/browser check by this worker.",
-    "Supplement indexes 197 untriaged markers; not all are actual tasks. Raw chat and secrets deliberately excluded."
+    "All 197 indexed markers were individually triaged; raw chat and secrets deliberately excluded. Wider history/ACL discovery limits remain."
   ],
   "supplement_file": "recovered-backlog-supplement-agent.json",
-  "owner_parked": "VELYQUA physical sensor assembly and real telemetry; resume only on Owner instruction and actual hardware availability."
+  "owner_parked": "VELYQUA physical sensor assembly and real telemetry; resume only on Owner instruction and actual hardware availability.",
+  "latest_observation_scope": "Dated runtime and source receipt overlay; existing Verified status fields and historical objectives retained, no Lam verification inferred.",
+  "history_snapshot": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\memory-before\\20261013T115726475419Z"
 }

@@ -1,0 +1,2005 @@
+{
+  "schema": "abex.backlog-supplement.v1",
+  "observed_at_utc": "2026-10-13T08:37:03.895694+00:00",
+  "scope": "Read-only local metadata and marker index. Not complete current remote or runtime status.",
+  "repositories": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\AndrewLamSingapore",
+      "canonical_current_remote_checked": false,
+      "head": "764804b56b40f6b4c788ff4d7e7b6b4dd3d28f20",
+      "head_exit_code": 0,
+      "branch": "feat/global-gate-zero-20261003",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\AndrewLamSingapore\\AGENTS.md",
+        "sha256": "6676aa2f204a23175a4dc671a49aeaa20ad83f1c71f9857675df143a1e912b92",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [],
+      "marker_count": 0,
+      "scan_exit_code": 1
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\authority-engine",
+      "canonical_current_remote_checked": false,
+      "head": "4d6f4acabb7be0f6eb34f73ea7122c2b9f27b4c5",
+      "head_exit_code": 0,
+      "branch": "feat/global-gate-zero-20261003",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\authority-engine\\AGENTS.md",
+        "sha256": "6676aa2f204a23175a4dc671a49aeaa20ad83f1c71f9857675df143a1e912b92",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [],
+      "marker_count": 0,
+      "scan_exit_code": 1
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\game-platform",
+      "canonical_current_remote_checked": false,
+      "head": "7ada005d744e97b4fef35b5e33c49578a5a6be11",
+      "head_exit_code": 0,
+      "branch": "feat/global-gate-zero-20261003",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\game-platform\\AGENTS.md",
+        "sha256": "6676aa2f204a23175a4dc671a49aeaa20ad83f1c71f9857675df143a1e912b92",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [],
+      "marker_count": 0,
+      "scan_exit_code": 1
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime",
+      "canonical_current_remote_checked": false,
+      "head": "b795a09f37ab4b1cb6248ea424e1e8b78b864c33",
+      "head_exit_code": 0,
+      "branch": "docs/runtime-evidence-closeout-20260922",
+      "branch_exit_code": 0,
+      "dirty_paths": [
+        "?? worktrees/"
+      ],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\AGENTS.md",
+        "sha256": "c32c9bfe3a48eee3e4378e5f36df5698908e345b2549f4dc4cb0feaadb04c7bf",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\contracts\\prime-execution-record-v1.schema.json",
+          "line": 29,
+          "file_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+          "marker_excerpt": "    \"final_execution_result\": {\"enum\": [\"PASS\", \"FAIL\", \"PARTIAL\", \"BLOCKED\", \"UNKNOWN\"]},",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\app\\main.py",
+          "line": 584,
+          "file_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+          "marker_excerpt": "BLOCKED_CALLS={'eval','exec','compile','__import__','open','input','breakpoint','getattr','setattr','delattr','vars','dir','globals','locals'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\app\\main.py",
+          "line": 592,
+          "file_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+          "marker_excerpt": "  if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id in BLOCKED_CALLS:return False,f'Blocked call: {n.func.id}'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\app\\meta_review.py",
+          "line": 31,
+          "file_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+          "marker_excerpt": "            if status in {\"FAILED\", \"BLOCKED\", \"REJECTED\"}:",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\app\\spine.py",
+          "line": 299,
+          "file_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+          "marker_excerpt": "            execution_status, event_type, status = \"BLOCKED\", \"action.prohibited\", 403",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\app\\workflow_engine.py",
+          "line": 68,
+          "file_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+          "marker_excerpt": "                    complete[task.id]={'status':'BLOCKED','reason':'Dependency failed'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\AGENTS.md",
+          "line": 62,
+          "file_sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+          "marker_excerpt": "Continue independent work when one lane is blocked. Classify observations as `PASS`, `FAIL`, `MONITOR`, `DEFERRED`, `EXTERNAL`, `NOT APPLICABLE` or a justified localized `BLOCKER`. Test to learn or verify relevant behavior, not to satisfy invented gates. Do not disable probes, tools, agents, models, networking or other functioning capability to make a status clean. Preserve authentication, authorization, secrets, data integrity, recoverability and known-good production. Prefer the simplest reversible solution; request Owner intervention only for an actual physical, credential, financial, exter",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 127,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "            if db.execute(\"SELECT 1 FROM coaching_sessions WHERE state NOT IN ('DONE','BLOCKED') LIMIT 1\").fetchone():",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 130,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "            if db.execute(\"SELECT 1 FROM coaching_sessions WHERE state='BLOCKED' LIMIT 1\").fetchone():",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 154,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 161,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                    db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 169,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                    db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 171,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                    return 'BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 178,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                    db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 180,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                    return 'BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 224,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\agent_coaching.py",
+          "line": 226,
+          "file_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+          "marker_excerpt": "                return 'BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\STATUS.md",
+          "line": 169,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "  13 FAIL and 0 BLOCKED. All 21 receipt and execution-trace hashes were checked",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\STATUS.md",
+          "line": 193,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "  Golden and the candidate source are preserved. Promotion remains BLOCKED;",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\STATUS.md",
+          "line": 229,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "  or runtime acceptance. Golden remains preserved; candidate promotion is BLOCKED.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\STATUS.md",
+          "line": 721,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "- **Member-role acceptance remains BLOCKED on the absence of any legitimate member identity (23 September 2026).** The production project held 45 auth users at first inspection: exactly one confirmed email identity (the owner) plus 44 anonymous, unconfirmed identities created by earlier guest traffic. The unmapped-denial check requires a real authenticated identity, so the acceptance and browser rounds created 11 further anonymous identities of the same kind - one per unmapped scenario, each unmapped, empty and signed out, and each identified in the evidence by its auth user id (for example `8",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\STATUS.md",
+          "line": 825,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "- **Private PRIME authenticated acceptance: identity-independent half complete, OWNER mapping blocked by the absence of any privileged Supabase path on the Dell (22 Sep 2026).** Reported by Codex, not yet spot-checked by Lam and NOT owner-verified. (1) Lam completed the one required human authentication action, and the resulting real session was detected server-side: production `/prime` rendered \"Authenticated, not yet authorized\" because the deployed server validated the Supabase access token, resolved that auth user against `public.prime_identities`, found no mapping row and returned 403 `no",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\governance\\SUPREME_CAPABILITY_REGISTER.json",
+          "line": 160,
+          "file_sha256": "9d4c8fe5f52ec77b3e69323569ad8d56420a409d5fc8c776afa4d6c07e838e30",
+          "marker_excerpt": "      \"maturity\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\contracts\\prime-execution-record-v1.schema.json",
+          "line": 29,
+          "file_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+          "marker_excerpt": "    \"final_execution_result\": {\"enum\": [\"PASS\", \"FAIL\", \"PARTIAL\", \"BLOCKED\", \"UNKNOWN\"]},",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\BLACK_START_PREPARED_NOT_EXECUTED.md",
+          "line": 27,
+          "file_sha256": "7c2665f7ec469ca91bb441ef12c2dc7c5e533cdbc048960403e14d696c6fd2ac",
+          "marker_excerpt": "9. **Queues:** prove cloud work becomes `DEFERRED_OFFLINE`; do not replay it.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\governance\\observations\\abex-post-restart-20261012.json",
+          "line": 9,
+          "file_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+          "marker_excerpt": "  \"candidate_promotion\": \"BLOCKED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\governance\\observations\\abex-post-restart-20261012.json",
+          "line": 47,
+          "file_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+          "marker_excerpt": "    \"application_openai_routing\": \"BLOCKED_NO_AUTHORIZED_API_CREDENTIAL_OR_CATALOG_ROUTE\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\governance\\observations\\abex-candidate-closure-66a5d90-20261012.json",
+          "line": 469,
+          "file_sha256": "80c91fc4ce31314f1a923d4e3d459506ac8ae70d30b5012b9707ff7436b3166a",
+          "marker_excerpt": "  \"candidate_promotion\": \"BLOCKED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\tests\\test_workflow_engine.py",
+          "line": 28,
+          "file_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+          "marker_excerpt": "    assert result['tasks']['dependent']['status']=='BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\general_intelligence.py",
+          "line": 201,
+          "file_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+          "marker_excerpt": "    if len(ids)!=len(rows): return PlanResult((),\"BLOCKED\",(\"duplicate_step\",),False)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\general_intelligence.py",
+          "line": 206,
+          "file_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+          "marker_excerpt": "    except CycleError: return PlanResult((),\"BLOCKED\",(\"dependency_cycle\",),False)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\meta_review.py",
+          "line": 31,
+          "file_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+          "marker_excerpt": "            if status in {\"FAILED\", \"BLOCKED\", \"REJECTED\"}:",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\metacognition.py",
+          "line": 182,
+          "file_sha256": "2a4b3e7fe92bba534c2d4ae70e6bff2ce689fdc98fd2dde9a819237ba159df23",
+          "marker_excerpt": "    if state.disposition in {\"VERIFIED\", \"ABSTAIN\", \"VERIFY_REQUIRED\", \"DEFERRED\"}:",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\main.py",
+          "line": 584,
+          "file_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+          "marker_excerpt": "BLOCKED_CALLS={'eval','exec','compile','__import__','open','input','breakpoint','getattr','setattr','delattr','vars','dir','globals','locals'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\main.py",
+          "line": 592,
+          "file_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+          "marker_excerpt": "  if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id in BLOCKED_CALLS:return False,f'Blocked call: {n.func.id}'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\tests\\test_direct_execution.py",
+          "line": 136,
+          "file_sha256": "f38667e424cc7e7d066e24132dc4dccda0958f1b56b0e6019fecd3bfa6e55842",
+          "marker_excerpt": "    assert result['tasks']['fail']['status']=='FAILED' and result['tasks']['blocked']['status']=='BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\independence_matrix.py",
+          "line": 8,
+          "file_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+          "marker_excerpt": "STATES = frozenset({\"UNCHANGED\", \"DEGRADED\", \"DEFERRED\", \"FAILED\"})",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\independence_matrix.py",
+          "line": 44,
+          "file_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+          "marker_excerpt": "        scenario(\"github_unavailable\", queues=\"DEFERRED\"),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\independence_matrix.py",
+          "line": 48,
+          "file_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+          "marker_excerpt": "        scenario(\"internet_unavailable\", queues=\"DEFERRED\"),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\scripts\\verify_independence_phase.py",
+          "line": 32,
+          "file_sha256": "8a6e5e61c344c656dc9d972d2b852de7cdc590ab393ce2842f09c394fba37ba8",
+          "marker_excerpt": "            \"offline_work_durable\": operation.state is QueueState.DEFERRED_OFFLINE,",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\workflow_engine.py",
+          "line": 68,
+          "file_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+          "marker_excerpt": "                    complete[task.id]={'status':'BLOCKED','reason':'Dependency failed'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\scripts\\verify_capability_register.py",
+          "line": 12,
+          "file_sha256": "7a629b456c8d00faba249483588c4a215672eab39e5c5dfdc039fb4e59b863e8",
+          "marker_excerpt": "    \"DEFERRED\", \"BLOCKED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\supreme_integration.py",
+          "line": 24,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"timeout\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\supreme_integration.py",
+          "line": 27,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"provider_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\supreme_integration.py",
+          "line": 28,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"model_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\supreme_integration.py",
+          "line": 29,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"retrieval_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\supreme_integration.py",
+          "line": 31,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"tool_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\supreme_integration.py",
+          "line": 32,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"network_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\spine.py",
+          "line": 299,
+          "file_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+          "marker_excerpt": "            execution_status, event_type, status = \"BLOCKED\", \"action.prohibited\", 403",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\phase2_intelligence.py",
+          "line": 26,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "    BLOCKED = \"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\phase2_intelligence.py",
+          "line": 373,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "            \"RESUME\": ({ObjectiveState.PAUSED, ObjectiveState.BLOCKED}, ObjectiveState.ACTIVE),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\phase2_intelligence.py",
+          "line": 374,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "            \"CANCEL\": ({ObjectiveState.ACTIVE, ObjectiveState.PAUSED, ObjectiveState.BLOCKED}, ObjectiveState.CANCELLED),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\phase2_intelligence.py",
+          "line": 375,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "            \"STOP\": ({ObjectiveState.ACTIVE, ObjectiveState.PAUSED, ObjectiveState.BLOCKED}, ObjectiveState.CANCELLED),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 12,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "   DEFERRED_OFFLINE rather than failed.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 64,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "    DEFERRED_OFFLINE = \"DEFERRED_OFFLINE\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 293,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    disposition[name] = \"DEFERRED_OFFLINE\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 295,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    disposition[name] = \"DEFERRED_OFFLINE\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 348,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "            state = QueueState.DEFERRED_OFFLINE if self._state in (CapabilityState.OFFLINE, CapabilityState.DEGRADED) else QueueState.PENDING",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 387,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "            if operation.state in (QueueState.PENDING, QueueState.DEFERRED_OFFLINE, QueueState.RECONCILING, QueueState.FAILED)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 410,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    QueueState.DEFERRED_OFFLINE.value,",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 465,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "            if operation.state in (QueueState.PENDING, QueueState.DEFERRED_OFFLINE, QueueState.FAILED, QueueState.RECONCILING)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 483,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    state=QueueState.DEFERRED_OFFLINE.value,",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\offline_survival.py",
+          "line": 487,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                results.append(ReconcileResult(operation.id, QueueState.DEFERRED_OFFLINE, False, \"dependency_unavailable\"))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\app\\objective_api.py",
+          "line": 514,
+          "file_sha256": "9e0684ce093cf94ad2e25e93b8f7a1d1700c35c1e64b708268227ae04df73eb2",
+          "marker_excerpt": "        lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\evidence\\METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+          "line": 44,
+          "file_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+          "marker_excerpt": "| Counterfactual reasoning | DEFERRED | Model-level capability not independently quantified here |",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\evidence\\METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+          "line": 45,
+          "file_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+          "marker_excerpt": "| Tool/model selection | DEFERRED | Existing routing protected; no production modification |",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\evidence\\METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+          "line": 46,
+          "file_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+          "marker_excerpt": "| Production proven | DEFERRED | Explicitly undeployed |",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\evidence\\GOLDEN_GEN1_PHYSICAL_REGRESSIONS_20260926.md",
+          "line": 49,
+          "file_sha256": "a86f1802a78dee27a5c984966df46a6548b39ff1a48e95de80862f1a2115523a",
+          "marker_excerpt": "- Candidate repair: terminal dispatch-blocked tasks retain null start time with canonical reason `NO_EXECUTION_STARTED_DISPATCH_BLOCKED`, bind completion to the terminal objective-update observation, and preserve failure/artifact status without converting either into success.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\scripts\\benchmark_local_models.py",
+          "line": 19,
+          "file_sha256": "6435a26fffbe81770ccaf241e6a59348c0b3879d23be00f6aa8116aa4447ef28",
+          "marker_excerpt": "    {\"category\": \"structured_output\", \"language\": \"en\", \"prompt\": \"Return only JSON with keys decision and reason. decision must be BLOCKED.\", \"must_be_json\": True, \"required_json_keys\": [\"decision\", \"reason\"], \"json_equals\": {\"decision\": \"BLOCKED\"}},",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.md",
+          "line": 102,
+          "file_sha256": "356ae68d66ef129a5957893187abf30b104188754128866596415f0409d693dd",
+          "marker_excerpt": "BLOCKED state. No new phone action is required to establish this failure.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_authoritative_result_metadata.py",
+          "line": 113,
+          "file_sha256": "867ce0a21af7bc8387ef6115c1b284beea8491bf26b894a1d31041e461ee6d04",
+          "marker_excerpt": "            self.assertEqual(metadata['lifecycle']['started_at_reason'],'NO_EXECUTION_STARTED_DISPATCH_BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_agent_coaching.py",
+          "line": 138,
+          "file_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+          "marker_excerpt": "        self.assertEqual(self.controller.tick(),'BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_agent_coaching.py",
+          "line": 165,
+          "file_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+          "marker_excerpt": "        self.assertEqual(self.controller.tick(),'BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_agent_coaching.py",
+          "line": 167,
+          "file_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+          "marker_excerpt": "            row=db.execute(\"SELECT * FROM coaching_sessions WHERE state='BLOCKED'\").fetchone()",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_direct_execution.py",
+          "line": 145,
+          "file_sha256": "450b2716fd1724f77a73d8f47a99b9ce7d8ccb79e71ea86570362c72724d46e3",
+          "marker_excerpt": "    assert result['tasks']['fail']['status']=='FAILED' and result['tasks']['blocked']['status']=='BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_general_intelligence.py",
+          "line": 93,
+          "file_sha256": "8e33568ff178356d77cc1a266667c89bbae4b4d65fd768452f1bd5cac94be73e",
+          "marker_excerpt": "    assert plan_steps([PlanStep(\"a\",(\"b\",)),PlanStep(\"b\",(\"a\",))],set()).disposition==\"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\docs\\evidence\\DELL_REVERIFICATION_DISAGREEMENT_20260926.md",
+          "line": 5,
+          "file_sha256": "4489e6cd80c33d99a5cfbd6210662f5bf7d51ebb26b2b2ae4c0f842499eb9573",
+          "marker_excerpt": "Dell returned a read-only `BLOCKED â€” CRITICAL DEPENDENCY` result and confirmed",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_independence_dependency_matrix.py",
+          "line": 65,
+          "file_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+          "marker_excerpt": "    assert operation.state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_independence_dependency_matrix.py",
+          "line": 106,
+          "file_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+          "marker_excerpt": "    assert {item.state for item in results} == {QueueState.DEFERRED_OFFLINE}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_metacognition.py",
+          "line": 72,
+          "file_sha256": "5f57d7c56f713ae189d310c95ed14d6c7159c9ed5821e92cc510c205e8e34fcf",
+          "marker_excerpt": "@pytest.mark.parametrize(\"disposition\", [\"VERIFIED\", \"ABSTAIN\", \"VERIFY_REQUIRED\", \"DEFERRED\"])",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_objective_domain_provenance.py",
+          "line": 106,
+          "file_sha256": "862fcdf971b8691dfdcf0b8bd8860b317163bb83b565430aa2dbd672f9261b70",
+          "marker_excerpt": "        'NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if step_state == 'blocked' else 'NO_EXECUTION_START_RECORDED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_offline_survival.py",
+          "line": 81,
+          "file_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+          "marker_excerpt": "        assert operation.state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_offline_survival.py",
+          "line": 159,
+          "file_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+          "marker_excerpt": "        assert survival.get(operation.id).state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_offline_survival.py",
+          "line": 172,
+          "file_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+          "marker_excerpt": "        assert survival.get(survival.pending()[0].id).state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_portfolio_reconciliation.py",
+          "line": 35,
+          "file_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+          "marker_excerpt": "    assert observation[\"candidate_promotion\"] == \"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_portfolio_reconciliation.py",
+          "line": 82,
+          "file_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+          "marker_excerpt": "    assert observation[\"candidate_promotion\"] == \"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_production_compatibility.py",
+          "line": 206,
+          "file_sha256": "d76afd121af63d3d163c56e1367c2edb45d2cd325c505cc87f60a5183dc331cc",
+          "marker_excerpt": "    assert queued.json()['state'] in {'PENDING', 'DEFERRED_OFFLINE'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_supreme_independence_candidate.py",
+          "line": 62,
+          "file_sha256": "ee510baace15ad4b05627b424a14186dd0d0a5f68f356778076e72a96e5cb42b",
+          "marker_excerpt": "    assert operation.state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_supreme_intelligence_benchmark.py",
+          "line": 27,
+          "file_sha256": "e71cf664ac3cda9cc5887875ead84a77d6ab92943c8ab0199dbbbf11d3f5fcc0",
+          "marker_excerpt": "        (\"structured_output\", '{\"decision\":\"BLOCKED\",\"reason\":\"one check failed\"}', True),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\worktrees\\cloud-parallel-lanes-20261013\\tests\\test_workflow_engine.py",
+          "line": 28,
+          "file_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+          "marker_excerpt": "    assert result['tasks']['dependent']['status']=='BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        }
+      ],
+      "marker_count": 90,
+      "scan_exit_code": 0
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\sky-tablet",
+      "canonical_current_remote_checked": false,
+      "head": "949428926085de78e173f8e8ca3f688dc0a2dd68",
+      "head_exit_code": 0,
+      "branch": "feat/global-gate-zero-20261003",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\sky-tablet\\AGENTS.md",
+        "sha256": "6676aa2f204a23175a4dc671a49aeaa20ad83f1c71f9857675df143a1e912b92",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\sky-tablet\\index.html",
+          "line": 45,
+          "file_sha256": "6740ddfd6fc2bb677caa7dd3868320c0bb9d5ddc0db6ec53d2f415616bbdc18c",
+          "marker_excerpt": "      sound.textContent = state === 'playing' ? 'SOUND PLAYING' : state === 'ready' ? 'SOUND READY' : 'SOUND BLOCKED â€” RETRY';",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        }
+      ],
+      "marker_count": 1,
+      "scan_exit_code": 0
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal",
+      "canonical_current_remote_checked": false,
+      "head": "0af3d321f3c643bc70283f3ac41ca0b87465cacb",
+      "head_exit_code": 0,
+      "branch": "feat/global-gate-zero-20261003",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\AGENTS.md",
+        "sha256": "6676aa2f204a23175a4dc671a49aeaa20ad83f1c71f9857675df143a1e912b92",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\inhabitants.js",
+          "line": 49,
+          "file_sha256": "a7a4bbd55014145acf03004ca9180566a1ddba127648f261ec697437e77d5ffb",
+          "marker_excerpt": "  $('inhabitantState').textContent=`${items.length} INHABITANT${items.length===1?'':'S'} AWAKE Â· ${data.version||'PORTAL'} Â· REAL-WORLD AUTHORITY BLOCKED`;",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\living.js",
+          "line": 29,
+          "file_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+          "marker_excerpt": "  $('state').textContent=`${data.version} Â· ${data.generation_mode} Â· ${data.generations.length} GENERATIONS Â· ${data.cognition.readiness} Â· REAL-WORLD AUTHORITY BLOCKED`;",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\living.js",
+          "line": 33,
+          "file_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+          "marker_excerpt": "  $('meta').innerHTML=`<p class=\"tag\">WHAT PORTAL IS UNCERTAIN ABOUT</p><p>Uncertainty <b>${pct(c.metacognition?.uncertainty)}%</b></p><p>${esc(c.metacognition?.question||'No question generated.')}</p><p class=\"tag\">REAL-WORLD ACTION ${c.metacognition?.should_act?'ALLOWED':'BLOCKED'}</p>`;",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\living.js",
+          "line": 42,
+          "file_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+          "marker_excerpt": "  $('safety').innerHTML=Object.entries(data.safety||{}).map(([k,v])=>`<p class=\"${v?'':'blocked'}\">${v?'ALLOWED':'BLOCKED'} Â· ${esc(k.replaceAll('_',' '))}</p>`).join('')||'<p class=\"blocked\">Safety envelope unavailable.</p>';",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\lib\\autonomy.js",
+          "line": 27,
+          "file_sha256": "d278c67f484d3e7407902b5007df035b8abcceacd6b052291ff76ddf0c3c02a6",
+          "marker_excerpt": "  if (!db()) return { status: 'BLOCKED', reason: 'DATABASE_URL is required for durable autonomous runs' };",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\lib\\living-intelligence.js",
+          "line": 167,
+          "file_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+          "marker_excerpt": "      events.push({ ...base, status: 'RISK_BLOCKED', verified: false });",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\lib\\living-intelligence.js",
+          "line": 171,
+          "file_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+          "marker_excerpt": "      events.push({ ...base, status: 'BUDGET_BLOCKED', verified: false });",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\lib\\living-intelligence.js",
+          "line": 212,
+          "file_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+          "marker_excerpt": "    { step: 'PREDICT', status: prospectivePrediction ? 'READY' : 'BLOCKED', detail: prospectivePrediction },",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\lib\\spine-endpoint.js",
+          "line": 24,
+          "file_sha256": "8348c49f210b2c531202262d10364c86103bd94e793a1d3e96be6061402a3ddc",
+          "marker_excerpt": "      return res.status(result.status==='BLOCKED'?503:200).json(result);",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\lib\\spine-endpoint.js",
+          "line": 49,
+          "file_sha256": "8348c49f210b2c531202262d10364c86103bd94e793a1d3e96be6061402a3ddc",
+          "marker_excerpt": "      await writeSpineAudit({envelope,decision,executionStatus:'BLOCKED',verification,decisionRecord:record});",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\scripts\\inhabitants-smoke.mjs",
+          "line": 14,
+          "file_sha256": "fa412340ea9739058cbe7d562bbb8c96ec6ede341b40d59a22916ddaa72e1e95",
+          "marker_excerpt": "assert.match(script.text,/REAL-WORLD AUTHORITY BLOCKED/);",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\scripts\\living-intelligence.mjs",
+          "line": 51,
+          "file_sha256": "3234f63d70a76f62f5cb756cf0a742cda6fe7dc62b9c3d40319cd7d668fe9cbd",
+          "marker_excerpt": "assert.ok(overBudget.events.some(event => event.status === 'BUDGET_BLOCKED'));",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\the-portal\\scripts\\preflight-v2.mjs",
+          "line": 22,
+          "file_sha256": "b9fef1e774ec81101ebadd5cf7e2f5617a58fe769364601440b1796d0050eb50",
+          "marker_excerpt": "for (const token of [\"fetch('/api/living'\", 'Seed', 'Hatchling', 'Explorer', 'Researcher', 'Specialist', 'Sage', 'FEED KNOWLEDGE', 'REAL-WORLD AUTHORITY BLOCKED']) {",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        }
+      ],
+      "marker_count": 13,
+      "scan_exit_code": 0
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\velyqua",
+      "canonical_current_remote_checked": false,
+      "head": "7a13a7c09a6c2273322db52db1f3d003d1ae0998",
+      "head_exit_code": 0,
+      "branch": "feat/global-gate-zero-20261003",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\velyqua\\AGENTS.md",
+        "sha256": "6676aa2f204a23175a4dc671a49aeaa20ad83f1c71f9857675df143a1e912b92",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\velyqua\\api\\spine.js",
+          "line": 189,
+          "file_sha256": "3fdbbcaaa270096a7d6c84c639109fba005215cdebcc518aee220881db8d32f0",
+          "marker_excerpt": "      await audit(db, user.id, envelope, decision, verification, 'BLOCKED', { source: 'deterministic_policy_engine' });",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        }
+      ],
+      "marker_count": 1,
+      "scan_exit_code": 0
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013",
+      "canonical_current_remote_checked": false,
+      "head": "db143e2f78f8e237938f0c94c7be1871d68565b1",
+      "head_exit_code": 0,
+      "branch": "codex/coaching-priority-20261013",
+      "branch_exit_code": 0,
+      "dirty_paths": [],
+      "dirty_paths_exit_code": 0,
+      "agents_instructions": {
+        "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\AGENTS.md",
+        "sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+        "read": true,
+        "status_authority_note": "Only canonical STATUS portfolio authority; product code owns product repo; no parallel SSOT."
+      },
+      "markers": [
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\AGENTS.md",
+          "line": 62,
+          "file_sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+          "marker_excerpt": "Continue independent work when one lane is blocked. Classify observations as `PASS`, `FAIL`, `MONITOR`, `DEFERRED`, `EXTERNAL`, `NOT APPLICABLE` or a justified localized `BLOCKER`. Test to learn or verify relevant behavior, not to satisfy invented gates. Do not disable probes, tools, agents, models, networking or other functioning capability to make a status clean. Preserve authentication, authorization, secrets, data integrity, recoverability and known-good production. Prefer the simplest reversible solution; request Owner intervention only for an actual physical, credential, financial, exter",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\contracts\\prime-execution-record-v1.schema.json",
+          "line": 29,
+          "file_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+          "marker_excerpt": "    \"final_execution_result\": {\"enum\": [\"PASS\", \"FAIL\", \"PARTIAL\", \"BLOCKED\", \"UNKNOWN\"]},",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\scripts\\benchmark_local_models.py",
+          "line": 19,
+          "file_sha256": "6435a26fffbe81770ccaf241e6a59348c0b3879d23be00f6aa8116aa4447ef28",
+          "marker_excerpt": "    {\"category\": \"structured_output\", \"language\": \"en\", \"prompt\": \"Return only JSON with keys decision and reason. decision must be BLOCKED.\", \"must_be_json\": True, \"required_json_keys\": [\"decision\", \"reason\"], \"json_equals\": {\"decision\": \"BLOCKED\"}},",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 165,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "            if db.execute(\"SELECT 1 FROM coaching_sessions WHERE state NOT IN ('DONE','BLOCKED') LIMIT 1\").fetchone():",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 168,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "            if db.execute(\"SELECT 1 FROM coaching_sessions WHERE state='BLOCKED' LIMIT 1\").fetchone():",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 190,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "            if row['state']!='BLOCKED' or row['source_revision']!=self.source or latest is None or latest['outcome']!='EXECUTION_BINDING_MISMATCH':",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 213,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 220,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                    db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 228,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                    db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 230,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                    return 'BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 238,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                    db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 240,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                    return 'BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 285,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                db.execute(\"UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?\",(self.clock(),row['id']))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\agent_coaching.py",
+          "line": 287,
+          "file_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+          "marker_excerpt": "                return 'BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\coaching_observation.py",
+          "line": 41,
+          "file_sha256": "f2bfb02e212eccd965e60e1efd85c6dc7ac69a8d6046a0159e8706f73e0b399b",
+          "marker_excerpt": "            'blocker':events[0]['outcome'] if row['state']=='BLOCKED' and events else None}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\independence_matrix.py",
+          "line": 8,
+          "file_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+          "marker_excerpt": "STATES = frozenset({\"UNCHANGED\", \"DEGRADED\", \"DEFERRED\", \"FAILED\"})",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\independence_matrix.py",
+          "line": 44,
+          "file_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+          "marker_excerpt": "        scenario(\"github_unavailable\", queues=\"DEFERRED\"),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\independence_matrix.py",
+          "line": 48,
+          "file_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+          "marker_excerpt": "        scenario(\"internet_unavailable\", queues=\"DEFERRED\"),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\general_intelligence.py",
+          "line": 201,
+          "file_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+          "marker_excerpt": "    if len(ids)!=len(rows): return PlanResult((),\"BLOCKED\",(\"duplicate_step\",),False)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\general_intelligence.py",
+          "line": 206,
+          "file_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+          "marker_excerpt": "    except CycleError: return PlanResult((),\"BLOCKED\",(\"dependency_cycle\",),False)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\objective_api.py",
+          "line": 514,
+          "file_sha256": "9e0684ce093cf94ad2e25e93b8f7a1d1700c35c1e64b708268227ae04df73eb2",
+          "marker_excerpt": "        lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 12,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "   DEFERRED_OFFLINE rather than failed.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 64,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "    DEFERRED_OFFLINE = \"DEFERRED_OFFLINE\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 293,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    disposition[name] = \"DEFERRED_OFFLINE\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 295,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    disposition[name] = \"DEFERRED_OFFLINE\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 348,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "            state = QueueState.DEFERRED_OFFLINE if self._state in (CapabilityState.OFFLINE, CapabilityState.DEGRADED) else QueueState.PENDING",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 387,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "            if operation.state in (QueueState.PENDING, QueueState.DEFERRED_OFFLINE, QueueState.RECONCILING, QueueState.FAILED)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 410,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    QueueState.DEFERRED_OFFLINE.value,",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 465,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "            if operation.state in (QueueState.PENDING, QueueState.DEFERRED_OFFLINE, QueueState.FAILED, QueueState.RECONCILING)",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 483,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                    state=QueueState.DEFERRED_OFFLINE.value,",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\offline_survival.py",
+          "line": 487,
+          "file_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+          "marker_excerpt": "                results.append(ReconcileResult(operation.id, QueueState.DEFERRED_OFFLINE, False, \"dependency_unavailable\"))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\normal_role_followups.py",
+          "line": 129,
+          "file_sha256": "f56168a0204c6327be881964b65650147c4c8d822d32c3bafdd76c6b30c5aa54",
+          "marker_excerpt": "            agent.update(state='READY' if agent['phase']=='PRACTICE' and bound else ('DONE' if bound else 'BLOCKED'),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\normal_role_followups.py",
+          "line": 132,
+          "file_sha256": "f56168a0204c6327be881964b65650147c4c8d822d32c3bafdd76c6b30c5aa54",
+          "marker_excerpt": "        practice_open=any(a['phase']=='PRACTICE' and a['state'] not in ('DONE','BLOCKED') for a in state['agents'])",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\normal_role_followups.py",
+          "line": 157,
+          "file_sha256": "f56168a0204c6327be881964b65650147c4c8d822d32c3bafdd76c6b30c5aa54",
+          "marker_excerpt": "    return {'state':'DONE' if all(a['state']=='DONE' for a in state['agents']) else ('BLOCKED' if all(a['state'] in ('DONE','BLOCKED') for a in state['agents']) else 'IN_PROGRESS'),'wave':state['wave'],",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\meta_review.py",
+          "line": 31,
+          "file_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+          "marker_excerpt": "            if status in {\"FAILED\", \"BLOCKED\", \"REJECTED\"}:",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\phase2_intelligence.py",
+          "line": 26,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "    BLOCKED = \"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\phase2_intelligence.py",
+          "line": 373,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "            \"RESUME\": ({ObjectiveState.PAUSED, ObjectiveState.BLOCKED}, ObjectiveState.ACTIVE),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\phase2_intelligence.py",
+          "line": 374,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "            \"CANCEL\": ({ObjectiveState.ACTIVE, ObjectiveState.PAUSED, ObjectiveState.BLOCKED}, ObjectiveState.CANCELLED),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\phase2_intelligence.py",
+          "line": 375,
+          "file_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+          "marker_excerpt": "            \"STOP\": ({ObjectiveState.ACTIVE, ObjectiveState.PAUSED, ObjectiveState.BLOCKED}, ObjectiveState.CANCELLED),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\metacognition.py",
+          "line": 182,
+          "file_sha256": "2a4b3e7fe92bba534c2d4ae70e6bff2ce689fdc98fd2dde9a819237ba159df23",
+          "marker_excerpt": "    if state.disposition in {\"VERIFIED\", \"ABSTAIN\", \"VERIFY_REQUIRED\", \"DEFERRED\"}:",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\governance\\SUPREME_CAPABILITY_REGISTER.json",
+          "line": 160,
+          "file_sha256": "9d4c8fe5f52ec77b3e69323569ad8d56420a409d5fc8c776afa4d6c07e838e30",
+          "marker_excerpt": "      \"maturity\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\main.py",
+          "line": 584,
+          "file_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+          "marker_excerpt": "BLOCKED_CALLS={'eval','exec','compile','__import__','open','input','breakpoint','getattr','setattr','delattr','vars','dir','globals','locals'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\main.py",
+          "line": 592,
+          "file_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+          "marker_excerpt": "  if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id in BLOCKED_CALLS:return False,f'Blocked call: {n.func.id}'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\scripts\\verify_capability_register.py",
+          "line": 12,
+          "file_sha256": "7a629b456c8d00faba249483588c4a215672eab39e5c5dfdc039fb4e59b863e8",
+          "marker_excerpt": "    \"DEFERRED\", \"BLOCKED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\scripts\\verify_independence_phase.py",
+          "line": 32,
+          "file_sha256": "8a6e5e61c344c656dc9d972d2b852de7cdc590ab393ce2842f09c394fba37ba8",
+          "marker_excerpt": "            \"offline_work_durable\": operation.state is QueueState.DEFERRED_OFFLINE,",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\spine.py",
+          "line": 299,
+          "file_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+          "marker_excerpt": "            execution_status, event_type, status = \"BLOCKED\", \"action.prohibited\", 403",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\workflow_engine.py",
+          "line": 68,
+          "file_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+          "marker_excerpt": "                    complete[task.id]={'status':'BLOCKED','reason':'Dependency failed'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\supreme_integration.py",
+          "line": 24,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"timeout\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\supreme_integration.py",
+          "line": 27,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"provider_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\supreme_integration.py",
+          "line": 28,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"model_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\supreme_integration.py",
+          "line": 29,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"retrieval_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\supreme_integration.py",
+          "line": 31,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"tool_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\app\\supreme_integration.py",
+          "line": 32,
+          "file_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+          "marker_excerpt": "    \"network_unavailable\": \"DEFERRED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\BLACK_START_PREPARED_NOT_EXECUTED.md",
+          "line": 27,
+          "file_sha256": "7c2665f7ec469ca91bb441ef12c2dc7c5e533cdbc048960403e14d696c6fd2ac",
+          "marker_excerpt": "9. **Queues:** prove cloud work becomes `DEFERRED_OFFLINE`; do not replay it.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\full-role-acceptance.md",
+          "line": 18,
+          "file_sha256": "24fe261073418cf906c8e0b44fef7048dff74a3e9a548390e33ffd2232b930ce",
+          "marker_excerpt": "criterion. Missing evidence is UNKNOWN, a prevented dependency is BLOCKED, and an",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\governance\\observations\\abex-post-restart-20261012.json",
+          "line": 9,
+          "file_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+          "marker_excerpt": "  \"candidate_promotion\": \"BLOCKED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\governance\\observations\\abex-post-restart-20261012.json",
+          "line": 47,
+          "file_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+          "marker_excerpt": "    \"application_openai_routing\": \"BLOCKED_NO_AUTHORIZED_API_CREDENTIAL_OR_CATALOG_ROUTE\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\governance\\observations\\abex-candidate-closure-66a5d90-20261012.json",
+          "line": 469,
+          "file_sha256": "80c91fc4ce31314f1a923d4e3d459506ac8ae70d30b5012b9707ff7436b3166a",
+          "marker_excerpt": "  \"candidate_promotion\": \"BLOCKED\",",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\evidence\\EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.md",
+          "line": 102,
+          "file_sha256": "356ae68d66ef129a5957893187abf30b104188754128866596415f0409d693dd",
+          "marker_excerpt": "BLOCKED state. No new phone action is required to establish this failure.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\STATUS.md",
+          "line": 169,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "  13 FAIL and 0 BLOCKED. All 21 receipt and execution-trace hashes were checked",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\STATUS.md",
+          "line": 193,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "  Golden and the candidate source are preserved. Promotion remains BLOCKED;",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\STATUS.md",
+          "line": 229,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "  or runtime acceptance. Golden remains preserved; candidate promotion is BLOCKED.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\STATUS.md",
+          "line": 721,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "- **Member-role acceptance remains BLOCKED on the absence of any legitimate member identity (23 September 2026).** The production project held 45 auth users at first inspection: exactly one confirmed email identity (the owner) plus 44 anonymous, unconfirmed identities created by earlier guest traffic. The unmapped-denial check requires a real authenticated identity, so the acceptance and browser rounds created 11 further anonymous identities of the same kind - one per unmapped scenario, each unmapped, empty and signed out, and each identified in the evidence by its auth user id (for example `8",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\STATUS.md",
+          "line": 825,
+          "file_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "marker_excerpt": "- **Private PRIME authenticated acceptance: identity-independent half complete, OWNER mapping blocked by the absence of any privileged Supabase path on the Dell (22 Sep 2026).** Reported by Codex, not yet spot-checked by Lam and NOT owner-verified. (1) Lam completed the one required human authentication action, and the resulting real session was detected server-side: production `/prime` rendered \"Authenticated, not yet authorized\" because the deployed server validated the Supabase access token, resolved that auth user against `public.prime_identities`, found no mapping row and returned 403 `no",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\evidence\\DELL_REVERIFICATION_DISAGREEMENT_20260926.md",
+          "line": 5,
+          "file_sha256": "4489e6cd80c33d99a5cfbd6210662f5bf7d51ebb26b2b2ae4c0f842499eb9573",
+          "marker_excerpt": "Dell returned a read-only `BLOCKED â€” CRITICAL DEPENDENCY` result and confirmed",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\evidence\\GOLDEN_GEN1_PHYSICAL_REGRESSIONS_20260926.md",
+          "line": 49,
+          "file_sha256": "a86f1802a78dee27a5c984966df46a6548b39ff1a48e95de80862f1a2115523a",
+          "marker_excerpt": "- Candidate repair: terminal dispatch-blocked tasks retain null start time with canonical reason `NO_EXECUTION_STARTED_DISPATCH_BLOCKED`, bind completion to the terminal objective-update observation, and preserve failure/artifact status without converting either into success.",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\evidence\\METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+          "line": 44,
+          "file_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+          "marker_excerpt": "| Counterfactual reasoning | DEFERRED | Model-level capability not independently quantified here |",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\evidence\\METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+          "line": 45,
+          "file_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+          "marker_excerpt": "| Tool/model selection | DEFERRED | Existing routing protected; no production modification |",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\evidence\\METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+          "line": 46,
+          "file_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+          "marker_excerpt": "| Production proven | DEFERRED | Explicitly undeployed |",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_workflow_engine.py",
+          "line": 28,
+          "file_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+          "marker_excerpt": "    assert result['tasks']['dependent']['status']=='BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_supreme_intelligence_benchmark.py",
+          "line": 27,
+          "file_sha256": "e71cf664ac3cda9cc5887875ead84a77d6ab92943c8ab0199dbbbf11d3f5fcc0",
+          "marker_excerpt": "        (\"structured_output\", '{\"decision\":\"BLOCKED\",\"reason\":\"one check failed\"}', True),",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_supreme_independence_candidate.py",
+          "line": 62,
+          "file_sha256": "ee510baace15ad4b05627b424a14186dd0d0a5f68f356778076e72a96e5cb42b",
+          "marker_excerpt": "    assert operation.state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 64,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "            db.execute(\"UPDATE coaching_sessions SET state='BLOCKED' WHERE id=?\",(row['id'],))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 82,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "                self.assertEqual(self.controller.tick(),'BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 84,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "                    row=db.execute(\"SELECT id FROM coaching_sessions WHERE state='BLOCKED'\").fetchone()",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 93,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "            db.execute(\"UPDATE coaching_sessions SET state='BLOCKED' WHERE id=?\",(row['id'],))",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 212,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "        self.assertEqual(self.controller.tick(),'BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 239,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "        self.assertEqual(self.controller.tick(),'BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_agent_coaching.py",
+          "line": 241,
+          "file_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+          "marker_excerpt": "            row=db.execute(\"SELECT * FROM coaching_sessions WHERE state='BLOCKED'\").fetchone()",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_general_intelligence.py",
+          "line": 93,
+          "file_sha256": "8e33568ff178356d77cc1a266667c89bbae4b4d65fd768452f1bd5cac94be73e",
+          "marker_excerpt": "    assert plan_steps([PlanStep(\"a\",(\"b\",)),PlanStep(\"b\",(\"a\",))],set()).disposition==\"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_authoritative_result_metadata.py",
+          "line": 113,
+          "file_sha256": "867ce0a21af7bc8387ef6115c1b284beea8491bf26b894a1d31041e461ee6d04",
+          "marker_excerpt": "            self.assertEqual(metadata['lifecycle']['started_at_reason'],'NO_EXECUTION_STARTED_DISPATCH_BLOCKED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_direct_execution.py",
+          "line": 145,
+          "file_sha256": "450b2716fd1724f77a73d8f47a99b9ce7d8ccb79e71ea86570362c72724d46e3",
+          "marker_excerpt": "    assert result['tasks']['fail']['status']=='FAILED' and result['tasks']['blocked']['status']=='BLOCKED'",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_independence_dependency_matrix.py",
+          "line": 65,
+          "file_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+          "marker_excerpt": "    assert operation.state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_independence_dependency_matrix.py",
+          "line": 106,
+          "file_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+          "marker_excerpt": "    assert {item.state for item in results} == {QueueState.DEFERRED_OFFLINE}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_objective_domain_provenance.py",
+          "line": 106,
+          "file_sha256": "862fcdf971b8691dfdcf0b8bd8860b317163bb83b565430aa2dbd672f9261b70",
+          "marker_excerpt": "        'NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if step_state == 'blocked' else 'NO_EXECUTION_START_RECORDED')",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_metacognition.py",
+          "line": 72,
+          "file_sha256": "5f57d7c56f713ae189d310c95ed14d6c7159c9ed5821e92cc510c205e8e34fcf",
+          "marker_excerpt": "@pytest.mark.parametrize(\"disposition\", [\"VERIFIED\", \"ABSTAIN\", \"VERIFY_REQUIRED\", \"DEFERRED\"])",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_offline_survival.py",
+          "line": 81,
+          "file_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+          "marker_excerpt": "        assert operation.state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_offline_survival.py",
+          "line": 159,
+          "file_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+          "marker_excerpt": "        assert survival.get(operation.id).state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_offline_survival.py",
+          "line": 172,
+          "file_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+          "marker_excerpt": "        assert survival.get(survival.pending()[0].id).state is QueueState.DEFERRED_OFFLINE",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_portfolio_reconciliation.py",
+          "line": 35,
+          "file_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+          "marker_excerpt": "    assert observation[\"candidate_promotion\"] == \"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_portfolio_reconciliation.py",
+          "line": 82,
+          "file_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+          "marker_excerpt": "    assert observation[\"candidate_promotion\"] == \"BLOCKED\"",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        },
+        {
+          "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\tests\\test_production_compatibility.py",
+          "line": 206,
+          "file_sha256": "d76afd121af63d3d163c56e1367c2edb45d2cd325c505cc87f60a5183dc331cc",
+          "marker_excerpt": "    assert queued.json()['state'] in {'PENDING', 'DEFERRED_OFFLINE'}",
+          "triage_status": "UNRECONCILED_MARKER_NOT_AUTOMATIC_OUTSTANDING_TASK",
+          "note": "May be test assertion, enum or historical record; must inspect surrounding code before treating as unfinished work."
+        }
+      ],
+      "marker_count": 92,
+      "scan_exit_code": 0
+    }
+  ],
+  "session_metadata": [
+    {
+      "id": "01a12d98-c7bd-7591-987a-7a5ddf6a2f98",
+      "thread_name": "Audit ABEX and resume DELL handoffs",
+      "updated_at": "2026-10-12T00:53:40.9717072Z"
+    },
+    {
+      "id": "01a12e83-e78b-7b32-b4f7-a46c7fb888c7",
+      "thread_name": "Create a desktop shortcut",
+      "updated_at": "2026-10-12T05:09:52.2775307Z"
+    },
+    {
+      "id": "01a12eaa-677d-7b80-8fc0-633df0a1585a",
+      "thread_name": "Close ORQEVIA recovery gaps",
+      "updated_at": "2026-10-12T05:51:52.2820347Z"
+    },
+    {
+      "id": "01a12f16-02ed-7cd1-aa32-047fc2f6e854",
+      "thread_name": "Resume Hugging Face work",
+      "updated_at": "2026-10-12T07:49:41.5754711Z"
+    },
+    {
+      "id": "01a12f28-7a6e-7a11-8e24-d4c420302238",
+      "thread_name": "Check Codex CLI session",
+      "updated_at": "2026-10-12T08:09:51.4495866Z"
+    },
+    {
+      "id": "01a12f5e-853d-72b2-bd95-a57200d33345",
+      "thread_name": "Resume everything after restart",
+      "updated_at": "2026-10-12T09:08:31.7335203Z"
+    },
+    {
+      "id": "01a12f8d-1c6a-7781-b12a-8220bab1e2e1",
+      "thread_name": "Verify cleanup command and backups",
+      "updated_at": "2026-10-12T09:59:25.8533573Z"
+    },
+    {
+      "id": "01a132c4-6550-7b10-8cf9-bbfda57920bf",
+      "thread_name": "Repair Codex configuration",
+      "updated_at": "2026-10-13T01:00:53.276311Z"
+    },
+    {
+      "id": "01a132ce-2aab-7b30-96a0-98a818063e07",
+      "thread_name": "Review DELL handoff",
+      "updated_at": "2026-10-13T01:10:12.5734861Z"
+    },
+    {
+      "id": "01a13311-a702-7b22-b98c-308401adf49d",
+      "thread_name": "Reconnect with DELL PC",
+      "updated_at": "2026-10-13T02:23:12.3654764Z"
+    },
+    {
+      "id": "01a133de-0848-7db2-9b9d-99ae6de2b72a",
+      "thread_name": "Set as default",
+      "updated_at": "2026-10-13T06:06:54.9906939Z"
+    },
+    {
+      "id": "01a133e1-b992-7611-8f78-285d810686fc",
+      "thread_name": "Verify ABEX PC/Docker access",
+      "updated_at": "2026-10-13T06:11:08.2697267Z"
+    },
+    {
+      "id": "01a13402-56f5-7ff1-90df-0044532a0340",
+      "thread_name": "Coach and accept all 21 agents",
+      "updated_at": "2026-10-13T06:47:22.7702816Z"
+    }
+  ],
+  "external_checkpoint_index": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\offdevice-coaching-20261012\\digitalocean-checkpoint-20261012T103327Z-b0852ce6\\SAFE-CHECKPOINT.json",
+      "exists": true,
+      "sha256": "0db5795b164c05f89709fbba7a48731bf9c2eee9b1885a4b5dad83b0e33dc15e",
+      "bytes": 1970,
+      "mtime_utc": "2026-10-12T10:33:27.949197+00:00",
+      "top_level_keys": [
+        "status",
+        "execution",
+        "future_target",
+        "contract_draft",
+        "dependencies",
+        "implementation",
+        "live_verification",
+        "source_changes",
+        "model_calls",
+        "network_calls",
+        "practical_role_result",
+        "preserved_gates",
+        "next"
+      ],
+      "historical_summary_fields": {
+        "status": "BLOCKED_FUTURE_HOST_NOT_PROVISIONED",
+        "execution": "OWNER_PAUSED_SAVE_ONLY",
+        "future_target": "DigitalOcean isolated off-device coaching worker; no production migration authorized",
+        "implementation": "NONE",
+        "live_verification": "NONE",
+        "practical_role_result": "Frozen66 remains8 PASS/13 FAIL; no new passes or21/21 claim",
+        "next": "Resume only when authorized; provision/select the isolated future host, implement the verifier and worker, run CPU fixture checks separately, then an actual harmless task."
+      }
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-12\\s\\outputs\\offdevice-coaching-20261012\\remote-discovery-20261012T103131Z-d3b515cc\\SAVE-CHECKPOINT.txt",
+      "exists": true,
+      "sha256": "b1166cc16fa126229de8e99e849d97c1cbb90b6e909a5cebb830c626b4120448",
+      "bytes": 1475,
+      "mtime_utc": "2026-10-12T10:34:15.596086+00:00",
+      "marker_line_numbers": [
+        3,
+        8,
+        14,
+        16
+      ]
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-10\\te\\outputs\\ABEX-SWEEP-20261011\\21-AGENT-CURRENT-GAPS.json",
+      "exists": true,
+      "sha256": "e3c602d24952337bed82dbdd517179eda3477c18c3a7b804689567370d555661",
+      "bytes": 85983,
+      "mtime_utc": "2026-10-11T05:45:29.055632+00:00",
+      "top_level_keys": [
+        "source_revision",
+        "agents"
+      ],
+      "historical_summary_fields": {}
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-10\\te\\outputs\\ABEX-SWEEP-20261011\\834-NORMAL21-NATIVE-INDEPENDENT-AUDIT.json",
+      "exists": true,
+      "sha256": "f47ef3aa7ef18c936ac041e896332ddbb30bf11bd43baef78d162d5dd54ccf60",
+      "bytes": 26001,
+      "mtime_utc": "2026-10-11T10:55:26.145319+00:00",
+      "top_level_keys": [
+        "verdict",
+        "source",
+        "tested",
+        "passed",
+        "failed",
+        "rows",
+        "native_snapshots",
+        "l7_awarded",
+        "no_replay",
+        "scope"
+      ],
+      "historical_summary_fields": {
+        "verdict": "PASS_ORIGINAL_21_NORMAL_ROLE_ADJUDICATION"
+      }
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-10\\te\\outputs\\PRIME-CERTIFICATION-CONTINUATION.md",
+      "exists": true,
+      "sha256": "cce42ecec76fc107dbc733721536d631ee50b0047e38f44470637ae0204a77ff",
+      "bytes": 106366,
+      "mtime_utc": "2026-10-11T11:11:38.314647+00:00",
+      "marker_line_numbers": [
+        9,
+        19,
+        24,
+        25,
+        26,
+        28,
+        34,
+        36,
+        42,
+        44,
+        46,
+        48,
+        50,
+        52,
+        54,
+        60,
+        62,
+        64,
+        68,
+        76,
+        82,
+        84,
+        86,
+        88,
+        96,
+        99,
+        101,
+        104,
+        107,
+        110,
+        119,
+        123,
+        125,
+        129,
+        133,
+        135,
+        139,
+        141,
+        147,
+        149,
+        151,
+        153,
+        155,
+        158,
+        173,
+        191,
+        203,
+        205,
+        220,
+        230,
+        234,
+        251,
+        254,
+        258,
+        260,
+        261,
+        263,
+        265,
+        266,
+        271,
+        276,
+        278,
+        282,
+        284,
+        285,
+        288,
+        290,
+        292,
+        297,
+        301,
+        303,
+        309,
+        311,
+        313,
+        317,
+        321,
+        325,
+        342,
+        346,
+        350,
+        352,
+        369,
+        371,
+        380,
+        382,
+        384,
+        386,
+        391,
+        394,
+        396,
+        401,
+        406
+      ]
+    }
+  ],
+  "limitations": [
+    "Only seven default local repositories plus current coaching task worktree scanned; historical worktrees and external output trees not exhaustively traversed.",
+    "Default repos are retained local snapshots, not current remote authorities; Git HEAD/dirty metadata do not establish deployment.",
+    "Excluded generated dependency/build/evidence/config/private directories and credential-looking filenames; exclusion can hide valid obligations, so comprehensive completion is not claimed.",
+    "TODO/FIXME/BLOCKED/DEFERRED marker index is deliberately untriaged; strings/tests/enums must not become fake tasks.",
+    "session_index metadata may omit archived/deleted/other-account sessions; raw transcript bodies not inspected.",
+    "Referenced checkpoint existence/hash is narrower than whole capture integrity or full restore."
+  ],
+  "session_index": {
+    "path": "C:\\Users\\Admin\\.codex\\session_index.jsonl",
+    "sha256": "c407d81d6a8ed842bf1f38fec85c66b531c883dc3fecba7f32dfdb407fccaf01",
+    "entries": 13,
+    "invalid_lines": 0,
+    "scope": "Index metadata only; raw session bodies/tools/auth not read."
+  }
+}

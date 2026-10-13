@@ -1,0 +1,101 @@
+{
+  "schema": "orqevia.final-acceptance-independent-review.v1",
+  "state": "PASS",
+  "reviewed_at_utc": "2026-10-13T12:06:37.955635+00:00",
+  "reviewer": "resume_coaching independent read-only consistency review",
+  "scope": "FINAL_REPORT_AND49_MEMORY_CUSTODY_AND_CLAIM_SCOPES_NOT_NEW_ROLE_OR_PHYSICAL_OR_AZURE_ACCEPTANCE",
+  "checks": {
+    "all_report_evidence_hashes_and_sizes_match": true,
+    "checkpoint_payload_sha256_valid": true,
+    "prior_checkpoint_chain_reaches_preserved_original": true,
+    "checkpoint_exact_repository_and_operational_mirror": true,
+    "49_unique_tasks_all_prior_ids_retained": true,
+    "original_obligations_acceptance_and_verified_classifications_unchanged": true,
+    "all49_task_ids_bound_to_checkpoint": true,
+    "all_original_constraints_and_failures_preserved_in_goal": true,
+    "report_and_goal_full_azure_gates_stay_open": true,
+    "report_goal_checkpoint_normal_identity_counts_separate": true,
+    "goal_current_report_hash_bound": true,
+    "report_evidence_and_report_self_digest_bound_to_checkpoint": true,
+    "dated_actual_identity3b_reused_via_installed503_continuity": true,
+    "selected_costs_do_not_hide_original_unknown_timeout": true,
+    "physical_gates_not_claimed_as_observed_pass": true,
+    "Owner_policy_and_record_preservation_not_physical_cookie_claim": true,
+    "22_handler_reads_not_misclassified_as21_model_tool_acceptance": true,
+    "controlled_pads_board_handoff_not_full_autonomy": true,
+    "6272_source_pass_one_skip_scoped_to_exact503": true,
+    "later_candidate_delta_only_helper_docs_tests_no_application_change": true,
+    "original3b_signing_failure_retained_MONITOR_cause_unproven": true,
+    "consumer_drafts_explicitly_undeployed": true,
+    "continuation_preserves_STOP_rule_parked_scope_and_no_automatic_replay": true,
+    "fresh_runtime_matches_reported_containers_images_revisions_health": true,
+    "new_STATUS_claims_do_not_award_Lam_Verified": true
+  },
+  "findings": [],
+  "report_json_sha256": "1b8bafcb022e34e09142819c858ffb828207fe089f339295d68545d6a54e5878",
+  "report_md_sha256": "5a4eeb3f1f4f400b09c15daa40a91afff8acc172a5489699bdce6d6ad2015d3b",
+  "checkpoint_file_sha256": "3ed3a793c7919ec2122f3f15a1ac55777a3868649bcbe52fa48828df06fccf04",
+  "checkpoint_payload_sha256": "63d436d5073f0e9113ab735cb5155e649f0b203db3963c49fac55e16cf0c312d",
+  "ledger_sha256": "8416dbba625e353ec2fe7e36cbf2831e0e7ea24b6e3fb9f8a1565856eaf15ca1",
+  "goal_memory_sha256": "d1909416a784717797c0fc31e0a615418a353478c2d3f0e5215e7fa0e176db99",
+  "checkpoint_chain": [
+    "63d436d5073f0e9113ab735cb5155e649f0b203db3963c49fac55e16cf0c312d",
+    "a45926092be4dcda4651e365995b434f72eb8a3dec918f3588c3f7636fcef681",
+    "7aa3c7836f9d1f1ef1396ad74d0de4ab8d8dcb7484fc4fe016158b9a3b1a2baf",
+    "ad5e274f72fba3f8d675838ad5b9eeda8811a9092e826db6a34982399ab9a21d"
+  ],
+  "reviewed_candidate_source_head": "ef6160b4f91da3c421956a51c635c463924cdf45",
+  "later_candidate_delta_files": [
+    "docs/operations/agent-tool-bridge-a07.md",
+    "scripts/agent_tool_bridge_specimen.py",
+    "tests/test_agent_tool_bridge_specimen.py"
+  ],
+  "original_memory_snapshot": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\memory-before\\20261013T115726475419Z",
+  "evidence_checked": 72,
+  "failed_evidence_entries": [],
+  "distinct_evidence_paths": 71,
+  "informational_notes": [
+    "One identical first assessment-packet content-addressed path is indexed twice; every indexed hash/size matches.",
+    "MEMORY-RECONCILIATION records the initial 7aa checkpoint; current 63d checkpoint chains through later retained snapshots to original ad5."
+  ],
+  "fresh_runtime": [
+    {
+      "name": "prime-epoch-20260919-prime-1",
+      "container_id": "029e776616e0113e1e029c47e69c1067b796e2f80958e884b082b0de4d77e745",
+      "image": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "health": "healthy"
+    },
+    {
+      "name": "prime-epoch-20260919-interface-1",
+      "container_id": "2bf5b357d9ce9c24f650296ab5157707d51c90b73460505a807a95a5ce877a31",
+      "image": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "health": "healthy"
+    },
+    {
+      "name": "orqevia-coaching-coaching-1",
+      "container_id": "427cde7c6236638627dab2d9f677068feb052fbd5995e831805e7acf20745d13",
+      "image": "sha256:cf11bef0d4d922346439ce984e7e3cb28b4ed94b8f92507772004ac4f8dd9b8f",
+      "revision": "81f2d1dcb238f39c26af153d2e870cc16674993f",
+      "health": "healthy"
+    },
+    {
+      "name": "prime-epoch-20260919-ollama-1",
+      "container_id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+      "image": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "revision": null,
+      "health": "healthy"
+    }
+  ],
+  "model_calls": 0,
+  "runtime_mutations": 0,
+  "files_changed": [
+    "own independent review receipt only"
+  ],
+  "limits": [
+    "Dated source/identity evidence is scoped explicitly; no original execution is relabeled as fresh inference.",
+    "Physical Safari/PWA-cookie/icon/voice/touch and full21 role/model-tool acceptance remain unestablished.",
+    "Consumer draft source is not deployed runtime; Azure evidence package is not independent assessor certification."
+  ]
+}

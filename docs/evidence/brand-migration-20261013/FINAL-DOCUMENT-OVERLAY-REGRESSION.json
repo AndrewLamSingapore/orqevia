@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-10-13T12:06:43.747755+00:00",
+  "source_head": "ef6160b4f91da3c421956a51c635c463924cdf45",
+  "exit_code": 0,
+  "scope": "EXACT_COMMITTED_SOURCE_PLUS_READ_ONLY_CURRENT_DOCUMENT_OVERLAY_NOT_NEW_RUNTIME",
+  "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\final-document-overlay-regression.log",
+  "log_sha256": "761592df33ff6e42a8523c6f1d1981782e569512cacd3261d7e63fba822dc0ba"
+}

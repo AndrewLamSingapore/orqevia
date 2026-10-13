@@ -1,0 +1,3793 @@
+{
+  "schema": "abex.marker-triage.v1",
+  "observed_at_utc": "2026-10-13T08:53:36.203318+00:00",
+  "scope": "Read all 197 supplied source markers with nearby context; no source/runtime mutation or secret/private/env/raw-session reads. New artifact only.",
+  "status_authority": "Operational evidence index only; canonical ORQEVIA STATUS portfolio authority retained; no Verified claims.",
+  "source_supplement_sha256": "714992b0b22bea06014d16191665dbd02eeb03bf5b90b978fcb519d0602d2736",
+  "source_ledger_sha256": "318aa29082599a8713dc21d93564802eacf39be15c6ce78bd5127d1fbd531ebb",
+  "marker_count": 197,
+  "disposition_counts": {
+    "SCHEMA_ENUM_NOT_TASK": 5,
+    "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK": 108,
+    "OPERATING_INSTRUCTION_NOT_TASK": 2,
+    "DATED_STATUS_REQUIRES_RECONCILIATION": 10,
+    "DEFERRED_OBLIGATION_RETAINED": 4,
+    "DATED_OBSERVATION_REQUIRES_RECONCILIATION": 6,
+    "TEST_FIXTURE_NOT_TASK": 49,
+    "DEFERRED_QUALIFICATION_RETAINED": 6,
+    "HISTORICAL_REPAIR_EVIDENCE": 2,
+    "FAILED_QUALIFICATION_DUPLICATE": 2,
+    "INDEPENDENT_FAILURE_DUPLICATE": 2,
+    "CONDITIONAL_DEPENDENCY_NOT_CURRENT_BLOCKER": 1
+  },
+  "source_changed_since_index": [
+    "ABEX-MARKER-989b02020373",
+    "ABEX-MARKER-c0809552d024",
+    "ABEX-MARKER-db9f52980856",
+    "ABEX-MARKER-ce0a1e22da8a",
+    "ABEX-MARKER-276fbb322419",
+    "ABEX-MARKER-b8b23eb00b73",
+    "ABEX-MARKER-6c982150f4bf",
+    "ABEX-MARKER-de8fb82187a5",
+    "ABEX-MARKER-a2cb3619d9b5"
+  ],
+  "new_unique_obligations": [
+    {
+      "task_id": "ABEX-MARK-001",
+      "project": "ORQEVIA / ABEX",
+      "original_objective": "Execute and independently evidence physical Black Start without Internet/cloud AI/Codex/GitHub, preserving durable queues and identity/authority",
+      "verified_status": "DEFERRED_HISTORICAL_UNVERIFIED_CURRENT",
+      "priority": "P2",
+      "parent_task_ids": [
+        "ABEX-REC-005",
+        "ABEX-REC-007"
+      ],
+      "dependencies": [
+        "ABEX-REC-012",
+        "ABEX-REC-007"
+      ],
+      "blockers": "No fresh evidence establishes completion; source describes unexecuted/deferred qualification.",
+      "next_executable_action": "Reconcile prepared procedure with current runtime/backups; prepare reversible recovery test before any physical restart.",
+      "completion_acceptance_criteria": "Actual physical shutdown/start, isolated offline operation, deferred queues, restore and unchanged authority receipts; simulation insufficient.",
+      "owner_approval_requirement": "Physical shutdown/reboot or production-impacting offline test requires authorization; preparation authorized.",
+      "evidence_marker_ids": [
+        "ABEX-MARKER-deee47d48edb",
+        "ABEX-MARKER-d5a3d8e67b15",
+        "ABEX-MARKER-2bb7275bbc0d",
+        "ABEX-MARKER-96377f4bf0ce"
+      ]
+    },
+    {
+      "task_id": "ABEX-MARK-002",
+      "project": "ORQEVIA / ABEX",
+      "original_objective": "Qualify metacognitive counterfactual reasoning, tool/model selection and calibration with attributable real outcomes",
+      "verified_status": "DEFERRED_HISTORICAL_UNVERIFIED_CURRENT",
+      "priority": "P5",
+      "parent_task_ids": [
+        "ABEX-REC-005"
+      ],
+      "dependencies": [
+        "ABEX-REC-003",
+        "ABEX-REC-008"
+      ],
+      "blockers": "No fresh evidence establishes completion; source describes unexecuted/deferred qualification.",
+      "next_executable_action": "Reconcile current implementation and retained evaluations; define separately attributable representative tests.",
+      "completion_acceptance_criteria": "Reproducible held-out counterfactual/model/tool-selection results and real-outcome calibration with independent review before production claims.",
+      "owner_approval_requirement": "Isolated evaluation within existing budgets authorized; production promotion or additional spend requires scope.",
+      "evidence_marker_ids": [
+        "ABEX-MARKER-89ce8aeb5c5f",
+        "ABEX-MARKER-861a4cf05db3",
+        "ABEX-MARKER-521ff94c3681",
+        "ABEX-MARKER-c7187b6ee6a8",
+        "ABEX-MARKER-3eaab101df42",
+        "ABEX-MARKER-a5578c3746ed"
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "marker_id": "ABEX-MARKER-06ead7d08602",
+      "source": "repos/prime/contracts/prime-execution-record-v1.schema.json",
+      "line": 29,
+      "source_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+      "indexed_source_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+      "matches_indexed_source": true,
+      "context_lines": [
+        21,
+        35
+      ],
+      "context_sha256": "3b6839fa2f2eb654edf50ca01c02aae8d509b20ff9add3178a00e67e18b030e1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "SCHEMA_ENUM_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-53eaeac01e4c",
+      "source": "repos/prime/app/main.py",
+      "line": 584,
+      "source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "indexed_source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "matches_indexed_source": true,
+      "context_lines": [
+        576,
+        592
+      ],
+      "context_sha256": "40ceb1a316db8b0e4b2ee18bf77d0dfdc34da05d335b3acd76efa0de3cc1554a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-141e1796fcbc",
+      "source": "repos/prime/app/main.py",
+      "line": 592,
+      "source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "indexed_source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "matches_indexed_source": true,
+      "context_lines": [
+        584,
+        600
+      ],
+      "context_sha256": "e6e2836f581bd59f10ecb368becd5559da9b61fe36f68503ded8a5c6966a4e95",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-01487ffd45fe",
+      "source": "repos/prime/app/meta_review.py",
+      "line": 31,
+      "source_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+      "indexed_source_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+      "matches_indexed_source": true,
+      "context_lines": [
+        23,
+        39
+      ],
+      "context_sha256": "48a09d11bb9f72c2638ab64313d076077075d11a4f34690a00511cb19219fe1a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d15260f39271",
+      "source": "repos/prime/app/spine.py",
+      "line": 299,
+      "source_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+      "indexed_source_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+      "matches_indexed_source": true,
+      "context_lines": [
+        291,
+        307
+      ],
+      "context_sha256": "8fb53e885b8503ef1d45e809f2547d698df5718e74699535a941916284e1af61",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-26406b77ca7e",
+      "source": "repos/prime/app/workflow_engine.py",
+      "line": 68,
+      "source_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+      "indexed_source_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+      "matches_indexed_source": true,
+      "context_lines": [
+        60,
+        76
+      ],
+      "context_sha256": "6c1e25b791321d453107741be68a263f3b6c61994e5691fe08894b61e5f6cbc7",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-bba87735192f",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/AGENTS.md",
+      "line": 62,
+      "source_sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+      "indexed_source_sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+      "matches_indexed_source": true,
+      "context_lines": [
+        54,
+        70
+      ],
+      "context_sha256": "7b5a6e9f9d37dec497503a4252aa15425b4ffd937f80360a406eb9a365c4c0cb",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "OPERATING_INSTRUCTION_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-4860455bc56a",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 127,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        119,
+        135
+      ],
+      "context_sha256": "6883a00b15f5be288efdca5556076d87cd9c130c8dfe73d3235de3b6e510f203",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-04cbb6bdb84f",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 130,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        122,
+        138
+      ],
+      "context_sha256": "5503d8f092e63a1861f7ea174413361bcfbea69d5c7be613f6b1bea9f51b51da",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d58ab6dc5128",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 154,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        146,
+        162
+      ],
+      "context_sha256": "069f0ac85354a4ebe85b302c35b72e41e5a9799a8006859d705b5701cc7f56fc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a3aa854e5171",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 161,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        153,
+        169
+      ],
+      "context_sha256": "c741af3a33a9dd6ffb5b98c2c5a9635322261578d717ecb236330f5360be7713",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e2d97162ab99",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 169,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        161,
+        177
+      ],
+      "context_sha256": "8dfebe1fe3f0cd85edae6a2e5649dcd757fbd77fcce17bd195feba19e2f1e060",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-fc9bdddc37c4",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 171,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        163,
+        179
+      ],
+      "context_sha256": "8c1ba4a78ba57effba9c55ceb1d120fc82f9b288a3b337c777c214c0cf679c5b",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-88d6ac786a1c",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 178,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        170,
+        186
+      ],
+      "context_sha256": "c03b25aeeb267875d679aee6157d70cd8549e9383561c618f9e439c5a1666d16",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-537b3f3d3c13",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 180,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        172,
+        188
+      ],
+      "context_sha256": "57f713e85e78a36ceea9084e807aa28143497e00c3457a8ee4143df6f11a33ef",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-057b42188353",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 224,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        216,
+        232
+      ],
+      "context_sha256": "edc70197491f442cc1fb7807ba862ac12fca99a70b285756ba7857875bf04752",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c58c2d57e540",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/agent_coaching.py",
+      "line": 226,
+      "source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "indexed_source_sha256": "d4782ff586fd17451ba1f0c2f2da56b15b8bf8c03a0daa21a24fd1713bf9d654",
+      "matches_indexed_source": true,
+      "context_lines": [
+        218,
+        234
+      ],
+      "context_sha256": "96fe70930c094999567de6d7e940300f7a1657bb9639cfd2cce1313d8a843876",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1c49a2169074",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/STATUS.md",
+      "line": 169,
+      "source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        161,
+        177
+      ],
+      "context_sha256": "1849a0a64954d5ba4d4a7a5957439fb9757d7b21b90ee03b901fda1d144aea7d",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-001"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-58eb52464d60",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/STATUS.md",
+      "line": 193,
+      "source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        185,
+        201
+      ],
+      "context_sha256": "e4d82bd8aa8b82751e0279e04783545b5ece78ae69a2fe9f2769b7427d260c82",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018",
+        "ABEX-REC-006"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-758380447a68",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/STATUS.md",
+      "line": 229,
+      "source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        221,
+        237
+      ],
+      "context_sha256": "e12e9993d481213f9a371c5ab39d56583a0592b6c38d1220f62ef242dc28ce96",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018",
+        "ABEX-REC-006"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-50d05650bad3",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/STATUS.md",
+      "line": 721,
+      "source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        713,
+        729
+      ],
+      "context_sha256": "f1d4adf44cb65626c57c7b1dc441be6825037e34cf47afbaba638b96634099a1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-011"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e41c9ba3f6fb",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/STATUS.md",
+      "line": 825,
+      "source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        817,
+        833
+      ],
+      "context_sha256": "c08dfc6d9f3ec53c9782cc8eac5b406f3accff2c748e493974307325f5bff4b5",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-011",
+        "ABEX-REC-030"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-deee47d48edb",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/governance/SUPREME_CAPABILITY_REGISTER.json",
+      "line": 160,
+      "source_sha256": "9d4c8fe5f52ec77b3e69323569ad8d56420a409d5fc8c776afa4d6c07e838e30",
+      "indexed_source_sha256": "9d4c8fe5f52ec77b3e69323569ad8d56420a409d5fc8c776afa4d6c07e838e30",
+      "matches_indexed_source": true,
+      "context_lines": [
+        152,
+        168
+      ],
+      "context_sha256": "e27842742616b9684fa2aceb3d6de623a12286d23e3f24420ef8ae2c8e2364e6",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_OBLIGATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-001"
+      ],
+      "reason": "Physical black start explicitly not executed; source/fixture cannot substitute for physical proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-40d82991ee02",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/contracts/prime-execution-record-v1.schema.json",
+      "line": 29,
+      "source_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+      "indexed_source_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+      "matches_indexed_source": true,
+      "context_lines": [
+        21,
+        35
+      ],
+      "context_sha256": "3b6839fa2f2eb654edf50ca01c02aae8d509b20ff9add3178a00e67e18b030e1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "SCHEMA_ENUM_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d5a3d8e67b15",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/BLACK_START_PREPARED_NOT_EXECUTED.md",
+      "line": 27,
+      "source_sha256": "7c2665f7ec469ca91bb441ef12c2dc7c5e533cdbc048960403e14d696c6fd2ac",
+      "indexed_source_sha256": "7c2665f7ec469ca91bb441ef12c2dc7c5e533cdbc048960403e14d696c6fd2ac",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "28b8847a63f514f6997c80f90707081fefc950b083457b14c7989b04dbd7a48a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_OBLIGATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-001"
+      ],
+      "reason": "Physical black start explicitly not executed; source/fixture cannot substitute for physical proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-860eb88a411c",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/governance/observations/abex-post-restart-20261012.json",
+      "line": 9,
+      "source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "indexed_source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "matches_indexed_source": true,
+      "context_lines": [
+        1,
+        17
+      ],
+      "context_sha256": "78910b2a344f1482b0965da6c8406de0864cd08a5d96a5099e2aab1326410836",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_OBSERVATION_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018"
+      ],
+      "reason": "Historical observation is retained, not a current blocker proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-47ee47521486",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/governance/observations/abex-post-restart-20261012.json",
+      "line": 47,
+      "source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "indexed_source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "matches_indexed_source": true,
+      "context_lines": [
+        39,
+        55
+      ],
+      "context_sha256": "2a78a6c18040aa81957930206a9fabd97e9b25775f7b859ba9560a75b3cdeedc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_OBSERVATION_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-008"
+      ],
+      "reason": "Historical observation is retained, not a current blocker proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-435968609cf0",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/governance/observations/abex-candidate-closure-66a5d90-20261012.json",
+      "line": 469,
+      "source_sha256": "80c91fc4ce31314f1a923d4e3d459506ac8ae70d30b5012b9707ff7436b3166a",
+      "indexed_source_sha256": "80c91fc4ce31314f1a923d4e3d459506ac8ae70d30b5012b9707ff7436b3166a",
+      "matches_indexed_source": true,
+      "context_lines": [
+        461,
+        477
+      ],
+      "context_sha256": "e8c0f20d4a5cb820d40dead33652b39ac2a6006825da96ce4a7b38e6ab169742",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_OBSERVATION_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018"
+      ],
+      "reason": "Historical observation is retained, not a current blocker proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7004a34a3697",
+      "source": "repos/prime/tests/test_workflow_engine.py",
+      "line": 28,
+      "source_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+      "indexed_source_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+      "matches_indexed_source": true,
+      "context_lines": [
+        20,
+        31
+      ],
+      "context_sha256": "f81d56426cfe606e9d50648d892218d2f5180d309c3bd94f6ce88dac1a424ded",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-175b8315644c",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/general_intelligence.py",
+      "line": 201,
+      "source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "indexed_source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        193,
+        209
+      ],
+      "context_sha256": "5de86d62c215d6925741113efd70b57065c03ad754c59e6ab0614e172edb0d3f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-fd87e755f727",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/general_intelligence.py",
+      "line": 206,
+      "source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "indexed_source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        198,
+        214
+      ],
+      "context_sha256": "5bb8267f96b5f2c8b0ecb3a9cfcf295c829caad0249991e611a387c08d727b82",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1efde37a26b3",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/meta_review.py",
+      "line": 31,
+      "source_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+      "indexed_source_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+      "matches_indexed_source": true,
+      "context_lines": [
+        23,
+        39
+      ],
+      "context_sha256": "48a09d11bb9f72c2638ab64313d076077075d11a4f34690a00511cb19219fe1a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c10895f14d99",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/metacognition.py",
+      "line": 182,
+      "source_sha256": "2a4b3e7fe92bba534c2d4ae70e6bff2ce689fdc98fd2dde9a819237ba159df23",
+      "indexed_source_sha256": "2a4b3e7fe92bba534c2d4ae70e6bff2ce689fdc98fd2dde9a819237ba159df23",
+      "matches_indexed_source": true,
+      "context_lines": [
+        174,
+        190
+      ],
+      "context_sha256": "53d309c01b375724def150e99bab21ce6a45b7afbb3786b326c5a80e5350d48c",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-8adc66596dcf",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/main.py",
+      "line": 584,
+      "source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "indexed_source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "matches_indexed_source": true,
+      "context_lines": [
+        576,
+        592
+      ],
+      "context_sha256": "40ceb1a316db8b0e4b2ee18bf77d0dfdc34da05d335b3acd76efa0de3cc1554a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a9851e6ee579",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/main.py",
+      "line": 592,
+      "source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "indexed_source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "matches_indexed_source": true,
+      "context_lines": [
+        584,
+        600
+      ],
+      "context_sha256": "e6e2836f581bd59f10ecb368becd5559da9b61fe36f68503ded8a5c6966a4e95",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-76a470e1b22c",
+      "source": "repos/prime/tests/test_direct_execution.py",
+      "line": 136,
+      "source_sha256": "f38667e424cc7e7d066e24132dc4dccda0958f1b56b0e6019fecd3bfa6e55842",
+      "indexed_source_sha256": "f38667e424cc7e7d066e24132dc4dccda0958f1b56b0e6019fecd3bfa6e55842",
+      "matches_indexed_source": true,
+      "context_lines": [
+        128,
+        144
+      ],
+      "context_sha256": "b4130295366ed41a39b698362e8db6fb5be2a364fd6d4e5aa4b609cb101f7ddc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-544c04891c83",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/independence_matrix.py",
+      "line": 8,
+      "source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "indexed_source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "matches_indexed_source": true,
+      "context_lines": [
+        1,
+        16
+      ],
+      "context_sha256": "06cf60ed3f55f45213df6d0c4b781c51954e63b5bd2355e6db878ea9e4731106",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1fea035d42c5",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/independence_matrix.py",
+      "line": 44,
+      "source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "indexed_source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "matches_indexed_source": true,
+      "context_lines": [
+        36,
+        49
+      ],
+      "context_sha256": "2d2fe4123ee47eaa8bef6edab8c0b9749e12c17f4f0b297996574fff01f7d188",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-abc27e2f3581",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/independence_matrix.py",
+      "line": 48,
+      "source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "indexed_source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "matches_indexed_source": true,
+      "context_lines": [
+        40,
+        49
+      ],
+      "context_sha256": "59600600a650ced376a8a5cb620d00d634903e9930f96953879aa3f0a79fe1a4",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-0bdceefd527a",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/scripts/verify_independence_phase.py",
+      "line": 32,
+      "source_sha256": "8a6e5e61c344c656dc9d972d2b852de7cdc590ab393ce2842f09c394fba37ba8",
+      "indexed_source_sha256": "8a6e5e61c344c656dc9d972d2b852de7cdc590ab393ce2842f09c394fba37ba8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        24,
+        40
+      ],
+      "context_sha256": "0fed486db1c453f50a7b98ed7d61c5b1a63e9fac7e96ac8dbc74aaa413e2a5d7",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e198be77e578",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/workflow_engine.py",
+      "line": 68,
+      "source_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+      "indexed_source_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+      "matches_indexed_source": true,
+      "context_lines": [
+        60,
+        76
+      ],
+      "context_sha256": "6c1e25b791321d453107741be68a263f3b6c61994e5691fe08894b61e5f6cbc7",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c0dd12f724ea",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/scripts/verify_capability_register.py",
+      "line": 12,
+      "source_sha256": "7a629b456c8d00faba249483588c4a215672eab39e5c5dfdc039fb4e59b863e8",
+      "indexed_source_sha256": "7a629b456c8d00faba249483588c4a215672eab39e5c5dfdc039fb4e59b863e8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        4,
+        20
+      ],
+      "context_sha256": "f19a9536e91a7d9cd90ccc0e12fa6bc953c339ac482587377864d59e9c48afde",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "SCHEMA_ENUM_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-80729cadc5ba",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/supreme_integration.py",
+      "line": 24,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        16,
+        32
+      ],
+      "context_sha256": "10624d2f20ff512d0881243898fcdf149e47b07c5b84c86f2a467ebfb8fb1cd0",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-eecc689f6327",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/supreme_integration.py",
+      "line": 27,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "d8afbbe19a47cecaba68f30bf6e197d9b0c4aa3cab7e49a355fc3c466cbdab18",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-27c4a9edf282",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/supreme_integration.py",
+      "line": 28,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        20,
+        36
+      ],
+      "context_sha256": "f9d5e58d647b265380dc59b3974f7ee066d51457e7aa8ac45909bde04ac6fc11",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-5f578484e044",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/supreme_integration.py",
+      "line": 29,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        21,
+        37
+      ],
+      "context_sha256": "71180229121bd42e378861170ae6852a81dfe0f55b2650f950f5c382ddea5ee9",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-0e78d49678f9",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/supreme_integration.py",
+      "line": 31,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        23,
+        39
+      ],
+      "context_sha256": "b29836694bd3ef1cd89345a41131319d8a006e0e90b048d131202b021678da56",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-23d49b11867c",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/supreme_integration.py",
+      "line": 32,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        24,
+        40
+      ],
+      "context_sha256": "f7e9493a22eacf32ec3106515afe42e253a4ba86e26e83320fbd3dc21e17678e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7550e8bbd0af",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/spine.py",
+      "line": 299,
+      "source_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+      "indexed_source_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+      "matches_indexed_source": true,
+      "context_lines": [
+        291,
+        307
+      ],
+      "context_sha256": "8fb53e885b8503ef1d45e809f2547d698df5718e74699535a941916284e1af61",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7e8340dd505a",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/phase2_intelligence.py",
+      "line": 26,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        18,
+        34
+      ],
+      "context_sha256": "3975fa85f7628014cc3ac3b4639708ab951819504601cc8a79265935d3ae38dc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-79634bc3471b",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/phase2_intelligence.py",
+      "line": 373,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        365,
+        381
+      ],
+      "context_sha256": "61b94b81f03e4f6c34eb47c6cfc2d54099ee4e6f0c68ce7fb2b4ace454dd32e3",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-19cdc19a55ad",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/phase2_intelligence.py",
+      "line": 374,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        366,
+        382
+      ],
+      "context_sha256": "2718588aa136dea356af4b514d14578dcbd5c87365598d484e5f2f21963eb3c5",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c40986d78f7e",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/phase2_intelligence.py",
+      "line": 375,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        367,
+        383
+      ],
+      "context_sha256": "66608d8889ff1ff0cbbd9c8192ab28ff9d620e25aa0e2cd2f3f76851ab02b89e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d8e77be185c1",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 12,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        4,
+        20
+      ],
+      "context_sha256": "1844f4e293ae5ae1456a20243a74283d586786802975aba9da066369a96bb3be",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3f6e5e3a1da4",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 64,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        56,
+        72
+      ],
+      "context_sha256": "197771b2012e7393ffa5f07431e459fbf6d4ccde1be4568be5c9b28ed6da3bd5",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1725f40dd41a",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 293,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        285,
+        301
+      ],
+      "context_sha256": "c3c01208d05fb38d1a64c86c635af640db78354ed67409bedee4c93b78893694",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-49690c91c7c5",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 295,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        287,
+        303
+      ],
+      "context_sha256": "2df3f260fca0a087c83199fa8c7fd57f6f7d306e1f0512b507c33d34eb20a892",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-0a636fb0d4cf",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 348,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        340,
+        356
+      ],
+      "context_sha256": "6452e21e1b5205ffa1d11a3173f3f1ca68b5d2eba6b1377cc7fb2cbb184e25ed",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1ca0347de783",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 387,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        379,
+        395
+      ],
+      "context_sha256": "04423c837c13d5a2cc9ca9034519dd7b771da69f6ce6d793f019b8d421e43015",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-f6d4dcc984ca",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 410,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        402,
+        418
+      ],
+      "context_sha256": "12a5e2c230c62785dcb0fbbe674fe0368fd9da70e9c865871158db3e162c7868",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-94bb115bc67c",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 465,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        457,
+        473
+      ],
+      "context_sha256": "fbb6071cb6c50a745a60aad00e8201e796a77eec57f9d763ddff81f8d22cb2fb",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-9e98c27b4705",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 483,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        475,
+        491
+      ],
+      "context_sha256": "dd3558fbd3eeace2a134e10d266d8e1a33c43eb36d62792cb6740c39e690ceca",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-41eb8948e24e",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/offline_survival.py",
+      "line": 487,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        479,
+        495
+      ],
+      "context_sha256": "099fef13f3bb7fc461bf29c9e7f6ea0a74dccb247fdb5635b11444c83cce1e6e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-17daee176629",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/app/objective_api.py",
+      "line": 514,
+      "source_sha256": "9e0684ce093cf94ad2e25e93b8f7a1d1700c35c1e64b708268227ae04df73eb2",
+      "indexed_source_sha256": "9e0684ce093cf94ad2e25e93b8f7a1d1700c35c1e64b708268227ae04df73eb2",
+      "matches_indexed_source": true,
+      "context_lines": [
+        506,
+        522
+      ],
+      "context_sha256": "ac68d399aead2053139a7af2f4c8e61811bc605e2914db2df38c041ff183292d",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-89ce8aeb5c5f",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/evidence/METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+      "line": 44,
+      "source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "indexed_source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        36,
+        52
+      ],
+      "context_sha256": "ffbac899f3270bb81813de2578fc62b92fefeef464f5e702820ab8631e97330a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_QUALIFICATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-002",
+        "ABEX-REC-005"
+      ],
+      "reason": "Candidate has no attributable counterfactual/tool-model evaluation or real-outcome calibration; bounded synthetic results are separate.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-861a4cf05db3",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/evidence/METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+      "line": 45,
+      "source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "indexed_source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        37,
+        53
+      ],
+      "context_sha256": "c33038eb90f59f657514945a3332f29bea573159bab06703e6f0a1414775cb44",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_QUALIFICATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-002",
+        "ABEX-REC-005"
+      ],
+      "reason": "Candidate has no attributable counterfactual/tool-model evaluation or real-outcome calibration; bounded synthetic results are separate.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-521ff94c3681",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/evidence/METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+      "line": 46,
+      "source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "indexed_source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        38,
+        54
+      ],
+      "context_sha256": "dba2cc03ddddfc5ec35277f7687e166565747abb102eac11f3792791964794f6",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_QUALIFICATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-002",
+        "ABEX-REC-005"
+      ],
+      "reason": "Candidate has no attributable counterfactual/tool-model evaluation or real-outcome calibration; bounded synthetic results are separate.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-f719ff6a5563",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/evidence/GOLDEN_GEN1_PHYSICAL_REGRESSIONS_20260926.md",
+      "line": 49,
+      "source_sha256": "a86f1802a78dee27a5c984966df46a6548b39ff1a48e95de80862f1a2115523a",
+      "indexed_source_sha256": "a86f1802a78dee27a5c984966df46a6548b39ff1a48e95de80862f1a2115523a",
+      "matches_indexed_source": true,
+      "context_lines": [
+        41,
+        57
+      ],
+      "context_sha256": "ada71bb06b641d766465e97e2fde98af74497dc344b86921c9b231e4352815f1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "HISTORICAL_REPAIR_EVIDENCE",
+      "mapped_task_ids": [
+        "ABEX-REC-018"
+      ],
+      "reason": "Candidate repair described, no new TODO expressed.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-4d0722fa5fcb",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/scripts/benchmark_local_models.py",
+      "line": 19,
+      "source_sha256": "6435a26fffbe81770ccaf241e6a59348c0b3879d23be00f6aa8116aa4447ef28",
+      "indexed_source_sha256": "6435a26fffbe81770ccaf241e6a59348c0b3879d23be00f6aa8116aa4447ef28",
+      "matches_indexed_source": true,
+      "context_lines": [
+        11,
+        27
+      ],
+      "context_sha256": "c6126cc647e3307ec14530b3651aacc5f7d7262a085cd0af5c84cae80d4352f1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-028d5925fbdc",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.md",
+      "line": 102,
+      "source_sha256": "356ae68d66ef129a5957893187abf30b104188754128866596415f0409d693dd",
+      "indexed_source_sha256": "356ae68d66ef129a5957893187abf30b104188754128866596415f0409d693dd",
+      "matches_indexed_source": true,
+      "context_lines": [
+        94,
+        110
+      ],
+      "context_sha256": "12331448c6f5c06c4202bc7fcf4c228c0f36aaef8881c9e0d2964f389b11b79a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "FAILED_QUALIFICATION_DUPLICATE",
+      "mapped_task_ids": [
+        "ABEX-REC-009"
+      ],
+      "reason": "Software integration failure retained; isolated projection repair does not complete retrieval/classification/governed persistence.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7af58a2039cc",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_authoritative_result_metadata.py",
+      "line": 113,
+      "source_sha256": "867ce0a21af7bc8387ef6115c1b284beea8491bf26b894a1d31041e461ee6d04",
+      "indexed_source_sha256": "867ce0a21af7bc8387ef6115c1b284beea8491bf26b894a1d31041e461ee6d04",
+      "matches_indexed_source": true,
+      "context_lines": [
+        105,
+        121
+      ],
+      "context_sha256": "5fac8c709e982df4e70c4e8637cb58d9a8022a18ac5ebe5c122823a2df029d44",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-2a8c05510ffd",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_agent_coaching.py",
+      "line": 138,
+      "source_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+      "indexed_source_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+      "matches_indexed_source": true,
+      "context_lines": [
+        130,
+        146
+      ],
+      "context_sha256": "d2f0b63680e06c017c2896b13671973a8ef7e343ba9b71cea17d051ca05a607f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-88496970622a",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_agent_coaching.py",
+      "line": 165,
+      "source_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+      "indexed_source_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+      "matches_indexed_source": true,
+      "context_lines": [
+        157,
+        173
+      ],
+      "context_sha256": "7e8cc50bbc8afc8345cbb308d2791635dfa388bab7373b5580739329e74df4df",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d15a43e747ad",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_agent_coaching.py",
+      "line": 167,
+      "source_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+      "indexed_source_sha256": "6164c2de6624b3a6ee6a7bc7d6c397368308d4c19844f5c2d6ac5306873e0e58",
+      "matches_indexed_source": true,
+      "context_lines": [
+        159,
+        175
+      ],
+      "context_sha256": "a1ea3ff0fe5b339880c053a8efdc4a6eec5ed6e8d0a86856a823fdce28f05dac",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b030a55c5f7e",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_direct_execution.py",
+      "line": 145,
+      "source_sha256": "450b2716fd1724f77a73d8f47a99b9ce7d8ccb79e71ea86570362c72724d46e3",
+      "indexed_source_sha256": "450b2716fd1724f77a73d8f47a99b9ce7d8ccb79e71ea86570362c72724d46e3",
+      "matches_indexed_source": true,
+      "context_lines": [
+        137,
+        153
+      ],
+      "context_sha256": "b4130295366ed41a39b698362e8db6fb5be2a364fd6d4e5aa4b609cb101f7ddc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1443c42d08ef",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_general_intelligence.py",
+      "line": 93,
+      "source_sha256": "8e33568ff178356d77cc1a266667c89bbae4b4d65fd768452f1bd5cac94be73e",
+      "indexed_source_sha256": "8e33568ff178356d77cc1a266667c89bbae4b4d65fd768452f1bd5cac94be73e",
+      "matches_indexed_source": true,
+      "context_lines": [
+        85,
+        101
+      ],
+      "context_sha256": "dc8aaf860550692f85d7e627c4f4728e841aa12cd9984b7e7734edf498adb425",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e0dbb3feec98",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/docs/evidence/DELL_REVERIFICATION_DISAGREEMENT_20260926.md",
+      "line": 5,
+      "source_sha256": "4489e6cd80c33d99a5cfbd6210662f5bf7d51ebb26b2b2ae4c0f842499eb9573",
+      "indexed_source_sha256": "4489e6cd80c33d99a5cfbd6210662f5bf7d51ebb26b2b2ae4c0f842499eb9573",
+      "matches_indexed_source": true,
+      "context_lines": [
+        1,
+        13
+      ],
+      "context_sha256": "e41d4150e666ccc589fb514161bff2874057cc57f5d7594053b5dc334a3d139e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "INDEPENDENT_FAILURE_DUPLICATE",
+      "mapped_task_ids": [
+        "ABEX-REC-011"
+      ],
+      "reason": "Retain Dell failed assessment; reassess current generation at canonical HTTPS8443, Dell assessment-only.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6ab9706754f0",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_independence_dependency_matrix.py",
+      "line": 65,
+      "source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "indexed_source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        57,
+        73
+      ],
+      "context_sha256": "1f4b329ca935ca896f84a027f0787a3ab7a96b373925ca53419f8e9cc9422d39",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-43f0ed75549d",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_independence_dependency_matrix.py",
+      "line": 106,
+      "source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "indexed_source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        98,
+        107
+      ],
+      "context_sha256": "22b7ea023a687397d921452125e5b88881e1366c91845c5d698ff9b03b5de8f4",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-ecd24b16a7e1",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_metacognition.py",
+      "line": 72,
+      "source_sha256": "5f57d7c56f713ae189d310c95ed14d6c7159c9ed5821e92cc510c205e8e34fcf",
+      "indexed_source_sha256": "5f57d7c56f713ae189d310c95ed14d6c7159c9ed5821e92cc510c205e8e34fcf",
+      "matches_indexed_source": true,
+      "context_lines": [
+        64,
+        80
+      ],
+      "context_sha256": "77678246b6a47bc9134db57c5c343622ccc2e49a0e9f94af0f8a687970904e9b",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-fc71f2826e8b",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_objective_domain_provenance.py",
+      "line": 106,
+      "source_sha256": "862fcdf971b8691dfdcf0b8bd8860b317163bb83b565430aa2dbd672f9261b70",
+      "indexed_source_sha256": "862fcdf971b8691dfdcf0b8bd8860b317163bb83b565430aa2dbd672f9261b70",
+      "matches_indexed_source": true,
+      "context_lines": [
+        98,
+        114
+      ],
+      "context_sha256": "7872014347261c567c595024211a804f80188be12e4b03e733dba2fad22a63bf",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7e8ced3aa517",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_offline_survival.py",
+      "line": 81,
+      "source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "indexed_source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "matches_indexed_source": true,
+      "context_lines": [
+        73,
+        89
+      ],
+      "context_sha256": "f88b221dd072135bc990bb397d6ae41c6854c47b3b2b3b9ebcd90d297b6c4c37",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a7dbb1e1d176",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_offline_survival.py",
+      "line": 159,
+      "source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "indexed_source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "matches_indexed_source": true,
+      "context_lines": [
+        151,
+        167
+      ],
+      "context_sha256": "f627f934c15a80c4d7106fbc5e8397199f8ef11c30a093446fb64ba915309899",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3d65b98bcf4f",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_offline_survival.py",
+      "line": 172,
+      "source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "indexed_source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "matches_indexed_source": true,
+      "context_lines": [
+        164,
+        180
+      ],
+      "context_sha256": "3772b1ea46c2bebf50565e0ffdef73b21f2d8e9597bc4daffb311c1e8195fa68",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-bed19a5c006f",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_portfolio_reconciliation.py",
+      "line": 35,
+      "source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "indexed_source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        27,
+        43
+      ],
+      "context_sha256": "c264993a0bc39bcf90c1684ba888d0bcd7a4932a4756d6fa541b955dadad5605",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-33a023de6e75",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_portfolio_reconciliation.py",
+      "line": 82,
+      "source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "indexed_source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        74,
+        90
+      ],
+      "context_sha256": "d17f1f07e4ab3191ec19bb0cff154af00637f5f5bff4d8cd660dbfb44af6d4e0",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-62e13eea8062",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_production_compatibility.py",
+      "line": 206,
+      "source_sha256": "d76afd121af63d3d163c56e1367c2edb45d2cd325c505cc87f60a5183dc331cc",
+      "indexed_source_sha256": "d76afd121af63d3d163c56e1367c2edb45d2cd325c505cc87f60a5183dc331cc",
+      "matches_indexed_source": true,
+      "context_lines": [
+        198,
+        214
+      ],
+      "context_sha256": "31d8901d65de6c36f7586bfdebdfa372283fad58924f133cf27eda0c858f4520",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1e42cf76dcd4",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_supreme_independence_candidate.py",
+      "line": 62,
+      "source_sha256": "ee510baace15ad4b05627b424a14186dd0d0a5f68f356778076e72a96e5cb42b",
+      "indexed_source_sha256": "ee510baace15ad4b05627b424a14186dd0d0a5f68f356778076e72a96e5cb42b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        54,
+        70
+      ],
+      "context_sha256": "571f7dea79d2625714f2d789f5c66f1c932d13cdd7750ad7821bfd5697f6e09a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-0a58d53711bb",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_supreme_intelligence_benchmark.py",
+      "line": 27,
+      "source_sha256": "e71cf664ac3cda9cc5887875ead84a77d6ab92943c8ab0199dbbbf11d3f5fcc0",
+      "indexed_source_sha256": "e71cf664ac3cda9cc5887875ead84a77d6ab92943c8ab0199dbbbf11d3f5fcc0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "34a7ac1ff56a1b2e72375e5576875f15d650717b805301f95808390410008fb2",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-925d8408a731",
+      "source": "repos/prime/worktrees/cloud-parallel-lanes-20261013/tests/test_workflow_engine.py",
+      "line": 28,
+      "source_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+      "indexed_source_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+      "matches_indexed_source": true,
+      "context_lines": [
+        20,
+        31
+      ],
+      "context_sha256": "f81d56426cfe606e9d50648d892218d2f5180d309c3bd94f6ce88dac1a424ded",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-13774f19edc0",
+      "source": "repos/sky-tablet/index.html",
+      "line": 45,
+      "source_sha256": "6740ddfd6fc2bb677caa7dd3868320c0bb9d5ddc0db6ec53d2f415616bbdc18c",
+      "indexed_source_sha256": "6740ddfd6fc2bb677caa7dd3868320c0bb9d5ddc0db6ec53d2f415616bbdc18c",
+      "matches_indexed_source": true,
+      "context_lines": [
+        37,
+        53
+      ],
+      "context_sha256": "0fb464cc707596b7dde6b966c9e286bf91a3f43175071f8d50ff073fbec0f75e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a6bbeba43801",
+      "source": "repos/the-portal/inhabitants.js",
+      "line": 49,
+      "source_sha256": "a7a4bbd55014145acf03004ca9180566a1ddba127648f261ec697437e77d5ffb",
+      "indexed_source_sha256": "a7a4bbd55014145acf03004ca9180566a1ddba127648f261ec697437e77d5ffb",
+      "matches_indexed_source": true,
+      "context_lines": [
+        41,
+        52
+      ],
+      "context_sha256": "b7cd16845295994659bc90b324ccb9652752e002f551221c54f6482e005d7c42",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-76cb63e7cbf9",
+      "source": "repos/the-portal/living.js",
+      "line": 29,
+      "source_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+      "indexed_source_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+      "matches_indexed_source": true,
+      "context_lines": [
+        21,
+        37
+      ],
+      "context_sha256": "5b0f3150d1dd5a21ea51b42323a44195d7b51ffa7ca089f7087b094a12c9f578",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1192cb72e6fc",
+      "source": "repos/the-portal/living.js",
+      "line": 33,
+      "source_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+      "indexed_source_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+      "matches_indexed_source": true,
+      "context_lines": [
+        25,
+        41
+      ],
+      "context_sha256": "5ffbc8aa312f9d049be251444505c9078527dc8fb7b5edffc58540da6ebafbf0",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1ad126eef7df",
+      "source": "repos/the-portal/living.js",
+      "line": 42,
+      "source_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+      "indexed_source_sha256": "8702f435cc1cf57367c56643b8aae55a99440ec89c97756b35cec81f8ec9e802",
+      "matches_indexed_source": true,
+      "context_lines": [
+        34,
+        50
+      ],
+      "context_sha256": "bd72b4a564b7f6e62337f119f27d7854bd17831fff39e705131e4a9d53451fe7",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-50703894d92d",
+      "source": "repos/the-portal/lib/autonomy.js",
+      "line": 27,
+      "source_sha256": "d278c67f484d3e7407902b5007df035b8abcceacd6b052291ff76ddf0c3c02a6",
+      "indexed_source_sha256": "d278c67f484d3e7407902b5007df035b8abcceacd6b052291ff76ddf0c3c02a6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "d9ef1a383bf4cde84cced77a3a1045ca7213db2855bee15c97a2dc7963ee8460",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "CONDITIONAL_DEPENDENCY_NOT_CURRENT_BLOCKER",
+      "mapped_task_ids": [
+        "ABEX-REC-027"
+      ],
+      "reason": "Conditional DATABASE_URL guard when autonomy enabled. Deployed configuration unverified; do not remove guard or infer missing credentials.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-44292a145ee4",
+      "source": "repos/the-portal/lib/living-intelligence.js",
+      "line": 167,
+      "source_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+      "indexed_source_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+      "matches_indexed_source": true,
+      "context_lines": [
+        159,
+        175
+      ],
+      "context_sha256": "141f84142c690fffc36c48d1a7a653b06fae361064b02df6f1d6e3c61013f270",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7a224ef20815",
+      "source": "repos/the-portal/lib/living-intelligence.js",
+      "line": 171,
+      "source_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+      "indexed_source_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+      "matches_indexed_source": true,
+      "context_lines": [
+        163,
+        179
+      ],
+      "context_sha256": "c22b90bdd2b9b6360275853f4a1d83d3551f7c3d1c9f951786e5ca95cb080c2c",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3ba03ca23107",
+      "source": "repos/the-portal/lib/living-intelligence.js",
+      "line": 212,
+      "source_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+      "indexed_source_sha256": "7c2c0677078f085502abe3f9a87359ecbeb31934b8d12b47f8e3bb23aa1f4eff",
+      "matches_indexed_source": true,
+      "context_lines": [
+        204,
+        220
+      ],
+      "context_sha256": "a645bd2fde37d3db047c0977395cf10274b9fec4ae89f54f4cce6b75b8a2a2f9",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3ebfb9deb8ad",
+      "source": "repos/the-portal/lib/spine-endpoint.js",
+      "line": 24,
+      "source_sha256": "8348c49f210b2c531202262d10364c86103bd94e793a1d3e96be6061402a3ddc",
+      "indexed_source_sha256": "8348c49f210b2c531202262d10364c86103bd94e793a1d3e96be6061402a3ddc",
+      "matches_indexed_source": true,
+      "context_lines": [
+        16,
+        32
+      ],
+      "context_sha256": "b8f9dbd28392535b5aa927e7069d37b07b5470b72d3791e2dc6b61936094ad7d",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3b0eed1eb6fa",
+      "source": "repos/the-portal/lib/spine-endpoint.js",
+      "line": 49,
+      "source_sha256": "8348c49f210b2c531202262d10364c86103bd94e793a1d3e96be6061402a3ddc",
+      "indexed_source_sha256": "8348c49f210b2c531202262d10364c86103bd94e793a1d3e96be6061402a3ddc",
+      "matches_indexed_source": true,
+      "context_lines": [
+        41,
+        57
+      ],
+      "context_sha256": "1abb4ba0dbb84a88e8a0e654163413d37c343e3f475ae178c670a68f1a8c39e6",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7850fb050364",
+      "source": "repos/the-portal/scripts/inhabitants-smoke.mjs",
+      "line": 14,
+      "source_sha256": "fa412340ea9739058cbe7d562bbb8c96ec6ede341b40d59a22916ddaa72e1e95",
+      "indexed_source_sha256": "fa412340ea9739058cbe7d562bbb8c96ec6ede341b40d59a22916ddaa72e1e95",
+      "matches_indexed_source": true,
+      "context_lines": [
+        6,
+        22
+      ],
+      "context_sha256": "f6bb8a43ca86731c98c59d606ea21444e8e12ec262753d9147e50f44d27c163c",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c7674e154a2f",
+      "source": "repos/the-portal/scripts/living-intelligence.mjs",
+      "line": 51,
+      "source_sha256": "3234f63d70a76f62f5cb756cf0a742cda6fe7dc62b9c3d40319cd7d668fe9cbd",
+      "indexed_source_sha256": "3234f63d70a76f62f5cb756cf0a742cda6fe7dc62b9c3d40319cd7d668fe9cbd",
+      "matches_indexed_source": true,
+      "context_lines": [
+        43,
+        59
+      ],
+      "context_sha256": "dba3b5b7eba3e98141acd1e271f6c5f9ce8a6d0ab374cfb19fbf58d5c5e6c791",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6d6bc43b513a",
+      "source": "repos/the-portal/scripts/preflight-v2.mjs",
+      "line": 22,
+      "source_sha256": "b9fef1e774ec81101ebadd5cf7e2f5617a58fe769364601440b1796d0050eb50",
+      "indexed_source_sha256": "b9fef1e774ec81101ebadd5cf7e2f5617a58fe769364601440b1796d0050eb50",
+      "matches_indexed_source": true,
+      "context_lines": [
+        14,
+        27
+      ],
+      "context_sha256": "33634276e29cd6ad6a24d3d06aa07f1f9bd01020bebf311b2e3e2014f63c8798",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-fcca7276dd04",
+      "source": "repos/velyqua/api/spine.js",
+      "line": 189,
+      "source_sha256": "3fdbbcaaa270096a7d6c84c639109fba005215cdebcc518aee220881db8d32f0",
+      "indexed_source_sha256": "3fdbbcaaa270096a7d6c84c639109fba005215cdebcc518aee220881db8d32f0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        181,
+        197
+      ],
+      "context_sha256": "e54e7b06886876d1f185ef13410d754c556c0e0f0c74defc0be35ad07a99e801",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Implemented authorization/budget/safety control or UI state. Intended denied real-world authority must not be removed to produce a pass.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d7917897d3b1",
+      "source": "worktrees/orqevia-coaching-priority-20261013/AGENTS.md",
+      "line": 62,
+      "source_sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+      "indexed_source_sha256": "b8bcb13b066f91eb9f5497ac3962ec96949aad2c0dd06c35e562f835d14197c5",
+      "matches_indexed_source": true,
+      "context_lines": [
+        54,
+        70
+      ],
+      "context_sha256": "7b5a6e9f9d37dec497503a4252aa15425b4ffd937f80360a406eb9a365c4c0cb",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "OPERATING_INSTRUCTION_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a4604a0d227f",
+      "source": "worktrees/orqevia-coaching-priority-20261013/contracts/prime-execution-record-v1.schema.json",
+      "line": 29,
+      "source_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+      "indexed_source_sha256": "fb2ace72689280cfd967f1b7cae893cb4162bccbd25e405c3ef08c0cc14e7f17",
+      "matches_indexed_source": true,
+      "context_lines": [
+        21,
+        35
+      ],
+      "context_sha256": "3b6839fa2f2eb654edf50ca01c02aae8d509b20ff9add3178a00e67e18b030e1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "SCHEMA_ENUM_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e5861b22ae80",
+      "source": "worktrees/orqevia-coaching-priority-20261013/scripts/benchmark_local_models.py",
+      "line": 19,
+      "source_sha256": "6435a26fffbe81770ccaf241e6a59348c0b3879d23be00f6aa8116aa4447ef28",
+      "indexed_source_sha256": "6435a26fffbe81770ccaf241e6a59348c0b3879d23be00f6aa8116aa4447ef28",
+      "matches_indexed_source": true,
+      "context_lines": [
+        11,
+        27
+      ],
+      "context_sha256": "c6126cc647e3307ec14530b3651aacc5f7d7262a085cd0af5c84cae80d4352f1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-47711f248332",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 165,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        157,
+        173
+      ],
+      "context_sha256": "6883a00b15f5be288efdca5556076d87cd9c130c8dfe73d3235de3b6e510f203",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-4a33aef920e1",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 168,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        160,
+        176
+      ],
+      "context_sha256": "5503d8f092e63a1861f7ea174413361bcfbea69d5c7be613f6b1bea9f51b51da",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7cb6e0681e4a",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 190,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        182,
+        198
+      ],
+      "context_sha256": "987bd040813d68ae7a2ac0ae7f046d06d62de15921f73d34b5457634f1dd586c",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a829c44bbfd5",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 213,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        205,
+        221
+      ],
+      "context_sha256": "069f0ac85354a4ebe85b302c35b72e41e5a9799a8006859d705b5701cc7f56fc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-9975cbe0e9de",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 220,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        212,
+        228
+      ],
+      "context_sha256": "c741af3a33a9dd6ffb5b98c2c5a9635322261578d717ecb236330f5360be7713",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-9aea385db517",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 228,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        220,
+        236
+      ],
+      "context_sha256": "cab043b85796927fb248eb4af6415f1a2762a32c52b389baddad822b95acc311",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a6f2db3a21a5",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 230,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        222,
+        238
+      ],
+      "context_sha256": "0db9d46fd1cf4d0180689378eac884d0fb569e5f028055a7a7e05b30e8d1faa4",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-f1e8dd0e444e",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 238,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        230,
+        246
+      ],
+      "context_sha256": "04a856571ea140a69bac4c2e5a775daf44722b79ad94b52d914b977b9b2c4ac1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b0cdb274b8e9",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 240,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        232,
+        248
+      ],
+      "context_sha256": "61125569f00920f4bc688afd3593da27ba88c702842cebdca2c1d9ba0499b14f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6f12b13fa587",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 285,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        277,
+        293
+      ],
+      "context_sha256": "edc70197491f442cc1fb7807ba862ac12fca99a70b285756ba7857875bf04752",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-74ecdfdf08a9",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/agent_coaching.py",
+      "line": 287,
+      "source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "indexed_source_sha256": "1a2d97f0ce3ff8960b96839b032a06e4a189eec8db83ae61388658b832136373",
+      "matches_indexed_source": true,
+      "context_lines": [
+        279,
+        295
+      ],
+      "context_sha256": "96fe70930c094999567de6d7e940300f7a1657bb9639cfd2cce1313d8a843876",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-989b02020373",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/coaching_observation.py",
+      "line": 41,
+      "source_sha256": "e3fd546df2141469af3b78c90c20783c96277e7b64cd202df6328baac126e5bd",
+      "indexed_source_sha256": "f2bfb02e212eccd965e60e1efd85c6dc7ac69a8d6046a0159e8706f73e0b399b",
+      "matches_indexed_source": false,
+      "context_lines": [
+        33,
+        49
+      ],
+      "context_sha256": "dba9ff402997797134ba587ac36d7e216556edb286afe54275fa63770504f2eb",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-73444455e4ab",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/independence_matrix.py",
+      "line": 8,
+      "source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "indexed_source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "matches_indexed_source": true,
+      "context_lines": [
+        1,
+        16
+      ],
+      "context_sha256": "06cf60ed3f55f45213df6d0c4b781c51954e63b5bd2355e6db878ea9e4731106",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6056a76b6382",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/independence_matrix.py",
+      "line": 44,
+      "source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "indexed_source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "matches_indexed_source": true,
+      "context_lines": [
+        36,
+        49
+      ],
+      "context_sha256": "2d2fe4123ee47eaa8bef6edab8c0b9749e12c17f4f0b297996574fff01f7d188",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c12975ada4d2",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/independence_matrix.py",
+      "line": 48,
+      "source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "indexed_source_sha256": "a52504e8f399f4153a471d2cf1bb57cb78742fab32c10e0f149f3ebae9497ff7",
+      "matches_indexed_source": true,
+      "context_lines": [
+        40,
+        49
+      ],
+      "context_sha256": "59600600a650ced376a8a5cb620d00d634903e9930f96953879aa3f0a79fe1a4",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-60342f219bed",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/general_intelligence.py",
+      "line": 201,
+      "source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "indexed_source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        193,
+        209
+      ],
+      "context_sha256": "5de86d62c215d6925741113efd70b57065c03ad754c59e6ab0614e172edb0d3f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3a97a429630a",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/general_intelligence.py",
+      "line": 206,
+      "source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "indexed_source_sha256": "26b42f09da2c8b76409058b30702199cb953950fe5c40b348761a5c4dc3e4b88",
+      "matches_indexed_source": true,
+      "context_lines": [
+        198,
+        214
+      ],
+      "context_sha256": "5bb8267f96b5f2c8b0ecb3a9cfcf295c829caad0249991e611a387c08d727b82",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1db514424439",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/objective_api.py",
+      "line": 514,
+      "source_sha256": "9e0684ce093cf94ad2e25e93b8f7a1d1700c35c1e64b708268227ae04df73eb2",
+      "indexed_source_sha256": "9e0684ce093cf94ad2e25e93b8f7a1d1700c35c1e64b708268227ae04df73eb2",
+      "matches_indexed_source": true,
+      "context_lines": [
+        506,
+        522
+      ],
+      "context_sha256": "ac68d399aead2053139a7af2f4c8e61811bc605e2914db2df38c041ff183292d",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-8b44dc8d936a",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 12,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        4,
+        20
+      ],
+      "context_sha256": "1844f4e293ae5ae1456a20243a74283d586786802975aba9da066369a96bb3be",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-99e1eb5b3ff1",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 64,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        56,
+        72
+      ],
+      "context_sha256": "197771b2012e7393ffa5f07431e459fbf6d4ccde1be4568be5c9b28ed6da3bd5",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1ad95416251b",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 293,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        285,
+        301
+      ],
+      "context_sha256": "c3c01208d05fb38d1a64c86c635af640db78354ed67409bedee4c93b78893694",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b2200b31e520",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 295,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        287,
+        303
+      ],
+      "context_sha256": "2df3f260fca0a087c83199fa8c7fd57f6f7d306e1f0512b507c33d34eb20a892",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-ea3a1feea916",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 348,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        340,
+        356
+      ],
+      "context_sha256": "6452e21e1b5205ffa1d11a3173f3f1ca68b5d2eba6b1377cc7fb2cbb184e25ed",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a250cffd2437",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 387,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        379,
+        395
+      ],
+      "context_sha256": "04423c837c13d5a2cc9ca9034519dd7b771da69f6ce6d793f019b8d421e43015",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-4934790d42ab",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 410,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        402,
+        418
+      ],
+      "context_sha256": "12a5e2c230c62785dcb0fbbe674fe0368fd9da70e9c865871158db3e162c7868",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-2c0a105e7081",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 465,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        457,
+        473
+      ],
+      "context_sha256": "fbb6071cb6c50a745a60aad00e8201e796a77eec57f9d763ddff81f8d22cb2fb",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-24e907f470a3",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 483,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        475,
+        491
+      ],
+      "context_sha256": "dd3558fbd3eeace2a134e10d266d8e1a33c43eb36d62792cb6740c39e690ceca",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-57a34d36d618",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/offline_survival.py",
+      "line": 487,
+      "source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "indexed_source_sha256": "a82687e4a742e5d38f374f2f1e16f135638a85796d177cf4fc233a37956909d0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        479,
+        495
+      ],
+      "context_sha256": "099fef13f3bb7fc461bf29c9e7f6ea0a74dccb247fdb5635b11444c83cce1e6e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c0809552d024",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/normal_role_followups.py",
+      "line": 129,
+      "source_sha256": "a74da14c5d83d38904f53d72619fc9e399d05a41330d4d88c4792f33d18779ac",
+      "indexed_source_sha256": "f56168a0204c6327be881964b65650147c4c8d822d32c3bafdd76c6b30c5aa54",
+      "matches_indexed_source": false,
+      "context_lines": [
+        121,
+        137
+      ],
+      "context_sha256": "a6f92badd04a50a734665415e9478a277f189d7987608f29f8d3957b43f7e65a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-db9f52980856",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/normal_role_followups.py",
+      "line": 132,
+      "source_sha256": "a74da14c5d83d38904f53d72619fc9e399d05a41330d4d88c4792f33d18779ac",
+      "indexed_source_sha256": "f56168a0204c6327be881964b65650147c4c8d822d32c3bafdd76c6b30c5aa54",
+      "matches_indexed_source": false,
+      "context_lines": [
+        124,
+        140
+      ],
+      "context_sha256": "b853a21ff913932e1304d39fe0862bc8dd0a9358ddd90bc327af9aacb2f78634",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-ce0a1e22da8a",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/normal_role_followups.py",
+      "line": 157,
+      "source_sha256": "a74da14c5d83d38904f53d72619fc9e399d05a41330d4d88c4792f33d18779ac",
+      "indexed_source_sha256": "f56168a0204c6327be881964b65650147c4c8d822d32c3bafdd76c6b30c5aa54",
+      "matches_indexed_source": false,
+      "context_lines": [
+        149,
+        165
+      ],
+      "context_sha256": "2ec570bd1567890bedb711f7b67ece552e1ec1424c3d23335dc40ea271049c1f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [
+        "ABEX-REC-001",
+        "ABEX-REC-007"
+      ],
+      "reason": "Implemented bounded coaching state/projection; actual failed sessions require runtime receipts.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3054b276c87a",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/meta_review.py",
+      "line": 31,
+      "source_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+      "indexed_source_sha256": "cbc1e7797978b99aa0c4eaa6bb08edcafe91ce6d8e5baaa9280d15a201f427eb",
+      "matches_indexed_source": true,
+      "context_lines": [
+        23,
+        39
+      ],
+      "context_sha256": "48a09d11bb9f72c2638ab64313d076077075d11a4f34690a00511cb19219fe1a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-0120c22d4e88",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/phase2_intelligence.py",
+      "line": 26,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        18,
+        34
+      ],
+      "context_sha256": "3975fa85f7628014cc3ac3b4639708ab951819504601cc8a79265935d3ae38dc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3c7130074d0e",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/phase2_intelligence.py",
+      "line": 373,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        365,
+        381
+      ],
+      "context_sha256": "61b94b81f03e4f6c34eb47c6cfc2d54099ee4e6f0c68ce7fb2b4ace454dd32e3",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-def2a45ef4db",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/phase2_intelligence.py",
+      "line": 374,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        366,
+        382
+      ],
+      "context_sha256": "2718588aa136dea356af4b514d14578dcbd5c87365598d484e5f2f21963eb3c5",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-68135a9fda13",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/phase2_intelligence.py",
+      "line": 375,
+      "source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "indexed_source_sha256": "6356fd83f2a0d527f9297f8cf465191f5dfe542c2b7bc3c7d68512dc5593bd31",
+      "matches_indexed_source": true,
+      "context_lines": [
+        367,
+        383
+      ],
+      "context_sha256": "66608d8889ff1ff0cbbd9c8192ab28ff9d620e25aa0e2cd2f3f76851ab02b89e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d08f16342644",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/metacognition.py",
+      "line": 182,
+      "source_sha256": "2a4b3e7fe92bba534c2d4ae70e6bff2ce689fdc98fd2dde9a819237ba159df23",
+      "indexed_source_sha256": "2a4b3e7fe92bba534c2d4ae70e6bff2ce689fdc98fd2dde9a819237ba159df23",
+      "matches_indexed_source": true,
+      "context_lines": [
+        174,
+        190
+      ],
+      "context_sha256": "53d309c01b375724def150e99bab21ce6a45b7afbb3786b326c5a80e5350d48c",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-2bb7275bbc0d",
+      "source": "worktrees/orqevia-coaching-priority-20261013/governance/SUPREME_CAPABILITY_REGISTER.json",
+      "line": 160,
+      "source_sha256": "9d4c8fe5f52ec77b3e69323569ad8d56420a409d5fc8c776afa4d6c07e838e30",
+      "indexed_source_sha256": "9d4c8fe5f52ec77b3e69323569ad8d56420a409d5fc8c776afa4d6c07e838e30",
+      "matches_indexed_source": true,
+      "context_lines": [
+        152,
+        168
+      ],
+      "context_sha256": "e27842742616b9684fa2aceb3d6de623a12286d23e3f24420ef8ae2c8e2364e6",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_OBLIGATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-001"
+      ],
+      "reason": "Physical black start explicitly not executed; source/fixture cannot substitute for physical proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-600ce30a3340",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/main.py",
+      "line": 584,
+      "source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "indexed_source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "matches_indexed_source": true,
+      "context_lines": [
+        576,
+        592
+      ],
+      "context_sha256": "40ceb1a316db8b0e4b2ee18bf77d0dfdc34da05d335b3acd76efa0de3cc1554a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1bd37e3f3cd6",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/main.py",
+      "line": 592,
+      "source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "indexed_source_sha256": "5b64f9c1c1ed16a2c5378176d69ffb29029fbe621bc922b0e73b7f4b64a9dede",
+      "matches_indexed_source": true,
+      "context_lines": [
+        584,
+        600
+      ],
+      "context_sha256": "e6e2836f581bd59f10ecb368becd5559da9b61fe36f68503ded8a5c6966a4e95",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-7e550ef46437",
+      "source": "worktrees/orqevia-coaching-priority-20261013/scripts/verify_capability_register.py",
+      "line": 12,
+      "source_sha256": "7a629b456c8d00faba249483588c4a215672eab39e5c5dfdc039fb4e59b863e8",
+      "indexed_source_sha256": "7a629b456c8d00faba249483588c4a215672eab39e5c5dfdc039fb4e59b863e8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        4,
+        20
+      ],
+      "context_sha256": "f19a9536e91a7d9cd90ccc0e12fa6bc953c339ac482587377864d59e9c48afde",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "SCHEMA_ENUM_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-9113437f1c9c",
+      "source": "worktrees/orqevia-coaching-priority-20261013/scripts/verify_independence_phase.py",
+      "line": 32,
+      "source_sha256": "8a6e5e61c344c656dc9d972d2b852de7cdc590ab393ce2842f09c394fba37ba8",
+      "indexed_source_sha256": "8a6e5e61c344c656dc9d972d2b852de7cdc590ab393ce2842f09c394fba37ba8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        24,
+        40
+      ],
+      "context_sha256": "0fed486db1c453f50a7b98ed7d61c5b1a63e9fac7e96ac8dbc74aaa413e2a5d7",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3a13a8bd0e84",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/spine.py",
+      "line": 299,
+      "source_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+      "indexed_source_sha256": "962796892e9e7d698a04f7dd820f09d64f1a38782e62633dd1137cb07da3fa5d",
+      "matches_indexed_source": true,
+      "context_lines": [
+        291,
+        307
+      ],
+      "context_sha256": "8fb53e885b8503ef1d45e809f2547d698df5718e74699535a941916284e1af61",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-564dc33e5af8",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/workflow_engine.py",
+      "line": 68,
+      "source_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+      "indexed_source_sha256": "4e6a5fa2b9c52b5e70d7d4ecee8d2337c6ffc7f157b9c9cca2ec985c02410bc5",
+      "matches_indexed_source": true,
+      "context_lines": [
+        60,
+        76
+      ],
+      "context_sha256": "6c1e25b791321d453107741be68a263f3b6c61994e5691fe08894b61e5f6cbc7",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1c49e9722fe6",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/supreme_integration.py",
+      "line": 24,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        16,
+        32
+      ],
+      "context_sha256": "10624d2f20ff512d0881243898fcdf149e47b07c5b84c86f2a467ebfb8fb1cd0",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e30090a6846e",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/supreme_integration.py",
+      "line": 27,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "d8afbbe19a47cecaba68f30bf6e197d9b0c4aa3cab7e49a355fc3c466cbdab18",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1cfda7346561",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/supreme_integration.py",
+      "line": 28,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        20,
+        36
+      ],
+      "context_sha256": "f9d5e58d647b265380dc59b3974f7ee066d51457e7aa8ac45909bde04ac6fc11",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-2c8dc0df98c3",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/supreme_integration.py",
+      "line": 29,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        21,
+        37
+      ],
+      "context_sha256": "71180229121bd42e378861170ae6852a81dfe0f55b2650f950f5c382ddea5ee9",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-86d216004524",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/supreme_integration.py",
+      "line": 31,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        23,
+        39
+      ],
+      "context_sha256": "b29836694bd3ef1cd89345a41131319d8a006e0e90b048d131202b021678da56",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-992010c02ec5",
+      "source": "worktrees/orqevia-coaching-priority-20261013/app/supreme_integration.py",
+      "line": 32,
+      "source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "indexed_source_sha256": "665820c78497f894ca9882104e4cb806205dae0d23b2ba9db01ee0136b63bada",
+      "matches_indexed_source": true,
+      "context_lines": [
+        24,
+        40
+      ],
+      "context_sha256": "f7e9493a22eacf32ec3106515afe42e253a4ba86e26e83320fbd3dc21e17678e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-96377f4bf0ce",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/BLACK_START_PREPARED_NOT_EXECUTED.md",
+      "line": 27,
+      "source_sha256": "7c2665f7ec469ca91bb441ef12c2dc7c5e533cdbc048960403e14d696c6fd2ac",
+      "indexed_source_sha256": "7c2665f7ec469ca91bb441ef12c2dc7c5e533cdbc048960403e14d696c6fd2ac",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "28b8847a63f514f6997c80f90707081fefc950b083457b14c7989b04dbd7a48a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_OBLIGATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-001"
+      ],
+      "reason": "Physical black start explicitly not executed; source/fixture cannot substitute for physical proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-d19373ae5a9c",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/full-role-acceptance.md",
+      "line": 18,
+      "source_sha256": "24fe261073418cf906c8e0b44fef7048dff74a3e9a548390e33ffd2232b930ce",
+      "indexed_source_sha256": "24fe261073418cf906c8e0b44fef7048dff74a3e9a548390e33ffd2232b930ce",
+      "matches_indexed_source": true,
+      "context_lines": [
+        10,
+        26
+      ],
+      "context_sha256": "bf56f0110f9973e2afbad4ac8af49045f6201782c3986ca5181cf7e1f28a5df2",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "IMPLEMENTED_STATE_OR_GUARD_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Nearby code implements a status transition or safety guard; this string alone establishes no unfinished obligation.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-cb0b89cdef7d",
+      "source": "worktrees/orqevia-coaching-priority-20261013/governance/observations/abex-post-restart-20261012.json",
+      "line": 9,
+      "source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "indexed_source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "matches_indexed_source": true,
+      "context_lines": [
+        1,
+        17
+      ],
+      "context_sha256": "78910b2a344f1482b0965da6c8406de0864cd08a5d96a5099e2aab1326410836",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_OBSERVATION_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018"
+      ],
+      "reason": "Historical observation is retained, not a current blocker proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-ac299d0522b7",
+      "source": "worktrees/orqevia-coaching-priority-20261013/governance/observations/abex-post-restart-20261012.json",
+      "line": 47,
+      "source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "indexed_source_sha256": "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1",
+      "matches_indexed_source": true,
+      "context_lines": [
+        39,
+        55
+      ],
+      "context_sha256": "2a78a6c18040aa81957930206a9fabd97e9b25775f7b859ba9560a75b3cdeedc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_OBSERVATION_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-008"
+      ],
+      "reason": "Historical observation is retained, not a current blocker proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a468050c035e",
+      "source": "worktrees/orqevia-coaching-priority-20261013/governance/observations/abex-candidate-closure-66a5d90-20261012.json",
+      "line": 469,
+      "source_sha256": "80c91fc4ce31314f1a923d4e3d459506ac8ae70d30b5012b9707ff7436b3166a",
+      "indexed_source_sha256": "80c91fc4ce31314f1a923d4e3d459506ac8ae70d30b5012b9707ff7436b3166a",
+      "matches_indexed_source": true,
+      "context_lines": [
+        461,
+        477
+      ],
+      "context_sha256": "e8c0f20d4a5cb820d40dead33652b39ac2a6006825da96ce4a7b38e6ab169742",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_OBSERVATION_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018"
+      ],
+      "reason": "Historical observation is retained, not a current blocker proof.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-e819f7b4aa6d",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.md",
+      "line": 102,
+      "source_sha256": "356ae68d66ef129a5957893187abf30b104188754128866596415f0409d693dd",
+      "indexed_source_sha256": "356ae68d66ef129a5957893187abf30b104188754128866596415f0409d693dd",
+      "matches_indexed_source": true,
+      "context_lines": [
+        94,
+        110
+      ],
+      "context_sha256": "12331448c6f5c06c4202bc7fcf4c228c0f36aaef8881c9e0d2964f389b11b79a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "FAILED_QUALIFICATION_DUPLICATE",
+      "mapped_task_ids": [
+        "ABEX-REC-009"
+      ],
+      "reason": "Software integration failure retained; isolated projection repair does not complete retrieval/classification/governed persistence.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-276fbb322419",
+      "source": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+      "line": 169,
+      "source_sha256": "7892dceb613ff0ce659284e5514780056b58ce656f878738e8be54149761949d",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": false,
+      "context_lines": [
+        161,
+        177
+      ],
+      "context_sha256": "423c73896ee8d9b6386f5adce3c8dd084df694785003a505db73b4a7d3338cdc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-001"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b8b23eb00b73",
+      "source": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+      "line": 193,
+      "source_sha256": "7892dceb613ff0ce659284e5514780056b58ce656f878738e8be54149761949d",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": false,
+      "context_lines": [
+        185,
+        201
+      ],
+      "context_sha256": "d4113142c307664922fd1fc21178f2d110afdce4229ea43bab6cfffdfd37fb75",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018",
+        "ABEX-REC-006"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6c982150f4bf",
+      "source": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+      "line": 229,
+      "source_sha256": "7892dceb613ff0ce659284e5514780056b58ce656f878738e8be54149761949d",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": false,
+      "context_lines": [
+        221,
+        237
+      ],
+      "context_sha256": "aba90cbd50de333d18b0606a66052aa89d02409c6f710d52d70aa3eaee8bd5c3",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-018",
+        "ABEX-REC-006"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-de8fb82187a5",
+      "source": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+      "line": 721,
+      "source_sha256": "7892dceb613ff0ce659284e5514780056b58ce656f878738e8be54149761949d",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": false,
+      "context_lines": [
+        713,
+        729
+      ],
+      "context_sha256": "eac011b7969b5e2e5a4705531c2c295a370e803b245077f9275cb97c20ee6709",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-011"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a2cb3619d9b5",
+      "source": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+      "line": 825,
+      "source_sha256": "7892dceb613ff0ce659284e5514780056b58ce656f878738e8be54149761949d",
+      "indexed_source_sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+      "matches_indexed_source": false,
+      "context_lines": [
+        817,
+        833
+      ],
+      "context_sha256": "1b4fedbc0c841537625ebdbad06b308e87f62182b928234c676e94e1bdb91c84",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DATED_STATUS_REQUIRES_RECONCILIATION",
+      "mapped_task_ids": [
+        "ABEX-REC-011",
+        "ABEX-REC-030"
+      ],
+      "reason": "Dated portfolio claim in local candidate; current main/runtime proof must be reconciled separately.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-4e1d97f8a8f3",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/evidence/DELL_REVERIFICATION_DISAGREEMENT_20260926.md",
+      "line": 5,
+      "source_sha256": "4489e6cd80c33d99a5cfbd6210662f5bf7d51ebb26b2b2ae4c0f842499eb9573",
+      "indexed_source_sha256": "4489e6cd80c33d99a5cfbd6210662f5bf7d51ebb26b2b2ae4c0f842499eb9573",
+      "matches_indexed_source": true,
+      "context_lines": [
+        1,
+        13
+      ],
+      "context_sha256": "e41d4150e666ccc589fb514161bff2874057cc57f5d7594053b5dc334a3d139e",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "INDEPENDENT_FAILURE_DUPLICATE",
+      "mapped_task_ids": [
+        "ABEX-REC-011"
+      ],
+      "reason": "Retain Dell failed assessment; reassess current generation at canonical HTTPS8443, Dell assessment-only.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1d716726c404",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/evidence/GOLDEN_GEN1_PHYSICAL_REGRESSIONS_20260926.md",
+      "line": 49,
+      "source_sha256": "a86f1802a78dee27a5c984966df46a6548b39ff1a48e95de80862f1a2115523a",
+      "indexed_source_sha256": "a86f1802a78dee27a5c984966df46a6548b39ff1a48e95de80862f1a2115523a",
+      "matches_indexed_source": true,
+      "context_lines": [
+        41,
+        57
+      ],
+      "context_sha256": "ada71bb06b641d766465e97e2fde98af74497dc344b86921c9b231e4352815f1",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "HISTORICAL_REPAIR_EVIDENCE",
+      "mapped_task_ids": [
+        "ABEX-REC-018"
+      ],
+      "reason": "Candidate repair described, no new TODO expressed.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c7187b6ee6a8",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/evidence/METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+      "line": 44,
+      "source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "indexed_source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        36,
+        52
+      ],
+      "context_sha256": "ffbac899f3270bb81813de2578fc62b92fefeef464f5e702820ab8631e97330a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_QUALIFICATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-002",
+        "ABEX-REC-005"
+      ],
+      "reason": "Candidate has no attributable counterfactual/tool-model evaluation or real-outcome calibration; bounded synthetic results are separate.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-3eaab101df42",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/evidence/METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+      "line": 45,
+      "source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "indexed_source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        37,
+        53
+      ],
+      "context_sha256": "c33038eb90f59f657514945a3332f29bea573159bab06703e6f0a1414775cb44",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_QUALIFICATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-002",
+        "ABEX-REC-005"
+      ],
+      "reason": "Candidate has no attributable counterfactual/tool-model evaluation or real-outcome calibration; bounded synthetic results are separate.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-a5578c3746ed",
+      "source": "worktrees/orqevia-coaching-priority-20261013/docs/evidence/METACOGNITIVE_CANDIDATE_CLOSURE_20260925.md",
+      "line": 46,
+      "source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "indexed_source_sha256": "9b25f122174150c5252c3edd01512149ee1484fc0674b1b093c0a202a010402b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        38,
+        54
+      ],
+      "context_sha256": "dba2cc03ddddfc5ec35277f7687e166565747abb102eac11f3792791964794f6",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "DEFERRED_QUALIFICATION_RETAINED",
+      "mapped_task_ids": [
+        "ABEX-MARK-002",
+        "ABEX-REC-005"
+      ],
+      "reason": "Candidate has no attributable counterfactual/tool-model evaluation or real-outcome calibration; bounded synthetic results are separate.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-8beb88ba4b3c",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_workflow_engine.py",
+      "line": 28,
+      "source_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+      "indexed_source_sha256": "2c847af7c25d5887b384cb3f013293584bdde62f6cb201a139f9e82d13d0e85e",
+      "matches_indexed_source": true,
+      "context_lines": [
+        20,
+        31
+      ],
+      "context_sha256": "f81d56426cfe606e9d50648d892218d2f5180d309c3bd94f6ce88dac1a424ded",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b3c34b9119f7",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_supreme_intelligence_benchmark.py",
+      "line": 27,
+      "source_sha256": "e71cf664ac3cda9cc5887875ead84a77d6ab92943c8ab0199dbbbf11d3f5fcc0",
+      "indexed_source_sha256": "e71cf664ac3cda9cc5887875ead84a77d6ab92943c8ab0199dbbbf11d3f5fcc0",
+      "matches_indexed_source": true,
+      "context_lines": [
+        19,
+        35
+      ],
+      "context_sha256": "34a7ac1ff56a1b2e72375e5576875f15d650717b805301f95808390410008fb2",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-4251395bbb86",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_supreme_independence_candidate.py",
+      "line": 62,
+      "source_sha256": "ee510baace15ad4b05627b424a14186dd0d0a5f68f356778076e72a96e5cb42b",
+      "indexed_source_sha256": "ee510baace15ad4b05627b424a14186dd0d0a5f68f356778076e72a96e5cb42b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        54,
+        70
+      ],
+      "context_sha256": "571f7dea79d2625714f2d789f5c66f1c932d13cdd7750ad7821bfd5697f6e09a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-bafd7753f177",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 64,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        56,
+        72
+      ],
+      "context_sha256": "80b49bf3372ece6ad036921d4144789152e0fc6b06296cd79572ce979df2da2f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-1f1388806b36",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 82,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        74,
+        90
+      ],
+      "context_sha256": "589b7bb72c81346537dfa1e65411c53e6d89d4309aa83e4e16dd665089383f0a",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-583e39842f45",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 84,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        76,
+        92
+      ],
+      "context_sha256": "a786fc50b4b2f3605206d62830ac2eb685cacf13d20d2a0fb3b27542b3906962",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-fb5e05ff7997",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 93,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        85,
+        101
+      ],
+      "context_sha256": "4850681667c6fa6c8dbcc989d94f2d6c833731c6735427a20804d17d13297772",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b20d6d106917",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 212,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        204,
+        220
+      ],
+      "context_sha256": "d2f0b63680e06c017c2896b13671973a8ef7e343ba9b71cea17d051ca05a607f",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-5bf5066ab0ba",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 239,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        231,
+        247
+      ],
+      "context_sha256": "7e8cc50bbc8afc8345cbb308d2791635dfa388bab7373b5580739329e74df4df",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c94368469d4e",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_agent_coaching.py",
+      "line": 241,
+      "source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "indexed_source_sha256": "fd53d6e154496557d634486b928864c538cf2683605124d20f5755507110bbc6",
+      "matches_indexed_source": true,
+      "context_lines": [
+        233,
+        249
+      ],
+      "context_sha256": "a1ea3ff0fe5b339880c053a8efdc4a6eec5ed6e8d0a86856a823fdce28f05dac",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-b141a0d54bd1",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_general_intelligence.py",
+      "line": 93,
+      "source_sha256": "8e33568ff178356d77cc1a266667c89bbae4b4d65fd768452f1bd5cac94be73e",
+      "indexed_source_sha256": "8e33568ff178356d77cc1a266667c89bbae4b4d65fd768452f1bd5cac94be73e",
+      "matches_indexed_source": true,
+      "context_lines": [
+        85,
+        101
+      ],
+      "context_sha256": "dc8aaf860550692f85d7e627c4f4728e841aa12cd9984b7e7734edf498adb425",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-591be8f9b63b",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_authoritative_result_metadata.py",
+      "line": 113,
+      "source_sha256": "867ce0a21af7bc8387ef6115c1b284beea8491bf26b894a1d31041e461ee6d04",
+      "indexed_source_sha256": "867ce0a21af7bc8387ef6115c1b284beea8491bf26b894a1d31041e461ee6d04",
+      "matches_indexed_source": true,
+      "context_lines": [
+        105,
+        121
+      ],
+      "context_sha256": "5fac8c709e982df4e70c4e8637cb58d9a8022a18ac5ebe5c122823a2df029d44",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-074e9cf981ac",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_direct_execution.py",
+      "line": 145,
+      "source_sha256": "450b2716fd1724f77a73d8f47a99b9ce7d8ccb79e71ea86570362c72724d46e3",
+      "indexed_source_sha256": "450b2716fd1724f77a73d8f47a99b9ce7d8ccb79e71ea86570362c72724d46e3",
+      "matches_indexed_source": true,
+      "context_lines": [
+        137,
+        153
+      ],
+      "context_sha256": "b4130295366ed41a39b698362e8db6fb5be2a364fd6d4e5aa4b609cb101f7ddc",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-0e8c6116d8e6",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_independence_dependency_matrix.py",
+      "line": 65,
+      "source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "indexed_source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        57,
+        73
+      ],
+      "context_sha256": "1f4b329ca935ca896f84a027f0787a3ab7a96b373925ca53419f8e9cc9422d39",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-837265c9351d",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_independence_dependency_matrix.py",
+      "line": 106,
+      "source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "indexed_source_sha256": "52ef9a1e0488d85cdb4c9757fc52e42a773f73213eaa60aa22531a24cb70f13b",
+      "matches_indexed_source": true,
+      "context_lines": [
+        98,
+        107
+      ],
+      "context_sha256": "22b7ea023a687397d921452125e5b88881e1366c91845c5d698ff9b03b5de8f4",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-60f05a3059ad",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_objective_domain_provenance.py",
+      "line": 106,
+      "source_sha256": "862fcdf971b8691dfdcf0b8bd8860b317163bb83b565430aa2dbd672f9261b70",
+      "indexed_source_sha256": "862fcdf971b8691dfdcf0b8bd8860b317163bb83b565430aa2dbd672f9261b70",
+      "matches_indexed_source": true,
+      "context_lines": [
+        98,
+        114
+      ],
+      "context_sha256": "7872014347261c567c595024211a804f80188be12e4b03e733dba2fad22a63bf",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-c6549f89f8f2",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_metacognition.py",
+      "line": 72,
+      "source_sha256": "5f57d7c56f713ae189d310c95ed14d6c7159c9ed5821e92cc510c205e8e34fcf",
+      "indexed_source_sha256": "5f57d7c56f713ae189d310c95ed14d6c7159c9ed5821e92cc510c205e8e34fcf",
+      "matches_indexed_source": true,
+      "context_lines": [
+        64,
+        80
+      ],
+      "context_sha256": "77678246b6a47bc9134db57c5c343622ccc2e49a0e9f94af0f8a687970904e9b",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-5ff7bc4d3b80",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_offline_survival.py",
+      "line": 81,
+      "source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "indexed_source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "matches_indexed_source": true,
+      "context_lines": [
+        73,
+        89
+      ],
+      "context_sha256": "f88b221dd072135bc990bb397d6ae41c6854c47b3b2b3b9ebcd90d297b6c4c37",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6b0f0dc97856",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_offline_survival.py",
+      "line": 159,
+      "source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "indexed_source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "matches_indexed_source": true,
+      "context_lines": [
+        151,
+        167
+      ],
+      "context_sha256": "f627f934c15a80c4d7106fbc5e8397199f8ef11c30a093446fb64ba915309899",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-9cf121d6edd5",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_offline_survival.py",
+      "line": 172,
+      "source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "indexed_source_sha256": "254b163256ab813e941089430693c6149843c9f8cd436b95a8077799698e6c06",
+      "matches_indexed_source": true,
+      "context_lines": [
+        164,
+        180
+      ],
+      "context_sha256": "3772b1ea46c2bebf50565e0ffdef73b21f2d8e9597bc4daffb311c1e8195fa68",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-408cd456fa66",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_portfolio_reconciliation.py",
+      "line": 35,
+      "source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "indexed_source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        27,
+        43
+      ],
+      "context_sha256": "c264993a0bc39bcf90c1684ba888d0bcd7a4932a4756d6fa541b955dadad5605",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6c584aaec382",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_portfolio_reconciliation.py",
+      "line": 82,
+      "source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "indexed_source_sha256": "4ef34c896b626c69b1cd6f2efcd63e49df987799723ad19f7e2ebe1d8a3396f8",
+      "matches_indexed_source": true,
+      "context_lines": [
+        74,
+        90
+      ],
+      "context_sha256": "d17f1f07e4ab3191ec19bb0cff154af00637f5f5bff4d8cd660dbfb44af6d4e0",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    },
+    {
+      "marker_id": "ABEX-MARKER-6cbdb63a78c7",
+      "source": "worktrees/orqevia-coaching-priority-20261013/tests/test_production_compatibility.py",
+      "line": 206,
+      "source_sha256": "d76afd121af63d3d163c56e1367c2edb45d2cd325c505cc87f60a5183dc331cc",
+      "indexed_source_sha256": "d76afd121af63d3d163c56e1367c2edb45d2cd325c505cc87f60a5183dc331cc",
+      "matches_indexed_source": true,
+      "context_lines": [
+        198,
+        214
+      ],
+      "context_sha256": "31d8901d65de6c36f7586bfdebdfa372283fad58924f133cf27eda0c858f4520",
+      "read_at_utc": "2026-10-13T08:53:36.203318+00:00",
+      "disposition": "TEST_FIXTURE_NOT_TASK",
+      "mapped_task_ids": [],
+      "reason": "Expected status in test/benchmark; no failed live execution implied.",
+      "status_freshness": "Current local file read; dated source semantics do not prove current runtime/remote status."
+    }
+  ],
+  "limitations": [
+    "Remote/main and live runtime not checked by this worker.",
+    "Supplied scan may omit denied paths/other source markers.",
+    "Raw excerpts omitted to avoid duplicating identity-sensitive historical lines; hashes/line/context bounds retained."
+  ]
+}

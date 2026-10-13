@@ -1,0 +1,135 @@
+{
+  "schema": "abex.a19-successor-diagnostic.v1",
+  "observed_at_utc": "2026-10-13T08:51:59.686708+00:00",
+  "read_only": true,
+  "source_revisions": {
+    "canonical_main_inspected": "680fccfb2ccc8bb84d35e7a4083fe558f5b1ac3f",
+    "locally_retained_review_snapshot": "bb190b481de1f0deeb5976d369d57a6d4c09e61b",
+    "reported_latest_pr296_head": "f7f0ab71ffba758e4339772a7e4e87bab29980c8",
+    "latest_head_object_available_in_inspected_git_store": false
+  },
+  "exact_failures": [
+    {
+      "test_id": "tests/test_authorized_assessment_regressions.py::test_authorized_assessment_does_not_create_or_require_spine[False]",
+      "assertion": "assert not spine.exists()",
+      "assertion_line": 10,
+      "when": "Before collect() or production authority dispatch; imported runtime fixture eagerly constructs store.",
+      "category": "TEST_HARNESS_INITIALIZATION_CONFLICT; latest production path requires separate exact-head recheck."
+    },
+    {
+      "test_id": "tests/test_authorized_assessment_regressions.py::test_authorized_assessment_does_not_create_or_require_spine[True]",
+      "assertion": "assert not spine.exists()",
+      "assertion_line": 10,
+      "when": "Before collect() or production authority dispatch; imported runtime fixture eagerly constructs store.",
+      "category": "TEST_HARNESS_INITIALIZATION_CONFLICT; latest production path requires separate exact-head recheck."
+    }
+  ],
+  "root_cause": "Imported shared runtime fixture in tests/test_agent_cert_authority_chain.py lines30-32 imports SpineStore, sets PRIME_SPINE_DB and unconditionally constructs SpineStore. Both absent-store regressions fail their first assertion before invoking subject code. Current main fixture has no eager Spine creation. Locally retained authority-event implementation already limits _owning_spine to DENIAL_CASE and leaves permitted registry/read-only assessment spine=None. Do not infer that latest f7 implementation is identical without obtaining exact-head source.",
+  "smallest_justified_correction": {
+    "harness": "Preserve original absent-store regression assertions. Remove unconditional store initialization from shared runtime fixture; explicitly initialize temporary Spine only in denial cases/fixtures that genuinely test owning trust.change admission. Keep permitted authority:complete and unauthorized_rejection:authorized without Spine.",
+    "implementation": "If exact f7 code unconditionally opens/initializes Spine for permitted assessment, restrict owning Spine admission to DENIAL_CASE and preserve denial-case authentic audit/event provenance and existing-store preconditions. No generated store for assessment.",
+    "criteria_change_required": false,
+    "authority_decision": "Canonical main semantics already determine permitted assessment does not require/create Spine; no reason to weaken criteria or create a new certification decision."
+  },
+  "required_retests": [
+    "Original two absent-Spine parametrizations unchanged, including authority:complete followed by permitted assessment.",
+    "All actual trust.change DENIAL_CASE tests with explicitly provisioned disposable owning store.",
+    "test_agent_cert_trust_denial, authority chain, review dispatch, model selection/residency/substitution and HF QA regressions.",
+    "Full exact-head canonical regression and independent source-union review before integration."
+  ],
+  "evidence_files": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\a19-296-independent-review-20261013\\tests\\test_authorized_assessment_regressions.py",
+      "snapshot_revision": "bb190b481de1f0deeb5976d369d57a6d4c09e61b",
+      "snapshot_file_sha256": "e1c4a379f859e815c2a3251cbf82466fa73e1e4e2a4fb81effa18d4174744653",
+      "main_revision": "680fccfb2ccc8bb84d35e7a4083fe558f5b1ac3f",
+      "main_file_sha256": "248735f59420af7356ecca4ba6c6948ed5a981b37c691d6d73172ab0b632fa8b",
+      "byte_equal_to_main": false,
+      "relevant_lines": [
+        {
+          "line": 10,
+          "text": "assert not spine.exists()"
+        },
+        {
+          "line": 14,
+          "text": "assert not spine.exists()"
+        },
+        {
+          "line": 20,
+          "text": "assert not spine.exists()"
+        }
+      ]
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\a19-296-independent-review-20261013\\tests\\test_agent_cert_authority_chain.py",
+      "snapshot_revision": "bb190b481de1f0deeb5976d369d57a6d4c09e61b",
+      "snapshot_file_sha256": "9d8c8026d04ae165f3a6cc872e1d7e6f4c54140f282424cc52c1a8a05e842322",
+      "main_revision": "680fccfb2ccc8bb84d35e7a4083fe558f5b1ac3f",
+      "main_file_sha256": "4061e348df7cae59504ee20855d569c2fc27b3d29628a179d93e44e62da7d9f7",
+      "byte_equal_to_main": false,
+      "relevant_lines": [
+        {
+          "line": 32,
+          "text": "SpineStore(str(configured.root / 'prime-spine.db'))"
+        }
+      ]
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\a19-296-independent-review-20261013\\app\\agent_cert_authority_events.py",
+      "snapshot_revision": "bb190b481de1f0deeb5976d369d57a6d4c09e61b",
+      "snapshot_file_sha256": "cd3f870a2694acc00818c5643fb56d63bc3d1afc717cf08fac9905ea89c18a4f",
+      "main_revision": "680fccfb2ccc8bb84d35e7a4083fe558f5b1ac3f",
+      "main_file_sha256": "37902d33b0896782093b1cee29ab871baf0877112c14e1131720ad58c246aded",
+      "byte_equal_to_main": false,
+      "relevant_lines": [
+        {
+          "line": 194,
+          "text": "return SpineStore(str(path), initialize=False, deadline=deadline)"
+        },
+        {
+          "line": 388,
+          "text": "spine = _owning_spine(root, deadline=spine_deadline) if fixed['case'] == DENIAL_CASE else None"
+        },
+        {
+          "line": 389,
+          "text": "if spine is not None:"
+        },
+        {
+          "line": 407,
+          "text": "if spine is not None:"
+        },
+        {
+          "line": 432,
+          "text": "if spine is not None:"
+        }
+      ]
+    }
+  ],
+  "test_receipts": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\full-sweep-20261013\\A19-FIXED-HEAD-INDEPENDENT-REGRESSIONS.log",
+      "sha256": "b3157901c54a2ac2bc53bc036b2621fa05a5536703c4101db546c5046776fe16",
+      "summaries": []
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\full-sweep-20261013\\A19-UNCHANGED-MAIN-BASELINE-AFTER.log",
+      "sha256": "b58bdcfe78835e0df9b4dbf1ec17ae607a2e16958591a273bfb9983b4224d901",
+      "summaries": []
+    }
+  ],
+  "reported_latest_evidence": {
+    "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\DELL-MAILBOX-PRESERVED-20261013.json",
+    "comment_ids": [
+      6139489021,
+      6139616481
+    ],
+    "scope": "Dated Dell reports latest 43->2 and eager fixture cause, not fresh local test receipt."
+  },
+  "limitations": [
+    "No source edits or tests executed in this diagnosis.",
+    "Retained local log has 22/26 pass,4/26 fail including two dispatch-prompt failures; later 207 focused passes/two failures are reported mailbox scope, not this same test run.",
+    "Latest f7 object absent from inspected Git stores; cached snapshot and current main inspected, so exact latest production-path equivalence remains unverified.",
+    "ACL-denied operations/a19-*/pytest directories not bypassed."
+  ],
+  "next_action": "Obtain exact current PR296 source read-only, confirm fixture/denial guards, create additive successor preserving all original assertions, then retest unchanged cases."
+}

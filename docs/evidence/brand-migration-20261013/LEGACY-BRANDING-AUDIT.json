@@ -1,0 +1,423 @@
+{
+  "schema": "orqevia.legacy-branding-audit.v1",
+  "audit_at_utc": "2026-10-13T11:49:32.923205+00:00",
+  "scope": "CURRENT_SOURCE_AND_READ_ONLY_LIVE_PUBLIC_BRANDING_WITH_APPROVED_WIRE_HISTORY_EXCEPTIONS",
+  "overall_status": "PASS_SCOPED_CURRENT_PRIMARY_SOFTWARE_PHYSICAL_UNKNOWN_CONSUMER_UNDEPLOYED",
+  "official_identity": {
+    "english": "ORQEVIA",
+    "chinese": "奥启维亚",
+    "full": "ORQEVIA · 奥启维亚",
+    "core_display": "ORQEVIA Core"
+  },
+  "source_worktree_head": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+  "source_correction_candidate": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+  "deployed_at_audit": [
+    {
+      "service": "prime-epoch-20260919-prime-1",
+      "container_id": "945d3df008475a7c2d433ee6367b0f9f8dbfa2635ae99f40014ef51cb5feac54",
+      "image_id": "sha256:6733b1b7c579d8adaa273faf2c3cf0ff76388082b9d237d069ab7220d0f5acc9",
+      "health": "healthy",
+      "declared_source": "3b129d9d15496fc692a731e7a4d6a3e7624c9f7f",
+      "declared_interface_source": "3b129d9d15496fc692a731e7a4d6a3e7624c9f7f",
+      "declared_image_id": "sha256:6733b1b7c579d8adaa273faf2c3cf0ff76388082b9d237d069ab7220d0f5acc9"
+    },
+    {
+      "service": "prime-epoch-20260919-interface-1",
+      "container_id": "fbb1b3e64ea9ec6c26d286869150285ec663ec29cc3fc140c1808c4eb002e723",
+      "image_id": "sha256:6733b1b7c579d8adaa273faf2c3cf0ff76388082b9d237d069ab7220d0f5acc9",
+      "health": "healthy",
+      "declared_source": "3b129d9d15496fc692a731e7a4d6a3e7624c9f7f",
+      "declared_interface_source": "3b129d9d15496fc692a731e7a4d6a3e7624c9f7f",
+      "declared_image_id": "sha256:6733b1b7c579d8adaa273faf2c3cf0ff76388082b9d237d069ab7220d0f5acc9"
+    }
+  ],
+  "live_observation_at_utc": "2026-10-13T11:47:07.193239+00:00",
+  "surfaces": [
+    {
+      "surface": "public PWA title, header, footer, metadata and install manifest",
+      "status": "PASS_LIVE_HTTP",
+      "evidence": "Title and manifest name/short_name ORQEVIA, bilingual current header/footer, id/scope/start_url /pwa/ preserved. TLS-validated HTTP 200 and exact installed asset hashes."
+    },
+    {
+      "surface": "favicon, app icon and Apple touch icon",
+      "status": "PASS_ASSET_SOURCE_AND_LIVE_HTTP",
+      "evidence": "Current refs use versioned ORQEVIA 192/512/180 PNGs; PNG signatures/dimensions and served hashes match. SVG aria-label ORQEVIA. 512 PNG visually inspected: geometric Q, no legacy letters.",
+      "limitation": "Physical installed icon/label refresh is UNKNOWN. Old unreferenced icon URLs remain retained; the current shell/manifest do not reference them."
+    },
+    {
+      "surface": "avatar and profile",
+      "status": "PASS_CURRENT_SOURCE",
+      "evidence": "Generic account/profile symbols; no fixed old-brand avatar label. Dynamic account/task content was not rewritten or comprehensively inspected."
+    },
+    {
+      "surface": "menu, navigation, Settings and connection dialog",
+      "status": "PASS_CURRENT_SOURCE_AND_LIVE_SHELL",
+      "evidence": "Current workspace header and connection/enrollment copy use ORQEVIA; navigation and Settings labels are generic. Live delivered HTML/app/dashboard matches installed bytes.",
+      "limitation": "No interactive physical-device click/touch acceptance awarded."
+    },
+    {
+      "surface": "notifications, alerts and spoken brand copy",
+      "status": "PASS_SOURCE_SCOPE",
+      "evidence": "Startup/offline/connection/result/owner/audio-test messages are generic or ORQEVIA. Voice module has generic permission/status messages.",
+      "native_push_notification_status": "NOT_IMPLEMENTED_IN_SCANNED_CURRENT_PWA",
+      "limitation": "Browser/OS microphone, speech, native notifications and actual physical voice delivery are not observed."
+    },
+    {
+      "surface": "production local control template",
+      "status": "PASS_LIVE_LOOPBACK_GET",
+      "evidence": "HTTP 200 title ORQEVIA Control; no JARVIS/PRIME display matches. HTTP text equals installed read_text output.",
+      "raw_bytes_note": "FastAPI HTMLResponse uses read_text, normalizing CRLF to LF. Exact raw file byte hash differs; standard newline-decoded text matches. Original observation retains this distinction."
+    },
+    {
+      "surface": "backend current user identity, role introductions and artifact headings",
+      "status": "PASS_DATED_ACTUAL_IDENTITIES_AND_CURRENT_SOURCE",
+      "evidence": "Common contract ORQEVIA · 奥启维亚 powered by ORQEVIA Core; dispatch/legacy specialist intros/HTML and artifact heading migrated. Dated 21/21 actual public identity responses independently revalidated; original first wave 20/21 and two A21 failures retained.",
+      "identity_evidence_at_utc": "2026-10-13T11:30:50.529911+00:00",
+      "identity_pass_count": 21,
+      "identity_denominator": 21,
+      "limitation": "This is identity evidence, separately scoped from normal-role and full end-to-end acceptance."
+    },
+    {
+      "surface": "public registry helper orchestrator name",
+      "status": "PASS_LIVE_INSTALLED_DISPLAY_CORRECTION",
+      "evidence": "Fresh installed 5030941 helper returns ORQEVIA Core; private frozen JARVIS PRIME record and its exact bytes remain preserved. No new inference.",
+      "correction_commit": "8629ec0fabb4c3b03a796195abb330f8b3d641b8",
+      "integrated_candidate": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "corrected_display": "ORQEVIA Core",
+      "test_pass_count": 41,
+      "installation_status": "VERIFIED_AT_2026-10-13T11:51:47Z",
+      "continuity_status": "PASS",
+      "previous_status": "RETAINED_LIVE_SOURCE_FAILURE_WITH_SOURCE_CORRECTION",
+      "retained_original_failure_evidence": "Installed 3b helper returns JARVIS PRIME; source callsite search found helper/tests only and no mounted HTTP route in reviewed production apps. Potential public consumer display remains a source projection gap.",
+      "post_rollout_continuity_status": "PASS"
+    },
+    {
+      "surface": "legacy alternative control app, architecture and Dell thin-client source",
+      "status": "PASS_SCOPED_CURRENT_DISPLAY_SOURCE",
+      "evidence": "Legacy main/control templates, deterministic architecture answers and Dell source display aliases use ORQEVIA. PRIME CORE authority, env names and HTTP user-agent remain operational identifiers.",
+      "limitation": "Alternative app and Dell were not independently deployed/physically tested in this audit."
+    }
+  ],
+  "approved_exceptions": [
+    {
+      "class": "wire protocol and transport",
+      "examples": [
+        "jarvis.interface.v1",
+        "X-Jarvis-PWA",
+        "X-Jarvis-Client-ID",
+        "X-PRIME-Protocol",
+        "/api/public/jarvis",
+        "/interface/v1",
+        "existing /jarvis product routes"
+      ],
+      "basis": "Approved compatible API/protocol/header IDs and existing technical endpoints."
+    },
+    {
+      "class": "device, session and storage continuity",
+      "examples": [
+        "jarvis-client-reference",
+        "existing cookie/authentication audience names",
+        "JARVIS-ABEX-HTTPS.mobileconfig",
+        "/run/prime-tls/*"
+      ],
+      "basis": "Approved existing enrolled devices, client DB, TLS pins and filenames; no reset."
+    },
+    {
+      "class": "service and internal runtime IDs",
+      "examples": [
+        "prime-epoch-20260919-*",
+        "PRIME_* env variables",
+        "prime.db",
+        "prime-artifact-store",
+        "dataset.jarvisReady"
+      ],
+      "basis": "Approved service names, environment/configuration and internal ready sentinel; not current display brand."
+    },
+    {
+      "class": "superseded cache migration",
+      "examples": [
+        "jarvis-shell-* cleanup matching"
+      ],
+      "basis": "Needed to retire old shell caches; does not clear private client references or unrelated caches."
+    },
+    {
+      "class": "frozen registry and generated contracts",
+      "examples": [
+        "prime orchestrator ID",
+        "jarvis-prime-agent-registry",
+        "JARVIS PRIME private registry name",
+        "JARVIS Agent Registry v1",
+        "generated JARVIS Shared schema titles"
+      ],
+      "basis": "Approved IDs/fingerprints/contracts retained. Public helper display alias is corrected separately rather than editing frozen source."
+    },
+    {
+      "class": "dated history and fixtures",
+      "examples": [
+        "Golden manifests",
+        "original task/model output bytes",
+        "historical coaching receipts",
+        "legacy voice/candidate test fixtures"
+      ],
+      "basis": "Historical evidence/test inputs retained as originals; not relabeled as current product introductions."
+    }
+  ],
+  "exception_authority": {
+    "path": "docs/ORQEVIA-BRAND-MIGRATION.md",
+    "sha256": "9c84539817200b48374f4813921d7018b09997fec3ea89c227752f27dc55581a",
+    "owner_instruction": "Preserve immutable registry config/IDs/fingerprints, historical evidence, protocol/schema/route/service/session/device/cert identities; update current display alias only."
+  },
+  "consumer_drafts": [
+    {
+      "product": "portal",
+      "source_revision": "241230d7a757ab05a789717aaf910494bf95081c",
+      "working_tree_clean": true,
+      "status": "SOURCE_CANDIDATE_UNDEPLOYED",
+      "source_brand_files": {
+        "ecosystem-link.js": "f45c62ee3625bce96107a3cbe8b883242abdcbd1ef0ffcda644e471b5dd9c2a0",
+        "prime.html": "c4c87f81af7ce7dea764645f2780601d778bdaa44839346f58f06123196ebc16",
+        "prime.js": "f58dd1e7098b99fd956779a1b3c0caf71f3153934f1c365f7f125b2b96486ccb"
+      },
+      "observed_current_source_copy": "ORQEVIA · 奥启维亚 cross-product links; portal private operations and VELYQUA dashboard ORQEVIA labels",
+      "residual_documentation_or_developer_copy": [],
+      "deployment_verified": false,
+      "existing_technical_routes_preserved": true,
+      "files_modified_by_auditor": false,
+      "previous_candidate_source_revision": "c9da53beab2d9be8b067f54d1c035bb72a11966d",
+      "previous_residual_documentation_or_developer_copy": [
+        "README.md:11 Explore JARVIS PRIME",
+        "README.md:13 JARVIS PRIME public walkthrough"
+      ],
+      "current_readme_legacy_display_residue": "NONE_IN_REVIEWED_README",
+      "readme_sha256": "50599a143695393894589c5c26f3321bf27f41961d2be04a459c6877e02ae0a2",
+      "docs_cleanup_status": "PASS_SOURCE_ONLY"
+    },
+    {
+      "product": "game",
+      "source_revision": "cd4d70dcc468c0da9a56b3230d07ba83b094c262",
+      "working_tree_clean": true,
+      "status": "SOURCE_CANDIDATE_UNDEPLOYED",
+      "source_brand_files": {
+        "ecosystem-link.js": "d4c40b52d789f891f68d873cf54b2a90ca997a5212262143a7746b3765c9fbb9"
+      },
+      "observed_current_source_copy": "ORQEVIA · 奥启维亚 cross-product links; portal private operations and VELYQUA dashboard ORQEVIA labels",
+      "residual_documentation_or_developer_copy": [],
+      "deployment_verified": false,
+      "existing_technical_routes_preserved": true,
+      "files_modified_by_auditor": false,
+      "previous_candidate_source_revision": "dfe5ae0721cc8031aa66d2102f243a377fc736b7",
+      "previous_residual_documentation_or_developer_copy": [
+        "README.md:13 Explore JARVIS PRIME",
+        "README.md:15 JARVIS PRIME public walkthrough"
+      ],
+      "current_readme_legacy_display_residue": "NONE_IN_REVIEWED_README",
+      "readme_sha256": "0731b7a3bfb64e1160517b524ab0c63ae9b097033ff04c49c983e99a87e4306e",
+      "docs_cleanup_status": "PASS_SOURCE_ONLY"
+    },
+    {
+      "product": "sky",
+      "source_revision": "af586c5a4a574a18509aa3d34f71aa30bcf2d69a",
+      "working_tree_clean": true,
+      "status": "SOURCE_CANDIDATE_UNDEPLOYED",
+      "source_brand_files": {
+        "experience.html": "6426a1af4c8d8346cf918ad8b16872f95e42a130a231a8dbe971fbc90b950986"
+      },
+      "observed_current_source_copy": "ORQEVIA · 奥启维亚 cross-product links; portal private operations and VELYQUA dashboard ORQEVIA labels",
+      "residual_documentation_or_developer_copy": [],
+      "deployment_verified": false,
+      "existing_technical_routes_preserved": true,
+      "files_modified_by_auditor": false,
+      "previous_candidate_source_revision": "645cd20e4d15d80ba4276e32f8d0c46b00a3a855",
+      "previous_residual_documentation_or_developer_copy": [
+        "README.md:39 current project list includes JARVIS PRIME"
+      ],
+      "current_readme_legacy_display_residue": "NONE_IN_REVIEWED_README",
+      "readme_sha256": "8e38c7aac097b232dcbb0cfec187ea3c4fd40363d1274fbd09f0d84173f1b10e",
+      "docs_cleanup_status": "PASS_SOURCE_ONLY"
+    },
+    {
+      "product": "velyqua",
+      "source_revision": "df9951104ac0d66639a20e08742585620758d220",
+      "working_tree_clean": true,
+      "status": "SOURCE_CANDIDATE_UNDEPLOYED",
+      "source_brand_files": {
+        "src/product/CreatorConnection.tsx": "aae9fc21f50cbfa88c23e9fd94f5fc9c41dbacfe8486b91a3c5c5b855c1cd5b4",
+        "src/product/Dashboard.tsx": "9e3efcaad876af9dc0e121331e9bb60f56ed31e060fe5f4bc3d66620b5c45971"
+      },
+      "observed_current_source_copy": "ORQEVIA · 奥启维亚 cross-product links; portal private operations and VELYQUA dashboard ORQEVIA labels",
+      "residual_documentation_or_developer_copy": [],
+      "deployment_verified": false,
+      "existing_technical_routes_preserved": true,
+      "files_modified_by_auditor": false,
+      "previous_candidate_source_revision": "9f6193ae7fb480f807a03b0a2efcd78e02e0f504",
+      "previous_residual_documentation_or_developer_copy": [
+        "README.md:24 Explore JARVIS PRIME",
+        "README.md:26 JARVIS PRIME public walkthrough",
+        "App.tsx:169 PRIME owner bridge sync console warning; developer log, not rendered UI"
+      ],
+      "current_readme_legacy_display_residue": "NONE_IN_REVIEWED_README",
+      "readme_sha256": "6cb2496bd8141d8c3ca0d3bad373f31147f37b346829e8a72ea83df4edc67de8",
+      "docs_cleanup_status": "PASS_SOURCE_ONLY",
+      "retained_internal_developer_log": "App.tsx:169 PRIME owner bridge sync is pending; internal component diagnostic, no rendered UI brand."
+    }
+  ],
+  "physical_acceptance": {
+    "safari": "UNKNOWN",
+    "existing_installed_pwa_brand_label_and_icon_refresh": "UNKNOWN",
+    "physical_owner_session": "UNKNOWN",
+    "physical_touch": "UNKNOWN",
+    "physical_voice": "UNKNOWN"
+  },
+  "counts_separate": {
+    "dated_current_identity": {
+      "passed": 21,
+      "denominator": 21,
+      "at_utc": "2026-10-13T11:30:50.529911+00:00",
+      "original_wave_passed": 20,
+      "original_wave_denominator": 21,
+      "retained_attempts": 23,
+      "unknown_original_cloud_costs": 1
+    },
+    "latest_bound_normal_roles": {
+      "passed": 21,
+      "denominator": 21,
+      "receipt": "operations/coaching-priority-20261013/NORMAL-CURRENT-AGGREGATE-20261013T1042Z.json"
+    },
+    "historical_pinned_followup": {
+      "passed": 20,
+      "denominator": 21,
+      "preserved": true
+    },
+    "full_role_accepted": {
+      "passed": 0,
+      "denominator": 21
+    }
+  },
+  "audit_actions": {
+    "http_methods": [
+      "GET"
+    ],
+    "public_asset_get_count": 16,
+    "control_get_count": 1,
+    "runtime_mutations": 0,
+    "model_calls": 0,
+    "new_inference_cost_usd": 0,
+    "external_messages": 0,
+    "source_correction": "authorized public display alias only; committed separately; not deployed by auditor"
+  },
+  "evidence": {
+    "operations/brand-migration-20261013/LEGACY-BRANDING-LIVE-READONLY-20261013T114707Z.json": {
+      "sha256": "cf71272437abbc46722adf59f9a3385fbc57fd341440249067c2fcace6fd8287"
+    },
+    "operations/brand-migration-20261013/IDENTITY-SOURCE-CONTINUITY-5030941d.json": {
+      "sha256": "811d444cd0b77e8a7e6a23e6f0f577a9b8ac1b81bcd842d1e96cdbcdbee08e9f"
+    },
+    "operations/coaching-priority-20261013/IDENTITY-CURRENT-AGGREGATE-20261013T113050638599Z.json": {
+      "sha256": "af86c0aaec9e34b42dc73e1cbd10785f70a98a676a5c056060f6b77c43739037"
+    },
+    "operations/brand-migration-20261013/LEGACY-BRANDING-AUDIT-PRE-5030941.json": {
+      "sha256": "b436aea233d39f7b9d82bfed2f44f1a6cc0d071259dd996ed5729af4165c53db"
+    },
+    "operations/brand-migration-20261013/LEGACY-BRANDING-LIVE-READONLY-20261013T115147Z.json": {
+      "sha256": "133659c76bc9b1cb158d17e18019ee6d7d6533158983dc7f5ed580c98d84cd7c"
+    },
+    "operations/brand-migration-20261013/IDENTITY-POST-ROLLOUT-CONTINUITY-5030941d-20261013T115241Z.json": {
+      "sha256": "d9aafad528c15bb4a2dc50aebdec4fa9477f393dc7dbdb37645cf362ad966718"
+    },
+    "operations/brand-migration-20261013/LEGACY-BRANDING-AUDIT-FINAL-ADDENDUM.json": {
+      "sha256": "f92bff585d27428db1857cfc968b45c7c7272ccc72b849ed9129ec527912b701"
+    }
+  },
+  "source_sha256": {
+    "app/agent_dispatch_api.py": "089f7fade8c3e3c4290c6e7a46c904e586611dd1230e18c2fd45fdafc7b1a2b6",
+    "app/agent_registry.py": "0fa4ea02a9528f1319b03e1e007b86bd636ced09f3d0138bb3f56c584f51ffe7",
+    "app/artifact_delivery.py": "c3f7836e2316aa3b4a0a551395f51cf299b4415052895529981d68c1b7ccc16d",
+    "app/control_surface.html": "15a770679c074ae442389aa9e225151bcb2fa1f54cf79040da09f7274bfe06e8",
+    "app/control_surface.py": "8b99359e3d79c6bb29bd0ecd63d3719f0464e605c82f202911c561dfec62ad05",
+    "app/direct_entry.py": "57e6c7e8a3e54cf9e991abd09ac4fe6384c875f7c2ae9b1ce193ed11973ba22e",
+    "app/interface_server.py": "ad65040068fbdd18f9526cba8165d7748b5bdce239e520e539d5e515d5ab8180",
+    "app/interface_telemetry.py": "50fa81dc338888ec18cbb4f93a92e565a59b14fe24318d52f8fc5cc6146f8f58",
+    "app/jarvis_response_contract.py": "f9e7493b24666c44c8d76903923dce2380bff6c7501cfef5a7276df56e080c0f",
+    "app/main.py": "0cd1514dc577617a3d69e20b79245f654fca45473e9f505fe3fd6ccdd1dacf46",
+    "app/normal_latest_observation.py": "5f89f746ea676a99d4814f2fab53102370ea1ba867cd9a15d9ed37b430ddce73",
+    "app/product_identity.py": "1ac74a68bf0e8bbd7b27a1517a705d102068251bbefb7e0bf84765f34d9e4b9a",
+    "app/production_control.html": "c0b49242544bb8ae5427755cb9a08307a47ce8fe4d1a34295a19d93db3aa5bdd",
+    "app/production_control.js": "2c890f778437a42a186ce42b57f142a47d5702ba754a0943daed857589b42dbf",
+    "app/production_entry.py": "4008d755f4bf7b9b3e6e4a6bb67c6098d11952ad1b46841ab6d23f8e8ab68a05",
+    "app/system_architecture.py": "6d340320583294ec7857fcf57e1997b062d6c0142ea98ca8af207f28467bf5b9",
+    "clients/dell/public/app.js": "0476b9965f6688f87ad424ca71b8ad201561da351fd66c23ed31f87a9a23c92e",
+    "clients/dell/public/index.html": "ff1e8e0f24f272cb036aa8a78bde92fc21b3abf8b485f39451f6b0bf7120192d",
+    "clients/pwa/app.mjs": "ab99251ed61266aedefa5796e344446259672046f82b931166c1aa47f86b0977",
+    "clients/pwa/core.mjs": "e6394a7a76790dcb16fa1b8dffc44683e8ea383985dfa605f5545a9a8bddb320",
+    "clients/pwa/dashboard.css": "784cf8cab3f4d2925bc1363a723141a659465885207467d696701948942ab647",
+    "clients/pwa/dashboard.mjs": "8a4dc4c447c9ae8ddf373cf441da5e3ce5eb82b136b87ce217eff9b11c031446",
+    "clients/pwa/icons/icon.svg": "f50534e68f48827b2e088b36482172df466d086d6c11de06220f42a8aafbe0b0",
+    "clients/pwa/icons/orqevia-v1-192.png": "fb87a1b2a6ae1ea560adec43a0c177aa732a9f84f0774c6a491cc3b5e299d7aa",
+    "clients/pwa/icons/orqevia-v1-512.png": "24447534ee9188c3c265a42deb409f3f84c0efaec34fd194f5be78d1b9e9cac1",
+    "clients/pwa/icons/orqevia-v1-apple-touch.png": "8f73c754888be3f8216b03d2f0b72bea9c1da48c7cb106855d7c5f065fe9e3c2",
+    "clients/pwa/index.html": "360357b6ddba61a50936cd9628f52617f004de888eb4c17ec8cea914a8f9d8b5",
+    "clients/pwa/manifest.webmanifest": "577d709c5f63a6c21a9c78a6d2d2bbccc6d5a369be9d75cf6d80794917fcfbc2",
+    "clients/pwa/recovery.js": "dc9f204e4945dac0aa964364d3428ddaa25dbfec159b7bf0e6ba740f891ceba5",
+    "clients/pwa/release.mjs": "bb15c9f1ecd4a2dbad3002c298a4cc82daa60ebcb06d60d55ad2429485c57ff0",
+    "clients/pwa/storage.mjs": "a8a11eb7b9a0e66572ca765b305847b13f85d28bb3038674ae62d0dba6fd3b67",
+    "clients/pwa/style.css": "725870b6dd2532ce7573b9f8154fa7a10102613ea621ff93b61fcea66ee4d4ea",
+    "clients/pwa/sw.js": "b53c14ee41c500fe1bcf2b8aa26f58c1877d0364b2872d625b94cfecb47f8322",
+    "clients/pwa/voice.mjs": "0a35654895ad0d12be656d726faaa94e5bcf0fda1bb72288a9f0507c862291ab",
+    "config/agent_registry.json": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6",
+    "config/agent_registry_migration.json": "e328d9e3182881e5310aa73967add1f529ebbcef0aed33aa64727c683310c4a9",
+    "docs/ORQEVIA-BRAND-MIGRATION.md": "9c84539817200b48374f4813921d7018b09997fec3ea89c227752f27dc55581a"
+  },
+  "limitations": [
+    "Scoped current product surfaces, not an assertion that no legacy string exists anywhere in the workspace.",
+    "Historical/private task data and test fixtures are intentionally retained; no privacy-sensitive prompt/credential audit payload.",
+    "No physical Safari/home-screen PWA, icon cache, touch, voice or session acceptance.",
+    "Consumer candidate runtime deployment and current public Vercel sites are not verified in this read-only local audit.",
+    "Unlabelled current consumer README residue is reported as cleanup, not granted a history exception.",
+    "A prior recursive operations listing encountered protected test temp directories; audit uses explicit current surface files and retained receipts."
+  ],
+  "state": "PASS",
+  "final_observation_at_utc": "2026-10-13T11:54:14.402356+00:00",
+  "latest_live_observation_at_utc": "2026-10-13T11:51:47.704047+00:00",
+  "latest_deployed": [
+    {
+      "service": "prime-epoch-20260919-prime-1",
+      "container_id": "029e776616e0113e1e029c47e69c1067b796e2f80958e884b082b0de4d77e745",
+      "image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "health": "healthy",
+      "declared_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_interface_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5"
+    },
+    {
+      "service": "prime-epoch-20260919-interface-1",
+      "container_id": "2bf5b357d9ce9c24f650296ab5157707d51c90b73460505a807a95a5ce877a31",
+      "image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "health": "healthy",
+      "declared_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_interface_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5"
+    }
+  ],
+  "final_addendum": {
+    "path": "LEGACY-BRANDING-AUDIT-FINAL-ADDENDUM.json",
+    "sha256": "f92bff585d27428db1857cfc968b45c7c7272ccc72b849ed9129ec527912b701"
+  },
+  "retained_pre_correction_audit": {
+    "path": "LEGACY-BRANDING-AUDIT-PRE-5030941.json",
+    "sha256": "b436aea233d39f7b9d82bfed2f44f1a6cc0d071259dd996ed5729af4165c53db"
+  },
+  "retained_pre_correction_overall_status": "LIVE_UI_PASS_SOURCE_ALIAS_CORRECTED_INSTALLATION_PENDING_PHYSICAL_UNKNOWN",
+  "final_checks": {
+    "both_services_declare_exact_deployed_revision": true,
+    "both_services_health_and_image_declaration_match": true,
+    "public_assets_tls_http200_and_exact_installed_bytes": true,
+    "current_public_metadata_correct": true,
+    "production_control_current_brand_and_installed_text_match": true,
+    "public_helper_alias_correct_and_frozen_private_identity_preserved": true,
+    "identity_source_continuity_of_all21_and23_retained_attempts": true,
+    "runtime_stable_during_independent_reads": true,
+    "queue_idle_at_read": true,
+    "no_new_model_calls_or_cost": true,
+    "four_consumer_current_readme_residue_resolved_in_source_only": true
+  }
+}

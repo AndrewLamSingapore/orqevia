@@ -1,0 +1,532 @@
+{
+  "schema": "orqevia.brand-migration-acceptance.v1",
+  "at_utc": "2026-10-13T12:03:55.577214+00:00",
+  "current_brand": "ORQEVIA \u00b7 \u5965\u542f\u7ef4\u4e9a",
+  "primary_display_name": "ORQEVIA",
+  "classification": "CLAIMED_WITH_SCOPED_RECEIPTS_NOT_OWNER_VERIFIED",
+  "overall": "PARTIAL_REQUIRED_PHYSICAL_AND_FULL_ENGINEERING_GATES_REMAIN_OPEN",
+  "source_head": "ef6160b4f91da3c421956a51c635c463924cdf45",
+  "canonical_main_reviewed": "5026ad4dcc0dcb0758e532377cf59c3565b056c8",
+  "installed_runtime": [
+    {
+      "name": "prime-epoch-20260919-prime-1",
+      "container_id": "029e776616e0113e1e029c47e69c1067b796e2f80958e884b082b0de4d77e745",
+      "image_digest": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "source_revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "health": "healthy",
+      "state": "running",
+      "started_at": "2026-10-13T11:51:04.612936961Z"
+    },
+    {
+      "name": "prime-epoch-20260919-interface-1",
+      "container_id": "2bf5b357d9ce9c24f650296ab5157707d51c90b73460505a807a95a5ce877a31",
+      "image_digest": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "source_revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "health": "healthy",
+      "state": "running",
+      "started_at": "2026-10-13T11:51:05.929120022Z"
+    },
+    {
+      "name": "orqevia-coaching-coaching-1",
+      "container_id": "427cde7c6236638627dab2d9f677068feb052fbd5995e831805e7acf20745d13",
+      "image_digest": "sha256:cf11bef0d4d922346439ce984e7e3cb28b4ed94b8f92507772004ac4f8dd9b8f",
+      "source_revision": "81f2d1dcb238f39c26af153d2e870cc16674993f",
+      "health": "healthy",
+      "state": "running",
+      "started_at": "2026-10-13T10:22:59.338733747Z"
+    },
+    {
+      "name": "prime-epoch-20260919-ollama-1",
+      "container_id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+      "image_digest": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "source_revision": null,
+      "health": "healthy",
+      "state": "running",
+      "started_at": "2026-10-13T10:22:59.342644836Z"
+    }
+  ],
+  "checks": {
+    "branding_migration": {
+      "status": "PASS",
+      "scope": "Installed existing ORQEVIA application/PWA assets/API metadata/prompts, dark visual identity retained; physical and undeployed consumer scopes separate."
+    },
+    "iphone_safari_branding": {
+      "status": "FAIL",
+      "observation": "NOT_TESTED",
+      "reason": "Acceptance not demonstrated: no enabled physical iPhone/browser access. Served Safari-facing assets PASS over real validated TLS."
+    },
+    "iphone_home_screen_pwa_branding": {
+      "status": "FAIL",
+      "observation": "NOT_TESTED",
+      "reason": "Installed icon/label/cache behavior requires actual iOS observation. Current manifest/icon assets and cache migration source checks PASS."
+    },
+    "owner_session_preservation": {
+      "status": "PASS",
+      "scope": "Exact unchanged12sessions/4devices/20pairing records,1eligibleOwner session+device, cookie/protocol IDs/auth config/TLS preserved; physical cookie flow not tested."
+    },
+    "backend_compatibility": {
+      "status": "PASS",
+      "scope": "ExistingOwner authenticated TLS API,401anonymous restriction,21normal observer,task202/idempotency/completion/artifacthash return; original internal routes/services and credentials retained."
+    },
+    "agent_identity_consistency": {
+      "status": "PASS",
+      "passed": 21,
+      "denominator": 21,
+      "scope": "21actual model replies with unchanged identity validator;23attempts and historicalunknown timeoutcost preserved. Executed runtime source3b129d9d15496fc692a731e7a4d6a3e7624c9f7f."
+    },
+    "legacy_branding_audit": {
+      "status": "PASS",
+      "scope": "Current existingapplication display surfaces; legitimate historical/wire/frozen evidence aliases excluded explicitly. Consumerdrafts not deployed."
+    },
+    "normal_role_acceptance": {
+      "status": "PASS",
+      "passed": 21,
+      "denominator": 21,
+      "criteria_changed": false
+    },
+    "full_role_end_to_end_acceptance": {
+      "status": "FAIL",
+      "observation": "NOT_ESTABLISHED",
+      "passed": 0,
+      "denominator": 21
+    },
+    "independent_azure_l7": {
+      "status": "FAIL",
+      "observation": "NOT_ESTABLISHED",
+      "scope": "Independent evidence package preparation never substitutes for assessor-issued certification."
+    },
+    "pads_and_shared_board": {
+      "status": "PASS",
+      "principals": 22,
+      "scope": "Authenticated bound writes/readbacks/GLOBALdeliveries+acks and controlled restart readbacks; spontaneousmodelcollaboration/otherboard scenarios not all established."
+    },
+    "public_internet_commissioning": {
+      "status": "PASS",
+      "principals": 22,
+      "scope": "Real authenticated Core+21 handler-bound publicHTTPS reads, rawbytes/sourcehash/actions. Model-to-tool-to-correctsynthesis for21 remains OPEN; a07 originalfast feedbackfailed and separateexactprompt4b diagnostic timedout withnoanswer."
+    },
+    "safe_handoff": {
+      "status": "PASS",
+      "scope": "Controlled a17\u2192Core durablehandoff\u2192DONE and restart persistence; process sacrifice/resource yielding/hostreboot qualification incomplete."
+    },
+    "full_source_regression": {
+      "status": "PASS",
+      "passed": 6272,
+      "failed": 0,
+      "skipped": 1,
+      "tested_revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "scope": "Exact final503 source Gitclone/tag history/network-none suite. Original3b6242PASS/1FAIL/1SKIP and pre-mutation signingfixture baseline rejection remainMONITOR, rootcauseunproven.309focusedchecks+100baselines/100late-reviewrejections and52finalregistry/observer checksPASS. No assertionweakened."
+    }
+  },
+  "regressions": {
+    "portable_pwa": 83,
+    "dell_client": 11,
+    "brand_backend_combined": 176,
+    "network_broker": 265,
+    "normal_latest_observer": 28,
+    "independent_bridge": 33,
+    "latest_source_helpers_and_history": 93,
+    "final_registry_and_normal_observer": 52,
+    "full_suite": "6272PASS/0FAIL/1SKIP_at5030941",
+    "preserved_earlier_suite": "6242PASS/1FAIL/1SKIP_at3b129d9_MONITOR"
+  },
+  "cost_scope": {
+    "normal_latest_selected_usd": 0.0027015900000000002,
+    "identity_latest_selected_usd": "0.00093916",
+    "identity_original_timeout_actual_cost": "UNKNOWN_RETAINED",
+    "a07_local_specimen_additional_cloud_cost_usd": 0,
+    "new_paid_infrastructure": false,
+    "a07_failed_local_diagnostic_consumption": "UNKNOWN_NO_PERSISTED_INFERENCE_RECEIPT; recorded zero tokens/cost are defaults, not proof of no compute"
+  },
+  "consumer_drafts": [
+    "https://github.com/AndrewLamSingapore/the-portal/pull/85",
+    "https://github.com/AndrewLamSingapore/velyqua/pull/91",
+    "https://github.com/AndrewLamSingapore/game-platform/pull/46",
+    "https://github.com/AndrewLamSingapore/sky-tablet/pull/20"
+  ],
+  "primary_draft_pr": "https://github.com/AndrewLamSingapore/orqevia/pull/299",
+  "evidence": [
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\LIVE-BRAND-ACCEPTANCE-20261013T115132Z.json",
+      "sha256": "8eeb4d80a86fa114821e0967f1a795225e9d0420ef0336bd7d83480f54e4a378",
+      "bytes": 4148
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\IDENTITY-CURRENT-AGGREGATE-20261013T113050638599Z.json",
+      "sha256": "af86c0aaec9e34b42dc73e1cbd10785f70a98a676a5c056060f6b77c43739037",
+      "bytes": 15884
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\NORMAL-CURRENT-AGGREGATE-20261013T1042Z.json",
+      "sha256": "4d5daab90686d3a5f27a4e6ee11c28237b6df845d88801de6adcb64234b7e3ea",
+      "bytes": 22176
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\BEFORE.json",
+      "sha256": "c40c77c72c9f9215abca87c47931e486aa440dc86c926c1860a6fb7ca5cadd9d",
+      "bytes": 4329
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\AFTER-FINAL.json",
+      "sha256": "4df35e31d3bac833bed69c50d2d19e68d5aeb92bcbbe3995697416880b392543",
+      "bytes": 4343
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-commission-20261013T111100Z.json",
+      "sha256": "d711e807523af478c2acfa3d922cd25e424d0fb05bb3cc24dc54a474e3d56788",
+      "bytes": 63863
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T111707Z.json",
+      "sha256": "8bdafbcc59081e8aca376ecd261932e1fb610634d2d2ea54bbf62020c7cd4a36",
+      "bytes": 64143
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\pwa-regression-final.log",
+      "sha256": "f498804c9b756beed35d08926722e071c2841ec95a20d25506fd42dc53744b31",
+      "bytes": 37526
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\dell-client-regression.log",
+      "sha256": "e11046853b18a7414b6d046f24f40177777574c801ba64e819084fbbfa960717",
+      "bytes": 4560
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\integrated-brand-tests-final.log",
+      "sha256": "ac09e8ee4c9f8b3fc2bbe119bf3d52d765994986d2bf1602c041a5f2ec91126b",
+      "bytes": 1560
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\FULL-FOLLOWUP-REGRESSION-3b129d9.json",
+      "sha256": "0bb1cb5d49b252c9e8457a89bb6e996286f670f67152a4011e503ff13a069937",
+      "bytes": 358
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\full-followup-regression-3b129d9.log",
+      "sha256": "1080a1bd32d55b06c8bee5d7ffcf8f6aeedd5765bd44969cde23ca03c30055cd",
+      "bytes": 11005
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\SIGNING-PRECONDITION-DIAGNOSIS-3b129d9.json",
+      "sha256": "fb2ee9b87eab969ce7c27f6a705d23eb4b897fe8e20b05ede2ae14ff997b19a8",
+      "bytes": 3548
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\PRESERVED-REGRESSION-DIAGNOSIS-20261013.json",
+      "sha256": "f96e074a3997c3e1985a4b0c5cc5b1a29c52551e1084c6f19ad74da2adc140e7",
+      "bytes": 4123
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\CANONICAL-REVIEW.json",
+      "sha256": "1264ba5778803e607e82bcc8340631bb5f5c72f200b3b73a205a813e969a49fe",
+      "bytes": 740
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\FINAL-SOURCE-FOCUSED-20261013T113858Z.json",
+      "sha256": "91fa75d6166250c147152d7d88dd87450b2787aa54956bf6b5bc7c140c0fe3db",
+      "bytes": 656
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\COMMISSIONING-after-restart-20261013T115132Z.json",
+      "sha256": "b5f21e4f88147f632a8aac0629fc4187a561aa91aebf93094c1f6658c01fc0dd",
+      "bytes": 64143
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\BUILD-1faa8d2c.json",
+      "sha256": "d3a297e1229b93b2e8a01bba2a5b043129a3aa61b388fc0ad4e7ea180a25e446",
+      "bytes": 881
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\BUILD-383d79c9.json",
+      "sha256": "ec87c0e8688aa12d50151f3176e667147b9722a285a19351a3f278e242ef2189",
+      "bytes": 791
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\BUILD-3b129d9d.json",
+      "sha256": "172dfd04ecbac70779d31040cc908edbffebd561c6a7bc591218427fed6e3df8",
+      "bytes": 881
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\BUILD-3f9c97d5.json",
+      "sha256": "4b1165a714a6ef7d5ea6b432d6d7c4d0fcdb0009078e669d3a2d31676052be47",
+      "bytes": 881
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\BUILD-5030941d.json",
+      "sha256": "ffdd6bed8ce43dabee12fe2a0840e697dd86cf877fc455d7a90c0361825fdcd8",
+      "bytes": 881
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\RUNTIME-INSTALL-20261013T115102Z.json",
+      "sha256": "045d58efddf7b0380eda5d86dc8c48ddfb7070f98a039802622775bb3c086d64",
+      "bytes": 4936
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\LEGACY-BRANDING-AUDIT-FINAL-ADDENDUM.json",
+      "sha256": "f92bff585d27428db1857cfc968b45c7c7272ccc72b849ed9129ec527912b701",
+      "bytes": 3570
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\LEGACY-BRANDING-AUDIT-PRE-5030941.json",
+      "sha256": "b436aea233d39f7b9d82bfed2f44f1a6cc0d071259dd996ed5729af4165c53db",
+      "bytes": 18800
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\LEGACY-BRANDING-AUDIT.json",
+      "sha256": "62410bb7ee3619c01f48dc18b701410747c0126d5ff86bde71c2caa7d42a1290",
+      "bytes": 23895
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\IDENTITY-POST-ROLLOUT-CONTINUITY-5030941d-20261013T115241Z.json",
+      "sha256": "d9aafad528c15bb4a2dc50aebdec4fa9477f393dc7dbdb37645cf362ad966718",
+      "bytes": 9358
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\IDENTITY-SOURCE-CONTINUITY-5030941d.json",
+      "sha256": "811d444cd0b77e8a7e6a23e6f0f577a9b8ac1b81bcd842d1e96cdbcdbee08e9f",
+      "bytes": 10166
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\UNATTENDED-OBSERVATION-20261013T115102Z.json",
+      "sha256": "ecbe5f06d531f7be735c35cb7a47c16d0cf66ee11bfeb21e188a96584e5a59ff",
+      "bytes": 777
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\REGISTRY-DISPLAY-REGRESSION-5030941.json",
+      "sha256": "5a75688f2354a867b2e720706bfe4faf6d9f760d8b48e9c5f5a81000efd42b66",
+      "bytes": 350
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\FULL-FOLLOWUP-REGRESSION-5030941.json",
+      "sha256": "e39995d4fe9525a352e3266680830d4f5e9a6de1af06cd468e81c29ae23f2e3b",
+      "bytes": 391
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\full-followup-regression-5030941.log",
+      "sha256": "f068c131fe9d8363fa9cd13c2ece61cbe1071b1280c4a1df436f10f19be478f3",
+      "bytes": 8866
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\isolated-restore-discovery-20261013.json",
+      "sha256": "d900bd7bf6f2568581e9058193c646a248fc701eda14f18ef47d9bee35382344",
+      "bytes": 8470
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\ISOLATED-RESTORE-FOLLOWUP-20261013.json",
+      "sha256": "e5e42988df304b3ac0e1ef62f41c784697d2c91bedc55611eb5cd78908e2f058",
+      "bytes": 28741
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\ISOLATED-RESTORE-NORMAL-BINDING-ADDENDUM-20261013.json",
+      "sha256": "5d155a5daa220140cbfa20399feb150cad6795206f0c3b55c500115bfffc3371",
+      "bytes": 16503
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\ISOLATED-RESTORE-VALIDATION-20261013.json",
+      "sha256": "f18a7f522779f3753a3e09c7d6aed67df4ee57c0a39db75d6b14a8c3e7173759",
+      "bytes": 22028
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\RESTORE-LATEST-METADATA-COMPONENTS-20261013.json",
+      "sha256": "dfebc02920ffd69118e967420b12f1a5f70b7dbcec5394a5978d18528139bf88",
+      "bytes": 23428
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\action-readback.json",
+      "sha256": "ca54ff2ea3e0ed8e2687f08673e3028ad87ffe30bcc802047198a7c25cb1668e",
+      "bytes": 7264
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\azure-assessment-packet-41c971151508227363487fb473db80c1e2d24aaae3c9f9879c3006af97ea82b1.json",
+      "sha256": "41c971151508227363487fb473db80c1e2d24aaae3c9f9879c3006af97ea82b1",
+      "bytes": 13153
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\azure-assessment-packet-41c971151508227363487fb473db80c1e2d24aaae3c9f9879c3006af97ea82b1.json",
+      "sha256": "41c971151508227363487fb473db80c1e2d24aaae3c9f9879c3006af97ea82b1",
+      "bytes": 13153
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\deployment-identity-after.json",
+      "sha256": "c938ed49c9764e49f2bf83ff9db4605675628260987fee482111325239476f0b",
+      "bytes": 452
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\deployment-identity-before.json",
+      "sha256": "f6fb665c02428c13c3c113d3a44bc7a923d70175345ca7001bbaecf3760660a8",
+      "bytes": 511
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\feedback-job.json",
+      "sha256": "6bfd7f7abf68e728e0838ced14a71c26d8651daaf125032738ad9bac6ed27156",
+      "bytes": 5679
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\feedback-submission-readback.json",
+      "sha256": "7a9cd0addbc223243a26ed9509af96250c82241e2ad123d2f4d24486947f31dc",
+      "bytes": 4954
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\final-bridge-readback.json",
+      "sha256": "8e2b0afd4f62a62ab72210ffdb0e9adf8596c184ae3f9c6c7d8d47041db60f29",
+      "bytes": 6590
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\generation-job.json",
+      "sha256": "e14bf3a6e6b54856c6f8ad9f1a593e0888017b8b530963256692d0243b763153",
+      "bytes": 4196
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\independent-review-line-ending-addendum.json",
+      "sha256": "9b5a48319e980d4c82c7f569d17bdc71dd5411db699d935e92b905142c067db2",
+      "bytes": 4362
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\independent-review.json",
+      "sha256": "f4abb2489682eab8d52f79986b49cedc6f96fc8f1c77729dc0885e7c0b85ecb9",
+      "bytes": 8812
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\initial-submission-readback.json",
+      "sha256": "21799702e32506234709e1b6c3bb8956af44049488b633a3aae394c8ff7cce6a",
+      "bytes": 3161
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\initial-submission.json",
+      "sha256": "b1c4859f2e7ac59578c7ed061bdbf4f81013133e15d2901975fe807a4804a1e7",
+      "bytes": 2608
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-independent-live-metadata.json",
+      "sha256": "0e8a22823b284c555c9e65e9cb948c3f8c0ec16c04ff2c60e0bb3837a4d3d1a6",
+      "bytes": 1229
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-synthesis-diagnostic-actions.json",
+      "sha256": "eaef5556dbe8ea95715c6bea6d5d97c802ba64de5a8d62172729e106e1d2deed",
+      "bytes": 1306
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-synthesis-diagnostic-job.json",
+      "sha256": "fc596e81ff9b08abe7db9c75b96c9dc0bb64d9e465304890c61380365621312d",
+      "bytes": 4697
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-synthesis-diagnostic-proposal.json",
+      "sha256": "1ae7190d82713741f2cd16fee775b1a0d6493324f0968c414ce865eebf91aa39",
+      "bytes": 4771
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-synthesis-diagnostic-readback.json",
+      "sha256": "0f83094fea8c604806f0ad9746b1586924922645d52be096fed7676e6bb5ad2a",
+      "bytes": 836
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-synthesis-diagnostic-submission.json",
+      "sha256": "bd2fdd677b99ba3ca523d70d37157b6aff3505896b66bc63ff16d09350c9c856",
+      "bytes": 4941
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-synthesis-diagnostic-submit-intent.json",
+      "sha256": "b6702947feaea6e08cc5fa5988e4d6e812e17d2cafb41d2c15df775fe93b99ab",
+      "bytes": 4830
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\packet-copy-custody.json",
+      "sha256": "d1469afc14af9296feefbe88c0163a333210abc280ecf012bbe1ca5332a9e8e3",
+      "bytes": 8790
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\public-tool-execution-readback.json",
+      "sha256": "8879969b069aa2898f6a1713f888f4fdbc52f4c6cd7760988f03515a6f7ed7bc",
+      "bytes": 4281
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\public-tool-receipt.json",
+      "sha256": "1cf9def58802b98557edb338ace80350a1167fede96b45efa9e4eaf229ec68eb",
+      "bytes": 2339
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\runtime-source-custody.json",
+      "sha256": "748043f7e7e8291d98b39965a8a90e0059fb6fd39dc7f454684f1f5896403f8a",
+      "bytes": 1881
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\scenario.json",
+      "sha256": "39c2fe1cc576bfe97346b4863f027595c1ddde9bd7adc142b7aaaf3faadd1c3d",
+      "bytes": 3058
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\selected-action-span-review.json",
+      "sha256": "036894335fb52e26b29877545e480d03142e9e04b36a6119424f1ef3c5ff8e48",
+      "bytes": 13965
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\separate-normal-role-evidence-reference.json",
+      "sha256": "7c49e4ef75b7057ab9d074cad55c7ecae07f99cbee369996d2916efa49ea2d95",
+      "bytes": 715
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\specimen-sequence-diagnostic-addendum.json",
+      "sha256": "cc0e1f8d9842caac0f84c664e824fe52ef7569c72f9a9884e0e00c2e79b1d293",
+      "bytes": 1692
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\specimen-sequence.json",
+      "sha256": "667ab0cce6177a0857cd77147d30c82751253877cabef0b863ac232ac340f7f5",
+      "bytes": 2477
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\state.json",
+      "sha256": "df2df27661ef6292493a880a3628f8357888b4658299254196d69efb4fb43a11",
+      "bytes": 1481
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\ISOLATED-RESTORE-EXACT-PRINCIPAL-ADDENDUM-20261013.json",
+      "bytes": 1362,
+      "sha256": "12a1679b8548c56edb113e4576608f243fe6b12b0b9b7494996e03e4e62bd65d"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-assessment-packet.zip",
+      "bytes": 113645,
+      "sha256": "7b0aa223b5930a15f84bedd09254213164375b0d39f17c9c4f67d3969cea74ee"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\local4b-independent-failure-review.json",
+      "bytes": 7830,
+      "sha256": "569ec403cd2baf09bbf21665acc14ebe055aa06cfd9dcad710c0457b1026f466"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\azure-assessment-packet-f1eb1b29349d4b3e28cda07f4fae496da7241dd266b524cac9dd6dc9f2fc39db.json",
+      "bytes": 13964,
+      "sha256": "f1eb1b29349d4b3e28cda07f4fae496da7241dd266b524cac9dd6dc9f2fc39db"
+    },
+    {
+      "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\azure-assessment-packet.json",
+      "bytes": 13964,
+      "sha256": "f1eb1b29349d4b3e28cda07f4fae496da7241dd266b524cac9dd6dc9f2fc39db"
+    }
+  ],
+  "iphone_instructions": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\orqevia-coaching-priority-20261013\\docs\\ORQEVIA-BRAND-MIGRATION.md",
+  "historical_evidence_preserved": true,
+  "credentials_reset": false,
+  "pwa_data_deleted": false,
+  "independent_azure_evidence_packet": {
+    "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\coaching-priority-20261013\\a07-public-bridge-specimen-20261013-attempt3\\azure-assessment-packet.json",
+    "sha256": "f1eb1b29349d4b3e28cda07f4fae496da7241dd266b524cac9dd6dc9f2fc39db",
+    "hashed_files": 73,
+    "custody_mismatches": 0,
+    "assessor_issued_acceptance": false
+  },
+  "independent_restore_scope": {
+    "database_count": 12,
+    "latest_normal_results": 21,
+    "private_pad_owners": 22,
+    "acknowledged_board_recipients": 22,
+    "later_artifacts": 114,
+    "full_coherent_off_device_restore_established": false,
+    "historical_action_chain_gaps_preserved": 43,
+    "original_done_handoff_replayed": false,
+    "new_disposable_handoff_shutdown_stale_token_claim_bound": "PASS"
+  }
+}

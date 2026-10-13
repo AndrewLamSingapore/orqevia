@@ -174,6 +174,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only this exact new non-Verified migration event; all prior pins remain.
+    brand_title = '## ORQEVIA brand migration and bounded live commissioning - 13 October 2026'
+    assert after.count(brand_title) == 1
+    brand_start = after.index(brand_title)
+    brand_end = after.index('\n## ', brand_start + len(brand_title)) + 1
+    brand_update = after[brand_start:brand_end].encode('utf-8')
+    assert len(brand_update) == 3908
+    assert hashlib.sha256(brand_update).hexdigest() == '2a7b424165b5c61a67ef3900e01d9b7c10785210ff063980c79cfd521a954828'
+    after = after[:brand_start] + after[brand_end:]
     # Admit only the original additive coaching observation from 7f1c893.
     # All earlier section pins and the frozen 27 September baseline stay intact.
     coaching_title = '## ABEX coaching and durable task-memory continuation \u2014 13 October 2026'

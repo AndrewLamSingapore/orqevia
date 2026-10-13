@@ -87,3 +87,8 @@ governance/observations/abex-dell-reconciliation-20261013.json -text
 
 # Preserve the follow-up integration receipt bytes.
 governance/observations/abex-integration-followup-20261013.json -text
+
+# Preserve new migration receipts and recovery indexes as recorded bytes.
+docs/evidence/brand-migration-20261013/** -text
+docs/operations/abex-autonomy/*.json -text
+governance/observations/abex-orqevia-brand-migration-20261013.json -text

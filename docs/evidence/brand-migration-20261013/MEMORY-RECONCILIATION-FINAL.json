@@ -1,0 +1,10 @@
+{
+  "at_utc": "2026-10-13T12:03:55.577214+00:00",
+  "retained_tasks": 49,
+  "checkpoint_integrity": "PASS",
+  "payload_sha256": "63d436d5073f0e9113ab735cb5155e649f0b203db3963c49fac55e16cf0c312d",
+  "prior_checkpoint_sha256": "a45926092be4dcda4651e365995b434f72eb8a3dec918f3588c3f7636fcef681",
+  "evidence_count": 72,
+  "final_report_sha256": "1b8bafcb022e34e09142819c858ffb828207fe089f339295d68545d6a54e5878",
+  "original_snapshot": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\final-record-history\\20261013T120355577214Z"
+}

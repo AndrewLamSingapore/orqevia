@@ -36,6 +36,24 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA brand migration and bounded live commissioning - 13 October 2026
+
+### Claimed, not independently checked
+
+- ORQEVIA · 奥启维亚 is installed on the existing ABEX Core and Interface from source `5030941d2c878c611d77f3a64dc9b55bc3a7c0eb`, image `sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5`. The existing dark PWA shell, original application scope, TLS trust, cookies, routes and enrollment records are preserved. Twelve sessions, four devices and twenty pairing records retain identical fingerprints; existing Owner-policy TLS task submission, idempotency, completion and artifact hashes pass. Physical Safari and installed home-screen icon/label/session acceptance remain NOT TESTED.
+- Latest bound unchanged normal-role results are 21/21 PASS after separately retained A01 and A19 corrections. Actual branded identity replies are 21/21 PASS; all 23 attempts, the initial local typo and unknown cloud-timeout cost remain. The final public Core display alias has independent source-continuity evidence for unchanged prompts, validator and frozen registry bytes; no repeated inference was used to relabel original receipts.
+- Core plus 21 actor-bound public HTTPS reads, 22 separate pad write/readbacks and 22 GLOBAL delivery/ack readbacks pass and survive a controlled service restart. Controlled a17-to-Core handoff reaches DONE. These are bounded authenticated commissioning observations, not 21-agent autonomous collaboration, physical reboot, process self-sacrifice or full role acceptance.
+- The finite a07 model-tool specimen retains two invalid fast requests, a valid deep request, 517 actual source bytes and the original failed fast synthesis. A separate diagnosed synthesis and its independent review are evidence lanes, never permission to rewrite original jobs or award full certification.
+- The final installed 503 source suite passes 6272 with 1 SKIP and 0 FAIL in an isolated Git clone with original tags. The previous 3b suite retains 6242 PASS, 1 FAIL and 1 SKIP: the signing fixture rejected its pre-mutation baseline.309 focused signing checks and 100 baseline / 100 negative repetitions pass, but the intermittent original cause remains unproven and monitored. Later helper/history checks pass 93 and registry/normal observer checks pass 52. No assertion or frozen verification pin was weakened.
+- The isolated local restore retains all 12 SQLite snapshots, original coaching failures, 22 pad/board records and later supplemental artifact readbacks. Sequential backups and later supplements do not establish coherent encrypted off-device or host-loss recovery. The Windows supervisor and AC execution/system power holder remain active independently of display; actual TV-off and pre-logon recovery remain unverified.
+
+### Known broken / open
+
+- Full role/tool/collaboration acceptance remains 0/21 established. Independent Azure L7 assessment is not established; the prepared independent evidence packet preserves original pins and gaps. DigitalOcean production migration and private service commissioning require separately available credentials, budget and custody.
+- Physical iPhone Safari/PWA, member journeys, coherent off-device restore, broader interruption/self-sacrifice recovery and the outstanding 49-entry master ledger remain open. Four owning consumer branding drafts are source-only and not deployed. VELYQUA physical telemetry remains Owner-parked. Only Lam may move claims into Verified.
+
+Evidence: [dated observation](governance/observations/abex-orqevia-brand-migration-20261013.json), [acceptance report](docs/evidence/brand-migration-20261013/FINAL-ACCEPTANCE.md), [safe iPhone instructions](docs/ORQEVIA-BRAND-MIGRATION.md), and the retained local immutable receipts in `operations/brand-migration-20261013/` and `operations/coaching-priority-20261013/`. All earlier STATUS sections and original failures remain unchanged.
+
 ## ABEX coaching and durable task-memory continuation — 13 October 2026
 
 ### Claimed, not independently checked

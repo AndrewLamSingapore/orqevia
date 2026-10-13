@@ -1,0 +1,76 @@
+{
+  "schema": "orqevia.legacy-branding-audit-addendum.v1",
+  "state": "PASS",
+  "scope": "CURRENT_PRIMARY_DEPLOYED_SOFTWARE_BRAND_AND_IDENTITY_CONTINUITY_CONSUMER_DOCUMENT_SOURCE_ONLY",
+  "observed_at_utc": "2026-10-13T11:54:14.402356+00:00",
+  "deployed_source_revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+  "deployed_services": [
+    {
+      "service": "prime-epoch-20260919-prime-1",
+      "container_id": "029e776616e0113e1e029c47e69c1067b796e2f80958e884b082b0de4d77e745",
+      "image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "health": "healthy",
+      "declared_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_interface_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5"
+    },
+    {
+      "service": "prime-epoch-20260919-interface-1",
+      "container_id": "2bf5b357d9ce9c24f650296ab5157707d51c90b73460505a807a95a5ce877a31",
+      "image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+      "health": "healthy",
+      "declared_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_interface_source": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
+      "declared_image_id": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5"
+    }
+  ],
+  "checks": {
+    "both_services_declare_exact_deployed_revision": true,
+    "both_services_health_and_image_declaration_match": true,
+    "public_assets_tls_http200_and_exact_installed_bytes": true,
+    "current_public_metadata_correct": true,
+    "production_control_current_brand_and_installed_text_match": true,
+    "public_helper_alias_correct_and_frozen_private_identity_preserved": true,
+    "identity_source_continuity_of_all21_and23_retained_attempts": true,
+    "runtime_stable_during_independent_reads": true,
+    "queue_idle_at_read": true,
+    "no_new_model_calls_or_cost": true,
+    "four_consumer_current_readme_residue_resolved_in_source_only": true
+  },
+  "prior_failure_and_audit_preserved": true,
+  "prior_audit_snapshot": {
+    "path": "LEGACY-BRANDING-AUDIT-PRE-5030941.json",
+    "sha256": "b436aea233d39f7b9d82bfed2f44f1a6cc0d071259dd996ed5729af4165c53db"
+  },
+  "new_live_receipt": {
+    "path": "LEGACY-BRANDING-LIVE-READONLY-20261013T115147Z.json",
+    "sha256": "133659c76bc9b1cb158d17e18019ee6d7d6533158983dc7f5ed580c98d84cd7c"
+  },
+  "new_identity_continuity_receipt": {
+    "path": "IDENTITY-POST-ROLLOUT-CONTINUITY-5030941d-20261013T115241Z.json",
+    "sha256": "d9aafad528c15bb4a2dc50aebdec4fa9477f393dc7dbdb37645cf362ad966718"
+  },
+  "consumer_draft_heads": {
+    "portal": "241230d7a757ab05a789717aaf910494bf95081c",
+    "game": "cd4d70dcc468c0da9a56b3230d07ba83b094c262",
+    "velyqua": "df9951104ac0d66639a20e08742585620758d220",
+    "sky": "af586c5a4a574a18509aa3d34f71aa30bcf2d69a"
+  },
+  "consumer_deployment_verified": false,
+  "physical_safari": "UNKNOWN",
+  "physical_installed_pwa": "UNKNOWN",
+  "physical_owner_session_voice_touch": "UNKNOWN",
+  "dated_actual_identity_passed": 21,
+  "dated_actual_identity_denominator": 21,
+  "new_identity_model_responses": 0,
+  "original_identity_3b_plan_and_terminal_receipts_modified": false,
+  "latest_bound_normal_roles_passed": 21,
+  "historical_pinned_followup_passed": 20,
+  "full_role_accepted_count": 0,
+  "model_calls": 0,
+  "new_model_cost_usd": 0,
+  "http_methods": [
+    "GET"
+  ],
+  "runtime_mutations": 0
+}
