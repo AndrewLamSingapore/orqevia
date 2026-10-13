@@ -20,6 +20,20 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
     original = json.loads(subprocess.check_output(
         ["git", "show", "325c65323df03de1a1a7a12a50b76b3d20bf9bea:governance/operational-manifest.json"], cwd=ROOT))
     reference = manifest.pop("latest_observation")
+    # Account only for the two authority-prose corrections. All dates, runtime
+    # identities and original acceptance evidence must still equal the snapshot.
+    corrections = (
+        ("supersession", "rule",
+         "This manifest alone selects current architecture and operational state. Generated mirrors and public-safe source summaries are subordinate. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
+         "This manifest is a dated component and observation reference; it cannot select current architecture or operational state. STATUS.md is the sole portfolio status record. Each product repository owns its source, configuration, contracts and domain records. Runtime claims require observed runtime identity and evidence. Generated mirrors retain the same dated scope. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history."),
+        ("truth_reconciliation", "authority_boundary",
+         "STATUS.md alone owns current status; this manifest records component and observation references. Dell may independently verify; ABEX remains the PRIME runtime authority.",
+         "STATUS.md records portfolio status claims and their evidence classification; this manifest records dated component and observation references. Each product owns its source, configuration, contracts and domain records in its repository. Runtime claims require observed runtime identity and evidence. Dell may independently verify; ABEX remains the PRIME runtime authority."),
+    )
+    for section, field, prior, corrected in corrections:
+        assert original[section][field] == prior
+        assert manifest[section][field] == corrected
+        manifest[section][field] = prior
     assert manifest == original
     assert manifest["status"] == "STALE"
     assert reference["current_acceptance"] == "UNVERIFIED"

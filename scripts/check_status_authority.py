@@ -17,6 +17,14 @@ def validate_status_authority(root: Path = ROOT) -> None:
 
     manifest = json.loads((root / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
     assert manifest['status_authority'] == STATUS_URL
+    rule = manifest['supersession']['rule']
+    assert 'dated component and observation reference' in rule
+    assert 'cannot select current architecture or operational state' in rule
+    assert 'This manifest alone selects' not in rule
+    boundary = manifest['truth_reconciliation']['authority_boundary']
+    assert 'STATUS.md records portfolio status claims' in boundary
+    assert 'Each product owns its source, configuration, contracts and domain records' in boundary
+    assert 'STATUS.md alone owns current status' not in boundary
     assert manifest['canonical_machine_source'] == {
         'repository': 'AndrewLamSingapore/orqevia',
         'branch': 'main',
