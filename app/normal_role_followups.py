@@ -143,7 +143,7 @@ def tick(queue):
               'preferred_provider':PROVIDER,'ram_mb':0,'vram_mb':0,'timeout_seconds':60,'max_retries':0,
               'max_cost_usd':CAP,'allow_cloud':True,'external_execution':False,'data_classification':'CLOUD_PERMITTED',
               'task_class':'classification' if agent['phase']=='PRACTICE' else 'planning','response_format':'strict_json',
-              'idempotency_key':'normal-followup-20261013:'+agent['agent']+':'+agent['phase'].lower()+':v1'}
+              'idempotency_key':'normal-followup-20261013:'+agent['agent']+':'+agent['phase'].lower()+':v'+str(agent.get('submission_attempt',1))}
             # Same guarded durable submission path as the existing controller.
             # The network-isolated sidecar submits; only the primary executes.
             job=queue.submit(**body)
@@ -151,13 +151,41 @@ def tick(queue):
             state['last_activity_at']=time.time();write_state(state);queued+=1
         return summary(state)
 
+def recover_context_budget_failures(queue,*,catalog_sha256):
+    """Explicit one-time repair after confirmed pre-HTTP context rejection.
+
+    Never replay ambiguous network failures or hide the original assessment.
+    Caller must install and record the corrected scoped catalog first.
+    """
+    if len(catalog_sha256)!=64 or any(c not in '0123456789abcdef' for c in catalog_sha256):
+        raise ValueError('corrected catalog hash required')
+    with ownership() as acquired:
+        if not acquired:return {'state':'COACH_ALREADY_RUNNING'}
+        state=json.loads((ROOT/'state.json').read_text());recovered=[]
+        for agent in state['agents']:
+            if agent['state']!='DONE' or agent.get('submission_attempt',1)!=1 or not agent['assessments']:continue
+            attempt=agent['assessments'][-1]
+            if attempt['phase']!='REASSESSMENT' or attempt['execution_error']!='CONTEXT_BUDGET_EXCEEDED':continue
+            job=queue.get(attempt['job_id'])
+            if job['status']!='failed' or job['error']!='CONTEXT_BUDGET_EXCEEDED' or job['result'] or job.get('inference_receipt'):
+                raise ValueError('pre-execution rejection evidence required')
+            agent.update(state='READY',job_id=None,submission_attempt=2)
+            agent['infrastructure_recovery']={'reason':'CONTEXT_BUDGET_EXCEEDED_BEFORE_HTTP',
+                'original_job_id':job['id'],'corrected_catalog_sha256':catalog_sha256,'at':time.time()}
+            recovered.append(agent['agent'])
+        state['maximum_jobs']+=len(recovered)
+        state['last_activity_at']=time.time();write_state(state)
+        return {'state':'RECOVERED','agents':recovered,'maximum_jobs':state['maximum_jobs']}
+
 def summary(state):
     practice=[x for a in state['agents'] for x in a['assessments'] if x['phase']=='PRACTICE']
-    reassessed=[x for a in state['agents'] for x in a['assessments'] if x['phase']=='REASSESSMENT']
+    reassessed=[next((x for x in reversed(a['assessments']) if x['phase']=='REASSESSMENT'),None) for a in state['agents']]
+    reassessed=[x for x in reassessed if x is not None]
     return {'state':'DONE' if all(a['state']=='DONE' for a in state['agents']) else ('BLOCKED' if all(a['state'] in ('DONE','BLOCKED') for a in state['agents']) else 'IN_PROGRESS'),'wave':state['wave'],
       'practice_assessed':len(practice),'practice_passed':sum(x['outcome']=='PASS' for x in practice),
       'reassessed':len(reassessed),'normal_passed':sum(x['outcome']=='PASS' for x in reassessed),
       'normal_failed':sum(x['outcome']=='FAIL' for x in reassessed),'jobs_submitted':state['jobs_submitted'],
       'normal_denominator':21,'unknown_cost_count':sum(x['actual_cost_usd'] is None for a in state['agents'] for x in a['assessments']),
+      'retained_reassessment_attempts':sum(x['phase']=='REASSESSMENT' for a in state['agents'] for x in a['assessments']),
       'known_cost_usd':sum(x['actual_cost_usd'] for a in state['agents'] for x in a['assessments'] if x['actual_cost_usd'] is not None),
       'full_role_accepted_count':0}

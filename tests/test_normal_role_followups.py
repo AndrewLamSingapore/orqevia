@@ -95,3 +95,26 @@ def test_failed_reassessment_retains_output_and_stops_without_retry(tmp_path,mon
         assert outcome['full_role_accepted_count']==0
         assert saved['agents'][0]['assessments'][0]['original_output']=='{}'
         assert len(queue.calls)==1
+
+
+def test_context_recovery_is_explicit_once_and_preserves_failure(tmp_path):
+    queue=Queue();agent=sample(passed=True)
+    attempt={'phase':'REASSESSMENT','job_id':'failed','outcome':'FAIL',
+             'execution_error':'CONTEXT_BUDGET_EXCEEDED','actual_cost_usd':None}
+    agent.update(state='DONE',phase='REASSESSMENT',assessments=[attempt])
+    queue.jobs['failed']={'status':'failed','error':'CONTEXT_BUDGET_EXCEEDED','result':'','id':'failed'}
+    with patch.object(follow,'ROOT',tmp_path):
+        follow.write_state(state(agent))
+        assert follow.recover_context_budget_failures(queue,catalog_sha256='c'*64)['agents']==['a01']
+        assert follow.recover_context_budget_failures(queue,catalog_sha256='c'*64)['agents']==[]
+        saved=json.loads((tmp_path/'state.json').read_text())
+        assert saved['agents'][0]['assessments']==[attempt]
+        assert saved['maximum_jobs']==28 and saved['agents'][0]['submission_attempt']==2
+
+
+def test_summary_counts_latest_per_agent_and_keeps_attempt_denominator():
+    agent=sample();agent['assessments']=[{'phase':'REASSESSMENT','outcome':'FAIL','actual_cost_usd':None},
+                                      {'phase':'REASSESSMENT','outcome':'PASS','actual_cost_usd':.001}]
+    result=follow.summary(state(agent))
+    assert result['reassessed']==1 and result['normal_passed']==1
+    assert result['retained_reassessment_attempts']==2 and result['normal_denominator']==21
