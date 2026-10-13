@@ -45,6 +45,8 @@ def snapshot(client_id, role):
     observed = datetime.now(timezone.utc).isoformat()
     registry = load_agent_registry()
     stores = telemetry_store_counts()
+    from .coaching_observation import coaching_snapshot
+    coaching = coaching_snapshot(Path(os.getenv('PRIME_DATA_DIR','/data')))
     instance = os.getenv('PRIME_INTERFACE_HOST_ID', 'UNKNOWN')
     revision = os.getenv('PRIME_INTERFACE_RUNTIME_REVISION', 'UNKNOWN')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', instance):
@@ -74,5 +76,6 @@ def snapshot(client_id, role):
             'agents': [{'agent_id': agent['id'], 'name': agent['name'],
                         'registration': 'REGISTERED', 'availability': 'UNKNOWN',
                         'heartbeat': None} for agent in registry['agents']],
+            'coaching': coaching,
             'privacy': {'aggregate_only': True, 'private_tasks_exposed': False,
                         'credentials_exposed': False}}
