@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/AndrewLamSingapore/AndrewLamSingapore/main/portfolio-contracts/schemas/portfolio-event-v1.schema.json",
+  "title": "ORQEVIA Portfolio Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "event_type", "source", "occurred_at", "correlation_id", "evidence_level", "provenance", "payload"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "event_id": { "type": "string", "minLength": 8 },
+    "event_type": { "type": "string", "pattern": "^[a-z][a-z0-9_-]+(\\.[a-z0-9_-]+)+$" },
+    "source": { "enum": ["orqevia", "the-portal", "velyqua", "game-platform", "authority-engine"] },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "subject_id": { "type": ["string", "null"] },
+    "evidence_level": { "enum": ["E0", "E1", "E2", "E3", "E4", "E5"] },
+    "provenance": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+    "payload": { "type": "object" }
+  }
+}
