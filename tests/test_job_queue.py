@@ -13,6 +13,42 @@ def scheduler_only_without_backend_allocation(monkeypatch):
 LOCAL=Provider("ollama","local","fast",8192,4096,2)
 CLOUD=Provider("gpu-cloud","cloud","large",131072,81920,4,1.0,2.0)
 
+
+def test_cloud_workers_do_not_expand_golden_local_admission(tmp_path, monkeypatch):
+    reservations=[]
+    monkeypatch.setattr(backend_admission, 'reserve_model',
+                        lambda *_args, **kwargs: reservations.append(kwargs['global_concurrency']))
+    q=JobQueue(tmp_path/'mixed.db',QueuePolicy(global_concurrency=3,
+               local_concurrency=1,cloud_concurrency=2,cloud_wait_seconds=0,
+               daily_cost_ceiling_usd=1,local_vram_mb=4096))
+    local=q.submit(agent='planner',prompt='local')
+    local_wait=q.submit(agent='critic',prompt='local waiting')
+    cloud=[]
+    for agent in ('a17','a06'):
+        cloud.append(q.submit(agent=agent,prompt='public test',model='large',
+                     allow_cloud=True,data_classification='CLOUD_PERMITTED',max_cost_usd=.1))
+    assert q.claim('local',[LOCAL,CLOUD])['id']==local['id']
+    assert q.claim('cloud1',[LOCAL,CLOUD])['id']==cloud[0]['id']
+    assert q.claim('cloud2',[LOCAL,CLOUD])['id']==cloud[1]['id']
+    assert reservations==[1]
+    assert q.get(local_wait['id'])['status']=='queued'
+    assert q.claim('extra',[LOCAL,CLOUD]) is None
+
+
+def test_mixed_workers_keep_agent_and_budget_limits(tmp_path):
+    q=JobQueue(tmp_path/'mixed.db',QueuePolicy(global_concurrency=3,
+               local_concurrency=1,cloud_concurrency=2,cloud_wait_seconds=0,
+               daily_cost_ceiling_usd=.005,local_vram_mb=4096))
+    local=q.submit(agent='planner',prompt='local')
+    same=q.submit(agent='planner',prompt='public test',model='large',
+                  allow_cloud=True,data_classification='CLOUD_PERMITTED',max_cost_usd=.1)
+    expensive=q.submit(agent='critic',prompt='public test',model='large',
+                  allow_cloud=True,data_classification='CLOUD_PERMITTED',max_cost_usd=.1)
+    assert q.claim('local',[LOCAL,CLOUD])['id']==local['id']
+    assert q.claim('cloud',[LOCAL,CLOUD]) is None
+    assert q.get(same['id'])['status']=='queued'
+    assert q.get(expensive['id'])['status']=='budget_blocked'
+
 def queue(tmp_path,**kw):
     p=QueuePolicy(global_concurrency=kw.get("global",2),per_agent_concurrency=1,local_ram_mb=8192,
                   local_vram_mb=4096,cloud_wait_seconds=0,max_job_cost_usd=2,daily_cost_ceiling_usd=3)

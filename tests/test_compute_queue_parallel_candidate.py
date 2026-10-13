@@ -16,17 +16,28 @@ from pathlib import Path
 from app.job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 
 
-def candidate_global_concurrency(environment, profile):
+def extracted_policy_function(name, *args):
     source = Path(__file__).resolve().parents[1] / "app" / "compute_queue_api.py"
     tree = ast.parse(source.read_text(encoding="utf-8"))
     function = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
-                    and node.name == "candidate_global_concurrency")
+                    and node.name == name)
     namespace = {}
     exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), "exec"), namespace)
-    return namespace[function.name](environment, profile)
+    return namespace[function.name](*args)
+
+
+def candidate_global_concurrency(environment, profile):
+    return extracted_policy_function('candidate_global_concurrency', environment, profile)
 
 
 class QueueParallelCandidateTests(unittest.TestCase):
+    def test_cloud_workers_require_explicit_opt_in(self):
+        for env in ({}, {'PRIME_CLOUD_QUEUE_PARALLEL_ENABLED':'true'},
+                    {'PRIME_CLOUD_QUEUE_PARALLEL_ENABLED':'0'}):
+            self.assertEqual(extracted_policy_function('candidate_cloud_worker_slots',env,2),0)
+        self.assertEqual(extracted_policy_function('candidate_cloud_worker_slots',
+            {'PRIME_CLOUD_QUEUE_PARALLEL_ENABLED':'1'},2),2)
+
     def setUp(self):
         # Exercise scheduler overlap with a fake executor; admission is N=1
         # until a measured backend authorizes more than one local generation.

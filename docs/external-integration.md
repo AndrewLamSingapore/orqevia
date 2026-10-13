@@ -42,7 +42,14 @@ cannot be guaranteed without provider-specific evidence. Unknown usage and cost
 remain null; queue accounting conservatively retains estimated reservations.
 Fallback is restricted to explicit same-tier IDs after safe preflight/rejected
 admission failures. Partial/ambiguous requests are never automatically replayed.
-Queue concurrency remains one; cloud parallelism has not been qualified.
+Local inference defaults to one slot. The optional
+`PRIME_CLOUD_QUEUE_PARALLEL_ENABLED=1` adds independent cloud queue workers up to
+`PRIME_CLOUD_REQUEST_CAPACITY` (one by default, capped at four). For example,
+capacity two permits one Golden local inference plus two cloud requests from
+distinct agents. This does not increase local admission, waive provider selection,
+locality or budgets, or establish free credits or live qualification. Leave the
+option disabled until provider access and any required spending authority are
+established. Inline and queued cloud requests share the same cloud capacity.
 GET /api/compute-queue/providers/health is owner-authenticated and reports local
 readiness separately from unmeasured external health; it makes no external probe.
 
