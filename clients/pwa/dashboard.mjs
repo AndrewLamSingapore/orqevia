@@ -26,6 +26,23 @@ export function coachingPhaseCounts(agents) {
   });
 }
 
+export function coachingDetailLines(agent) {
+  const score=value=>value===0||value===100?String(value):'UNKNOWN';
+  const date=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))?value:'UNKNOWN';
+  const lines=[`Synthetic case score: baseline ${score(agent?.baseline_score)} / latest ${score(agent?.latest_score)} (0 or 100; not role competence)`,
+    'Full role acceptance: NOT ESTABLISHED',`Last activity: ${date(agent?.last_activity_at)}`];
+  if(typeof agent?.blocker==='string') lines.push(`Blocker: ${agent.blocker.slice(0,96)}`);
+  if(Array.isArray(agent?.failures)) for(const failure of agent.failures.slice(0,6)) {
+    const errors=Array.isArray(failure?.errors)?failure.errors.filter(x=>typeof x==='string'&&/^[a-zA-Z0-9_.:-]{1,96}$/.test(x)).slice(0,12):[];
+    lines.push(`Retained failure: ${failure?.phase||'UNKNOWN'} / ${date(failure?.assessed_at)} / ${errors.join(', ')||'assessment failed'}`);
+  }
+  if(Array.isArray(agent?.coaching_actions)) lines.push(`Recorded coaching actions: ${agent.coaching_actions.length}`);
+  if(typeof agent?.coaching_method==='string') lines.push(`Method: ${agent.coaching_method.slice(0,1000)}`);
+  if(Array.isArray(agent?.reassessment_results)) for(const result of agent.reassessment_results.slice(0,2))
+    lines.push(`Synthetic reassessment: ${result?.outcome==='PASS'?'PASS':result?.outcome==='FAIL'?'FAIL':'UNKNOWN'} / ${date(result?.assessed_at)}`);
+  return lines;
+}
+
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
   let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, generation=null;
@@ -61,12 +78,12 @@ if(typeof document!=='undefined') {
     const tick=Date.parse(coaching.controller?.last_tick_at||'');
     const controllerAvailability=Number.isFinite(tick)&&tick<=Date.now()+5000?(['OBSERVED','STALE','UNKNOWN'].includes(coaching.controller?.availability)?coaching.controller.availability:'UNKNOWN'):'UNKNOWN';
     const controller=coaching.controller?.last_state||'UNKNOWN';
-    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - internal role assessment only`);
+    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - synthetic role assessment only; full role acceptance is separate`);
     const counts=coachingPhaseCounts(coaching.agents);
     if(summary&&counts){for(const item of counts){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=`${item.assessed} / 21 assessed`;const l=document.createElement('small');l.textContent=`${item.phase}: ${item.passed} pass, ${item.failed} fail, ${item.unassessed} unassessed`;c.append(s,l);summary.append(c);}}
     if(!counts){text('coaching-state','UNKNOWN');empty('Complete per-role observation unavailable; partial or malformed registry.');return;}
     if(!Array.isArray(coaching.agents)||coaching.agents.length===0){empty('No per-role observation (cohort unavailable or partial registry).');return;}
-    if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);list.append(row);}}
+    if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${typeof agent.role==='string'?agent.role.slice(0,128):'Role UNKNOWN'} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Synthetic acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);for(const line of coachingDetailLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
   }
   function unavailable(state){latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');text('telemetry-source','No current authenticated measurement');}
   function render(){

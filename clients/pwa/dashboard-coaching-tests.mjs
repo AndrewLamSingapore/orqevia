@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {coachingStatus,coachingPhaseCounts} from './dashboard.mjs';
+import {coachingStatus,coachingPhaseCounts,coachingDetailLines} from './dashboard.mjs';
 
 const time = Date.parse('2026-10-12T01:00:00Z');
 const observed = {status: 'OBSERVED', last_event_at: new Date(time).toISOString(), cohort_id: 'c', cohort_source_revision: 'a'.repeat(40), baseline_pass_count: 0, acceptance_pass_count: 0, completed_count: 0, agents: []};
@@ -20,6 +20,14 @@ assert.equal(coachingPhaseCounts(agents)[1].assessed,0);
 assert.equal(coachingPhaseCounts(agents.slice(1)),null);
 assert.equal(coachingPhaseCounts([...agents.slice(0,20),agents[0]]),null);
 assert.equal(coachingPhaseCounts([{...agents[0],baseline_pass:'true'},...agents.slice(1)])[0].passed,0);
+const details=coachingDetailLines({baseline_score:0,latest_score:100,full_role_acceptance_status:'ACCEPTED',
+  failures:[{phase:'baseline',assessed_at:'2026-10-12T01:00:00Z',errors:['field_contract_mismatch']}],
+  coaching_actions:[{action:'practice_submitted'}],reassessment_results:[{outcome:'PASS',assessed_at:'2026-10-12T01:01:00Z'}]});
+assert.ok(details.some(x=>x.includes('baseline 0 / latest 100')));
+assert.ok(details.includes('Full role acceptance: NOT ESTABLISHED'));
+assert.ok(details.some(x=>x.includes('Retained failure: baseline')));
+assert.ok(details.some(x=>x.includes('Synthetic reassessment: PASS')));
+assert.ok(coachingDetailLines({baseline_score:'100',latest_score:NaN})[0].includes('baseline UNKNOWN / latest UNKNOWN'));
 
 const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 assert.ok(html.includes('id="coaching-view"'));
