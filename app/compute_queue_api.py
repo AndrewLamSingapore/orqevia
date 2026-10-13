@@ -43,13 +43,23 @@ def candidate_global_concurrency(environment: dict[str, str], profile: dict | No
     return int(requested)
 
 
+def candidate_cloud_worker_slots(environment: dict[str, str], capacity: int) -> int:
+    """Keep independent cloud workers disabled until explicitly activated."""
+    return capacity if environment.get('PRIME_CLOUD_QUEUE_PARALLEL_ENABLED', '0') == '1' else 0
+
+
 POLICY = QueuePolicy.from_env()
 # Additional slots are candidates only, requiring explicit backend and hash-pinned
 # measured-profile support. It is never inferred merely from spare host CPU.
 _candidate_slots = candidate_global_concurrency(os.environ, runtime_compute_profile())
 POLICY = replace(POLICY, global_concurrency=_candidate_slots,
+                 local_concurrency=_candidate_slots,
                  per_agent_concurrency=1,
                  background_concurrency=(_candidate_slots - 1 if _candidate_slots > 1 else 0))
+# Explicit opt-in adds cloud workers without expanding local backend admission.
+# Provider selection, locality, per-agent limits and existing budgets still apply.
+POLICY = replace(POLICY, global_concurrency=_candidate_slots +
+                 candidate_cloud_worker_slots(os.environ, POLICY.cloud_concurrency))
 validate_configuration(SETTINGS,POLICY)
 queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 

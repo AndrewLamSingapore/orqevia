@@ -47,9 +47,15 @@ class QueuePolicy:
     starvation_boost_cap: int = 100
     max_job_cost_usd: float = 2.0
     daily_cost_ceiling_usd: float = 10.0
-    # A separate upper bound also covers inline governed cloud requests. It
-    # never increases the measured global/local worker limit.
+    # Shared upper bound for queued and inline governed cloud requests.
     cloud_concurrency: int = 1
+    # None preserves existing standalone queue policies. Production sets the
+    # measured local limit explicitly when adding independent cloud workers.
+    local_concurrency: int | None = None
+
+    @property
+    def local_inference_limit(self) -> int:
+        return self.global_concurrency if self.local_concurrency is None else self.local_concurrency
 
     @classmethod
     def from_env(cls) -> "QueuePolicy":
@@ -367,17 +373,20 @@ class JobQueue:
         if sum(1 for x in active if identity(x["agent"])==row["agent"])>=self.policy.per_agent_concurrency:return None,"per-agent concurrency limit",0
         used_ram=sum(int(x["ram_mb"]) for x in active if x["provider"] in local_names)
         used_vram=sum(int(x["vram_mb"]) for x in active if x["provider"] in local_names)
-        # Reserve a worker for Owner-critical work, regardless of whether the
-        # other workers are executing local or cloud jobs. A cloud fallback
-        # must not bypass the reserve after local capacity is exhausted.
+        local_active=[x for x in active if x['provider'] in local_names and not x['cloud_inflight']]
+        # Legacy shared-worker policies preserve their Owner reserve. With
+        # independent cloud workers, the reserve applies to the local envelope.
+        independent_cloud_workers=self.policy.global_concurrency>self.policy.local_inference_limit
+        reserve_active=local_active if independent_cloud_workers else active
         background_at_limit=(self.policy.background_concurrency>0 and
             row["priority"]<PRIORITIES["critical"] and
-            sum(1 for x in active if x["priority"]<PRIORITIES["critical"])
+            sum(1 for x in reserve_active if x["priority"]<PRIORITIES["critical"])
             >=self.policy.background_concurrency)
-        if background_at_limit:return None,"owner inference reserve",0
+        if background_at_limit and not independent_cloud_workers:return None,"owner inference reserve",0
         local=[]
         for p in providers:
             if p.kind!="local":continue
+            if background_at_limit or len(local_active)>=self.policy.local_inference_limit:continue
             if sum(1 for x in active if x["provider"]==p.name)>=p.concurrency:continue
             if row["ram_mb"]+used_ram>min(p.ram_mb,self.policy.local_ram_mb):continue
             if row["vram_mb"]+used_vram>min(p.vram_mb,self.policy.local_vram_mb):continue
@@ -470,7 +479,7 @@ class JobQueue:
                     try:
                         backend_admission.reserve_model(c,self.backend_endpoint,row['id'],
                                                         provider.model,row['ram_mb'],
-                                                        global_concurrency=self.policy.global_concurrency)
+                                                        global_concurrency=self.policy.local_inference_limit)
                     except PermissionError:
                         provider,reason,estimate=self._route(c,row,providers,local_unavailable=True)
                         if not provider:

@@ -73,7 +73,8 @@ def validate_configuration(settings,queue_policy):
     if mode=='measured' and not profile:
         raise RuntimeError('Measured local inference admission requires a valid Compute Profile')
     if not profile:return
-    if queue_policy.global_concurrency>profile['normal_concurrency']:
+    local_limit=getattr(queue_policy,'local_inference_limit',queue_policy.global_concurrency)
+    if local_limit>profile['normal_concurrency']:
         raise RuntimeError('Queue concurrency exceeds measured envelope')
     if settings.multi_specialist_workers>profile['normal_concurrency']:
         raise RuntimeError('Specialist concurrency exceeds measured envelope')

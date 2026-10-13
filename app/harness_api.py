@@ -95,7 +95,7 @@ def status(authorization: str | None = Header(default=None)):
         "artifact_agents": sorted(harness.policy.artifact_agents),
         "bounded_wasm_agents": sorted(harness.policy.wasm_agents),
         "cloud_overflow": False,
-        "local_concurrency": compute_queue_api.queue.policy.global_concurrency,
+        "local_concurrency": compute_queue_api.queue.policy.local_inference_limit,
         "counts": counts,
     }
 

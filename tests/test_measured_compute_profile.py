@@ -77,6 +77,15 @@ def test_profile_cannot_expand_scheduler_or_models(measured):
     with pytest.raises(PermissionError,match='Model'):cp.require_compute_capacity('unmeasured-model')
 
 
+def test_cloud_workers_do_not_expand_measured_local_profile(measured):
+    from app.job_queue import QueuePolicy
+    settings=SimpleNamespace(ollama_base_url='http://fixture',multi_specialist_workers=1,
+                             context_tokens=8192,max_output_tokens=512,required_models=['gemma3:1b'])
+    cp.validate_configuration(settings,QueuePolicy(global_concurrency=3,local_concurrency=1))
+    with pytest.raises(RuntimeError,match='concurrency'):
+        cp.validate_configuration(settings,QueuePolicy(global_concurrency=3,local_concurrency=2))
+
+
 @pytest.mark.parametrize('mutation', [
     {'runtime_version': None},
     {'runtime_version': ''},
