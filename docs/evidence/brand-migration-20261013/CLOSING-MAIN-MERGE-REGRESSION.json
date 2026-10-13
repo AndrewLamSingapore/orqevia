@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-10-13T12:08:35.798416+00:00",
+  "source_head": "2a607ce327b08a2103efcf74aecee47fb818e0d2",
+  "exit_code": 0,
+  "scope": "EXACT_COMMITTED_SOURCE_PLUS_READ_ONLY_CURRENT_DOCUMENT_OVERLAY_NOT_NEW_RUNTIME",
+  "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\closing-main-merge-regression.log",
+  "log_sha256": "09ee61a62813f5220f53672640212517072cdf12569b482595409c5e4aeeaa55"
+}

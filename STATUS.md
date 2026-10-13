@@ -72,6 +72,18 @@ Evidence: [dated observation](governance/observations/abex-orqevia-brand-migrati
 
 Evidence navigation: [task ledger](docs/operations/abex-autonomy/MASTER_TASK_LEDGER.md), [21-agent matrix](docs/operations/abex-autonomy/CERTIFICATION_MATRIX_21.md), [evidence index](docs/operations/abex-autonomy/EVIDENCE_INDEX.md). Original dated sections and Lam-only Verified entries are preserved.
 
+## Telemetry source and external runtime follow-up - 13 October 2026
+
+### Claimed, not independently checked
+
+- Base owning main for this dated update was `5026ad4dcc0dcb0758e532377cf59c3565b056c8`. Telemetry [PR #302](https://github.com/AndrewLamSingapore/orqevia/pull/302), exact source `62a820e3cc2c52d5c76d09947656e6a8cf47d73b`, includes the measured Windows sampler, scoped dashboard and reviewed Windows lock/archive repairs. Ubuntu [run 38391310671](https://github.com/AndrewLamSingapore/orqevia/actions/runs/38391310671) passed 5,243 tests, three skips and 96 subtests, plus PWA, Compose, package and archive checks. Windows [run 38391313723](https://github.com/AndrewLamSingapore/orqevia/actions/runs/38391313723) passed 6,050 tests and 106 subtests, admission and PWA checks, and disposable off-host image packaging, Golden-record lookup, TLS/anonymous denial and artifact preservation. Original failing receipts, the historical STATUS digest and all 54 protected source files remain retained.
+- At 19:36 Singapore time, PRIME and Interface were observed at external runtime revision `3b129d9d15496fc692a731e7a4d6a3e7624c9f7f`; this sweep did not install that revision. Four containers were running and healthy out of 89 total, with 85 stopped. At 19:37, backend health and the CA-validated LAN PWA returned 200; protected anonymous Interface requests returned 401. These are dated endpoint and container observations, not authenticated client or host-stability acceptance.
+- The final observation window closed at 19:56:34 Singapore time: observed runtime source was `5030941d2c878c611d77f3a64dc9b55bc3a7c0eb`, with 91 containers, four running and healthy, 87 stopped and zero observed restart/OOM flags. Health and PWA returned 200; protected anonymous requests returned 401. The read-only aggregate recorded 21 registered agents, zero active job records and 166 objectives; all four host metrics remained null with `HOST_COLLECTOR_NOT_CONFIGURED`. No further runtime refresh is included in this dated observation.
+- Installed CPU, memory, C: disk and latency gauges remained null with `HOST_COLLECTOR_NOT_CONFIGURED`. PR #302 is an unmerged source candidate, distinct from the observed runtime. No host sampler service, on-host image build or runtime rollout was performed by this sweep; any integration must account for the externally changed source.
+- The 19:35 seven-day Windows inventory retained 13 bugchecks and 15 unexpected shutdowns, with no newer bugcheck than the already recorded 18:21 event. The native administrator request for dump copying was canceled; dump analysis remains deferred and a hardware or driver cause remains unestablished.
+
+Evidence: local `outputs/telemetry-final-ci.json`, `outputs/container-health-after-crash.json`, `outputs/current-endpoint-telemetry-observation.json` and `outputs/windows-stability-final.json` under `C:/Users/Admin/Documents/Codex/2026-10-13/ru/`. This dated follow-up adds source and runtime deltas to the earlier sweep observation without changing Verified sections or prior receipts.
+
 ## Portfolio bug sweep and STATUS reference reconciliation - 13 October 2026
 
 ### Claimed, with scoped source and audit receipts
