@@ -103,6 +103,19 @@ def test_manifest_cannot_select_a_competing_status_authority(authority_copy):
         validate_status_authority(authority_copy)
 
 
+@pytest.mark.parametrize('section,field,obsolete_claim', [
+    ('supersession', 'rule', 'This manifest alone selects current architecture and operational state.'),
+    ('truth_reconciliation', 'authority_boundary', 'STATUS.md alone owns current status; this manifest records component and observation references.'),
+])
+def test_manifest_rejects_obsolete_universal_authority(authority_copy, section, field, obsolete_claim):
+    path = authority_copy / 'governance/operational-manifest.json'
+    manifest = json.loads(path.read_text(encoding='utf-8'))
+    manifest[section][field] = obsolete_claim
+    path.write_text(json.dumps(manifest), encoding='utf-8')
+    with pytest.raises(AssertionError):
+        validate_status_authority(authority_copy)
+
+
 def test_resume_canonical_link_is_derived_from_manifest():
     manifest = json.loads((ROOT / 'governance/operational-manifest.json').read_text(encoding='utf-8'))
     manifest['canonical_machine_source']['branch'] = 'isolated-fixture'

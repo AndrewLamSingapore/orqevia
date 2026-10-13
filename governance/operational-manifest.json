@@ -334,7 +334,7 @@
     "secret_values_allowed": false
   },
   "supersession": {
-    "rule": "This manifest alone selects current architecture and operational state. Generated mirrors and public-safe source summaries are subordinate. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
+    "rule": "This manifest is a dated component and observation reference; it cannot select current architecture or operational state. STATUS.md is the sole portfolio status record. Each product repository owns its source, configuration, contracts and domain records. Runtime claims require observed runtime identity and evidence. Generated mirrors retain the same dated scope. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
     "duplicate_current_checkpoints_allowed": false,
     "superseded_prime_prs": [
       59,
@@ -353,7 +353,7 @@
   },
   "truth_reconciliation": {
     "version": "1.0.0",
-    "authority_boundary": "STATUS.md alone owns current status; this manifest records component and observation references. Dell may independently verify; ABEX remains the PRIME runtime authority.",
+    "authority_boundary": "STATUS.md records portfolio status claims and their evidence classification; this manifest records dated component and observation references. Each product owns its source, configuration, contracts and domain records in its repository. Runtime claims require observed runtime identity and evidence. Dell may independently verify; ABEX remains the PRIME runtime authority.",
     "result_contract": "contracts/truth-reconciliation-v1.schema.json",
     "execution_record_contract": "contracts/prime-execution-record-v1.schema.json",
     "repository_registry": "governance/repository-registry.json",
