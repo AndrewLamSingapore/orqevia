@@ -36,6 +36,27 @@ If you are an AI agent updating this file:
 
 ---
 
+## Completed source integrations and remaining runtime work - 13 October 2026
+
+### Claimed, with scoped source and deployment receipts
+
+- ORQEVIA controller repair #286, dashboard #292, Tool #293 and governed HF QA #294 are merged; current source at this observation is `738682b21a8a48e718b4f99d17bf339e495af821`. HF/Tool combined tests pass235 cases and queue/coaching regressions pass37. Source integration does not install or activate providers.
+- Profile #25 merged at `8d4683909fbb7b7b5444dad00190391f98b3615a`: generated-contract LF attributes match reviewed source; Windows generator/conformance and CI pass. Original signature-policy rejection and successful policy-compliant squash merge are retained.
+- Sky #18 merged at `8cb2dcf428ff40e9313645c8a4952fc4e0ecd7e9`:21 local tests and CI pass; exact production is READY and HTTP200 returns the three declared browser response headers. Physical touch/mobile acceptance remains separate.
+- Game #42/#43 source is merged at `51c1f720409cd45747f47a578966c64df361d4e7`;18 package commands and CI pass, exact production is READY. Existing Supabase project `vtrfgckzpjgtmqsnumur` is ACTIVE_HEALTHY; gm-turn v17 is ACTIVE with JWT verification preserved and retrieved code matching reviewed #42. Full v16 rollback source is retained. No authenticated gameplay turn was exercised.
+- VELYQUA #88 merged at `97dd856f4af3723c89bb5f55b7e3d94d29a5af18`: current native SecureStore/web AsyncStorage disclosure and original static test agree; CI passes. Documentation/test only, without authentication behavior or live security qualification changes.
+- Authority #92 merged at `069f5b505672eb8944b2b9da9acd974e784896d8`: fresh exact-head Node22 CI installed declared patched dependencies and passed47 tests, lint, contracts and build. The latest production observed before this supplement still points to earlier `f58033a2`; deployment correspondence is pending. No clean dependency audit is claimed.
+- Superseded source PRs ORQ #287/#288/#290, Game #35/#41 and VELYQUA #77 were closed after reviewed successor integration. Original branches, histories and failure receipts remain preserved; the earlier95-open-PR census is dated and is not a current count.
+
+### Open and unverified
+
+- DELL's A19 successor is still preparation: earlier whole-file resolution omitted unique dispatch adapters; failed revision `4c2bef6` is preserved on an archive branch. DELL reports corrected `eda8e403` with520 source tests passing, but #260 delta, final coverage/net-diff, protected-initialization baseline failure comparison, independent review and integration remain incomplete. #240 stays open. No L7 or live qualification is awarded.
+- Existing ABEX controller/Interface installation and fresh21-role baseline/practice/acceptance receipts remain unavailable through this session's Windows owner Docker access dependency. Historical cohorts are not promoted to current21/21. All fabric live execution stages, authenticated product journeys, physical-device acceptance, protected initialization/L7, off-device backup restore and host hardware diagnosis remain outstanding.
+- DELL acknowledged the expanded work queue: A19, exact superseded-source proof, installation/rollback runbook, read-only fabric verification, product/dependency reviews and backlog mapping. ABEX retains independent integration and operational single-writer ownership; mailbox posts require an actual reply to establish receipt.
+- Enforced sandbox/approval policy is unchanged. Automatic approval rejected two disposable pytest-directory deletions; no deletion occurred. These localized dependencies do not stop independent source work.
+
+Evidence: `governance/observations/abex-integration-followup-20261013.json`, local `operations/full-sweep-20261013/` receipts, and GitHub mailbox #284. This dated supplement preserves all original STATUS text, Verified sections, frozen pins, consumed runs and manifest dates.
+
 ## ABEX–DELL end-to-end reconciliation — 13 October 2026
 
 ### Claimed, not independently checked

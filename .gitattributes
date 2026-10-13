@@ -84,3 +84,6 @@ docs/evidence/autonomy-20261013/** -text
 
 # Preserve the dated reconciliation observation on both PCs.
 governance/observations/abex-dell-reconciliation-20261013.json -text
+
+# Preserve the follow-up integration receipt bytes.
+governance/observations/abex-integration-followup-20261013.json -text
