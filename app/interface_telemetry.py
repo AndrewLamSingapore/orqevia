@@ -66,8 +66,8 @@ def snapshot(client_id, role):
     metrics = [metric('registered_agents', len(registry['agents']), 'OBSERVED', 'agent-registry'),
                metric('active_job_records', active, 'OBSERVED' if active is not None else 'UNAVAILABLE', 'compute-queue'),
                metric('stored_objectives', stores['objectives']['count'], stores['objectives']['status'], 'objective-store')]
-    for name, unit in [('cpu', 'percent'), ('memory', 'percent'), ('disk', 'percent'), ('network_latency', 'ms')]:
-        metrics.append(metric(name, None, 'UNAVAILABLE', 'HOST_COLLECTOR_NOT_CONFIGURED', unit))
+    from .host_telemetry import host_metrics
+    metrics.extend(host_metrics(instance, observed))
     return {'schema_version': 'orqevia.telemetry.v1', 'snapshot_id': str(uuid.uuid4()),
             'observed_at': observed, 'freshness_seconds': 60,
             'audience': {'client_id': client_id, 'role': role},

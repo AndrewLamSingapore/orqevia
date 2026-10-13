@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {telemetryFreshness} from './dashboard.mjs';
+import {telemetryFreshness,hostGaugeValues} from './dashboard.mjs';
 const time=Date.parse('2026-10-12T01:00:00Z');
 const report={schema_version:'orqevia.telemetry.v1',source:{instance:'fixture',revision:'a'.repeat(40)},observed_at:new Date(time).toISOString(),freshness_seconds:60,metrics:[],agents:Array.from({length:21},(_,i)=>({agent_id:`fixture-${i}`}))};
 assert.equal(telemetryFreshness(report,time),'OBSERVED');
@@ -17,3 +17,13 @@ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.ok(html.includes('id="objective-form"'));assert.ok(html.includes('id="enrollment-form"'));assert.ok(html.includes('id="artifact-section"'));
 assert.ok(!html.includes('21/21 agents ready'));assert.ok(!/>\s*100%\s*</.test(html));
 console.log('Dashboard source, freshness, duplicate-agent rejection, PWA identity and API cache boundary: 12 assertions PASS');
+
+const measured={metric_id:'network_latency',value:12.25,unit:'ms',collection_status:'OBSERVED',source_system:'WINDOWS_HOST',measurement_scope:'LOCAL_LOOPBACK_HTTP_HEALTH',event_timestamp:new Date(time).toISOString()};
+assert.equal(hostGaugeValues([measured],time).network_latency.text,'12.3 ms');
+assert.equal(hostGaugeValues([measured],time+90001).network_latency.text,'—');
+assert.equal(hostGaugeValues([{...measured,event_timestamp:new Date(time+6000).toISOString()}],time).network_latency.text,'—');
+for(const change of [{value:NaN},{value:Infinity},{value:-1},{value:5001},{value:'7'},{unit:'percent'},{measurement_scope:'GLOBAL_NETWORK'},{collection_status:'UNAVAILABLE'},{source_system:'LINUX_CONTAINER'}]) assert.equal(hostGaugeValues([{...measured,...change}],time).network_latency.text,'—');
+assert.equal(hostGaugeValues([measured,measured],time).network_latency.text,'—');
+assert.equal(hostGaugeValues([],time).cpu.text,'—');
+assert.ok(html.includes('<small>C: used</small>'));assert.ok(html.includes('<small>Local HTTP</small>'));
+console.log('Host gauge values, explicit local scope, receipt age/future bounds and unavailable clearing: 16 assertions PASS');

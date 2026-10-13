@@ -29,9 +29,9 @@ async function fixture(){
   await import('data:text/javascript;base64,'+encoded);
   return {nodes,listeners,documentListeners,intervals,requests,
     session(value){listeners.get('orqevia-session')({detail:value?{...value,clientId:'fixture-client',generation:1}:null});},
-    respond(i,instance='CURRENT',observed=Date.now(),audience='fixture-client',coaching=null){
+    respond(i,instance='CURRENT',observed=Date.now(),audience='fixture-client',coaching=null,hostMetrics=[]){
       requests[i].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date(observed).toISOString(),freshness_seconds:60,
-        audience:{client_id:audience},metrics:[{metric_id:'registered_agents',collection_status:'OBSERVED',value:21}],source:{instance,revision:'a'.repeat(40)},
+        audience:{client_id:audience},metrics:[{metric_id:'registered_agents',collection_status:'OBSERVED',value:21},...hostMetrics],source:{instance,revision:'a'.repeat(40)},
         coaching,agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,name:'fixture',registration:'REGISTERED',availability:'UNKNOWN'}))}),
         {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
     }
@@ -42,6 +42,18 @@ test('No telemetry request until authenticated session is confirmed',async()=>{
   const f=await fixture();assert.equal(f.requests.length,0);
   f.session({role:'MEMBER'});assert.equal(f.requests.length,1);
   f.respond(0);await settle();assert.equal(f.nodes.get('telemetry-state').textContent,'OBSERVED');
+});
+
+test('current host measurements render and are cleared on session loss',async()=>{
+  const f=await fixture(),now=Date.now();f.session({role:'MEMBER'});
+  const metric={metric_id:'cpu',value:30,unit:'percent',collection_status:'OBSERVED',source_system:'WINDOWS_HOST',measurement_scope:'HOST_CPU_LOAD',event_timestamp:new Date(now).toISOString()};
+  f.respond(0,'CURRENT',now,'fixture-client',null,[metric,{...metric,metric_id:'network_latency',unit:'ms',value:12.25,measurement_scope:'LOCAL_LOOPBACK_HTTP_HEALTH'}]);
+  await settle();
+  assert.equal(f.nodes.get('metric-cpu').textContent,'30.0%');
+  assert.equal(f.nodes.get('metric-network_latency').textContent,'12.3 ms');
+  assert.match(f.nodes.get('telemetry-source').textContent,/host measurements 2\/4/);
+  f.session(null);
+  assert.equal(f.nodes.get('metric-cpu').textContent,'—');assert.equal(f.nodes.get('metric-network_latency').textContent,'—');
 });
 
 test('a valid-looking measurement addressed to a different client is rejected',async()=>{
