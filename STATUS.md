@@ -36,6 +36,22 @@ If you are an AI agent updating this file:
 
 ---
 
+## Portfolio bug sweep and STATUS reference reconciliation - 13 October 2026
+
+### Claimed, with scoped source and audit receipts
+
+- The seven-repository sweep resolved each owning source independently. ORQEVIA source for this supplement is `acf9077c9a2eefa23370be06695588f08ab4adc3`. STATUS.md remains the sole portfolio status reference; product source and domain records stay with their owning repositories, and dated manifests do not establish current runtime status.
+- Reviewed reference corrections are merged: ORQEVIA [#300](https://github.com/AndrewLamSingapore/orqevia/pull/300) at `acf9077`; Authority [#99](https://github.com/AndrewLamSingapore/authority-engine/pull/99) at `2c073f4`; Profile [#26](https://github.com/AndrewLamSingapore/AndrewLamSingapore/pull/26) at `20177ab`; VELYQUA [#90](https://github.com/AndrewLamSingapore/velyqua/pull/90) at `f40df2b`; Portal [#84](https://github.com/AndrewLamSingapore/the-portal/pull/84) at `bcc1eea`; Game [#44](https://github.com/AndrewLamSingapore/game-platform/pull/44) at `b3dc794`; Sky [#19](https://github.com/AndrewLamSingapore/sky-tablet/pull/19) at `fd10fa5`. Independent source review and exact candidate CI passed; current authority references were corrected while historical bodies, dates and runtime evidence were retained.
+- Game [#45](https://github.com/AndrewLamSingapore/game-platform/pull/45) is merged at `9553e16da8173f3ce3712807addd0b369374337d`. It restores campaign-creation controls after success or returned/thrown failure. Four tests invoke the shipped handler; the full source test chain and exact-head CI passed, with separate independent review. Authenticated production gameplay acceptance remains separate.
+
+### Open and bounded observations
+
+- Windows recorded a fresh bugcheck `0x133` at 18:21:58 Singapore time. Follow-up found NUL-filled files and a broken ref in the newly created telemetry scratch checkout; its parent Git objects remained readable. The original 164 registered worktrees were clean at the 18:31 follow-up. The damaged scratch and crash evidence are retained. No hardware cause is established.
+- The last read-only observation found four existing live containers healthy. CPU, memory, disk and latency telemetry remain unavailable; their source repair is a separate lane. Container health and source CI do not establish host stability, fresh 21-role acceptance, L7 certification or independent backup restoration.
+- The Jarvis tunnel probe returned `client_not_seen`. Owner explicitly instructed SKIP for tunnel recovery; no recovery retry or tunnel restart is claimed. This does not stop the completed repository reconciliation or other independent work.
+
+Evidence: merged PRs above; retained local `outputs/repository-reconciliation-receipts.json`, `outputs/game-bug-fix-receipt.json` and `outputs/worktree-cleanliness.json` under `C:/Users/Admin/Documents/Codex/2026-10-13/ru/`; independent audit receipts in `work/github-sweep/` and `work/portfolio-sweep/`. This supplement adds a dated non-Verified observation and preserves every earlier STATUS section and failure receipt.
+
 ## Completed source integrations and remaining runtime work - 13 October 2026
 
 ### Claimed, with scoped source and deployment receipts
