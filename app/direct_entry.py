@@ -58,6 +58,9 @@ async def bounded_service_requests(request,call_next):
             try:request._body=await asyncio.wait_for(read_body(),timeout=SERVICE_BODY_SECONDS)
             except TimeoutError:return JSONResponse({'detail':'Service upload deadline exceeded'},status_code=408)
             except ValueError:return JSONResponse({'detail':'Service body exceeds limit'},status_code=413)
+            # No-body control routes still pass authentication and upload bounds;
+            # required request models reject absent bodies downstream themselves.
+            if not request._body:return await call_next(request)
             import json
             def unique(pairs):
                 result={}

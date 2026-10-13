@@ -62,6 +62,21 @@ def test_exact_body_survives_bounded_json_validation(monkeypatch):
     assert response.status_code==200
 
 
+def test_empty_control_post_remains_authenticated_and_reaches_route(monkeypatch):
+    monkeypatch.setenv('PRIME_SPINE_TOKEN',OWNER)
+    calls=[]
+    async def receive():return {'type':'http.request','body':b'','more_body':False}
+    async def next_handler(request):
+        calls.append(await request.body())
+        return JSONResponse({'received':True})
+    headers=[(b'authorization',('Bearer '+OWNER).encode())]
+    request_scope=scope(headers);request_scope['path']='/api/agent-tool-bridge/sessions/job/stop'
+    response=asyncio.run(direct_entry.bounded_service_requests(Request(request_scope,receive),next_handler))
+    assert response.status_code==200 and calls==[b'']
+    with TestClient(direct_entry.app,raise_server_exceptions=False) as client:
+        assert client.post('/api/capabilities/core/request',headers={'Authorization':'Bearer '+OWNER}).status_code==422
+
+
 def test_streamed_size_and_deep_json_fail_before_operation(monkeypatch):
     monkeypatch.setenv('PRIME_SPINE_TOKEN',OWNER)
     nested='private-value'
