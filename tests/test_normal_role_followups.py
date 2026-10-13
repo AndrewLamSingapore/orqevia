@@ -118,3 +118,20 @@ def test_summary_counts_latest_per_agent_and_keeps_attempt_denominator():
     result=follow.summary(state(agent))
     assert result['reassessed']==1 and result['normal_passed']==1
     assert result['retained_reassessment_attempts']==2 and result['normal_denominator']==21
+
+
+def test_identifier_coaching_requires_retained_failure_and_runs_once(tmp_path):
+    queue=Queue();agent=sample()
+    attempt={'phase':'REASSESSMENT','job_id':'prior','status':'completed','execution_bound':True,
+             'original_output':'retained','errors':['chosen_project_under_three_day_limit','higher_efficiency_project','higher_total_project']}
+    agent.update(state='DONE',phase='REASSESSMENT',assessments=[attempt])
+    queue.jobs['prior']={'result':'retained'}
+    with patch.object(follow,'ROOT',tmp_path):
+        follow.write_state(state(agent));result=follow.coach_identifier_casing(queue)
+        assert result['maximum_jobs']==28
+        assert follow.coach_identifier_casing(queue)['state']=='ALREADY_APPLIED'
+        saved=json.loads((tmp_path/'state.json').read_text())['agents'][0]
+        assert saved['assessments']==[attempt] and saved['submission_attempt']==3
+        assert saved['normal_request_sha256']==agent['normal_request_sha256']
+        assert 'Alpha' not in saved['identifier_coaching_applied']['instruction']
+        assert 'Beta' not in saved['identifier_coaching_applied']['instruction']

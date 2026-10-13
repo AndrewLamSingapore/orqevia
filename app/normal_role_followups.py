@@ -189,3 +189,28 @@ def summary(state):
       'retained_reassessment_attempts':sum(x['phase']=='REASSESSMENT' for a in state['agents'] for x in a['assessments']),
       'known_cost_usd':sum(x['actual_cost_usd'] for a in state['agents'] for x in a['assessments'] if x['actual_cost_usd'] is not None),
       'full_role_accepted_count':0}
+
+def coach_identifier_casing(queue):
+    """One targeted, answer-free correction justified by retained a01 errors."""
+    with ownership() as acquired:
+        if not acquired:return {'state':'COACH_ALREADY_RUNNING'}
+        state=json.loads((ROOT/'state.json').read_text())
+        agent=next(a for a in state['agents'] if a['agent']=='a01')
+        if agent.get('identifier_coaching_applied'):return {'state':'ALREADY_APPLIED'}
+        latest=agent['assessments'][-1]
+        allowed={'chosen_project_under_three_day_limit','higher_efficiency_project','higher_total_project'}
+        if agent['state']!='DONE' or latest['status']!='completed' or not latest['execution_bound'] or set(latest['errors'])!=allowed:
+            raise ValueError('retained case-sensitive identifier failures required')
+        original=queue.get(latest['job_id'])
+        if original['result']!=latest['original_output']:raise ValueError('original evidence changed')
+        instruction=('\nIdentifier contract: Source identifiers are case-sensitive. '
+            'Copy their exact spelling and capitalization from the supplied facts when returning identifier values. '
+            'JSON field names do not determine the capitalization of identifier values. '
+            'Internally verify type, units and exact source spelling before returning the object.')
+        agent['reassessment_prompt']+=instruction
+        agent['identifier_coaching_applied']={'at':time.time(),'source_job_id':latest['job_id'],
+            'instruction':instruction,'contract_version':'normal-role-identifiers.v2','expected_answers_supplied':False}
+        agent.update(state='READY',phase='REASSESSMENT',job_id=None,submission_attempt=3)
+        state['maximum_jobs']+=1;state['last_activity_at']=time.time();write_state(state)
+        return {'state':'PREPARED','agent':'a01','prompt_sha256':hashlib.sha256(agent['reassessment_prompt'].encode()).hexdigest(),
+            'maximum_jobs':state['maximum_jobs'],'normal_request_sha256':agent['normal_request_sha256']}
