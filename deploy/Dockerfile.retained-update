@@ -1,0 +1,11 @@
+# Reuse the exact retained commissioned dependencies; no package/model download.
+ARG PRIME_RETAINED_BASE_IMAGE
+FROM ${PRIME_RETAINED_BASE_IMAGE}
+COPY app /app/app
+COPY config /app/config
+COPY clients/pwa/index.html clients/pwa/recovery.js clients/pwa/release.mjs clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/storage.mjs clients/pwa/style.css clients/pwa/sw.js clients/pwa/voice.mjs clients/pwa/manifest.webmanifest /app/app/pwa_static/
+COPY clients/pwa/dashboard.mjs clients/pwa/dashboard.css /app/app/pwa_static/
+COPY clients/pwa/icons /app/app/pwa_static/icons
+ARG PRIME_SOURCE_REVISION
+ENV PRIME_RUNTIME_REVISION=$PRIME_SOURCE_REVISION
+LABEL org.opencontainers.image.revision=$PRIME_SOURCE_REVISION
