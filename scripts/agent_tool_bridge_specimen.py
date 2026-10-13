@@ -229,6 +229,8 @@ def run(args):
                     'public-source.bin', 'feedback-job.json', 'action-readback.json',
                     'runtime-source-custody.json', 'deployment-identity-before.json',
                     'deployment-identity-after.json', 'independent-review.json']
+        if (root / 'local4b-synthesis-diagnostic-job.json').exists():
+            required.append('local4b-independent-failure-review.json')
         packet = {'schema': 'orqevia.azure-assessment-evidence-packet.v1', 'assembled_at_utc': now(),
             'agent': AGENT, 'subject': 'ONE_A07_PUBLIC_SOURCE_REQUEST_TOOL_FEEDBACK_SPECIMEN',
             'files': files, 'missing_evidence': [name for name in required if not (root / name).exists()],
@@ -237,11 +239,11 @@ def run(args):
             'azure_signing_or_credentials_used': False,
             'existing_owner_credentials_used_for_loopback_auth': bool(state.get('generation_job_id')),
             'independent_review_receipts': [item for item in files
-                if 'independent-review' in Path(item['path']).name],
+                if 'independent' in Path(item['path']).name and 'review' in Path(item['path']).name],
             'missing_assessment_scope_evidence': [
                 'Passing independent semantic result-use review for this exact objective.',
                 'Independent Azure verdict and attestation bound to the exact case, runtime source, authority and execution/review artifact digests.',
-                'Remaining owned-capability exact-case evidence for all21 full agent roles.'],
+                'Remaining owned-capability exact-case evidence for all 21 full agent roles.'],
             'assessment_decision': 'ASSIGNED_TO_INDEPENDENT_ASSESSOR',
             'limits': ['This packet supplies no Azure-issued results or attestation.',
                 'A single specimen does not cover all a07 responsibilities or all21 agents.',
