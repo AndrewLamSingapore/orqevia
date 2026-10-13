@@ -109,11 +109,11 @@ class AgentDispatchTests(HarnessApiTests):
         prompt = inference_prompt(request, Tier.MINI)
         assert 'Return only one valid JSON object' in prompt
         assert 'without a name, preface, Markdown, or code fence' in prompt
-        assert 'Always identify yourself as JARVIS' not in prompt
+        assert 'Always identify yourself as ORQEVIA · 奥启维亚' not in prompt
         assert '10 failures in 100 requests' in prompt
         ordinary = inference_prompt(AgentRequest(capability='responsibility.a12',
                                                   objective='Explain the count.'), Tier.MINI)
-        assert 'Always identify yourself as JARVIS' in ordinary
+        assert 'Always identify yourself as ORQEVIA · 奥启维亚' in ordinary
 
     def test_scope_and_unavailable_tier_fail_only_the_affected_request(self):
         for capability,tier,expected in [('invented','NANO',422),('responsibility.a02','FLAGSHIP',409)]:

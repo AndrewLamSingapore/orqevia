@@ -1,6 +1,6 @@
 import pytest
 
-from app.agent_dispatch_api import AgentRequest,JARVIS_IDENTITY_CONTRACT,inference_prompt,user_facing_contract,requested_response_language
+from app.agent_dispatch_api import AgentRequest,ORQEVIA_IDENTITY_CONTRACT,inference_prompt,user_facing_contract,requested_response_language
 from app.agent_registry import load_agent_registry
 from app.tier_router import Tier
 
@@ -8,7 +8,7 @@ from app.tier_router import Tier
 def test_context_free_nano_keeps_complete_objective():
     body=AgentRequest(capability='responsibility.a19',objective='Classify the sentiment of "I love this useful tool" as POSITIVE, NEGATIVE, or NEUTRAL. Return only the label.')
     prompt=inference_prompt(body,Tier.NANO)
-    assert prompt.startswith(JARVIS_IDENTITY_CONTRACT)
+    assert prompt.startswith(ORQEVIA_IDENTITY_CONTRACT)
     assert prompt.endswith(body.objective)
 
 
@@ -22,7 +22,7 @@ def test_context_remains_explicit_evidence():
 def test_cloud_prompt_preserves_identity_contract():
     body=AgentRequest(capability='responsibility.a19',objective='Write an agenda.')
     prompt=inference_prompt(body,Tier.MINI)
-    assert prompt.startswith(JARVIS_IDENTITY_CONTRACT)
+    assert prompt.startswith(ORQEVIA_IDENTITY_CONTRACT)
     assert 'Provide an advisory answer for this role: Operational resilience evaluation.' in prompt
     assert 'responsibility.a19' not in prompt
 
@@ -43,8 +43,8 @@ def test_contextual_prompt_uses_registered_role_and_expected_contribution(agent)
 @pytest.mark.parametrize('objective',["你叫什么名字",'What is your name?'])
 def test_identity_and_language_contract_is_provider_and_tier_independent(tier,objective):
     prompt=inference_prompt(AgentRequest(capability='responsibility.a02',objective=objective),tier)
-    assert 'You are JARVIS' in prompt
-    assert 'Always identify yourself as JARVIS' in prompt
+    assert 'You are ORQEVIA · 奥启维亚' in prompt
+    assert 'Always identify yourself as ORQEVIA · 奥启维亚' in prompt
     assert 'Reply in the language used by the user' in prompt
     assert objective in prompt
 
@@ -60,4 +60,4 @@ def test_chinese_objective_gets_explicit_all_chinese_contract():
     contract=user_facing_contract('你叫什么名字')
     assert 'Respond entirely in Simplified Chinese' in contract
     assert 'Do not translate or discuss the question; answer it directly.' in contract
-    assert 'JARVIS' in contract
+    assert 'ORQEVIA · 奥启维亚' in contract

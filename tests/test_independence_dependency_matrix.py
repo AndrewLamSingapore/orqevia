@@ -32,7 +32,7 @@ def test_identity_authority_registry_memory_and_lan_survive_external_loss(tmp_pa
     memory = GovernedKnowledgeStore(tmp_path / "memory.db")
     row = memory.write(context=OWNER, memory_key="jarvis.identity", memory_class=MemoryClass.FACT, scope=Scope.OWNER_PRIVATE, scope_id="lam", value={"identity": "JARVIS"}, source="local-policy", source_version="1", source_authority="OWNER", verification_ref="local:identity", write_request_id="identity:1")
     assert GovernedKnowledgeStore(tmp_path / "memory.db").get(row["record_id"], context=OWNER)["value"]["identity"] == "JARVIS"
-    assert "JARVIS" in user_facing_contract("你叫什么名字？")
+    assert "ORQEVIA · 奥启维亚" in user_facing_contract("你叫什么名字？")
     now = time.time()
     member = IntegrationEnvelope("t", "r", "wife", "MEMBER", "household-1", "1.0", now, now + 60, "i", frozenset({"task.submit"}))
     assert not authorize_tool(member, permission="owner.admin", model_claimed_role="OWNER")

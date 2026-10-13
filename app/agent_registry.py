@@ -1,4 +1,4 @@
-"""Canonical JARVIS agent registry and deny-by-default public projection."""
+"""Canonical ORQEVIA agent registry and deny-by-default public projection."""
 from __future__ import annotations
 
 import json
