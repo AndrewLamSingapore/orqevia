@@ -125,6 +125,12 @@ def control_script():
     return Response(Path(__file__).with_name('production_control.js').read_text(encoding='utf-8'), media_type='text/javascript')
 
 
+@app.get('/control/brand/{name}', dependencies=[Depends(local_authorization)])
+def control_logo(name: str):
+    from .brand_assets import official_logo_response
+    return official_logo_response(name)
+
+
 @app.post('/control/api/objectives', status_code=202)
 def submit_objective(body: objective_api.ObjectiveRequest, authorization=Depends(local_authorization)):
     return objective_api.submit(body, authorization)

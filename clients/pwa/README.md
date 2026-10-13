@@ -34,7 +34,7 @@ Session validation rejects superseded responses. Task, history, upload and
 artifact rendering carry the originating client and session generation, so an
 account change cannot render an earlier account's late response. Ordinary
 same-client refresh preserves its owned result. The functional candidate uses
-shell `orqevia-shell-v19` while preserving `/pwa/` and the manifest identity,
+shell `orqevia-shell-v20` while preserving `/pwa/` and the manifest identity,
 cookie names and existing client-scoped IndexedDB references. A shell update is
 source readiness until an installed browser/PWA update is observed.
 
@@ -70,5 +70,5 @@ node clients/pwa/tests.mjs
 
 Focused candidate continuation tests: `node clients/pwa/followup-tests.mjs` — 6 passing tests for terminal/revision preconditions, exact request schema, task/revision-bound retry identity, wrong acknowledgment rejection, non-retried conflicts and explicit composer/voice integration. These are not a deployed or physical-device acceptance claim. The shell cache version is incremented for the updated composer/core assets.
 
-`make-icons.mjs` reproduces the included geometric PNG icons without external assets or dependencies. It is not required at runtime.
+`python scripts/build_official_logo_icons.py` resizes the exact owner-approved original with Pillow 12.3.0 at build time; `--check` verifies deterministic custody. It adds no runtime dependency. The retired `make-icons.mjs` exits with this workflow and cannot redraw a substitute. Current manifest icons use purpose `any`. See [official logo provenance](../../docs/ORQEVIA-OFFICIAL-LOGO.md).
 

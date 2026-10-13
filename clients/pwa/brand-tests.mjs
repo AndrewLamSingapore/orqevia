@@ -12,8 +12,8 @@ test('brand migration keeps installed app identity and private storage compatibi
 });
 test('versioned brand assets exist and every current icon is in the offline shell',()=>{
   const sw=read('./sw.js'),release=read('./release.mjs');
-  assert.match(sw,/const CACHE='orqevia-shell-v19'/);assert.match(release,/const RELEASE='orqevia-shell-v19'/);
-  for(const [name,size]of[['orqevia-v1-192.png',192],['orqevia-v1-512.png',512],['orqevia-v1-apple-touch.png',180]]){
+  assert.match(sw,/const CACHE='orqevia-shell-v20'/);assert.match(release,/const RELEASE='orqevia-shell-v20'/);
+  for(const [name,size]of[['orqevia-official-v1-192.png',192],['orqevia-official-v1-512.png',512],['orqevia-official-v1-apple-touch.png',180]]){
     assert.ok(sw.includes(`/pwa/icons/${name}`));const bytes=readFileSync(new URL(`./icons/${name}`,import.meta.url));
     assert.equal(bytes.subarray(1,4).toString(),'PNG');assert.equal(bytes.readUInt32BE(16),size);assert.equal(bytes.readUInt32BE(20),size);
   }

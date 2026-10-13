@@ -2,11 +2,11 @@
 
 Official English brand and primary application name: **ORQEVIA**. Official Chinese brand: **奥启维亚**. This updates the existing application.
 
-Current display copy, app metadata, response identity, control screens and artifact headings use the new name. The original geometric Q mark retains the premium dark palette. Versioned ORQEVIA PNGs supply the favicon, 192/512-pixel manifest icons and 180-pixel Apple touch icon.
+Current display copy, app metadata, response identity, control screens and artifact headings use the new name. The owner-approved original raster supplies full-image resized PNGs for the favicon, 192/512-pixel manifest icons and 180-pixel Apple touch icon. The earlier generated Q icons are retained as unapproved historical/compatibility assets. See [official source provenance and technical resizing](ORQEVIA-OFFICIAL-LOGO.md).
 
 The app's manifest ID, scope, start URL and origin remain `/pwa/` on the existing host. Protocol/schema identifiers, API routes, cookie names, enrolled device identity, client reference database, registry IDs, service names, authentication audiences, TLS pins and historical evidence retain their compatible values. Historical JARVIS PRIME files and Golden manifests remain dated evidence. New exact runtime-status objectives are accepted alongside the historical objectives, with no broader action matching.
 
-Shell `orqevia-shell-v19` downloads the complete public asset allowlist before activation. Activation removes only superseded `jarvis-shell-*` and `orqevia-shell-*` caches. Private API responses bypass the cache. Cookies, IndexedDB and private task/artifact data are not reset. A failed download keeps the existing worker active.
+Shell `orqevia-shell-v20` downloads the complete public asset allowlist before activation. Activation removes only superseded `jarvis-shell-*` and `orqevia-shell-*` caches. Private API responses bypass the cache. Cookies, IndexedDB and private task/artifact data are not reset. A failed download keeps the existing worker active.
 
 ## iPhone update and acceptance
 

@@ -37,6 +37,13 @@ def control_surface() -> HTMLResponse:
     )
 
 
+@router.get("/control/brand/{name}")
+def control_surface_logo(name: str, request: Request):
+    _trusted_authorization(request)
+    from .brand_assets import official_logo_response
+    return official_logo_response(name)
+
+
 @router.get("/api/control-surface/manifest")
 def control_surface_manifest() -> dict:
     return {

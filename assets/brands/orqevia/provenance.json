@@ -1,0 +1,100 @@
+{
+  "schema": "orqevia.official-logo-provenance.v1",
+  "original": {
+    "repository": "AndrewLamSingapore/orqevia",
+    "branch": "brand-master-register-2026-10-10",
+    "commit": "f03ce95d1752f316bca92257b0f7349a48863472",
+    "path": "assets/brands/orqevia/generated-original.png",
+    "git_blob_sha1": "accb39978851a9c882fa31558412a15bffcfbfd2",
+    "sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+    "bytes": 1531581,
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGB",
+    "opaque": true
+  },
+  "approval_reference": {
+    "register_path": "governance/BRAND_MASTER_REGISTER.md",
+    "register_commit": "f70f85ea547f1b2fa8f62e0d741344d4435df048",
+    "original_upload_commit": "f03ce95d1752f316bca92257b0f7349a48863472",
+    "upload_note": "Owner-authored approved original binary upload follows the register; its older not-yet-uploaded sentence is historical."
+  },
+  "derivation": {
+    "pillow_version": "12.3.0",
+    "method": "FULL_IMAGE_RESIZE_LANCZOS",
+    "color_mode": "original RGB",
+    "crop": false,
+    "recolor": false,
+    "redraw": false,
+    "source_proportions_preserved": true,
+    "source_opaque_background_preserved": true,
+    "png_compress_level": 9,
+    "png_optimize": false,
+    "maskable_claim": false
+  },
+  "derivatives": [
+    {
+      "path": "clients/pwa/icons/orqevia-official-v1-192.png",
+      "size": [
+        192,
+        192
+      ],
+      "sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+      "bytes": 37462,
+      "purpose": "any"
+    },
+    {
+      "path": "clients/pwa/icons/orqevia-official-v1-512.png",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+      "bytes": 238262,
+      "purpose": "any"
+    },
+    {
+      "path": "clients/pwa/icons/orqevia-official-v1-apple-touch.png",
+      "size": [
+        180,
+        180
+      ],
+      "sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+      "bytes": 33636,
+      "purpose": "any"
+    },
+    {
+      "path": "clients/pwa/icons/orqevia-official-v1-favicon-16.png",
+      "size": [
+        16,
+        16
+      ],
+      "sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+      "bytes": 699,
+      "purpose": "any"
+    },
+    {
+      "path": "clients/pwa/icons/orqevia-official-v1-favicon-32.png",
+      "size": [
+        32,
+        32
+      ],
+      "sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+      "bytes": 2099,
+      "purpose": "any"
+    },
+    {
+      "path": "clients/pwa/icons/orqevia-official-v1-favicon-48.png",
+      "size": [
+        48,
+        48
+      ],
+      "sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+      "bytes": 3974,
+      "purpose": "any"
+    }
+  ],
+  "prior_generated_q_icons": "retained unreferenced compatibility/history; not official originals"
+}
