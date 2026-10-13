@@ -16,7 +16,11 @@ cloud disclosure/spend, no inference retry and at most two practice attempts.
 Owner queued/running work precedes new coaching. One cohort has 21 logical
 sessions; no new agents or 21 simultaneous workers are created. Scheduling is
 at least daily with at most 84 jobs in a rolling day. New submission stops at
-20,000 history events or a 64 MiB controller database; history is preserved.
+20,000 history events or a 64 MiB controller storage footprint (database plus
+SQLite WAL/SHM files); history is preserved. The storage threshold also prevents
+new cohorts. It stops new transitions rather than deleting or checkpointing
+evidence to shrink the store. A missing submitted queue job blocks its session
+with `QUEUE_JOB_MISSING`, retaining the job binding without replay or a grade.
 
 `deploy/agent-coaching.compose.yml` attaches only to the existing data volume.
 The controller has no network, credentials, exposed ports or container-control
