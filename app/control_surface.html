@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>JARVIS · Control Surface</title>
+  <title>ORQEVIA · 奥启维亚 — Control Surface</title>
   <style>
     :root{--bg:#070b12;--panel:#0d1420;--panel2:#111b2a;--line:#223249;--text:#eaf2ff;--muted:#8fa2bb;--cyan:#5ce1e6;--gold:#efc36a;--good:#57d68d;--warn:#f4b65d;--bad:#ff7185}
     *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 25% -10%,#19314b 0,transparent 30%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,sans-serif}
@@ -14,7 +14,7 @@
 <body>
 <div class="shell">
   <aside class="rail">
-    <div class="brand">JARVIS <b>PRIME</b></div>
+    <div class="brand">ORQEVIA <b lang="zh-Hans">奥启维亚</b></div>
     <div class="mode">● APPROVAL-GATED CONTROL SURFACE</div>
     <nav class="nav" aria-label="Control Surface views">
       <button class="active" data-view="overview">Overview</button>
@@ -25,16 +25,16 @@
       <button data-view="actions">Actions</button>
       <button data-view="audit">Audit</button>
     </nav>
-    <div class="rail-note">PRIME CORE is the only cognitive control plane. This surface presents state and proposals; it does not create authority.</div>
+    <div class="rail-note">ORQEVIA Core is the only cognitive control plane. This surface presents state and proposals; it does not create authority.</div>
   </aside>
   <main class="main">
     <header class="top">
       <div><div class="eyebrow">Owner Intelligence Workspace</div><h1 id="title">Overview</h1><div class="muted" id="subtitle">State → priorities → evidence → guidance</div></div>
-      <div class="status"><span class="pill good" id="health">Checking PRIME…</span><span class="pill">Local-only</span><span class="pill">Approval decisions</span><span class="pill">No actuation</span><span class="pill good">Trusted local access</span></div>
+      <div class="status"><span class="pill good" id="health">Checking ORQEVIA…</span><span class="pill">Local-only</span><span class="pill">Approval decisions</span><span class="pill">No actuation</span><span class="pill good">Trusted local access</span></div>
     </header>
 
     <section class="view active" id="overview"><div class="grid">
-      <article class="card hero"><div class="eyebrow">Private executive brief</div><h2>Your JARVIS operating picture</h2><p class="muted">A live, read-only synthesis of system health, active work, evidence and attention items.</p><div class="toolbar"><button class="primary" id="refreshOverview">Refresh overview</button><button class="secondary" id="exportReport">Export report</button></div></article>
+      <article class="card hero"><div class="eyebrow">Private executive brief</div><h2>Your ORQEVIA operating picture</h2><p class="muted">A live, read-only synthesis of system health, active work, evidence and attention items.</p><div class="toolbar"><button class="primary" id="refreshOverview">Refresh overview</button><button class="secondary" id="exportReport">Export report</button></div></article>
       <article class="card"><h2>At a glance</h2><div class="metrics" id="overviewMetrics">Loading…</div></article>
       <article class="card two-third"><h2>Owner guidance</h2><div id="guidance" class="empty">Assessing current state…</div></article>
       <article class="card third"><h2>Active priorities</h2><div id="priorities" class="empty">Loading…</div></article>
@@ -43,12 +43,12 @@
 
     <section class="view" id="conversation">
       <div class="grid">
-        <article class="card half"><h2>Ask JARVIS</h2><p class="muted">A read-only answer request. Memory writes are disabled.</p><textarea id="prompt" placeholder="What should we decide or understand?"></textarea><div class="row" style="margin-top:10px"><button class="primary" id="ask">Run cognitive flow</button><span class="muted" id="route"></span></div><div class="output" id="answer">Ready.</div></article>
+        <article class="card half"><h2>Ask ORQEVIA</h2><p class="muted">A read-only answer request. Memory writes are disabled.</p><textarea id="prompt" placeholder="What should we decide or understand?"></textarea><div class="row" style="margin-top:10px"><button class="primary" id="ask">Run cognitive flow</button><span class="muted" id="route"></span></div><div class="output" id="answer">Ready.</div></article>
         <article class="card half"><h2>Decision trace</h2><div class="metrics" id="trace"><div class="metric"><strong>—</strong>Confidence</div><div class="metric"><strong>—</strong>Route</div><div class="metric"><strong>—</strong>Approval</div></div><div class="output" id="traceDetail">A trace appears after a request.</div></article>
       </div>
     </section>
 
-    <section class="view" id="evidence"><div class="grid"><article class="card"><h2>Verified artifacts</h2><p class="muted">Evidence and review records already held by PRIME.</p><input id="evidenceQuery" placeholder="Filter evidence by title, status or content"><div id="artifacts" class="empty">Loading…</div></article></div></section>
+    <section class="view" id="evidence"><div class="grid"><article class="card"><h2>Verified artifacts</h2><p class="muted">Evidence and review records already held by ORQEVIA.</p><input id="evidenceQuery" placeholder="Filter evidence by title, status or content"><div id="artifacts" class="empty">Loading…</div></article></div></section>
     <section class="view" id="memory"><div class="grid"><article class="card"><h2>Memory governance</h2><p class="muted">Working, episodic, semantic, procedural and protected records have explicit retention and authority. This surface remains inspection-only for memory.</p><div class="metrics" id="memoryLayers"><div class="metric"><strong>Request</strong>Working</div><div class="metric"><strong>Reviewed</strong>Episodic</div><div class="metric"><strong>Superseded</strong>Semantic</div><div class="metric"><strong>Owner</strong>Procedural</div><div class="metric"><strong>Owner only</strong>Protected</div></div></article><article class="card half"><h2>Memory search</h2><input id="memoryQuery" placeholder="Search durable memory"><div class="row" style="margin-top:10px"><button class="secondary" id="searchMemory">Search</button></div><div id="memoryResults" class="empty">Enter a query.</div></article><article class="card half"><h2>Recent episodes</h2><div id="episodes" class="empty">Loading through trusted local access…</div></article></div></section>
     <section class="view" id="system"><div class="grid"><article class="card"><h2>Runtime status</h2><div class="metrics" id="systemMetrics"></div><div class="output" id="systemRaw">Loading…</div></article><article class="card"><h2>Workspace acceptance</h2><p class="muted">Registered runtime paths are checked against the complete read-only workspace contract.</p><div class="metrics" id="acceptance">Loading…</div></article></div></section>
     <section class="view" id="actions"><div class="grid"><article class="card third"><h2>Proposed actions</h2><p class="muted">Proposals remain inert until separately executed outside this decision surface.</p><div id="actionList" class="empty">Loading…</div></article><article class="card two-third"><h2>Approval cards</h2><p class="muted">Review risk, source, evidence, reversibility and expected effect. Approve, modify or reject records a decision only.</p><div id="approvalList" class="empty">Loading…</div></article></div></section>
@@ -68,11 +68,11 @@ async function health(){
     const response=await fetch('/health',{cache:'no-store'}),d=await response.json();
     if(!((response.status===200&&d.ok===true)||(response.status===503&&d.ok===false)))throw new Error('Invalid health response');
     const state=d.ok?'healthy':'degraded';
-    $('health').textContent='● PRIME '+state;
+    $('health').textContent='● ORQEVIA '+state;
     $('health').className='pill '+(d.ok?'good':'error');
     return {state,integrity:d.integrity||'UNKNOWN',modelsReady:d.models?.ready};
   }catch{
-    $('health').textContent='● PRIME unavailable';
+    $('health').textContent='● ORQEVIA unavailable';
     $('health').className='pill error';
     return {state:'unknown',integrity:'UNKNOWN',modelsReady:null};
   }
@@ -83,10 +83,10 @@ async function loadOverview(){
     workspaceSnapshot={generated_at:new Date().toISOString(),health:observed,status,projects,actions,approvals,artifacts,reviews,boundaries:{local_only:true,read_only:true,no_actuation:true}};
     const pendingActions=actions.filter(x=>x.status==='pending').length,pendingApprovals=approvals.filter(x=>x.status==='pending').length,activeProjects=projects.filter(x=>['active','running','queued','draft'].includes(x.status)).length;
     $('overviewMetrics').innerHTML=[['Health',observed.state],['Active projects',activeProjects],['Verified evidence',artifacts.length],['Pending actions',pendingActions],['Pending approvals',pendingApprovals],['Agent jobs',status.agent_jobs??0]].map(x=>'<div class="metric"><strong>'+esc(x[1])+'</strong>'+esc(x[0])+'</div>').join('');
-    const guidance=[{tone:observed.state==='healthy'?'good':observed.state==='degraded'?'warn':'',title:'PRIME health',text:observed.state==='unknown'?'Live health could not be confirmed.':`Runtime integrity: ${observed.integrity}. Model readiness: ${observed.modelsReady===true?'ready':observed.modelsReady===false?'not ready':'unknown'}.`}];
+    const guidance=[{tone:observed.state==='healthy'?'good':observed.state==='degraded'?'warn':'',title:'ORQEVIA health',text:observed.state==='unknown'?'Live health could not be confirmed.':`Runtime integrity: ${observed.integrity}. Model readiness: ${observed.modelsReady===true?'ready':observed.modelsReady===false?'not ready':'unknown'}.`}];
     if(pendingApprovals)guidance.push({tone:'warn',title:'Review requested',text:pendingApprovals+' approval request(s) are waiting. This workspace will not resolve them.'});
     if(pendingActions)guidance.push({tone:'warn',title:'Proposals waiting',text:pendingActions+' proposed action(s) remain observe-only.'});
-    if(!activeProjects)guidance.push({tone:'',title:'No active project',text:'JARVIS has no active project requiring attention.'});
+    if(!activeProjects)guidance.push({tone:'',title:'No active project',text:'ORQEVIA has no active project requiring attention.'});
     if(!artifacts.length)guidance.push({tone:'',title:'Evidence runway',text:'No verified artifact is available yet.'});
     $('guidance').innerHTML=guidance.map(x=>'<div class="item guidance '+x.tone+'"><b>'+esc(x.title)+'</b><div>'+esc(x.text)+'</div></div>').join('');
     items('priorities',projects.slice(0,6),x=>'<div class="item"><b>'+esc(x.title||'Project')+'</b> · '+esc(x.status||'unknown')+'<div class="muted">Priority '+esc(x.priority??'—')+'</div></div>');
@@ -106,10 +106,10 @@ async function loadView(v){if(v==='overview')loadOverview();if(v==='system')load
 $('auditQuery').oninput=renderAudit;
 $('evidenceQuery').oninput=renderEvidence;
 $('refreshOverview').onclick=loadOverview;
-$('exportReport').onclick=async()=>{if(!workspaceSnapshot.generated_at)await loadOverview();const blob=new Blob([JSON.stringify(workspaceSnapshot,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='jarvis-owner-report-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url)};
+$('exportReport').onclick=async()=>{if(!workspaceSnapshot.generated_at)await loadOverview();const blob=new Blob([JSON.stringify(workspaceSnapshot,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='orqevia-owner-report-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url)};
 $('searchWorkspace').onclick=async()=>{const q=$('workspaceQuery').value.trim();if(!q)return;try{if(!workspaceSnapshot.generated_at)await loadOverview();const memory=await api('/api/control-surface/trusted/memory/search?q='+encodeURIComponent(q)+'&limit=10'),local=[...(workspaceSnapshot.projects||[]),...(workspaceSnapshot.artifacts||[]),...(workspaceSnapshot.reviews||[])].filter(x=>JSON.stringify(x).toLowerCase().includes(q.toLowerCase())).slice(0,15),rows=[...(memory.results||[]),...local];items('workspaceResults',rows,x=>'<div class="item"><b>'+esc(x.title||x.task_title||x.kind||x.key||'Result')+'</b><div>'+esc((x.text||x.value||x.description||x.content||x.summary||JSON.stringify(x)).slice(0,900))+'</div></div>')}catch(e){$('workspaceResults').innerHTML='<span class="error">'+esc(e.message)+'</span>'}};
 $('searchMemory').onclick=async()=>{try{const d=await api('/api/control-surface/trusted/memory/search?q='+encodeURIComponent($('memoryQuery').value)+'&limit=10');items('memoryResults',d.results,x=>'<div class="item"><b>'+esc(x.kind||x.key||'memory')+'</b><div>'+esc(x.text||x.value||JSON.stringify(x))+'</div></div>')}catch(e){$('memoryResults').innerHTML='<span class="error">'+esc(e.message)+'</span>'}};
-$('ask').onclick=async()=>{const intent=$('prompt').value.trim();if(!intent)return;$('answer').textContent='Reasoning…';try{const [p,chat]=await Promise.all([api('/api/control-surface/trusted/plan',{method:'POST',body:JSON.stringify({intent,department:'',context:'JARVIS Control Surface read-only request',allow_frontier:false})}),api('/api/chat',{method:'POST',body:JSON.stringify({message:intent,remember:false})})]);const plan=p.plan,decision=plan?.reasoning_route||{},rawAnswer=chat.answer||chat.detail||'No answer returned.',held=decision.selected_stage==='confidence_hold';$('answer').textContent=held?'DRAFT — HELD AT CONFIDENCE GATE\n'+(decision.reason||'The result did not pass the frozen route policy.')+'\n\n'+rawAnswer:rawAnswer;$('route').textContent=(chat.agents||[]).join(' → ');$('trace').innerHTML='<div class="metric"><strong>'+esc(plan?.confidence??'—')+'</strong>Confidence</div><div class="metric"><strong>'+esc(decision.selected_stage||plan?.specialist||(chat.agents||[]).at(-1)||'local')+'</strong>Route</div><div class="metric"><strong>'+esc(plan?.needs_approval?'Required':'No')+'</strong>Approval</div>';$('traceDetail').textContent=JSON.stringify(plan,null,2)}catch(e){$('answer').innerHTML='<span class="error">'+esc(e.message)+'</span>'}};
+$('ask').onclick=async()=>{const intent=$('prompt').value.trim();if(!intent)return;$('answer').textContent='Reasoning…';try{const [p,chat]=await Promise.all([api('/api/control-surface/trusted/plan',{method:'POST',body:JSON.stringify({intent,department:'',context:'ORQEVIA Control Surface read-only request',allow_frontier:false})}),api('/api/chat',{method:'POST',body:JSON.stringify({message:intent,remember:false})})]);const plan=p.plan,decision=plan?.reasoning_route||{},rawAnswer=chat.answer||chat.detail||'No answer returned.',held=decision.selected_stage==='confidence_hold';$('answer').textContent=held?'DRAFT — HELD AT CONFIDENCE GATE\n'+(decision.reason||'The result did not pass the frozen route policy.')+'\n\n'+rawAnswer:rawAnswer;$('route').textContent=(chat.agents||[]).join(' → ');$('trace').innerHTML='<div class="metric"><strong>'+esc(plan?.confidence??'—')+'</strong>Confidence</div><div class="metric"><strong>'+esc(decision.selected_stage||plan?.specialist||(chat.agents||[]).at(-1)||'local')+'</strong>Route</div><div class="metric"><strong>'+esc(plan?.needs_approval?'Required':'No')+'</strong>Approval</div>';$('traceDetail').textContent=JSON.stringify(plan,null,2)}catch(e){$('answer').innerHTML='<span class="error">'+esc(e.message)+'</span>'}};
 loadOverview();
 </script>
 </body>

@@ -23,7 +23,7 @@ function connectEvents(taskId) {
   events?.close();
   events = new EventSource(`/api/tasks/${encodeURIComponent(taskId)}/events`);
   events.onmessage = event => { try { showTask(JSON.parse(event.data)); } catch {} };
-  events.onerror = () => { $('message').textContent = 'Status stream interrupted. JARVIS will reconnect automatically.'; };
+  events.onerror = () => { $('message').textContent = 'Status stream interrupted. ORQEVIA will reconnect automatically.'; };
 }
 
 async function loadArtifacts() {

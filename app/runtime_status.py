@@ -11,6 +11,7 @@ from urllib.request import build_opener, ProxyHandler
 OBJECTIVE = 'Produce a JARVIS runtime-status report artifact containing current PRIME health, available qualified compute backends, and current task count.'
 PHYSICAL_OBJECTIVE = 'Produce a JARVIS runtime status artifact containing current PRIME health, current qualified compute backends, current active task count, current JARVIS protocol version, and timestamp.'
 DELL_OBJECTIVE = 'Produce a JARVIS runtime status artifact containing current PRIME health, qualified compute backends, active task count, JARVIS protocol version, and timestamp.'
+BRANDED_OBJECTIVES = tuple(value.replace('JARVIS', 'ORQEVIA').replace('PRIME', 'ORQEVIA Core') for value in (OBJECTIVE, PHYSICAL_OBJECTIVE, DELL_OBJECTIVE))
 SCHEMA = 'jarvis.runtime-status.v1'
 
 
@@ -18,7 +19,7 @@ def is_runtime_status(objective, context=''):
     if context.strip():return False
     # Exact allowlist, not keyword matching: additional actions are not swallowed.
     normalize=lambda x:' '.join(x.split()).casefold().rstrip('.')
-    return normalize(objective) in {normalize(OBJECTIVE),normalize(PHYSICAL_OBJECTIVE),normalize(DELL_OBJECTIVE)}
+    return normalize(objective) in {normalize(value) for value in (OBJECTIVE, PHYSICAL_OBJECTIVE, DELL_OBJECTIVE, *BRANDED_OBJECTIVES)}
 
 
 def production_health():

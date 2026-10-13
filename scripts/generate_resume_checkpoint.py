@@ -27,7 +27,7 @@ def generate(value: dict[str, Any]) -> str:
         f"- Recorded architecture release: `{release['id']}`",
         f"- Manifest snapshot state: **{value['status']}** (dated, not a current runtime verdict)",
         f"- Source observation: `{value['as_of_utc']}`",
-        '- Architecture: ABEX PRIME; Dell/PWA/voice clients; 21 agents; direct observed bounded work.',
+        '- Architecture: ABEX ORQEVIA Core; Dell/PWA/voice clients; 21 agents; direct observed bounded work.',
         '- This applies to ChatGPT, Codex, Sol and Astra. Model memory and old chats are not current authority.',
         '- Source publication does not prove deployment. Historical Dell observations do not prove ABEX identity.',
         '', '## Source observations and deployment evidence', '',

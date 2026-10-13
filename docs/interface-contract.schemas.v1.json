@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "JARVIS Interface v1 wire schemas",
+  "title": "ORQEVIA Interface v1 wire schemas",
   "protocol": "jarvis.interface.v1",
   "$defs": {
     "ObjectiveRequest": {

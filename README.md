@@ -13,12 +13,12 @@ Golden Generation 2 is the frozen accepted non-audio architecture, described by
 `docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md` and
 `governance/golden-gen2-manifest.json`. Golden Generation 1 and its immutable
 manifest remain the preserved rollback/reference. Architecture v1 remains the
-implementation foundation: ABEX PRIME, authenticated
+implementation foundation: ABEX ORQEVIA, authenticated
 Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and direct
 observed execution with narrow consequential controls. Runtime acceptance is
 recorded separately and must not be inferred from this README or passing CI.
 
-`system.manifest.json` binds PRIME product components. `deploy/product-runtime-v1.json`
+`system.manifest.json` binds ORQEVIA product components. `deploy/product-runtime-v1.json`
 defines entrypoints and external inputs.
 
 Validate with `python scripts/validate_canonical.py` and
@@ -37,4 +37,4 @@ the sealed ABEX baseline. Historical source and migration evidence remain in Git
 
 The public contract is `governance/public-experience.json`. Authority Engine, The Portal, Living Worlds, Sky Tablet and VELYQUA link to that experience. Navigation and enquiry context do not grant private runtime access or merge product databases.
 
-STATUS.md records current portfolio status claims. The operational manifest and its generated resume checkpoint are machine references, not second status records. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.
+STATUS.md records current portfolio status claims. The operational manifest and its generated resume checkpoint are machine references, not second status records. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current ORQEVIA runtime fields.

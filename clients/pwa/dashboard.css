@@ -21,3 +21,5 @@ main{padding-top:14px;min-width:0}.dashboard-card{background:linear-gradient(120
 .coaching-role-head strong{font-weight:600}
 .coaching-marks{font-family:ui-monospace,monospace;color:#9fd4f5;font-size:11px;white-space:nowrap}
 .coaching-role small{color:#8fa8bd}
+
+.brand-chinese{font-size:.8em;letter-spacing:.1px;font-weight:500;color:var(--muted)}

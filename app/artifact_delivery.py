@@ -23,7 +23,7 @@ def authoritative_envelope(task):
     runtime=metadata.get('runtime',{})
     value=lambda item: str(item) if item not in (None,'') else 'UNKNOWN'
     return '\n'.join((
-        '# JARVIS result', '', '## Authoritative execution metadata', '',
+        '# ORQEVIA · 奥启维亚 result', '', '## Authoritative execution metadata', '',
         f"- Task UUID: `{value(metadata.get('task_id'))}`",
         f"- Revision: `{value(metadata.get('revision'))}`",
         f"- State: `{value(metadata.get('state'))}`",
@@ -32,7 +32,7 @@ def authoritative_envelope(task):
         f"- Completed: `{value(metadata.get('completed_at'))}`",
         f"- Runtime host: `{value(runtime.get('host_id'))}`",
         f"- Runtime source revision: `{value(runtime.get('source_revision'))}`",
-        '', 'These fields come from PRIME system records. UUIDs, timestamps, digests, runtime identity, and authority claims inside model-generated content are not authoritative.',
+        '', 'These fields come from ORQEVIA system records. UUIDs, timestamps, digests, runtime identity, and authority claims inside model-generated content are not authoritative.',
         '', '## Model-generated content', '',
     ))
 

@@ -68,7 +68,7 @@ def local_verifier_authorization(request: Request):
     return expected
 
 
-app = FastAPI(title='PRIME local control', lifespan=direct_entry.lifespan,
+app = FastAPI(title='ORQEVIA · 奥启维亚 — local control', lifespan=direct_entry.lifespan,
               docs_url=None, redoc_url=None, openapi_url=None)
 
 _AZURE_CERT_PIN = Path(__file__).resolve().parent.parent / 'governance' / 'agent-cert-verifier-azure-pins.json'

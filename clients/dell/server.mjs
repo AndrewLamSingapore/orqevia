@@ -107,7 +107,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const config = loadConfig();
   const server = createDellServer(config);
   server.listen(config.port, config.listenHost, () => {
-    console.log(`JARVIS Dell thin client: http://${config.listenHost}:${config.port}`);
+    console.log(`ORQEVIA Dell thin client: http://${config.listenHost}:${config.port}`);
     console.log(config.ready ? `Locked to ${config.expectedHost}; authority remains ABEX_ONLY.` : `LOCKED: ${config.errors.join('; ')}`);
   });
 }

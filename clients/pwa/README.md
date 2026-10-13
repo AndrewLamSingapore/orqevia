@@ -1,8 +1,8 @@
 > Portfolio status authority: [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the private ORQEVIA repository. This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
 
-# JARVIS mobile PWA
+# ORQEVIA · 奥启维亚 mobile PWA
 
-Canonical mobile/voice client for v1. This is a static, dependency-free browser client of the existing ABEX Interface Node. PRIME orchestration, provider credentials and execution remain on ABEX. Native iOS tooling is not a v1 dependency.
+Canonical mobile/voice client for v1. This is a static, dependency-free browser client of the existing ABEX Interface Node. ORQEVIA orchestration, provider credentials and execution remain on ABEX. Native iOS tooling is not a v1 dependency.
 
 ## Hosting contract
 
@@ -34,9 +34,11 @@ Session validation rejects superseded responses. Task, history, upload and
 artifact rendering carry the originating client and session generation, so an
 account change cannot render an earlier account's late response. Ordinary
 same-client refresh preserves its owned result. The functional candidate uses
-shell `jarvis-shell-v16` while preserving `/pwa/`, the manifest and icon identity,
+shell `orqevia-shell-v19` while preserving `/pwa/` and the manifest identity,
 cookie names and existing client-scoped IndexedDB references. A shell update is
 source readiness until an installed browser/PWA update is observed.
+
+The previous `jarvis-shell-v16` through `jarvis-shell-v18` generations are historical. The ORQEVIA migration changes versioned icon URLs and current display copy while retaining enrolled devices, cookie names and the client reference database. See [the migration and iPhone update instructions](../../docs/ORQEVIA-BRAND-MIGRATION.md).
 
 ## Recovery and integrity
 

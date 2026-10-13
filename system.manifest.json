@@ -55,5 +55,7 @@
   "historical_dell_readme": "clients/dell/README.md is pinned historical initial-delivery documentation, not current production state",
   "canonical_operational_source": "governance/operational-manifest.json",
   "authority_scope": "SUBORDINATE_PRODUCT_COMPONENT_MANIFEST",
-  "ecosystem_release_id": "jarvis-prime-unified-2026-09-15"
+  "ecosystem_release_id": "jarvis-prime-unified-2026-09-15",
+  "product_name": "ORQEVIA",
+  "brand_zh": "奥启维亚"
 }

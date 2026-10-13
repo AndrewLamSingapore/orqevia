@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 
 function worker({installFails=false}={}){
-  const listeners=new Map(),deleted=[],assets=[],existing=new Set(['jarvis-shell-v14','unrelated-product-cache']);let skipped=0,claimed=0;
+  const listeners=new Map(),deleted=[],assets=[],existing=new Set(['jarvis-shell-v14','orqevia-shell-v18','unrelated-product-cache','jarvis-client-data']);let skipped=0,claimed=0;
   const self={location:{origin:'https://candidate.invalid'},addEventListener(name,fn){listeners.set(name,fn);},skipWaiting(){skipped++;},clients:{claim(){claimed++;}}};
   const caches={async open(name){existing.add(name);return {async addAll(values){assets.push(...values);if(installFails)throw new Error('fixture shell download failed');}};},async keys(){return [...existing];},async delete(name){deleted.push(name);existing.delete(name);},async match(path){return {cached:path};}};
   vm.runInNewContext(readFileSync(new URL('./sw.js',import.meta.url),'utf8'),{self,caches,URL,fetch:async()=>{throw new Error('fixture offline');}});
@@ -17,7 +17,7 @@ test('successful update installs the full new shell before replacing only old ap
   const w=worker();await w.lifecycle('install');
   assert.ok(w.assets.includes('/pwa/dashboard.mjs'));assert.ok(w.assets.includes('/pwa/dashboard.css'));
   assert.equal(w.skipped,1);assert.ok(w.existing.has('jarvis-shell-v14'));
-  await w.lifecycle('activate');assert.deepEqual(w.deleted,['jarvis-shell-v14']);
+  await w.lifecycle('activate');assert.deepEqual(w.deleted,['jarvis-shell-v14','orqevia-shell-v18']);assert.ok(w.existing.has('unrelated-product-cache'));assert.ok(w.existing.has('jarvis-client-data'));
   assert.ok(w.existing.has('unrelated-product-cache'));assert.equal(w.claimed,1);
 });
 
@@ -41,5 +41,5 @@ test('release checks for update and reloads at most once per generation without 
   const navigator={serviceWorker:{addEventListener(name,fn){listeners.set(name,fn);},async register(path,options){assert.equal(path,'/pwa/sw.js');assert.equal(options.scope,'/pwa/');return{async update(){updates++;}};}}};
   vm.runInNewContext(readFileSync(new URL('./release.mjs',import.meta.url),'utf8'),{navigator,location:{protocol:'https:',reload(){reloads++;}},sessionStorage:{getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)}});
   await new Promise(resolve=>setTimeout(resolve,0));listeners.get('controllerchange')();listeners.get('controllerchange')();
-  assert.equal(updates,1);assert.equal(reloads,1);assert.deepEqual([...values.keys()],['jarvis-shell-v18:controller-reload']);
+  assert.equal(updates,1);assert.equal(reloads,1);assert.deepEqual([...values.keys()],['orqevia-shell-v19:controller-reload']);
 });

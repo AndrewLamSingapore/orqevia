@@ -8,9 +8,9 @@ import struct
 ROOT=Path(__file__).parents[1]
 PWA=ROOT/'clients'/'pwa'
 EXPECTED={
-    'jarvis-prime-v1-192.png':(192,192,'06e6b61d8fc70b7c11b7d24e34eae6e75e0809a98a5f4bf3d7b5fc4740693aa5'),
-    'jarvis-prime-v1-512.png':(512,512,'4c1bd41fbf6636e3f16174a251c528c691266f6e774274680c14d5f7000dc147'),
-    'jarvis-prime-v1-apple-touch.png':(180,180,'43f89fdec3bafe3c4f1766308038e38d471b4caacf1dab3b4f33f62caab73ecf')}
+    'orqevia-v1-192.png':(192,192,'fb87a1b2a6ae1ea560adec43a0c177aa732a9f84f0774c6a491cc3b5e299d7aa'),
+    'orqevia-v1-512.png':(512,512,'24447534ee9188c3c265a42deb409f3f84c0efaec34fd194f5be78d1b9e9cac1'),
+    'orqevia-v1-apple-touch.png':(180,180,'8f73c754888be3f8216b03d2f0b72bea9c1da48c7cb106855d7c5f065fe9e3c2')}
 
 
 def dimensions(raw):
@@ -20,12 +20,12 @@ def dimensions(raw):
 
 def test_manifest_and_apple_install_use_one_versioned_canonical_brand():
     manifest=json.loads((PWA/'manifest.webmanifest').read_text(encoding='utf-8'))
-    assert manifest['name']=='JARVIS PRIME' and manifest['short_name']=='JARVIS'
+    assert manifest['name']=='ORQEVIA' and manifest['short_name']=='ORQEVIA'
     sources={Path(icon['src']).name for icon in manifest['icons']}
-    assert sources=={'jarvis-prime-v1-192.png','jarvis-prime-v1-512.png'}
+    assert sources=={'orqevia-v1-192.png','orqevia-v1-512.png'}
     html=(PWA/'index.html').read_text(encoding='utf-8')
     match=re.search(r'<link rel="apple-touch-icon" sizes="180x180" href="/pwa/icons/([^"]+)">',html)
-    assert match and match.group(1)=='jarvis-prime-v1-apple-touch.png'
+    assert match and match.group(1)=='orqevia-v1-apple-touch.png'
     assert 'member' not in ' '.join(sources).lower()+match.group(1).lower()
 
 

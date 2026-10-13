@@ -22,7 +22,7 @@ def test_chinese_combined_identity_and_agent_count_uses_registry_not_model():
     answer=facts.architecture_answer(question)
     assert answer['status']=='VERIFIED'
     assert answer['provenance']=='CANONICAL_REGISTRY_AND_RUNTIME'
-    assert 'JARVIS' in answer['text'] and '21' in answer['text']
+    assert 'ORQEVIA · 奥启维亚' in answer['text'] and '21' in answer['text']
     assert '三个' not in answer['text']
 
 def test_unavailable_registry_abstains_instead_of_fabricating(monkeypatch):

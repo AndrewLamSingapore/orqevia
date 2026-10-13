@@ -1,10 +1,10 @@
 > Portfolio status is recorded in [STATUS.md](../STATUS.md). This document describes this repository only; current runtime and deployment claims require evidence from their owning domains.
 
-# JARVIS PRIME Architecture v1
+# ORQEVIA · 奥启维亚 Architecture v1
 
 This successor defines current intended architecture and supersedes conflicting earlier architecture, including governance/OPERATIONAL_BASELINE_v1.md. Historical documents and parent Git history remain unchanged; historical evidence is not invalidated by superseded ceremonial rules.
 
-Owner → Dell / mobile PWA / PWA voice → one authenticated HTTPS Interface contract → ABEX PRIME → automatic deterministic / qualified Local Nano / Cloud Mini / Cloud Flagship routing → appropriate canonical 21-agent subset → tools, execution, independent validation and bounded repair → one task/artifact namespace → originating or explicitly linked owner client.
+Owner → Dell / mobile PWA / PWA voice → one authenticated HTTPS Interface contract → ABEX ORQEVIA Core → automatic deterministic / qualified Local Nano / Cloud Mini / Cloud Flagship routing → appropriate canonical 21-agent subset → tools, execution, independent validation and bounded repair → one task/artifact namespace → originating or explicitly linked owner client.
 
 Client identity does not grant execution authority. Server policy selects routing and cost/data-locality bounds; clients cannot select models or authority. Ordinary bounded work uses direct observed execution with narrow consequential controls. Action records primarily preserve evidence.
 
