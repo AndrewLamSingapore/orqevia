@@ -193,6 +193,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(coaching_update) == 3606
     assert hashlib.sha256(coaching_update).hexdigest() == '7f4b6984193296e695a0cc99228aa4e43519775276847c787c5fa443c8d8ed6a'
     after = after[:coaching_start] + after[coaching_end:]
+    # Admit only this exact incremental observation; every earlier byte stays pinned.
+    incremental_title = "## Incremental crash analysis and communication-path follow-up - 13 October 2026"
+    assert after.count(incremental_title) == 1
+    incremental_start = after.index(incremental_title)
+    incremental_end = after.index("\n## ", incremental_start + len(incremental_title)) + 1
+    incremental_update = after[incremental_start:incremental_end].encode("utf-8")
+    assert len(incremental_update) == 4309
+    assert hashlib.sha256(incremental_update).hexdigest() == "626618b2ac3bcdc6bc38297b388e245fc8ff139585e76a413dfc79d2846cb610"
+    after = after[:incremental_start] + after[incremental_end:]
     # Admit only the exact dated telemetry/runtime follow-up; prior history is unchanged.
     runtime_title = "## Telemetry source and external runtime follow-up - 13 October 2026"
     assert after.count(runtime_title) == 1
@@ -438,6 +447,8 @@ def test_light_observation_and_failure_reject_inflated_claims(monkeypatch, origi
 
 @pytest.mark.parametrize("original,replacement", [
     ("## Course study", "## Course study — unaccounted history edit"),
+    ("The offending driver remains UNIDENTIFIED.", "The offending driver is NTFS."),
+    ("Host reliability remains unresolved.", "Host reliability is certified."),
     ("PR #302 is an unmerged source candidate, distinct from the observed runtime.",
      "PR #302 is the installed and accepted runtime."),
     ("No hardware cause is established.", "The hardware cause is established."),
