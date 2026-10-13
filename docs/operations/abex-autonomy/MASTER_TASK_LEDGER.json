@@ -1,6 +1,6 @@
 {
   "schema": "abex.master-task-ledger.v1",
-  "updated_at_utc": "2026-10-13T11:57:26.475419+00:00",
+  "updated_at_utc": "2026-10-13T13:04:44.471361+00:00",
   "tasks": [
     {
       "task_id": "ABEX-REC-001",
@@ -1560,7 +1560,7 @@
     },
     {
       "task_id": "ABEX-OWNER-009",
-      "project": "ORQEVIA \u00b7 \u5965\u542f\u7ef4\u4e9a",
+      "project": "ORQEVIA · 奥启维亚",
       "original_objective": "Migrate existing JARVIS PRIME public application and operational identity to ORQEVIA while preserving enrollment, APIs, history and all existing engineering acceptance criteria.",
       "verified_status": "OWNER_DIRECTIVE_IN_PROGRESS",
       "latest_observation": {
@@ -1586,6 +1586,90 @@
           "read_at_utc": "2026-10-13T12:03:55.577214+00:00"
         }
       ]
+    },
+    {
+      "task_id": "ABEX-OWNER-010",
+      "project": "Sky Tablet / The Portal",
+      "original_objective": "Investigate and resolve Evidence Lens terminology while preserving independent sovereign products",
+      "verified_status": "OPEN",
+      "evidence_sources": [],
+      "status_scope": "Owner-directed current work; scoped receipts do not award Lam-only Verified status.",
+      "dependencies": [],
+      "blockers": "No global stop; physical device, external credentials/custody and independent assessment retain their narrow separate limits.",
+      "next_executable_action": "Review and publish Interpretation Lens source and independent deployment evidence; Portal Evidence Lab remains its actual verification feature. Preserve historical names and compatibility IDs.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Exhaustive owning-source inventory; accurate purpose-based name; preserve URLs/data/identifiers/history; regression, navigation, evidence and independent deployment receipts; no mandatory peer dependencies.",
+      "owner_approval_requirement": "Existing Owner authorization covers reversible implementation and permitted deployment; retain actual physical, credential, financial or irreversible dependencies.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T13:04:44.471361+00:00",
+        "status": "SOURCE_AND_PREVIEW_PASS_PRODUCTION_UNCHANGED",
+        "scope": "Review and publish Interpretation Lens source and independent deployment evidence; Portal Evidence Lab remains its actual verification feature. Preserve historical names and compatibility IDs.",
+        "classification": "CLAIMED_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": []
+    },
+    {
+      "task_id": "ABEX-OWNER-011",
+      "project": "ABEX",
+      "original_objective": "Tidy both products and the wider workspace without losing source, data, credentials or evidence",
+      "verified_status": "OPEN",
+      "evidence_sources": [],
+      "status_scope": "Owner-directed current work; scoped receipts do not award Lam-only Verified status.",
+      "dependencies": [],
+      "blockers": "No global stop; physical device, external credentials/custody and independent assessment retain their narrow separate limits.",
+      "next_executable_action": "Retain reviewed cache/data exclusions and independently audit reversible four-context archive. No deletion occurred; zero bytes reclaimed; continue scoped cleanup where evidence supports it.",
+      "priority": "P4",
+      "completion_acceptance_criteria": "Inventory and classify cleanup targets; preserve original source, evidence and rollback; safe reversible operations with exact custody receipts; do not remove protected fixtures or incomplete captures.",
+      "owner_approval_requirement": "Existing Owner authorization covers reversible implementation and permitted deployment; retain actual physical, credential, financial or irreversible dependencies.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T13:04:44.471361+00:00",
+        "status": "PARTIAL_REVERSIBLE_ARCHIVE_PASS",
+        "scope": "Retain reviewed cache/data exclusions and independently audit reversible four-context archive. No deletion occurred; zero bytes reclaimed; continue scoped cleanup where evidence supports it.",
+        "classification": "CLAIMED_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": []
+    },
+    {
+      "task_id": "ABEX-OWNER-012",
+      "project": "ORQEVIA",
+      "original_objective": "Retrieve and deploy the authentic GitHub-approved ORQEVIA logo across existing ORQ interfaces and iPhone PWA",
+      "verified_status": "OPEN",
+      "evidence_sources": [],
+      "status_scope": "Owner-directed current work; scoped receipts do not award Lam-only Verified status.",
+      "dependencies": [],
+      "blockers": "No global stop; physical device, external credentials/custody and independent assessment retain their narrow separate limits.",
+      "next_executable_action": "Install reviewed exact-source image on idle existing Core/Interface with backups/rollback, validate TLS Owner-policy task/artifacts and public desktop/mobile branding; publish scoped internet interfaces; physical iPhone acceptance remains separate.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Canonical approved original with repository/path/commit/checksum; preserved full design in required derivatives; actual deployed web/PWA logo/favicon/metadata/cache checks; session/data/API compatibility; physical Safari/PWA/home-screen observation or explicitly pending.",
+      "owner_approval_requirement": "Existing Owner authorization covers reversible implementation and permitted deployment; retain actual physical, credential, financial or irreversible dependencies.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T13:04:44.471361+00:00",
+        "status": "IMPLEMENTED_TESTED_NOT_YET_DEPLOYED",
+        "scope": "Install reviewed exact-source image on idle existing Core/Interface with backups/rollback, validate TLS Owner-policy task/artifacts and public desktop/mobile branding; publish scoped internet interfaces; physical iPhone acceptance remains separate.",
+        "classification": "CLAIMED_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": []
+    },
+    {
+      "task_id": "ABEX-OWNER-013",
+      "project": "ORQEVIA / six sovereign systems",
+      "original_objective": "Discover, reconcile, implement and verify the original Fabrics architecture without introducing a seventh product or compulsory gateways",
+      "verified_status": "OPEN",
+      "evidence_sources": [],
+      "status_scope": "Owner-directed current work; scoped receipts do not award Lam-only Verified status.",
+      "dependencies": [],
+      "blockers": "No global stop; physical device, external credentials/custody and independent assessment retain their narrow separate limits.",
+      "next_executable_action": "Finish historical/source/runtime Fabrics discovery before selecting integration changes; map existing components and trust boundaries, independently review contradictions and implement the smallest evidenced gaps.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Recover historical definitions and competing scopes with exact source evidence; maintain six sovereign systems and optional versioned interfaces; master diagrams/matrices in owning documentation; implement actual evidenced gaps; test isolation, messaging, evidence, restart/recovery and regressions; preserve full backlog and physical/certification limits.",
+      "owner_approval_requirement": "Existing Owner authorization covers reversible implementation and permitted deployment; retain actual physical, credential, financial or irreversible dependencies.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T13:04:44.471361+00:00",
+        "status": "READ_ONLY_DISCOVERY_IN_PROGRESS",
+        "scope": "Finish historical/source/runtime Fabrics discovery before selecting integration changes; map existing components and trust boundaries, independently review contradictions and implement the smallest evidenced gaps.",
+        "classification": "CLAIMED_NOT_OWNER_VERIFIED"
+      },
+      "observation_history": []
     }
   ],
   "discovery_limits": [
@@ -1600,5 +1684,6 @@
   "supplement_file": "recovered-backlog-supplement-agent.json",
   "owner_parked": "VELYQUA physical sensor assembly and real telemetry; resume only on Owner instruction and actual hardware availability.",
   "latest_observation_scope": "Dated runtime and source receipt overlay; existing Verified status fields and historical objectives retained, no Lam verification inferred.",
-  "history_snapshot": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\memory-before\\20261013T115726475419Z"
+  "history_snapshot": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\memory-before\\20261013T115726475419Z",
+  "owner_addition_scope": "49 earlier obligations preserved exactly plus lens, wider cleanup, official logo and Fabrics Owner directives."
 }

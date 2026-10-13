@@ -1,6 +1,6 @@
 # ABEX master task ledger
 
-Observed 2026-10-13T11:57:26.475419+00:00.49 entries: all48 prior obligations retained plus approved ORQEVIA brand migration. STATUS.md and owning repositories retain their scoped authority.
+Observed 2026-10-13T13:04:44.471361+00:00. 53 entries: all 49 previous obligations retained exactly plus four subsequent Owner directives. STATUS.md records portfolio claims; owning repositories retain source and domain authority.
 
 | ID | Project | Objective | Latest dated status | Priority |
 | --- | --- | --- | --- | --- |
@@ -53,6 +53,9 @@ Observed 2026-10-13T11:57:26.475419+00:00.49 entries: all48 prior obligations re
 | ABEX-MARK-001 | ORQEVIA / ABEX | Execute and independently evidence physical Black Start without Internet/cloud AI/Codex/GitHub, preserving durable queues and identity/authority | DEFERRED_HISTORICAL_UNVERIFIED_CURRENT | P2 |
 | ABEX-MARK-002 | ORQEVIA / ABEX | Qualify metacognitive counterfactual reasoning, tool/model selection and calibration with attributable real outcomes | DEFERRED_HISTORICAL_UNVERIFIED_CURRENT | P5 |
 | ABEX-OWNER-009 | ORQEVIA · 奥启维亚 | Migrate existing JARVIS PRIME public application and operational identity to ORQEVIA while preserving enrollment, APIs, history and all existing engineering acceptance criteria. | PARTIAL_SOFTWARE_BRAND_PASS_PHYSICAL_PENDING | P1 |
+| ABEX-OWNER-010 | Sky Tablet / The Portal | Investigate and resolve Evidence Lens terminology while preserving independent sovereign products | SOURCE_AND_PREVIEW_PASS_PRODUCTION_UNCHANGED | P5 |
+| ABEX-OWNER-011 | ABEX | Tidy both products and the wider workspace without losing source, data, credentials or evidence | PARTIAL_REVERSIBLE_ARCHIVE_PASS | P4 |
+| ABEX-OWNER-012 | ORQEVIA | Retrieve and deploy the authentic GitHub-approved ORQEVIA logo across existing ORQ interfaces and iPhone PWA | IMPLEMENTED_TESTED_NOT_YET_DEPLOYED | P1 |
+| ABEX-OWNER-013 | ORQEVIA / six sovereign systems | Discover, reconcile, implement and verify the original Fabrics architecture without introducing a seventh product or compulsory gateways | READ_ONLY_DISCOVERY_IN_PROGRESS | P1 |
 
-Full objectives, dependencies, original evidence, unchanged acceptance and next actions: [MASTER_TASK_LEDGER.json](MASTER_TASK_LEDGER.json).
-Original memory bytes preserved in dated `operations/brand-migration-20261013/memory-before/`. Failed or ambiguous observations are never erased or automatically replayed.
+All original objectives, criteria, failures and Verified-status fields remain. The machine-readable ledger preserves provenance, dependencies and dated observation histories.
