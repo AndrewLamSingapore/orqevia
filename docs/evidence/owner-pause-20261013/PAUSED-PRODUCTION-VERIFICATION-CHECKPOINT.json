@@ -1,0 +1,66 @@
+{
+  "schema": "official-logo.production-verification-paused-checkpoint.v1",
+  "observed_at_utc": "2026-10-13T13:40:41.165Z",
+  "owner_instruction": "Explicit pause received through root; save at safe point and stop. No new tests, source edits or releases after checkpoint.",
+  "state": "PAUSED_BY_OWNER",
+  "scope_completed": "READ_ONLY_VERCEL_PRODUCTION_DEPLOYMENT_AND_STABLE_ALIAS_METADATA",
+  "authority": {
+    "deployment_id": "dpl_C4DJx1o4j3EgFMLQkEmLKRtvywcP",
+    "state": "READY",
+    "target": "production",
+    "source_revision": "b19c93d7ae51ee7c7b1c150a584dfb66ad6ca2b6",
+    "immutable_url": "authority-engine-7j2hx7gyk-andrew-lam-singapore.vercel.app",
+    "stable_url": "https://authority-engine-app.vercel.app",
+    "stable_alias_deployment_id": "dpl_C4DJx1o4j3EgFMLQkEmLKRtvywcP",
+    "source_evidence": "Actual Vercel get_deployment tool response observed in current turn; complete response retained in conversation tool trace. Alias raw tool result retained below.",
+    "prior_production_rollback_reference": "dpl_26uJfSLEjoJjNqNcUQERNApnoScR"
+  },
+  "portal": {
+    "deployment_id": "dpl_2vdGMnGiJMZQfZhFohTJbwJkmakr",
+    "state": "READY",
+    "target": "production",
+    "source_revision": "06957cb87d556ec8180b2d7ebccd75cfa5770047",
+    "immutable_url": "the-portal-rm0bvyd1f-andrew-lam-singapore.vercel.app",
+    "stable_url": "https://the-portal-ten.vercel.app",
+    "stable_alias_deployment_id": "dpl_2vdGMnGiJMZQfZhFohTJbwJkmakr",
+    "source_evidence": "Raw actual Vercel deployment and alias results retained below.",
+    "prior_production_rollback_reference": "dpl_BM347D5awkPM16w7PxLzqeosXSSM"
+  },
+  "source_readiness_references": [
+    "../independent-source/AUTHORITY-FINAL-HANDOFF.json",
+    "../independent-source/AUTHORITY-OFFICIAL-LOGO-INDEPENDENT-FINAL-REVIEW.json",
+    "../portal-private/PORTAL-PRIVATE-OFFICIAL-LOGO-SOURCE.json",
+    "../portal-private/PORTAL-PUBLIC-LABEL-INDEPENDENT-ADDENDUM.json"
+  ],
+  "ci_scope": "Authority exactb19 latest CI was independently checked in the source handoff. Portal069 three SUCCESS workflows reported by root; not rechecked in this new production-verification lane.",
+  "scope_not_started": [
+    "Actual public production HTML/asset raw byte retrieval",
+    "Production DOM/header/logo/favicon/OG desktop/mobile screenshots",
+    "Authority same-page ORQ→Portal→ORQ→agents→About restoration",
+    "Portal private anonymous no-auth-traffic readback and global identity comparison",
+    "Five-product standalone browser flows with Core/Authority/sibling services blocked",
+    "Independent Game configured-down publication/outbox mocked failure probe delegated but instructed not to begin after pause"
+  ],
+  "awards": {
+    "production_logo_rendered_acceptance": "UNVERIFIED",
+    "all_five_product_disconnected_acceptance": "UNVERIFIED",
+    "physical_device": "UNVERIFIED",
+    "full21_role": "UNVERIFIED",
+    "azure": "UNVERIFIED"
+  },
+  "mutation_counts": {
+    "production_releases_by_this_agent": 0,
+    "application_auth_writes": 0,
+    "real_uploads": 0,
+    "paid_model_calls": 0,
+    "product_source_edits": 0
+  },
+  "next_safe_action_on_explicit_resume": "First confirm stable aliases still point to these exact READY deployments; then retrieve public exact approved PNG bytes and inspect actual production anonymous desktop/mobile DOM/head/navigation in fresh bounded read-only browser contexts. Keep those production checks separate from isolated source/mocked sibling-failure tests. Report a concrete standalone bug before any product edit.",
+  "raw_receipts": [
+    "portal-production-deployment-tool-result.json",
+    "authority-production-alias-tool-result.json",
+    "portal-production-alias-tool-result.json"
+  ],
+  "no_active_browser_or_test_process_started_in_this_lane": true
+}
+

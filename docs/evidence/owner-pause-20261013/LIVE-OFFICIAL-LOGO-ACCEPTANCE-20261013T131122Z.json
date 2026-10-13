@@ -1,0 +1,161 @@
+{
+  "state": "PASS",
+  "scope": "REAL_TLS_HTTP_EXISTING_OWNER_POLICY_NOT_PHYSICAL_IPHONE_COOKIE_TEST",
+  "tls_chain_and_hostname_validated": true,
+  "source_revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+  "assets": [
+    {
+      "path": "/pwa/icons/orqevia-official-v1-192.png",
+      "status": 200,
+      "sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-official-v1-512.png",
+      "status": 200,
+      "sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-official-v1-apple-touch.png",
+      "status": 200,
+      "sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-official-v1-favicon-16.png",
+      "status": 200,
+      "sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-official-v1-favicon-32.png",
+      "status": 200,
+      "sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-official-v1-favicon-48.png",
+      "status": 200,
+      "sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/index.html",
+      "status": 200,
+      "sha256": "cb0af5f66f9a5021bded7a33a088a30030f1ad0b366c82d220d7deb2c1865b35",
+      "content_type": "text/html; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/manifest.webmanifest",
+      "status": 200,
+      "sha256": "aff25eebdfd7ce2e43536ce0d380c66c5380fcea28f3a3e84f7854d1055199c8",
+      "content_type": "application/manifest+json",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/sw.js",
+      "status": 200,
+      "sha256": "151c14020274587cedb405ba2869c987d63d26e6dd6fee0e89ed96de82896e6c",
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/release.mjs",
+      "status": 200,
+      "sha256": "38ba519af338436ec606474e157636b29a01d54df81773f585b5d2e8f6887162",
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/app.mjs",
+      "status": 200,
+      "sha256": "ab99251ed61266aedefa5796e344446259672046f82b931166c1aa47f86b0977",
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/core.mjs",
+      "status": 200,
+      "sha256": "e6394a7a76790dcb16fa1b8dffc44683e8ea383985dfa605f5545a9a8bddb320",
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/dashboard.mjs",
+      "status": 200,
+      "sha256": "8a4dc4c447c9ae8ddf373cf441da5e3ce5eb82b136b87ce217eff9b11c031446",
+      "content_type": "text/javascript; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/dashboard.css",
+      "status": 200,
+      "sha256": "7d38d48fd6ac7058bd5f2c8692c0b19461237004a7cd2d763cf53819f29b4897",
+      "content_type": "text/css; charset=utf-8",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/icon.svg",
+      "status": 200,
+      "sha256": "f50534e68f48827b2e088b36482172df466d086d6c11de06220f42a8aafbe0b0",
+      "content_type": "image/svg+xml",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-v1-192.png",
+      "status": 200,
+      "sha256": "fb87a1b2a6ae1ea560adec43a0c177aa732a9f84f0774c6a491cc3b5e299d7aa",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-v1-512.png",
+      "status": 200,
+      "sha256": "24447534ee9188c3c265a42deb409f3f84c0efaec34fd194f5be78d1b9e9cac1",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    },
+    {
+      "path": "/pwa/icons/orqevia-v1-apple-touch.png",
+      "status": 200,
+      "sha256": "8f73c754888be3f8216b03d2f0b72bea9c1da48c7cb106855d7c5f065fe9e3c2",
+      "content_type": "image/png",
+      "cache_control": "no-store"
+    }
+  ],
+  "official_original_sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+  "current_brand": "ORQEVIA \u00b7 \u5965\u542f\u7ef4\u4e9a",
+  "manifest_identity_preserved": true,
+  "anonymous_telemetry_status": 401,
+  "authenticated_owner_policy": true,
+  "normal_latest_passed": 21,
+  "normal_denominator": 21,
+  "full_end_to_end_accepted": 0,
+  "task_id": "4f4e6197-2921-4949-80bd-43f020fcc549",
+  "same_task_idempotent_replay": true,
+  "task_state": "COMPLETED",
+  "verified_artifacts": [
+    {
+      "artifact_id": "7b812e140735473aba9dd2671c3f6888",
+      "sha256": "82710d81749a8a165e20ef1b2a079f5f685bac8148d48cc943701e3519750d34",
+      "bytes": 3433
+    },
+    {
+      "artifact_id": "ca84d6843e64447eb17a62f7c65bd386",
+      "sha256": "9744ad536b00987def6fc93dfcf8016058a863fc0eec6a9356c750ffe8badec3",
+      "bytes": 1409
+    }
+  ],
+  "task_runtime_identity_matches_observed_docker": true,
+  "physical_safari_tested": false,
+  "physical_home_screen_tested": false,
+  "at_utc": "2026-10-13T13:11:22.247247+00:00"
+}

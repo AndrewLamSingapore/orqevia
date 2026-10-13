@@ -1,0 +1,96 @@
+{
+  "schema": "orqevia.reversible-context-archive-independent-postmove.v1",
+  "observed_at_utc": "2026-10-13T12:56:11.635801+00:00",
+  "plan_sha256": "c7b621ea7b53dbe277bd64abe4a60283aae52ab8247f1777eb6cf0d76ec3795c",
+  "root_execution_receipt_sha256": "f1928330766240fe1c195cbccb13f4fc0c9c7c510cfa0116101af96abd80a32c",
+  "reviewer_moves_deletes_or_live_actions": 0,
+  "checks": {
+    "all_four_exact_archived_inventories": true,
+    "all_file_and_byte_totals_retained": true,
+    "receipt_reports_no_deletion_or_reclaimed_space": true,
+    "old_new_mapping_exact_receipt": true,
+    "receipt_retains_original_delete_rejection_and_summary_failure": true
+  },
+  "archived_contexts": [
+    {
+      "old_source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\retained-build-context-1faa8d2c",
+      "new_archive_path": "C:\\Users\\Admin\\Documents\\ABEX\\archive\\brand-migration-20261013\\rebuildable-contexts-20261013T125000Z\\retained-build-context-1faa8d2c",
+      "old_source_absent": true,
+      "destination_present": true,
+      "file_count": 384,
+      "bytes_retained": 4091500,
+      "full_original_inventory_exact": true,
+      "no_reparse_children": true,
+      "reconstruction_guards": {
+        "archive": true,
+        "build_receipt": true,
+        "recipe_sidecar": true
+      },
+      "inventory_sha256": "4fb74aa783a6f72789afb584d6ffc2e78c643a73c7e39599b844dc494be2b9f7"
+    },
+    {
+      "old_source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\retained-build-context-3b129d9d",
+      "new_archive_path": "C:\\Users\\Admin\\Documents\\ABEX\\archive\\brand-migration-20261013\\rebuildable-contexts-20261013T125000Z\\retained-build-context-3b129d9d",
+      "old_source_absent": true,
+      "destination_present": true,
+      "file_count": 384,
+      "bytes_retained": 4091500,
+      "full_original_inventory_exact": true,
+      "no_reparse_children": true,
+      "reconstruction_guards": {
+        "archive": true,
+        "build_receipt": true,
+        "recipe_sidecar": true
+      },
+      "inventory_sha256": "b56768df1a474ed94a21fa93734ee910740b4d88506296e2f870410f0e2c9c25"
+    },
+    {
+      "old_source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\retained-build-context-3f9c97d5",
+      "new_archive_path": "C:\\Users\\Admin\\Documents\\ABEX\\archive\\brand-migration-20261013\\rebuildable-contexts-20261013T125000Z\\retained-build-context-3f9c97d5",
+      "old_source_absent": true,
+      "destination_present": true,
+      "file_count": 384,
+      "bytes_retained": 4091500,
+      "full_original_inventory_exact": true,
+      "no_reparse_children": true,
+      "reconstruction_guards": {
+        "archive": true,
+        "build_receipt": true,
+        "recipe_sidecar": true
+      },
+      "inventory_sha256": "4ed4c272852c0277dc55ab7a2f2b5b61d6fe117a1fe4f5b80533e93b06c056d7"
+    },
+    {
+      "old_source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\brand-migration-20261013\\retained-build-context-5030941d",
+      "new_archive_path": "C:\\Users\\Admin\\Documents\\ABEX\\archive\\brand-migration-20261013\\rebuildable-contexts-20261013T125000Z\\retained-build-context-5030941d",
+      "old_source_absent": true,
+      "destination_present": true,
+      "file_count": 384,
+      "bytes_retained": 4091574,
+      "full_original_inventory_exact": true,
+      "no_reparse_children": true,
+      "reconstruction_guards": {
+        "archive": true,
+        "build_receipt": true,
+        "recipe_sidecar": true
+      },
+      "inventory_sha256": "fce7559f376e904fc57d43063682ea353657b56c1eecf35c0d243d0acbdadcbe"
+    }
+  ],
+  "decision": "PASS_ALL_1536_FILES_AND_16366074_BYTES_RETAINED_EXACTLY_ZERO_RECLAIMED",
+  "original_policy_rejection": {
+    "action": "Guarded recursive deletion of four redundant build contexts",
+    "reason": "blocked by policy",
+    "mutation_performed": false
+  },
+  "retained_postmove_summary_failure": {
+    "operation": "PowerShell final summary after successful guarded moves",
+    "error": "Measure-Object property files not found on hashtable entries",
+    "mutation_failure": false,
+    "recovery": "Read-only complete post-move inventory and retained-evidence hash verification; no repeated move"
+  },
+  "limitations": [
+    "Reversible on-device archival declutters operations paths; no disk space reclaimed.",
+    "This does not establish complete workspace cleanup, off-device/encrypted backup, full coherent recovery, or future image bit reproducibility."
+  ]
+}

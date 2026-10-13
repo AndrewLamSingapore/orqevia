@@ -1,61 +1,52 @@
 {
   "payload": {
     "schema": "abex.session-checkpoint.v1",
-    "at_utc": "2026-10-13T13:04:44.471361+00:00",
+    "at_utc": "2026-10-13T13:50:23.069288+00:00",
     "active_objective": "Preserve full backlog; complete authentic-logo rollout and lens/workspace reconciliation; discover and integrate original Fabrics across six sovereign systems",
     "git": {
-      "head": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+      "head": "5421877ab436cbbc44588fdd06f0b7958e3dc4f0",
       "branch": "codex/coaching-priority-20261013",
-      "canonical_main_reviewed": "38de17921fa6ac8bb3d4587fab6eb2bb882af8dc",
+      "canonical_main_reviewed": "8929aca8fa1a16c4fb30d4d9c6950ac5f8868504",
       "pr": "https://github.com/AndrewLamSingapore/orqevia/pull/299",
       "dirty_paths_at_observation": [
         " M docs/operations/abex-autonomy/MASTER_TASK_LEDGER.json",
         " M docs/operations/abex-autonomy/MASTER_TASK_LEDGER.md"
-      ]
+      ],
+      "head_at_snapshot": "5421877ab436cbbc44588fdd06f0b7958e3dc4f0",
+      "final_saved_commit_receipt": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\pause-resume-20261013\\FINAL-SAVE-RECEIPT.json",
+      "snapshot_head_scope": "Pre-save commit; final source commit is recorded in the external final save receipt to avoid self-reference."
     },
     "runtime": [
       {
         "name": "prime-epoch-20260919-prime-1",
-        "id": "029e776616e0113e1e029c47e69c1067b796e2f80958e884b082b0de4d77e745",
-        "image": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+        "id": "9c8e97c7254076e817c1197d82dc00094266d19512d3ef093124859ec3b46a37",
+        "image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
         "status": "running",
-        "health": "healthy",
-        "started_at": "2026-10-13T11:51:04.612936961Z",
-        "source_revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
-        "restart_policy": "unless-stopped"
+        "health": "healthy"
       },
       {
         "name": "prime-epoch-20260919-interface-1",
-        "id": "2bf5b357d9ce9c24f650296ab5157707d51c90b73460505a807a95a5ce877a31",
-        "image": "sha256:eaa3cf988ee0392d2a160a2a24cfe5fce010d018c991a73926282ffe235706a5",
+        "id": "ea900018386bba2d613f8ed5255307c4743b7e16f8a075e6d59ddbd2131059b5",
+        "image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
         "status": "running",
-        "health": "healthy",
-        "started_at": "2026-10-13T11:51:05.929120022Z",
-        "source_revision": "5030941d2c878c611d77f3a64dc9b55bc3a7c0eb",
-        "restart_policy": "unless-stopped"
+        "health": "healthy"
       },
       {
         "name": "orqevia-coaching-coaching-1",
         "id": "427cde7c6236638627dab2d9f677068feb052fbd5995e831805e7acf20745d13",
         "image": "sha256:cf11bef0d4d922346439ce984e7e3cb28b4ed94b8f92507772004ac4f8dd9b8f",
         "status": "running",
-        "health": "healthy",
-        "started_at": "2026-10-13T10:22:59.338733747Z",
-        "source_revision": "81f2d1dcb238f39c26af153d2e870cc16674993f",
-        "restart_policy": "unless-stopped"
+        "health": "healthy"
       },
       {
         "name": "prime-epoch-20260919-ollama-1",
         "id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
         "image": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
         "status": "running",
-        "health": "healthy",
-        "started_at": "2026-10-13T10:22:59.342644836Z",
-        "source_revision": null,
-        "restart_policy": "unless-stopped"
+        "health": "healthy"
       }
     ],
-    "last_observed_action": "Tracked four new Owner directives without modifying the original49 obligations. Final logo source6297PASS/1SKIP; running runtime still5030941d until independent review and rollout.",
+    "last_observed_action": "Source candidates committed; automatic coaching marker observedPAUSED/queue0;13SQLite online backups and686artifact copies validated; all child agents stopped at saved checkpoints.",
     "counts": {
       "normal_passed": 21,
       "normal_denominator": 21,
@@ -68,7 +59,7 @@
       "full_denominator": 21,
       "azure_l7": "NOT_ESTABLISHED"
     },
-    "next_safe_action": "Complete reviewed official-logo deployment, then historical Fabrics discovery and evidence-based integration. Preserve normal21/21 and identity21/21; full0/21 and Azure unestablished. Physical iPhone/pre-logon/off-host qualification remain separate.",
+    "next_safe_action": "Wait for explicit Owner resume. Read PAUSE-RESUME.md and FINAL-SAVE-RECEIPT.json, verify checkpoint hash, current source/main/runtime and owned pause marker. Then finish real original-wire adapter+Event integration and independent/full regression, actual public-logo browser checks, Fabrics master diagrams/sovereign failure tests and remaining53tasks. Preserve completed normal21/21 and identity21/21; full0/21 and Azure remain unestablished.",
     "remaining_task_ids": [
       "ABEX-REC-001",
       "ABEX-REC-002",
@@ -206,9 +197,25 @@
       "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BUILD-5c38c56d-attempt2.json": "cc5f131922f54b7fb1c5ab9e8b24a42a59ade41cbed296d87dff11a12300feee",
       "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BUILD-5c38c56d.json": "b68ac3f69ccbd60bd330c6123d6749ef35012f3788aadea6265532275cf6339f",
       "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BUILD-891e3adf-attempt2.json": "8f554c7208887272fc1593784b27a0bcddcc8f4218bc1c98079aa6b2fcf1a815",
-      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BUILD-891e3adf.json": "7d0e6d22abba7bbe1ead8bcb91a81cf07b011e67dc51a25b629c649cd3f0a9ad"
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BUILD-891e3adf.json": "7d0e6d22abba7bbe1ead8bcb91a81cf07b011e67dc51a25b629c649cd3f0a9ad",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\CORE-OFFICIAL-LOGO-INDEPENDENT-FINAL-ADDENDUM.json": "3c6b3adac804dce1841c886e9d8e5fb120af220e27067b8fbafa33991a3a9047",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-OFFICIAL-LOGO-ACCEPTANCE-20261013T131122Z.json": "7715fd3daba31681dea9e905d3fc2583619831be88a6d139998fd855d0f4ad31",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-BROWSER-LOGO-RECEIPT-ATTEMPT2.json": "1b42d8aa90c35e1f49d3ab611043c0547ba09cd4c957ff82ac57e38027026de2",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BEFORE.json": "8a6cf8dad3c54fe53b4de051f3d71906ab400922d291fecc7331f35822c7ce7e",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\AFTER.json": "b0f4fa4d35e2aefee6583b0d4964fc349a722dc75fa1417e50b3f64152549706",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\production-verification\\PAUSED-PRODUCTION-VERIFICATION-CHECKPOINT.json": "6419269362e91e3b6cc723f7e71afb75e4be430eeb0f95c808af5726985102a4",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\lens-collision-20261013\\workspace\\reversible-context-archive-receipt.json": "f1928330766240fe1c195cbccb13f4fc0c9c7c510cfa0116101af96abd80a32c",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\lens-collision-20261013\\workspace\\reversible-context-archive-independent-postmove.json": "b9b045d5148ae7b015e6c5adba1b1f18870f59d8c166485564a3caac83cd4565",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\ORQEVIA-FABRICS-HISTORICAL-INVENTORY.json": "328a3872e8a997543afd82dad7d547332ef2aab406247ef811ae619252c45165",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\product-source-inventory\\FIVE-PRODUCT-FABRIC-FINDINGS.json": "b817c633be075af284d6e287aba5695ac69445d0cafa1ff0ab2c31b838f1ffcb",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\ADAPTER-AFTER-OWNER-SCHEMA-ENCODING-FIX.json": "9460a24e07eaba50b2e178ad8e760c4676d00d4f69ee79206da07d2c5da339dc",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\event-recovery\\OWNER-PAUSE-CHECKPOINT.json": "0c11bfa52dc928c5f56ef4839750007be311b2e7533d2b88b6cc3e8f0cf84ce1",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\independence\\REVIEWER-PAUSE-CHECKPOINT-20261013.json": "1a24d59fc921a1a2e8176f6762787d72ebcf496627a0340367d9c551cb446871",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-20261013\\orq-concrete\\ORQ-CONCRETE-FABRIC-FINDINGS.json": "e383f9bb3ccc3038b862376bbc19791aac0bad4ec362989f25a8c0e088358174",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\pause-resume-20261013\\OWNER-PAUSE-RUNTIME-20261013T134213Z.json": "892a4ef0949223d07605c2a36120f967c892bb2dd881d142a6fa93036b9fdcb1",
+      "C:\\Users\\Admin\\Documents\\ABEX\\operations\\pause-resume-20261013\\PAUSE-DATA-SAVE-20261013T134612Z.json": "9d5c5f4729616a926b4bdf24dc996638580c18ba9a341cbe2f62de7a5e198f89"
     },
-    "prior_checkpoint_sha256": "63d436d5073f0e9113ab735cb5155e649f0b203db3963c49fac55e16cf0c312d",
+    "prior_checkpoint_sha256": "c217d9e3977b3ba0ea75c330432cdba8fc2fcc83c36e0443ce694dcff1ec5105",
     "owner_decisions_required": [
       "Physical iPhone/TV observation",
       "Actual external custody/credentials/budget where required",
@@ -219,8 +226,18 @@
     ],
     "history_preserved": true,
     "discovery_complete": false,
-    "runtime_observation_scope": "Container IDs captured at preceding reconciliation; independent final review rechecks fresh Docker identity.",
-    "task_count": 53
+    "runtime_observation_scope": "Fresh Owner-pause runtime readback: application891 healthy, controllerPAUSED, zero active jobs.",
+    "task_count": 53,
+    "execution_state": "PAUSED_BY_OWNER",
+    "owner_pause_instruction": "Save everything at safe checkpoints; pause and stop work until Owner resumes.",
+    "resume_authorization_required": true,
+    "backup": {
+      "receipt": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\pause-resume-20261013\\PAUSE-DATA-SAVE-20261013T134612Z.json",
+      "same_volume_path": "/data/owner-pause-backups/20261013T134612Z",
+      "databases": 13,
+      "artifact_files": 686,
+      "off_device_or_coherent_host_loss_qualification": false
+    }
   },
-  "payload_sha256": "c217d9e3977b3ba0ea75c330432cdba8fc2fcc83c36e0443ce694dcff1ec5105"
+  "payload_sha256": "b822c9d08c82fb0e088870a2af794dcc5ec2f2b5a8ffbb1a667fb1482df58213"
 }

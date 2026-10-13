@@ -1,0 +1,196 @@
+{
+  "schema": "orqevia.fabric-concrete-findings.v1",
+  "state": "PASS",
+  "scope": "Read-only implementation, service/dependency and live-binding inventory; not full Fabric semantic acceptance.",
+  "observed_at": "2026-10-13T13:18:18.900980+00:00",
+  "canonical_main": "24534eca22f5f43f68ebffc24f06361e9e427bf1",
+  "candidate_source": "445984b2d9456799b9440bd8514dc71b14e557e0",
+  "installed_source": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+  "immutable_image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
+  "modules_inspected": 60,
+  "runtime_correspondence": "60/60 exact content after ONLY CRLF-to-LF checkout normalization; raw file hashes retained. Original raw45 comparison7/45FAIL retained, not rewritten.",
+  "source_modules_absent_from_canonical_main": [
+    "app/collective_workspace.py",
+    "app/collective_api.py",
+    "app/capability_broker.py",
+    "app/agent_tool_bridge.py",
+    "app/agent_tool_bridge_api.py",
+    "app/public_http.py"
+  ],
+  "surfaces": [
+    {
+      "surface": "Registered agents and dispatch",
+      "source": [
+        "app/agent_registry.py",
+        "app/agent_dispatch_api.py",
+        "app/objective_api.py",
+        "app/agent_coaching.py"
+      ],
+      "active_boundary": "production_entry mounts direct_entry; /api/agents/dispatch and /api/agents/objectives use registry identity, task routing and shared queue.",
+      "actual_observation": "GET capability permissions 200 lists 21 canonical specialists. Queue metrics 200 shows 286 completed/16 failed retained jobs, zero running/cloud-inflight.",
+      "limit": "21 registry entries are not 21 workers. The dated normal21/21 and identity21/21 remain their original acceptance evidence; this inventory adds no model assessment."
+    },
+    {
+      "surface": "Compute/model/provider execution",
+      "source": [
+        "app/compute_queue_api.py",
+        "app/job_queue.py",
+        "app/backend_admission.py",
+        "app/compute_catalog.py",
+        "app/provider_runtime.py",
+        "app/cloud_execution.py",
+        "app/hf_admission.py",
+        "app/hf_qa_execution.py"
+      ],
+      "active_boundary": "Authenticated jobs -> admitted local/provider worker -> queue original output and usage/action receipt. HF QA has separate explicit provider admission.",
+      "actual_observation": "Installed queue policies and existing job aggregates read only; no inference or paid provider call.",
+      "limit": "Catalog/admission availability does not prove every configured provider or HF QA semantic acceptance."
+    },
+    {
+      "surface": "Scoped tools and service fulfillment",
+      "source": [
+        "app/capability_broker.py",
+        "app/public_http.py",
+        "app/engineering_api.py",
+        "app/wasm_sandbox.py",
+        "app/action_records.py"
+      ],
+      "active_boundary": "/api/capabilities request uses task-to-actor binding, service permissions and durable action audit; Core has its own /core/request.",
+      "actual_observation": "Live GET permissions lists public-read/task-metadata availability for 21; infrastructure/HF/WASM/delegation remain role-specific.",
+      "limit": "A handler permission is not a model-issued successful tool use. GitHub/DO/secrets/apply/code-generate/engineering-debug requests remain denied/unconfigured in this broker."
+    },
+    {
+      "surface": "Private engineering notes, boards and task handoff",
+      "source": [
+        "app/collective_workspace.py",
+        "app/collective_api.py"
+      ],
+      "active_boundary": "/api/collective/request; 22 principals including Core; private sketch revisions, board delivery/ack, registry delegation edges, task leases/history.",
+      "actual_observation": "Read-only tables retain 22 sketches,22 subscriptions,22 deliveries,1 message,1 task,5 task events,72 audit rows.",
+      "limit": "Stored notes are explicit structured contributions, not extracted hidden reasoning. This does not promote memory/event knowledge or prove all 21 models used a board."
+    },
+    {
+      "surface": "Finite model output -> tools/delegation -> feedback bridge",
+      "source": [
+        "app/agent_tool_bridge.py",
+        "app/agent_tool_bridge_api.py"
+      ],
+      "active_boundary": "Owner-authenticated /api/agent-tool-bridge/sessions; completed original output and trusted finite scope; at most4steps/2delegations, fixed local child provider,max_retries0,cost0.",
+      "actual_observation": "One existing bridge session and two steps retained. No create/execute/observe/feedback endpoint called by this read-only inventory.",
+      "limit": "Source deliberately records model_consumption_established=false after feedback execution. This is bounded orchestration, not a perpetual autonomous loop or full-role certification."
+    },
+    {
+      "surface": "Durable memory and context",
+      "source": [
+        "app/memory.py",
+        "app/production_survival.py",
+        "app/context_pack.py",
+        "app/skill_router.py",
+        "app/governed_knowledge.py",
+        "app/hybrid_memory.py"
+      ],
+      "active_boundary": "Local authorized /control/api/survival/memory write/search/get; request context pack and advisory skills are opt-in dispatch paths.",
+      "actual_observation": "Read-only memory tables contain one durable record and zero episodes. No memory method imported/called; no embedding request.",
+      "limit": "Direct dispatch context packs include supplied request data, not automatic durable-memory/event retrieval. GovernedKnowledgeStore has no production caller; HybridMemory is on retained cognitive runtime paths. Skills grant no tools/authority."
+    },
+    {
+      "surface": "Events, cross-product relay and retained cognitive reasoning",
+      "source": [
+        "app/event_fabric.py",
+        "app/portfolio_relay.py",
+        "app/runtime.py",
+        "app/cognitive_orchestrator.py",
+        "app/cognitive_api.py",
+        "app/spine.py",
+        "app/spine_api.py"
+      ],
+      "active_boundary": "Retained cognitive/control_surface modules define these routes; current production_entry/direct_entry does not mount those modules.",
+      "actual_observation": "Live GET /api/cognitive/models and /api/spine/events return404; portfolio-events.db,agent-authority.db,spine.db absent at this data root.",
+      "limit": "Absence is current binding evidence, not deletion or proof no historical execution elsewhere. Optional relay/Portal context must not become a compulsory cross-product gateway."
+    },
+    {
+      "surface": "Candidate learning/continuity/MLP and active deterministic workflow",
+      "source": [
+        "app/phase2_intelligence.py",
+        "app/phase2_evidence_adapter.py",
+        "app/general_intelligence.py",
+        "app/competence_frontier.py",
+        "app/mlp_fabric.py",
+        "app/workflow_engine.py",
+        "app/operational_workflows.py"
+      ],
+      "active_boundary": "/api/workflows is mounted for bounded named deterministic workflows. Phase2/MLP/lesson helpers are retained libraries without active production dispatch routing.",
+      "actual_observation": "15 additional continuity/learning/workflow/skill/Interface module bytes match installed source after CRLF checkout normalization.",
+      "limit": "Phase2 evidence/lesson verifiers default-deny; MLP approved-artifact/decision verifiers and persisted registry are integration prerequisites for that library. Neither is an automatic prerequisite for ordinary current work."
+    }
+  ],
+  "measured_integration_gaps_and_suggestions": [
+    {
+      "gap": "Automatic scoped durable-memory/context retrieval is not joined to direct dispatch.",
+      "smallest_candidate": "Optional caller-scoped retrieval adapter returning bounded data-only ContextCandidates with source/version/age and no authority transfer; leave normal/identity pinned prompts untouched by default.",
+      "testable_acceptance": "Temporary-store tests for correct principal/scope, wrong-principal denial, stale/superseded records, injection as data, byte budget and original prompt equality when disabled. No inference required."
+    },
+    {
+      "gap": "Historical EventFabric/PortfolioRelay endpoints are not mounted and no event inbox exists on the current production data root.",
+      "smallest_candidate": "First reconcile the authoritative historical definition with owning product contracts. If required, opt-in event adapter into an existing explicit source-owned route, not mounting the complete old cognitive/Spine authority app.",
+      "testable_acceptance": "Isolated canonical event fixture -> durable idempotent inbox -> candidate projection with original source/event/correlation; conflicting reuse fails and repeat does not duplicate. Product continues when adapter/ORQEVIA is absent. No real provider call."
+    },
+    {
+      "gap": "Bridge feedback execution is recorded separately from semantic consumption/correctness; catalog21 does not establish21 model tool users.",
+      "smallest_candidate": "Use existing finite bridge with one authorized public synthetic objective only when parent approves new model work; inspect original result bytes and tool-use/feedback semantics rather than infer correctness from completed status.",
+      "testable_acceptance": "First existing source tests against retained originals; future model receipt must bind actor, original output, permitted effect, child prompt and original model result, preserving failures and zero-replay ambiguity. Do not invent a perpetual loop."
+    },
+    {
+      "gap": "MLP and Phase2 learning components have source contracts but no production routing/persistent artifact integration shown.",
+      "smallest_candidate": "Preserve candidate status until a concrete useful numeric/continuity objective requires their optional owning integration. Do not activate historical global gates or count source fixtures as live fabric acceptance.",
+      "testable_acceptance": "Existing test_mlp_fabric/test_phase2 source tests in temporary stores; separately retain independent approved artifact, exact source/runtime/authority and rollback evidence before any later operational invocation."
+    }
+  ],
+  "historical_definition_scope": {
+    "named_source_concepts": [
+      "Portfolio Compute Fabric: event contract consumer/coordinator, commit5935acb9 Aug31",
+      "Context Fabric: proposed architecture then Phase2 candidate implementation94d63b3 Sep26",
+      "Autonomous Engineering Fabric: candidate assurance evidence, f8790a8/69597b0 Sep25",
+      "Governed local MLP candidate: a34efaa7 Oct4",
+      "Model Fabric HF QA:4c0fdc65 Oct8"
+    ],
+    "original_exact_six_fabric_list": "UNVERIFIED_IN_THIS_CODE_INVENTORY; parent owns broader original-definition discovery",
+    "six_sovereign_products": [
+      "ORQEVIA",
+      "Authority Engine",
+      "Game Platform",
+      "The Portal",
+      "The Sky Tablet",
+      "VELYQUA"
+    ],
+    "shared_profile_control_reference": "Not a seventh product; optional shared contracts do not replace owning product source/data or force ORQEVIA availability."
+  },
+  "reusable_commands": [
+    "python operations/fabrics-20261013/orq-concrete/collect_inventory.py",
+    "python operations/fabrics-20261013/orq-concrete/finish_correspondence.py",
+    "python operations/fabrics-20261013/orq-concrete/collect_supplement.py"
+  ],
+  "evidence": [
+    {
+      "path": "ORQ-CONCRETE-SERVICE-INVENTORY.json",
+      "sha256": "6a08400f4afb7e546bed4b711d48cf807f32a40a1bf6a563499776e65a157403"
+    },
+    {
+      "path": "INSTALLED-SOURCE-CORRESPONDENCE.json",
+      "sha256": "c02428564d43d4434b04605b0bb7fe200cab431f6e5c357ce558ab052571696d"
+    },
+    {
+      "path": "INSTALLED-SOURCE-CORRESPONDENCE-RAW-FAILURE.json",
+      "sha256": "166a7bd1f125a7d92baf16fd4e6214f43f5197b770bee78e374edd4d4fb68fe5"
+    },
+    {
+      "path": "ORQ-CONTINUITY-LEARNING-SUPPLEMENT.json",
+      "sha256": "b563b5ba3d4ce047641d2c6b71ce31d27779a432855b46752569ed0a71b9cb01"
+    }
+  ],
+  "limitations": [
+    "No code changes, deploy, new inference, paid-provider job, authentication mutation or cross-product writes.",
+    "No hidden chain-of-thought capture; only explicit source contracts and safe aggregate observations.",
+    "Normal21/21,identity21/21 are dated distinct evidence; full0/21 and Azure unestablished remain unchanged."
+  ]
+}

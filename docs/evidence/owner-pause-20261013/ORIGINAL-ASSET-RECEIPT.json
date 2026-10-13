@@ -1,0 +1,12 @@
+{
+  "at_utc": "2026-10-13T12:34:05.444484+00:00",
+  "repository": "AndrewLamSingapore/orqevia",
+  "branch": "brand-master-register-2026-10-10",
+  "path": "assets/brands/orqevia/generated-original.png",
+  "source_commit": "f03ce95d1752f316bca92257b0f7349a48863472",
+  "git_blob_sha1": "accb39978851a9c882fa31558412a15bffcfbfd2",
+  "sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+  "bytes": 1531581,
+  "retained_file": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\official-original.png",
+  "approval_evidence": "Owner Andrew Lam authored commit with message chore(brand): add approved ORQEVIA logo binary; preceding approved master brand register independently reviewed."
+}

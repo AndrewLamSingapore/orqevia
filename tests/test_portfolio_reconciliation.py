@@ -174,6 +174,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only the exact Owner pause event; every existing history pin remains.
+    pause_title = '## Owner pause, authentic logo rollout and Fabrics source checkpoint - 13 October 2026'
+    assert after.count(pause_title) == 1
+    pause_start = after.index(pause_title)
+    pause_end = after.index('\n## ', pause_start + len(pause_title)) + 1
+    pause_update = after[pause_start:pause_end].encode('utf-8')
+    assert len(pause_update) == 3496
+    assert hashlib.sha256(pause_update).hexdigest() == '479cbb152ccee8d83ec27cc25f19f900f2d9b8ce5cac82871bd9fac56e42dc80'
+    after = after[:pause_start] + after[pause_end:]
     # Admit only this exact new non-Verified migration event; all prior pins remain.
     brand_title = '## ORQEVIA brand migration and bounded live commissioning - 13 October 2026'
     assert after.count(brand_title) == 1

@@ -1,0 +1,140 @@
+{
+  "schema": "orqevia.event-recovery.owner-pause-checkpoint.v1",
+  "state": "PAUSED_BY_OWNER",
+  "saved_at": "2026-10-13T13:42:02.864583+00:00",
+  "branch": "codex/fabric-event-recovery-20261013",
+  "worktree": "C:\\Users\\Admin\\Documents\\ABEX\\worktrees\\fabric-event-recovery-20261013",
+  "baseline": "fd47eab861da52a928d3c4a89fc2bb29181ccb58",
+  "head": "caf15f6f41f7fc23e324fda03757d278c5fc0fe2",
+  "clean_worktree": true,
+  "push_state": "LOCAL_COMMIT_ONLY_NO_NEW_PUBLICATION_AT_PAUSE",
+  "changed_files": [
+    "app/event_fabric.py",
+    "app/memory.py",
+    "docs/event-fabric-recovery-candidate.md",
+    "tests/test_event_fabric_recovery.py"
+  ],
+  "source_git_sha256": {
+    "app/event_fabric.py": "a14fab7f8a4d6a1deff22c67a1dd9a0248ac2e6d6fcae1667b7758238922fb94",
+    "app/memory.py": "06bd5e125e14cb599f758d4c1935419d9b1bd21b5cc4f41fe058b68e9d699a8c",
+    "docs/event-fabric-recovery-candidate.md": "ad99653699b0af7300ea1c6dce599cc2a3f74054b5ced09e09dad2c9d979ed13",
+    "tests/test_event_fabric_recovery.py": "935c75d6834018898e848ce744d1bdda8a0e2d4a0d2d4942672095110fd37e1e"
+  },
+  "tests": {
+    "latest_focused": 71,
+    "latest_focused_state": "PASS",
+    "full_suite": "NOT_RUN_PAUSED",
+    "real_v2_v3_adapter_storage_integration": "NOT_RUN_PAUSED; optional helper belongs to root source lane",
+    "independent_after_previous_working_source": {
+      "state": "9_CASES_PASS_AT_EARLIER_HASHES",
+      "receipt": "operations/fabrics-architecture-20261013/independence/INDEPENDENT-AFTER-PROBE-20261013T133509Z.json",
+      "sha256": "7a2cf53730b135cd0231868afa6823c17d9ac974f1155a8e2e8a7b055d399753",
+      "final_index_and_envelope_changes": "FINAL_INDEPENDENT_REVIEW_PENDING"
+    }
+  },
+  "retained_raw_receipts": [
+    {
+      "path": "operations/fabrics-architecture-20261013/event-recovery/before-20261013T132515Z.json",
+      "state": "PASS",
+      "sha256": "60683b970eb27bd4d87e5d86c13948f70a612e5c057ef9aad0c564dcb4608046",
+      "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\event-recovery\\before-20261013T132515Z.log",
+      "log_sha256": "2e35f03823e3fa8f27a722092af18b762a565c25d0cea65fa8722cc4690ffba6"
+    },
+    {
+      "path": "operations/fabrics-architecture-20261013/event-recovery/focused-20261013T133331Z.json",
+      "state": "FAIL",
+      "sha256": "980f9abd0b9dec68c8b47b817516253a7b89ff7caa696761b1f3c55d8b030a2f",
+      "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\event-recovery\\focused-20261013T133331Z.log",
+      "log_sha256": "c3a181c200daa43db9321b4a2227eb8596c57c537b282fbccc01e6281405d6f9"
+    },
+    {
+      "path": "operations/fabrics-architecture-20261013/event-recovery/focused-20261013T133404Z.json",
+      "state": "PASS",
+      "sha256": "0167de8d48dc6edb2f72f9ba884dbe3dd9da280571f71187cc1e53851cbf8cb2",
+      "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\event-recovery\\focused-20261013T133404Z.log",
+      "log_sha256": "d2a97dbd6a22eabccef687220bd51cbb0792c75db172e8d4b21d8a7bcb08c783"
+    },
+    {
+      "path": "operations/fabrics-architecture-20261013/event-recovery/focused-20261013T133847Z.json",
+      "state": "PASS",
+      "sha256": "c37c231fa5e4ec0575e08d3d7ab0994632fc90e822681e8a3b79f19c60e58c04",
+      "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\event-recovery\\focused-20261013T133847Z.log",
+      "log_sha256": "952c343e8a65bbf2004296e2d5ac50799915b7de4e504237373822aeb4ba2971"
+    }
+  ],
+  "unchanged_normal_identity_session_execution_modules": [
+    {
+      "path": "app/agent_dispatch_api.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "089f7fade8c3e3c4290c6e7a46c904e586611dd1230e18c2fd45fdafc7b1a2b6"
+    },
+    {
+      "path": "app/product_identity.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "9b435157d7b4f7529ba7df5b1ad4fa60df1df2c38fa6e77aa953b6497d19566c"
+    },
+    {
+      "path": "app/jarvis_response_contract.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "2fa5dc630a9859db2d28d21d8ac613b60d3e5c6e5de4fe2ccc0dd4309708e4bb"
+    },
+    {
+      "path": "app/normal_latest_observation.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "d6ee8da91069d7eebe2807cb6a67869bcf9ed62efb9382f1a1374e2ec7a441ad"
+    },
+    {
+      "path": "app/pwa_sessions.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "803c816ed6ca301be5278d5a595b6a88a668f542e347dc325f7c035306050aba"
+    },
+    {
+      "path": "app/interface_node.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "cfa96b29062acc45462d14be70472c1da9a4a5ea60d30504bfae96b493747f2f"
+    },
+    {
+      "path": "app/agent_registry.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "0fa4ea02a9528f1319b03e1e007b86bd636ced09f3d0138bb3f56c584f51ffe7"
+    },
+    {
+      "path": "config/agent_registry.json",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6"
+    },
+    {
+      "path": "app/agent_cert_cases.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "65735ae35767153572b659a160894d37679345588ecbf8660ca15dc6af3bb941"
+    },
+    {
+      "path": "app/compute_queue_api.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "b5e03da248c883141db77be79ac7fdea39d9e6bdc07868d6450a4762fabdaa33"
+    },
+    {
+      "path": "app/capability_broker.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "6ad22852d43c026730e09b2671b4b1c05faf1f7065097de6d78a6779bb67a04b"
+    },
+    {
+      "path": "app/agent_tool_bridge.py",
+      "git_blob_bytes_unchanged": true,
+      "sha256": "f7d877e68177a1be8e6d63b64d877e9b6dbd424e2f017a5a1695d04682693dd5"
+    }
+  ],
+  "next_safe_actions_after_explicit_resume": [
+    "Integrate root optional portfolio_event_compat helper and pinned v3 schema in the owning source; run real schema-validated envelope/inbox atomicity tests.",
+    "Independently review exact caf15f6 indexed lookup and original-envelope storage; run full appropriate source regression before any later integration/promotion.",
+    "Game configured-down optional publication/outbox probe on pinned9553 export remains NOT_STARTED."
+  ],
+  "runtime": {
+    "event_component": "LEGACY_OPTIONAL_UNMOUNTED_SOURCE_CANDIDATE",
+    "deployment": "NO_DEPLOYMENT",
+    "production_database_writes": 0,
+    "new_model_provider_calls": 0,
+    "new_runtime_mount_auth_provider_prompt_changes": false
+  },
+  "normal_and_identity_acceptance": "Original dated normal21/21 and identity21/21 preserved; no new full/Azure claim."
+}

@@ -1,0 +1,8 @@
+{
+  "started_at_utc": "2026-10-13T13:01:08.690867+00:00",
+  "finished_at_utc": "2026-10-13T13:02:22.853024+00:00",
+  "source_revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+  "exit_code": 0,
+  "scope": "ISOLATED_SOURCE_REGRESSION_NOT_AGENT_ACCEPTANCE",
+  "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\full-followup-regression-891e3ad.log"
+}

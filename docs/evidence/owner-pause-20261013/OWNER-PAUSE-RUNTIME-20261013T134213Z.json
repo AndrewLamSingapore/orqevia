@@ -1,0 +1,53 @@
+{
+  "schema": "abex.owner-pause-runtime.v1",
+  "at_utc": "20261013T134213Z",
+  "scope": "Explicit Owner pause of automatic coaching; existing application and all task/evidence data preserved",
+  "marker": {
+    "path": "/data/coaching.pause",
+    "sha256": "b370d8d87784e3c5a5070b47bedf252be903abe3729a85379b5470ff0e2b1934",
+    "prior_marker_present": false,
+    "prior_marker_sha256": null,
+    "prior_marker_preserved": false
+  },
+  "credentials_or_enrollment_reset": false,
+  "jobs_cancelled": false,
+  "machine_policy_changed": false,
+  "controller": {
+    "state": "PAUSED",
+    "last_tick_epoch": 1791898941.7329905
+  },
+  "queue": {
+    "queued_or_running": 0
+  },
+  "services": [
+    {
+      "name": "prime-epoch-20260919-prime-1",
+      "id": "9c8e97c7254076e817c1197d82dc00094266d19512d3ef093124859ec3b46a37",
+      "image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
+      "status": "running",
+      "health": "healthy"
+    },
+    {
+      "name": "prime-epoch-20260919-interface-1",
+      "id": "ea900018386bba2d613f8ed5255307c4743b7e16f8a075e6d59ddbd2131059b5",
+      "image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
+      "status": "running",
+      "health": "healthy"
+    },
+    {
+      "name": "orqevia-coaching-coaching-1",
+      "id": "427cde7c6236638627dab2d9f677068feb052fbd5995e831805e7acf20745d13",
+      "image": "sha256:cf11bef0d4d922346439ce984e7e3cb28b4ed94b8f92507772004ac4f8dd9b8f",
+      "status": "running",
+      "health": "healthy"
+    },
+    {
+      "name": "prime-epoch-20260919-ollama-1",
+      "id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+      "image": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "status": "running",
+      "health": "healthy"
+    }
+  ],
+  "resume_action": "After explicit Owner resume, verify marker SHA and preserve any prior marker before removing only this pause marker; recheck source/runtime/ledger. Do not replay completed normal or identity cohorts."
+}

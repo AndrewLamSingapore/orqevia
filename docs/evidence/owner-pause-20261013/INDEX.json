@@ -1,0 +1,110 @@
+[
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\ORIGINAL-ASSET-RECEIPT.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/ORIGINAL-ASSET-RECEIPT.json",
+    "sha256": "e74deb53c422ef216a2b66aef97d1126b1851c96cf02cb8fc06961c61c46d528",
+    "bytes": 741
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\CORE-OFFICIAL-LOGO-INDEPENDENT-FINAL-ADDENDUM.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/CORE-OFFICIAL-LOGO-INDEPENDENT-FINAL-ADDENDUM.json",
+    "sha256": "3c6b3adac804dce1841c886e9d8e5fb120af220e27067b8fbafa33991a3a9047",
+    "bytes": 11159
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\FULL-FOLLOWUP-REGRESSION-891e3ad.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/FULL-FOLLOWUP-REGRESSION-891e3ad.json",
+    "sha256": "c8544c8a9eb78236923bd165437d8144dcc0d456a60a872471f09f11ad1c7d24",
+    "bytes": 387
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-OFFICIAL-LOGO-ACCEPTANCE-20261013T131122Z.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/LIVE-OFFICIAL-LOGO-ACCEPTANCE-20261013T131122Z.json",
+    "sha256": "7715fd3daba31681dea9e905d3fc2583619831be88a6d139998fd855d0f4ad31",
+    "bytes": 5776
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-BROWSER-LOGO-RECEIPT-ATTEMPT2.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/LIVE-BROWSER-LOGO-RECEIPT-ATTEMPT2.json",
+    "sha256": "1b42d8aa90c35e1f49d3ab611043c0547ba09cd4c957ff82ac57e38027026de2",
+    "bytes": 5004
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\BEFORE.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/BEFORE.json",
+    "sha256": "8a6cf8dad3c54fe53b4de051f3d71906ab400922d291fecc7331f35822c7ce7e",
+    "bytes": 4343
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\AFTER.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/AFTER.json",
+    "sha256": "b0f4fa4d35e2aefee6583b0d4964fc349a722dc75fa1417e50b3f64152549706",
+    "bytes": 4343
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\production-verification\\PAUSED-PRODUCTION-VERIFICATION-CHECKPOINT.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/PAUSED-PRODUCTION-VERIFICATION-CHECKPOINT.json",
+    "sha256": "6419269362e91e3b6cc723f7e71afb75e4be430eeb0f95c808af5726985102a4",
+    "bytes": 3794
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\lens-collision-20261013\\workspace\\reversible-context-archive-receipt.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/reversible-context-archive-receipt.json",
+    "sha256": "f1928330766240fe1c195cbccb13f4fc0c9c7c510cfa0116101af96abd80a32c",
+    "bytes": 4557
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\lens-collision-20261013\\workspace\\reversible-context-archive-independent-postmove.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/reversible-context-archive-independent-postmove.json",
+    "sha256": "b9b045d5148ae7b015e6c5adba1b1f18870f59d8c166485564a3caac83cd4565",
+    "bytes": 4638
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\ORQEVIA-FABRICS-HISTORICAL-INVENTORY.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/ORQEVIA-FABRICS-HISTORICAL-INVENTORY.json",
+    "sha256": "328a3872e8a997543afd82dad7d547332ef2aab406247ef811ae619252c45165",
+    "bytes": 1208530
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\product-source-inventory\\FIVE-PRODUCT-FABRIC-FINDINGS.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/FIVE-PRODUCT-FABRIC-FINDINGS.json",
+    "sha256": "b817c633be075af284d6e287aba5695ac69445d0cafa1ff0ab2c31b838f1ffcb",
+    "bytes": 28112
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\ADAPTER-AFTER-OWNER-SCHEMA-ENCODING-FIX.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/ADAPTER-AFTER-OWNER-SCHEMA-ENCODING-FIX.json",
+    "sha256": "9460a24e07eaba50b2e178ad8e760c4676d00d4f69ee79206da07d2c5da339dc",
+    "bytes": 501
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\event-recovery\\OWNER-PAUSE-CHECKPOINT.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/OWNER-PAUSE-CHECKPOINT.json",
+    "sha256": "0c11bfa52dc928c5f56ef4839750007be311b2e7533d2b88b6cc3e8f0cf84ce1",
+    "bytes": 6741
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-architecture-20261013\\independence\\REVIEWER-PAUSE-CHECKPOINT-20261013.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/REVIEWER-PAUSE-CHECKPOINT-20261013.json",
+    "sha256": "1a24d59fc921a1a2e8176f6762787d72ebcf496627a0340367d9c551cb446871",
+    "bytes": 7247
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-20261013\\orq-concrete\\ORQ-CONCRETE-FABRIC-FINDINGS.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/ORQ-CONCRETE-FABRIC-FINDINGS.json",
+    "sha256": "e383f9bb3ccc3038b862376bbc19791aac0bad4ec362989f25a8c0e088358174",
+    "bytes": 12506
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\pause-resume-20261013\\OWNER-PAUSE-RUNTIME-20261013T134213Z.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/OWNER-PAUSE-RUNTIME-20261013T134213Z.json",
+    "sha256": "892a4ef0949223d07605c2a36120f967c892bb2dd881d142a6fa93036b9fdcb1",
+    "bytes": 2099
+  },
+  {
+    "source_path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\pause-resume-20261013\\PAUSE-DATA-SAVE-20261013T134612Z.json",
+    "repository_copy": "docs/evidence/owner-pause-20261013/PAUSE-DATA-SAVE-20261013T134612Z.json",
+    "sha256": "9d5c5f4729616a926b4bdf24dc996638580c18ba9a341cbe2f62de7a5e198f89",
+    "bytes": 129902
+  }
+]

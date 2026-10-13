@@ -1,6 +1,6 @@
 # ABEX master task ledger
 
-Observed 2026-10-13T13:04:44.471361+00:00. 53 entries: all 49 previous obligations retained exactly plus four subsequent Owner directives. STATUS.md records portfolio claims; owning repositories retain source and domain authority.
+PAUSED by explicit Owner instruction at 2026-10-13T13:50:23.069288+00:00. 53 entries; all49 earlier obligations, original criteria and Verified-status fields preserved exactly. STATUS.md records claims; owning repositories retain source/domain authority.
 
 | ID | Project | Objective | Latest dated status | Priority |
 | --- | --- | --- | --- | --- |
@@ -53,9 +53,9 @@ Observed 2026-10-13T13:04:44.471361+00:00. 53 entries: all 49 previous obligatio
 | ABEX-MARK-001 | ORQEVIA / ABEX | Execute and independently evidence physical Black Start without Internet/cloud AI/Codex/GitHub, preserving durable queues and identity/authority | DEFERRED_HISTORICAL_UNVERIFIED_CURRENT | P2 |
 | ABEX-MARK-002 | ORQEVIA / ABEX | Qualify metacognitive counterfactual reasoning, tool/model selection and calibration with attributable real outcomes | DEFERRED_HISTORICAL_UNVERIFIED_CURRENT | P5 |
 | ABEX-OWNER-009 | ORQEVIA · 奥启维亚 | Migrate existing JARVIS PRIME public application and operational identity to ORQEVIA while preserving enrollment, APIs, history and all existing engineering acceptance criteria. | PARTIAL_SOFTWARE_BRAND_PASS_PHYSICAL_PENDING | P1 |
-| ABEX-OWNER-010 | Sky Tablet / The Portal | Investigate and resolve Evidence Lens terminology while preserving independent sovereign products | SOURCE_AND_PREVIEW_PASS_PRODUCTION_UNCHANGED | P5 |
-| ABEX-OWNER-011 | ABEX | Tidy both products and the wider workspace without losing source, data, credentials or evidence | PARTIAL_REVERSIBLE_ARCHIVE_PASS | P4 |
-| ABEX-OWNER-012 | ORQEVIA | Retrieve and deploy the authentic GitHub-approved ORQEVIA logo across existing ORQ interfaces and iPhone PWA | IMPLEMENTED_TESTED_NOT_YET_DEPLOYED | P1 |
-| ABEX-OWNER-013 | ORQEVIA / six sovereign systems | Discover, reconcile, implement and verify the original Fabrics architecture without introducing a seventh product or compulsory gateways | READ_ONLY_DISCOVERY_IN_PROGRESS | P1 |
+| ABEX-OWNER-010 | Sky Tablet / The Portal | Investigate and resolve Evidence Lens terminology while preserving independent sovereign products | PAUSED_SOURCE_AND_PREVIEW_COMPLETE_PRODUCTION_UNCHANGED | P5 |
+| ABEX-OWNER-011 | ABEX | Tidy both products and the wider workspace without losing source, data, credentials or evidence | PAUSED_PARTIAL_ARCHIVE_COMPLETE | P4 |
+| ABEX-OWNER-012 | ORQEVIA | Retrieve and deploy the authentic GitHub-approved ORQEVIA logo across existing ORQ interfaces and iPhone PWA | PAUSED_CORE_DEPLOYED_PUBLIC_RELEASE_UNVERIFIED_PHYSICAL_PENDING | P1 |
+| ABEX-OWNER-013 | ORQEVIA / six sovereign systems | Discover, reconcile, implement and verify the original Fabrics architecture without introducing a seventh product or compulsory gateways | PAUSED_DISCOVERY_AND_SOURCE_CANDIDATES | P1 |
 
-All original objectives, criteria, failures and Verified-status fields remain. The machine-readable ledger preserves provenance, dependencies and dated observation histories.
+Resume only on explicit Owner instruction. Preserve every original failed wave and acceptance criterion; do not repeat completed normal21/21 or identity21/21 merely to resume.

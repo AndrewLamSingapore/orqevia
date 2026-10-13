@@ -139,3 +139,8 @@ Indexed 2026-10-13T09:42:46.159109+00:00. Local root: `C:\Users\Admin\Documents\
 
 Timestamped RAW-PER-AGENT, NORMAL-ROLE-RESULTS-HF, FOLLOWUP-RESULTS, CONTROLLER-298-INSTALL, RUNTIME-INSTALL and RESTART-RECOVERY receipts are retained in that directory. Latest mirrors are navigation only; immutable originals remain.
 Earlier failed source regressions and provider/queue failures are retained. Repository implementation and deployment identities remain separate.
+
+
+## Owner pause checkpoint —13October2026
+
+[Resume checkpoint](PAUSE-RESUME.md) and [repository receipt index](../../evidence/owner-pause-20261013/INDEX.json). Original operational receipts and failure evidence retain their original dates/scopes.

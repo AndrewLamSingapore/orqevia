@@ -1,0 +1,208 @@
+{
+  "schema": "orqevia.core-official-logo-independent-final-addendum.v1",
+  "observed_at_utc": "2026-10-13T13:08:11.150007+00:00",
+  "initial_receipt_sha256": "e37b6eb4973068e46a62c63cd287b8ff8950c9639f2e278beea80fd7c681e331",
+  "initial_receipt_preserved": true,
+  "diagnosis": "Initial raw-Git comparator flagged five text files encoded by the retained Windows Git archive as strict LF-to-CRLF translations. Each final image file matches that retained archive exactly; original PNG and six derivatives are byte-identical to raw Git. No unexplained content divergence.",
+  "final_source_revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+  "image_id": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
+  "checks": {
+    "all_twelve_image_files_exact_retained_archive": true,
+    "every_archive_representation_exact_raw_git_or_strict_windows_crlf": true,
+    "original_and_six_derivatives_exact_raw_git_bytes": true,
+    "all_twelve_final_logo_sources_unchanged_from_prior_review": true,
+    "archive_build_image_final_source_identity_bound": true,
+    "only_existing_display_verifier_and_negative_unit_test_changed": true,
+    "existing_seven_criteria_retained_with_only_brand_icon_expression_updated": true,
+    "eleven_other_initial_independent_checks_pass": true,
+    "parent_final_full_regression_success_retained": true
+  },
+  "decision": "PASS_BOUNDED_OFFICIAL_LOGO_SOURCE_CACHE_AUTH_AND_PACKAGED_CUSTODY",
+  "packaged_files": [
+    {
+      "path": "assets/brands/orqevia/generated-original.png",
+      "bytes": 1531581,
+      "sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+      "source_path": "assets/brands/orqevia/generated-original.png",
+      "raw_git_sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+      "archive_sha256": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+      "archive_bytes": 1531581,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "assets/brands/orqevia/provenance.json",
+      "bytes": 3056,
+      "sha256": "9ea631a3ec30da33ca93d8f25c44b3eacb12e23a7c6f42284dcf2761b2e0594b",
+      "source_path": "assets/brands/orqevia/provenance.json",
+      "raw_git_sha256": "d6650aacf200272a0f471f56915d72ac3b90f0ff505ba354f8d7db7b6f9248b5",
+      "archive_sha256": "9ea631a3ec30da33ca93d8f25c44b3eacb12e23a7c6f42284dcf2761b2e0594b",
+      "archive_bytes": 3056,
+      "representation": "EXACT_LF_TO_WINDOWS_CRLF",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/brand_assets.py",
+      "bytes": 989,
+      "sha256": "a3fe845917656b4e55ddee4474903585c6692781bf57beb2de36d3ee7db4b549",
+      "source_path": "app/brand_assets.py",
+      "raw_git_sha256": "3ed13e5c32026ad7e7fe6303fbd3307faa6cb8b21b07e13300ec8363ac3a36c7",
+      "archive_sha256": "a3fe845917656b4e55ddee4474903585c6692781bf57beb2de36d3ee7db4b549",
+      "archive_bytes": 989,
+      "representation": "EXACT_LF_TO_WINDOWS_CRLF",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/icons/orqevia-official-v1-192.png",
+      "bytes": 37462,
+      "sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+      "source_path": "clients/pwa/icons/orqevia-official-v1-192.png",
+      "raw_git_sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+      "archive_sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+      "archive_bytes": 37462,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/icons/orqevia-official-v1-512.png",
+      "bytes": 238262,
+      "sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+      "source_path": "clients/pwa/icons/orqevia-official-v1-512.png",
+      "raw_git_sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+      "archive_sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+      "archive_bytes": 238262,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/icons/orqevia-official-v1-apple-touch.png",
+      "bytes": 33636,
+      "sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+      "source_path": "clients/pwa/icons/orqevia-official-v1-apple-touch.png",
+      "raw_git_sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+      "archive_sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+      "archive_bytes": 33636,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/icons/orqevia-official-v1-favicon-16.png",
+      "bytes": 699,
+      "sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+      "source_path": "clients/pwa/icons/orqevia-official-v1-favicon-16.png",
+      "raw_git_sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+      "archive_sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+      "archive_bytes": 699,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/icons/orqevia-official-v1-favicon-32.png",
+      "bytes": 2099,
+      "sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+      "source_path": "clients/pwa/icons/orqevia-official-v1-favicon-32.png",
+      "raw_git_sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+      "archive_sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+      "archive_bytes": 2099,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/icons/orqevia-official-v1-favicon-48.png",
+      "bytes": 3974,
+      "sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+      "source_path": "clients/pwa/icons/orqevia-official-v1-favicon-48.png",
+      "raw_git_sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+      "archive_sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+      "archive_bytes": 3974,
+      "representation": "EXACT_RAW_GIT",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/sw.js",
+      "bytes": 1216,
+      "sha256": "151c14020274587cedb405ba2869c987d63d26e6dd6fee0e89ed96de82896e6c",
+      "source_path": "clients/pwa/sw.js",
+      "raw_git_sha256": "7449bb6a37c5bddee04c4ae060dee16d8fd14f74091b38be05935eefb1a195f4",
+      "archive_sha256": "151c14020274587cedb405ba2869c987d63d26e6dd6fee0e89ed96de82896e6c",
+      "archive_bytes": 1216,
+      "representation": "EXACT_LF_TO_WINDOWS_CRLF",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/manifest.webmanifest",
+      "bytes": 468,
+      "sha256": "aff25eebdfd7ce2e43536ce0d380c66c5380fcea28f3a3e84f7854d1055199c8",
+      "source_path": "clients/pwa/manifest.webmanifest",
+      "raw_git_sha256": "0efe4a36f4d04864002244f20ba11538d1728fe14a7637d7f5c050b5b4e1150d",
+      "archive_sha256": "aff25eebdfd7ce2e43536ce0d380c66c5380fcea28f3a3e84f7854d1055199c8",
+      "archive_bytes": 468,
+      "representation": "EXACT_LF_TO_WINDOWS_CRLF",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    },
+    {
+      "path": "app/pwa_static/index.html",
+      "bytes": 18289,
+      "sha256": "cb0af5f66f9a5021bded7a33a088a30030f1ad0b366c82d220d7deb2c1865b35",
+      "source_path": "clients/pwa/index.html",
+      "raw_git_sha256": "447d939f37c5d30432df78db27154add6e1acf6e557efb248b96e53184f1877d",
+      "archive_sha256": "cb0af5f66f9a5021bded7a33a088a30030f1ad0b366c82d220d7deb2c1865b35",
+      "archive_bytes": 18289,
+      "representation": "EXACT_LF_TO_WINDOWS_CRLF",
+      "image_exact_archive": true,
+      "final_logo_source_exact_prior": true
+    }
+  ],
+  "final_delta": [
+    "scripts/verify_jarvis_candidate.py",
+    "tests/test_jarvis_candidate_verifier.py"
+  ],
+  "verifier_delta_sha256": "143d130618446693c2686ca3e77695a8a37c7693564c6d9e50811e37d17b441d",
+  "prior_independent_tests": {
+    "backend_existing_and_new_logo_auth_identity_contract_tests": {
+      "passed": 54,
+      "failed": 0,
+      "network": "none",
+      "log_sha256": "f10930e08860cc33e372faf7927bbdee74364faf76ae1e2d708e46d1c5062982"
+    },
+    "portable_existing_sw_update_brand_revision_tests": {
+      "passed": 21,
+      "failed": 0,
+      "log_sha256": "cb1fa245a4b1e3e17bdcc007b58360bc0e3cdc14d0c8d938e34f2c83b999a799"
+    },
+    "independent_pillow_exact_derivation": "ALL_SIX_PASS",
+    "reviewer_image_generation_or_writes": false
+  },
+  "parent_full_suite": {
+    "passed": 6297,
+    "skipped": 1,
+    "failed": 0,
+    "scope": "ISOLATED_SOURCE_REGRESSION_NOT_AGENT_ACCEPTANCE",
+    "receipt_sha256": "c8544c8a9eb78236923bd165437d8144dcc0d456a60a872471f09f11ad1c7d24",
+    "log_sha256": "9221a16b780f7ae90656f9e178d5ef9f83bbcf41ca0067d3cc0e7d801a5bb3de"
+  },
+  "reviewer_live_deployments_or_model_calls": 0,
+  "security_scope": "Production /control/brand keeps existing local_authorization dependency; source control_surface route uses existing _trusted_authorization; legacy public route returns only six literal approved filenames. No traversal or arbitrary asset access.",
+  "service_worker_scope": "Complete public shell installation precedes skipWaiting; failure leaves old v19 worker/cache and enrollment untouched. Activation deletes only prior jarvis/orqevia shell caches and preserves private/other cache namespaces. Query/API/other-origin requests remain unhandled.",
+  "limits": [
+    "No physical iPhone installed-icon refresh, browser rendering/device performance, or live enrollment/22-pad readback is awarded by source checks.",
+    "The historical register approves identity/custody; current Owner rollout authorization is separately held by root.",
+    "Image master custody and deterministic resizing do not establish off-device/encrypted/full backup recovery."
+  ],
+  "retained_failures": [
+    "Initial raw-Git/image text representation mismatch receipt remains unchanged.",
+    "Initial package assembly omitted brand assets before build; both initial failed attempts remain.",
+    "Initial 5c38 full regression failed one obsolete branding-prefix assertion; original failure is retained, final exact-icon custody criterion is stricter and seven criteria remain."
+  ]
+}

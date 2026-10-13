@@ -1,0 +1,517 @@
+{
+  "schema": "portfolio.five-owning-product-fabric-discovery.v1",
+  "observed_at_utc": "2026-10-13T13:33:11.639507+00:00",
+  "owner_directive": "Discover first. Six sovereign systems: ORQEVIA, Authority Engine, The Portal, VELYQUA, Living Worlds/Game Platform, Sky Tablet. No seventh sovereign service and no forced shared runtime.",
+  "scope": "READ_ONLY_OWNING_MAIN_AND_BOUNDED_RELEVANT_HISTORICAL_SOURCE; NO_PRODUCT_OR_ARCHITECTURE_CODE_EDIT; NO_RUNTIME_RELEASE",
+  "source_pins": [
+    {
+      "repository": "AndrewLamSingapore/authority-engine",
+      "main_revision": "2c073f45489b92c41b290fae389fe5309d10e15e",
+      "tracked_paths": 128,
+      "fabric_family_raw_matches": 0,
+      "shallow": false,
+      "snapshot_files": 16,
+      "historical_branches": 5
+    },
+    {
+      "repository": "AndrewLamSingapore/the-portal",
+      "main_revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+      "tracked_paths": 176,
+      "fabric_family_raw_matches": 8,
+      "shallow": false,
+      "snapshot_files": 36,
+      "historical_branches": 7
+    },
+    {
+      "repository": "AndrewLamSingapore/velyqua",
+      "main_revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+      "tracked_paths": 183,
+      "fabric_family_raw_matches": 1,
+      "shallow": false,
+      "snapshot_files": 30,
+      "historical_branches": 2
+    },
+    {
+      "repository": "AndrewLamSingapore/game-platform",
+      "main_revision": "9553e16da8173f3ce3712807addd0b369374337d",
+      "tracked_paths": 107,
+      "fabric_family_raw_matches": 1,
+      "shallow": false,
+      "snapshot_files": 47,
+      "historical_branches": 5
+    },
+    {
+      "repository": "AndrewLamSingapore/sky-tablet",
+      "main_revision": "fd10fa5e940d1663ab0e885f2501bc50229cd551",
+      "tracked_paths": 30,
+      "fabric_family_raw_matches": 0,
+      "shallow": false,
+      "snapshot_files": 6,
+      "historical_branches": 1
+    }
+  ],
+  "shared_governance_source_revision": "8929aca8fa1a16c4fb30d4d9c6950ac5f8868504",
+  "shared_contract_repository_role": "The existing AndrewLamSingapore profile repository hosts versioned compile-time contract sources. It is not introduced as a seventh deployed sovereign runtime.",
+  "captured_tracked_source_paths": 624,
+  "captured_selected_blob_snapshots": 135,
+  "selected_remote_historical_branches": 20,
+  "history_limit": "Main-reachable path/content/named-commit history and20 purpose-selected remote heads; not a claim to inspect every unrelated branch or uncommitted worktree.",
+  "products": [
+    {
+      "product": "Authority Engine",
+      "source_maturity": "IMPLEMENTED_LOCAL_POLICY_AND_OPTIONAL_OUTBOUND_ADAPTER; LIVE_RELAY_ACCEPTANCE_NOT_AWARDED",
+      "purpose": "Curate public proof. Ingest contract-valid evidence into its own Sanity candidates, quarantine lower evidence maturity, retain separate authenticated review and unpublished draft creation. Event receipt never publishes a draft.",
+      "dependencies": [
+        "Own Sanity configuration/credentials for candidate persistence and editorial APIs",
+        "Locally copied generated contracts3.0.0",
+        "Optional PORTFOLIO_RELAY_URL+PORTFOLIO_RELAY_TOKEN"
+      ],
+      "disconnected_source_behavior": "Missing relay configuration returns portfolio_relay_not_configured. Review/draft APIs catch relay failure and retain the own-domain result. Public Authority pages do not require ORQ or Portal execution.",
+      "history": [
+        {
+          "commit": "2a2a9725f871140ff30fc3fa3e9e253dc18a7b46",
+          "meaning": "Main-reachable merge#30 named portfolio-fabric; current tracked body contains no literal Fabric definition."
+        },
+        {
+          "commit": "f38aaf0c3c628d8d6ee6b726c7fa3f8cb2713cfc",
+          "path": "api/_portfolio-relay.js",
+          "meaning": "Adds deterministic authority event identity and optional outbound relay; retained as current adapter."
+        }
+      ],
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/authority-engine",
+          "revision": "2c073f45489b92c41b290fae389fe5309d10e15e",
+          "path": "api/_portfolio-relay.js",
+          "line": 21,
+          "snapshot_sha256": "036be4af46e2535d37772345a2419028bf2344edcb74e93a9527aa0e24b347dc",
+          "anchor": "export async function publishAuthorityEvent"
+        },
+        {
+          "repository": "AndrewLamSingapore/authority-engine",
+          "revision": "2c073f45489b92c41b290fae389fe5309d10e15e",
+          "path": "api/portfolio-evidence.js",
+          "line": 47,
+          "snapshot_sha256": "db32d53ee337808e4c063e2c1a48a68a1a82a596531933bc087aa08684bdedfa",
+          "anchor": "relay = { queued: false, reason: 'relay_failed' }"
+        },
+        {
+          "repository": "AndrewLamSingapore/authority-engine",
+          "revision": "2c073f45489b92c41b290fae389fe5309d10e15e",
+          "path": "api/portfolio-publication.js",
+          "line": 21,
+          "snapshot_sha256": "4c314386b66fea3bf295d53c4cd177b55e49ad8b2047f3968d5cde344c6d17d9",
+          "anchor": "published: false"
+        },
+        {
+          "repository": "AndrewLamSingapore/authority-engine",
+          "revision": "2c073f45489b92c41b290fae389fe5309d10e15e",
+          "path": "evidence/PORTFOLIO_INGESTION.md",
+          "line": 15,
+          "snapshot_sha256": "0f15ec55e2796bd60723d69ec63d9676a6bbe6b3d8c9b3ac6bda48132197d522",
+          "anchor": "No endpoint publishes"
+        }
+      ]
+    },
+    {
+      "product": "The Portal",
+      "source_maturity": "IMPLEMENTED_OWN_SEMANTIC_GRAPH_OUTBOX_AND_ROLE_SCOPED_RELAYS; DOCUMENT_LIVE_LABEL_IS_NOT_A_CURRENT_RECEIPT",
+      "purpose": "Own imagined-futures artifacts, graph/evidence and semantic retrieval. Exchange evidence through a local durable Postgres outbox. Optional ciphertext relay forwards opaque requests/results without issuing grants or decrypting proofs. Private ORQ report UI is an additional separately authenticated surface.",
+      "dependencies": [
+        "Own DATABASE_URL-backed Neon/Postgres archive/outbox",
+        "Own OPENAI_API_KEY for generation/embedding retrieval",
+        "Local contracts2.0.0",
+        "Optional PRIME_BASE_URL+PRIME_SPINE_TOKEN for direct event delivery",
+        "Separate producer/consumer trust-relay tokens; optional legacy portfolio relay token"
+      ],
+      "disconnected_source_behavior": "No DATABASE_URL means no durable enqueue and /api/graph returns503 Archive unavailable. After the DB path exists, missing/failing embedding provider yields lexical_fallback. ORQ delivery retries to DEAD after8 failures; Portal source/generation results retain a separate portfolio_fabric result and catch relay errors.",
+      "history": [
+        {
+          "commit": "8adc314c10a16f0af01ccc506531cfa153637928",
+          "paths": [
+            "docs/PORTFOLIO_COMPUTE_FABRIC.md",
+            "src/lib/portfolio-events.js"
+          ],
+          "meaning": "First main-reachable Portfolio Compute Fabric definition/adapters, 2026-08-31; original source snapshots retained."
+        },
+        {
+          "commit": "05ab4b668e53861fe16510f0b444d0d30ad57351",
+          "meaning": "Activates persistent embedding/outbox delivery source; current runtime acceptance is separate."
+        }
+      ],
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "docs/PORTFOLIO_COMPUTE_FABRIC.md",
+          "line": 5,
+          "snapshot_sha256": "8f79987fd6551987d455a1c1b11cee3019b047b141a546f1771d3ea818d72c21",
+          "anchor": "The Portal is the semantic knowledge plane"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "src/lib/portfolio-events.js",
+          "line": 73,
+          "snapshot_sha256": "252e54fb422c19b699c7ef4dc329df16c48890b33d09adb93f9cd582de4fc34a",
+          "anchor": "export async function deliverPortfolioOutbox"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "api/health.js",
+          "line": 13,
+          "snapshot_sha256": "4ce979719a59dbeaf07fcf24ef38c2b0217318c28719ca53344317b8cbe005a4",
+          "anchor": "route === 'portfolio-relay'"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "api/graph.js",
+          "line": 14,
+          "snapshot_sha256": "08cddf86c451fb7e7931006e819e778f3e89308ade5d91aff5652b50227a019c",
+          "anchor": "Archive unavailable"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "lib/semantic-embeddings.js",
+          "line": 19,
+          "snapshot_sha256": "c9bc025067afb24f14c4fb0cae926a8340261e24baeea903411a9cd87fcd2666",
+          "anchor": "lexical_fallback"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "src/lib/trust-relay.js",
+          "line": 6,
+          "snapshot_sha256": "546be752572cd9996c95357fe1d3db760613d028d84280b5985441aed140ea03",
+          "anchor": "Relay stores ciphertext only"
+        }
+      ]
+    },
+    {
+      "product": "VELYQUA",
+      "source_maturity": "IMPLEMENTED_ACCOUNT_SCOPED_LOCAL_OBSERVATION_ADAPTER_AND_OPTIONAL_LEGACY_TRANSPORT; TELEMETRY_AND_PHYSICAL_ACTUATION_SCOPE_PRESERVED",
+      "purpose": "Own aquarium/tank truth, observations, safety and local account-scoped storage. Inbound experiments are advisory and await VELYQUA owner approval limited to observation_only. Outbound evidence does not grant ORQ tank-write or equipment-control authority.",
+      "dependencies": [
+        "Own account-scoped tank/experiment SQLite and transactional outbox",
+        "Own Supabase Auth/cloud configuration when that own feature is used",
+        "Local contracts2.0.0",
+        "Optional explicit legacy owner bridge URL and separate client/server enabling flags"
+      ],
+      "disconnected_source_behavior": "Core manual/public product use skips legacy sync without the flag/session/client; public guest also skips. Commercial server experiment discovery returns410 unless explicitly enabled. Explicit event relay requires authenticated account matching and configured outbound ORQ credentials. The source does not implement equipment actuation.",
+      "history": [
+        {
+          "commit": "a7028d21da0877ceb6cfbdd0e4816a521781f41c",
+          "path": "docs/ECOSYSTEM_ARCHITECTURE.md",
+          "meaning": "Original25Aug ecosystem proposal, now explicitly superseded in current owning source; original wording is historical context, not current topology authority."
+        },
+        {
+          "commit": "7370c94343df540ecc8227e13a114603dd00cf4b",
+          "path": "docs/PORTFOLIO_EVENTS.md",
+          "meaning": "31Aug computational-fabric event producer integration."
+        },
+        {
+          "commit": "3c913c59ebae2b2d6150e03a46fa007cf403a541",
+          "path": "src/integrations/primeOutboxTransport.ts",
+          "meaning": "27Aug local experiment outbox transport introduction; current code has bounded batch/account/ack/dead-letter checks."
+        }
+      ],
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/velyqua",
+          "revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+          "path": "App.tsx",
+          "line": 163,
+          "snapshot_sha256": "947ab4cb7765a1b7db4be27a33268e34a51209c325fe1b977341026022b53cbc",
+          "anchor": "if (publicAccess || !client || !session || !primeBridgeConfigured"
+        },
+        {
+          "repository": "AndrewLamSingapore/velyqua",
+          "revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+          "path": "src/integrations/primeCloudBridge.ts",
+          "line": 118,
+          "snapshot_sha256": "77f69ef0decc260fbd22f94ffc231b421095da09b1970ccbd8e1fbc8d9ae0046",
+          "anchor": "EXPO_PUBLIC_VELYQUA_LEGACY_PRIME_BRIDGE_ENABLED === '1'"
+        },
+        {
+          "repository": "AndrewLamSingapore/velyqua",
+          "revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+          "path": "api/prime.js",
+          "line": 140,
+          "snapshot_sha256": "28d4c91fb29574d5445f957390dcf9237c51f649d24e983a40b4cdc4e26d8f1f",
+          "anchor": "Legacy Personal JARVIS experiment discovery is disabled"
+        },
+        {
+          "repository": "AndrewLamSingapore/velyqua",
+          "revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+          "path": "src/integrations/primeExperiment.ts",
+          "line": 155,
+          "snapshot_sha256": "dff32e4e0e4832257110e9e4451e2ae20bc60ee78ad59ed2297fdaff99fdbf47",
+          "anchor": "PRIME verification is advisory"
+        },
+        {
+          "repository": "AndrewLamSingapore/velyqua",
+          "revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+          "path": "PRIME_EXECUTION_BOUNDARY.md",
+          "line": 36,
+          "snapshot_sha256": "398e10d2220a6d0009cc0ab596fa9a91bd1b0d4ed681b718d02b21bb525d1d61",
+          "anchor": "direct dependence of core VELYQUA functionality"
+        },
+        {
+          "repository": "AndrewLamSingapore/velyqua",
+          "revision": "f40df2ba94406310a5c2b7bbb21fae24d74d44c0",
+          "path": "src/integrations/primeOutboxTransport.ts",
+          "line": 207,
+          "snapshot_sha256": "85e7705672ca526fef5bc711309d8140f0aa954317bf311cf7ebf1aa37a8f362",
+          "anchor": "PRIME acknowledgement does not match"
+        }
+      ]
+    },
+    {
+      "product": "Living Worlds / Game Platform",
+      "source_maturity": "IMPLEMENTED_OWN_BOUNDED_DETERMINISTIC_SIMULATION_AND_OPTIONAL_EVENT_CLIENT; CONFIGURED_DOWN_PEER_ISOLATION_NOT_ESTABLISHED",
+      "purpose": "Own campaign/game/simulation behavior. Produce deterministic bounded simulation evidence marked E1, authoritative:false, real_world_proof:false. Optional outbox/relay sends event evidence to ORQ; it does not grant ORQ campaign writes.",
+      "dependencies": [
+        "Own Supabase Auth/domain tables and campaign membership rules for hosted campaign play",
+        "Own service-role-backed outbox when configured",
+        "Local contracts2.0.0",
+        "Optional Portal relay or direct ORQ event URL/token"
+      ],
+      "disconnected_source_behavior": "Missing all integration configuration can return a local simulation result with queued:false. api/simulate awaits publishing; configured relay errors can propagate to its422 catch after the local simulation is computed. A source distinction between unconfigured and configured-but-down peers is required; runtime negative tests are independently owned.",
+      "history": [
+        {
+          "commit": "e009de0bdc0c2fbf89e8896d0313e2bee9583da8",
+          "path": "server/services/portfolioEventClient.js",
+          "meaning": "First main-reachable governed simulation/event client,31Aug."
+        },
+        {
+          "commit": "e85db19d9f6ef9b20c081197843da856c4044a23",
+          "path": "api/simulate.js",
+          "meaning": "Exposes bounded simulations and durable portfolio events#14."
+        },
+        {
+          "commit": "6aa419ac61a70985420b163070dc569ded556524",
+          "meaning": "Adds event delivery resilience/fallback source; does not establish every failure-isolation path."
+        }
+      ],
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/game-platform",
+          "revision": "9553e16da8173f3ce3712807addd0b369374337d",
+          "path": "api/simulate.js",
+          "line": 11,
+          "snapshot_sha256": "315c86a8080b188c99f961a0ee17eff2bd28c89fad0f7d854e4173ef2839666e",
+          "anchor": "const fabric=await publishPortfolioEvent"
+        },
+        {
+          "repository": "AndrewLamSingapore/game-platform",
+          "revision": "9553e16da8173f3ce3712807addd0b369374337d",
+          "path": "server/services/portfolioEventClient.js",
+          "line": 27,
+          "snapshot_sha256": "a894ad40757de2fc3ab421d089fdda7b07b869e746ca585214c6bfaac9c0c92d",
+          "anchor": "export async function enqueueViaRelay"
+        },
+        {
+          "repository": "AndrewLamSingapore/game-platform",
+          "revision": "9553e16da8173f3ce3712807addd0b369374337d",
+          "path": "server/services/portfolioSimulation.js",
+          "line": 17,
+          "snapshot_sha256": "50924df429a511848efafff112b9d17a7e33306d7878fba8fb16bdafb30ab3fe",
+          "anchor": "real_world_proof:false"
+        },
+        {
+          "repository": "AndrewLamSingapore/game-platform",
+          "revision": "9553e16da8173f3ce3712807addd0b369374337d",
+          "path": "supabase/migrations/20260901010000_portfolio_event_outbox.sql",
+          "line": 14,
+          "snapshot_sha256": "6209cf5c6c56a119e3ddd132f31b4c57fc5de6acb48f79e5be99b67d86db7779",
+          "anchor": "revoke all on table public.portfolio_event_outbox"
+        }
+      ]
+    },
+    {
+      "product": "The Sky Tablet",
+      "source_maturity": "NO_FABRIC_ADAPTER_OR_SCHEMA_BUNDLE_FOUND_IN_PINNED_OWNING_SOURCE_OR_SELECTED_RELEVANT_HISTORY",
+      "purpose": "Own independent educational historical/astronomical interpretation and scene provenance. Product cross-links are navigation. Optional Buttondown subscription is a newsletter capability, not cross-product orchestration.",
+      "dependencies": [
+        "Its static HTML/assets and browser/WebGL",
+        "External jsDelivr Three.js0.180.0 import for the3D experience",
+        "Optional BUTTONDOWN_API_KEY only for subscription POST"
+      ],
+      "disconnected_source_behavior": "No ORQ/Portal runtime request is required by the scene. If its Three.js CDN is unavailable it shows an explicit fallback; public notes remain available. No full Internet-offline/GPU/device acceptance is claimed. Do not force Sky into an event Fabric simply to fill a topology diagram.",
+      "history": [],
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/sky-tablet",
+          "revision": "fd10fa5e940d1663ab0e885f2501bc50229cd551",
+          "path": "experience.html",
+          "line": 56,
+          "snapshot_sha256": "2d3cc481902918ec484f086fc85ad24b0b69a0f091cf3fd16ef69b520458a04e",
+          "anchor": "await import('https://cdn.jsdelivr.net/npm/three@0.180.0/+esm')"
+        },
+        {
+          "repository": "AndrewLamSingapore/sky-tablet",
+          "revision": "fd10fa5e940d1663ab0e885f2501bc50229cd551",
+          "path": "api/evidence-updates.js",
+          "line": 19,
+          "snapshot_sha256": "04c56d0bc5e4040704a11147bedbb44a91ea5ad9dcaf90b72b85da40c132dfd8",
+          "anchor": "Subscription unavailable"
+        },
+        {
+          "repository": "AndrewLamSingapore/sky-tablet",
+          "revision": "fd10fa5e940d1663ab0e885f2501bc50229cd551",
+          "path": "README.md",
+          "line": 61,
+          "snapshot_sha256": "1ec6fecca1c9868c204829e490e4d875c4d1a30942b1738cc8a5ba47634606e4",
+          "anchor": "Notes remain public"
+        }
+      ]
+    }
+  ],
+  "cross_product_observations": [
+    {
+      "classification": "OBSERVED_CONTRACT_VERSION_DIVERGENCE",
+      "fact": "Authority and Profile validators3.0.0 accept source orqevia and reject prime. Portal, VELYQUA and Game validators2.0.0 accept prime and reject orqevia. The other four producer source names remain common. All five canonical schema hashes and source enums match their own manifests/generated bundles.",
+      "receipt": "CONSUMER-CONTRACT-MATRIX.json",
+      "consequence": "Compatibility negotiation/migration needs explicit owning-source design; a display rebrand is not authority to rewrite existing protocol fields, old records or receipts."
+    },
+    {
+      "classification": "INTENTIONAL_SHARED_HOSTED_BACKEND_SOURCE; LIVE_LEAST_PRIVILEGE_UNVERIFIED",
+      "fact": "Portal private report/Auth source and Game hosted play use Supabase project vtrfgckzpjgtmqsnumur. Portal semantic archive/outbox instead uses its configured DATABASE_URL. The private-domain decision records an Owner-selected existing Auth/report project. Current source provides separate prime_* versus game/campaign tables, forced user RLS and role checks, but sharing a project remains a provider/administrative blast-radius dependency.",
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "docs/PRIME_PRIVATE_DOMAIN_DECISION.md",
+          "line": 41,
+          "snapshot_sha256": "4b57201ad4d6e5df427a3bacb84e4efb2c176d3335860e647e8d8166f15de252",
+          "anchor": "existing project"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "lib/prime-auth.js",
+          "line": 49,
+          "snapshot_sha256": "9f116c707eafa639ee8151fcab4b8d48442bb76ded1ae5e13211408dc7936236",
+          "anchor": "resolvePrimeIdentity"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "migrations/20260922120000_prime_private_surface.sql",
+          "line": 46,
+          "snapshot_sha256": "079099923976f7bd778f27d51b1506dfc2bfb019466818a22424cb2c0d5f8e4f",
+          "anchor": "force row level security"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "migrations/20260923120000_prime_report_ingestion.sql",
+          "line": 42,
+          "snapshot_sha256": "de7fb66a51352c57f2b397a1d39f8f33f6d3bf20e407d155549f9951bfd89f24",
+          "anchor": "revoke insert, update, delete"
+        },
+        {
+          "repository": "AndrewLamSingapore/game-platform",
+          "revision": "9553e16da8173f3ce3712807addd0b369374337d",
+          "path": "README.md",
+          "line": 33,
+          "snapshot_sha256": "21b686091b062b1822ed1242dde4756fcc1164cc416191a3270cf8a45461928a",
+          "anchor": "Dedicated Supabase project"
+        }
+      ],
+      "limits": "Different repositories/deployments do not prove current credential, datastore or cross-user isolation. No live Auth/DB calls or environment secret inspection was performed."
+    },
+    {
+      "classification": "SOURCE_DOCUMENT_DEGRADATION_MISMATCH",
+      "fact": "Portal Fabric doc says database unavailable yields API lexical_fallback. api/graph returns503 before semanticScores when DATABASE_URL is absent. Embedding-provider degradation after the DB path exists is accurately implemented as lexical_fallback.",
+      "consequence": "Keep independent product availability separate from each optional archive/retrieval capability prerequisite."
+    },
+    {
+      "classification": "SOURCE_PRODUCER_IDENTITY_BINDING_GAP; NO_LIVE_EXPLOIT_CLAIM",
+      "fact": "Portal portfolio publish handler validates the event.source enum but binds publishing permission to the legacy relay credential rather than a server-owned per-producer source identity. The distinct ABEX consumer credential is constrained to claim/readback/ack/status.",
+      "evidence": [
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "src/lib/portfolio-relay-endpoint.js",
+          "line": 9,
+          "snapshot_sha256": "a0c48260df02e13eebbfabd741d97321d19c24ef2b8399ff80cde9d72c1b4847",
+          "anchor": "const legacy = authorized"
+        },
+        {
+          "repository": "AndrewLamSingapore/the-portal",
+          "revision": "bcc1eea5d5ea853c1a442d4c8a211c8e458f82e8",
+          "path": "src/lib/portfolio-relay-endpoint.js",
+          "line": 26,
+          "snapshot_sha256": "a0c48260df02e13eebbfabd741d97321d19c24ef2b8399ff80cde9d72c1b4847",
+          "anchor": "assertContract('portfolio-event-v1', body.event)"
+        }
+      ],
+      "limits": "Token distribution/current config uninspected. This is a source enforcement gap, not a demonstrated production impersonation."
+    },
+    {
+      "classification": "CONFIGURED_DOWN_PEER_FAILURE_ISOLATION_PENDING",
+      "fact": "Game simulation endpoint computes locally then awaits optional publication; configured relay failures can become422. Missing peer config and failing configured peers are separate modes.",
+      "consequence": "Use an actual pinned-handler mock-failure test before any change, preserving the original failure and independent local result evidence."
+    }
+  ],
+  "architecture_handoff_priorities": [
+    "Keep Fabric as owned capabilities plus opt-in contracts; preserve six domain owners and per-product stores, with ORQ orchestration unable to grant authority from model/event text.",
+    "Define explicit version compatibility and producer-authenticated provenance before enabling new cross-product paths; preserve original event/job/receipt custody.",
+    "Classify each optional dependency and its absence/failure mode. Bound deadlines/retries/queues and preserve useful own-product behavior when optional peers are down.",
+    "Record intentional shared hosting accurately; prove scoped credentials/user RLS/negative cross-product access independently before claiming datastore isolation.",
+    "Retain historical definitions as dated context. New Owner sovereignty instructions do not make old proposed topology or source Live headings current execution receipts.",
+    "Do not invent a Sky Fabric membership or seventh central service; no migration/mount/enum repair has been made by this inventory."
+  ],
+  "runtime_awards": {
+    "new_fabric_end_to_end": false,
+    "all_six_sovereign_disconnected_acceptance": false,
+    "physical_device": false,
+    "azure": false
+  },
+  "verification_commands": [
+    "Python collect_owning_fabric_sources.py: owning Git blob snapshots, main history and relevant retained branch heads; local receipts only.",
+    "Node22.23.2 contract-matrix.mjs: executes actual pinned generated validators against35 synthetic in-memory events; no network/auth/mutations.",
+    "Independent peer owns current module/handler negative and disconnected tests; this report does not convert source findings to live acceptance."
+  ],
+  "receipt_digests": [
+    {
+      "path": "OWNING-SOURCE-PINS.json",
+      "sha256": "572c97eacc9cba85741c6680f3ee6794c9067d41aa69578e957847a9da7e8332",
+      "bytes": 3386
+    },
+    {
+      "path": "CONSUMER-CONTRACT-MATRIX.json",
+      "sha256": "0f6422071a8d4572d80fe818432dfe932f48b8c68fd1cdd736bb81aa5cf66ecd",
+      "bytes": 12064
+    },
+    {
+      "path": "authority-engine/inventory.json",
+      "sha256": "04bf06bcb6134cf554025900adef750c2c663ff1a824b3b370dbbc0e78eb1349",
+      "bytes": 15013
+    },
+    {
+      "path": "the-portal/inventory.json",
+      "sha256": "f2eb730870684f58990c4780f82dd70319963effa9c9181eff6e6b071e7d912d",
+      "bytes": 29671
+    },
+    {
+      "path": "velyqua/inventory.json",
+      "sha256": "6faa77f8e877e08168ac47ba07bd915b2155ed8e021f734a78f319296b1b08dd",
+      "bytes": 22736
+    },
+    {
+      "path": "game-platform/inventory.json",
+      "sha256": "92b93136355c0975beda77092461b7b6cc678ab3ee997ae8ebb98d99cd47585f",
+      "bytes": 37683
+    },
+    {
+      "path": "sky-tablet/inventory.json",
+      "sha256": "2033892b0f43a00874ce3dc19b0b7aad4da770c1c711fbde5c6f77b6a8c0a45b",
+      "bytes": 5031
+    }
+  ]
+}

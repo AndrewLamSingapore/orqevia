@@ -1,0 +1,141 @@
+{
+  "schema": "orqevia.actual-logo-browser.v1",
+  "at_utc": "2026-10-13T13:13:33.729Z",
+  "base": "https://192.168.1.23:8443",
+  "engine": "155.0.4283.45",
+  "headless": true,
+  "physical_iphone": false,
+  "ignore_https_errors": false,
+  "checks": [
+    {
+      "viewport": "desktop",
+      "state": "PASS",
+      "title": "ORQEVIA",
+      "logo": {
+        "src": "/pwa/icons/orqevia-official-v1-192.png",
+        "alt": "ORQEVIA · 奥启维亚",
+        "width": 192,
+        "height": 192,
+        "fit": "contain"
+      },
+      "apple_touch_icon": "/pwa/icons/orqevia-official-v1-apple-touch.png",
+      "manifest_identity_preserved": true,
+      "icons": [
+        {
+          "path": "/pwa/icons/orqevia-official-v1-192.png",
+          "status": 200,
+          "sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+          "bytes": 37462
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-512.png",
+          "status": 200,
+          "sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+          "bytes": 238262
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-apple-touch.png",
+          "status": 200,
+          "sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+          "bytes": 33636
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-favicon-16.png",
+          "status": 200,
+          "sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+          "bytes": 699
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-favicon-32.png",
+          "status": 200,
+          "sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+          "bytes": 2099
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-favicon-48.png",
+          "status": 200,
+          "sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+          "bytes": 3974
+        }
+      ],
+      "worker": "orqevia-shell-v20",
+      "broken_images": 0,
+      "primary_visible_legacy_branding": 0,
+      "scope": "Actual deployed anonymous connection/enrollment UI; no credentials submitted"
+    },
+    {
+      "state": "PASS",
+      "scope": "Actual served v20 worker activation with controlled prior public/private cache and session sentinel in disposable browser context",
+      "keys": [
+        "orqevia-shell-v20",
+        "orqevia-shell-v19",
+        "private-fixture-preserved"
+      ],
+      "private": 200,
+      "session": "preserve"
+    },
+    {
+      "viewport": "mobile",
+      "state": "PASS",
+      "title": "ORQEVIA",
+      "logo": {
+        "src": "/pwa/icons/orqevia-official-v1-192.png",
+        "alt": "ORQEVIA · 奥启维亚",
+        "width": 192,
+        "height": 192,
+        "fit": "contain"
+      },
+      "apple_touch_icon": "/pwa/icons/orqevia-official-v1-apple-touch.png",
+      "manifest_identity_preserved": true,
+      "icons": [
+        {
+          "path": "/pwa/icons/orqevia-official-v1-192.png",
+          "status": 200,
+          "sha256": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+          "bytes": 37462
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-512.png",
+          "status": 200,
+          "sha256": "c018857c354a1cede7c514ff67904dd5057e9b3e8b7eef56a63fe46f094dce39",
+          "bytes": 238262
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-apple-touch.png",
+          "status": 200,
+          "sha256": "5984607eaf2ada7f0e71fa12d15ab765dc02df4de1d109e6148394a39c961968",
+          "bytes": 33636
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-favicon-16.png",
+          "status": 200,
+          "sha256": "d7fc6ad0c78ecf3d6bbaf8541cdd83e6423537c665d9e737fe9eb1050e74b858",
+          "bytes": 699
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-favicon-32.png",
+          "status": 200,
+          "sha256": "f87af1da54659558e230ba5c9a02368584652cf6f2101f4c5a40738121c47d6f",
+          "bytes": 2099
+        },
+        {
+          "path": "/pwa/icons/orqevia-official-v1-favicon-48.png",
+          "status": 200,
+          "sha256": "67955faf73806db945bf41ed253b420c980f44c0af02d937d1d786fd2ebbe28c",
+          "bytes": 3974
+        }
+      ],
+      "worker": "orqevia-shell-v20",
+      "broken_images": 0,
+      "primary_visible_legacy_branding": 0,
+      "scope": "Actual deployed anonymous connection/enrollment UI; no credentials submitted"
+    }
+  ],
+  "screenshots": [
+    "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-PWA-desktop.png",
+    "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-PWA-desktop-connection.png",
+    "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-PWA-mobile.png",
+    "C:\\Users\\Admin\\Documents\\ABEX\\operations\\official-logo-20261013\\LIVE-PWA-mobile-connection.png"
+  ],
+  "state": "PASS"
+}

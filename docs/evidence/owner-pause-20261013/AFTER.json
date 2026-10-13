@@ -1,0 +1,119 @@
+{
+  "at_utc": "2026-10-13T13:11:20.121340+00:00",
+  "scope": "READ_ONLY_PRESERVATION_FINGERPRINT_NOT_PHYSICAL_IPHONE_SESSION_TEST",
+  "pwa": {
+    "sessions": {
+      "count": 12,
+      "sha256": "4860812e5faa97f0cabf4314c348725cc8a3eae63c7954edfd74989c6c171ea8"
+    },
+    "devices": {
+      "count": 4,
+      "sha256": "4bce3189327cdfb333486bc31e1b622d290f379e680b9eb1e26bbc8f74dcd842"
+    },
+    "pairing": {
+      "count": 20,
+      "sha256": "50c7f64cbce20b57c9e3bd7da44d89bde0200b172163ae4a7fd71b1711c28d71"
+    },
+    "eligible_owner_sessions": 1,
+    "eligible_owner_devices": 1,
+    "cookie_names": [
+      "__Host-JARVIS-PWA",
+      "__Host-JARVIS-Device"
+    ],
+    "public_tls_asset_hashes": {
+      "/run/prime-tls/server.crt": "c9e75116907379ec7335c01093448cbf0a6d738de59b6cb7ca77c6e0aea1f348",
+      "/app/app/pwa_static/JARVIS-ABEX-HTTPS.mobileconfig": "f12d80f414a1eeffe75f6a284d38e1b641be2a33808d630f1098e6b357ecff20"
+    },
+    "static_directory": "/app/app/pwa_static"
+  },
+  "services": [
+    {
+      "name": "prime-epoch-20260919-prime-1",
+      "id": "9c8e97c7254076e817c1197d82dc00094266d19512d3ef093124859ec3b46a37",
+      "image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
+      "revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+      "health": "healthy",
+      "protected_configuration_sha256": "55da2ef7fd0afb33f10b655ba7121ded0e754394d7d77a3287445e9d35e14119",
+      "mounts": [
+        {
+          "type": "volume",
+          "source": "/var/lib/docker/volumes/prime-epoch-20260919-data/_data",
+          "destination": "/data",
+          "rw": true
+        },
+        {
+          "type": "bind",
+          "source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/operations/coaching-priority-20261013/provider-catalog.identity-21-orqevia-core-3f9c97d5.json",
+          "destination": "/run/prime-models/huggingface.json",
+          "rw": false
+        },
+        {
+          "type": "bind",
+          "source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/private/prime-epoch-20260919/hf_token",
+          "destination": "/run/secrets/hf_token",
+          "rw": false
+        }
+      ],
+      "ports": {
+        "8000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8000"
+          }
+        ]
+      },
+      "security_options": null,
+      "cap_drop": null
+    },
+    {
+      "name": "prime-epoch-20260919-interface-1",
+      "id": "ea900018386bba2d613f8ed5255307c4743b7e16f8a075e6d59ddbd2131059b5",
+      "image": "sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419",
+      "revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+      "health": "healthy",
+      "protected_configuration_sha256": "faac8690dde4364dc72ff2b1f1bdf303c4669a030e2ef0dda4865e3a48eadbb1",
+      "mounts": [
+        {
+          "type": "volume",
+          "source": "/var/lib/docker/volumes/prime-epoch-20260919-data/_data",
+          "destination": "/data",
+          "rw": true
+        },
+        {
+          "type": "bind",
+          "source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/private/prime-epoch-20260919/tls/ca.crt",
+          "destination": "/run/prime-tls/ca.crt",
+          "rw": false
+        },
+        {
+          "type": "bind",
+          "source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/private/prime-epoch-20260919/tls/server.crt",
+          "destination": "/run/prime-tls/server.crt",
+          "rw": false
+        },
+        {
+          "type": "bind",
+          "source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/private/prime-epoch-20260919/tls/server.key",
+          "destination": "/run/prime-tls/server.key",
+          "rw": false
+        },
+        {
+          "type": "bind",
+          "source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/private/prime-epoch-20260919/JARVIS-ABEX-HTTPS.mobileconfig",
+          "destination": "/app/app/pwa_static/JARVIS-ABEX-HTTPS.mobileconfig",
+          "rw": false
+        }
+      ],
+      "ports": {
+        "8443/tcp": [
+          {
+            "HostIp": "192.168.1.23",
+            "HostPort": "8443"
+          }
+        ]
+      },
+      "security_options": null,
+      "cap_drop": null
+    }
+  ]
+}

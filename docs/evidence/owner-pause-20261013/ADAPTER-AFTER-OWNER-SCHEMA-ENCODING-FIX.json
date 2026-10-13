@@ -1,0 +1,9 @@
+{
+  "at_utc": "2026-10-13T13:36:58.121271+00:00",
+  "scope": "ISOLATED_SOURCE_COMPATIBILITY_TESTS_NO_NETWORK_OR_LIVE_STATE",
+  "label": "after-owner-schema-encoding-fix",
+  "exit_code": 0,
+  "log": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\fabrics-integration-20261013\\adapter-after-owner-schema-encoding-fix.log",
+  "log_sha256": "938547f7dcf9287cc98c488140f33de93e751efa6f6ed37d0210701baa8c92c2",
+  "source_sha256": "48ad66429a8b7c024994c209be72bd731dc8fd7b0e2f18732023c1cacacd6b0c"
+}
