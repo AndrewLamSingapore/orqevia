@@ -93,3 +93,4 @@ docs/evidence/brand-migration-20261013/** -text
 docs/operations/abex-autonomy/*.json -text
 governance/observations/abex-orqevia-brand-migration-20261013.json -text
 app/contract_data/*.json -text
+docs/evidence/owner-pause-20261013/** -text
