@@ -193,6 +193,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(coaching_update) == 3606
     assert hashlib.sha256(coaching_update).hexdigest() == '7f4b6984193296e695a0cc99228aa4e43519775276847c787c5fa443c8d8ed6a'
     after = after[:coaching_start] + after[coaching_end:]
+    # Admit only this exact public-profile observation; all prior bytes stay pinned.
+    profile_title = '## Public GitHub profile refresh - 13 October 2026'
+    assert after.count(profile_title) == 1
+    profile_start = after.index(profile_title)
+    profile_end = after.index("\n## ", profile_start + len(profile_title)) + 1
+    profile_update = after[profile_start:profile_end].encode("utf-8")
+    assert len(profile_update) == 2458
+    assert hashlib.sha256(profile_update).hexdigest() == "46c0bf06fde829fb81f6927e7f9975abb2fd66ba1187be1c84dd49ca77278efd"
+    after = after[:profile_start] + after[profile_end:]
     # Admit only this exact incremental observation; every earlier byte stays pinned.
     incremental_title = "## Incremental crash analysis and communication-path follow-up - 13 October 2026"
     assert after.count(incremental_title) == 1

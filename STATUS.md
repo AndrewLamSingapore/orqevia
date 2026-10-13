@@ -71,6 +71,16 @@ Evidence: [dated observation](governance/observations/abex-orqevia-brand-migrati
 - Real production tool composition, A19 successor #296 assessment/spine semantics, authenticated dashboard/iPhone journeys, pre-logon recovery, coherent off-host restore and physical/hardware qualification remain open. VELYQUA physical sensor assembly and live telemetry remain Owner-parked. DELL remains assessment-only.
 
 Evidence navigation: [task ledger](docs/operations/abex-autonomy/MASTER_TASK_LEDGER.md), [21-agent matrix](docs/operations/abex-autonomy/CERTIFICATION_MATRIX_21.md), [evidence index](docs/operations/abex-autonomy/EVIDENCE_INDEX.md). Original dated sections and Lam-only Verified entries are preserved.
+## Public GitHub profile refresh - 13 October 2026
+
+### Claimed, not independently checked
+
+- Base owning ORQEVIA main for this dated update was `24534eca22f5f43f68ebffc24f06361e9e427bf1`. Public profile [PR #27](https://github.com/AndrewLamSingapore/AndrewLamSingapore/pull/27) merged at `bd31d162f335c1e0b09bf032830591b317062e5a`; the independently reviewed README and banner matched their published source blobs. [PR #28](https://github.com/AndrewLamSingapore/AndrewLamSingapore/pull/28) then corrected the stale mutable image URL by pinning the README image to that immutable banner revision. Final owning profile source is `8e81c07f0e2f149b10be1a2d221049ae28f27f7b`; a fresh source read confirms the immutable image URL and README blob `f3078633c3008715717e4510336f07c29c713fc7`. The banner remains blob `b688e2ff3737b8f649c86bb4599550a678cf4237`.
+- Exact PR #27 source CI [38401846339](https://github.com/AndrewLamSingapore/AndrewLamSingapore/actions/runs/38401846339) and STATUS [38401846415](https://github.com/AndrewLamSingapore/AndrewLamSingapore/actions/runs/38401846415) passed. Exact PR #28 source CI [38402511778](https://github.com/AndrewLamSingapore/AndrewLamSingapore/actions/runs/38402511778) and STATUS [38402511531](https://github.com/AndrewLamSingapore/AndrewLamSingapore/actions/runs/38402511531) passed. Independent content, privacy, SVG and desktop/mobile review passed at reviewed PR #27 head `d2c17bc47675f22e645109f556898def27436344`.
+- Live GitHub README and bio text were observed during this publication. The public bio reads: "20+ years in logistics and supply chain. Building practical analytics and applied AI for clearer operational decisions. Singapore." Source and preview review are distinct from a fresh public-banner rendering observation. These public-source, CI and profile observations do not establish private runtime, role acceptance or certification.
+
+Evidence: owning profile PRs and CI above; final [README source](https://github.com/AndrewLamSingapore/AndrewLamSingapore/blob/8e81c07f0e2f149b10be1a2d221049ae28f27f7b/README.md), immutable [banner source](https://github.com/AndrewLamSingapore/AndrewLamSingapore/blob/bd31d162f335c1e0b09bf032830591b317062e5a/assets/profile-banner.svg), and local `outputs/public-profile-final-review.json` under `C:/Users/Admin/Documents/Codex/2026-10-13/ru/`. This dated non-Verified observation preserves every prior STATUS section and its existing evidence classification.
+
 ## Incremental crash analysis and communication-path follow-up - 13 October 2026
 
 ### Claimed, not independently checked
