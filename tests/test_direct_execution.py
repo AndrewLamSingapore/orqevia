@@ -16,6 +16,7 @@ from app.connector_sdk import ConnectorRegistry,Sink
 def isolated(monkeypatch,tmp_path):
     close_ledgers()
     monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
     monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
     monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
@@ -201,27 +202,43 @@ def test_interface_identity_not_action_approval(api,monkeypatch):
     assert client.post('/api/interface/v1/tasks/'+task+'/cancel',headers=headers).status_code==200
 
 
-def test_stream_cancel_closes_silent_connection(monkeypatch):
-    from app.direct_stream import infer
+def _silent_stream_fixture(monkeypatch):
     import app.direct_stream as stream
+    entered=threading.Event()
     closed=[]
     class Response:
         async def __aenter__(self):return self
-        async def __aexit__(self,*args):closed.append(True)
+        async def __aexit__(self,*args):closed.append('response')
         def raise_for_status(self):pass
         async def aiter_lines(self):
-            await asyncio.sleep(10)
+            entered.set()
+            await asyncio.Event().wait()
             yield '{}'
     class Client(Response):
         def __init__(self,*args,**kwargs):pass
+        async def __aexit__(self,*args):closed.append('client')
         def stream(self,*args,**kwargs):return Response()
     monkeypatch.setattr(stream.httpx,'AsyncClient',Client)
-    checks=[]
-    def cancel():checks.append(1);return len(checks)>1
     settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive='1m',context_tokens=128,max_output_tokens=4)
+    return entered,closed,settings
+
+
+def test_stream_cancel_closes_silent_connection(monkeypatch):
+    from app.direct_stream import infer
+    entered,closed,settings=_silent_stream_fixture(monkeypatch)
+    # Cancellation tests HTTP cleanup, not a one-second cold-start deadline.
+    # Signal only after both contexts opened and the fake stream is waiting.
     with pytest.raises(RuntimeError,match='cancelled'):
-        asyncio.run(infer({'prompt':'test','timeout_seconds':1,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=cancel))
-    assert closed
+        asyncio.run(infer({'prompt':'test','timeout_seconds':5,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=entered.is_set))
+    assert entered.is_set() and closed==['response','client']
+
+
+def test_stream_deadline_still_closes_silent_connection(monkeypatch):
+    from app.direct_stream import infer
+    entered,closed,settings=_silent_stream_fixture(monkeypatch)
+    with pytest.raises(TimeoutError):
+        asyncio.run(infer({'prompt':'test','timeout_seconds':.1,'ram_mb':1024},SimpleNamespace(model='gemma3:1b'),settings=settings,capacity=lambda m:None,options=lambda:{},cancelled=lambda:False))
+    assert entered.is_set() and closed==['response','client']
 
 
 def test_cloud_queue_metadata_is_not_approval(tmp_path):

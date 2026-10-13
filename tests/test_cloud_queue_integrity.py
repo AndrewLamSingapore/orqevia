@@ -2,9 +2,10 @@ import time
 from app.job_queue import JobQueue,Provider,QueuePolicy
 
 
-def setup_queue(tmp_path,ceiling=1):
+def setup_queue(tmp_path,ceiling=1,cloud_concurrency=1):
     return JobQueue(tmp_path/'queue.db',QueuePolicy(global_concurrency=2,per_agent_concurrency=1,
-        cloud_wait_seconds=0,max_job_cost_usd=1,daily_cost_ceiling_usd=ceiling))
+        cloud_concurrency=cloud_concurrency,cloud_wait_seconds=0,
+        max_job_cost_usd=1,daily_cost_ceiling_usd=ceiling))
 
 
 def submit(q,agent='a02'):
@@ -16,12 +17,23 @@ PROVIDER=Provider('fixture-cloud','cloud','fixture-model',0,0,2,1,1,16)
 
 
 def test_running_reservation_prevents_overcommit(tmp_path):
-    q=setup_queue(tmp_path,ceiling=.00006)
+    # Allow the second cloud candidate to reach the financial admission guard.
+    q=setup_queue(tmp_path,ceiling=.00006,cloud_concurrency=2)
     first=submit(q);second=submit(q,'a17')
     claim=q.claim('one',[PROVIDER])
     assert claim['id']==first['id'] and claim['actual_cost_usd'] is None
     assert q.claim('two',[PROVIDER]) is None
     assert q.get(second['id'])['status']=='budget_blocked'
+
+
+def test_default_cloud_capacity_stops_before_financial_admission(tmp_path):
+    q=JobQueue(tmp_path/'default.db',QueuePolicy(global_concurrency=2,
+        cloud_wait_seconds=0,daily_cost_ceiling_usd=.00006))
+    first=submit(q);second=submit(q,'a17')
+    assert q.policy.cloud_concurrency==1
+    assert q.claim('one',[PROVIDER])['id']==first['id']
+    assert q.claim('two',[PROVIDER]) is None
+    assert q.get(second['id'])['status']=='queued'
 
 
 def test_unknown_cancelled_charge_retains_reservation(tmp_path):
