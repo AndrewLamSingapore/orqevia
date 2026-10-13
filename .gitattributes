@@ -78,3 +78,6 @@ governance/agent-cert-verifier-azure-pins.json -text
 # Keep that recorded checkout form on every platform; never renew their claims.
 governance/observations/abex-post-restart-20261012.json text eol=crlf
 governance/observations/abex-candidate-closure-66a5d90-20261012.json text eol=crlf
+
+# Synchronization copies retain original native evidence bytes on both PCs.
+docs/evidence/autonomy-20261013/** -text
