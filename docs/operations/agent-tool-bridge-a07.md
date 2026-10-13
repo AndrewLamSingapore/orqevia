@@ -26,7 +26,10 @@ The prepared script can be staged in the confirmed owner container at
 the current Dockerfile. Keep the original file SHA-256 and deployment receipt.
 Use a dedicated directory, for example `/data/e2e-a07-bridge-20261013`.
 
-Run these finite stages with `python -B /tmp/agent_tool_bridge_specimen.py`:
+Run these finite stages with
+`docker exec -e PYTHONPATH=/app -w /app <confirmed-owner-container> python -B /tmp/agent_tool_bridge_specimen.py`.
+The process-local import path selects the installed package; it does not alter
+the running server environment or admission policy.
 
 1. `--stage prepare --output-dir /data/e2e-a07-bridge-20261013` creates the
    answer-free scenario and durable state without model/tool submission.
@@ -65,3 +68,11 @@ stop after three unsuccessful attempts; this driver runs no retry loop and does
 not authorize another attempt. Preserve a failure first, diagnose it using its
 original evidence, and require materially new evidence before any separately
 authorized repeat. Interrupted bridge effects remain reconciliation work.
+
+The first actual local request returned step id `12345678`; its original output
+was retained and rejected by the unchanged lowercase-letter identifier rule,
+with zero public tool calls. Root authorized a separate second attempt after
+that diagnosis. `--attempt 2` uses a distinct directory and submission key and
+adds only the exact identifier grammar to the original prompt. It supplies no
+source contents, task answer or identifier repair. Do not reuse an earlier
+attempt's directory or pool the failed and later results.

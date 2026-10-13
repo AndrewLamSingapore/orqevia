@@ -69,3 +69,10 @@ def test_local_payload_receipt_mismatch_is_detected_without_inference():
     receipt['prompt_sha256'] = 'f' * 64
     job['inference_receipt'] = json.dumps(receipt)
     assert not specimen.inference_receipt_bound(job)
+
+
+def test_diagnosed_second_prompt_only_clarifies_identifier_grammar():
+    assert specimen.prompt(2).startswith(specimen.prompt(1))
+    assert specimen.OBJECTIVE in specimen.prompt(2)
+    assert specimen.SOURCE_URL in specimen.prompt(2)
+    assert 'start with a lowercase ASCII letter' in specimen.prompt(2)
