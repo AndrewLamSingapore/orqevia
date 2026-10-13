@@ -202,6 +202,8 @@ def execute_governed_qa(*, authorization, queue, data, available_providers,
         raise ProviderFailure('QA_ROUTER_CHAIN_DENIED', pre_execution=True)
     selected_digest = _digest(selected)
     prompt = qa_router_prompt(request['context'], request['question'])
+    require_hf_task_scope(selected, {'agent': request['agent_id'], 'prompt': prompt,
+                                      'task_class': 'question_answering'})
     permit = None
     jobs = []
     direct_authority_delivered = False
@@ -235,7 +237,7 @@ def execute_governed_qa(*, authorization, queue, data, available_providers,
         if _digest(current) != selected_digest:
             raise ProviderFailure('QA_CATALOG_CHANGED', pre_execution=True)
         require_hf_task_scope(current, {'agent': binding['agent_id'], 'prompt': prompt,
-                                      'task_class': 'classification'})
+                                      'task_class': 'question_answering'})
 
     def admit(binding, previous, phase):
         nonlocal permit, jobs, direct_authority_delivered
@@ -250,7 +252,8 @@ def execute_governed_qa(*, authorization, queue, data, available_providers,
                 chain.append({'provider': router_provider, 'prompt': prompt,
                               'max_cost_usd': str(router_charge)})
             jobs = queue.reserve_cloud_chain(agent=binding['agent_id'], requests=chain,
-                timeout_seconds=request.get('timeout_seconds', 30), binding={
+                timeout_seconds=request.get('timeout_seconds', 30),
+                task_class='question_answering', binding={
                     'request_binding_sha256': _digest(binding),
                     'parent_task_id': binding['task_id'],
                     'price_contract_sha256': contract['price_contract_sha256']})

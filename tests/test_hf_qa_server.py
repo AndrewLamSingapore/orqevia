@@ -42,7 +42,7 @@ def governed(monkeypatch, tmp_path):
         'model': 'fixture/span:provider', 'endpoint': HuggingFaceProvider.ENDPOINT,
         'secret_ref': 'env:HF_TOKEN', 'context_tokens': 4096, 'output_tokens': 64,
         'input_usd_million': '.1', 'output_usd_million': '.5', 'concurrency': 1,
-        'allowed_task_classes': ['classification'], 'max_retries': 0,
+        'allowed_task_classes': ['question_answering'], 'max_retries': 0,
         'serverless_qa': {'version': 'hf-serverless-qa.price.v1', 'model': HFServerlessQA.MODEL,
             'maximum_charge_usd': '.001', 'price_contract_sha256': 'a' * 64,
             'valid_until_utc': (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
@@ -172,13 +172,35 @@ def test_owner_authority_precedes_catalog_and_reservation(governed):
 def test_existing_scope_and_combined_daily_budget_deny_before_disclosure(governed):
     arguments, entry, calls, credentials, _, _ = governed
     entry['allowed_task_classes'] = ['coding']
-    with pytest.raises(ProviderFailure, match='QA_BUDGET_NOT_RESERVED'):
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
         server.execute_governed_qa(**arguments)
-    entry['allowed_task_classes'] = ['classification']
+    entry['allowed_task_classes'] = ['question_answering']
     arguments['queue'].policy = replace(arguments['queue'].policy, daily_cost_ceiling_usd=.001)
     with pytest.raises(ProviderFailure, match='QA_BUDGET_NOT_RESERVED'):
         server.execute_governed_qa(**arguments)
     assert not calls and not credentials and not arguments['queue'].list()
+
+
+def test_direct_qa_cannot_borrow_classification_only_qualification(governed):
+    arguments, entry, calls, credentials, _, _ = governed
+    entry['allowed_task_classes'] = ['classification']
+    with pytest.raises(ProviderFailure, match='PROVIDER_UNQUALIFIED'):
+        server.execute_governed_qa(**arguments)
+    assert not calls and not credentials and not arguments['queue'].list()
+
+
+@pytest.mark.parametrize('fallback', [False, True])
+def test_direct_qa_persists_question_answering_scope_for_entire_chain(governed, fallback):
+    arguments, entry, calls, credentials, direct_response, _ = governed
+    entry['serverless_qa']['router_fallback'] = fallback
+    if fallback:
+        direct_response[0] = httpx.Response(429, json={})
+    result = server.execute_governed_qa(**arguments)
+    assert result['answer'] == 'Clara'
+    jobs = arguments['queue'].list()
+    assert len(jobs) == (2 if fallback else 1)
+    assert all(job['task_class'] == 'question_answering' for job in jobs)
+    assert calls == (['direct', 'router'] if fallback else ['direct'])
 
 
 def test_backpressure_does_not_read_credentials_or_increase_global_slots(governed):
