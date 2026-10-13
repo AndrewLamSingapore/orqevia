@@ -135,7 +135,8 @@ def run(mode, revision):
                     binding = {'agent': job['agent'], 'prompt_sha256': job['prompt_sha256']}
                     if not entry.get('enabled') or entry['model'] != job['model'] or binding not in entry['allowed_prompt_bindings']:
                         raise ValueError('exact identity prompt/provider binding is not admitted')
-                active = db.execute("SELECT COUNT(*) FROM compute_jobs WHERE status IN ('queued','running')").fetchone()[0]
+                active = db.execute("SELECT COUNT(*) FROM compute_jobs WHERE status IN "
+                    "('queued','running','held','awaiting_approval') OR cloud_inflight=1").fetchone()[0]
                 if not submitted and active:
                     raise ValueError('queue must be idle before identity wave begins')
                 for job in planned['jobs']:
