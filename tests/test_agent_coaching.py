@@ -26,6 +26,69 @@ class CoachingTests(unittest.TestCase):
         with self.queue.connect() as db:
             db.execute("UPDATE compute_jobs SET status='completed',result=?,started_at='2026-01-01T00:00:00Z',completed_at='2026-01-01T00:01:00Z' WHERE status='queued'",(response,))
 
+    def test_implementation_revision_does_not_relabel_cohort_evidence(self):
+        self.controller.ensure_cohort()
+        changed=CoachingController(self.root/'coaching.db',self.queue,
+            source_revision='a'*40,implementation_revision='b'*40,model='fixture-local',clock=self.clock)
+        self.assertEqual(changed.tick(),'SUBMITTED')
+        changed.heartbeat('SUBMITTED')
+        with changed.connect() as db:
+            event=db.execute('SELECT * FROM coaching_events').fetchone()
+            self.assertEqual(event['source_revision'],'a'*40)
+            self.assertEqual(json.loads(event['details_json'])['implementation_revision'],'b'*40)
+            self.assertEqual(db.execute('SELECT source_revision FROM coaching_controller').fetchone()[0],'b'*40)
+
+    def test_failed_local_null_cost_is_assessed_without_fabricating_cost(self):
+        self.controller.ensure_cohort();self.controller.tick()
+        with self.queue.connect() as db:
+            db.execute("UPDATE compute_jobs SET status='failed',actual_cost_usd=NULL WHERE status='queued'")
+        self.assertEqual(self.controller.tick(),'FAIL')
+        with self.queue.connect() as db:
+            self.assertIsNone(db.execute("SELECT actual_cost_usd FROM compute_jobs").fetchone()[0])
+
+    def test_explicit_recovery_preserves_original_block_and_binding(self):
+        self.controller.ensure_cohort();self.controller.tick()
+        with self.controller.connect() as db:
+            row=dict(db.execute("SELECT * FROM coaching_sessions WHERE state='WAITING'").fetchone())
+            db.execute("UPDATE coaching_sessions SET state='BLOCKED' WHERE id=?",(row['id'],))
+            self.controller.event(db,row,'EXECUTION_BINDING_MISMATCH')
+        with self.queue.connect() as db:
+            db.execute("UPDATE compute_jobs SET status='failed',actual_cost_usd=NULL WHERE id=?",(row['job_id'],))
+        self.controller.recover_failed_local_binding(row['id'])
+        with self.controller.connect() as db:
+            recovered=db.execute('SELECT * FROM coaching_sessions WHERE id=?',(row['id'],)).fetchone()
+            self.assertEqual(recovered['job_id'],row['job_id'])
+            self.assertEqual(recovered['request_sha256'],row['request_sha256'])
+            self.assertEqual(db.execute("SELECT count(*) FROM coaching_events WHERE outcome='EXECUTION_BINDING_MISMATCH'").fetchone()[0],1)
+        self.assertEqual(self.controller.tick(),'FAIL')
+
+    def test_null_cost_cannot_authorize_completed_or_external_execution(self):
+        for change in ("status='completed'", "status='failed',allow_cloud=1", "status='failed',external_execution=1", "status='failed',data_classification='PUBLIC'"):
+            with self.subTest(change=change):
+                self.controller.ensure_cohort();self.controller.tick()
+                with self.queue.connect() as db:
+                    db.execute("UPDATE compute_jobs SET actual_cost_usd=NULL,"+change+" WHERE status='queued'")
+                self.assertEqual(self.controller.tick(),'BLOCKED')
+                with self.controller.connect() as db:
+                    row=db.execute("SELECT id FROM coaching_sessions WHERE state='BLOCKED'").fetchone()
+                with self.assertRaises(ValueError):self.controller.recover_failed_local_binding(row['id'])
+                # Use independent databases for the next distinct rejection.
+                self.temp.cleanup();self.setUp()
+
+    def test_recovery_rejects_changed_contract_and_completed_execution(self):
+        self.controller.ensure_cohort();self.controller.tick()
+        with self.controller.connect() as db:
+            row=dict(db.execute("SELECT * FROM coaching_sessions WHERE state='WAITING'").fetchone())
+            db.execute("UPDATE coaching_sessions SET state='BLOCKED' WHERE id=?",(row['id'],))
+            self.controller.event(db,row,'EXECUTION_BINDING_MISMATCH')
+        self.complete()
+        with self.assertRaises(ValueError):self.controller.recover_failed_local_binding(row['id'])
+        with self.queue.connect() as db:
+            db.execute("UPDATE compute_jobs SET status='failed',actual_cost_usd=NULL WHERE id=?",(row['job_id'],))
+        with self.controller.connect() as db:
+            db.execute("UPDATE coaching_sessions SET request_sha256='changed' WHERE id=?",(row['id'],))
+        with self.assertRaises(ValueError):self.controller.recover_failed_local_binding(row['id'])
+
     def test_every_registered_role_has_disjoint_practice_and_discriminating_assessor(self):
         from app.agent_registry import registered_agent_ids
         self.assertEqual(set(METHODS),registered_agent_ids(include_orchestrator=False))

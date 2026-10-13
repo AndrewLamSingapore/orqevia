@@ -52,10 +52,13 @@ def effective_prompt(agent, phase, seed, feedback=()):
     return request,prompt
 
 class CoachingController:
-    def __init__(self, path, queue, *, source_revision, model, clock=time.time,
+    def __init__(self, path, queue, *, source_revision, model, implementation_revision=None, clock=time.time,
                  max_daily_jobs=84, max_practice_attempts=2, cohort_interval_seconds=86400):
         if not re.fullmatch('[a-f0-9]{40}',source_revision):
             raise ValueError('pinned coaching source revision required')
+        implementation_revision = implementation_revision or source_revision
+        if not re.fullmatch('[a-f0-9]{40}',implementation_revision):
+            raise ValueError('pinned implementation revision required')
         if not model or len(model)>128:
             raise ValueError('existing local model required')
         if type(max_daily_jobs) is not int or not 1<=max_daily_jobs<=84:
@@ -64,6 +67,7 @@ class CoachingController:
             raise ValueError('bounded retry and scheduling policy required')
         self.path,self.queue = Path(path),queue
         self.source,self.model,self.clock = source_revision,model,clock
+        self.implementation = implementation_revision
         self.daily,self.attempts,self.interval = max_daily_jobs,max_practice_attempts,cohort_interval_seconds
         self.path.parent.mkdir(parents=True,exist_ok=True)
         with self.connect() as db:
@@ -95,12 +99,12 @@ class CoachingController:
         now = self.clock()
         db.execute('INSERT INTO coaching_events VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                    (uuid.uuid4().hex,row['id'],row['cohort_id'],row['agent'],row['phase'],outcome,
-                    timestamp(now),now,row.get('job_id'),self.source,canonical(details or {})))
+                    timestamp(now),now,row.get('job_id'),self.source,canonical({**(details or {}),'implementation_revision':self.implementation})))
 
     def heartbeat(self,state):
         with self.connect() as db:
             db.execute('INSERT INTO coaching_controller VALUES(1,?,?,?) ON CONFLICT(id) DO UPDATE SET source_revision=excluded.source_revision,last_tick_epoch=excluded.last_tick_epoch,state=excluded.state',
-                       (self.source,self.clock(),state))
+                       (self.implementation,self.clock(),state))
 
     def storage_limit_reached(self):
         # A reader can retain uncheckpointed WAL pages while the main file is
@@ -140,6 +144,27 @@ class CoachingController:
                            (uuid.uuid4().hex,cohort,agent,seed,'baseline',1,'READY',self.clock()))
             return cohort
 
+    def recover_failed_local_binding(self, session_id):
+        """Explicitly reconcile one retained failed-local binding; never replay inference."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            found = db.execute("SELECT s.*,c.source_revision FROM coaching_sessions s JOIN coaching_cohorts c ON c.id=s.cohort_id WHERE s.id=?", (session_id,)).fetchone()
+            if found is None:
+                raise ValueError('coaching session not found')
+            row = dict(found)
+            latest = db.execute('SELECT outcome FROM coaching_events WHERE session_id=? ORDER BY event_epoch DESC,rowid DESC LIMIT 1', (session_id,)).fetchone()
+            if row['state']!='BLOCKED' or row['source_revision']!=self.source or latest is None or latest['outcome']!='EXECUTION_BINDING_MISMATCH':
+                raise ValueError('failed local binding recovery not applicable')
+            request,prompt = effective_prompt(row['agent'],row['phase'],row['seed'],json.loads(row['feedback_json']))
+            job = self.queue.get(row['job_id'])
+            if (row['request_sha256']!=digest(request) or row['prompt_sha256']!=hashlib.sha256(prompt.encode()).hexdigest()
+                or job['status'] not in {'failed','cancelled'} or job.get('agent')!=row['agent'] or job.get('prompt')!=prompt
+                or job.get('allow_cloud')!=0 or job.get('external_execution')!=0
+                or job.get('data_classification')!='LOCAL_ONLY' or job.get('actual_cost_usd') is not None):
+                raise ValueError('retained failed local binding does not match')
+            self.event(db,row,'FAILED_LOCAL_BINDING_RECOVERED',{'original_cost_usd':None,'inference_replayed':False})
+            db.execute("UPDATE coaching_sessions SET state='WAITING',updated_epoch=? WHERE id=?", (self.clock(),session_id))
+
     def tick(self):
         """One bounded state transition; crash-safe submission uses queue idempotency."""
         with self.connect() as db:
@@ -173,7 +198,8 @@ class CoachingController:
                     return 'WAITING'
                 bound = (job.get('agent')==row['agent'] and job.get('prompt')==prompt and
                          job.get('allow_cloud')==0 and job.get('external_execution')==0 and
-                         job.get('data_classification')=='LOCAL_ONLY' and job.get('actual_cost_usd',0)==0)
+                         job.get('data_classification')=='LOCAL_ONLY' and (job.get('actual_cost_usd')==0 or
+                          (job['status'] in {'failed','cancelled'} and job.get('actual_cost_usd') is None)))
                 if not bound:
                     db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
                     self.event(db,row,'EXECUTION_BINDING_MISMATCH')
@@ -187,6 +213,7 @@ class CoachingController:
                         passed,errors = review_role_output(row['agent'],'responsibility.'+row['agent'],job.get('result'))
                 # A semantic grade is scoped internal evaluation, never certification.
                 evidence = {'passed':bool(passed),'errors':list(errors),'job_status':job['status'],
+                            'actual_cost_usd':job.get('actual_cost_usd'),
                             'request_sha256':request_hash,'effective_prompt_sha256':prompt_hash,
                             'result_sha256':hashlib.sha256((job.get('result') or '').encode()).hexdigest(),
                             'job_started_at':job.get('started_at'),'job_completed_at':job.get('completed_at'),
@@ -242,7 +269,8 @@ def main():
         signal.signal(sig,lambda *_:stop.set())
     root = Path(os.getenv('PRIME_DATA_DIR','/data'))
     controller = CoachingController(root/'agent-coaching.db',queue,
-        source_revision=os.environ['PRIME_COACHING_SOURCE_REVISION'],model=SETTINGS.deep_model)
+        source_revision=os.environ['PRIME_COACHING_SOURCE_REVISION'],model=SETTINGS.deep_model,
+        implementation_revision=os.getenv('PRIME_COACHING_IMPLEMENTATION_REVISION'))
     while not stop.is_set():
         try:
             if (root/'coaching.pause').exists():
