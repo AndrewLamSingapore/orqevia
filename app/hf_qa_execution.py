@@ -76,19 +76,8 @@ def _uuid(value):
     return isinstance(value, str) and str(uuid.UUID(value)) == value
 
 
-def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
-                      data_classification, max_cost_usd, admit=None,
-                      execute_hf_router=None, timeout_seconds=30,
-                      primary_timeout_seconds=15, qa=None, circuits=None,
-                      cancelled=None, clock=time.monotonic):
-    """Execute one QA primary and at most one explicitly approved HF alternate.
-
-    The synchronous executor is for the existing bounded worker/Model Fabric,
-    not an event-loop handler. The router callback must honor the passed shared
-    remaining deadline and cancellation using the existing provider executor.
-    Late output is rejected; no second route is attempted after ambiguous work.
-    """
-    authenticate_owner(authorization)
+def validate_qa_identity(agent_id, task_id, max_cost_usd):
+    """Canonical permanent owner and positive finite budget, for either route."""
     try:
         if not isinstance(agent_id, str):
             raise ValueError()
@@ -98,8 +87,41 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
         ceiling = _money(max_cost_usd)
         if ceiling <= 0:
             raise ValueError()
+        return ceiling
     except (RegistryError, ValueError, TypeError, InvalidOperation):
         raise ProviderFailure('QA_REQUEST_IDENTITY_OR_BUDGET_INVALID', pre_execution=True) from None
+
+
+def validate_router_span(answer, context):
+    """Output shape only: a verbatim source span is not a task-quality oracle."""
+    try:
+        valid = (isinstance(answer, str) and bool(answer.strip())
+                 and len(answer.encode()) <= 1024 and answer in context)
+    except UnicodeError:
+        valid = False
+    if not valid:
+        raise ProviderFailure('INVALID_QA_ANSWER_SPAN')
+    start = context.index(answer)
+    return start, start + len(answer)
+
+
+def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
+                      data_classification, max_cost_usd, admit=None,
+                      execute_hf_router=None, timeout_seconds=30,
+                      primary_timeout_seconds=15, qa=None, circuits=None,
+                      cancelled=None, clock=time.monotonic, record_direct_rejection=None):
+    """Execute one QA primary and at most one explicitly approved HF alternate.
+
+    The synchronous executor is for the existing bounded worker/Model Fabric,
+    not an event-loop handler. The router callback must honor the passed shared
+    remaining deadline and cancellation using the existing provider executor.
+    Late output is rejected; no second route is attempted after ambiguous work.
+    The optional trusted bookkeeping observer receives only an affirmative
+    clean direct rejection. An eventual pre_execution flag alone is not proof
+    that an earlier request was undispatched, and cannot release its reserve.
+    """
+    authenticate_owner(authorization)
+    ceiling = validate_qa_identity(agent_id, task_id, max_cost_usd)
     HFServerlessQA.validate_request(context=context, question=question,
         data_classification=data_classification, timeout_seconds=timeout_seconds)
     if (type(primary_timeout_seconds) not in (int, float) or
@@ -110,7 +132,8 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
         raise ProviderFailure('CANCELLATION_STATE_INVALID', pre_execution=True)
     if admit is None:
         raise ProviderFailure('QA_PRICE_CONTRACT_UNAVAILABLE', pre_execution=True)
-    if not callable(admit) or (execute_hf_router is not None and not callable(execute_hf_router)):
+    if (not callable(admit) or (execute_hf_router is not None and not callable(execute_hf_router))
+            or (record_direct_rejection is not None and not callable(record_direct_rejection))):
         raise ProviderFailure('QA_ADMISSION_CONFIGURATION_INVALID', pre_execution=True)
     if qa is not None and type(qa) is not HFServerlessQA:
         raise ProviderFailure('QA_ADAPTER_SCOPE_INVALID', pre_execution=True)
@@ -182,6 +205,11 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
     except ProviderFailure as exc:
         if exc.pre_execution is not True or exc.code not in _SAFE_FAILOVER:
             raise
+        if record_direct_rejection is not None:
+            try:
+                record_direct_rejection(binding=dict(binding), reservation=permit, code=exc.code)
+            except Exception:
+                raise ProviderFailure('QA_ACCOUNTING_UNAVAILABLE') from None
         failures.append({'provider': HFServerlessQA.CIRCUIT_ID, 'code': exc.code})
         if permit.hf_router_provider_id is None or execute_hf_router is None:
             raise
@@ -217,21 +245,14 @@ def execute_direct_qa(*, authorization, agent_id, task_id, context, question,
         if not identity_valid:
             raise ProviderFailure('QA_ROUTER_IDENTITY_MISMATCH')
         answer = result.get('result')
-        try:
-            span_valid = (isinstance(answer, str) and bool(answer.strip())
-                and len(answer.encode()) <= 1024 and answer in context)
-        except UnicodeError:
-            span_valid = False
-        if not span_valid:
-            raise ProviderFailure('INVALID_QA_ANSWER_SPAN')
+        start, end = validate_router_span(answer, context)
         try:
             measured = result.get('actual_cost_usd')
             if measured is None or _money(measured) > _money(permit.router_maximum_charge_usd):
                 raise ValueError()
         except (ValueError, TypeError, InvalidOperation):
             raise ProviderFailure('QA_ROUTER_COST_NOT_VERIFIED') from None
-        start = context.index(answer)
-        result = {'answer': answer, 'start': start, 'end': start + len(answer),
+        result = {'answer': answer, 'start': start, 'end': end,
             'provider': permit.hf_router_provider_id, 'model': permit.hf_router_model,
             'route': 'HF_ROUTER', 'span_validation': 'MATCHES_INPUT_CONTEXT',
             'quality_oracle': 'CALLER_VERIFICATION_REQUIRED',

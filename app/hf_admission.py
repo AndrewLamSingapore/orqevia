@@ -12,7 +12,7 @@ from .tier_router import classify_for_cloud
 
 
 HF_FALLBACK_POLICY_VERSION = 'hf-fallback.v1'
-_TASK_CLASSES = frozenset(('auto', 'classification', 'conversation', 'research',
+_TASK_CLASSES = frozenset(('auto', 'classification', 'question_answering', 'conversation', 'research',
                           'planning', 'writing', 'coding', 'architecture', 'complex_reasoning'))
 _PROMPT_DIGEST = re.compile(r'[0-9a-f]{64}\Z')
 
