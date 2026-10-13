@@ -1,0 +1,41 @@
+# Sidecar controller only: the existing PRIME service remains the sole executor.
+# Point PRIME_COACHING_DATA_VOLUME at its existing Docker data volume.
+name: orqevia-coaching
+services:
+  coaching:
+    image: ${PRIME_COACHING_IMAGE:?pinned coaching image required}
+    command: [python, -B, -m, app.agent_coaching]
+    restart: "on-failure:5"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 64
+    environment:
+      PRIME_DATA_DIR: /data
+      PRIME_COMPUTE_QUEUE_DB: /data/compute-queue.db
+      PRIME_COACHING_SOURCE_REVISION: ${PRIME_COACHING_SOURCE_REVISION:?source revision required}
+      PRIME_COMPUTE_PROFILE: compat
+      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:?existing local fast model required}
+      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:?existing local deep model required}
+      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:?existing local evaluator required}
+      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:?existing local embedding model required}
+      OLLAMA_NUM_PARALLEL: '1'
+      PRIME_QUEUE_CONCURRENCY: '1'
+      PRIME_AGENT_CONCURRENCY: '1'
+    volumes:
+      - coaching-data:/data
+    logging:
+      driver: json-file
+      options: {max-size: 2m, max-file: '2'}
+    healthcheck:
+      test: [CMD, python, -c, "import sqlite3,time; c=sqlite3.connect('file:/data/agent-coaching.db?mode=ro',uri=True); r=c.execute('SELECT last_tick_epoch FROM coaching_controller WHERE id=1').fetchone(); c.close(); assert r and 0 <= time.time()-r[0] <= 60"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  coaching-data:
+    external: true
+    name: ${PRIME_COACHING_DATA_VOLUME:?existing volume required}

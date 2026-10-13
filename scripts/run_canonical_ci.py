@@ -21,6 +21,7 @@ def main():
            'interface_server','consequential_intent','stable_spine','sink_guard',
            'provider_failure_boundaries','interface_cloud_policy',
            'direct_execution','connector_sdk']
+    names.extend(['agent_coaching','coaching_observation'])
     names.append('supreme_intelligence_benchmark')
     names.append('supreme_independence_candidate')
     names.append('independence_dependency_matrix')
