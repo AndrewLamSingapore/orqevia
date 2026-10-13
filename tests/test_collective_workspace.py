@@ -112,11 +112,11 @@ def test_shutdown_handoff_invalidates_old_lease_and_does_not_complete(store):
     assert store.task('prime','task:1')['state']=='HANDOFF'
     with pytest.raises(Conflict):store.transition('a17','task:1',token,'DONE',{'summary':'wrong'})
     reopened=CollectiveWorkspace(store.path);token=reopened.claim('a17','task:1')
-    reopened.transition('a17','task:1',token,'HANDOFF',{'summary':'verification needed'},handoff_to='a18')
-    token=reopened.claim('a18','task:1')
-    reopened.transition('a18','task:1',token,'DONE',{'summary':'verified','evidence_refs':['receipt:1']})
+    reopened.transition('a17','task:1',token,'HANDOFF',{'summary':'verification needed'},handoff_to='a15')
+    token=reopened.claim('a15','task:1')
+    reopened.transition('a15','task:1',token,'DONE',{'summary':'verified','evidence_refs':['receipt:1']})
     assert reopened.task('prime','task:1')['state']=='DONE'
-    assert reopened.shutdown('a18')==[]
+    assert reopened.shutdown('a15')==[]
 
 
 def test_bounds_archive_not_delete_and_safe_audit(store):
@@ -139,3 +139,55 @@ def test_concurrent_duplicate_posts_deliver_once_and_database_integrity(store):
     with store.connect() as db:
         assert db.execute('pragma integrity_check').fetchone()[0]=='ok'
         assert db.execute('pragma foreign_key_check').fetchall()==[]
+
+
+def test_explicit_owner_engineering_fields_roundtrip_and_bounded_types(store):
+    note={'objective':'bounded change','decomposition':['inspect','implement'],
+          'hypotheses':[{'claim':'parser mismatch','status':'unverified'}],
+          'assumptions':['public fixture'],'plans':{'primary':['test']},
+          'alternatives':['retain existing implementation'],'calculations':{'expected_count':21},
+          'analysis':{'observed_count':15,'missing':None},'tool_results':[{'tool':'pytest','exit':0}],
+          'experiments':[{'name':'replay','passed':True}], 'questions':['root cause?'],
+          'dependencies':['task:1'],'next_actions':['retest'],'confidence':0.75,
+          'uncertainty':0.25,'completion_criteria':['unchanged assertions pass']}
+    store.write_sketch('prime','prime','plan',note)
+    assert CollectiveWorkspace(store.path).read_sketch('prime','prime','plan')['note']==note
+
+
+@pytest.mark.parametrize('note',[
+    {'confidence':True},{'confidence':1.1},{'uncertainty':-0.1},
+    {'uncertainty':float('nan')},{'calculations':float('inf')},
+    {'analysis':{'a':{'b':{'c':{'d':{'e':1}}}}}},
+    {'plans':['step']*33},{'analysis':{'value':'x'*4001}},
+    {'analysis':{'raw_prompt':'user secret'}},{'tool_results':[{'hidden_reasoning':'x'}]},
+    {'tool_results':[{'access_token':'fake-secret'}]},
+    {'experiments':[{'output':'Bearer fake-token'}]},
+    {'analysis':{'a':'x'*4000,'b':'x'*4000,'c':'x'*4000,'d':'x'*4000}}])
+def test_engineering_bounds_hidden_input_and_nested_secrets_rejected(store,note):
+    with pytest.raises(ValueError):store.write_sketch('a17','a17','analysis',note)
+    assert store.read_sketch('a17','a17','analysis') is None
+
+
+def test_assignment_edges_and_core_separate_coordination(store):
+    store.assign('a15','implementation','a17',{'objective':'implement'})
+    store.assign('a17','own-task','a17',{'objective':'self work'})
+    for actor in store.principals:
+        store.assign('prime','core-'+actor,actor,{'objective':'coordinate'})
+    for actor,target in [('a17','a18'),('a01','a17'),('a15','a28'),('a17','prime')]:
+        with pytest.raises(PermissionError):store.assign(actor,'illegal-'+actor+'-'+target,target,{'summary':'illegal'})
+    assert store.task('prime','core-prime')['assigned']=='prime'
+
+
+def test_handoff_denial_cycle_and_allowed_escalation_preserves_original(store):
+    store.assign('a15','task:cycle','a15',{'objective':'implementation'})
+    lead_token=store.claim('a15','task:cycle')
+    store.transition('a15','task:cycle',lead_token,'HANDOFF',{'next_action':'implement'},handoff_to='a17')
+    child_token=store.claim('a17','task:cycle')
+    with pytest.raises(PermissionError):store.transition('a17','task:cycle',child_token,'HANDOFF',{'summary':'peer'},handoff_to='a18')
+    with pytest.raises(Conflict):store.transition('a17','task:cycle',child_token,'HANDOFF',{'summary':'return'},handoff_to='a15')
+    assert store.task('a17','task:cycle')['state']=='RUNNING'
+    assert len(store.task_history('a15','task:cycle'))==4
+    store.assign('prime','task:escalate','a17',{'objective':'bounded'})
+    token=store.claim('a17','task:escalate')
+    store.transition('a17','task:escalate',token,'HANDOFF',{'failure':'needs coordination'},handoff_to='prime')
+    assert store.task('prime','task:escalate')['state']=='HANDOFF'

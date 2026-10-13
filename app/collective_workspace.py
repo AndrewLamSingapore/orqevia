@@ -28,12 +28,15 @@ import sqlite3
 import time
 import uuid
 import unicodedata
+import math
 from pathlib import Path
 
-from .agent_registry import registered_agent_ids
+from .agent_registry import registered_agent_ids, agent_record
 
 BOARDS = ("GLOBAL", "TASKS", "RESEARCH", "ENGINEERING", "INCIDENTS", "DECISIONS", "EVIDENCE", "BLOCKERS", "HANDOFFS", "CERTIFICATION")
-NOTE_FIELDS = frozenset({"summary", "decision", "next_action", "failure", "evidence_refs", "task_refs", "evidence_level"})
+ENGINEERING_FIELDS = frozenset({"objective", "decomposition", "hypotheses", "assumptions", "plans", "alternatives", "calculations", "analysis", "tool_results", "experiments", "questions", "dependencies", "next_actions", "completion_criteria"})
+NOTE_FIELDS = ENGINEERING_FIELDS | frozenset({"summary", "decision", "next_action", "failure", "evidence_refs", "task_refs", "evidence_level", "confidence", "uncertainty"})
+HIDDEN_FIELDS = frozenset({"thoughts", "chain_of_thought", "hidden_reasoning", "raw_prompt", "raw_user_message", "raw_user_messages"})
 SECRET = re.compile(r"(?i)(?:\b(?:password|passwd|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|client[_ -]?secret|authorization|credential|private[_ -]?key)\b[\s\"'\\]*[:=]|\bbearer\s+\S+|\b(?:sk-[a-z0-9_-]{8,}|hf_[a-z0-9]{8,}|gh[pousr]_[a-z0-9]{8,})\b|-----BEGIN[^\n]*PRIVATE KEY|[a-z]+://[^\s/:]+:[^\s/@]+@|\beyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)")
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
 
@@ -60,7 +63,12 @@ def structured_note(value):
     if not isinstance(value, dict) or not value or set(value) - NOTE_FIELDS:
         raise ValueError("structured engineering fields required")
     for key, field in value.items():
-        if key == "evidence_level":
+        if key in ENGINEERING_FIELDS:
+            bounded_engineering_value(field)
+        elif key in ("confidence", "uncertainty"):
+            if type(field) not in (int, float) or not 0 <= field <= 1 or not math.isfinite(field):
+                raise ValueError("confidence/uncertainty must be finite between zero and one")
+        elif key == "evidence_level":
             if field not in ("verified_fact", "hypothesis", "unknown"):
                 raise ValueError("invalid evidence label")
             if field == "verified_fact" and not value.get("evidence_refs"):
@@ -77,6 +85,35 @@ def structured_note(value):
     if len(text.encode()) > 16000 or SECRET.search(normalized) or re.search(r"(?i)\b(chain.of.thought|hidden.reasoning|raw.user.message)\b", normalized):
         raise ValueError("credential-bearing or oversized note rejected")
     return text
+
+
+def bounded_engineering_value(value, depth=0):
+    """Explicit inspectable notes, bounded JSON; never implicit model state."""
+    if depth > 4:
+        raise ValueError("engineering note nesting exceeds bound")
+    if isinstance(value, dict):
+        if len(value) > 32:
+            raise ValueError("too many engineering fields")
+        for key, child in value.items():
+            identifier(key)
+            if key.lower() in HIDDEN_FIELDS:
+                raise ValueError("hidden reasoning/raw user input forbidden")
+            bounded_engineering_value(child, depth+1)
+    elif isinstance(value, list):
+        if len(value) > 32:
+            raise ValueError("too many engineering items")
+        for child in value:
+            bounded_engineering_value(child, depth+1)
+    elif isinstance(value, str):
+        if len(value) > 4000:
+            raise ValueError("engineering string exceeds bound")
+    elif value is None or type(value) is bool:
+        return
+    elif type(value) in (int,float):
+        if abs(value) > 1e100 or not math.isfinite(value):
+            raise ValueError("numeric value exceeds bound")
+    else:
+        raise ValueError("JSON engineering types required")
 
 
 class CollectiveWorkspace:
@@ -147,6 +184,12 @@ class CollectiveWorkspace:
     def board(self, board):
         if board not in BOARDS:
             raise ValueError("unknown board")
+
+    def delegation(self, actor, target):
+        """Task coordination does not transfer execution authority."""
+        self.principal(actor); self.principal(target)
+        if actor != 'prime' and target != actor and target not in agent_record(actor).get('allowed_delegation_targets', []):
+            raise PermissionError("registered delegation edge required")
 
     def capacity(self, db, table):
         # Hard ceilings fail visibly; no automatic evidence deletion.
@@ -261,7 +304,7 @@ class CollectiveWorkspace:
                 self.log(db,actor,"board.archive",message)
 
     def assign(self, actor, task, assigned, note):
-        self.principal(actor); self.principal(assigned); identifier(task)
+        self.delegation(actor, assigned); identifier(task)
         content = structured_note(note)
         with self.transaction() as db:
             old = db.execute("SELECT creator,assigned,note FROM tasks WHERE id=?", (task,)).fetchone()
@@ -315,6 +358,15 @@ class CollectiveWorkspace:
             row=db.execute("SELECT * FROM tasks WHERE id=?",(task,)).fetchone()
             if row is None or row["assigned"]!=actor: raise PermissionError("assigned principal required")
             if row["state"]!="RUNNING" or row["lease_token"]!=token or row["lease_until"]<=self.clock(): raise Conflict("invalid/expired lease")
+            if handoff_to is not None and handoff_to != actor:
+                permitted = (actor == 'prime' or
+                    handoff_to in agent_record(actor).get('allowed_delegation_targets', []) or
+                    handoff_to in agent_record(actor).get('escalation_relationships', []) or
+                    (handoff_to == 'prime' and row['creator'] == 'prime'))
+                if not permitted:
+                    raise PermissionError("registered handoff or escalation edge required")
+                if db.execute("SELECT 1 FROM task_events WHERE task=? AND principal=? AND state='RUNNING' LIMIT 1",(task,handoff_to)).fetchone():
+                    raise Conflict("circular handoff to prior running participant")
             if state=="RETRY" and row["attempts"]>=self.max_attempts: state="BLOCKED"
             self.capacity(db,"task_events")
             retry_at=self.clock()+min(3600,15*2**(row['attempts']-1)) if state=="RETRY" else 0
