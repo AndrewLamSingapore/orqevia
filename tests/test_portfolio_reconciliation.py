@@ -174,6 +174,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only the original additive coaching observation from 7f1c893.
+    # All earlier section pins and the frozen 27 September baseline stay intact.
+    coaching_title = '## ABEX coaching and durable task-memory continuation \u2014 13 October 2026'
+    assert after.count(coaching_title) == 1
+    coaching_start = after.index(coaching_title)
+    coaching_end = after.index('\n## ', coaching_start + len(coaching_title)) + 1
+    coaching_update = after[coaching_start:coaching_end].encode('utf-8')
+    assert len(coaching_update) == 3606
+    assert hashlib.sha256(coaching_update).hexdigest() == '7f4b6984193296e695a0cc99228aa4e43519775276847c787c5fa443c8d8ed6a'
+    after = after[:coaching_start] + after[coaching_end:]
     # Admit only this exact integration follow-up, preserving historical bytes.
     followup_title = "## Completed source integrations and remaining runtime work - 13 October 2026"
     assert after.count(followup_title) == 1
@@ -338,6 +348,37 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     baseline = INDEX["status_before_insertion"]
     assert len(preserved) == baseline["bytes"]
     assert hashlib.sha256(preserved).hexdigest() == baseline["sha256"]
+
+
+def test_coaching_history_admission_matches_original_git_addition():
+    original = subprocess.check_output(['git', 'show', '7f1c893:STATUS.md'], cwd=ROOT).decode('utf-8')
+    heading = '## ABEX coaching and durable task-memory continuation \u2014 13 October 2026'
+    start = original.index(heading)
+    end = original.index('\n## ', start + len(heading)) + 1
+    raw = original[start:end].encode('utf-8')
+    assert len(raw) == 3606
+    assert hashlib.sha256(raw).hexdigest() == '7f4b6984193296e695a0cc99228aa4e43519775276847c787c5fa443c8d8ed6a'
+
+
+@pytest.mark.parametrize('mutation', ['coaching_claim', 'frozen_history', 'unregistered_addition'])
+def test_status_history_reconstruction_rejects_changed_and_unregistered_content(monkeypatch, mutation):
+    path = ROOT / 'STATUS.md'
+    original_read = Path.read_text
+    changed = original_read(path, encoding='utf-8')
+    if mutation == 'coaching_claim':
+        assert 'yields 20/21 PASS and 1/21 FAIL' in changed
+        changed = changed.replace('yields 20/21 PASS and 1/21 FAIL', 'yields 21/21 PASS and 0/21 FAIL', 1)
+    elif mutation == 'frozen_history':
+        prior = 'Move items here from "Known broken / open" only after the underlying fix exists.'
+        assert prior in changed
+        changed = changed.replace(prior, 'Move items here whenever a record looks complete.', 1)
+    else:
+        changed += '\n## Unregistered observation\n\nAn arbitrary additional claim.\n'
+    def read_text(file, *args, **kwargs):
+        return changed if file == path else original_read(file, *args, **kwargs)
+    monkeypatch.setattr(Path, 'read_text', read_text)
+    with pytest.raises(AssertionError):
+        test_status_insertion_preserves_all_existing_sections_and_history()
 
 
 @pytest.mark.parametrize("original,replacement", [
