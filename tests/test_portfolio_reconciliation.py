@@ -174,6 +174,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only the exact dated telemetry/runtime follow-up; prior history is unchanged.
+    runtime_title = "## Telemetry source and external runtime follow-up - 13 October 2026"
+    assert after.count(runtime_title) == 1
+    runtime_start = after.index(runtime_title)
+    runtime_end = after.index("\n## ", runtime_start + len(runtime_title)) + 1
+    runtime_update = after[runtime_start:runtime_end].encode("utf-8")
+    assert len(runtime_update) == 2513
+    assert hashlib.sha256(runtime_update).hexdigest() == "2588412dd03e463ef7c0c3bb2495055b698866d8886ac6fb53caab8302a6a353"
+    after = after[:runtime_start] + after[runtime_end:]
     # Admit only this exact dated sweep supplement; all prior bytes stay pinned.
     sweep_title = "## Portfolio bug sweep and STATUS reference reconciliation - 13 October 2026"
     assert after.count(sweep_title) == 1
@@ -379,6 +388,8 @@ def test_light_observation_and_failure_reject_inflated_claims(monkeypatch, origi
 
 @pytest.mark.parametrize("original,replacement", [
     ("## Course study", "## Course study — unaccounted history edit"),
+    ("PR #302 is an unmerged source candidate, distinct from the observed runtime.",
+     "PR #302 is the installed and accepted runtime."),
     ("No hardware cause is established.", "The hardware cause is established."),
     ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
     ("Fully L7 certified remains **0/21**.", "Fully L7 certified remains **1/21**."),
