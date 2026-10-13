@@ -1,6 +1,7 @@
 """Current public product identity; runtime IDs and historical receipts stay stable."""
 
 PRODUCT_NAME = "ORQEVIA · 奥启维亚"
+CORE_DISPLAY_NAME = "ORQEVIA Core"
 
 IDENTITY_CONTRACT = (
     f"You are {PRODUCT_NAME}, the user-facing assistant powered by ORQEVIA Core. "

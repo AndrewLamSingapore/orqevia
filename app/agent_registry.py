@@ -8,6 +8,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .product_identity import CORE_DISPLAY_NAME
+
 REGISTRY_PATH = Path(__file__).resolve().parent.parent / "config" / "agent_registry.json"
 MAX_DELEGATION_DEPTH = 2
 
@@ -249,7 +251,7 @@ def public_agent_registry() -> dict[str, Any]:
         "registry_id": data["registry_id"],
         "orchestrator": {
             "id": data["orchestrator"]["id"],
-            "name": data["orchestrator"]["name"],
+            "name": CORE_DISPLAY_NAME,
             "role": data["orchestrator"]["role"],
             "public_description": data["orchestrator"]["public_description"],
         },

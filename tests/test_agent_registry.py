@@ -56,6 +56,27 @@ def test_public_projection_is_deny_by_default():
         assert not forbidden.intersection(agent)
 
 
+def test_public_orchestrator_brand_alias_preserves_frozen_registry():
+    import hashlib
+    from app.agent_registry import REGISTRY_PATH, agent_record
+    from app.product_identity import CORE_DISPLAY_NAME
+
+    original_bytes = REGISTRY_PATH.read_bytes()
+    original_digest = hashlib.sha256(original_bytes).hexdigest()
+    private = load_agent_registry()
+    public = public_agent_registry()
+    assert CORE_DISPLAY_NAME == "ORQEVIA Core"
+    assert public["orchestrator"]["name"] == CORE_DISPLAY_NAME
+    assert public["orchestrator"]["id"] == private["orchestrator"]["id"] == "prime"
+    assert public["registry_id"] == private["registry_id"]
+    assert private["orchestrator"]["name"] == "JARVIS PRIME"
+    assert agent_record("prime")["name"] == "JARVIS PRIME"
+    for key in ("role", "public_description"):
+        assert public["orchestrator"][key] == private["orchestrator"][key]
+    assert REGISTRY_PATH.read_bytes() == original_bytes
+    assert hashlib.sha256(REGISTRY_PATH.read_bytes()).hexdigest() == original_digest
+
+
 def test_legacy_migration_preserves_roles_and_denies_removed_identities():
     import pytest
     from app.agent_registry import agent_record, domain_lead
