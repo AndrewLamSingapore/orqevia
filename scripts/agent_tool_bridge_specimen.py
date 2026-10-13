@@ -56,8 +56,8 @@ def response_schema():
         'required': ['schema', 'requests'], 'additionalProperties': False}
 
 
-def prompt():
-    return (
+def prompt(attempt=1):
+    original = (
         'You are the registered Evidence Agent a07. Do not supply task answers '
         'before retrieving evidence. The Owner permits exactly one public read '
         'of ' + SOURCE_URL + '. Return one JSON tool-request object only, using '
@@ -69,6 +69,14 @@ def prompt():
         'the authenticated runtime will separately validate and execute it.\n'
         'Authorized objective:\n' + OBJECTIVE
     )
+    if attempt == 1:
+        return original
+    # A diagnosed contract ambiguity, no source facts or task-answer values.
+    return original + ('\nIdentifier contract clarification: id is a step label, '
+        'not a numeric execution ID. It must start with a lowercase ASCII letter '
+        'a-z. Remaining characters may only be lowercase ASCII letters, digits, '
+        'underscore or hyphen. Total length must be one to forty-eight characters. '
+        'Preserve the same task, source and all other output requirements.')
 
 
 def atomic(path, value):
@@ -195,13 +203,17 @@ def run(args):
         'maximum_initial_model_jobs': 1, 'maximum_feedback_model_jobs': 1,
         'automatic_model_retries': 0, 'full_role_acceptance': 'NOT_ESTABLISHED',
         'independent_review': 'PENDING', 'independent_azure_assessment': 'NOT_ESTABLISHED'}
+    attempt = getattr(args, 'attempt', 1)
+    if state.get('attempt', attempt) != attempt:
+        raise ValueError('Separate attempt directory required; original case stays immutable')
+    state['attempt'] = attempt
     def save():
         state['last_observed_at_utc'] = now()
         atomic(state_path, state)
         retain(root / 'history' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ') + '.json'), state)
     if args.stage == 'prepare':
         retain(root / 'scenario.json', {'agent': AGENT, 'source_url': SOURCE_URL,
-            'objective': OBJECTIVE, 'request_prompt': prompt(), 'response_schema': response_schema(),
+            'objective': OBJECTIVE, 'request_prompt': prompt(attempt), 'response_schema': response_schema(),
             'scope': 'ONE_PUBLIC_SOURCE_SPECIMEN_NOT_FULL_ROLE_OR_21_OR_AZURE',
             'answers_supplied': False, 'source_contents_supplied_before_retrieval': False})
         state['driver_sha256'] = sha(Path(__file__).read_bytes())
@@ -237,13 +249,15 @@ def run(args):
         from app.settings import SETTINGS
         from app.agent_registry import agent_record
         assert agent_record(AGENT)['name'] == 'Evidence Agent'
-        body = {'agent': AGENT, 'prompt': prompt(), 'response_schema': response_schema(),
+        body = {'agent': AGENT, 'prompt': prompt(attempt), 'response_schema': response_schema(),
             'response_format': 'strict_json', 'priority': 'low', 'model_role': 'fast',
             'model': SETTINGS.fast_model, 'preferred_provider': 'ollama-fast',
             'ram_mb': 1024, 'timeout_seconds': 60, 'max_retries': 0, 'max_cost_usd': 0,
             'allow_cloud': False, 'external_execution': False,
             'data_classification': 'CLOUD_PERMITTED', 'classification': 'R0',
             'task_class': 'classification', 'idempotency_key': 'a07-public-bridge-specimen-20261013:request'}
+        if attempt != 1:
+            body['idempotency_key'] += ':attempt' + str(attempt)
         from app.response_schema import canonicalize_schema
         body['response_schema'] = canonicalize_schema(body['response_schema'])
         retain(root / 'initial-submission.json', body)
@@ -342,6 +356,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--stage', choices=('prepare', 'submit', 'collect', 'feedback', 'finish', 'packet'), default='prepare')
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--attempt', type=int, choices=(1, 2, 3), default=1,
+                        help='Explicit separately authorized attempt; never an automatic retry loop')
     parser.add_argument('--deployment-confirmed', action='store_true')
     parser.add_argument('--expected-source')
     parser.add_argument('--expected-image')
