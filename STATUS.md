@@ -36,6 +36,109 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX–DELL end-to-end reconciliation — 13 October 2026
+
+### Claimed, not independently checked
+
+- Reconciliation source: ORQEVIA main `f5543d06476246bb288ff385d422c8bdb3f46c42`.
+  Each product's owning main was freshly resolved and is recorded in
+  [the dated observation](governance/observations/abex-dell-reconciliation-20261013.json).
+  Source, CI, deployment, runtime, role assessments and certification remain
+  separate evidence scopes.
+- Controller repair [PR #286](https://github.com/AndrewLamSingapore/orqevia/pull/286)
+  is merged at that main revision, with zero file differences from tested
+  `cdba1a6bac049831cbab91eee1a5634b1fb643a4` / tree
+  `6ee8b6d2b54f03669167310165c1632411b304cb`. ABEX reproduced three original
+  storage/missing-job failures; DELL independently reported 48 tests and 77
+  subtests passing. Exact-head source workflows passed. Installation on the
+  live controller is still pending.
+- DELL published the existing-PWA coaching view as
+  [PR #287](https://github.com/AndrewLamSingapore/orqevia/pull/287).
+  ABEX reconstructed its exact tree and reproduced coaching-panel retention
+  after logout, offline transition and parent telemetry expiry, plus explicit
+  UNKNOWN promoted to OBSERVED. Repaired successor
+  [PR #288](https://github.com/AndrewLamSingapore/orqevia/pull/288), head
+  `909f0a6b43d66fa9c046bf3d98ed743e22abeeee`, preserves DELL's history, clears
+  authenticated observations, honors UNKNOWN/STALE, derives assessed/pass/fail/
+  unassessed counts for baseline/practice/acceptance and separates event,
+  transition and controller times. Six selected offline PWA command groups,
+  including 22 race/session/worker checks, passed; all three exact-head
+  workflows passed. DELL's independent review and live Interface installation
+  remain pending.
+- DELL published [Game PR #42](https://github.com/AndrewLamSingapore/game-platform/pull/42)
+  at `fcc91560e0f0be63ec689c2efb11ac72277ca100` with 18 reported focused passes,
+  [HF QA PR #289](https://github.com/AndrewLamSingapore/orqevia/pull/289)
+  at `3389b1924f0a19026ecfb1e6eaf68346bb6aac30` with 212 reported passes, and
+  [Tool Library PR #290](https://github.com/AndrewLamSingapore/orqevia/pull/290)
+  at `0bec08179290ac7b543cf0216e57a931343c6d26` with 12 reported passes.
+  These are published source candidates awaiting integration, not installed
+  backend/fabric acceptance.
+- The initial sweep observed 96 open PRs: 89 had success in the latest returned
+  PR-triggered workflow per name, three had failures and four had no PR workflow
+  returned. API first-page coverage does not establish all required checks.
+  ORQEVIA #268/#242/#208 retain their original failed runs; DELL has claimed
+  current-main triage. Later source publications and merges are separate events.
+- Five latest Vercel production build records were READY and matched their
+  owning canonical heads. Public Authority/Portal/Game health returned 200 with
+  matching revisions; the VELYQUA page returned 200. Sky's /api/health returned
+  404, a route-specific observation rather than proof the application is down.
+  These observations do not establish authenticated journeys or mobile acceptance.
+
+### Resolved — backend restoration, 13 October 2026
+
+- The sweep's earlier INACTIVE observation for existing Supabase project
+  `vtrfgckzpjgtmqsnumur` (Game Platform, ap-southeast-1) is superseded by actual
+  owner-authorized restoration: INACTIVE → COMING_UP → ACTIVE_HEALTHY.
+  A read-only `SELECT 1` returned `database_reachable: 1` at
+  `2026-10-13T03:42:22.654323Z`. Canonical Game and the Portal's private PRIME
+  surface reference this project. No schema, data, auth, RLS or function change
+  was made. This resolves the observed inactive database state; authenticated
+  Game/Portal end-to-end acceptance remains unverified.
+
+### Known broken / open
+
+- Current 21/21 coaching completion and per-fabric live acceptance remain
+  UNVERIFIED. The historical start receipt created 21 sessions and submitted one
+  job at 02:14:56 UTC; it is not a fresh completion receipt. The separate last
+  completed historical normal-role cohort remains source `66a5d90`,
+  8 PASS / 13 FAIL. Earlier `18ec939` remains 7 PASS / 14 FAIL. No cohort
+  pooling, 21/21 competence or L7 promotion follows; last recorded L7 is 0/21.
+- This execution identity cannot access the existing Docker configuration or
+  engine; the latest retry also returned engine-pipe not found. No active
+  browser surface/session is exposed here. These are specific observation/
+  installation dependencies, not a global source-work stop. Owner requested
+  permanent full access, but no sandbox policy change occurred. The existing
+  owner-session read-only collector is prepared at
+  `C:/Users/Admin/Documents/ABEX/operations/verify-live-coaching.py`.
+- ABEX System event 1001 records 13 October 02:21:49 UTC bugcheck 0x0A and
+  00:33:58 UTC 0x3B, following 12 October 09:05:30 UTC 0x1A. Cause and failed
+  component remain unverified. No driver change, RAM test or reboot was initiated.
+- The encrypted capture exists with 1,320 historical capture failures.
+  Full archive authentication/decryption and independent off-device restoration
+  remain unverified; BACKUP-VERIFICATION.json was not found at the original root.
+  Cancelled extended backup helpers were not replayed.
+- Profile #25, Sky #18, VELYQUA #77, Authority #92 and Game #41 remain integration
+  work. HF QA/tool-library successors, A19 #251/#260 reconciliation, authorized
+  God's Eye integration and dependency compatibility remain separate source
+  lanes. Actual cloud/provider, physical-iPhone, VELYQUA sensor and independent
+  recovery acceptance are not supplied by source tests.
+- Owner's standing coordination instruction is always synchronize and provide
+  handoffs in [mailbox #284](https://github.com/AndrewLamSingapore/orqevia/issues/284).
+  DELL acknowledged the current execution handoff in
+  [its pass-back](https://github.com/AndrewLamSingapore/orqevia/issues/284#issuecomment-6137738942).
+  ABEX owns operational changes and this reconciliation; DELL owns CI triage,
+  #288 independent review and isolated source lanes. Each host retains its
+  identity, existing credentials and original evidence dates.
+
+Evidence: [dated machine-readable reconciliation](governance/observations/abex-dell-reconciliation-20261013.json).
+Full detailed sweep and raw receipt index are retained at
+`C:/Users/Admin/Documents/ABEX/operations/full-sweep-20261013` and in
+[the complete mailbox handoff](https://github.com/AndrewLamSingapore/orqevia/issues/284#issuecomment-6137519234).
+Earlier observations and manifest verification/expiry timestamps retain their
+original dates. Nothing in this supplement is a Lam-verified claim.
+
++---
+
 ## ABEX frozen candidate closure supplement — 12 October 2026
 
 ### Claimed, not independently checked
