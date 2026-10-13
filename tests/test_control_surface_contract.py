@@ -103,7 +103,7 @@ class ControlSurfaceContractTests(unittest.TestCase):
             'id="workspaceQuery"',
             'id="evidenceQuery"',
             'id="exportReport"',
-            "jarvis-owner-report-",
+            "orqevia-owner-report-",
         ):
             self.assertIn(feature, html)
         self.assertIn("Search memory, projects and verified evidence", html)

@@ -41,7 +41,7 @@ AGENTS={
 "data":{"name":"Data Agent","purpose":"Inspects and reasons over local CSV/JSON datasets."},
 "coding":{"name":"Coding Agent","purpose":"Generates, validates and safely tests code in a local workspace."},
 "actions":{"name":"Actions Agent","purpose":"Queues mutating actions for explicit approval."},
-"automation":{"name":"Automation Agent","purpose":"Runs persistent local schedules while PRIME is online."},
+"automation":{"name":"Automation Agent","purpose":"Runs persistent local schedules while ORQEVIA is online."},
 "governor":{"name":"Executive Governor","purpose":"Enforces constitution, authority boundaries and institutional policy."},
 "executive":{"name":"Executive Orchestrator","purpose":"Turns approved objectives into bounded internal organizational work."},
 "portfolio":{"name":"Portfolio Agent","purpose":"Coordinates objectives, projects, dependencies and priorities."},
@@ -257,7 +257,7 @@ async def phase3_verify(task_title,task_description,content,*,specialist="strate
   return 0,"revise","GROUNDING FAIL: "+guard_feedback,"deterministic_grounding_guard"
 
  evidence_label=evidence_context[:12000] if evidence_context else "NO VERIFIED EXTERNAL/DATA EVIDENCE ATTACHED."
- prompt=f"""You are {PRODUCT_NAME}, acting as the Phase 3.1.1 Evidence-Grounded Evaluator powered by PRIME.
+ prompt=f"""You are {PRODUCT_NAME}, acting as the Phase 3.1.1 Evidence-Grounded Evaluator powered by ORQEVIA Core.
 TASK: {task_title}
 DESCRIPTION: {task_description}
 SPECIALIST: {specialist}
@@ -307,7 +307,7 @@ async def phase3_review_project(project_id):
  finally:c.close()
  if not tasks or any(t["status"]!="completed" for t in tasks):return None
  packet="\n\n".join([f"TASK: {t['title']}\nARTIFACT: "+next((a["content"] for a in arts if a["task_id"]==t["id"]),"No artifact")[:4500] for t in tasks])
- prompt=f"""You are {PRODUCT_NAME}, acting as the Phase 3 Closed Loop Manager powered by PRIME.
+ prompt=f"""You are {PRODUCT_NAME}, acting as the Phase 3 Closed Loop Manager powered by ORQEVIA Core.
 PROJECT: {p['title']}
 DESCRIPTION: {p['description']}
 COMPLETED WORK:
@@ -1049,7 +1049,7 @@ async def organization_cycle():
  valid_depts={d['name'] for d in depts}
  if not valid_depts:raise HTTPException(503,'No active departments are available.')
 
- prompt=f"""You are {PRODUCT_NAME}, acting as the Phase 2 Executive Orchestrator powered by PRIME under a strict constitution.
+ prompt=f"""You are {PRODUCT_NAME}, acting as the Phase 2 Executive Orchestrator powered by ORQEVIA Core under a strict constitution.
 OBJECTIVE:
 Title: {obj['title']}
 Description: {obj['description']}
@@ -1229,7 +1229,7 @@ async def autonomous_cycle():
      c.execute("UPDATE org_project_tasks SET status='active',updated_at=? WHERE id=?",(now(),task_id));c.commit()
     finally:c.close()
 
-   prompt=f"""You are {PRODUCT_NAME}, powered by PRIME and performing one Phase 2 INTERNAL task.
+   prompt=f"""You are {PRODUCT_NAME}, powered by ORQEVIA Core and performing one Phase 2 INTERNAL task.
 Department: {item['department']}
 Task: {item['title']}
 Description: {item['description']}
@@ -1428,7 +1428,7 @@ async def execute_orchestrated_job(run_id,item):
  try:
   while attempts<ORCH_MAX_ATTEMPTS:
    attempts+=1;update_agent_job(jid,attempts=attempts,last_status=f'attempt {attempts} running')
-   system=(BASE_SYSTEM+" Perform the "+SPECIALISTS[route.specialist]['name']+" role inside PRIME's governed orchestration layer. Follow the mission brief exactly. You have no direct external authority.")
+   system=(BASE_SYSTEM+" Perform the "+SPECIALISTS[route.specialist]['name']+" role inside ORQEVIA Core's governed orchestration layer. Follow the mission brief exactly. You have no direct external authority.")
    d=await ollama_post('/api/chat',{'model':DEEP_MODEL,'messages':[{'role':'system','content':system},{'role':'user','content':brief if attempts==1 else brief+f"\n\nSUPERVISOR REVISION REQUEST\n{feedback}\nRevise the deliverable; do not expand scope."}],'stream':False},900)
    content=d['message']['content'].strip()[:24000]
    if not aid:aid=create_artifact(item['task_id'],item['project_id'],run_id,item['title'],content)
@@ -1708,7 +1708,7 @@ async def phase3_verified_cycle():
       try:c.execute("UPDATE org_project_tasks SET status='blocked_evidence',updated_at=? WHERE id=?",(now(),task_id));c.execute("UPDATE org_department_queue SET status='blocked_evidence',lease_until=NULL,updated_at=? WHERE id=?",(now(),item['id']));c.commit()
       finally:c.close()
      summary.append({'task':item['title'],'status':'blocked_evidence','artifact_id':aid});break
-    prompt=f"""You are {PRODUCT_NAME}, powered by PRIME and executing one Phase 3 INTERNAL task.
+    prompt=f"""You are {PRODUCT_NAME}, powered by ORQEVIA Core and executing one Phase 3 INTERNAL task.
 Department: {item['department']}
 Task: {item['title']}
 Description: {item['description']}

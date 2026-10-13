@@ -7,7 +7,7 @@ from .agent_registry import RegistryError,agent_record,load_agent_registry,orche
 
 PATTERNS=(r'how many agents',r'list (?:your|the) agents',r'which agent (?:answered|is answering)',
           r'what does agent\s+\w+',r'which tools can agent\s+\w+',r'can an agent change its own role',
-          r'what (?:prime )?generation',r'(?:source|runtime) identity',
+          r'what (?:(?:orqevia|奥启维亚|prime|jarvis) )?generation',r'(?:source|runtime) identity',
           r'(?:多少|几个|数量).{0,12}(?:已注册)?代理',r'(?:已注册)?代理.{0,12}(?:多少|几个|数量)',
           r'(?:列出|有哪些|什么).{0,12}(?:已注册)?代理')
 GOVERNANCE_PATTERNS=(r'phase.?2.*(?:verified|production.ready|golden|accepted)',r'(?:verified|production.ready|golden|accepted).*phase.?2',
