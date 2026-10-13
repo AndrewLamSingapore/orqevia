@@ -3,7 +3,6 @@
 Uses the existing queue and unchanged semantic oracles. It never awards full
 role acceptance or Azure L7. Operator composition owns its narrow HF allowlist.
 """
-from contextlib import contextmanager
 import datetime
 import hashlib
 import json
@@ -11,7 +10,7 @@ import os
 from pathlib import Path
 import time
 
-from .agent_coaching import canonical,digest,effective_prompt
+from .agent_coaching import canonical,controller_process_lock,digest,effective_prompt
 from .agent_cert_response_contracts import normal_role_response_contract
 from .agent_cert_role_review import review_role_output
 from .coaching_exercises import METHODS,practice_request,review_practice
@@ -60,16 +59,8 @@ def baseline_bound(job,expected):
       job['provider']==PROVIDER and job['allow_cloud']==1 and job['external_execution']==0 and
       job['data_classification']=='CLOUD_PERMITTED' and job['max_cost_usd']<=CAP)
 
-@contextmanager
 def ownership():
-    import fcntl
-    ROOT.mkdir(parents=True,exist_ok=True)
-    with (ROOT/'driver.lock').open('a+b') as handle:
-        try:fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except BlockingIOError:
-            yield False;return
-        try:yield True
-        finally:fcntl.flock(handle.fileno(),fcntl.LOCK_UN)
+    return controller_process_lock(ROOT/'driver.lock')
 
 def prepare(queue):
     with ownership() as acquired:

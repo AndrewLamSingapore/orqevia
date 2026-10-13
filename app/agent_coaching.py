@@ -40,9 +40,8 @@ def controller_process_lock(path):
     with path.open('a+b') as lease:
         if os.name == 'nt':
             import msvcrt
-            lease.seek(0)
-            if not lease.read(1):
-                lease.write(b'0'); lease.flush()
+            # Windows can lock a byte beyond EOF. Do not read or initialize it:
+            # another owner's byte lock also denies access to that byte.
             lease.seek(0)
             try:
                 msvcrt.locking(lease.fileno(), msvcrt.LK_NBLCK, 1)

@@ -56,11 +56,19 @@ print(json.dumps(result))
 '''
 
 
+def _historical_source_archive(root, revision):
+    # git archive applies the historical attributes and host line-ending settings.
+    # Preserve the reviewed blob bytes without changing repository configuration.
+    return subprocess.check_output(
+        ['git', '-c', 'core.autocrlf=false', '-c', 'core.eol=lf',
+         'archive', '--format=tar', revision], cwd=root)
+
+
 def historical_validation(tmp_path, mode):
     assert mode in {'audit', 'old', 'fresh'}
     target = tmp_path / 'historical-source'
     target.mkdir()
-    archive = subprocess.check_output(['git', 'archive', '--format=tar', REVISION], cwd=ROOT)
+    archive = _historical_source_archive(ROOT, REVISION)
     with tarfile.open(fileobj=io.BytesIO(archive), mode='r:') as source:
         source.extractall(target, filter='data')
     subprocess.run(['git', 'init', str(target)], check=True, capture_output=True)

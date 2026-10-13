@@ -48,6 +48,21 @@ def test_atomic_state_roundtrip_and_exclusive_lock(tmp_path):
         assert not (tmp_path/'state.next.json').exists()
         with follow.ownership() as first:
             with follow.ownership() as second:assert first and not second
+        with follow.ownership() as recovered:assert recovered
+
+
+def test_contending_driver_cannot_read_state_or_submit_jobs(tmp_path):
+    queue=Queue()
+    with patch.object(follow,'ROOT',tmp_path):
+        # Missing state is intentional: contention must return before reading it.
+        with follow.ownership() as acquired:
+            assert acquired
+            assert follow.prepare(queue)=={'state':'COACH_ALREADY_RUNNING'}
+            assert follow.tick(queue)=={'state':'COACH_ALREADY_RUNNING'}
+            assert follow.recover_context_budget_failures(queue,catalog_sha256='c'*64)=={'state':'COACH_ALREADY_RUNNING'}
+            assert follow.coach_identifier_casing(queue)=={'state':'COACH_ALREADY_RUNNING'}
+        assert not queue.calls and not queue.jobs
+        assert not (tmp_path/'state.json').exists()
 
 
 def test_changed_executor_blocks_submission(tmp_path,monkeypatch):

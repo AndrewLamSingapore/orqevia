@@ -1,6 +1,8 @@
 """Isolated controller/assessor tests; no model, cloud or certification claims."""
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -19,6 +21,45 @@ class CoachingTests(unittest.TestCase):
                 self.assertTrue(first)
                 with controller_process_lock(path) as second:
                     self.assertFalse(second)
+            with controller_process_lock(path) as recovered:
+                self.assertTrue(recovered)
+
+    def test_process_lock_is_exclusive_across_processes(self):
+        from app.agent_coaching import controller_process_lock
+        probe = '''
+import os, sys
+with open(sys.argv[1], 'a+b') as lease:
+    lease.seek(0)
+    try:
+        if os.name == 'nt':
+            import msvcrt
+            msvcrt.locking(lease.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lease.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        print('BUSY')
+    else:
+        print('ACQUIRED')
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'coaching-controller.lock'
+            def observe():
+                return subprocess.run([sys.executable, '-B', '-c', probe, str(path)],
+                    check=True, capture_output=True, text=True, timeout=10).stdout.strip()
+            with controller_process_lock(path) as acquired:
+                self.assertTrue(acquired)
+                self.assertEqual(observe(), 'BUSY')
+            self.assertEqual(observe(), 'ACQUIRED')
+
+    def test_process_lock_releases_when_owner_raises(self):
+        from app.agent_coaching import controller_process_lock
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'coaching-controller.lock'
+            with self.assertRaisesRegex(RuntimeError, 'fixture owner failed'):
+                with controller_process_lock(path) as acquired:
+                    self.assertTrue(acquired)
+                    raise RuntimeError('fixture owner failed')
             with controller_process_lock(path) as recovered:
                 self.assertTrue(recovered)
 
