@@ -6,6 +6,7 @@ and promotes only explicitly durable, keyed items into update-in-place memory.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import sqlite3
@@ -62,6 +63,13 @@ class MemoryStore:
               promoted_at text
             );
             create index if not exists episodic_status_idx on episodic_memory(status, created_at);
+            create index if not exists episodic_source_event_idx on episodic_memory(
+              source,
+              case when json_valid(content_json) then
+                case when json_type(content_json,'$.event_id')='text'
+                     then json_extract(content_json,'$.event_id') end
+              end
+            );
             create table if not exists durable_memory (
               memory_kind text not null,
               memory_key text not null,
@@ -71,6 +79,16 @@ class MemoryStore:
               updated_at text not null,
               primary key(memory_kind, memory_key)
             );
+            create table if not exists episode_idempotency (
+              source text not null,
+              event_id text not null,
+              request_sha256 text not null,
+              event_fingerprint text,
+              episode_id text not null,
+              origin text not null,
+              retained_duplicate_ids_json text not null,
+              primary key(source, event_id)
+            );
             """)
 
     @staticmethod
@@ -79,7 +97,8 @@ class MemoryStore:
 
     def record_episode(self, *, event_type: str, content: Mapping[str, Any], source: str,
                        salience: float = 0.0, durable_kind: str | None = None,
-                       durable_key: str | None = None) -> dict[str, Any]:
+                       durable_key: str | None = None, idempotency_key: str | None = None,
+                       event_fingerprint: str | None = None) -> dict[str, Any]:
         kind = durable_kind.strip().lower() if durable_kind else None
         if kind and kind not in DURABLE_KINDS:
             raise ValueError(f"unsupported durable memory kind: {kind}")
@@ -101,9 +120,81 @@ class MemoryStore:
         }
         if not row["event_type"] or not row["source"]:
             raise ValueError("event_type and source are required")
+        if idempotency_key is not None:
+            return self._record_episode_once(row, idempotency_key, event_fingerprint)
+        if event_fingerprint is not None:
+            raise ValueError("event fingerprint requires an idempotency key")
         with self.connect() as db:
             db.execute("insert into episodic_memory(episode_id,event_type,content_json,source,salience,durable_kind,durable_key,status,created_at) values(:episode_id,:event_type,:content_json,:source,:salience,:durable_kind,:durable_key,:status,:created_at)", row)
         return {**row, "content": dict(content)}
+
+    @staticmethod
+    def _episode_digest(row: Mapping[str, Any]) -> str:
+        """Stable input fields only: promotion/status and original GUID stay separate."""
+        fields = {key: row[key] for key in
+                  ("event_type", "source", "salience", "durable_kind", "durable_key")}
+        fields["content"] = json.loads(row["content_json"])
+        raw = json.dumps(fields, sort_keys=True, separators=(",", ":"),
+                         ensure_ascii=False, allow_nan=False).encode("utf-8")
+        return hashlib.sha256(raw).hexdigest()
+
+    def _record_episode_once(self, row: dict[str, Any], event_id: str,
+                             event_fingerprint: str | None) -> dict[str, Any]:
+        if not isinstance(event_id, str) or not event_id.strip():
+            raise ValueError("nonempty event idempotency key required")
+        if event_fingerprint is not None and (not isinstance(event_fingerprint, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", event_fingerprint)):
+            raise ValueError("canonical event SHA-256 fingerprint required")
+        request_sha256 = self._episode_digest(row)
+        with self.connect() as db:
+            # The episode and durable key share one commit. A projector receipt
+            # in another database may be lost without replaying this side effect.
+            db.execute("BEGIN IMMEDIATE")
+            binding = db.execute("select * from episode_idempotency where source=? and event_id=?",
+                                 (row["source"], event_id)).fetchone()
+            if binding:
+                if (binding["request_sha256"] != request_sha256
+                        or binding["event_fingerprint"] != event_fingerprint):
+                    raise ValueError("event idempotency key conflicts with original episode")
+                original = db.execute("select * from episodic_memory where episode_id=?",
+                                      (binding["episode_id"],)).fetchone()
+                if original is None or self._episode_digest(original) != request_sha256:
+                    raise ValueError("bound original episode is missing or changed")
+                episode = dict(original)
+                origin = binding["origin"]
+                duplicates = json.loads(binding["retained_duplicate_ids_json"])
+                state = "REPLAYED"
+            else:
+                # Recover pre-ledger side effects without replacing their GUIDs.
+                # Identical historical duplicates remain individually readable;
+                # any conflicting event match is an ambiguity, not permission to
+                # invent another episode or silently choose conflicting content.
+                matches = db.execute("""select * from episodic_memory where source=? and
+                    (case when json_valid(content_json) then
+                      case when json_type(content_json,'$.event_id')='text'
+                           then json_extract(content_json,'$.event_id') end
+                    end)=? order by created_at,episode_id""",
+                    (row["source"], event_id)).fetchall()
+                if any(self._episode_digest(candidate) != request_sha256 for candidate in matches):
+                    raise ValueError("legacy event episodes have conflicting content; reconciliation required")
+                if matches:
+                    episode = dict(matches[0])
+                    duplicates = [candidate["episode_id"] for candidate in matches[1:]]
+                    origin = "ADOPTED_LEGACY"
+                else:
+                    episode = row
+                    duplicates = []
+                    origin = "CREATED"
+                    db.execute("insert into episodic_memory(episode_id,event_type,content_json,source,salience,durable_kind,durable_key,status,created_at) values(:episode_id,:event_type,:content_json,:source,:salience,:durable_kind,:durable_key,:status,:created_at)", row)
+                db.execute("insert into episode_idempotency(source,event_id,request_sha256,event_fingerprint,episode_id,origin,retained_duplicate_ids_json) values(?,?,?,?,?,?,?)",
+                           (row["source"], event_id, request_sha256, event_fingerprint,
+                            episode["episode_id"], origin, json.dumps(duplicates)))
+                state = origin
+        return {**episode, "content": json.loads(episode["content_json"]),
+                "idempotency": {"state": state, "origin": origin,
+                    "source": row["source"], "event_id": event_id,
+                    "retained_duplicate_episode_ids": duplicates,
+                    "historical_full_event_fingerprint_available": origin != "ADOPTED_LEGACY"}}
 
     def consolidate(self, *, minimum_salience: float = 0.6, limit: int = 100) -> dict[str, int]:
         """Promote explicitly keyed episodes; never infer durable facts from raw logs."""
