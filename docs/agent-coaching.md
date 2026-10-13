@@ -29,6 +29,9 @@ Create `/data/coaching.pause` to stop new transitions without clearing state.
 Stopping the sidecar stops the controller; any submitted bounded queue job is
 owned by the existing executor. Restart resumes the same job. Rollback removes
 the sidecar only; do not roll back the live queue or erase coaching failures.
+The restart policy also resumes across normal host/Docker restarts, while a
+deliberate container stop stays stopped. Health checks require a controller
+tick within 60 seconds, rather than treating an old database as live operation.
 
 `interface_telemetry.snapshot` offers bounded read-only per-role internal grades
 and original event times; a fresh dashboard read never refreshes old evidence.

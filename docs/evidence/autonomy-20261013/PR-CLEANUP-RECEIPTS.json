@@ -1,0 +1,65 @@
+{
+  "reconciled_at_utc": "2026-10-13T01:25:09.050Z",
+  "receipts": [
+    {
+      "number": 196,
+      "head": "2da256a45bca5e4c015f193911737c96e9cf8d12",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 195,
+      "head": "b90574e0e449ad92febe5cc3cbfb653357eb4976",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 186,
+      "head": "30960dc2b0dc721e5f7c4f5a1df120beb4182fa6",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 185,
+      "head": "f092d2824a62362329993699bfda761883292beb",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 190,
+      "head": "16c0d3c8e6e052b7c9aa0d551bffb88fd494bc3b",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 182,
+      "head": "f117d1a04de3a6f3fd48ca7da10cc39414b3ceab",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 181,
+      "head": "56c3ee79f43c2254c21bee6253af3d8f0a538bac",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 176,
+      "head": "f23ed2de9a7ba252555f534b774aa80078940db4",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 175,
+      "head": "23d4949ae1d9b2364464dcd0549d237ba23a7e8f",
+      "state": "closed",
+      "error": false
+    },
+    {
+      "number": 157,
+      "head": "4724b0c0057d8fda1b5098de993efb204ce5d7c3",
+      "state": "closed",
+      "error": false
+    }
+  ]
+}

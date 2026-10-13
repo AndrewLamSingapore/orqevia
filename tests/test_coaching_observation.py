@@ -33,6 +33,20 @@ class ObservationTests(unittest.TestCase):
             self.assertNotIn('prompt',str(fresh))
             self.assertNotIn('result_sha256',str(fresh))
 
+    def test_controller_heartbeat_is_distinct_from_original_assessment_time(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);queue=JobQueue(root/'queue.db')
+            controller=CoachingController(root/'agent-coaching.db',queue,source_revision='a'*40,model='fixture',clock=lambda:1000000.0)
+            controller.ensure_cohort();controller.tick()
+            original=coaching_snapshot(root,now=2000000)['last_event_at']
+            controller.clock=lambda:2000000.0
+            controller.heartbeat('DAILY_LIMIT')
+            report=coaching_snapshot(root,now=2000010)
+            self.assertEqual(report['controller']['availability'],'OBSERVED')
+            self.assertEqual(report['last_event_at'],original)
+            self.assertEqual(report['status'],'STALE')
+            self.assertEqual(coaching_snapshot(root,now=2000070)['controller']['availability'],'STALE')
+
     def test_partial_registry_records_are_unavailable(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);queue=JobQueue(root/'queue.db')

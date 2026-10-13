@@ -5,7 +5,8 @@ services:
   coaching:
     image: ${PRIME_COACHING_IMAGE:?pinned coaching image required}
     command: [python, -B, -m, app.agent_coaching]
-    restart: "on-failure:5"
+    # Resume across normal Docker/host restarts; a deliberate stop stays stopped.
+    restart: unless-stopped
     read_only: true
     network_mode: none
     cap_drop: [ALL]
