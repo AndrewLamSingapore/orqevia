@@ -11,7 +11,7 @@ from typing import Literal
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
@@ -59,7 +59,7 @@ def _int(name: str, default: int) -> int:
     except ValueError: return default
 
 
-def providers() -> list[Provider]:
+def providers(*,validated_catalog=None) -> list[Provider]:
     local_ram,local_vram=_int("PRIME_LOCAL_RAM_MB",32768),_int("PRIME_LOCAL_VRAM_MB",0)
     result=[]
     for role,model in (("fast",SETTINGS.fast_model),("deep",SETTINGS.deep_model),
@@ -68,7 +68,7 @@ def providers() -> list[Provider]:
             result.append(Provider(f"ollama-{role}","local",model,local_ram,local_vram,
                                    _int("OLLAMA_NUM_PARALLEL",2) or 1))
     from .compute_catalog import load_catalog,model_spec
-    for entry in load_catalog():
+    for entry in (load_catalog() if validated_catalog is None else validated_catalog):
         if not entry.get('enabled') or entry['location']!='cloud':continue
         spec=model_spec(entry)
         # Unpriced external calls cannot enter automatic budgeted execution.
@@ -111,32 +111,38 @@ def _execute(job: dict, provider: Provider) -> dict:
         return execute_cloud(job,provider,DATA,lambda:queue.get(job['id'])['status']=='cancelled')
     record=ActionRecord(job['id'],job['agent'],'inference.run','ollama',
         classification=job.get('classification','R0'),model_backend=provider.model)
-    # Persist actual local usage before the queue exposes completion. A later
-    # peer read must not create/change the subject's accounting projection.
-    from .outcome_metrics import OutcomeMetrics
     from .agent_dispatch_api import local_model_backends
-    import uuid
-    tier=next((backend.tier.name for backend in local_model_backends()
-               if backend.name==provider.name and backend.model==provider.model),None)
-    if tier is None:
-        raise PermissionError('Local provider is not an existing configured role')
-    metrics=OutcomeMetrics(DATA/'compute-ledger.db')
-    started=time.monotonic();answer=None;failure='LOCAL_INFERENCE_FAILED'
+    selected = next((backend for backend in local_model_backends(SETTINGS)
+        if backend.name == provider.name and backend.model == provider.model), None)
+    started = time.monotonic()
+    answer = None
+    failure = 'LOCAL_INFERENCE_FAILED'
     try:
-        answer=DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
+        answer = DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
             settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
             cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
-        failure='STRICT_JSON_CONTRACT_FAILED' if answer.get('error')=='STRICT_JSON_CONTRACT_FAILED' else None
+        failure = 'STRICT_JSON_CONTRACT_FAILED' if answer.get('error') == 'STRICT_JSON_CONTRACT_FAILED' else (
+            'LOCAL_INFERENCE_FAILED' if answer.get('error') else None)
         return answer
     finally:
-        metrics.record(attempt_id=uuid.uuid4().hex,task_id=job['id'],task_class=job.get('task_class','auto'),
-            tier=tier,seconds=time.monotonic()-started,
-            input_tokens=answer.get('input_tokens') if answer else None,
-            output_tokens=answer.get('output_tokens') if answer else None,cost=0,
-            agent_id=job['agent'],provider=provider.name,model=provider.model,retries=0,
-            requested_tier=tier,requested_provider=provider.name,requested_model=provider.model,
-            fallback_route=[],error_classifications=[failure] if failure else [],
-            success=answer is not None and failure is None,failure_kind=failure)
+        if selected is not None:
+            try:
+                import uuid
+                from .outcome_metrics import OutcomeMetrics
+                OutcomeMetrics(DATA/'compute-ledger.db').record(attempt_id=uuid.uuid4().hex,
+                    task_id=job['id'],task_class=job.get('task_class','auto'),tier=selected.tier.name,
+                    seconds=time.monotonic()-started,
+                    input_tokens=answer.get('input_tokens') if answer is not None else None,
+                    output_tokens=answer.get('output_tokens') if answer is not None else None,
+                    cost=answer.get('actual_cost_usd') if answer is not None else None,
+                    agent_id=job['agent'],provider=provider.name,model=provider.model,retries=0,
+                    requested_tier=selected.tier.name,requested_provider=provider.name,
+                    requested_model=provider.model,fallback_route=[],error_classifications=[failure] if failure else [],
+                    success=answer is not None and failure is None,failure_kind=failure)
+            except Exception:
+                # Missing accounting never discards inference or replays a model call.
+                import logging
+                logging.getLogger(__name__).warning('Local inference attempt evidence unavailable')
 
 
 pool=WorkerPool(queue,providers(),_execute)
@@ -149,8 +155,6 @@ def authorize(authorization: str | None) -> None:
 
 class SubmitJob(BaseModel):
     response_format: Literal['text', 'strict_json'] = 'text'
-    response_schema: dict | None = None
-    response_schema_order: Literal['canonical', 'declared'] = 'canonical'
     agent: str=Field(min_length=1,max_length=80)
     prompt: str=Field(min_length=1,max_length=120000)
     priority: str|int="normal"
@@ -165,19 +169,6 @@ class SubmitJob(BaseModel):
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
     preferred_provider: str|None=None
-    idempotency_key: str|None=Field(default=None,min_length=1,max_length=128,pattern=r'^[A-Za-z0-9._:-]+$')
-
-    @model_validator(mode='after')
-    def validate_response_schema(self):
-        if self.response_schema is not None:
-            from .response_schema import canonicalize_schema, validated_wire_schema
-            if self.response_format != 'strict_json' or self.allow_cloud or self.external_execution:
-                raise ValueError('Response schema requires local strict_json execution')
-            self.response_schema = (validated_wire_schema(self.response_schema) if self.response_schema_order == 'declared'
-                                    else canonicalize_schema(self.response_schema))
-        elif self.response_schema_order != 'canonical':
-            raise ValueError('Declared schema order requires a response schema')
-        return self
 
 
 class Approval(BaseModel):
@@ -191,9 +182,6 @@ class SubmitHFQA(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def require_finite_json(cls, value):
-        # FastAPI's standard error renderer cannot serialize NaN or lone
-        # surrogates echoed in Pydantic error details. Deny invalid JSON/UTF-8
-        # with a sanitized response before those details are constructed.
         try:
             if not isinstance(value, dict):
                 raise ValueError()
@@ -280,13 +268,6 @@ def provider_health(authorization: str|None=Header(None)):
     authorize(authorization)
     from .cloud_execution import configured_provider_health
     return configured_provider_health()
-
-
-@router.get('/providers/usage')
-def provider_usage(authorization: str|None=Header(None)):
-    authorize(authorization)
-    from .provider_usage import usage_projection
-    return usage_projection(DATA/'compute-ledger.db',POLICY)
 
 
 def start_compute_queue() -> None: pool.start()
