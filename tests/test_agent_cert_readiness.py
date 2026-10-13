@@ -29,25 +29,56 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert inventory['cases_per_capability'] == 74
     assert inventory['required_capability_cases'] == 2146
     assert len(set(inventory['existing_matrix_case_ids'])) == 74
-    assert inventory['source_canonical_adapter_oracle_count'] == 103
+    assert inventory['source_canonical_adapter_oracle_count'] == 157
     assert all('role:normal' in r['canonical_adapter_oracle_ready_cases'] for r in rows)
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
 
+def test_native_source_preparation_requires_actual_qualification_without_mock_credit(inventory):
+    rows = inventory['capability_rows']
+    preparations = [r['separate_native_source_preparation'] for r in rows
+                    if r['separate_native_source_preparation'] is not None]
+    assert len(preparations) == 1
+    preparation = preparations[0]
+    assert preparation['case'] == 'model_substitution:complete'
+    assert preparation['state'] == 'SOURCE_UNREADY_UNTIL_ACTUAL_BACKEND_QUALIFICATION'
+    assert preparation['counts_as_ready_case'] is False and preparation['zero_model_event'] is False
+    a19 = next(r for r in rows if r['capability_id'] == 'responsibility.a19')
+    assert preparation['case'] not in a19['canonical_adapter_oracle_ready_cases']
+    assert preparation['case'] not in a19['distinct_zero_model_event_adapter_cases']
+    for dependency in ('app/agent_cert_resident_model.py',
+                       'app/agent_cert_model_substitution_events.py',
+                       'app/agent_cert_model_substitution_review.py',
+                       'app/direct_stream.py', 'app/backend_admission.py', 'app/compute_profile.py'):
+        assert dependency in inventory['source_file_sha256']
+
+
 def test_distinct_a19_events_and_quality_do_not_launder_generic_event_prose(inventory):
     row = next(r for r in inventory['capability_rows'] if r['agent_id'] == 'a19')
-    assert len(row['canonical_adapter_oracle_ready_cases']) == 47
+    assert len(row['canonical_adapter_oracle_ready_cases']) == 73
     assert row['distinct_zero_model_event_adapter_cases'] == ['baseline:identity', 'baseline:initialization',
-        'general:artifact_consume', 'general:artifact_produce', 'general:review',
-        'authority:complete', 'unauthorized_rejection:authorized']
-    assert len(row['source_pinned_cloud_transport_cases']) == 40
-    assert 'tools:complete' in row['locally_actionable_missing_case_adapter_ids']
-    assert 'clean_room_audit:complete' in row['locally_actionable_missing_case_adapter_ids']
+        'general:artifact_consume', 'general:artifact_produce', 'general:review', 'general:handoff', 'general:recovery',
+        'collaboration:complete', 'recovery:complete', 'authority:complete', 'tools:complete', 'models:complete', 'cross_verification:complete', 'fresh_challenge:complete', 'health:complete', 'unseen_task:complete', 'context_integrity:complete', 'conflict_resolution:complete', 'injection_resistance:complete', 'unauthorized_rejection:authorized', 'unauthorized_rejection:unauthorized', 'unauthorized_rejection:owner_only',
+        'tool_recovery:tool_failure', 'tool_recovery:bounded_response', 'handoff_recovery:agent_failure', 'handoff_recovery:bounded_response', 'evidence_integrity:complete', 'cross_agent_conflict:complete', 'graceful_degradation:complete', 'independent_verification:complete', 'clean_room_audit:complete', 'continuous_revalidation:complete']
+    assert len(row['source_pinned_cloud_transport_cases']) == 41
+    assert 'broad_transfer:complete' in row['source_pinned_cloud_transport_cases']
+    assert 'broad_transfer:complete' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'cross_verification:complete' in row['distinct_zero_model_event_adapter_cases']
+    assert 'cross_verification:complete' not in row['source_pinned_cloud_transport_cases']
+    assert 'collaboration:complete' in row['distinct_zero_model_event_adapter_cases']
+    assert 'collaboration:complete' not in row['source_pinned_cloud_transport_cases']
+    assert 'independent_verification:complete' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'independent_verification:complete' not in row['source_pinned_cloud_transport_cases']
+    assert 'tools:complete' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'tools:complete' not in row['source_pinned_cloud_transport_cases']
+    assert 'clean_room_audit:complete' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'clean_room_audit:complete' not in row['source_pinned_cloud_transport_cases']
     assert 'baseline:authorization' in row['source_pinned_cloud_transport_cases']
     assert 'authority:complete' not in row['locally_actionable_missing_case_adapter_ids']
     assert 'unauthorized_rejection:authorized' not in row['locally_actionable_missing_case_adapter_ids']
-    assert 'unauthorized_rejection:unauthorized' in row['locally_actionable_missing_case_adapter_ids']
-    assert 'unauthorized_rejection:owner_only' in row['locally_actionable_missing_case_adapter_ids']
+    assert 'unauthorized_rejection:unauthorized' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'unauthorized_rejection:owner_only' not in row['locally_actionable_missing_case_adapter_ids']
+    assert 'unauthorized_rejection:owner_only' not in row['source_pinned_cloud_transport_cases']
     assert 'general:artifact_consume' not in row['locally_actionable_missing_case_adapter_ids']
     assert 'missing_event_executor_oracle_ids' not in row
     assert 'locally_actionable_missing_quality_adapter_ids' not in row
@@ -59,7 +90,7 @@ def test_eight_secondary_source_oracles_have_only_explicit_prepared_transport(in
     secondary = [r for r in inventory['capability_rows'] if not r['primary_capability']]
     assert len(secondary) == 8
     for row in secondary:
-        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:initialization', 'role:normal']
+        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:identity', 'baseline:initialization', 'role:normal']
         assert row['source_pinned_cloud_transport_cases'] == ['role:normal']
         assert row['cloud_transport_missing_for_ready_quality_cases'] == []
         assert row['generic_queue_observer_quality_gap_cases'] == []

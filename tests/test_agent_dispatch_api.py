@@ -29,6 +29,28 @@ class AgentDispatchTests(HarnessApiTests):
         assert '07:43Z' not in instructions and 'retry.submit' not in instructions
         assert 'sample-service' not in instructions and '2024' not in instructions
 
+    def test_strict_json_self_check_is_generic_and_preserves_request(self):
+        prefixes = []
+        for capability in ('responsibility.a12', 'responsibility.a17',
+                           'responsibility.a05', 'responsibility.a29'):
+            request = AgentRequest(capability=capability, objective='Return only requested fields.',
+                context='PUBLIC source=probe; supplied value=7', response_format='strict_json',
+                task_class='planning', minimum_tier='MINI', data_classification='LOCAL_ONLY', max_cost_usd=0)
+            original = request.model_dump_json()
+            prompt = inference_prompt(request, Tier.MINI)
+            prefix = prompt.split('Role:', 1)[0]
+            prefixes.append(prefix)
+            assert 'independently verify your draft' in prefix
+            assert 'field types and representations' in prefix
+            assert 'recompute quantitative' in prefix
+            assert 'boundaries and constraints' in prefix
+            assert 'PUBLIC source=probe' not in prefix and capability not in prefix
+            assert prompt.endswith('Objective:\n'+request.objective+'\nContext:\n'+request.context)
+            assert request.model_dump_json() == original
+            ordinary = request.model_copy(update={'response_format': 'text'})
+            assert 'independently verify your draft' not in inference_prompt(ordinary, Tier.MINI)
+        assert len(set(prefixes)) == 1
+
     def test_strict_json_contract_reaches_durable_queue(self):
         request={'capability':'responsibility.a19','objective':'Classify yes or no.',
                  'task_class':'classification','response_format':'strict_json'}
@@ -38,6 +60,7 @@ class AgentDispatchTests(HarnessApiTests):
         assert accepted.status_code==202,accepted.text
         identifier=accepted.json()['job']['id']
         assert compute_queue_api.queue.get(identifier)['response_format']=='strict_json'
+        assert 'independently verify your draft' in compute_queue_api.queue.get(identifier)['prompt']
 
     def setUp(self):
         super().setUp()

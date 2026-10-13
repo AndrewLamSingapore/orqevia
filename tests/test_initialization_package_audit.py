@@ -25,6 +25,30 @@ def test_all_29_original_cases_pass_unchanged_protected_oracle_without_claims(tm
     assert result['time_scope']=='LOCAL_NONPROTECTED_AUDIT_ONLY'
 
 
+def test_historical_package_rejects_current_changed_source_closure():
+    plan,_,_,_=evidence()
+    with pytest.raises(ValueError,match='Protected reviewed-case admission rejected'):
+        audit(plan,local_audit_at=datetime.now(timezone.utc))
+
+
+def test_all_29_historical_originals_are_intact_but_not_current_oracle_admissions():
+    plan,_,_,_=evidence()
+    now=datetime.now(timezone.utc)
+    seen=set()
+    for entry in plan['cases']:
+        row=entry['record_established_fields']
+        seen.add((row['agent_id'],row['capability_id']))
+        path=ROOT/entry['evidence_directory']/row['agent_id']
+        primary=(path/'execution.json').read_bytes()
+        reviewed=(path/'review.json').read_bytes()
+        assert hashlib.sha256(primary).hexdigest()==entry['execution_sha256']
+        assert hashlib.sha256(reviewed).hexdigest()==entry['review_sha256']
+        # Historical observations remain immutable, not fresh current admissions.
+        with pytest.raises(ValueError,match='IDENTITY_ORACLE_FAILED'):
+            probe_case(entry,primary,reviewed,local_audit_at=now)
+    assert len(seen)==29
+
+
 def test_current_changed_closure_rejects_the_original_package():
     plan,_,_,_=evidence()
     with pytest.raises(ValueError, match='Protected reviewed-case admission rejected'):

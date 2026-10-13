@@ -146,7 +146,7 @@ def test_distinct_source_owned_cases_same_agent_can_be_batched_without_agent22()
         item = entry()
         item['record']['dimension'], item['record']['test_case'] = case.split(':')
         entries.append(item)
-    assert len(loader.parse(manifest(entries))) == 20
+    assert len(loader.parse(manifest(entries))) == 21
     with pytest.raises(ValueError):
         loader.parse(manifest(entries + [deepcopy(entries[0])]))
 

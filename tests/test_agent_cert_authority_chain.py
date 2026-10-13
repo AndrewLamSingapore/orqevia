@@ -27,6 +27,9 @@ CODE = 'f' * 40
 def runtime(configured, monkeypatch):
     from app import artifact_delivery, client_auth, compute_queue_api, objective_api
     from app.action_records import ActionLedger
+    from app.spine import SpineStore
+    monkeypatch.setenv('PRIME_SPINE_DB', str(configured.root / 'prime-spine.db'))
+    SpineStore(str(configured.root / 'prime-spine.db'))
     monkeypatch.setenv('PRIME_SPINE_TOKEN', TOKEN)
     for module in (dispatch, objective_api, api, artifact_delivery):
         monkeypatch.setattr(module, 'authenticate_owner', client_auth.authenticate_owner)
@@ -123,7 +126,7 @@ def test_authenticated_http_original_domains_separate_a26_review_and_pure_signer
     content = json.loads(result.reviewer_artifact_bytes)
     assert content['schema_version'] == contracts.AUTHORITY_REVIEW_SCHEMA
     assert content['dimension'] == review['dimension'] == case_id.split(':')[0]
-    assert content['subject_domain_join']['consequential_guard_denial_proven'] is False
+    assert content['subject_domain_join']['consequential_guard_denial_proven'] is (case_id == events.DENIAL_CASE)
     assert content['subject_domain_join']['completed_at'] == execution['dispatch']['authority_event']['completed_at']
     assert recompute(signer_row(result), result.execution_bytes, result.review_bytes) is True
     assert all(reply.body_complete for reply in runtime.operator.original_replies())
@@ -140,8 +143,11 @@ def test_exact_cases_do_not_accept_model_answers_or_borrowed_capabilities(case_i
 
 
 @pytest.mark.parametrize('case_id', events.UNREADY_CASES)
-def test_consequential_cases_remain_unready_not_simulated_denial(runtime, case_id):
-    with pytest.raises(ValueError): contracts.canonical_case_spec('a19', 'responsibility.a19', case_id)
+def test_original_authority_route_rejects_separately_implemented_owner_case(runtime, case_id):
+    from app import agent_cert_owner_referral_events as owner_events
+    assert case_id == owner_events.CASE
+    assert contracts.canonical_case_spec('a19', 'responsibility.a19', case_id) == owner_events.canonical_owner_case()
+    with pytest.raises(ValueError): events.canonical_authority_case(case_id)
     reply = runtime.client.get('/api/agent-cert-events/actions/' + NONCE,
         params={'action_type': 'agent.certification.authority.' + case_id.split(':')[1]},
         headers={'Authorization': 'Bearer ' + TOKEN})
@@ -342,7 +348,10 @@ def test_new_chain_is_selected_and_protected_hash_scope_includes_frozen_producer
     from scripts.sign_admitted_agent_cases import CODE_FILES
     from scripts.agent_cert_readiness import EVENT_CASES, SOURCE_FILES
     assert set(events.SUPPORTED_CASES) <= EVENT_CASES
-    assert not set(events.UNREADY_CASES) & EVENT_CASES
+    from app import agent_cert_owner_referral_events as owner_events
+    assert set(events.UNREADY_CASES) == {owner_events.CASE}
+    assert owner_events.CASE in EVENT_CASES
+    assert owner_events.CASE not in events.SUPPORTED_CASES
     assert 'app/agent_cert_authority_events.py' in CODE_FILES and 'app/agent_cert_authority_events.py' in SOURCE_FILES
     root = Path(__file__).resolve().parents[1]
     tree = ast.parse((root / 'scripts/run_canonical_ci.py').read_text())

@@ -247,11 +247,14 @@ def _observe_runtime_artifact(spec, base, *, dispatch, get_artifact, get_runtime
 
 def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_runtime,
                                      expected_source_revision, expected_registry_sha256,
-                                     started, timeout_seconds, monotonic, wall_clock):
+                                     started, timeout_seconds, monotonic, wall_clock, owned_identity=False):
     """Observe the distinct owned-contract inspection, never an identity clone."""
     from .agent_cert_initialization import MAX_BYTES, validate_initialization_report
+    if owned_identity:
+        from .agent_cert_owned_identity import validate_identity_report as validate_initialization_report
     agent, capability = spec.get('agent_id'), spec.get('capability_id')
-    if _canonical(spec) != _canonical(challenge('baseline:initialization', agent_id=agent,
+    fixed_case = 'baseline:identity' if owned_identity else 'baseline:initialization'
+    if _canonical(spec) != _canonical(challenge(fixed_case, agent_id=agent,
                                                 capability_id=capability)):
         return {**base, 'state': 'REJECTED', 'reason': 'initialization_case_source_mismatch'}
     if (not callable(get_artifact) or not callable(get_runtime)
@@ -328,21 +331,24 @@ def _observe_initialization_artifact(spec, base, *, dispatch, get_artifact, get_
             'result_sha256': metadata['sha256'],
             'artifact_metadata_sha256': hashlib.sha256(_canonical(metadata)).hexdigest(),
             'started_at': began.isoformat(), 'completed_at': ended.isoformat(),
-            'captured_at': captured.isoformat(), 'case_review': 'INITIALIZATION_ARTIFACT_CHECK_PASS',
+            'captured_at': captured.isoformat(), 'case_review': 'OWNED_IDENTITY_ARTIFACT_CHECK_PASS' if owned_identity else 'INITIALIZATION_ARTIFACT_CHECK_PASS',
             'review_errors': ()}
 
 
 def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
                             expected_source_revision, expected_registry_sha256,
-                            started, timeout_seconds, monotonic, wall_clock, authority=False):
+                            started, timeout_seconds, monotonic, wall_clock, authority=False, tool=False):
     """Observe fixed actual artifact work, not a model answer or complete review."""
-    if authority:
+    if tool:
+        from . import agent_cert_tool_events as events
+        fixed = events.canonical_tool_case(spec.get('case'))
+    elif authority:
         from . import agent_cert_authority_events as events
         fixed = events.canonical_authority_case(spec.get('case'))
     else:
         from . import agent_cert_artifact_events as events
         fixed = events.canonical_artifact_case(spec.get('case'))
-    event_key = 'authority_event' if authority else 'artifact_event'
+    event_key = 'tool_event' if tool else 'authority_event' if authority else 'artifact_event'
     if _canonical(spec) != _canonical(fixed):
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_case_source_mismatch'}
     if (not callable(get_artifact) or not callable(get_runtime)
@@ -374,7 +380,7 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_identity_mismatch'}
     event_began, event_ended = _time(event.get('started_at')), _time(event.get('completed_at'))
     if (event.get('schema_version') != events.EVENT_SCHEMA or event.get('case') != fixed['case']
-            or event.get('case_version') != events.CASE_VERSION or event.get('task_id') != task
+            or event.get('case_version') != fixed['case_version'] or event.get('task_id') != task
             or event.get('source_revision') != expected_source_revision
             or event.get('registry_sha256') != expected_registry_sha256
             or event.get('case_spec_sha256') != events.sha(events.canonical(fixed))
@@ -392,10 +398,40 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
             or type(retrieved[0]) is not dict or type(retrieved[1]) is not bytes):
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_read_invalid'}
     metadata, raw = retrieved
-    expected_raw = (events.expected_result_bytes(fixed['case'],
+    if tool and fixed['case'] in events.HANDOFF_CASES:
+        from .agent_cert_handoff_gap import validate_assessment
+        validate_assessment(raw,fixed['request']['context'].encode(),event['original_failed_peer'],
+            runtime=before,registry_sha256=expected_registry_sha256,task_id=task,
+            now=event_began)
+        expected_raw=raw
+    elif tool and fixed['case'] == events.MODELS_CASE:
+        from .agent_cert_model_selection import independently_validate_report
+        independently_validate_report(raw, fixed['request']['context'].encode(),
+            event['original_model_snapshot'])
+        expected_raw = raw
+    elif tool and fixed['case'] == events.HEALTH_CASE:
+        events.validate_health_assessment(raw, fixed['request']['context'].encode(),
+            events.parse(raw).get('observed_action_records'), task, expected_source_revision)
+        expected_raw = raw
+    elif tool and fixed['case'] == events.REVALIDATION_CASE:
+        from .agent_cert_revalidation import validate_assessment
+        validate_assessment(raw, fixed['request']['context'].encode(), expected_source_revision,
+            event_began, event_ended)
+        expected_raw = raw
+    else:
+        expected_raw = (events.expected_result_bytes(fixed['case'],
         events.current_authority_policy(expected_registry_sha256),
-        events.sha(events.canonical(events._snapshot(event.get('read_domains_before'))))) if authority
-        else events.expected_artifact_bytes(fixed['case']))
+        events.sha(events.canonical(events._snapshot(event.get('read_domains_before')))),
+        admission=event.get('admission')) if authority
+        else events.expected_artifact_bytes(fixed['case'], **(
+            {'available_bytes': events.input_bytes(fixed['case'])}
+            if tool and fixed['case'] in events.AVAILABLE_CASES else {}), **(
+            {'registry_sha256': expected_registry_sha256}
+            if fixed['case'] == 'context_integrity:complete' else {}), **(
+            {'task_id': task, 'input_artifact': event.get('input_artifact_metadata'),
+             **({'prior_artifact': event.get('prior_artifact_metadata')}
+                if fixed['case'] in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else {})}
+            if fixed['case'] in {'general:handoff', 'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'} else {})))
     if events.canonical(metadata) != events.canonical(declared) or raw != expected_raw:
         return {**base, 'state': 'REJECTED', 'reason': 'artifact_binding_mismatch'}
     events._metadata(metadata, raw, task, expected_source_revision, began=event_began, ended=event_ended)
@@ -413,7 +449,8 @@ def _observe_artifact_event(spec, base, *, dispatch, get_artifact, get_runtime,
         'runtime_identity_sha256': events.sha(events.canonical(before)), 'result_sha256': events.sha(raw),
         'artifact_metadata_sha256': events.sha(events.canonical(metadata)),
         'started_at': began.isoformat(), 'captured_at': event_began.isoformat(), 'completed_at': ended.isoformat(),
-        'case_review': ('AUTHORITY_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED' if authority else
+        'case_review': ('TOOL_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED' if tool else
+            'AUTHORITY_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED' if authority else
             'ARTIFACT_EVENT_RESULT_CHECK_PASS_ORIGINAL_JOINS_REQUIRED'), 'review_errors': ()}
 
 
@@ -511,14 +548,35 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
                 timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
-        if spec.get('case') == 'baseline:initialization':
+        if spec.get('case') in {'baseline:identity', 'baseline:initialization'}:
             if cloud_receipt is not None:
                 return {**base, 'state': 'REJECTED', 'reason': 'initialization_cloud_transport_forbidden'}
             return _observe_initialization_artifact(
                 spec, base, dispatch=dispatch, get_artifact=get_artifact,
                 get_runtime=get_runtime, expected_source_revision=expected_source_revision,
                 expected_registry_sha256=expected_registry_sha256, started=started,
-                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock,
+                owned_identity=spec['case'] == 'baseline:identity')
+        if spec.get('case') == 'cross_agent_conflict:complete':
+            return {**base,'state':'REJECTED','reason':'original_four_task_unresolved_conflict_collector_required'}
+        if spec.get('case') == 'unauthorized_rejection:owner_only':
+            return {**base, 'state': 'REJECTED', 'reason': 'original_owner_referral_ack_collector_required'}
+        if spec.get('case') == 'conflict_resolution:complete':
+            return {**base,'state':'REJECTED','reason':'original_four_task_conflict_collector_required'}
+        if spec.get('case') == 'recovery:complete':
+            # This case owns two persisted subject tasks and a third persisted
+            # peer Objective. A single generic dispatch cannot observe that
+            # original chain or substitute a model answer for it.
+            return {**base, 'state': 'REJECTED',
+                'reason': 'original_two_task_recovery_collector_required'}
+        from .agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
+        if spec.get('case') in TOOL_CASES:
+            if cloud_receipt is not None:
+                return {**base, 'state': 'REJECTED', 'reason': 'tool_cloud_transport_forbidden'}
+            return _observe_artifact_event(spec, base, dispatch=dispatch, get_artifact=get_artifact,
+                get_runtime=get_runtime, expected_source_revision=expected_source_revision,
+                expected_registry_sha256=expected_registry_sha256, started=started,
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock, tool=True)
         from .agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
         if spec.get('case') in ARTIFACT_CASES:
             if cloud_receipt is not None:

@@ -30,6 +30,16 @@ def test_actual_29_custody_validated_with_fake_guard_fixed24h_source_test_only(t
         assert datetime.fromisoformat(row['expires_at'])-boundary==timedelta(hours=24)
 
 
+def test_historical_29_package_rejects_current_changed_source_closure():
+    plan=json.loads((v.ROOT/v.PLAN).read_bytes())
+    started=datetime.now(timezone.utc)
+    # A fake protected GitHub guard cannot authorize changed verifier bytes.
+    # No validation boundary, renewal or proposed admissions may be emitted.
+    with pytest.raises(ValueError,match='Protected reviewed-case admission rejected'):
+        v.protected_validation(plan,env=ENV,checkout_head=SHA,github_read=read,
+                               clock=lambda:started)
+
+
 def test_changed_current_source_cannot_admit_original_custody():
     plan=json.loads((v.ROOT/v.PLAN).read_bytes())
     with pytest.raises(ValueError, match='Protected reviewed-case admission rejected'):

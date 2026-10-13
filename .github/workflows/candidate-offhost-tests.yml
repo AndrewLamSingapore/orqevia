@@ -20,9 +20,8 @@ concurrency:
 jobs:
   tests:
     runs-on: windows-latest
-    # Original PR231 job completed its Python suite in 953.30s after setup and
-    # 172.44s of backend gates, reaching the 20m ceiling before PWA could run.
-    timeout-minutes: 30
+    # The complete Windows suite reached 99% at the former 30-minute cutoff.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -49,7 +48,15 @@ jobs:
           tests/test_live_lease_enforcement.py
           tests/test_measured_compute_profile.py
       - name: Python regression suite
-        run: python -B -m pytest -q -p no:cacheprovider
+        run: python -B -m pytest -q -p no:cacheprovider --junitxml=windows-regression-results.xml
+      - name: Preserve Windows regression diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-regression-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: windows-regression-results.xml
+          if-no-files-found: warn
+          retention-days: 7
       - name: PWA regression suite
         shell: pwsh
         run: |

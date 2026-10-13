@@ -1,0 +1,88 @@
+{
+  "schema": "prime.owner-selected-runtime-reference.v1",
+  "observed_at": "2026-10-10T00:11:49.066299+00:00",
+  "owner_directive": "governance/OWNER_EXECUTION_20261010.md",
+  "source_observed_main": "d9a4e0bdd733a4908e9fa239f6b24bef3c2dce79",
+  "selection_scope": "UPDATED_EXISTING_ACCEPTED_RUNTIME_REFERENCE_NOT_NEW_GOLDEN_QUALIFICATION",
+  "accepted_source": "61335a96293be627b240488debfb94294cdf9b34",
+  "accepted_backend_image": "sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68",
+  "runtime_observation": "EXACT_EXISTING_SERVICES_RESTARTED_HEALTHY",
+  "full_l7_agents": 0,
+  "full_l7_capabilities": 0,
+  "new_deployments": 0,
+  "permanent_stability": "NOT_ESTABLISHED",
+  "source_readiness_not_live_certification": true,
+  "historical_frozen_golden_manifest": "governance/golden-gen2-manifest.json",
+  "historical_frozen_golden_manifest_sha256": "8c013e913e4a75df737346ea98bfdd531afcb9a39bd21bdb1c9c406d64b2fbc0",
+  "supersession": "Older operating priorities and backend-current references are superseded for this session; historical evidence and rollback assets remain immutable.",
+  "supplied_directives": [
+    {
+      "title": "ABEX stability",
+      "attachment_id": "ff457b2b-0e60-4243-b3d9-699a1cd02f35",
+      "sha256": "b396afa9f92a01beecfa8290074cf7ddc186f9928d61d430acd223ab06568797"
+    },
+    {
+      "title": "SOUP assurance",
+      "attachment_id": "f2c917a9-91a7-450e-8c6f-9a2c385efe9e",
+      "sha256": "68ee8f790aed2eada49f0645c62e85846edbc970297edd14e373dd94467937df"
+    },
+    {
+      "title": "L7 and subsequent qualification",
+      "attachment_id": "ef9df00e-441b-4f24-8022-5ff7874e2bae",
+      "sha256": "6991d3e47e43370cbfd03cd5f9b276c72259ab845bcf963e28607201bc448ff2"
+    },
+    {
+      "title": "Master restart and certification",
+      "attachment_id": "bcab757c-6eac-4bb3-bbf9-bc3df0fc9b84",
+      "sha256": "ffc07c35ca683d95c4bdb6a1b1c729f0fe5227a6b8d32962b5ad583121af0ac8"
+    },
+    {
+      "title": "DeepInfra Qwen recovery",
+      "attachment_id": "4eedc93c-c8a4-4f53-84ae-8a1a7331b071",
+      "sha256": "4081cb7ac8e8df74f027c98361a7cbe5fa58e1c1d5ba5b79e6abe712a5790486"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/resume-20261010/restart-receipt.json",
+      "sha256": "1e3bd67eab876451065fe630e31ca8a49feefc872ffcb340d56f05e342344bfe",
+      "bytes": 3348
+    },
+    {
+      "path": "docs/evidence/resume-20261010/LEXAR-NVME-RESUME-VALIDATION-20261010.json",
+      "sha256": "2a4f5e000b329f81637082bec51516f13bd8da55b504f7439cac3074b41db1fc",
+      "bytes": 1284
+    },
+    {
+      "path": "docs/evidence/resume-20261010/ACCEPTED-REGISTRY-ACTUAL-POPULATION-20261010.receipt.json",
+      "sha256": "4be45ba43ce383b9c5faeeae7e190363a1f709755d07eead0e6a6ef732b15fce",
+      "bytes": 8565
+    },
+    {
+      "path": "docs/evidence/resume-20261010/ACCEPTED-CERTIFICATION-DOMAIN-ACTUAL-20261010.receipt.json",
+      "sha256": "6c4c07e20b39b752fd99ec82d14298e25afe2d410c44e629d83c5062240712c1",
+      "bytes": 192697
+    },
+    {
+      "path": "docs/evidence/resume-20261010/QUEUE-PRE-SHUTDOWN.json",
+      "sha256": "e20d32ab3a5fc41397cf9136f0442eb9a7ff33e6c39da70375a8eff8b75698ad",
+      "bytes": 370
+    },
+    {
+      "path": "docs/evidence/resume-20261010/source-readiness-main.json",
+      "sha256": "746e5ff6415a36d576a0bd83c7b9fecbba8766a9a0c5562dd38b7c9b26ded2be",
+      "bytes": 176740
+    }
+  ],
+  "release_candidate": {
+    "pr": 225,
+    "source": "1658dc83dd6c067a36f3b916fadef53a10c8951d",
+    "state": "SOURCE_GATES_PASSED_NOT_DEPLOYED_EXACT_RELEASE_DECISION_REQUIRED"
+  },
+  "next_actions": [
+    "Complete independent context/identity source qualification",
+    "Complete cancelled PR226 off-host Windows/image gate",
+    "Prepare exact PR225 current-data rollback/cutover and obtain required release decision",
+    "Execute mandatory authenticated case chains and independent protected review/signing; never award from source tests"
+  ]
+}

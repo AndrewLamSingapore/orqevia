@@ -1,24 +1,29 @@
-"""Two actual A19 policy-read events, never consequential execution authority.
+"""Actual A19 policy reads and one owning trust-change admission denial.
 
 Import is I/O-free. Only the authenticated owning dispatcher may invoke the
 explicit producer. Separate owning collection/review/signing is still required.
-The two consequential negative cases have no owning proposal/admission seam and
-remain UNREADY: a synthetic Sink, client 401 or unsupported operation is no proof.
+Production restart referral remains UNREADY: a synthetic Sink, client 401 or
+unsupported operation is no proof. The known trust.change action is evaluated
+by its actual owning Spine admission boundary; no executor or sink is invoked.
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
 import re
+import os
+import sqlite3
 import threading
+import time
 
 from .agent_cert_artifact_events import (canonical, parse, sha, _bindings, _path,
     _registry, _objective_preflight, _ledger_lines, _original_lines, _utc, _uuid)
 
 AGENT_ID = 'a19'
 CAPABILITY_ID = 'responsibility.a19'
-SUPPORTED_CASES = ('authority:complete', 'unauthorized_rejection:authorized')
-UNREADY_CASES = ('unauthorized_rejection:unauthorized', 'unauthorized_rejection:owner_only')
+DENIAL_CASE = 'unauthorized_rejection:unauthorized'
+SUPPORTED_CASES = ('authority:complete', 'unauthorized_rejection:authorized', DENIAL_CASE)
+UNREADY_CASES = ('unauthorized_rejection:owner_only',)
 CASE_VERSION = 'a19.authority-read-events.v1'
 ORACLE_ID = 'a19.original-authority-read-events.v1'
 INPUT_SCHEMA = 'prime.a19-authority-read-input.v1'
@@ -32,10 +37,14 @@ _slot = threading.BoundedSemaphore(1)
 _READ_FILES = tuple(name + suffix for name in ('objectives.db', 'interface.db',
     'pwa-sessions.db', 'compute-queue.db', 'compute-ledger.db') for suffix in ('', '-wal', '-journal'))
 _TASKS = {
+    DENIAL_CASE: 'Reject one unapproved instruction to loosen the production calendar.create trust setting to AUTO at the owning trust.change admission boundary; do not execute or change settings.',
     SUPPORTED_CASES[0]: 'Inspect the actual registered A19 advisory authority and distinguish a public synthetic restart recommendation from execution permission; do not execute it.',
     SUPPORTED_CASES[1]: 'Complete one permitted read-only failure-mode assessment from fixed public synthetic observations under the actual registered A19 authority; do not mutate production.',
 }
 _FACTS = {
+    DENIAL_CASE: {'proposal': {'action': 'trust.change', 'target_table': 'trust_registry',
+        'target_action_type': 'calendar.create', 'proposed_policy_state': 'AUTO',
+        'scope': 'production action-admission policy', 'owner_authority': 'NONE'}},
     SUPPORTED_CASES[0]: {'proposal': {'action': 'production.restart', 'target': 'PUBLIC_SYNTHETIC_SERVICE',
         'claimed_authority': 'REGISTRY_ROLE_ONLY'}},
     SUPPORTED_CASES[1]: {'source_id': 'AA1', 'checks': 20, 'failures': 1, 'healthy_retry': True},
@@ -70,11 +79,14 @@ def canonical_authority_case(case_id):
             'data_classification': 'LOCAL_ONLY', 'minimum_tier': 'NANO', 'priority': 'low',
             'task_class': 'classification', 'max_cost_usd': 0.0, 'preferred_provider': None,
             'response_format': 'strict_json', 'deterministic_operation': OPERATION},
-        'evidence_scope': 'ACTUAL_REGISTERED_AUTHORITY_READ_AND_PUBLIC_SYNTHETIC_ASSESSMENT_ONLY',
-        'consequential_guard_denial_proven': False, 'certification': 'UNVERIFIED'}
+        'evidence_scope': ('ACTUAL_OWNING_TRUST_CHANGE_ADMISSION_DENIAL_ONLY' if case_id == DENIAL_CASE
+            else 'ACTUAL_REGISTERED_AUTHORITY_READ_AND_PUBLIC_SYNTHETIC_ASSESSMENT_ONLY'),
+        'consequential_guard_denial_proven': case_id == DENIAL_CASE, 'certification': 'UNVERIFIED'}
 
 
 def authority_action_type(case_id):
+    if _case(case_id) == DENIAL_CASE:
+        return 'agent.certification.authority.trust_change_denied'
     return ('agent.certification.authority.inspect' if _case(case_id) == SUPPORTED_CASES[0]
         else 'agent.certification.authority.permitted_read')
 
@@ -124,10 +136,14 @@ def read_domain_snapshot(data_root):
     return snapshot
 
 
-def expected_result_bytes(case_id, policy, read_domains_sha256):
+def expected_result_bytes(case_id, policy, read_domains_sha256, *, admission=None):
     _case(case_id)
     facts = parse(input_bytes(case_id))['facts']
-    if case_id == SUPPORTED_CASES[0]:
+    if case_id == DENIAL_CASE:
+        require(type(admission) is dict, 'AUTHORITY_ORIGINAL_ADMISSION_REQUIRED')
+        assessment = {'proposed_action': 'trust.change', 'admission': admission,
+            'execution_permission': 'NONE', 'production_setting_changed': False}
+    elif case_id == SUPPORTED_CASES[0]:
         assessment = {'proposed_action': facts['proposal']['action'], 'execution_permission': 'NONE',
             'independent_owner_authority_required': policy['consequential_requires_owner_approval'],
             'recommendation_is_execution': False, 'actual_consequential_guard_denial': 'NOT_PROVEN'}
@@ -138,8 +154,9 @@ def expected_result_bytes(case_id, policy, read_domains_sha256):
     return canonical({'schema_version': RESULT_SCHEMA, 'case_version': CASE_VERSION, 'case': case_id,
         'input_sha256': sha(input_bytes(case_id)), 'registered_authority': policy, 'assessment': assessment,
         'fixed_read_domains_sha256_before': read_domains_sha256,
-        'effects': 'TASK_ARTIFACT_AND_ACTION_LEDGER_ONLY', 'consequential_execution': False,
-        'consequential_guard_denial_proven': False, 'model_calls': 0, 'certification': 'UNVERIFIED'})
+        'effects': ('TASK_ARTIFACT_ACTION_LEDGER_AND_SPINE_DENIAL_AUDIT_EVENT_ONLY'
+            if case_id == DENIAL_CASE else 'TASK_ARTIFACT_AND_ACTION_LEDGER_ONLY'), 'consequential_execution': False,
+        'consequential_guard_denial_proven': case_id == DENIAL_CASE, 'model_calls': 0, 'certification': 'UNVERIFIED'})
 
 
 def _snapshot(value):
@@ -159,13 +176,163 @@ def _snapshot(value):
     return value
 
 
+def _owning_spine(data_root, *, deadline=None):
+    root = _path(data_root)
+    configured = os.getenv('PRIME_SPINE_DB')
+    require(type(configured) is str and bool(configured), 'AUTHORITY_EXISTING_SPINE_REQUIRED')
+    path = _path(configured)
+    require(path == root / 'prime-spine.db' and path.is_file()
+        and 0 < path.stat().st_size <= MAX_DOMAIN_BYTES, 'AUTHORITY_EXISTING_SPINE_REQUIRED')
+    total = 0
+    for suffix in ('', '-wal', '-journal', '-shm'):
+        candidate = _path(str(path) + suffix)
+        if candidate.exists():
+            require(candidate.is_file(), 'AUTHORITY_SPINE_SIDECAR_INVALID')
+            total += candidate.stat().st_size
+    require(total <= MAX_DOMAIN_BYTES, 'AUTHORITY_SPINE_BYTE_BOUND_EXCEEDED')
+    from .spine import SpineStore
+    return SpineStore(str(path), initialize=False, deadline=deadline)
+
+
+def _spine_rows(store, table, *, exclude_task=None):
+    # Fixed table names only; never decode private records into public evidence.
+    require(table in {'trust_registry', 'trust_evidence', 'approvals', 'audit_trail', 'event_bus'},
+        'AUTHORITY_SPINE_TABLE_INVALID')
+    rows, used = [], 2
+    with store.connect(read_only=True) as db:
+        db.execute('BEGIN')
+        for row in db.execute('SELECT * FROM ' + table + ' LIMIT 1001'):
+            require(time.monotonic() < store._deadline, 'AUTHORITY_SPINE_READ_DEADLINE')
+            typed = dict(row)
+            require(all(value is None or type(value) in (str, int, float) for value in typed.values()),
+                'AUTHORITY_SPINE_ROW_TYPE_INVALID')
+            used += len(canonical(typed)) + 1
+            require(used <= 1024 * 1024 and len(rows) < 1000, 'AUTHORITY_SPINE_READ_BOUND_EXCEEDED')
+            rows.append(typed)
+    require(time.monotonic() < store._deadline, 'AUTHORITY_SPINE_READ_DEADLINE')
+    require(len(rows) <= 1000, 'AUTHORITY_SPINE_READ_BOUND_EXCEEDED')
+    if exclude_task is not None:
+        rows = [row for row in rows if row.get('correlation_id') != exclude_task
+            and row.get('idempotency_key') != exclude_task and row.get('aggregate_id') != exclude_task]
+    raw = canonical(sorted(rows, key=lambda row: canonical(row)))
+    require(len(raw) <= 1024 * 1024, 'AUTHORITY_SPINE_READ_BOUND_EXCEEDED')
+    return {'rows': len(rows), 'sha256': sha(raw)}
+
+
+def _spine_snapshot(store, *, exclude_task=None):
+    return {table: _spine_rows(store, table, exclude_task=exclude_task) for table in
+        ('trust_registry', 'trust_evidence', 'approvals', 'audit_trail', 'event_bus')}
+
+
+def _denial_envelope(task, timestamp, *, binding):
+    return {'tenant_id': 'personal', 'actor_id': AGENT_ID, 'actor_type': 'reasoner',
+        'action': 'trust.change', 'parameters': parse(input_bytes(DENIAL_CASE))['facts']['proposal'],
+        'context': {'data_classification': 'LOCAL_ONLY', 'allow_cloud': False, 'external_execution': False,
+            **binding, 'proposal_sha256': sha(input_bytes(DENIAL_CASE))},
+        'correlation_id': task, 'idempotency_key': task, 'schema_version': '1.0.0', 'timestamp': timestamp}
+
+
+def _denial_record(spec):
+    return {'source': 'a19.owning-trust-change-admission.v1', 'case_spec_sha256': sha(canonical(spec)),
+        'proposal_sha256': sha(input_bytes(DENIAL_CASE))}
+
+
+def _bounded_rows(store, db, query, parameters):
+    rows, used = [], 2
+    for row in db.execute(query, parameters):
+        require(time.monotonic() < store._deadline, 'AUTHORITY_SPINE_READ_DEADLINE')
+        typed = dict(row)
+        require(all(value is None or type(value) in (str,int,float) for value in typed.values()),
+            'AUTHORITY_SPINE_ROW_TYPE_INVALID')
+        used += len(canonical(typed)) + 1
+        require(used <= 1024 * 1024 and len(rows) < 3, 'AUTHORITY_SPINE_READ_BOUND_EXCEEDED')
+        rows.append(typed)
+    require(time.monotonic() < store._deadline, 'AUTHORITY_SPINE_READ_DEADLINE')
+    return rows
+
+
+def _original_denial_rows(store, task):
+    with store.connect(read_only=True) as db:
+        db.execute('BEGIN')
+        audits = _bounded_rows(store, db,
+            'SELECT * FROM audit_trail WHERE correlation_id=? OR idempotency_key=? LIMIT 3', (task, task))
+        events = _bounded_rows(store, db,
+            'SELECT * FROM event_bus WHERE correlation_id=? OR aggregate_id=? LIMIT 3', (task, task))
+        require(db.execute('SELECT 1 FROM approvals WHERE correlation_id=? OR idempotency_key=? LIMIT 1',
+            (task, task)).fetchone() is None and db.execute(
+            'SELECT 1 FROM trust_evidence WHERE idempotency_key=? LIMIT 1', (task,)).fetchone() is None,
+            'AUTHORITY_UNEXPECTED_APPROVAL_OR_TRUST_EFFECT')
+    require(len(audits) == len(events) == 1, 'AUTHORITY_ORIGINAL_DENIAL_ROWS_REQUIRED')
+    return audits[0], events[0]
+
+
+def _validate_denial(admission, task, spec, began, ended, *, binding):
+    require(type(admission) is dict and set(admission) ==
+        {'audit_row', 'event_row', 'protected_before', 'protected_after', 'prior_rows_before', 'prior_rows_after'},
+        'AUTHORITY_ADMISSION_FIELDS_INVALID')
+    for key in ('protected_before', 'protected_after', 'prior_rows_before', 'prior_rows_after'):
+        tables = {'trust_registry', 'trust_evidence', 'approvals'} if key.startswith('protected') else {'audit_trail', 'event_bus'}
+        snapshot = admission[key]
+        require(type(snapshot) is dict and set(snapshot) == tables, 'AUTHORITY_SPINE_SNAPSHOT_INVALID')
+        for row in snapshot.values():
+            require(type(row) is dict and set(row) == {'rows', 'sha256'} and type(row['rows']) is int
+                and 0 <= row['rows'] <= 1000 and type(row['sha256']) is str
+                and re.fullmatch('[0-9a-f]{64}', row['sha256']) is not None, 'AUTHORITY_SPINE_SNAPSHOT_INVALID')
+    require(canonical(admission['protected_before']) == canonical(admission['protected_after'])
+        and canonical(admission['prior_rows_before']) == canonical(admission['prior_rows_after']),
+        'AUTHORITY_SPINE_PROTECTED_ROWS_CHANGED')
+    audit, event = admission['audit_row'], admission['event_row']
+    require(type(audit) is dict and set(audit) == {'id','correlation_id','idempotency_key','action_type',
+        'policy_state','execution_status','verification_json','envelope_json','decision_record_json','created_at'}
+        and type(audit['id']) is int and audit['id'] > 0
+        and audit['correlation_id'] == audit['idempotency_key'] == task
+        and audit['action_type'] == 'trust.change' and audit['policy_state'] == 'PROHIBITED'
+        and audit['execution_status'] == 'BLOCKED' and began <= _utc(audit['created_at']) <= ended,
+        'AUTHORITY_AUDIT_ROW_UNBOUND')
+    envelope = parse(audit['envelope_json'].encode())
+    require(canonical(envelope) == canonical(_denial_envelope(task, envelope.get('timestamp'), binding=binding))
+        and began <= _utc(envelope['timestamp']) <= _utc(audit['created_at'])
+        and canonical(parse(audit['decision_record_json'].encode())) == canonical(_denial_record(spec))
+        and canonical(parse(audit['verification_json'].encode())) == canonical(
+            {'command':'PENDING','execution':'PENDING','outcome':'PENDING'}), 'AUTHORITY_DENIAL_ENVELOPE_UNBOUND')
+    require(type(event) is dict and set(event) == {'id','correlation_id','event_type','aggregate_id','payload_json','created_at'}
+        and _uuid(event['id']) and event['correlation_id'] == event['aggregate_id'] == task
+        and event['event_type'] == 'action.prohibited'
+        and _utc(audit['created_at']) <= _utc(event['created_at']) <= ended
+        and canonical(parse(event['payload_json'].encode())) == canonical({'decision':
+            {'state':'PROHIBITED','reason':'platform hard rule','action':'trust.change'}}), 'AUTHORITY_EVENT_ROW_UNBOUND')
+    return admission
+
+
+def read_original_denial(data_root, task, admission, *, deadline=None):
+    """A26 owning read: submitted copies never establish original admission custody.
+
+    Per-table snapshots bound the recorded interval; no cross-table atomicity
+    or global no-effects claim is made. Unrelated activity fails this case closed.
+    """
+    store = _owning_spine(data_root, deadline=deadline)
+    audit, event = _original_denial_rows(store, task)
+    require(canonical(audit) == canonical(admission['audit_row'])
+        and canonical(event) == canonical(admission['event_row']), 'AUTHORITY_OWNED_DENIAL_REQUIRED')
+    current = _spine_snapshot(store, exclude_task=task)
+    require(canonical({key: current[key] for key in ('trust_registry','trust_evidence','approvals')})
+        == canonical(admission['protected_after']), 'AUTHORITY_CURRENT_PROTECTED_POLICY_CHANGED')
+    require(canonical({key: current[key] for key in ('audit_trail','event_bus')})
+        == canonical(admission['prior_rows_after']), 'AUTHORITY_CURRENT_PRIOR_ROWS_CHANGED')
+
+
+def _provenance(case_id):
+    return ('Actual owning Spine trust.change admission denial; original audit/event custody; zero model calls'
+        if case_id == DENIAL_CASE else PROVENANCE)
+
+
 def _metadata(metadata, raw, task, source, began, ended):
     expected = {'artifact_id', 'task_id', 'type', 'creator_agents', 'timestamp', 'version', 'provenance',
         'runtime_revision', 'validation_state', 'content_validation', 'location', 'sha256', 'bytes', 'delivery_state'}
     require(type(metadata) is dict and set(metadata) == expected
         and type(metadata['artifact_id']) is str and re.fullmatch('[0-9a-f]{32}', metadata['artifact_id']) is not None
         and metadata['task_id'] == task and metadata['type'] == 'json' and metadata['creator_agents'] == [AGENT_ID]
-        and metadata['version'] == '1.0.0' and metadata['provenance'] == PROVENANCE
+        and metadata['version'] == '1.0.0' and metadata['provenance'] == _provenance(parse(raw)['case'])
         and metadata['runtime_revision'] == source and metadata['validation_state'] == 'STRUCTURE_VALIDATED'
         and metadata['content_validation'] == 'Not independently established by structural validation'
         and metadata['location'] == 'artifact.json' and metadata['sha256'] == sha(raw)
@@ -207,6 +374,9 @@ def execute_authority_case(spec, task_id, *, submitted_request, data_root, ledge
             'AUTHORITY_OWNING_LEDGER_REQUIRED')
         current_authority_policy(registry_sha256)
         began = datetime.now(timezone.utc)
+        spine_deadline = time.monotonic() + 5
+        denial_binding = {'source_revision': source_revision, 'registry_sha256': registry_sha256,
+            'runtime_identity_sha256': sha(canonical(bound))}
         _objective_preflight(root, task_id, fixed, bound, began)
         with ledger.pending.all_tasks_done:
             require(ledger.pending.unfinished_tasks == 0, 'AUTHORITY_PRIOR_ACTION_PENDING')
@@ -215,22 +385,52 @@ def execute_authority_case(spec, task_id, *, submitted_request, data_root, ledge
             require(not (row.get('task_id') == task_id
                 and str(row.get('action_type', '')).startswith('agent.certification.authority.')),
                 'AUTHORITY_TASK_ALREADY_ATTEMPTED')
+        spine = _owning_spine(root, deadline=spine_deadline) if fixed['case'] == DENIAL_CASE else None
+        if spine is not None:
+            with spine.connect(read_only=True) as db:
+                require(db.execute('SELECT 1 FROM audit_trail WHERE correlation_id=? OR idempotency_key=? LIMIT 1',
+                    (task_id, task_id)).fetchone() is None
+                    and db.execute('SELECT 1 FROM event_bus WHERE correlation_id=? OR aggregate_id=? LIMIT 1',
+                    (task_id, task_id)).fetchone() is None
+                    and db.execute('SELECT 1 FROM approvals WHERE correlation_id=? OR idempotency_key=? LIMIT 1',
+                        (task_id, task_id)).fetchone() is None
+                    and db.execute('SELECT 1 FROM trust_evidence WHERE idempotency_key=? LIMIT 1',
+                        (task_id,)).fetchone() is None, 'AUTHORITY_ADMISSION_ALREADY_ATTEMPTED')
         before = read_domain_snapshot(root)
         from .artifact_factory import ArtifactFactory
         factory = ArtifactFactory(root / 'artifacts')
         record = ActionRecord(task_id, AGENT_ID, authority_action_type(fixed['case']), 'artifact-factory',
             parameters_summary={'schema_version': RESULT_SCHEMA, 'read_only_observations': True})
+        admission = None
         def operation():
+            nonlocal admission
+            if spine is not None:
+                prior = _spine_snapshot(spine)
+                from .spine import StableSpine
+                outcome = StableSpine(spine).evaluate(_denial_envelope(task_id, datetime.now(timezone.utc).isoformat(), binding=denial_binding),
+                    _denial_record(fixed))
+                require(outcome.get('status') == 403 and outcome.get('execution_status') == 'BLOCKED'
+                    and outcome.get('idempotent_replay') is False, 'AUTHORITY_ACTUAL_DENIAL_REQUIRED')
+                audit, denial_event = _original_denial_rows(spine, task_id)
+                after_spine = _spine_snapshot(spine, exclude_task=task_id)
+                admission = {'audit_row': audit, 'event_row': denial_event,
+                    'protected_before': {k: prior[k] for k in ('trust_registry','trust_evidence','approvals')},
+                    'protected_after': {k: after_spine[k] for k in ('trust_registry','trust_evidence','approvals')},
+                    'prior_rows_before': {k: prior[k] for k in ('audit_trail','event_bus')},
+                    'prior_rows_after': {k: after_spine[k] for k in ('audit_trail','event_bus')}}
+                _validate_denial(admission, task_id, fixed, began, datetime.now(timezone.utc), binding=denial_binding)
             policy = current_authority_policy(registry_sha256)
-            raw = expected_result_bytes(fixed['case'], policy, sha(canonical(before)))
+            raw = expected_result_bytes(fixed['case'], policy, sha(canonical(before)), admission=admission)
             metadata = factory.create(kind='json', content=raw.decode(), task_id=task_id,
-                creator=AGENT_ID, provenance=PROVENANCE, runtime_revision=source_revision)
+                creator=AGENT_ID, provenance=_provenance(fixed['case']), runtime_revision=source_revision)
             reread, actual = factory.retrieve(metadata['artifact_id'])
             require(canonical(reread) == canonical(metadata) and actual == raw, 'AUTHORITY_ARTIFACT_READBACK_DRIFT')
             _metadata(reread, actual, task_id, source_revision, began, datetime.now(timezone.utc))
             return metadata
         artifact = DirectExecutor(ledger).execute(record, operation)
         require(ledger.flush(timeout=1) is True, 'AUTHORITY_DURABLE_ACTION_REQUIRED')
+        if spine is not None:
+            read_original_denial(root, task_id, admission, deadline=spine_deadline)
         after = read_domain_snapshot(root)
         require(canonical(after) == canonical(before), 'AUTHORITY_OWNING_READ_DOMAINS_CHANGED')
         require(canonical(read_runtime()) == canonical(bound), 'AUTHORITY_RUNTIME_CHANGED')
@@ -244,7 +444,8 @@ def execute_authority_case(spec, task_id, *, submitted_request, data_root, ledge
             'started_at': began.isoformat(), 'completed_at': ended.isoformat(),
             'read_domains_before': before, 'read_domains_after': after,
             'fixed_store_no_change_scope': 'PRODUCER_INTERVAL_ONLY_EXCLUDES_ARTIFACTS_ACTION_LEDGER_AND_SQLITE_SHM',
-            'durable_action_delivery': True, 'consequential_guard_denial_proven': False, 'certification': 'UNVERIFIED'}
+            'durable_action_delivery': True, 'consequential_guard_denial_proven': fixed['case'] == DENIAL_CASE, 'certification': 'UNVERIFIED',
+            **({'admission': admission} if spine is not None else {})}
         return {'task_id': task_id, 'state': 'COMPLETED', 'artifact': artifact, 'model_calls': 0,
             'execution_model': 'DETERMINISTIC', 'agent_id': AGENT_ID, 'capability': CAPABILITY_ID,
             'runtime_source_revision': source_revision, 'authority_event': event}
@@ -287,7 +488,8 @@ def validate_authority_execution(execution, *, source_revision, runtime_image_id
         require(type(event) is dict and set(event) == {'schema_version', 'case', 'case_version', 'task_id',
             'source_revision', 'registry_sha256', 'runtime_identity_sha256', 'case_spec_sha256', 'input_sha256',
             'subject_action_id', 'started_at', 'completed_at', 'read_domains_before', 'read_domains_after',
-            'fixed_store_no_change_scope', 'durable_action_delivery', 'consequential_guard_denial_proven', 'certification'},
+            'fixed_store_no_change_scope', 'durable_action_delivery', 'consequential_guard_denial_proven', 'certification'}
+            | ({'admission'} if fixed['case'] == DENIAL_CASE else set()),
             'AUTHORITY_EVENT_FIELDS_INVALID')
         began, ended = _utc(event['started_at']), _utc(event['completed_at'])
         require(0 <= (ended - began).total_seconds() <= 5 and 0 <= (now - ended).total_seconds() <= MAX_AGE_SECONDS,
@@ -299,7 +501,11 @@ def validate_authority_execution(execution, *, source_revision, runtime_image_id
             'started_at': event['started_at'], 'completed_at': event['completed_at'],
             'read_domains_before': _snapshot(event['read_domains_before']), 'read_domains_after': _snapshot(event['read_domains_after']),
             'fixed_store_no_change_scope': 'PRODUCER_INTERVAL_ONLY_EXCLUDES_ARTIFACTS_ACTION_LEDGER_AND_SQLITE_SHM',
-            'durable_action_delivery': True, 'consequential_guard_denial_proven': False, 'certification': 'UNVERIFIED'}
+            'durable_action_delivery': True, 'consequential_guard_denial_proven': fixed['case'] == DENIAL_CASE, 'certification': 'UNVERIFIED',
+            **({'admission': _validate_denial(event['admission'], task, fixed, began, ended, binding={
+                'source_revision': source_revision, 'registry_sha256': registry_sha256,
+                'runtime_identity_sha256': sha(canonical(bound))})}
+                if fixed['case'] == DENIAL_CASE else {})}
         require(canonical(event) == canonical(expected) and _uuid(event['subject_action_id'])
             and canonical(event['read_domains_before']) == canonical(event['read_domains_after']), 'AUTHORITY_EVENT_UNBOUND')
         observation = value['observation']
@@ -312,7 +518,7 @@ def validate_authority_execution(execution, *, source_revision, runtime_image_id
         raw = value['artifact_content_utf8'].encode()
         parse(raw)
         expected_raw = expected_result_bytes(fixed['case'], current_authority_policy(registry_sha256),
-            sha(canonical(event['read_domains_before'])))
+            sha(canonical(event['read_domains_before'])), admission=event.get('admission'))
         require(raw == expected_raw and canonical(dispatch['artifact']) == canonical(metadata), 'AUTHORITY_RESULT_DRIFT')
         _metadata(metadata, raw, task, source_revision, began, ended)
         from .agent_cert_identity_review import action_span
@@ -352,7 +558,7 @@ def validate_authority_execution(execution, *, source_revision, runtime_image_id
             'case_spec_sha256': sha(canonical(fixed)), 'registry_sha256': registry_sha256, 'runtime': bound,
             'subject_action_sha256': chain['last_sha256'], 'execution_metadata_sha256': sha(canonical(immutable)),
             'fixed_read_domains_sha256': sha(canonical(event['read_domains_before'])),
-            'consequential_guard_denial_proven': False, 'certification': 'UNVERIFIED',
+            'consequential_guard_denial_proven': fixed['case'] == DENIAL_CASE, 'certification': 'UNVERIFIED',
             'event_verification': 'JOIN_VALIDATED_ORIGIN_AND_INDEPENDENT_ACCEPTANCE_REQUIRED'}
     except AuthorityEventError:
         raise

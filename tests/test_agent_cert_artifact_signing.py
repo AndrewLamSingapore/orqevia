@@ -55,10 +55,10 @@ def prepared(domain, case_id, tmp_path):
     content = dict(schema_version=ARTIFACT_REVIEW_SCHEMA, task_id=review_task,
         reviewer_id='a26', reviewer_capability_id='responsibility.a26',
         subject_agent_id='a19', subject_capability_id='responsibility.a19',
-        dimension='general', test_case=case_id.split(':')[1], source_revision=SOURCE,
+        dimension=case_id.split(':')[0], test_case=case_id.split(':')[1], source_revision=SOURCE,
         runtime_image_id=IMAGE, execution_evidence_sha256=events.sha(primary),
         case_spec_sha256=join['case_spec_sha256'], result_sha256=join['result_sha256'],
-        oracle_id=events.ORACLE_ID, test_result='PASS', review_errors=[], model_calls=0,
+        oracle_id=events.oracle_id(case_id), test_result='PASS', review_errors=[], model_calls=0,
         execution_model='DETERMINISTIC', subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
         subject_domain_join=join, certification='UNVERIFIED', review_nonce=str(uuid.uuid4()),
         reviewed_at=reviewed_at)
@@ -77,14 +77,14 @@ def prepared(domain, case_id, tmp_path):
     finally:
         assert ledger.close() is True
     certified_at = datetime.now(timezone.utc)
-    row = dict(agent_id='a19', capability_id='responsibility.a19', dimension='general',
+    row = dict(agent_id='a19', capability_id='responsibility.a19', dimension=case_id.split(':')[0],
         test_case=case_id.split(':')[1], certification_test=case_id.replace(':', '-'),
         test_version=events.CASE_VERSION, test_result='PASS', verifier='a26', executor_identity='a19',
         evidence='execution.json', evidence_sha256=events.sha(primary),
         certified_at=certified_at.isoformat(), last_revalidated=certified_at.isoformat(),
         expires_at=(certified_at + timedelta(hours=1)).isoformat(), source_revision=SOURCE,
         authority_scope=agent_record('a19')['authority'], review_evidence='review.json', review_evidence_sha256='',
-        review_run_id='temporary-artifact-independent-review', review_test_version=events.ORACLE_ID,
+        review_run_id='temporary-artifact-independent-review', review_test_version=events.oracle_id(case_id),
         review_source_revision=SOURCE, reviewer_code_revision=CODE)
     dispatch = dict(task_id=review_task, state='COMPLETED', artifact=metadata, model_calls=0,
         execution_model='DETERMINISTIC', agent_id='a26', capability='responsibility.a26',
@@ -95,11 +95,11 @@ def prepared(domain, case_id, tmp_path):
             runtime_source_revision=SOURCE, actual_runtime_image=IMAGE))
     review = dict(schema_version='prime.agent-certification.review.v1', reviewer_identity='a26',
         review_run_id=row['review_run_id'], source_revision=SOURCE, agent_id='a19',
-        capability_id='responsibility.a19', dimension='general', test_case=row['test_case'],
-        execution_evidence_sha256=events.sha(primary), test_result='PASS', review_test_version=events.ORACLE_ID,
+        capability_id='responsibility.a19', dimension=case_id.split(':')[0], test_case=row['test_case'],
+        execution_evidence_sha256=events.sha(primary), test_result='PASS', review_test_version=events.oracle_id(case_id),
         observations=dict(execution_task_id=join['task_id'], result_sha256=join['result_sha256'],
             case_spec_sha256=join['case_spec_sha256'], runtime_image_id=IMAGE, registry_sha256=join['registry_sha256'],
-            reviewer_code_revision=CODE, oracle_id=events.ORACLE_ID, oracle_pass=True, reviewer_execution=proof))
+            reviewer_code_revision=CODE, oracle_id=events.oracle_id(case_id), oracle_pass=True, reviewer_execution=proof))
     private = ec.generate_private_key(ec.SECP256R1())
     point = private.public_key().public_numbers()
     encode = lambda value: base64.urlsafe_b64encode(value.to_bytes(32, 'big')).rstrip(b'=').decode()

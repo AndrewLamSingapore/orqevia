@@ -23,7 +23,8 @@ from app.agent_cert_identity_review import action_span, parse, utc
 from app.agent_cert_role_review import (canonical_case_spec, ARTIFACT_REVIEW_SCHEMA,
     ARTIFACT_REVIEW_ACTION, ARTIFACT_REVIEW_OPERATION, ARTIFACT_REVIEW_OBJECTIVE,
     artifact_event_review_join, AUTHORITY_REVIEW_SCHEMA, AUTHORITY_REVIEW_ACTION,
-    AUTHORITY_REVIEW_OPERATION, AUTHORITY_REVIEW_OBJECTIVE, authority_event_review_join)
+    AUTHORITY_REVIEW_OPERATION, AUTHORITY_REVIEW_OBJECTIVE, authority_event_review_join,
+    TOOL_REVIEW_SCHEMA, TOOL_REVIEW_ACTION, TOOL_REVIEW_OPERATION, TOOL_REVIEW_OBJECTIVE, tool_event_review_join)
 from scripts.collect_agent_cert_case import (
     OperatorIO, CollectionError, _call, _canonical, _copy, _equal, _now,
     _require, _response, _runtime, _sha, _tick, _uuid,
@@ -53,20 +54,313 @@ class CollectedEvent:
     reviewer_dispatch_response_bytes: bytes | None = field(default=None, repr=False)
     input_artifact_bytes: bytes | None = field(default=None, repr=False)
     input_actions: tuple[str, ...] = field(default=(), repr=False)
+    prior_artifact_bytes: bytes | None = field(default=None, repr=False)
+    prior_actions: tuple[str, ...] = field(default=(), repr=False)
+
+
+@dataclass(frozen=True)
+class CollectedRecoveryCase:
+    summary: dict
+    execution_bytes: bytes | None = field(default=None,repr=False)
+    peer_execution_bytes: bytes | None = field(default=None,repr=False)
+    original_http_replies: tuple = field(default=(),repr=False)
+
+
+def collect_conflict_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,variant='standard',timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Four actual stored Objectives; retain every bounded original HTTP reply."""
+    from app.agent_cert_conflict_events import (CASE,PHASES,orientation,canonical_phase_spec,
+        phase_request,action_type,REVIEW_ACTION,validate_execution,validate_reviewed_conflict)
+    from scripts.agent_cert_operator_io import ConflictPhaseOperatorIO
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_health='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        orientation(variant)
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'CONFLICT_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic);_require(left>0,'CONFLICT_OUTER_DEADLINE_EXCEEDED');return left
+        def call(callback,*args):
+            remaining();value=_call(callback,*args);remaining();return value
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'CONFLICT_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,variant=variant,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is ConflictPhaseOperatorIO,'CONFLICT_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator);_require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which,originals=None):
+            nonlocal execution
+            summary['stage']=which.upper();operator=make(which,peer_executions=originals)
+            before=call(operator.runtime);_registry_pin(expected_registry_sha256);began=wall_clock()
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'CONFLICT_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'CONFLICT_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id'];metadata=dispatch['artifact']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,dispatch['conflict_event']['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'CONFLICT_OBJECTIVE_READ_FAILED')
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime);_require(_equal(before,after),'CONFLICT_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which,variant),submitted_request_sha256=_sha(_canonical(operator._submitted_request)),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()),peer_executions=originals)
+            execution=value
+            joined=validate_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'CONFLICT_OBJECTIVE_READ_FAILED')),
+                'CONFLICT_OBJECTIVE_CHANGED')
+            return value,joined
+        first,_=produce(PHASES[0]);second,_=produce(PHASES[1])
+        resolved,joined=produce(PHASES[2],[first,second]);execution=resolved
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory);operator=make('review',execution=resolved,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock();_registry_pin(expected_registry_sha256)
+        summary['submission_attempts']+=1
+        request=phase_request('review',variant,execution=resolved,nonce=nonce)
+        submission=_response(call(operator.submit_objective,request),202,'CONFLICT_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'CONFLICT_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,REVIEW_ACTION))
+        after=call(operator.runtime);_require(_equal(before,after),'CONFLICT_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request_sha256=_sha(_canonical(request)),runtime=before,runtime_after=after,
+            submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+            objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+        validate_reviewed_conflict(resolved,peer,**pins,now=wall_clock());remaining();_registry_pin(expected_registry_sha256)
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,orientation=variant,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(resolved)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=24,original_peer_rows=2,both_recommendations_retained=True)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,CollectionError) else 'CONFLICT_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)
+
+
+def collect_cross_conflict_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,variant='standard',timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Four actual stored Objectives; retain every bounded original HTTP reply."""
+    from app.agent_cert_cross_conflict_events import (CASE,PHASES,orientation,canonical_phase_spec,
+        phase_request,action_type,REVIEW_ACTION,validate_execution,validate_reviewed_conflict)
+    from scripts.agent_cert_operator_io import CrossConflictPhaseOperatorIO
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_health='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        orientation(variant)
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'CROSS_CONFLICT_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic);_require(left>0,'CROSS_CONFLICT_OUTER_DEADLINE_EXCEEDED');return left
+        def call(callback,*args):
+            remaining();value=_call(callback,*args);remaining();return value
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'CROSS_CONFLICT_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,variant=variant,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is CrossConflictPhaseOperatorIO,'CROSS_CONFLICT_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator);_require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which,originals=None):
+            nonlocal execution
+            summary['stage']=which.upper();operator=make(which,peer_executions=originals)
+            before=call(operator.runtime);_registry_pin(expected_registry_sha256);began=wall_clock()
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'CROSS_CONFLICT_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'CROSS_CONFLICT_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id'];metadata=dispatch['artifact']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,dispatch['conflict_event']['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'CROSS_CONFLICT_OBJECTIVE_READ_FAILED')
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime);_require(_equal(before,after),'CROSS_CONFLICT_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which,variant),submitted_request_sha256=_sha(_canonical(operator._submitted_request)),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()),peer_executions=originals)
+            execution=value
+            joined=validate_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'CROSS_CONFLICT_OBJECTIVE_READ_FAILED')),
+                'CROSS_CONFLICT_OBJECTIVE_CHANGED')
+            return value,joined
+        first,_=produce(PHASES[0]);second,_=produce(PHASES[1])
+        resolved,joined=produce(PHASES[2],[first,second]);execution=resolved
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory);operator=make('review',execution=resolved,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock();_registry_pin(expected_registry_sha256)
+        summary['submission_attempts']+=1
+        request=phase_request('review',variant,execution=resolved,nonce=nonce)
+        submission=_response(call(operator.submit_objective,request),202,'CROSS_CONFLICT_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'CROSS_CONFLICT_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,REVIEW_ACTION))
+        after=call(operator.runtime);_require(_equal(before,after),'CROSS_CONFLICT_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request_sha256=_sha(_canonical(request)),runtime=before,runtime_after=after,
+            submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+            objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+        validate_reviewed_conflict(resolved,peer,**pins,now=wall_clock());remaining();_registry_pin(expected_registry_sha256)
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,orientation=variant,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(resolved)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=24,original_peer_rows=2,both_recommendations_retained=True)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,CollectionError) else 'CROSS_CONFLICT_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)
+
+
+def collect_recovery_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Exactly two producer Objectives and a third persisted fixed A26 Objective.
+
+    The injected factory must return the existing bounded fixed-loopback phase
+    operator. It injects an already authorized credential; this collector never
+    finds credentials, signs, renews, accesses local domains or retries a POST.
+    """
+    from app.agent_cert_recovery_events import (PRIOR_PHASE,CORRECTION_PHASE,CASE,canonical_phase_spec,
+        action_type,REVIEW_ACTION,validate_phase_execution,validate_reviewed_recovery,canonical_review_request)
+    from scripts.agent_cert_operator_io import RecoveryPhaseOperatorIO
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_recovery='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'RECOVERY_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic)
+            _require(left>0,'RECOVERY_OUTER_DEADLINE_EXCEEDED')
+            return left
+        def call(callback,*args):
+            remaining();value=_call(callback,*args);remaining();return value
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'RECOVERY_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is RecoveryPhaseOperatorIO,'RECOVERY_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator)
+            _require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which,prior=None):
+            nonlocal execution
+            summary['stage']=which.upper()
+            operator=make(which,prior_execution=prior)
+            before=call(operator.runtime)
+            _registry_pin(expected_registry_sha256)
+            began=wall_clock()
+            # Update before the one-shot POST; late replies remain private custody.
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'RECOVERY_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'RECOVERY_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id']
+            metadata=dispatch['artifact'];event=dispatch['recovery_event']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,event['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'RECOVERY_OBJECTIVE_READ_FAILED')
+            observed_end=wall_clock()
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime)
+            _require(_equal(before,after),'RECOVERY_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which),submitted_request=_copy(operator._submitted_request),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=observed_end.isoformat()),prior_execution=prior)
+            execution=value # Retain originals before pure acceptance; no synthetic repair.
+            joined=validate_phase_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'RECOVERY_OBJECTIVE_READ_FAILED')),
+                'RECOVERY_OBJECTIVE_CHANGED')
+            return value,joined
+        prior,prior_join=produce(PRIOR_PHASE)
+        summary['controlled_failure_task_id']=prior_join['task_id']
+        corrected,joined=produce(CORRECTION_PHASE,prior)
+        execution=corrected
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory)
+        operator=make('review',execution=corrected,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock()
+        _registry_pin(expected_registry_sha256);summary['submission_attempts']+=1
+        submission=_response(call(operator.submit_objective,canonical_review_request(corrected,nonce=nonce)),202,
+            'RECOVERY_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'RECOVERY_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,REVIEW_ACTION))
+        after=call(operator.runtime);_require(_equal(before,after),'RECOVERY_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request=canonical_review_request(corrected,nonce=nonce),runtime=before,
+            runtime_after=after,submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+            artifact_content_utf8=raw.decode(),objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+        validate_reviewed_recovery(corrected,peer,**pins,now=wall_clock())
+        _registry_pin(expected_registry_sha256);remaining()
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(corrected)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=12,original_peer_rows=2,controlled_failure_retained=True)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,(CollectionError,)) else 'RECOVERY_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)
 
 
 def _contract(agent, capability, case):
+    from app.agent_cert_tool_events import (SUPPORTED_CASES as TOOL_CASES,
+        RESULT_SCHEMA as TOOL_RESULT_SCHEMA, oracle_id, tool_action_type)
+    if case in TOOL_CASES:
+        _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
+        from app.agent_cert_role_review import tool_review_objective
+        return (tool_action_type(case), TOOL_RESULT_SCHEMA, TOOL_REVIEW_SCHEMA, oracle_id(case),
+            tool_review_objective(case), ('a26', 'responsibility.a26'), tool_event_review_join)
     from app.agent_cert_authority_events import (SUPPORTED_CASES as AUTHORITY_CASES,
         RESULT_SCHEMA as AUTHORITY_RESULT_SCHEMA, ORACLE_ID as AUTHORITY_ORACLE, authority_action_type)
     if case in AUTHORITY_CASES:
         _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
         return (authority_action_type(case), AUTHORITY_RESULT_SCHEMA, AUTHORITY_REVIEW_SCHEMA,
             AUTHORITY_ORACLE, AUTHORITY_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), authority_event_review_join)
-    from app.agent_cert_artifact_events import SUPPORTED_CASES, RESULT_SCHEMA, ORACLE_ID, artifact_action_type
+    from app.agent_cert_artifact_events import SUPPORTED_CASES, RESULT_SCHEMA, oracle_id, artifact_action_type
     if case in SUPPORTED_CASES:
         _require((agent, capability) == ('a19', 'responsibility.a19'), 'SOURCE_OWNED_EVENT_UNAVAILABLE')
         return (artifact_action_type(case), RESULT_SCHEMA, ARTIFACT_REVIEW_SCHEMA,
-            ORACLE_ID, ARTIFACT_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), artifact_event_review_join)
+            oracle_id(case), ARTIFACT_REVIEW_OBJECTIVE, ('a26', 'responsibility.a26'), artifact_event_review_join)
     if case == 'baseline:initialization':
         from app.agent_cert_initialization import (
             ACTION_TYPE, SCHEMA, initialization_reviewer, initialization_oracle_id,
@@ -82,6 +376,13 @@ def _contract(agent, capability, case):
             initialization_oracle_id(agent, capability),
             initialization_review_objective(agent, capability),
             initialization_reviewer(agent, capability), validate)
+    if case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+        from app.agent_cert_owned_identity import (ACTION_TYPE, SCHEMA, REVIEW_SCHEMA,
+            ORACLE_ID, identity_reviewer, identity_review_objective, validate_owned_identity_execution)
+        def validate(value, **pins):
+            return validate_owned_identity_execution(value, agent_id=agent, capability_id=capability, **pins)
+        return (ACTION_TYPE, SCHEMA, REVIEW_SCHEMA, ORACLE_ID, identity_review_objective(agent, capability),
+            identity_reviewer(agent, capability), validate)
     _require((agent, capability, case) == ('a19', 'responsibility.a19', 'baseline:identity'),
              'SOURCE_OWNED_EVENT_UNAVAILABLE')
     from app.agent_cert_identity_review import SCHEMA, ORACLE_ID, validate_identity_execution
@@ -114,14 +415,14 @@ def _lines(value):
     return value
 
 
-def _artifact(io, identifier, metadata, holder, *, subject=False, input_artifact=False):
+def _artifact(io, identifier, metadata, holder, *, subject=False, input_artifact=False, prior_artifact=False):
     _require(type(identifier) is str and _ARTIFACT.fullmatch(identifier) is not None,
              'ARTIFACT_ID_INVALID')
     value = _call(io.read_artifact, identifier)
     _require(type(value) is tuple and len(value) == 3 and type(value[0]) is int
              and value[0] == 200 and type(value[1]) is bytes
              and 0 < len(value[1]) <= 65536, 'ORIGINAL_ARTIFACT_READ_FAILED')
-    holder['input_raw' if input_artifact else 'subject_raw' if subject else 'reviewer_raw'] = value[1]
+    holder['prior_raw' if prior_artifact else 'input_raw' if input_artifact else 'subject_raw' if subject else 'reviewer_raw'] = value[1]
     _require(type(value[2]) is str and value[2] == _sha(value[1])
              and type(metadata) is dict and set(metadata) == _METADATA_FIELDS
              and metadata.get('sha256') == value[2]
@@ -143,9 +444,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         protected_signing='PENDING_SEPARATE_ADMISSION', subject_submission_attempts=0,
         review_dispatch_attempts=0, submission_uncertain=False,
         review_dispatch_uncertain=False, source_revision=None, runtime_image_id=None)
-    holder = dict(subject_raw=None, reviewer_raw=None, reviewer_dispatch=None, input_raw=None)
+    holder = dict(subject_raw=None, reviewer_raw=None, reviewer_dispatch=None, input_raw=None, prior_raw=None)
     primary = review_raw = None
-    subject_lines = reviewer_lines = input_lines = ()
+    subject_lines = reviewer_lines = input_lines = prior_lines = ()
     execution = {}
     try:
         _require(type(io) is OperatorIO and callable(read_subject_actions)
@@ -176,9 +477,11 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         agent, capability, case = canonical['agent_id'], canonical['capability_id'], canonical['case']
         from app.agent_cert_artifact_events import SUPPORTED_CASES as ARTIFACT_CASES
         from app.agent_cert_authority_events import SUPPORTED_CASES as AUTHORITY_CASES
+        from app.agent_cert_tool_events import SUPPORTED_CASES as TOOL_CASES
         artifact_case = case in ARTIFACT_CASES
         authority_case = case in AUTHORITY_CASES
-        bounded_event = artifact_case or authority_case
+        tool_case = case in TOOL_CASES
+        bounded_event = artifact_case or authority_case or tool_case
         dimension = case.split(':')[0]
         action_type, report_schema, review_schema, oracle, review_objective, reviewer_pair, validate = _contract(agent, capability, case)
         reviewer, reviewer_cap = reviewer_pair
@@ -248,14 +551,44 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         # Custody is not acceptance, and cannot cause a retry or further POST.
         bounded()
         observation = execution['observation']
-        event = (execution['dispatch'].get('authority_event') if authority_case else
+        event = (execution['dispatch'].get('tool_event') if tool_case else
+            execution['dispatch'].get('authority_event') if authority_case else
             execution['dispatch'].get('artifact_event') if artifact_case else None)
-        action_began = utc(event['started_at'] if bounded_event else observation['captured_at'])
+        owned_identity = case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19')
+        action_began = utc(event['started_at'] if bounded_event else
+            observation['started_at'] if owned_identity else observation['captured_at'])
         action_ended = utc(event['completed_at'] if bounded_event else observation['completed_at'])
         execution['action_chain_join'] = action_span(events, task_id=task, agent_id=agent,
             action_type=action_type, schema=report_schema, metadata=execution['artifact_metadata'],
             began=action_began, ended=action_ended,
             **({'action_id': event['subject_action_id']} if bounded_event else {}))
+        if tool_case:
+            from app.agent_cert_tool_events import INPUT_SCHEMA, tool_action_type, failed_read_span
+            input_metadata = event['input_artifact_metadata']
+            raw = _artifact(io, input_metadata.get('artifact_id') if type(input_metadata) is dict else None,
+                input_metadata, holder, input_artifact=True)
+            execution['input_content_utf8'] = raw.decode()
+            lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='setup')))
+            input_lines = tuple(lines)
+            execution['input_action_records'] = lines
+            execution['input_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
+                action_type=tool_action_type(case, phase='setup'), schema=INPUT_SCHEMA, metadata=input_metadata,
+                began=action_began, ended=action_ended, action_id=event['setup_action_id'])
+            if case in {'graceful_degradation:complete','health:complete','tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'models:complete','cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
+                from app.agent_cert_tool_events import available_read_span
+                available_lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='available')))
+                execution['available_read_action_records'] = available_lines
+                execution['available_read_action_chain_join'] = available_read_span(available_lines, task_id=task,
+                    case=case, setup_metadata=input_metadata, input_raw=raw, began=action_began, ended=action_ended,
+                    action_id=event['available_read_action_id'])
+            if case not in {'tools:complete','independent_verification:complete','injection_resistance:complete', 'continuous_revalidation:complete', 'models:complete','cross_verification:complete', 'collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
+                lines = _lines(read(read_subject_actions, task, tool_action_type(case, phase='read')))
+                execution['failed_read_action_records'] = lines
+                execution['failed_read_action_chain_join'] = failed_read_span(lines, task_id=task, case=case,
+                    setup_metadata=input_metadata, began=action_began, ended=action_ended,
+                    action_id=event['failed_read_action_id'])
+            execution['original_action_records'] = _lines(read(read_subject_actions, task,
+                tool_action_type(case, phase='full')))
         if artifact_case:
             from app.agent_cert_artifact_events import INPUT_SCHEMA, artifact_action_type
             execution.update(input_content_utf8=None, input_action_records=[], input_action_chain_join=None)
@@ -274,8 +607,57 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
                     action_type=artifact_action_type(case, setup=True), schema=INPUT_SCHEMA,
                     metadata=input_metadata, began=action_began, ended=action_ended,
                     action_id=event['input_action_id'])
+            if case in {'general:recovery', 'evidence_integrity:complete', 'context_integrity:complete'}:
+                prior_metadata = event['prior_artifact_metadata']
+                bounded()
+                raw = _artifact(io, prior_metadata.get('artifact_id') if type(prior_metadata) is dict else None,
+                    prior_metadata, holder, prior_artifact=True)
+                execution['prior_artifact_content_utf8'] = raw.decode('utf-8')
+                bounded()
+                lines = _lines(_call(read_subject_actions, task, artifact_action_type(case, prior=True)))
+                prior_lines = tuple(lines)
+                execution['prior_action_records'] = lines
+                bounded()
+                execution['prior_action_chain_join'] = action_span(lines, task_id=task, agent_id=agent,
+                    action_type=artifact_action_type(case, prior=True), schema=report_schema, metadata=prior_metadata,
+                    began=action_began, ended=action_ended, action_id=event['prior_action_id'])
         if bounded_event:
             execution['runtime_current'] = runtime()
+        if tool_case and case == 'clean_room_audit:complete':
+            from app.agent_cert_clean_room import request_body as blind_request,validate_audit
+            blind_nonce = read(nonce_factory)
+            _require(_uuid(blind_nonce),'BLIND_NONCE_INVALID')
+            blind_body = blind_request(event['input_artifact_metadata'],expected_source_revision,
+                expected_registry_sha256,blind_nonce)
+            _registry_pin(expected_registry_sha256)
+            bounded()
+            summary.update(stage='BLIND_AUDIT_DISPATCH',blind_audit_dispatch_attempts=1,
+                blind_audit_dispatch_uncertain=True)
+            blind_dispatch = _response(_call(io.dispatch_reviewer,blind_body),202,'BLIND_AUDIT_DISPATCH_FAILED')
+            bounded()
+            _require(type(blind_dispatch) is dict and _uuid(blind_dispatch.get('task_id'))
+                and blind_dispatch['task_id'] != task and _uuid(blind_dispatch.get('review_action_id'))
+                and _uuid(blind_dispatch.get('blind_input_read_action_id'))
+                and blind_dispatch.get('review_action_durable') is True,'BLIND_DURABLE_ORIGINAL_TASK_REQUIRED')
+            blind_metadata = blind_dispatch.get('artifact')
+            blind_holder = {}
+            blind_raw = _artifact(io,blind_metadata.get('artifact_id') if type(blind_metadata) is dict else None,
+                blind_metadata,blind_holder)
+            holder['blind_audit_raw'] = blind_raw
+            blind_view = _response(read(io.read_objective,blind_dispatch['task_id']),200,'BLIND_ORIGINAL_OBJECTIVE_FAILED')
+            blind_proof = dict(request=blind_body,dispatch=blind_dispatch,artifact_metadata=blind_metadata,
+                artifact_content_utf8=blind_raw.decode(),objective_read=[200,blind_view],
+                input_action_records=_lines(read(io.read_review_actions,blind_dispatch['blind_input_read_action_id'])),
+                action_records=_lines(read(io.read_review_actions,blind_dispatch['review_action_id'])))
+            validate_audit(blind_proof,input_metadata=event['input_artifact_metadata'],
+                input_raw=execution['input_content_utf8'].encode(),runtime=before,
+                registry=expected_registry_sha256,now=_now(wall_clock))
+            _require(_equal(blind_view,_response(read(io.read_objective,blind_dispatch['task_id']),200,
+                'BLIND_ORIGINAL_OBJECTIVE_FAILED')),'BLIND_ORIGINAL_OBJECTIVE_CHANGED')
+            execution['blind_audit'] = blind_proof
+            summary.update(blind_audit_dispatch_uncertain=False,blind_audit_task_id=blind_dispatch['task_id'],
+                blind_audit_sha256=blind_metadata['sha256'])
+            bounded()
         primary = _canonical(execution)
         _require(len(primary) <= 1024 * 1024, 'EVENT_ENVELOPE_TOO_LARGE')
         now = _now(wall_clock)
@@ -292,8 +674,9 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         request = dict(classification='R0', capability=reviewer_cap, objective=review_objective,
             context=context, data_classification='LOCAL_ONLY', minimum_tier='NANO', priority='low',
             task_class='classification', max_cost_usd=0, response_format='strict_json',
-            deterministic_operation=AUTHORITY_REVIEW_OPERATION if authority_case else ARTIFACT_REVIEW_OPERATION if artifact_case else
+            deterministic_operation=TOOL_REVIEW_OPERATION if tool_case else AUTHORITY_REVIEW_OPERATION if authority_case else ARTIFACT_REVIEW_OPERATION if artifact_case else
                 'certification_initialization_review' if case.endswith('initialization')
+                else 'certification_owned_identity_review' if (agent, capability) != ('a19', 'responsibility.a19')
                 else 'certification_identity_review')
         _registry_pin(expected_registry_sha256)
         _require(read(io.authorize) is None, 'OWNER_AUTHENTICATION_FAILED')
@@ -337,6 +720,16 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             oracle_id=oracle, test_result='PASS', review_errors=[], model_calls=0,
             execution_model='DETERMINISTIC', subject_execution_verification='ARTIFACT_OBJECTIVE_ACTION_JOINED',
             subject_domain_join=join, certification='UNVERIFIED')
+        peer_objective = None
+        if case in {'models:complete','cross_verification:complete','collaboration:complete','handoff_recovery:bounded_response','handoff_recovery:agent_failure', 'clean_room_audit:complete'}:
+            from app.agent_cert_tool_events import cross_peer_request,validate_cross_peer_receipt,validate_cross_peer_objective,peer_review_fields
+            peer_request = cross_peer_request(execution,nonce,expected_source_revision)
+            receipt = content.get('peer_request_receipt')
+            validate_cross_peer_receipt(receipt,peer_task=result['task_id'],subject_task=task,
+                request=peer_request,runtime=before,now=_now(wall_clock))
+            expected.update(peer_review_fields(case,receipt))
+            peer_objective = _response(read(io.read_objective,result['task_id']),200,'CROSS_ORIGINAL_PEER_REQUEST_REQUIRED')
+            validate_cross_peer_objective(peer_objective,dispatch=result,runtime=before,receipt=receipt,now=_now(wall_clock))
         _require(set(content) == set(expected) | {'review_nonce', 'reviewed_at'}
             and content.get('review_nonce') == nonce
             and all(_equal(content.get(key), value) for key, value in expected.items()),
@@ -349,7 +742,8 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         reviewer_lines = tuple(lines)
         bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
-            action_type=AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
+            action_type=TOOL_REVIEW_ACTION if tool_case else AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
+                'agent.certification.owned_identity.review' if owned_identity else
                 'agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),
             ended=now, action_id=result['review_action_id'], duration_limit_ms=120000)
@@ -357,6 +751,11 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             transport=dict(authentication='OWNER_AUTHENTICATED', dispatch_http_status=202,
                 artifact_http_status=200, runtime_source_revision=expected_source_revision,
                 actual_runtime_image=expected_runtime_image))
+        if peer_objective is not None:
+            final_peer = _response(read(io.read_objective,result['task_id']),200,'CROSS_ORIGINAL_PEER_REQUEST_REQUIRED')
+            _require(_equal(final_peer,peer_objective),'CROSS_ORIGINAL_PEER_REQUEST_CHANGED')
+            validate_cross_peer_objective(final_peer,dispatch=result,runtime=before,receipt=receipt,now=_now(wall_clock))
+            proof.update(peer_objective_read=[200,peer_objective],peer_request_body=peer_request)
         review = dict(schema_version='prime.agent-certification.review.v1', reviewer_identity=reviewer,
             review_run_id=review_run_id, source_revision=expected_source_revision, agent_id=agent,
             capability_id=capability, dimension=dimension, test_case=case.split(':')[1],
@@ -393,4 +792,155 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
             pass
     return CollectedEvent(summary, primary, review_raw, holder['subject_raw'],
         holder['reviewer_raw'], subject_lines, reviewer_lines, holder['reviewer_dispatch'],
-        holder['input_raw'], input_lines)
+        holder['input_raw'], input_lines, holder['prior_raw'], prior_lines)
+
+@dataclass(frozen=True)
+class CollectedHandoffCase:
+    summary: dict
+    continuation: CollectedEvent | None = field(default=None,repr=False)
+    original_failure_bytes: bytes | None = field(default=None,repr=False)
+    original_http_replies: tuple = field(default=(),repr=False)
+
+
+def collect_handoff_case(*,case='handoff_recovery:bounded_response',operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,reviewer_code_revision,review_run_id,timeout_seconds=30,
+        monotonic=time.monotonic,wall_clock=lambda:datetime.now(timezone.utc),
+        nonce_factory=lambda:str(uuid.uuid4())):
+    """One supported original refusal then distinct continuation and A26 review."""
+    from app.agent_cert_handoff_gap import CASES,failure_request,validate_failed_original
+    from app.agent_cert_tool_events import canonical_tool_case
+    from scripts.agent_cert_operator_io import HandoffFailureOperatorIO,HandoffContinuationOperatorIO
+    summary=dict(state='INCOMPLETE',stage='FAILED_HANDOFF',case=case,certification='UNVERIFIED',
+        failure_scope='SUPPORTED_MISSING_EVIDENCE_HANDOFF_REFUSAL_NOT_AGENT_CRASH',failure_submission_attempts=0)
+    operators=[];failed=None;continuation=None
+    try:
+        _require(case in CASES and callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'HANDOFF_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic)
+            _require(left>0,'HANDOFF_OUTER_BOUND_EXCEEDED')
+            return left
+        failure=operator_factory(which='failure',case=case,total_timeout_seconds=min(30,remaining()))
+        _require(type(failure) is HandoffFailureOperatorIO,'HANDOFF_OWNED_FAILURE_TRANSPORT_REQUIRED')
+        operators.append(failure)
+        _require(failure.authorize() is None,'OWNER_AUTHENTICATION_FAILED')
+        before=failure.runtime();_registry_pin(expected_registry_sha256)
+        summary['failure_submission_attempts']=1
+        submission=_response(failure.submit_objective(failure_request(case)),202,'HANDOFF_ORIGINAL_REFUSAL_SUBMIT_FAILED')
+        failed=_response(failure.read_failed_objective(submission['id']),200,'HANDOFF_ORIGINAL_FAILED_READ_REQUIRED')
+        validate_failed_original(failed,runtime=before,registry_sha256=expected_registry_sha256,now=wall_clock())
+        _require(_equal(failed,_response(failure.read_failed_objective(submission['id']),200,
+            'HANDOFF_ORIGINAL_FAILED_READ_REQUIRED')) and _equal(before,failure.runtime()),'HANDOFF_FAILED_CUSTODY_DRIFT')
+        operator=operator_factory(which='continuation',case=case,original_failed_peer=failed,
+            total_timeout_seconds=min(30,remaining()))
+        _require(type(operator) is HandoffContinuationOperatorIO,'HANDOFF_OWNED_CONTINUATION_TRANSPORT_REQUIRED')
+        operators.append(operator);summary['stage']='CONTINUATION_AND_FRESH_REVIEW'
+        continuation=collect_event_case(canonical_tool_case(case),io=operator.io(),
+            read_subject_actions=operator.read_subject_actions,expected_source_revision=expected_source_revision,
+            expected_runtime_image=expected_runtime_image,expected_registry_sha256=expected_registry_sha256,
+            reviewer_code_revision=reviewer_code_revision,review_run_id=review_run_id,
+            timeout_seconds=min(30,remaining()),monotonic=monotonic,wall_clock=wall_clock,nonce_factory=nonce_factory)
+        remaining()
+        summary.update(continuation.summary,failure_submission_attempts=1,
+            failure_scope='SUPPORTED_MISSING_EVIDENCE_HANDOFF_REFUSAL_NOT_AGENT_CRASH',
+            original_failed_task_id=failed['id'],original_failed_objective_sha256=_sha(_canonical(failed)))
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,CollectionError) else 'HANDOFF_ORIGINAL_CHAIN_INCOMPLETE'
+    return CollectedHandoffCase(summary,continuation,None if failed is None else _canonical(failed),
+        tuple(reply for operator in operators for reply in operator.original_replies()))
+
+
+def collect_owner_referral_case(*,operator_factory,expected_source_revision,expected_runtime_image,
+        expected_registry_sha256,timeout_seconds=30,monotonic=time.monotonic,
+        wall_clock=lambda:datetime.now(timezone.utc),nonce_factory=lambda:str(uuid.uuid4())):
+    """Two actual stored Objectives and an original HTTPS Owner acknowledgment; retain every bounded original HTTP reply."""
+    from app.agent_cert_owner_referral_events import (CASE,canonical_phase_spec,
+        phase_request,action_type,validate_execution,validate_reviewed_owner_case)
+    from scripts.agent_cert_operator_io import OwnerPhaseOperatorIO,OperatorBindingError
+    summary=dict(state='INCOMPLETE',case=CASE,agent_id='a19',certification='UNVERIFIED',
+        production_health='NOT_ESTABLISHED',model_calls=0,submission_attempts=0,stage='PREPARE')
+    operators=[];execution=peer=None
+    try:
+        _require(callable(operator_factory) and type(timeout_seconds) in (int,float)
+            and 0<timeout_seconds<=30,'OWNER_BOUNDED_FACTORY_REQUIRED')
+        deadline=_tick(monotonic)+timeout_seconds
+        def remaining():
+            left=deadline-_tick(monotonic);_require(left>0,'OWNER_OUTER_DEADLINE_EXCEEDED');return left
+        def call(callback,*args):
+            remaining();custody_bound()
+            target=getattr(callback,'__self__',None)
+            if type(target) is OwnerPhaseOperatorIO:
+                used=sum(len(reply.raw) for op in operators for reply in op.original_replies())
+                target._custody_cap=target._response_bytes+24*1024*1024-used
+            value=_call(callback,*args);remaining();custody_bound();return value
+        def custody_bound():
+            _require(sum(len(reply.raw) for op in operators for reply in op.original_replies())<=24*1024*1024,
+                'OWNER_TOTAL_RESPONSE_CUSTODY_BOUND')
+        def original_artifact(operator,metadata):
+            response=call(operator.read_artifact,metadata['artifact_id'])
+            _require(type(response) is tuple and len(response)==3 and response[0]==200
+                and type(response[1]) is bytes and 0<len(response[1])<=65536
+                and response[2]==metadata['sha256']==_sha(response[1]),'OWNER_ORIGINAL_HTTP_ARTIFACT_REQUIRED')
+            return response[1]
+        def make(which,**kwargs):
+            operator=operator_factory(which=which,total_timeout_seconds=min(30,remaining()),**kwargs)
+            _require(type(operator) is OwnerPhaseOperatorIO,'OWNER_OWNED_TRANSPORT_REQUIRED')
+            operators.append(operator);_require(call(operator.authorize) is None,'OWNER_AUTHENTICATION_FAILED')
+            return operator
+        pins=dict(source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            registry_sha256=expected_registry_sha256)
+        def produce(which):
+            nonlocal execution
+            summary['stage']=which.upper();operator=make(which)
+            before=call(operator.runtime);_registry_pin(expected_registry_sha256);began=wall_clock()
+            summary['submission_attempts']+=1
+            submission=_response(call(operator.submit_objective,operator._submitted_request),202,'OWNER_OBJECTIVE_SUBMIT_FAILED')
+            _require(_uuid(submission.get('id')) and type(submission.get('steps')) is list
+                and len(submission['steps'])==1,'OWNER_ORIGINAL_SUBMISSION_REQUIRED')
+            dispatch=submission['steps'][0]['dispatch'];task=dispatch['task_id'];metadata=dispatch['artifact']
+            raw=original_artifact(operator,metadata)
+            input_raw=original_artifact(operator,dispatch['owner_referral_event']['input_artifact_metadata'])
+            objective=_response(call(operator.read_objective,task),200,'OWNER_OBJECTIVE_READ_FAILED')
+            lines=_lines(call(operator.read_subject_actions,task,action_type(which,'full')))
+            after=call(operator.runtime);_require(_equal(before,after),'OWNER_RUNTIME_CHANGED')
+            value=dict(case_spec=canonical_phase_spec(which),submitted_request_sha256=_sha(_canonical(operator._submitted_request)),
+                runtime=before,runtime_after=after,runtime_current=call(operator.runtime),
+                submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,
+                artifact_content_utf8=raw.decode(),input_content_utf8=input_raw.decode(),
+                objective_read=[200,objective],original_action_records=lines,
+                observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()))
+            execution=value
+            joined=validate_execution(value,**pins,now=wall_clock())
+            _require(_equal(objective,_response(call(operator.read_objective,task),200,'OWNER_OBJECTIVE_READ_FAILED')),
+                'OWNER_OBJECTIVE_CHANGED')
+            return value,joined
+        resolved,joined=produce('proposal');execution=resolved
+        acknowledgment=call(operators[0].acknowledge_owner_referral)
+        summary.update(stage='DISTINCT_PERSISTED_PEER',subject_task_id=joined['task_id'])
+        nonce=call(nonce_factory);operator=make('review',execution=resolved,acknowledgment=acknowledgment,nonce=nonce)
+        before=call(operator.runtime);began=wall_clock();_registry_pin(expected_registry_sha256)
+        summary['submission_attempts']+=1
+        request=phase_request('review',execution=resolved,acknowledgment=acknowledgment,nonce=nonce)
+        submission=_response(call(operator.submit_objective,request),202,'OWNER_PEER_OBJECTIVE_SUBMIT_FAILED')
+        task=submission['id'];dispatch=submission['steps'][0]['dispatch'];metadata=dispatch['artifact']
+        raw=original_artifact(operator,metadata)
+        objective=_response(call(operator.read_objective,task),200,'OWNER_PEER_OBJECTIVE_READ_FAILED')
+        lines=_lines(call(operator.read_subject_actions,task,action_type('review','review')))
+        after=call(operator.runtime);_require(_equal(before,after),'OWNER_PEER_RUNTIME_CHANGED')
+        peer=dict(submitted_request_sha256=_sha(_canonical(request)),runtime=before,runtime_after=after,
+            submission=[202,submission],dispatch=dispatch,artifact_metadata=metadata,artifact_content_utf8=raw.decode(),
+            objective_read=[200,objective],action_records=lines,
+            observation=dict(started_at=began.isoformat(),completed_at=wall_clock().isoformat()),
+            owner_acknowledgment=acknowledgment)
+        validate_reviewed_owner_case(resolved,peer,**pins,now=wall_clock());remaining();_registry_pin(expected_registry_sha256)
+        summary.update(state='UNSIGNED_EVENT_EVIDENCE',stage='COMPLETE',peer_task_id=task,
+            source_revision=expected_source_revision,runtime_image_id=expected_runtime_image,
+            execution_sha256=_sha(_canonical(resolved)),peer_execution_sha256=_sha(_canonical(peer)),
+            original_producer_rows=8,original_peer_rows=2,owner_acknowledgment="NOT_APPROVED",
+            owner_identity_scope="CURRENT_SERVER_ISSUED_ROLE_NOT_LAM_IDENTITY",execution_performed=False)
+    except Exception as error:
+        summary['reason']=str(error) if isinstance(error,(CollectionError,OperatorBindingError)) else 'OWNER_ORIGINAL_CHAIN_INCOMPLETE'
+    replies=tuple(reply for operator in operators for reply in operator.original_replies())
+    return CollectedRecoveryCase(summary,None if execution is None else _canonical(execution),
+        None if peer is None else _canonical(peer),replies)

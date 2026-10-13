@@ -72,3 +72,33 @@ def test_golden_direct_stream_rejects_unobserved_model(monkeypatch,tmp_path):
                               settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive=0,
                                                        context_tokens=128,max_output_tokens=8),
                               capacity=lambda _:None,options=lambda:{}))
+
+
+@pytest.mark.parametrize('response_format,configured,expected', [
+    ('strict_json', {}, {'temperature': 0}),
+    ('strict_json', {'temperature': .35, 'top_p': .9}, {'temperature': .35, 'top_p': .9}),
+    ('text', {}, {}),
+    ('text', {'temperature': .7}, {'temperature': .7}),
+])
+def test_structured_generation_respects_configured_options(response_format,configured,expected,monkeypatch,tmp_path):
+    import json
+    for name in ('PRIME_LOCAL_ADMISSION_MODE','PRIME_BACKEND_MEMORY_RECEIPT',
+                 'PRIME_MEASURED_COMPUTE_PROFILE','PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'PRIME_SSD_THERMAL_ENFORCE'):
+        monkeypatch.delenv(name,raising=False)
+    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
+    before=dict(configured);requests=[]
+    def reply(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200,text=json.dumps({'done':True,'message':{'content':'{"ok":true}'}})+'\n')
+    client=httpx.AsyncClient(transport=httpx.MockTransport(reply))
+    with patch('app.direct_stream.httpx.AsyncClient',return_value=client):
+        result=asyncio.run(infer({'timeout_seconds':5,'prompt':'fixture','ram_mb':1024,
+            'response_format':response_format},SimpleNamespace(model='gemma3:1b'),
+            settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive=0,
+                context_tokens=128,max_output_tokens=8),capacity=lambda _:None,options=lambda:configured))
+    assert result['result']=='{"ok":true}'
+    assert len(requests)==1
+    assert requests[0]['options']=={'num_ctx':128,'num_predict':8,**expected}
+    assert configured==before
+    assert (requests[0].get('format')=='json') is (response_format=='strict_json')

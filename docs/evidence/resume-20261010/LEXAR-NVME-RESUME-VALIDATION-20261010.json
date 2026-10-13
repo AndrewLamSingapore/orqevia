@@ -1,0 +1,32 @@
+{
+    "scope":  "ONE_OWNER_APPROVED_READ_ONLY_SMART_QUERY",
+    "host":  "DESKTOP-27LKJ2V",
+    "started_at":  "2026-10-10T00:07:30.0254468Z",
+    "status":  "PASS_CURRENT_SAMPLE_ONLY_NOT_HOST_QUALIFICATION",
+    "errors":  [
+
+               ],
+    "stress":  0,
+    "installations":  0,
+    "settings_changes":  0,
+    "service_changes":  0,
+    "boot_utc":  "2026-10-09T23:47:38.5000000Z",
+    "raw_sha256":  "66e8e838e5b6e37d84bda6c18de872ef4a4d1709a8d13193c22ed70ba4d95741",
+    "observed_at":  "2026-10-10T08:07:32.7172895+08:00",
+    "composite_c":  51.85,
+    "sensors":  [
+                    {
+                        "number":  1,
+                        "celsius":  51.85
+                    },
+                    {
+                        "number":  2,
+                        "celsius":  57.85
+                    }
+                ],
+    "critical_warning_bits":  0,
+    "media_integrity_errors":  "0",
+    "error_log_entries":  "0",
+    "boundary":  "Current NVMe sample only. Sensor locations and manufacturer/controller thermal limits are not established by this query; ignore the old reader caveat as a qualification threshold. TemperatureMax is not a measured lifetime maximum.",
+    "completed_at":  "2026-10-10T00:07:32.8408122Z"
+}
