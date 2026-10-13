@@ -1,0 +1,46 @@
+{
+  "scope": "Dated source/deployment claims; not Lam Verified or live qualification",
+  "orqevia_main": "738682b21a8a48e718b4f99d17bf339e495af821",
+  "completed": [
+    {
+      "repository": "AndrewLamSingapore",
+      "pr": 25,
+      "main": "8d4683909fbb7b7b5444dad00190391f98b3615a",
+      "verification": "Windows before failure, after generator/conformance pass, two CI pass; reviewed attributes match merged; original branch retained"
+    },
+    {
+      "repository": "sky-tablet",
+      "pr": 18,
+      "main": "8cb2dcf428ff40e9313645c8a4952fc4e0ecd7e9",
+      "verification": "21 local tests pass with declared three0.180.0; two CI pass; exact production READY; HTTP200 expected three response headers observed"
+    },
+    {
+      "repository": "game-platform",
+      "pr": 43,
+      "main": "51c1f720409cd45747f47a578966c64df361d4e7",
+      "verification": "18 package commands and two CI pass; exact production READY; original41/35 closed and branches retained; authenticatedjourney unverified"
+    },
+    {
+      "repository": "velyqua",
+      "pr": 88,
+      "main": "97dd856f4af3723c89bb5f55b7e3d94d29a5af18",
+      "verification": "Currentnative/websource review and staticdisclosuretest pass; two CI pass; original77closed/historyretained; sourceonly"
+    }
+  ],
+  "remaining": {
+    "authority92": "Independent review in progress; fresh exact-head isolatedqualityrerun38191975589 requested; old local dependencies cannot validate patched candidate",
+    "A19": "DELL reported495pass3protectedinitfailures; then found4c2bef6wholefileourslostuniqueownedidentity/referraldispatch; candidateNOTFINAL; correction/allconflictcoverage+260delta+baselinefailurecomparison+review+CI pending",
+    "runtime": "ExistingWindowsownerDockeraccessdependency; mergedcontroller/dashboard not verifiedinstalled; current21coaching/livefabrics/device/L7/backup/host acceptance incomplete"
+  },
+  "dell_last_ack": "6138322728 expandedqueueacknowledged",
+  "dell_last_defect_receipt": "6138431741",
+  "latest_abex_sync": "6138485318",
+  "initial_failures_preserved": true,
+  "authority92": {
+    "main": "069f5b505672eb8944b2b9da9acd974e784896d8",
+    "ci_job": 115135046960,
+    "tests_passed": 47,
+    "tests_failed": 0,
+    "production_correspondence": "PENDING_AT_OBSERVATION"
+  }
+}

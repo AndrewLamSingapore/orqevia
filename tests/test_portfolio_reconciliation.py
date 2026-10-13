@@ -160,6 +160,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only this exact integration follow-up, preserving historical bytes.
+    followup_title = "## Completed source integrations and remaining runtime work - 13 October 2026"
+    assert after.count(followup_title) == 1
+    followup_start = after.index(followup_title)
+    followup_end = after.index("\n## ", followup_start + len(followup_title)) + 1
+    followup = after[followup_start:followup_end].encode("utf-8")
+    assert len(followup) == 3918
+    assert hashlib.sha256(followup).hexdigest() == "e6814e6a7a9d5d8b1517ff4b3fca0c71a6c696621b2ed7b84a32e304691ceab9"
+    after = after[:followup_start] + after[followup_end:]
     # Admit only this exact dated reconciliation; preserve every historical pin.
     reconciliation_title = '## ABEX\u2013DELL end-to-end reconciliation \u2014 13 October 2026'
     assert after.count(reconciliation_title) == 1
