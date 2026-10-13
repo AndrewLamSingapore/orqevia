@@ -70,7 +70,7 @@ def coaching_snapshot(root, now=None):
                           'last_tick_at':datetime.fromtimestamp(heartbeat['last_tick_epoch'],timezone.utc).isoformat(),
                           'source_revision':heartbeat['source_revision'],'last_state':heartbeat['state']}
         status = 'UNKNOWN' if last is None or last>now+5 else ('STALE' if now-last>60 else 'OBSERVED')
-        return {**unavailable,'status':status,'last_event_at':datetime.fromtimestamp(last,timezone.utc).isoformat() if last is not None else None,
+        return {**unavailable,'normal_followup':normal_followup_snapshot(root),'status':status,'last_event_at':datetime.fromtimestamp(last,timezone.utc).isoformat() if last is not None else None,
                 'cohort_source_revision':cohort['source_revision'],'cohort_id':cohort['id'],'controller':controller,
                 'baseline_pass_count':sum(r['baseline_pass']==1 for r in rows),
                 'acceptance_pass_count':sum(r['acceptance_pass']==1 for r in rows),
@@ -85,3 +85,50 @@ def coaching_snapshot(root, now=None):
         return unavailable
     finally:
         if db is not None: db.close()
+
+def normal_followup_snapshot(root):
+    """Explicit separate gate: sanitized finite-wave observations, never answers."""
+    unavailable={'status':'UNAVAILABLE','agents':[],'normal_denominator':21,
+                 'full_role_accepted_count':0,'independent_azure_status':'NOT_ESTABLISHED'}
+    path=Path(root)/'normal-role-followups'/'hf-normal-21-20261013-v1'/'state.json'
+    try:
+        with path.open('rb') as handle:raw=handle.read(1048577)
+        if len(raw)>1048576:return unavailable
+        state=json.loads(raw)
+        from .agent_registry import registered_agent_ids,agent_record
+        rows=state['agents']
+        if len(rows)!=21 or {a['agent'] for a in rows}!=registered_agent_ids(include_orchestrator=False):return unavailable
+        agents=[]
+        def safe_errors(values):
+            return [x for x in values[:32] if type(x) is str and re.fullmatch(r'[a-zA-Z0-9_.:-]{1,96}',x)] if type(values) is list else []
+        for row in rows:
+            assessments=[]
+            for original in row['assessments'][-16:]:
+                if original['phase'] not in ('PRACTICE','REASSESSMENT') or original['outcome'] not in ('PASS','FAIL'):return unavailable
+                assessments.append({'phase':original['phase'],'outcome':original['outcome'],
+                    'errors':safe_errors(original['errors']),'execution_error':safe_errors([original.get('execution_error')]),
+                    'completed_at':original.get('completed_at'),'execution_bound':original['execution_bound'] is True})
+            latest=next((x for x in reversed(assessments) if x['phase']=='REASSESSMENT'),None)
+            practice=next((x for x in reversed(assessments) if x['phase']=='PRACTICE'),None)
+            actions=['answer_free_method_and_response_types']
+            if practice:actions.append('disjoint_practice_completed')
+            if row.get('infrastructure_recovery'):actions.append('pre_http_context_budget_repaired_original_failure_retained')
+            if row.get('identifier_coaching_applied'):actions.append('source_identifier_casing_coached')
+            agents.append({'agent_id':row['agent'],'role':agent_record(row['agent'])['name'],
+                'baseline_pass':row['baseline_pass'] is True,'baseline_errors':safe_errors(row['baseline_errors']),
+                'baseline_score':100 if row['baseline_pass'] is True else 0,
+                'latest_pass':None if latest is None else latest['outcome']=='PASS',
+                'latest_score':None if latest is None else (100 if latest['outcome']=='PASS' else 0),
+                'practice_pass':None if practice is None else practice['outcome']=='PASS',
+                'failures':[x for x in assessments if x['outcome']=='FAIL'],'reassessment_results':[x for x in assessments if x['phase']=='REASSESSMENT'],
+                'coaching_actions':actions,'last_activity_at':assessments[-1]['completed_at'] if assessments else None,
+                'blocker':safe_errors(row.get('blocker',[])), 'full_role_acceptance_status':'NOT_ESTABLISHED'})
+        return {**unavailable,'status':'OBSERVED','wave':state['wave'],'runtime_revision':state['runtime_revision'],
+            'assessment_scope':'ANSWER_FREE_NORMAL_ROLE_REASSESSMENT_NOT_FULL_ROLE_ACCEPTANCE_OR_AZURE_L7',
+            'score_scale':'SINGLE_CASE_BINARY_0_OR_100_NOT_ROLE_COMPETENCE','agents':agents,
+            'baseline_pass_count':sum(a['baseline_pass'] for a in agents),
+            'reassessed_count':sum(a['latest_pass'] is not None for a in agents),
+            'normal_pass_count':sum(a['latest_pass'] is True for a in agents),
+            'normal_fail_count':sum(a['latest_pass'] is False for a in agents),
+            'last_activity_epoch':state['last_activity_at']}
+    except (OSError,ValueError,TypeError,KeyError,OverflowError):return unavailable

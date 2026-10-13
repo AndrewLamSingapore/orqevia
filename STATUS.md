@@ -36,6 +36,24 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX coaching and durable task-memory continuation — 13 October 2026
+
+### Claimed, not independently checked
+
+- At 08:50 UTC, the retained original HF normal-role batch is 15/21 PASS and 6/21 FAIL. Answer-free targeted coaching plus unchanged semantic reassessment yields 20/21 PASS and 1/21 FAIL. The 15 originally passing agents all pass reassessment. Practice is separately 1/6 PASS and 5/6 FAIL; those failures are retained. These are bounded synthetic normal-role observations, not full responsibility coverage or independent certification.
+- Canonical a13 is Forecast Agent, distinct from the legacy A13 Test Engineer alias for a18. Its original expired local job remains unchanged; recovery and later real HF normal-role execution are retained separately.
+- a01 remains failed on exact case-sensitive project identifier assertions despite targeted clarification. Its original field-contract failure and two completed identifier-failure reassessments are retained. Automatic repetition is stopped pending materially new diagnostic evidence. Eight pre-HTTP context-budget rejection attempts are infrastructure failures, not agent regressions; each original record and unknown-cost field remains, with explicit one-time scoped-budget recovery.
+- Candidate source `66666be359d566a95b495008cca1a93911614779` has 6010 source tests PASS, 1 SKIP, 5 warnings. The earlier 6008 PASS / 1 FAIL / 1 SKIP regression is retained; the failed PWA verifier expected shell v16 after the coherent v17 release. Cache-generation coherence was repaired without changing agent grading criteria.
+- The bounded single-owner coaching controller runs candidate `b8db7febd7eae9299b2a687a84e344e7e8a26eab`; primary and Interface remain candidate `7b22f1c53b6fc0b8920e87d4bc3c296640ce493a` at this dated observation. Runtime installation, source main, local acceptance and independent assessment remain separate. Four inspected services are healthy. Controlled controller restart and Windows display-off execution receipts are retained; unattended reboot before logon and execution after this Codex session ends remain unestablished.
+- Repository-backed memory in `docs/operations/abex-autonomy/` retains 38 recovered obligations, evidence hashes, dependencies, approvals, parked work and an atomically written hash-validated checkpoint. Supplemental discovery indexes 197 untriaged markers and 13 session metadata entries; inaccessible fixtures and unreviewed history are explicit limits, not a claim of exhaustive recovery. Local raw receipts remain in `operations/coaching-priority-20261013/` on ABEX.
+
+### Known broken / open
+
+- Full end-to-end role/tool/collaboration acceptance remains 0/21 established. Independent Microsoft Azure L7 certification is not established; historical installed 0/21 L7 records are preserved. Azure is the independent assessment track; DigitalOcean remains the operational migration target, with no verified coaching host or authorized production cutover recorded.
+- Real production tool composition, A19 successor #296 assessment/spine semantics, authenticated dashboard/iPhone journeys, pre-logon recovery, coherent off-host restore and physical/hardware qualification remain open. VELYQUA physical sensor assembly and live telemetry remain Owner-parked. DELL remains assessment-only.
+
+Evidence navigation: [task ledger](docs/operations/abex-autonomy/MASTER_TASK_LEDGER.md), [21-agent matrix](docs/operations/abex-autonomy/CERTIFICATION_MATRIX_21.md), [evidence index](docs/operations/abex-autonomy/EVIDENCE_INDEX.md). Original dated sections and Lam-only Verified entries are preserved.
+
 ## Completed source integrations and remaining runtime work - 13 October 2026
 
 ### Claimed, with scoped source and deployment receipts

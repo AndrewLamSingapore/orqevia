@@ -1,0 +1,154 @@
+{
+  "payload": {
+    "schema": "abex.session-checkpoint.v1",
+    "at_utc": "2026-10-13T08:50:25.462637+00:00",
+    "active_objective": "21-agent evidence-backed coaching and acceptance",
+    "git": {
+      "head": "66666be359d566a95b495008cca1a93911614779",
+      "branch": "codex/coaching-priority-20261013",
+      "dirty_paths_at_observation": [
+        "M app/coaching_observation.py",
+        " M clients/pwa/candidate-tests.mjs",
+        " M clients/pwa/dashboard-coaching-tests.mjs",
+        " M clients/pwa/dashboard.mjs",
+        " M clients/pwa/release.mjs",
+        " M clients/pwa/revision-tests.mjs",
+        " M clients/pwa/sw-update-tests.mjs",
+        " M clients/pwa/sw.js",
+        " M tests/test_coaching_observation.py",
+        "?? docs/operations/"
+      ],
+      "pr": "https://github.com/AndrewLamSingapore/orqevia/pull/299"
+    },
+    "runtime": [
+      {
+        "name": "prime-epoch-20260919-prime-1",
+        "id": "e86bc49635f8ac723632f545576123cc0b4498e80bfcdbdc5b2b4fd1ada7a6fa",
+        "image": "sha256:318587768373171a68e49668bf46f6cedfc179acb3f37885eff81ad902390bd2",
+        "status": "running",
+        "health": "healthy",
+        "started_at": "2026-10-13T08:44:33.498156996Z",
+        "source_revision": "7b22f1c53b6fc0b8920e87d4bc3c296640ce493a",
+        "restart_policy": "unless-stopped"
+      },
+      {
+        "name": "prime-epoch-20260919-interface-1",
+        "id": "9b942cfaf39369094aaf596f7a0ad206301465f806af41597866069713580298",
+        "image": "sha256:318587768373171a68e49668bf46f6cedfc179acb3f37885eff81ad902390bd2",
+        "status": "running",
+        "health": "healthy",
+        "started_at": "2026-10-13T07:59:24.235814387Z",
+        "source_revision": "7b22f1c53b6fc0b8920e87d4bc3c296640ce493a",
+        "restart_policy": "unless-stopped"
+      },
+      {
+        "name": "orqevia-coaching-coaching-1",
+        "id": "427cde7c6236638627dab2d9f677068feb052fbd5995e831805e7acf20745d13",
+        "image": "sha256:cf11bef0d4d922346439ce984e7e3cb28b4ed94b8f92507772004ac4f8dd9b8f",
+        "status": "running",
+        "health": "healthy",
+        "started_at": "2026-10-13T08:39:06.940124444Z",
+        "source_revision": "b8db7febd7eae9299b2a687a84e344e7e8a26eab",
+        "restart_policy": "unless-stopped"
+      },
+      {
+        "name": "prime-epoch-20260919-ollama-1",
+        "id": "dc59c4482ea515b3ef8fe4851e5c655e0bead8e7f721ba54f6d5661d346270c3",
+        "image": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+        "status": "running",
+        "health": "healthy",
+        "started_at": "2026-10-13T06:44:45.348853416Z",
+        "source_revision": null,
+        "restart_policy": "unless-stopped"
+      }
+    ],
+    "last_verified_action": "Installed bounded follow-up controller and corrected scoped HF context budget; originals retained. See installation receipts.",
+    "counts": {
+      "baseline_pass": 15,
+      "baseline_denominator": 21,
+      "followup": {
+        "state": "BLOCKED",
+        "wave": "hf-normal-21-20261013-v1",
+        "practice_assessed": 6,
+        "practice_passed": 1,
+        "reassessed": 21,
+        "normal_passed": 20,
+        "normal_failed": 1,
+        "jobs_submitted": 36,
+        "normal_denominator": 21,
+        "unknown_cost_count": 8,
+        "retained_reassessment_attempts": 30,
+        "known_cost_usd": 0.00218943,
+        "full_role_accepted_count": 0
+      },
+      "gate_b_established": 0,
+      "gate_b_denominator": 21,
+      "gate_c": "NOT_ESTABLISHED"
+    },
+    "next_safe_action": "Collect follow-up wave, diagnose retained failures against unchanged oracles; continue bounded new-evidence corrections and all-21 regression.",
+    "remaining_task_ids": [
+      "ABEX-REC-001",
+      "ABEX-REC-002",
+      "ABEX-REC-003",
+      "ABEX-REC-004",
+      "ABEX-REC-005",
+      "ABEX-REC-006",
+      "ABEX-REC-007",
+      "ABEX-REC-008",
+      "ABEX-REC-009",
+      "ABEX-REC-010",
+      "ABEX-REC-011",
+      "ABEX-REC-012",
+      "ABEX-REC-013",
+      "ABEX-REC-014",
+      "ABEX-REC-015",
+      "ABEX-REC-016",
+      "ABEX-REC-017",
+      "ABEX-REC-018",
+      "ABEX-REC-019",
+      "ABEX-REC-020",
+      "ABEX-REC-021",
+      "ABEX-REC-022",
+      "ABEX-REC-023",
+      "ABEX-REC-024",
+      "ABEX-REC-025",
+      "ABEX-REC-026",
+      "ABEX-REC-027",
+      "ABEX-REC-028",
+      "ABEX-REC-029",
+      "ABEX-REC-030",
+      "ABEX-REC-031",
+      "ABEX-REC-032",
+      "ABEX-REC-033",
+      "ABEX-REC-034",
+      "ABEX-REC-035",
+      "ABEX-REC-036",
+      "ABEX-REC-037",
+      "ABEX-REC-038"
+    ],
+    "evidence_hashes": {
+      "recovered-backlog-agent.json": "318aa29082599a8713dc21d93564802eacf39be15c6ce78bd5127d1fbd531ebb",
+      "recovered-backlog-supplement-agent.json": "714992b0b22bea06014d16191665dbd02eeb03bf5b90b978fcb519d0602d2736",
+      "normal-role-latest.json": "66c4811b0c309c1e4d3e62383af0577651870faaf765e1d1629085d35336e147",
+      "followup-latest.json": "b2477691f8047450a040aa42bf1d9ae29df93ec94748bb3086185ff1bbe14f83",
+      "CONTEXT-BUDGET-REPAIR.json": "e59b9e18eb53b8d750ecd3e716f8f7ccdd63420480947b6f18e5903d311b1279",
+      "FOLLOWUP-PREPARATION.json": "8c590dcad0854edcf8c3e10435d7f70c7bd3f95b4dd06723d4b76de056b02e58",
+      "FULL-FOLLOWUP-REGRESSION.json": "ce619b93951892771f254c3f98d55333fc16fe38bfa7a96aff4190bfa007cbf5",
+      "followup-context-recovery-tests.log": "cab896bf665b91edf062478798c8787a005dcc574893e2bd5f6959cdd44ba710",
+      "display-off-receipt.json": "2ed2d0223672e3dd236675bf7b0e4ad48fd042dca136987965048f3cb4412bce",
+      "scheduled-task.xml": "8fa5cee0d18473a6c8b147706f263eb2f8bb678a6fa301765abf362bcde39d31",
+      "supervisor-pin.json": "5db3527e94677628605afe6805f997618191a7ffbc258639265e785db2f79057"
+    },
+    "owner_decisions_required": [
+      "Physical-device observations and sensor resumption",
+      "New cloud purchase/cutover, external custody/key and budget decisions when needed",
+      "Independent Azure assessor access/results"
+    ],
+    "parked": [
+      "VELYQUA physical telemetry"
+    ],
+    "history_preserved": true,
+    "discovery_complete": false
+  },
+  "payload_sha256": "14e4c0f1c63618de151f9dfeb94b14e35ee7bbf6e3daaf45abf8997a70b1498c"
+}

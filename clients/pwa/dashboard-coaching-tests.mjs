@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {coachingStatus,coachingPhaseCounts,coachingDetailLines} from './dashboard.mjs';
+import {coachingStatus,coachingPhaseCounts,coachingDetailLines,normalFollowupLines} from './dashboard.mjs';
 
 const time = Date.parse('2026-10-12T01:00:00Z');
 const observed = {status: 'OBSERVED', last_event_at: new Date(time).toISOString(), cohort_id: 'c', cohort_source_revision: 'a'.repeat(40), baseline_pass_count: 0, acceptance_pass_count: 0, completed_count: 0, agents: []};
@@ -39,3 +39,11 @@ const css = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
 assert.ok(css.includes('.coaching-roles'));
 
 console.log('Coaching dashboard: status transitions, malformed/future rejection, DOM and style wiring PASS');
+
+const normalLines=normalFollowupLines({baseline_pass:false,latest_pass:true,baseline_errors:['field_contract_mismatch'],
+  reassessment_results:[{outcome:'PASS',errors:[],execution_error:[]}],coaching_actions:['answer_free_method_and_response_types'],blocker:[]});
+assert.ok(normalLines[0].includes('baseline: FAIL; reassessment: PASS'));
+assert.ok(normalLines[0].includes('Full role acceptance: NOT ESTABLISHED'));
+assert.ok(normalLines[1].includes('Original normal-role failures: field_contract_mismatch'));
+assert.ok(normalFollowupLines({latest_pass:null})[0].includes('PENDING'));
+console.log('Separate normal-role follow-up, original failures and full/Azure gate labels PASS');

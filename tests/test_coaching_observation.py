@@ -7,6 +7,30 @@ from app.job_queue import JobQueue
 from app.coaching_observation import coaching_snapshot
 
 class ObservationTests(unittest.TestCase):
+    def test_normal_followup_excludes_raw_inputs_outputs_and_keeps_failures(self):
+        import json
+        from app.normal_role_followups import plan_for_agent,WAVE
+        from app.agent_registry import registered_agent_ids
+        from app.coaching_observation import normal_followup_snapshot
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);path=root/'normal-role-followups'/WAVE;path.mkdir(parents=True)
+            agents=[plan_for_agent(a,i,'retained',[],True) for i,a in enumerate(sorted(registered_agent_ids(include_orchestrator=False)))]
+            attempt={'phase':'REASSESSMENT','outcome':'FAIL','errors':['field_contract_mismatch'],
+                     'execution_error':'','completed_at':'2026-10-13T08:00:00Z','execution_bound':True,
+                     'original_output':'PRIVATE_OUTPUT','prompt':'PRIVATE_PROMPT','secret':'PRIVATE_TOKEN'}
+            agents[0]['assessments']=[attempt]
+            state={'agents':agents,'wave':WAVE,'runtime_revision':'a'*40,'last_activity_at':1}
+            (path/'state.json').write_text(json.dumps(state))
+            report=normal_followup_snapshot(root)
+            self.assertEqual(report['normal_fail_count'],1)
+            self.assertEqual(report['reassessed_count'],1)
+            self.assertEqual(report['normal_denominator'],21)
+            self.assertEqual(report['full_role_accepted_count'],0)
+            self.assertEqual(report['agents'][0]['failures'][0]['errors'],['field_contract_mismatch'])
+            for secret in ('PRIVATE_OUTPUT','PRIVATE_PROMPT','PRIVATE_TOKEN'):self.assertNotIn(secret,str(report))
+            agents[0]['agent']=agents[1]['agent'];(path/'state.json').write_text(json.dumps(state))
+            self.assertEqual(normal_followup_snapshot(root)['status'],'UNAVAILABLE')
+
     def test_original_failure_scores_actions_and_full_acceptance_stay_separate(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);queue=JobQueue(root/'queue.db')

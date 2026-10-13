@@ -43,6 +43,17 @@ export function coachingDetailLines(agent) {
   return lines;
 }
 
+export function normalFollowupLines(agent) {
+  const mark=value=>value===true?'PASS':value===false?'FAIL':'PENDING';
+  const lines=[`Normal-role baseline: ${mark(agent?.baseline_pass)}; reassessment: ${mark(agent?.latest_pass)}. Full role acceptance: NOT ESTABLISHED; independent Azure L7: NOT ESTABLISHED.`];
+  if(Array.isArray(agent?.baseline_errors)&&agent.baseline_errors.length)lines.push(`Original normal-role failures: ${agent.baseline_errors.slice(0,32).join(', ').slice(0,1500)}`);
+  if(Array.isArray(agent?.reassessment_results)){const latest=agent.reassessment_results.at(-1);if(latest)lines.push(`Latest reassessment: ${latest.outcome}; failures: ${(latest.errors||[]).slice(0,32).join(', ')||'none'}; execution: ${(latest.execution_error||[]).join(', ')||'completed'}`);}
+  if(Array.isArray(agent?.coaching_actions))lines.push(`Coaching actions: ${agent.coaching_actions.slice(0,8).join(', ').slice(0,1500)}`);
+  if(Array.isArray(agent?.blocker)&&agent.blocker.length)lines.push(`Blocker: ${agent.blocker.join(', ').slice(0,1500)}`);
+  if(agent?.last_activity_at)lines.push(`Normal-role last activity: ${String(agent.last_activity_at).slice(0,64)}`);
+  return lines;
+}
+
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
   let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, generation=null;
@@ -81,9 +92,12 @@ if(typeof document!=='undefined') {
     text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - synthetic role assessment only; full role acceptance is separate`);
     const counts=coachingPhaseCounts(coaching.agents);
     if(summary&&counts){for(const item of counts){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=`${item.assessed} / 21 assessed`;const l=document.createElement('small');l.textContent=`${item.phase}: ${item.passed} pass, ${item.failed} fail, ${item.unassessed} unassessed`;c.append(s,l);summary.append(c);}}
+    const normal=coaching.normal_followup;
+    if(summary&&normal?.status==='OBSERVED'&&normal.normal_denominator===21&&normal.agents?.length===21){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=`Normal-role reassessment: ${normal.normal_pass_count} / 21 pass`;const l=document.createElement('small');l.textContent=`${normal.reassessed_count} / 21 assessed; ${normal.normal_fail_count} fail. Full end-to-end acceptance: 0 / 21 established. Azure L7: not established.`;c.append(s,l);summary.append(c);}
     if(!counts){text('coaching-state','UNKNOWN');empty('Complete per-role observation unavailable; partial or malformed registry.');return;}
     if(!Array.isArray(coaching.agents)||coaching.agents.length===0){empty('No per-role observation (cohort unavailable or partial registry).');return;}
     if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${typeof agent.role==='string'?agent.role.slice(0,128):'Role UNKNOWN'} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Synthetic acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);for(const line of coachingDetailLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
+    if(list&&normal?.status==='OBSERVED'&&normal.agents?.length===21){for(const agent of normal.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.role||'Role UNKNOWN'} - Normal-role follow-up`;row.append(name);for(const line of normalFollowupLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
   }
   function unavailable(state){latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');text('telemetry-source','No current authenticated measurement');}
   function render(){

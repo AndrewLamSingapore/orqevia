@@ -1,0 +1,1153 @@
+{
+  "schema": "abex.master-task-ledger.v1",
+  "updated_at_utc": "2026-10-13T08:50:25.462637+00:00",
+  "tasks": [
+    {
+      "task_id": "ABEX-REC-001",
+      "project": "ORQEVIA",
+      "original_objective": "Complete real 21-agent coaching and role acceptance",
+      "verified_status": "OPEN",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Reconcile current per-agent receipts, continue bounded corrections and regression.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Exact unchanged role criteria met for 21/21 with retained failures; separate gates B/C.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T08:50:25.462637+00:00",
+        "status": "IN_PROGRESS",
+        "scope": "Retained baseline 15/21; targeted practice and unchanged semantic reassessment running. Full acceptance 0/21 established."
+      }
+    },
+    {
+      "task_id": "ABEX-REC-002",
+      "project": "ORQEVIA",
+      "original_objective": "Integrate A19 successor #296 without spine assessment side effects",
+      "verified_status": "FAILED_SOURCE_CANDIDATE",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Reported two authority/spine semantic failures; no fresh rerun here.",
+      "next_executable_action": "Read exact failing assertions and final net delta against current main; repair successor.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Unchanged whole-suite and independent review pass; no compulsory spine store for canonical assessment.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-003",
+      "project": "ORQEVIA",
+      "original_objective": "Bind every role/tool to production handlers and actual sinks",
+      "verified_status": "OPEN",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Map eligible tools, aliases, handlers, production composition and authenticated paths.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Real tool receipts for all required roles, preserved authorization boundaries.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-004",
+      "project": "ORQEVIA",
+      "original_objective": "Verify all fabric execution including MLP HF compute EventFabric portfolio compute Stable Spine PXI",
+      "verified_status": "UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Run authenticated admission/execution/readback stage receipts.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Owning runtime/store provenance and retained results for each live stage; no component-as-hardware substitution.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-005",
+      "project": "ORQEVIA",
+      "original_objective": "Qualify protected initialization and all 29 capabilities",
+      "verified_status": "OPEN",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Consumed runs and original verifier pins cannot be rebound; #267 repin and #266 skip held.",
+      "next_executable_action": "Recover original 29-case assertions and pins; reproduce authentic independent challenge.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Actual 29/29 distinct owned-capability execution and signer/custody evidence.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-006",
+      "project": "ORQEVIA / Microsoft Azure",
+      "original_objective": "Independent Azure L7 assessment",
+      "verified_status": "NOT_ESTABLISHED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Last dated full L7 0/21; access/assessor availability must be checked.",
+      "next_executable_action": "Inventory authentic assessor-issued results and prepare reproducible package.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Independent Azure-issued gate C results distinct from local certification.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-007",
+      "project": "ORQEVIA",
+      "original_objective": "Install durable restart-safe coaching telemetry and recovery",
+      "verified_status": "PARTIAL_REQUIRES_ROOT_RECONCILIATION",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Check root controller/restart/task receipts and before-login boot recovery gap.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Independent background execution after session exit, controlled restart and authorized reboot receipts; no overlapping writers.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T08:50:25.462637+00:00",
+        "status": "PARTIAL",
+        "scope": "Finite follow-up controller installed with exclusive lock and durable state; logon supervisor active. Pre-logon reboot and post-session execution remain unverified."
+      }
+    },
+    {
+      "task_id": "ABEX-REC-008",
+      "project": "ORQEVIA",
+      "original_objective": "Qualify additional inference lanes",
+      "verified_status": "PARTIAL_REQUIRES_ROOT_RECONCILIATION",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Reconcile #297 activation and actual concurrent HF receipts, retain local N=1 limit.",
+      "priority": "P1",
+      "completion_acceptance_criteria": "Measured real parallel provider execution with cost/admission/thermal bounds; serial tests not N=2/N=3 local.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T08:50:25.462637+00:00",
+        "status": "PARTIAL",
+        "scope": "Two scoped cloud lanes enabled, baseline provider execution proven; full mixed local/cloud qualification remains open."
+      }
+    },
+    {
+      "task_id": "ABEX-REC-009",
+      "project": "ORQEVIA",
+      "original_objective": "Restore Evidence Lens A-F end-to-end functionality",
+      "verified_status": "HISTORICAL_E2E_FAIL_UNRESOLVED",
+      "evidence_sources": [
+        {
+          "path": "recovery-records/FINAL-QUALIFICATION-CHECKPOINT-20260927.md",
+          "sha256": "bb052b1b4794207995be375e6c3f34ebe30743bd23c7ba6f41f80aefda49d037",
+          "file_mtime_utc": "2026-09-27T11:22:53.811690+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "portfolio-ssot/PORTFOLIO-TRUTH-RECONCILIATION-20260927.md",
+          "sha256": "62da0dc1e55d2674e144d8cf44afd69eea7c0a8459d0ea5883458b189f46ee48",
+          "file_mtime_utc": "2026-09-27T11:22:53.811690+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Historical P1 missing integration/authoritative unavailable projection and P2 unrequested Tamil; later scoped materialization does not imply all gates.",
+      "next_executable_action": "Map later merged repairs to original A-F case gates; reproduce missing retrieval/classification/persistence separately.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "All original six gates pass through governed objective path with real evidence provenance, no projection-only success.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-010",
+      "project": "ORQEVIA",
+      "original_objective": "Qualify iPhone/native/PWA voice and audio",
+      "verified_status": "DEFERRED_PHYSICAL",
+      "evidence_sources": [
+        {
+          "path": "recovery-records/FINAL-QUALIFICATION-CHECKPOINT-20260927.md",
+          "sha256": "bb052b1b4794207995be375e6c3f34ebe30743bd23c7ba6f41f80aefda49d037",
+          "file_mtime_utc": "2026-09-27T11:22:53.811690+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Audio PARKED_PHYSICAL_FAIL_NOT_ACCEPTED; W3-01 PARKED; actual devices Owner-dependent.",
+      "next_executable_action": "Preserve original Owner audio failure and device journeys; prepare source-only tests.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Real device Owner observation plus authenticated voice/audio/PWA acceptance, no synthetic physical proof.",
+      "owner_approval_requirement": "Owner resumption/physical observation required; no auto unpark."
+    },
+    {
+      "task_id": "ABEX-REC-011",
+      "project": "ORQEVIA",
+      "original_objective": "Qualify DELL MEMBER access without treating DELL as executor",
+      "verified_status": "OWNER_DEPENDENT_ASSESSMENT_ONLY",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "DELL shutdown/physical access; current instruction assessment-only.",
+      "next_executable_action": "Reconcile latest trust/mailbox receipts; retain authenticated device acceptance gap.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Fresh DELL assessment-only authenticated browser receipt with role/CA/runtime binding.",
+      "owner_approval_requirement": "Owner participation if DELL physical action required; do not assign engineering execution."
+    },
+    {
+      "task_id": "ABEX-REC-012",
+      "project": "ABEX",
+      "original_objective": "Coherent encrypted off-host backup and isolated restore",
+      "verified_status": "UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "CONTINUITY-NEXT.md",
+          "sha256": "bc6b653fb02c8d4dc2fada30d1dac973d0444f2dc816c2bce83d6c954511805b",
+          "file_mtime_utc": "2026-10-03T03:14:34.111489+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Off-ABEX key custody/provider/budget not established; local online DB backups alone insufficient.",
+      "next_executable_action": "Reconcile local capture failures, SQLite snapshots and identity/TLS inventory; plan isolated restoration.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Coherent state/config/key custody, encrypted off-device custody and actual isolated restore prove representative data/identity.",
+      "owner_approval_requirement": "Explicit destination/budget/custody approval before paid storage or sensitive upload; destructive restore requires approval."
+    },
+    {
+      "task_id": "ABEX-REC-013",
+      "project": "ABEX",
+      "original_objective": "Account for incomplete preservation capture and long-path/ACL/Git marker gaps",
+      "verified_status": "PARTIAL_HISTORICAL",
+      "evidence_sources": [
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Historical 3321 markers, 522 valid HEAD, 43 dirty and 2799 failed markers; no fresh complete proof.",
+      "next_executable_action": "Read final capture inventory and failures without opening secrets; compare staging coverage.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "All inaccessible paths/link targets/raw journals accounted; no stale WAL applied; hashes and restore receipt.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-014",
+      "project": "ABEX",
+      "original_objective": "Diagnose SSD temperature/health, filesystem and historical crashes",
+      "verified_status": "MONITOR_UNQUALIFIED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "host-audit/evidence-20260927-final/CHKDSK-SCAN.txt",
+          "sha256": "9b3ff21cae6ed56e123a60af803bf4c1f2cfa512fca04635288acb65baa5cbb3",
+          "file_mtime_utc": "2026-09-27T00:31:21.758460+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Historical bugchecks 0x0A/0x3B/0x1A unknown cause; 27 Sep CHKDSK no problems is dated; physical SSD/RAM checks Owner-dependent.",
+      "next_executable_action": "Read fresh SMART/broker and Windows crash/resource receipts with bounded checks.",
+      "priority": "P0",
+      "completion_acceptance_criteria": "Fresh non-destructive health/thermal evidence and localized crash root diagnosis; sustained capacity not inferred from health.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-015",
+      "project": "ABEX",
+      "original_objective": "Reconcile Secure Boot, Docker Public firewall, Windows time and update findings",
+      "verified_status": "HISTORICAL_FINDINGS_UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "recovery-records/FINAL-QUALIFICATION-CHECKPOINT-20260927.md",
+          "sha256": "bb052b1b4794207995be375e6c3f34ebe30743bd23c7ba6f41f80aefda49d037",
+          "file_mtime_utc": "2026-09-27T11:22:53.811690+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "host-audit/evidence-20260927-final/RESULT.txt",
+          "sha256": "693c9f339ae4309311bececfeba43e609f349a32ac4d5df2bc352f6ec7575c0a",
+          "file_mtime_utc": "2026-09-27T00:31:24.583873+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Host audit explicitly stopped before firewall mutation; firmware/security changes require reviewed authority.",
+      "next_executable_action": "Read current security/firewall/time/update state; identify exact active risks before repair.",
+      "priority": "P0",
+      "completion_acceptance_criteria": "Fresh state/risk scope, appropriate authorized repair and regression; Windows protections preserved.",
+      "owner_approval_requirement": "Read-only checks allowed; do not disable security/update protections; firmware/firewall change requires specific authority."
+    },
+    {
+      "task_id": "ABEX-REC-016",
+      "project": "ABEX",
+      "original_objective": "Resolve UAC stalls and unattended authenticated publishing/recovery",
+      "verified_status": "OPEN",
+      "evidence_sources": [
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Reconcile actual Windows elevated-token/API and Git authentication evidence without exposing secrets.",
+      "priority": "P4",
+      "completion_acceptance_criteria": "Bounded publishing and interruption recovery receipts, no stored plaintext secrets or security weakening.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-017",
+      "project": "ORQEVIA / DigitalOcean",
+      "original_objective": "Prepare DigitalOcean sovereign operational hosting migration",
+      "verified_status": "PREPARATION_ONLY",
+      "evidence_sources": [
+        {
+          "path": "operations/ORQEVIA-DIGITALOCEAN-COACHING-RESUME-20261012T103518Z-125c6535.txt",
+          "sha256": "1b51457c012e11a80f06cd61b4645c35ebf3dadd8a0e4462621210619fe4eb13",
+          "file_mtime_utc": "2026-10-12T10:35:18.327182+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "CONTINUITY-NEXT.md",
+          "sha256": "bc6b653fb02c8d4dc2fada30d1dac973d0444f2dc816c2bce83d6c954511805b",
+          "file_mtime_utc": "2026-10-03T03:14:34.111489+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "No coaching host deployed/connected/verified; account,budget,region,key custody,restore and acceptance unresolved.",
+      "next_executable_action": "Recover design notes and check account/budget/region/credentials availability read-only.",
+      "priority": "P3",
+      "completion_acceptance_criteria": "Reviewed hosting/network/HTTPS/auth/config/observability/backup/rollback/CI plan plus authorized tested readiness.",
+      "owner_approval_requirement": "No paid resource creation, sensitive upload or production cutover without explicit approval; Azure assessment only."
+    },
+    {
+      "task_id": "ABEX-REC-018",
+      "project": "ORQEVIA / GitHub",
+      "original_objective": "Reconcile candidate PRs and preserve source history",
+      "verified_status": "OPEN",
+      "evidence_sources": [
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/full-sweep-20261013/REMAINING-WORK-20261013.md",
+          "sha256": "0101aaa6e2a1a3e3309952852d70706459bd7e53c4555bc7c5feb470e9c53ddf",
+          "file_mtime_utc": "2026-10-13T04:34:52.008465+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Dated 90 PR audit not defect count; #268/#242/#208 failures, #240/#239/#234/#143 no returned PR runs.",
+      "next_executable_action": "Review exact net deltas, ancestry/reversions and current source union for each candidate.",
+      "priority": "P4",
+      "completion_acceptance_criteria": "Unique work integrated with tests or explicitly superseded using final-source equivalence; failure history retained.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-019",
+      "project": "ORQEVIA",
+      "original_objective": "Preserve and reconcile #240 / #251 / #260 authority-chain and signing lineage",
+      "verified_status": "OPEN_HISTORICAL_FAILURE",
+      "evidence_sources": [
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Windows validation cancelled and image smoke skipped in dated #240 checkpoint; uncertain Novita job must not replay.",
+      "next_executable_action": "Compare successor #296 and original dispatch adapters against unchanged authority-chain assertions.",
+      "priority": "P2",
+      "completion_acceptance_criteria": "Original stale-chain/canonical-hash discrepancy resolved with immutable independently reviewed lineage; no signing replay.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-020",
+      "project": "ORQEVIA",
+      "original_objective": "Review isolated alternate interface #244, PDE #145, engineering continuity #142",
+      "verified_status": "UNINTEGRATED_CANDIDATES",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Inspect unique source behaviors and owning integration requirements.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Useful unique deltas tested, explicitly integrated or justified superseded; no PR-title capability claims.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-021",
+      "project": "ORQEVIA",
+      "original_objective": "Reconcile exploration #269 and simulated finance #270",
+      "verified_status": "UNQUALIFIED_SIMULATION",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Map actual simulated behavior and distinguish real external execution.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Bounded simulation with honest provenance and tests; no real-finance claims or unauthorized execution.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-022",
+      "project": "ORQEVIA / PXI",
+      "original_objective": "Recover missing POSI/PGI domain adapters and customer entitlement/billing requirements",
+      "verified_status": "OPEN_REQUIREMENT_RECONCILIATION",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "PXI monitoring inactive, entitlement/billing missing in dated inspected source; acronym absence not functional proof.",
+      "next_executable_action": "Locate original POSI/PGI/PSI/PCEE/PEE requirements and equivalent source before adding code.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Requirements mapped to owning implementations or explicit backlog; monitoring/commercial scope accurately labelled.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-023",
+      "project": "ORQEVIA",
+      "original_objective": "Reconcile canonical STATUS and resume mirrors",
+      "verified_status": "OPEN_RECONCILIATION",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Append scoped fresh evidence in Claimed/Open, preserve Lam Verified and stale historical receipts.",
+      "priority": "P4",
+      "completion_acceptance_criteria": "Owning canonical source and generated resume mirror consistent, runtime/source/CI/acceptance separated.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-024",
+      "project": "VELYQUA",
+      "original_objective": "Review dependency successor #89 and originals #84-87",
+      "verified_status": "SOURCE_CANDIDATE",
+      "evidence_sources": [
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Review current-main compatibility, exact head checks and net-effect equivalence.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Owning-source tests pass with preserved historical candidates; no unreviewed upgrade.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-025",
+      "project": "VELYQUA",
+      "original_objective": "Qualify software native/web session storage, offline sync and RLS",
+      "verified_status": "UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Exercise SecureStore/AsyncStorage/auth/session/RLS software journeys with fixtures then authorized authentic clients.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Correct restoration/expiry/logout/offline synchronization and identity isolation; actual native receipts separate.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-026",
+      "project": "VELYQUA",
+      "original_objective": "Physical sensor assembly, real-water telemetry and physical integration",
+      "verified_status": "OWNER_PARKED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "recovery-records/FINAL-QUALIFICATION-CHECKPOINT-20260927.md",
+          "sha256": "bb052b1b4794207995be375e6c3f34ebe30743bd23c7ba6f41f80aefda49d037",
+          "file_mtime_utc": "2026-09-27T11:22:53.811690+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Owner explicitly paused assembly/live telemetry.",
+      "next_executable_action": "Retain physical requirements and resume conditions only.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Actual calibrated physical measurements and real sensor/source provenance, never simulated telemetry.",
+      "owner_approval_requirement": "Explicit Owner resumption and actual hardware required; software independent work may continue."
+    },
+    {
+      "task_id": "ABEX-REC-027",
+      "project": "The Portal",
+      "original_objective": "Private/relay/artifact authentication and failure-journey acceptance",
+      "verified_status": "UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/full-sweep-20261013/REMAINING-WORK-20261013.md",
+          "sha256": "0101aaa6e2a1a3e3309952852d70706459bd7e53c4555bc7c5feb470e9c53ddf",
+          "file_mtime_utc": "2026-10-13T04:34:52.008465+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Older real-user mapping claims contradictory by date; historical 404s superseded by fail-closed route deployment, not acceptance.",
+      "next_executable_action": "Reconcile latest real identity mapping then test owner/member/unmapped IDOR/cache/session/relay/artifact paths.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Authentic journeys with RLS and deny/escalation/replay/idempotency evidence; public prototype independent of ORQEVIA.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-028",
+      "project": "Game Platform / Living Worlds",
+      "original_objective": "Production game-turn reservation/concurrency/replay and login/guest/RLS acceptance",
+      "verified_status": "PARTIAL_SOURCE_DEPLOYMENT_ONLY_CURRENT_JOURNEYS_UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "operations/full-sweep-20261013/REMAINING-WORK-20261013.md",
+          "sha256": "0101aaa6e2a1a3e3309952852d70706459bd7e53c4555bc7c5feb470e9c53ddf",
+          "file_mtime_utc": "2026-10-13T04:34:52.008465+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Game #42 merged and deployed v17 metadata are narrower than current gameplay proof; old history migration drift retained.",
+      "next_executable_action": "Run safe authentic v17 turn/reservation failure and identity-isolation journeys against existing infrastructure.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Real turn executes exactly once, reservation rollback correct, guest/member/owner RLS held, no fabricated journey.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-029",
+      "project": "The Sky Tablet",
+      "original_objective": "WebGL/touch/mobile/GPU and learning-outcome acceptance",
+      "verified_status": "UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Canonical name The Sky Tablet, repository sky-tablet; physical client needed for device gate.",
+      "next_executable_action": "Use owning sky-tablet evidence and test scene/mobile render first.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Real physical GPU/mobile usability and touch receipts; interpretive demo not historical survey truth.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-030",
+      "project": "Authority Engine",
+      "original_objective": "Authenticated evidence/publication and owning dependency integrations",
+      "verified_status": "UNVERIFIED",
+      "evidence_sources": [
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/comprehensive-sweep-20261013/OUTSTANDING-AND-PRIORITIES.md",
+          "sha256": "e5e522916187a86c3a47bba4f8805a46229ee997f650993ddada757d93b35412",
+          "file_mtime_utc": "2026-10-13T06:37:18.887999+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Historical Node24/pnpm canvas build P2 requires fresh reproduction; passing Vercel deployment not local build closure.",
+      "next_executable_action": "Review #93 lucide/#97 Sanity compatibility and authenticated publish/review workflow.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Evidence publication permissions/provenance and owning-source tests, distinct from deployed hub reachability.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-031",
+      "project": "ORQEVIA",
+      "original_objective": "External commercial validation VAL-PRIME-001",
+      "verified_status": "HISTORICAL_L0_NO_QUALIFYING_EVENTS",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/docs/portfolio/archive/20260927-commercial-preparation/VALIDATION-EXPERIMENT-REGISTER.md",
+          "sha256": "a11e7511e497229d07e2a78e93d4a2db257fc1c1a8ea6f65c01788d41e402ac2",
+          "file_mtime_utc": "2026-10-13T06:55:38.666210+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Real participants, consent/input rights and owner business decisions required.",
+      "next_executable_action": "Prepare materials and preserve original plan; actual participant/contact authorization needed.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Five real prospect interviews and binding pilot decisions",
+      "owner_approval_requirement": "No unsolicited external messages; explicit participant outreach authorization required."
+    },
+    {
+      "task_id": "ABEX-REC-032",
+      "project": "VELYQUA",
+      "original_objective": "External commercial validation VAL-VEL-001",
+      "verified_status": "HISTORICAL_L0_NO_QUALIFYING_EVENTS",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/docs/portfolio/archive/20260927-commercial-preparation/VALIDATION-EXPERIMENT-REGISTER.md",
+          "sha256": "a11e7511e497229d07e2a78e93d4a2db257fc1c1a8ea6f65c01788d41e402ac2",
+          "file_mtime_utc": "2026-10-13T06:55:38.666210+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Real participants, consent/input rights and owner business decisions required.",
+      "next_executable_action": "Prepare materials and preserve original plan; actual participant/contact authorization needed.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Five keeper interviews and two manual-data trials, consent and no actuation",
+      "owner_approval_requirement": "No unsolicited external messages; explicit participant outreach authorization required."
+    },
+    {
+      "task_id": "ABEX-REC-033",
+      "project": "The Portal",
+      "original_objective": "External commercial validation VAL-PORTAL-001",
+      "verified_status": "HISTORICAL_L0_NO_QUALIFYING_EVENTS",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/docs/portfolio/archive/20260927-commercial-preparation/VALIDATION-EXPERIMENT-REGISTER.md",
+          "sha256": "a11e7511e497229d07e2a78e93d4a2db257fc1c1a8ea6f65c01788d41e402ac2",
+          "file_mtime_utc": "2026-10-13T06:55:38.666210+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Real participants, consent/input rights and owner business decisions required.",
+      "next_executable_action": "Prepare materials and preserve original plan; actual participant/contact authorization needed.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Five interviews and three external workflow sessions with source permissions",
+      "owner_approval_requirement": "No unsolicited external messages; explicit participant outreach authorization required."
+    },
+    {
+      "task_id": "ABEX-REC-034",
+      "project": "The Sky Tablet",
+      "original_objective": "External commercial validation VAL-SKY-001",
+      "verified_status": "HISTORICAL_L0_NO_QUALIFYING_EVENTS",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/docs/portfolio/archive/20260927-commercial-preparation/VALIDATION-EXPERIMENT-REGISTER.md",
+          "sha256": "a11e7511e497229d07e2a78e93d4a2db257fc1c1a8ea6f65c01788d41e402ac2",
+          "file_mtime_utc": "2026-10-13T06:55:38.666210+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Real participants, consent/input rights and owner business decisions required.",
+      "next_executable_action": "Prepare materials and preserve original plan; actual participant/contact authorization needed.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Five buyer interviews and three users/learning outcomes",
+      "owner_approval_requirement": "No unsolicited external messages; explicit participant outreach authorization required."
+    },
+    {
+      "task_id": "ABEX-REC-035",
+      "project": "Game Platform",
+      "original_objective": "External commercial validation VAL-GAME-001",
+      "verified_status": "HISTORICAL_L0_NO_QUALIFYING_EVENTS",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/docs/portfolio/archive/20260927-commercial-preparation/VALIDATION-EXPERIMENT-REGISTER.md",
+          "sha256": "a11e7511e497229d07e2a78e93d4a2db257fc1c1a8ea6f65c01788d41e402ac2",
+          "file_mtime_utc": "2026-10-13T06:55:38.666210+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Real participants, consent/input rights and owner business decisions required.",
+      "next_executable_action": "Prepare materials and preserve original plan; actual participant/contact authorization needed.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Five developers and five players with voluntary return and moderation decisions",
+      "owner_approval_requirement": "No unsolicited external messages; explicit participant outreach authorization required."
+    },
+    {
+      "task_id": "ABEX-REC-036",
+      "project": "Authority Engine",
+      "original_objective": "External commercial validation VAL-AUTH-001",
+      "verified_status": "HISTORICAL_L0_NO_QUALIFYING_EVENTS",
+      "evidence_sources": [
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/STATUS.md",
+          "sha256": "cd4069aa833623dd1205ca6cee118f72702c32e58f78a916403d90c68ba81f88",
+          "file_mtime_utc": "2026-10-13T06:55:38.182539+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "worktrees/orqevia-coaching-priority-20261013/docs/portfolio/archive/20260927-commercial-preparation/VALIDATION-EXPERIMENT-REGISTER.md",
+          "sha256": "a11e7511e497229d07e2a78e93d4a2db257fc1c1a8ea6f65c01788d41e402ac2",
+          "file_mtime_utc": "2026-10-13T06:55:38.666210+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "Real participants, consent/input rights and owner business decisions required.",
+      "next_executable_action": "Prepare materials and preserve original plan; actual participant/contact authorization needed.",
+      "priority": "P6",
+      "completion_acceptance_criteria": "Five interviews and two real claim-owner/reviewer packages",
+      "owner_approval_requirement": "No unsolicited external messages; explicit participant outreach authorization required."
+    },
+    {
+      "task_id": "ABEX-REC-037",
+      "project": "Portfolio / GitHub Profile",
+      "original_objective": "Recover remaining Profile #25, Sky #18, VELYQUA #77, Authority #92 and older product candidate deltas",
+      "verified_status": "SOURCE_CANDIDATES_REQUIRE_RECONCILIATION",
+      "evidence_sources": [
+        {
+          "path": "operations/full-sweep-20261013/REMAINING-WORK-20261013.md",
+          "sha256": "0101aaa6e2a1a3e3309952852d70706459bd7e53c4555bc7c5feb470e9c53ddf",
+          "file_mtime_utc": "2026-10-13T04:34:52.008465+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Reconcile newer seven-repo audit before testing each remaining unique delta.",
+      "priority": "P5",
+      "completion_acceptance_criteria": "Owning-source compatibility and tests plus accurate final disposition; no historical candidate assumed still open.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope."
+    },
+    {
+      "task_id": "ABEX-REC-038",
+      "project": "ABEX",
+      "original_objective": "Durable task memory and continuation without self-restart overclaim",
+      "verified_status": "OPEN_ROOT_OWNED",
+      "evidence_sources": [
+        {
+          "path": "ABEX_RESUME_MANIFEST.md",
+          "sha256": "79354e72a6edea9875e48c6def6e0acab13ede71baac5aae7174d78206b4c0b9",
+          "file_mtime_utc": "2026-10-12T09:53:04.359074+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        },
+        {
+          "path": "operations/OUTSTANDING-WORK-REPORT-20261013.txt",
+          "sha256": "43f68121bcc4a4ab9faa7489145541cf03763af14b6fe8539b72025a41a993e1",
+          "file_mtime_utc": "2026-10-13T07:39:09.138723+00:00",
+          "read_at_utc": "2026-10-13T08:33:54.714909+00:00",
+          "freshness": "Current file read; statements retain their original dated scope, not fresh runtime proof."
+        }
+      ],
+      "status_scope": "Historical source/report claim freshly read; runtime state not independently checked by this recovery worker. Reconcile with root current receipts.",
+      "dependencies": [],
+      "blockers": "",
+      "next_executable_action": "Merge this recovery inventory into existing ledger/checkpoint and validate atomic writes.",
+      "priority": "P4",
+      "completion_acceptance_criteria": "Every obligation retained with evidence, safe next action and restart-readable checkpoint; actual restart mechanism separately tested.",
+      "owner_approval_requirement": "No routine approval for read-only discovery or reversible source work; promotion/external spending/irreversible changes require existing explicit scope.",
+      "latest_observation": {
+        "at_utc": "2026-10-13T08:50:25.462637+00:00",
+        "status": "PARTIAL",
+        "scope": "Repository-backed ledger and hash-validated checkpoint created. Discovery limitations and 197 untriaged markers remain; no exhaustive-history claim."
+      }
+    }
+  ],
+  "discovery_limits": [
+    "Top-level rg traversed test fixtures and returned Access is denied for many test-runs/.../data/test-*/restored paths. These were not bypassed or counted as reviewed.",
+    "Secrets/private/env/auth/config excluded from reads.",
+    "Codex raw session messages and credential-containing originals were not copied or opened.",
+    "External design/capture references in Documents/Codex were recovered as references; their full contents and complete historical inventory not audited in this worker scope.",
+    "Existing source reports have inconsistent dated counts. Root must overlay latest runtime/CI receipts; no inferred current pass.",
+    "No fresh host security/SMART/hardware or authenticated product/browser check by this worker.",
+    "Supplement indexes 197 untriaged markers; not all are actual tasks. Raw chat and secrets deliberately excluded."
+  ],
+  "supplement_file": "recovered-backlog-supplement-agent.json",
+  "owner_parked": "VELYQUA physical sensor assembly and real telemetry; resume only on Owner instruction and actual hardware availability."
+}
