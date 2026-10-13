@@ -174,6 +174,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only this exact public-profile observation; all prior bytes stay pinned.
+    profile_title = '## Public GitHub profile refresh - 13 October 2026'
+    assert after.count(profile_title) == 1
+    profile_start = after.index(profile_title)
+    profile_end = after.index("\n## ", profile_start + len(profile_title)) + 1
+    profile_update = after[profile_start:profile_end].encode("utf-8")
+    assert len(profile_update) == 2458
+    assert hashlib.sha256(profile_update).hexdigest() == "46c0bf06fde829fb81f6927e7f9975abb2fd66ba1187be1c84dd49ca77278efd"
+    after = after[:profile_start] + after[profile_end:]
     # Admit only this exact incremental observation; every earlier byte stays pinned.
     incremental_title = "## Incremental crash analysis and communication-path follow-up - 13 October 2026"
     assert after.count(incremental_title) == 1
