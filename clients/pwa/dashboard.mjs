@@ -54,6 +54,19 @@ export function normalFollowupLines(agent) {
   return lines;
 }
 
+export function normalLatestLines(value, now=Date.now()) {
+  if(value?.status!=='OBSERVED'||value.normal_denominator!==21||value.reassessed_count!==21||!Array.isArray(value.agents)||value.agents.length!==21) return null;
+  if(new Set(value.agents.map(a=>a?.agent_id)).size!==21||value.agents.some(a=>!safeID(a?.agent_id)||a.execution_bound!==true||typeof a.latest_pass!=='boolean'))return null;
+  const passed=value.agents.filter(a=>a.latest_pass).length;
+  if(value.normal_pass_count!==passed||value.normal_fail_count!==21-passed||value.full_role_accepted_count!==0||value.certification_awarded!==false)return null;
+  const observed=Date.parse(value.reconciled_at),completed=Date.parse(value.last_execution_at);
+  if(!Number.isFinite(observed)||!Number.isFinite(completed)||observed>now+5000||completed>now+5000||now-observed>60000)return null;
+  if(!/^[a-f0-9]{40}$/.test(value.assessment_runtime_revision)||!/^[a-f0-9]{40}$/.test(value.observer_runtime_revision))return null;
+  return [`Latest pinned normal cases: ${passed} / 21 pass`,
+    `${21-passed} fail; unchanged oracle replay ${new Date(observed).toLocaleString()}. Last execution ${new Date(completed).toLocaleString()}. Full end-to-end acceptance: 0 / 21 established. Azure L7: not established.`,
+    `Assessment runtime ${value.assessment_runtime_revision.slice(0,7)}; observer ${value.observer_runtime_revision.slice(0,7)}. Historical waves and failures remain retained.`];
+}
+
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
   let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, generation=null;
@@ -104,6 +117,8 @@ if(typeof document!=='undefined') {
     const state=telemetryFreshness(latest);
     if(state!=='OBSERVED'){unavailable(state);return;}
     renderCoaching(latest?.coaching??null);
+    const normalLines=normalLatestLines(latest?.normal_latest);
+    if(normalLines){const box=document.createElement('div');box.className='coaching-stat';const title=document.createElement('strong');title.textContent=normalLines[0];box.append(title);for(const line of normalLines.slice(1)){const detail=document.createElement('small');detail.textContent=line;box.append(detail);}$('coaching-summary').append(box);}
     text('telemetry-state',state);text('mobile-system-state','Observations received');
     for(const [id,name] of [['registered-count','registered_agents'],['active-count','active_job_records']]){
       const metric=latest.metrics.find(m=>m.metric_id===name);

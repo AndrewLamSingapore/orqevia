@@ -14,6 +14,7 @@ from .agent_registry import registered_agent_ids
 from .agent_cert_event_api import router as certification_events
 from .capability_broker import router as capability_services
 from .collective_api import router as collective_workspace
+from .agent_tool_bridge_api import router as recorded_agent_tools
 
 
 @asynccontextmanager
@@ -26,7 +27,7 @@ async def lifespan(app):
 
 
 app=FastAPI(title='ORQEVIA · 奥启维亚 — direct execution',lifespan=lifespan)
-for router in (agents,objectives,engineering,artifacts,interface,dell_interface,compute,certification_events,capability_services,collective_workspace):app.include_router(router)
+for router in (agents,objectives,engineering,artifacts,interface,dell_interface,compute,certification_events,capability_services,collective_workspace,recorded_agent_tools):app.include_router(router)
 SERVICE_BODY_BYTES=300000
 SERVICE_BODY_SECONDS=5
 SERVICE_JSON_DEPTH=16
