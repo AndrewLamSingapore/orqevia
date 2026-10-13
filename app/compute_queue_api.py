@@ -174,6 +174,8 @@ class SubmitJob(BaseModel):
     allow_cloud: bool=False
     external_execution: bool=False
     data_classification: str='LOCAL_ONLY'
+    task_class: Literal['auto','classification','question_answering','conversation','research',
+                        'planning','writing','coding','architecture','complex_reasoning']='auto'
     preferred_provider: str|None=None
     idempotency_key: str|None=Field(default=None,min_length=1,max_length=128,pattern=r'^[A-Za-z0-9._:-]+$')
 
