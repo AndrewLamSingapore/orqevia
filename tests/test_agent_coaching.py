@@ -137,6 +137,41 @@ class CoachingTests(unittest.TestCase):
         with self.queue.connect() as db:db.execute("UPDATE compute_jobs SET agent='a29',status='completed',result='{}'")
         self.assertEqual(self.controller.tick(),'BLOCKED')
 
+    def test_storage_limit_includes_wal_before_submission(self):
+        self.controller.ensure_cohort()
+        # Keep an actual WAL alive, as a long-running telemetry reader can do.
+        with self.controller.connect() as writer:
+            writer.execute('PRAGMA wal_autocheckpoint=0')
+            writer.execute('CREATE TABLE retained_fixture(payload BLOB)')
+            writer.execute('INSERT INTO retained_fixture VALUES(zeroblob(?))',(64*1024*1024,))
+            writer.commit()
+            self.assertLess(self.controller.path.stat().st_size,64*1024*1024)
+            self.assertGreater(Path(str(self.controller.path)+'-wal').stat().st_size,64*1024*1024)
+            self.assertEqual(self.controller.tick(),'STORAGE_LIMIT')
+            self.assertEqual(len(self.queue.list()),0)
+
+    def test_storage_limit_prevents_new_cohort(self):
+        with self.controller.connect() as db:
+            db.execute('CREATE TABLE retained_fixture(payload BLOB)')
+            db.execute('INSERT INTO retained_fixture VALUES(zeroblob(?))',(64*1024*1024,))
+        self.assertIsNone(self.controller.ensure_cohort())
+        with self.controller.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM coaching_sessions').fetchone()[0],0)
+
+    def test_missing_submitted_job_blocks_without_replay_or_semantic_grade(self):
+        self.controller.ensure_cohort();self.controller.tick()
+        with self.queue.connect() as db:
+            db.execute('DELETE FROM compute_jobs')
+        self.assertEqual(self.controller.tick(),'BLOCKED')
+        with self.controller.connect() as db:
+            row=db.execute("SELECT * FROM coaching_sessions WHERE state='BLOCKED'").fetchone()
+            self.assertIsNotNone(row)
+            self.assertIsNotNone(row['job_id'])
+            self.assertIsNone(row['baseline_pass'])
+            outcomes=[r[0] for r in db.execute('SELECT outcome FROM coaching_events ORDER BY event_epoch,rowid')]
+            self.assertEqual(outcomes,['SUBMITTED','QUEUE_JOB_MISSING'])
+        self.assertEqual(len(self.queue.list()),0)
+
 
 if __name__=='__main__':
     unittest.main()

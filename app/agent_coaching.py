@@ -21,6 +21,7 @@ from .agent_registry import agent_record, registered_agent_ids
 from .coaching_exercises import METHODS, VERSION, practice_request, review_practice
 
 PHASES = ('baseline', 'practice', 'acceptance')
+STORAGE_LIMIT_BYTES = 64*1024*1024
 
 def canonical(value):
     return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)
@@ -101,6 +102,17 @@ class CoachingController:
             db.execute('INSERT INTO coaching_controller VALUES(1,?,?,?) ON CONFLICT(id) DO UPDATE SET source_revision=excluded.source_revision,last_tick_epoch=excluded.last_tick_epoch,state=excluded.state',
                        (self.source,self.clock(),state))
 
+    def storage_limit_reached(self):
+        # A reader can retain uncheckpointed WAL pages while the main file is
+        # still small. Count the actual footprint without checkpointing history.
+        size = self.path.stat().st_size
+        for suffix in ('-wal','-shm'):
+            try:
+                size += Path(str(self.path)+suffix).stat().st_size
+            except FileNotFoundError:
+                pass  # SQLite may remove a sidecar after its last reader closes.
+        return size >= STORAGE_LIMIT_BYTES
+
     def ensure_cohort(self):
         """At most 21 logical sessions per scheduled cohort, never 21 workers."""
         agents = sorted(registered_agent_ids(include_orchestrator=False))
@@ -108,6 +120,8 @@ class CoachingController:
             raise ValueError('practice coverage does not match canonical registry')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            if self.storage_limit_reached():
+                return None
             if db.execute('SELECT COUNT(*) FROM coaching_events').fetchone()[0]>=20000:
                 return None
             if db.execute("SELECT 1 FROM coaching_sessions WHERE state NOT IN ('DONE','BLOCKED') LIMIT 1").fetchone():
@@ -134,7 +148,7 @@ class CoachingController:
             ready = db.execute("SELECT s.*,c.source_revision FROM coaching_sessions s JOIN coaching_cohorts c ON c.id=s.cohort_id WHERE s.state='READY' ORDER BY s.updated_epoch,s.agent LIMIT 1").fetchone()
             row = dict(waiting or ready) if waiting or ready else None
             if row is None: return 'IDLE'
-            if self.path.stat().st_size>64*1024*1024:
+            if self.storage_limit_reached():
                 return 'STORAGE_LIMIT'
             if row['source_revision']!=self.source:
                 db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
@@ -147,7 +161,14 @@ class CoachingController:
                     db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
                     self.event(db,row,'CONTRACT_CHANGED')
                     return 'CONTRACT_CHANGED'
-                job = self.queue.get(row['job_id'])
+                try:
+                    job = self.queue.get(row['job_id'])
+                except KeyError:
+                    # Lost queue evidence cannot be graded or silently replayed.
+                    # Keep the original job binding for explicit reconciliation.
+                    db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
+                    self.event(db,row,'QUEUE_JOB_MISSING')
+                    return 'BLOCKED'
                 if job['status'] not in {'completed','failed','cancelled','budget_blocked'}:
                     return 'WAITING'
                 bound = (job.get('agent')==row['agent'] and job.get('prompt')==prompt and
