@@ -226,7 +226,9 @@ def run(args):
                 files.append({'path': path.relative_to(root).as_posix(),
                               'sha256': sha(path.read_bytes()), 'bytes': path.stat().st_size})
         required = ['scenario.json', 'generation-job.json', 'public-tool-receipt.json',
-                    'public-source.bin', 'feedback-job.json', 'action-readback.json', 'independent-review.json']
+                    'public-source.bin', 'feedback-job.json', 'action-readback.json',
+                    'runtime-source-custody.json', 'deployment-identity-before.json',
+                    'deployment-identity-after.json', 'independent-review.json']
         packet = {'schema': 'orqevia.azure-assessment-evidence-packet.v1', 'assembled_at_utc': now(),
             'agent': AGENT, 'subject': 'ONE_A07_PUBLIC_SOURCE_REQUEST_TOOL_FEEDBACK_SPECIMEN',
             'files': files, 'missing_evidence': [name for name in required if not (root / name).exists()],
@@ -259,6 +261,7 @@ def run(args):
         if 'generation_job_id' in state:
             return {'state': 'ALREADY_SUBMITTED_NO_NEW_INFERENCE', 'job_id': state['generation_job_id']}
         from app.settings import SETTINGS
+        from app import settings
         from app.agent_registry import agent_record
         assert agent_record(AGENT)['name'] == 'Evidence Agent'
         initial_model = SETTINGS.deep_model if attempt == 3 else SETTINGS.fast_model
@@ -274,6 +277,15 @@ def run(args):
             body['idempotency_key'] += ':attempt' + str(attempt)
         from app.response_schema import canonicalize_schema
         body['response_schema'] = canonicalize_schema(body['response_schema'])
+        package_root = Path(settings.__file__).resolve().parent.parent
+        custody_paths = ['app/agent_tool_bridge.py', 'app/agent_tool_bridge_api.py',
+            'app/capability_broker.py', 'app/public_http.py', 'app/compute_queue_api.py',
+            'app/job_queue.py', 'app/direct_stream.py', 'app/action_records.py',
+            'app/response_schema.py', 'app/settings.py', 'config/agent_registry.json']
+        retain(root / 'runtime-source-custody.json', {'observed_at_utc': now(),
+            'runtime_pins': pins, 'scope': 'ACTUAL_INSTALLED_FILE_BYTES; SOURCE_CORRESPONDENCE_REQUIRES_EXTERNAL_REVIEW',
+            'files': [{'path': name, 'sha256': sha((package_root / name).read_bytes()),
+                       'bytes': (package_root / name).stat().st_size} for name in custody_paths]})
         retain(root / 'initial-submission.json', body)
         state['submission_attempt_recorded'] = True
         state['feedback_model_expected'] = SETTINGS.fast_model

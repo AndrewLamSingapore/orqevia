@@ -20,6 +20,8 @@ def test_preparation_and_packet_do_not_submit_or_supply_task_answers(tmp_path, m
     assert canonicalize_schema(scenario['response_schema'])
     packet = specimen.run(args(tmp_path, stage='packet'))
     assert 'generation-job.json' in packet['missing_evidence']
+    assert 'deployment-identity-before.json' in packet['missing_evidence']
+    assert 'runtime-source-custody.json' in packet['missing_evidence']
     result = json.loads((tmp_path / 'azure-assessment-packet.json').read_text())
     assert result['signed_cases'] == [] and result['full_role_accepted_count'] == 0
     assert result['azure_signing_or_credentials_used'] is False
