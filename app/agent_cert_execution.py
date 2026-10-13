@@ -504,6 +504,14 @@ def observe_cert_case(spec: dict, *, dispatch: Callable[[dict], dict],
             validate_cloud_binding(spec, cloud_policy, cloud_binding,
                 expected_source_revision=expected_source_revision,
                 expected_policy_sha256=expected_owner_policy_sha256)
+        if spec.get('case') == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+            if cloud_receipt is not None:
+                return {**base, 'state': 'REJECTED', 'reason': 'owned_identity_cloud_transport_forbidden'}
+            from .agent_cert_identity_fleet import observe_identity_artifact
+            return observe_identity_artifact(spec, base, dispatch=dispatch, get_artifact=get_artifact,
+                get_runtime=get_runtime, expected_source_revision=expected_source_revision,
+                expected_registry_sha256=expected_registry_sha256, started=started,
+                timeout_seconds=timeout_seconds, monotonic=monotonic, wall_clock=wall_clock)
         if (agent, capability, spec.get("case")) == (
                 "a19", "responsibility.a19", "baseline:identity"):
             return _observe_runtime_artifact(

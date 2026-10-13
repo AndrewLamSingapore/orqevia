@@ -113,6 +113,8 @@ def main():
                   'agent_cert_initialization_fleet', 'agent_cert_initialization_fleet_events',
                   'agent_cert_secondary_roles', 'agent_cert_secondary_execution',
                   'agent_cert_secondary_integration', 'agent_cert_secondary_transport'])
+    names.extend(['agent_cert_identity_fleet', 'agent_cert_logic_quality_fleet',
+                  'agent_cert_role_numeric_variants'])
     names.extend(['agent_cert_readiness', 'objective_domain_provenance'])
     names.append('collect_agent_cert_event')
     names.extend(['agent_cert_event_api', 'agent_cert_operator_io',

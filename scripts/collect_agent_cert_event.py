@@ -82,6 +82,13 @@ def _contract(agent, capability, case):
             initialization_oracle_id(agent, capability),
             initialization_review_objective(agent, capability),
             initialization_reviewer(agent, capability), validate)
+    if case == 'baseline:identity' and (agent, capability) != ('a19', 'responsibility.a19'):
+        from app.agent_cert_identity_fleet import (ACTION_TYPE, SCHEMA, REVIEW_SCHEMA,
+            VERSION, identity_reviewer, identity_review_objective, validate_identity_execution)
+        def validate(value, **pins):
+            return validate_identity_execution(value, agent_id=agent, capability_id=capability, **pins)
+        return (ACTION_TYPE, SCHEMA, REVIEW_SCHEMA, VERSION,
+            identity_review_objective(agent, capability), identity_reviewer(agent, capability), validate)
     _require((agent, capability, case) == ('a19', 'responsibility.a19', 'baseline:identity'),
              'SOURCE_OWNED_EVENT_UNAVAILABLE')
     from app.agent_cert_identity_review import SCHEMA, ORACLE_ID, validate_identity_execution
@@ -349,7 +356,8 @@ def collect_event_case(spec, *, io: OperatorIO, read_subject_actions,
         reviewer_lines = tuple(lines)
         bounded()
         action_span(lines, task_id=result['task_id'], agent_id=reviewer,
-            action_type=AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
+            action_type='agent.certification.owned_identity.review' if case == 'baseline:identity' and agent != 'a19' else
+                AUTHORITY_REVIEW_ACTION if authority_case else ARTIFACT_REVIEW_ACTION if artifact_case else
                 'agent.certification.' + case.split(':')[1] + '.review',
             schema=review_schema, metadata=metadata, began=utc(content['reviewed_at']),
             ended=now, action_id=result['review_action_id'], duration_limit_ms=120000)

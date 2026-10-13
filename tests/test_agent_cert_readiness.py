@@ -29,7 +29,7 @@ def test_exact21_agents29_owned_capabilities_and_existing74_case_matrix(inventor
     assert inventory['cases_per_capability'] == 74
     assert inventory['required_capability_cases'] == 2146
     assert len(set(inventory['existing_matrix_case_ids'])) == 74
-    assert inventory['source_canonical_adapter_oracle_count'] == 103
+    assert inventory['source_canonical_adapter_oracle_count'] == 323
     assert all('role:normal' in r['canonical_adapter_oracle_ready_cases'] for r in rows)
     assert all('baseline:initialization' in r['distinct_zero_model_event_adapter_cases'] for r in rows)
 
@@ -59,10 +59,15 @@ def test_eight_secondary_source_oracles_have_only_explicit_prepared_transport(in
     secondary = [r for r in inventory['capability_rows'] if not r['primary_capability']]
     assert len(secondary) == 8
     for row in secondary:
-        assert row['canonical_adapter_oracle_ready_cases'] == ['baseline:initialization', 'role:normal']
+        assert set(row['canonical_adapter_oracle_ready_cases']) == {'baseline:identity',
+            'baseline:initialization', 'role:normal', 'logic_quality:unsupported_assumption',
+            'logic_quality:contradiction', 'logic_quality:counterevidence',
+            'logic_quality:edge_case', 'logic_quality:false_pass', 'logic_quality:fact_vs_inference'}
         assert row['source_pinned_cloud_transport_cases'] == ['role:normal']
-        assert row['cloud_transport_missing_for_ready_quality_cases'] == []
-        assert row['generic_queue_observer_quality_gap_cases'] == []
+        assert set(row['cloud_transport_missing_for_ready_quality_cases']) == set(row['canonical_adapter_oracle_ready_cases']) - {
+            'baseline:identity', 'baseline:initialization', 'role:normal'}
+        assert set(row['generic_queue_observer_quality_gap_cases']) == set(row['canonical_adapter_oracle_ready_cases']) - {
+            'baseline:identity', 'baseline:initialization', 'role:normal'}
 
 
 def test_source_readiness_never_awards_live_signature_or_l7(inventory):

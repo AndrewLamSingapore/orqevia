@@ -34,6 +34,8 @@ SOURCE_FILES = (
     'app/agent_cert_authority_events.py',
     'app/agent_cert_event_api.py', 'app/agent_cert_execution.py',
     'app/agent_cert_identity_review.py', 'app/agent_cert_initialization.py',
+    'app/agent_cert_identity_fleet.py', 'app/agent_cert_logic_quality_fleet.py',
+    'app/agent_cert_role_numeric_variants.py',
     'app/agent_cert_initialization_review.py', 'app/agent_cert_review_tool.py',
     'app/agent_cert_transport.py', 'app/agent_dispatch_api.py',
     'app/production_entry.py', 'scripts/collect_agent_cert_case.py',

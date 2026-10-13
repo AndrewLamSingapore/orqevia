@@ -42,14 +42,14 @@ def test_delegates_exact_specific_a19_case(case):
 
 
 @pytest.mark.parametrize("agent,cap,case", [
-    ("a20", "responsibility.a20", "role:difficult"),
+    ("a17", "responsibility.a17", "role:difficult"),
     ("a19", "responsibility.a20", "role:difficult"),
     ("A19", "responsibility.a19", "role:difficult"),
     ("a17", "responsibility.a27", "role:normal"),
     ("a19", "responsibility.a19", "recovery:normal"),
     ("a19", "responsibility.a19", "tools:normal"),
     ("a19", "responsibility.a19", "clean_room:normal"),
-    ("a20", "responsibility.a20", "baseline:identity"),
+    ("a20", "responsibility.a20", "baseline:authorization"),
     ("a19", "responsibility.a19", True),
     ("a19", "responsibility.a19", ["role:difficult"]),
 ])
