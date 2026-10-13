@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 import sqlite3
 import threading
@@ -14,7 +15,7 @@ import pytest
 from app import agent_cert_artifact_events as events
 from app.action_records import ActionLedger
 from app.artifact_factory import ArtifactFactory
-from app.agent_cert_identity_review import action_span
+from app.agent_cert_identity_review import action_span, IdentityReviewError
 
 
 SOURCE = 'a' * 40
@@ -61,6 +62,45 @@ def domain(tmp_path, monkeypatch):
     assert ledger.close()
 
 
+def action_failure_metrics(lines, **binding):
+    """Discriminating failure-only flags/timing; never original content or IDs."""
+    first, last = [json.loads(line) for line in (lines[0], lines[-1])]
+    metadata = binding['metadata']
+    stamps = [binding['began'], events._utc(first['timestamp']),
+        events._utc(metadata['timestamp']), events._utc(last['timestamp']), binding['ended']]
+    deltas = [(right - left).total_seconds() * 1_000_000
+        for left, right in zip(stamps, stamps[1:])]
+    duration = last['duration_ms']
+    numeric_duration = type(duration) in (int, float) and math.isfinite(duration)
+    return {'original_line_count': len(lines), 'order_deltas_us': deltas,
+        'timestamp_ordered': all(value >= 0 for value in deltas),
+        'action_duration_ms': duration if numeric_duration else None,
+        'action_duration_type': type(duration).__name__,
+        'duration_within_bound': numeric_duration
+            and 0 <= duration <= binding.get('duration_limit_ms', 5000),
+        'started_phase': first.get('phase') == 'started',
+        'completed_phase': last.get('phase') == 'completed',
+        'success_is_true': last.get('success') is True,
+        'actor_fields_match': all(item.get('agent_id') == binding['agent_id']
+            and item.get('task_id') == binding['task_id']
+            and item.get('action_type') == binding['action_type'] for item in (first, last)),
+        'result_summary_matches_artifact': last.get('result_summary') == {
+            'type': 'dict', 'artifact_id': metadata['artifact_id'],
+            'sha256': metadata['sha256'], 'location': 'artifact.json'}}
+
+
+def observed_action_span(lines, **binding):
+    try:
+        return action_span(lines, **binding)
+    except IdentityReviewError as error:
+        try:
+            note = json.dumps(action_failure_metrics(lines, **binding), sort_keys=True, allow_nan=False)
+        except Exception:
+            note = 'ACTION_DIAGNOSTIC_UNAVAILABLE'
+        error.add_note(note)
+        raise
+
+
 def execute_and_collect(domain, case_id):
     root, ledger, prepare, objective_api = domain
     spec, task, args, created = prepare(case_id)
@@ -81,7 +121,7 @@ def execute_and_collect(domain, case_id):
     metadata, raw = factory.retrieve(dispatch['artifact']['artifact_id'])
     receipt = dispatch['artifact_event']
     lines = events.read_artifact_action_span(root, task, case_id)
-    chain = action_span(lines, task_id=task, agent_id=events.AGENT_ID,
+    chain = observed_action_span(lines, task_id=task, agent_id=events.AGENT_ID,
         action_type=events.artifact_action_type(case_id), schema=events.RESULT_SCHEMA,
         metadata=metadata, began=events._utc(receipt['started_at']), ended=events._utc(receipt['completed_at']),
         action_id=receipt['subject_action_id'])
@@ -89,7 +129,7 @@ def execute_and_collect(domain, case_id):
     if receipt['input_artifact_metadata'] is not None:
         input_metadata, input_raw = factory.retrieve(receipt['input_artifact_metadata']['artifact_id'])
         input_lines = events.read_artifact_action_span(root, task, case_id, setup=True)
-        input_chain = action_span(input_lines, task_id=task, agent_id=events.AGENT_ID,
+        input_chain = observed_action_span(input_lines, task_id=task, agent_id=events.AGENT_ID,
             action_type=events.artifact_action_type(case_id, setup=True), schema=events.INPUT_SCHEMA,
             metadata=input_metadata, began=events._utc(receipt['started_at']), ended=events._utc(receipt['completed_at']),
             action_id=receipt['input_action_id'])
@@ -149,6 +189,78 @@ def test_long_observation_still_rejected_and_failure_metrics_do_not_retime_evide
     assert execution == original
     with pytest.raises(events.ArtifactEventError, match='ARTIFACT_OBSERVATION_UNBOUND'):
         events.validate_artifact_execution(execution, **pins)
+
+
+def test_action_span_rejection_preserves_original_exception_and_records(domain, monkeypatch):
+    original = IdentityReviewError('ACTION_BINDING_INVALID')
+    def rejected(*args, **kwargs):
+        raise original
+    monkeypatch.setitem(globals(), 'action_span', rejected)
+    with pytest.raises(IdentityReviewError, match='ACTION_BINDING_INVALID') as caught:
+        execute_and_collect(domain, events.SUPPORTED_CASES[1])
+    assert caught.value is original
+    note = json.loads(original.__notes__[0])
+    root, ledger, _, _ = domain
+    before = ledger.path.read_bytes()
+    records = [json.loads(line) for line in before.decode().splitlines()]
+    assert note['timestamp_ordered'] and note['result_summary_matches_artifact']
+    assert note['original_line_count'] == 2 and note['duration_within_bound']
+    assert all(record['task_id'] not in original.__notes__[0]
+        and record['action_id'] not in original.__notes__[0] for record in records)
+    assert ledger.path.read_bytes() == before
+
+
+def test_action_clock_rollback_retains_rejection_and_discriminating_timing(domain, monkeypatch):
+    from app import action_records
+    original = action_records.datetime
+    ticks = []
+    def now(zone):
+        stamp = original.now(zone) if not ticks else ticks[0] - timedelta(milliseconds=1)
+        ticks.append(stamp)
+        return stamp
+    monkeypatch.setattr(action_records, 'datetime', SimpleNamespace(now=now))
+    with pytest.raises(IdentityReviewError, match='ACTION_BINDING_INVALID') as caught:
+        execute_and_collect(domain, events.SUPPORTED_CASES[1])
+    note = json.loads(caught.value.__notes__[0])
+    assert not note['timestamp_ordered'] and note['order_deltas_us'][2] < 0
+    assert note['success_is_true'] and note['actor_fields_match'] and note['result_summary_matches_artifact']
+    assert note['duration_within_bound']
+    _, ledger, _, _ = domain
+    records = [json.loads(line) for line in ledger.path.read_text().splitlines()]
+    assert len(records) == 2 and events._utc(records[1]['timestamp']) < events._utc(records[0]['timestamp'])
+
+
+def test_action_diagnostic_failure_does_not_mask_original_rejection(domain, monkeypatch):
+    original = IdentityReviewError('ACTION_BINDING_INVALID')
+    def rejected(*args, **kwargs):
+        raise original
+    def unavailable(*args, **kwargs):
+        raise ValueError('private malformed diagnostic input')
+    monkeypatch.setitem(globals(), 'action_span', rejected)
+    monkeypatch.setitem(globals(), 'action_failure_metrics', unavailable)
+    with pytest.raises(IdentityReviewError, match='ACTION_BINDING_INVALID') as caught:
+        execute_and_collect(domain, events.SUPPORTED_CASES[1])
+    assert caught.value is original
+    assert original.__notes__ == ['ACTION_DIAGNOSTIC_UNAVAILABLE']
+
+
+def test_action_diagnostics_never_reflect_invalid_duration_content(domain):
+    execution, _ = execute_and_collect(domain, events.SUPPORTED_CASES[1])
+    lines = list(execution['action_records'])
+    last = json.loads(lines[-1])
+    last['duration_ms'] = 'private invalid duration content'
+    last['sha256'] = events.sha(events.canonical({key: value for key, value in last.items() if key != 'sha256'}))
+    lines[-1] = json.dumps(last, sort_keys=True) + '\n'
+    receipt = execution['dispatch']['artifact_event']
+    with pytest.raises(IdentityReviewError, match='ACTION_BINDING_INVALID') as caught:
+        observed_action_span(lines, task_id=receipt['task_id'], agent_id=events.AGENT_ID,
+            action_type=events.artifact_action_type(events.SUPPORTED_CASES[1]), schema=events.RESULT_SCHEMA,
+            metadata=execution['artifact_metadata'], began=events._utc(receipt['started_at']),
+            ended=events._utc(receipt['completed_at']), action_id=receipt['subject_action_id'])
+    note = json.loads(caught.value.__notes__[0])
+    assert note['action_duration_ms'] is None and note['action_duration_type'] == 'str'
+    assert not note['duration_within_bound']
+    assert 'private invalid duration content' not in caught.value.__notes__[0]
 
 
 def test_import_executes_no_domain_or_file_io(monkeypatch):
