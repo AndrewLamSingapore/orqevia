@@ -11,6 +11,17 @@ from app.job_queue import JobQueue
 
 
 class CoachingTests(unittest.TestCase):
+    def test_process_lock_rejects_overlap_and_releases_after_exit(self):
+        from app.agent_coaching import controller_process_lock
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'coaching-controller.lock'
+            with controller_process_lock(path) as first:
+                self.assertTrue(first)
+                with controller_process_lock(path) as second:
+                    self.assertFalse(second)
+            with controller_process_lock(path) as recovered:
+                self.assertTrue(recovered)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)

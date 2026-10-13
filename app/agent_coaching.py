@@ -32,6 +32,40 @@ def digest(value):
 def timestamp(epoch):
     return datetime.fromtimestamp(epoch,timezone.utc).isoformat()
 
+@contextmanager
+def controller_process_lock(path):
+    """Hold one OS lock for the service lifetime; crashes release it automatically."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('a+b') as lease:
+        if os.name == 'nt':
+            import msvcrt
+            lease.seek(0)
+            if not lease.read(1):
+                lease.write(b'0'); lease.flush()
+            lease.seek(0)
+            try:
+                msvcrt.locking(lease.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError:
+                yield False
+                return
+            try:
+                yield True
+            finally:
+                lease.seek(0)
+                msvcrt.locking(lease.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            try:
+                fcntl.flock(lease.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                yield False
+                return
+            try:
+                yield True
+            finally:
+                fcntl.flock(lease.fileno(), fcntl.LOCK_UN)
+
 def request_for(agent, phase, seed):
     if phase == 'practice':
         return practice_request(agent,seed)
@@ -262,6 +296,14 @@ class CoachingController:
             return 'SUBMITTED'
 
 def main():
+    root = Path(os.getenv('PRIME_DATA_DIR','/data'))
+    with controller_process_lock(root/'coaching-controller.lock') as acquired:
+        if not acquired:
+            print(canonical({'component':'agent-coaching','state':'COACH_ALREADY_RUNNING'}),flush=True)
+            return
+        run_controller()
+
+def run_controller():
     from .compute_queue_api import queue
     from .settings import SETTINGS
     stop = threading.Event()
