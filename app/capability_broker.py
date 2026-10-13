@@ -10,8 +10,9 @@ import threading
 from contextlib import contextmanager
 from functools import wraps
 from datetime import datetime,timezone
+from uuid import UUID
 from fastapi import APIRouter,Header,HTTPException
-from pydantic import BaseModel,Field,ConfigDict
+from pydantic import BaseModel,Field,ConfigDict,field_validator
 from .agent_registry import agent_record,registered_agent_ids
 from .client_auth import authenticate_owner
 from .action_records import ActionRecord,DirectExecutor,action_ledger
@@ -67,6 +68,23 @@ class ServiceRequest(BaseModel):
     service: str=Field(min_length=1,max_length=80)
     parameters: dict=Field(default_factory=dict)
 
+    @field_validator('job_id')
+    @classmethod
+    def canonical_job_id(cls,value):
+        if str(UUID(value))!=value:raise ValueError('Canonical job UUID required')
+        return value
+
+def bounded_parameters(parameters):
+    stack=[(parameters,0)]
+    while stack:
+        value,depth=stack.pop()
+        if depth>16:raise ValueError('Bounded parameter depth required')
+        if isinstance(value,dict):stack.extend((item,depth+1) for item in value.values())
+        elif isinstance(value,list):stack.extend((item,depth+1) for item in value)
+    raw=json.dumps(parameters,allow_nan=False,sort_keys=True,separators=(',',':')).encode()
+    if len(raw)>262144:raise ValueError('Bounded parameters required')
+    return raw
+
 class CoreRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     request_id: str=Field(min_length=1,max_length=128)
@@ -78,9 +96,11 @@ def execute_core_request(body,*,reader=public_read,ledger=None):
     """Core's own path, with no specialist job or active-agent dependency."""
     from .collective_workspace import identifier
     identifier(body.request_id)
+    raw=bounded_parameters(body.parameters)
     audit=ledger or action_ledger()
     if not audit.status()['healthy']:raise RuntimeError('Action audit unavailable')
-    record=ActionRecord(body.request_id,'prime',body.service,'core-capability-broker')
+    record=ActionRecord(body.request_id,'prime',body.service if body.service in SERVICES else 'unknown-service','core-capability-broker',
+                        parameters_summary={'parameters_sha256':hashlib.sha256(raw).hexdigest()})
     def operation():
         if body.service=='internet.public.read':
             if set(body.parameters)!={'url'}:raise ValueError('Exact public read parameters required')
@@ -103,25 +123,25 @@ def execute_core_request(body,*,reader=public_read,ledger=None):
 @router.post('/core/request')
 def core_request(body:CoreRequest,authorization: str|None=Header(None)):
     authenticate_owner(authorization)
-    try:
-        try:return execute_core_request(body)
-        except ServiceBusy:raise HTTPException(429,'Bounded Core service capacity occupied') from None
-        except PermissionError:raise HTTPException(403,'Core scoped fulfillment denied') from None
-        except (ValueError,KeyError):raise HTTPException(422,'Invalid Core service request') from None
-        except Exception:raise HTTPException(503,'Core service dependency unavailable') from None
-    finally:pass
+    try:return execute_core_request(body)
+    except ServiceBusy:raise HTTPException(429,'Bounded Core service capacity occupied') from None
+    except PermissionError:raise HTTPException(403,'Core scoped fulfillment denied') from None
+    except (ValueError,KeyError):raise HTTPException(422,'Invalid Core service request') from None
+    except Exception:raise HTTPException(503,'Core service dependency unavailable') from None
 
 @bounded_service
 def execute_request(body,*,job_queue=queue,reader=public_read,ledger=None):
-    if body.agent not in registered_agent_ids(include_orchestrator=False):raise PermissionError('Canonical registered actor required')
-    if len(json.dumps(body.parameters,allow_nan=False).encode())>262144:raise ValueError('Bounded parameters required')
+    raw=bounded_parameters(body.parameters)
+    canonical=body.agent in registered_agent_ids(include_orchestrator=False)
     audit=ledger or action_ledger()
     if not audit.status()['healthy']:raise RuntimeError('Action audit unavailable')
-    record=ActionRecord(body.job_id,body.agent,body.service,'scoped-capability-broker',
-        parameters_summary={'service':body.service,'parameters_sha256':hashlib.sha256(json.dumps(body.parameters,sort_keys=True,separators=(',',':')).encode()).hexdigest()})
+    record=ActionRecord(body.job_id,'boundary',body.service if body.service in SERVICES else 'unknown-service','scoped-capability-broker',
+        parameters_summary={'parameters_sha256':hashlib.sha256(raw).hexdigest()})
     def operation():
+        if not canonical:raise PermissionError('Canonical registered actor required')
         job=job_queue.get(body.job_id)
         if not job or job['agent']!=body.agent:raise PermissionError('Authenticated task actor binding mismatch')
+        record.agent_id=body.agent
         if not permissions(body.agent).get(body.service,False):
             raise PermissionError('Role service fulfillment denied; request may be escalated without authority transfer')
         p=body.parameters
@@ -179,10 +199,8 @@ def catalog(authorization: str|None=Header(None)):
 @router.post('/request')
 def request(body:ServiceRequest,authorization: str|None=Header(None)):
     authenticate_owner(authorization)
-    try:
-        try:return execute_request(body)
-        except ServiceBusy:raise HTTPException(429,'Bounded service capacity occupied') from None
-        except PermissionError:raise HTTPException(403,'Actor, role, scope or sensitive-action approval denied') from None
-        except (ValueError,KeyError):raise HTTPException(422,'Invalid bounded service request') from None
-        except Exception:raise HTTPException(503,'Approved service dependency or audit unavailable') from None
-    finally:pass
+    try:return execute_request(body)
+    except ServiceBusy:raise HTTPException(429,'Bounded service capacity occupied') from None
+    except PermissionError:raise HTTPException(403,'Actor, role, scope or sensitive-action approval denied') from None
+    except (ValueError,KeyError):raise HTTPException(422,'Invalid bounded service request') from None
+    except Exception:raise HTTPException(503,'Approved service dependency or audit unavailable') from None

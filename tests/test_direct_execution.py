@@ -259,7 +259,7 @@ def test_cloud_cost_capacity_still_applies(tmp_path):
 
 def test_new_entry_is_direct(api):
     from app.entry import app
-    assert app.title=='PRIME direct-execution candidate'
+    assert app.title=='ORQEVIA · 奥启维亚 — direct execution'
 
 
 def test_buffer_saturation_is_observable(tmp_path,monkeypatch):
