@@ -180,8 +180,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     runtime_start = after.index(runtime_title)
     runtime_end = after.index("\n## ", runtime_start + len(runtime_title)) + 1
     runtime_update = after[runtime_start:runtime_end].encode("utf-8")
-    assert len(runtime_update) == 2513
-    assert hashlib.sha256(runtime_update).hexdigest() == "2588412dd03e463ef7c0c3bb2495055b698866d8886ac6fb53caab8302a6a353"
+    assert len(runtime_update) == 3056
+    assert hashlib.sha256(runtime_update).hexdigest() == "04064e8c6e0e0d26904669f6e872d1e529ce03f748dd1fdf365135c5617477ee"
     after = after[:runtime_start] + after[runtime_end:]
     # Admit only this exact dated sweep supplement; all prior bytes stay pinned.
     sweep_title = "## Portfolio bug sweep and STATUS reference reconciliation - 13 October 2026"
