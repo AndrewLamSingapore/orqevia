@@ -317,6 +317,11 @@ def run_controller():
         try:
             if (root/'coaching.pause').exists():
                 state = 'PAUSED'
+            elif (root/'normal-role-followups'/'hf-normal-21-20261013-v1'/'state.json').exists():
+                # This finite evidence-led wave supersedes blind daily repeats.
+                # Retain the historical cohorts; never relabel their outcomes.
+                from .normal_role_followups import tick
+                state = 'NORMAL_FOLLOWUP_'+tick(queue)['state']
             else:
                 controller.ensure_cohort()
                 state = controller.tick()
