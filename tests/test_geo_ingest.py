@@ -1,4 +1,4 @@
-from app.geo_ingest import ObservationStore, Poller, normalize_usgs_earthquake
+from app.geo_ingest import ObservationStore, Poller, normalize_gdacs_item, normalize_open_meteo, normalize_usgs_earthquake
 
 
 FEATURE = {
@@ -47,3 +47,16 @@ def test_poller_fails_closed_for_blocked_source(tmp_path):
     assert receipt.ok is False
     assert receipt.error and "credential" in receipt.error
     assert store.count() == 0
+
+
+def test_normalize_open_meteo():
+    record = normalize_open_meteo({"current_weather": {"time": "2026-01-01T00:00", "temperature": 28.0, "windspeed": 5.0, "weathercode": 1}}, lat=1.3, lon=103.8)
+    assert record["kind"] == "weather"
+    assert record["temperature_c"] == 28.0
+    assert record["location"] == {"lat": 1.3, "lon": 103.8}
+
+
+def test_normalize_gdacs_item():
+    record = normalize_gdacs_item({"title": "Green earthquake", "link": "https://gdacs.org/e1", "pubDate": "2026-01-01T00:00:00Z"})
+    assert record["kind"] == "disaster"
+    assert record["place"] == "Green earthquake"

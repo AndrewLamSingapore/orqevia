@@ -33,11 +33,52 @@ SOURCES: dict[str, dict[str, Any]] = {
         "credential": None,
         "status": "READY",
     },
-    "satellite-imagery": {"kind": "satellite", "status": "BLOCKED", "reason": "No authorized imagery provider credential on Dell"},
+    "open-meteo-weather": {
+        "kind": "weather",
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "attribution": "Open-Meteo (CC BY 4.0)",
+        "permitted_use": "Free, no API key",
+        "coverage": "Point forecasts at configured locations",
+        "refresh_interval_seconds": 600,
+        "freshness_seconds": 1800,
+        "credential": None,
+        "status": "READY",
+    },
+    "gdacs-rss": {
+        "kind": "disaster",
+        "url": "https://www.gdacs.org/xml/rss.xml",
+        "attribution": "GDACS (European Commission/JRC)",
+        "permitted_use": "Public RSS feed",
+        "coverage": "Global",
+        "refresh_interval_seconds": 600,
+        "freshness_seconds": 3600,
+        "credential": None,
+        "status": "READY",
+    },
+    "nasa-firms": {
+        "kind": "satellite",
+        "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/",
+        "attribution": "NASA FIRMS",
+        "permitted_use": "Free, no API key (area query)",
+        "coverage": "Global active fire/hotspot",
+        "refresh_interval_seconds": 1800,
+        "freshness_seconds": 7200,
+        "credential": None,
+        "status": "READY",
+    },
+    "nasa-epic": {
+        "kind": "satellite",
+        "url": "https://epic.gsfc.nasa.gov/api/natural",
+        "attribution": "NASA EPIC",
+        "permitted_use": "Free, no API key",
+        "coverage": "DSCOVR/EPIC imagery metadata",
+        "refresh_interval_seconds": 3600,
+        "freshness_seconds": 86400,
+        "credential": None,
+        "status": "READY",
+    },
     "aviation-adsb": {"kind": "aviation", "status": "BLOCKED", "reason": "No permitted ADSB feed/credential on Dell"},
     "maritime-ais": {"kind": "maritime", "status": "BLOCKED", "reason": "Live AIS requires unavailable credential/payment"},
-    "weather-forecast": {"kind": "weather", "status": "BLOCKED", "reason": "No authorized weather API credential on Dell"},
-    "disaster-gdacs": {"kind": "disaster", "url": "https://www.gdacs.org/xml/rss.xml", "status": "BLOCKED", "reason": "RSS discovery pending; not yet parsed/qualified"},
     "geopolitical-acled": {"kind": "geopolitical", "status": "BLOCKED", "reason": "ACLED requires paid license not present on Dell"},
 }
 
@@ -74,6 +115,45 @@ def normalize_usgs_earthquake(feature: dict[str, Any], *, ingested_at: str | Non
         "source_url": str(props.get("url") or ""),
         "attribution": "U.S. Geological Survey",
         "status": props.get("status"),
+    }
+
+
+def normalize_open_meteo(payload: dict[str, Any], *, lat: float, lon: float, ingested_at: str | None = None) -> dict[str, Any]:
+    """Normalize an Open-Meteo current-weather payload for a requested point."""
+    lat, lon = validate_coordinate(lat, lon)
+    current = (payload.get("current_weather") or {}) if isinstance(payload, dict) else {}
+    return {
+        "event_id": f"open-meteo-{lat:.4f},{lon:.4f}-{current.get('time') or 'unknown'}",
+        "kind": "weather",
+        "location": {"lat": lat, "lon": lon},
+        "observed_at": current.get("time"),
+        "ingested_at": ingested_at or utc_now(),
+        "source": "Open-Meteo",
+        "source_url": "https://api.open-meteo.com/v1/forecast",
+        "attribution": "Open-Meteo (CC BY 4.0)",
+        "temperature_c": current.get("temperature"),
+        "wind_speed_kmh": current.get("windspeed"),
+        "weathercode": current.get("weathercode"),
+    }
+
+
+def normalize_gdacs_item(item: dict[str, Any], *, ingested_at: str | None = None) -> dict[str, Any]:
+    """Normalize one GDACS RSS item into a disaster observation record."""
+    if not isinstance(item, dict):
+        raise ValueError("GDACS item must be a mapping")
+    title = str(item.get("title") or "")
+    link = str(item.get("link") or "")
+    published = item.get("pubDate") or item.get("published")
+    return {
+        "event_id": link or f"gdacs-{hash(title) & 0xFFFFFFFFFFFFFFFF:016x}",
+        "kind": "disaster",
+        "place": title,
+        "observed_at": published,
+        "ingested_at": ingested_at or utc_now(),
+        "source": "GDACS",
+        "source_url": link,
+        "attribution": "GDACS (European Commission/JRC)",
+        "location": None,
     }
 
 

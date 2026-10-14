@@ -30,7 +30,12 @@
         ctx.fillStyle = '#5cc8ff';
         ctx.beginPath(); ctx.arc(lonToX(loc.lon), latToY(loc.lat), 4, 0, Math.PI * 2); ctx.fill();
         const li = document.createElement('li');
-        li.textContent = (r.place || r.event_id) + ' · M' + r.magnitude + ' · ' + r.observed_at + ' · ' + r.source + ' · ingested ' + r.ingested_at;
+        const ageMs = Date.now() - Date.parse(r.ingested_at || '');
+        const stale = !Number.isFinite(ageMs) || ageMs > 15 * 60 * 1000;
+        li.className = stale ? 'stale' : 'fresh';
+        li.textContent = (r.place || r.event_id) + ' · M' + r.magnitude + ' · ' + r.observed_at + ' · ' + r.source +
+          ' · ingested ' + r.ingested_at + (stale ? ' · STALE' : ' · FRESH');
+        li.setAttribute('aria-label', 'event ' + (r.place || r.event_id) + ', magnitude ' + r.magnitude + ', ' + (stale ? 'stale' : 'fresh'));
         list.appendChild(li);
       });
       status.textContent = 'OK';

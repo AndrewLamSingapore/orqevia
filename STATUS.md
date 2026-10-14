@@ -52,7 +52,8 @@ If you are an AI agent updating this file:
   `app/orqevia/intelligence_api.py` plus a map view.
 - Focused tests: `python -m pytest -q tests/test_geospatial.py
   tests/test_rag_grounding.py tests/test_geo_ingest.py
-  tests/test_event_detection.py` -> **17 passed**.
+  tests/test_event_detection.py tests/test_historical_predictive.py
+  tests/test_intelligence_api.py` -> **25 passed**.
 
 ### Final capability matrix (this scope)
 
@@ -64,10 +65,10 @@ If you are an AI agent updating this file:
 | GE-04 | Weather, disaster and geopolitical | BLOCKED (no authorized credentials) |
 | GE-05 | Geospatial Intelligence | IMPLEMENTED-UNVERIFIED |
 | GE-06 | RAG evidence grounding | IMPLEMENTED-UNVERIFIED |
-| GE-07 | Historical and predictive intelligence | DOCUMENTED-ONLY |
+| GE-07 | Historical and predictive intelligence | IMPLEMENTED-UNVERIFIED |
 | GE-08 | Autonomous event detection and alerts | IMPLEMENTED-UNVERIFIED |
 | GE-09 | ORQEVIA service and tool integration | IMPLEMENTED-UNVERIFIED |
-| GE-10 | Version-controlled documentation and release records | DOCUMENTED-ONLY |
+| GE-10 | Version-controlled documentation and release records | IMPLEMENTED-UNVERIFIED |
 
 ### Known broken / open
 
