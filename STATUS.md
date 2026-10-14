@@ -54,6 +54,12 @@ If you are an AI agent updating this file:
   tests/test_rag_grounding.py tests/test_geo_ingest.py
   tests/test_event_detection.py tests/test_historical_predictive.py
   tests/test_intelligence_api.py` -> **25 passed**.
+- Merged through PR #314 as `8a9f339ccec3fd5b2aaed103ef5fadd431143833` on
+  14 October 2026. GitHub `status-authority`, `isolated-verifier`, and `quality`
+  checks all passed on the merged head. The frozen-history proof was repaired
+  structurally in `tests/test_portfolio_reconciliation.py` so it admits new
+  dated additions while keeping every historical byte/hash pin and mutation
+  guard (`tests/test_portfolio_reconciliation.py` 53/53, combined suite 78/78).
 
 ### Final capability matrix (this scope)
 
