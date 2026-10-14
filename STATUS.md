@@ -36,6 +36,38 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026
+
+### Claimed, not independently checked
+
+- On 14 October 2026 Dell (host DESKTOP-IPV4PH9, user desktop-ipv4ph9\user)
+  completed the ORQEVIA development-handover assessment as a read-only pass and
+  then performed authorised, additive local development. No force-push or
+  history rewrite occurred; no production, cloud or certification action was
+  attempted; ABEX state was not mutated.
+- Authoritative identity confirmed live: canonical remote is
+  github.com/AndrewLamSingapore/orqevia.git (renamed from prime). The local
+  clone is repos/prime.
+- Reconciliation complete: local main was fast-forwarded from 6c3c8f1 to
+  GitHub main 8929aca (70 commits), then this Dell branch
+  (codex/dell-orqevia-skills-academy-uief-20261014) was merged into main.
+- The 21-agent registry is complete and accessible: config/agent_registry.json,
+  schema 2.0, 21 registered specialist agents plus orchestrator prime; all 21
+  specialists are model: unassigned; registry_status is
+  implemented_pending_runtime_acceptance. SHA-256 recomputed this session as
+  fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff, matching
+  the frozen pin.
+- L7 certification remains UNKNOWN from Dell; the historical record says 0/21
+  and nothing here changes it.
+- Additive development merged into main: SKILLS.md, PLAN.md,
+  skills/manifest.json, 12 skills/<id>/SKILL.md packages, app/academy.py (10
+  training rooms), app/uief.py (15 dimensions), and tests. All 23 new tests
+  pass. These are DRAFT_CANDIDATE and NOT qualified.
+- Remaining gates not closed from Dell: runtime activation of the 21 agents,
+  Azure L7 independent certification, and DigitalOcean readiness/provisioning.
+
+---
+
 ## Public GitHub profile refresh - 13 October 2026
 
 ### Claimed, not independently checked
