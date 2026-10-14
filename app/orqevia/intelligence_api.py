@@ -1,6 +1,7 @@
 """ORQEVIA intelligence endpoints: geospatial, RAG, ingestion and detection."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -13,7 +14,8 @@ from ..rag_grounding import DocumentStore
 
 router = APIRouter(prefix="/api/orqevia/intelligence")
 
-DATA_DIR = Path("work/orqevia-intelligence-data")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = Path(os.getenv("ORQEVIA_DATA_DIR", str(_REPO_ROOT.parents[1] / "work" / "orqevia-intelligence-data")))
 OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
 DOCUMENTS = DocumentStore()
 DETECTION = DetectionEngine(DATA_DIR / "alerts.json")
