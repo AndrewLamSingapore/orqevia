@@ -36,6 +36,43 @@ If you are an AI agent updating this file:
 
 ---
 
+## Hyper-Inference Fabric activation and PR reconciliation - ORQEVIA - 14 October 2026
+
+### Claimed, not independently checked
+
+- ORQEVIA main advanced to `707a12d` when
+  [PR #312](https://github.com/AndrewLamSingapore/orqevia/pull/312) merged the
+  Hyper-Inference Fabric core: 12 reasoning engines, 10 inference channels,
+  model/tool proxies, intelligence matrices, the ten-step adaptive router, the
+  12 Section 77 Academy exercises, and the measured 15-dimension UIEF
+  benchmark. It also wired the fabric into `app/cognitive_orchestrator.py` and
+  `app/skill_router.py` as advisory-only layers.
+- [PR #313](https://github.com/AndrewLamSingapore/orqevia/pull/313) is open with
+  auto-merge enabled: it marks `hyper-inference.fabric` as `QUALIFIED` while
+  keeping activation `advisory_only` (no tool grants, spending, release or
+  execution authority), and records the DigitalOcean blocker.
+- Test evidence on this Dell host: full pytest baseline `6038 passed, 5 failed,
+  4 skipped` (two skill-registry assertions fixed; three slow historical-custody
+  tests are branch/environment-specific and excluded from the fast gate). The
+  fast acceptance gate is `tests/test_fast_acceptance.py` (4 tests in ~0.26s;
+  every one of the 21 agents must pass identity, advisory-skill and
+  traceable-routing checks). Fabric unit + integration is 31 tests passing.
+  GitHub CI checks `quality`, `isolated-verifier`, and `status-authority` all
+  passed for PR #312.
+- DigitalOcean does not exist yet.
+  `deploy/digitalocean/provider-boundary.preparation.json` remains
+  `PREPARATION_ONLY` with `resources_created: false` and
+  `spend_authorized: false`. No provisioning, spending, deployment or
+  certification action was performed.
+
+Evidence: ORQEVIA PRs #312 and #313; local
+`docs/evidence/HYPER-INFERENCE-FABRIC-20261014.md`; local
+`app/hyper_inference/`; passing `python -m pytest -q tests/test_fast_acceptance.py`
+and `python -m pytest -q tests/test_hyper_inference.py
+tests/test_hyper_inference_integration.py`.
+
+---
+
 ## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026
 
 ### Claimed, not independently checked
