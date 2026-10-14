@@ -4,11 +4,13 @@ Status authority for the skills system. This file is a human-readable index;
 the machine-readable record is `skills/manifest.json`, and each skill carries
 its own `skills/<skill-id>/SKILL.md` package.
 
-Every skill below is currently **DRAFT_CANDIDATE** and **not qualified**.
-Instructions being present does not make a skill qualified. Qualification
-requires a defined interface, passing tests, verified security controls,
-demonstrated error handling, and preserved evidence (Gate A), plus integration
-evidence (Gate B) before it may be considered operational.
+Unless marked otherwise, every skill below is **DRAFT_CANDIDATE** and **not
+qualified**. Instructions being present does not make a skill qualified.
+Qualification requires a defined interface, passing tests, verified security
+controls, demonstrated error handling, and preserved evidence (Gate A), plus
+integration evidence (Gate B) before it may be considered operational.
+`hyper-inference.fabric` is **QUALIFIED** by owner approval after CI, and its
+activation remains `advisory_only`.
 
 ## Registry
 
@@ -26,7 +28,7 @@ evidence (Gate B) before it may be considered operational.
 | uief.evaluation | Universal Intelligence Evaluation Framework | 1.0.0 | a18, a26, a28 | DRAFT_CANDIDATE |
 | skills.governance | Skills registry governance and versioning | 1.0.0 | a26, a29 | DRAFT_CANDIDATE |
 | orchestration.plan | Continuous skills-update orchestration | 1.0.0 | a01, a02, a15, a26 | DRAFT_CANDIDATE |
-| hyper-inference.fabric | Hyper-Inference Fabric | 0.1.0 | a01, a02, a04, a15, a16, a18, a26 | DRAFT_CANDIDATE |
+| hyper-inference.fabric | Hyper-Inference Fabric | 0.1.0 | a01, a02, a04, a15, a16, a18, a26 | QUALIFIED |
 
 ## Dependency graph
 
@@ -52,9 +54,11 @@ registry (12 families), a channel registry (10 channels), mock model/tool proxy
 registries, interoperable intelligence matrix structures, and the ten-step
 adaptive inference router. The fabric never grants tools, spending, release or
 execution authority, and it does not call external services. It is tested by
-`tests/test_hyper_inference.py` (24 deterministic tests, currently passing) but
-remains `DRAFT_CANDIDATE` until Gates A and B are satisfied and owner approval
-activates it.
+`tests/test_hyper_inference.py` and `tests/test_hyper_inference_integration.py`
+(31 deterministic tests, passing), the 4-test fast 21-agent acceptance gate, and
+the measured 15-dimension UIEF benchmark. It is `QUALIFIED` by owner approval
+after the ORQEVIA v1 CI quality check passed for pull request #312; activation
+remains `advisory_only`.
 
 ## Qualification workflow
 
