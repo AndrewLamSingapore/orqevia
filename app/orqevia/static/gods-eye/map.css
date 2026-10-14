@@ -1,0 +1,6 @@
+.map-wrap { position: relative; max-width: 1080px; margin: 0 auto; }
+canvas { width: 100%; height: auto; background: #07111f; border: 1px solid #1b334f; }
+.map-meta { display: flex; justify-content: space-between; padding: 8px 2px; color: #9db8d6; font-size: 13px; }
+.event-list { list-style: none; padding: 0 12px 40px; max-width: 1080px; margin: 0 auto; }
+.event-list li { border-top: 1px solid #15304d; padding: 10px 2px; color: #dbe8f5; }
+.event-list .fresh { color: #69d39c; } .event-list .stale { color: #e2b56d; }

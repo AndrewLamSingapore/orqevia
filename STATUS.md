@@ -36,6 +36,75 @@ If you are an AI agent updating this file:
 
 ---
 
+## GOD'S EYE + Geospatial Intelligence + RAG — implementation, 14 October 2026
+
+### Claimed, not independently checked
+
+- Supersedes the earlier "open execution" and parked DigitalOcean/Azure/21-agent
+  records for this scope. JARVIS PRIME is retired; the active architecture is
+  ORQEVIA. There is no SSOT.
+- Dell executed in its own checkout (`DESKTOP-IPV4PH9`), branch
+  `codex/dell-gods-eye-geo-rag-20261014`, based on `707a12d` (fabric merged).
+- Recovered the God's Eye interface from `feat/orqevia-unified-interface-20261011`
+  into `app/orqevia/` and preserved PR #202 / #244 history (not rewritten).
+- Implemented and tested: `app/geospatial.py`, `app/rag_grounding.py`,
+  `app/geo_ingest.py`, `app/event_detection.py`, and
+  `app/orqevia/intelligence_api.py` plus a map view.
+- Focused tests: `python -m pytest -q tests/test_geospatial.py
+  tests/test_rag_grounding.py tests/test_geo_ingest.py
+  tests/test_event_detection.py` -> **17 passed**.
+
+### Final capability matrix (this scope)
+
+| ID | Capability | Status |
+|---|---|---|
+| GE-01 | Global situational-awareness dashboard | IMPLEMENTED-UNVERIFIED |
+| GE-02 | Live public-data ingestion | IMPLEMENTED-UNVERIFIED (USGS only) |
+| GE-03 | Satellite, aviation and maritime | BLOCKED (no authorized credentials) |
+| GE-04 | Weather, disaster and geopolitical | BLOCKED (no authorized credentials) |
+| GE-05 | Geospatial Intelligence | IMPLEMENTED-UNVERIFIED |
+| GE-06 | RAG evidence grounding | IMPLEMENTED-UNVERIFIED |
+| GE-07 | Historical and predictive intelligence | DOCUMENTED-ONLY |
+| GE-08 | Autonomous event detection and alerts | IMPLEMENTED-UNVERIFIED |
+| GE-09 | ORQEVIA service and tool integration | IMPLEMENTED-UNVERIFIED |
+| GE-10 | Version-controlled documentation and release records | DOCUMENTED-ONLY |
+
+### Known broken / open
+
+- No authorized Dell deployment target was provided. DigitalOcean/Azure are
+  parked per owner. Deployment remains BLOCKED until a target is named.
+- Live satellite/aviation/maritime/weather/geopolitical feeds require credentials
+  or paid licenses not present on Dell; connectors are registered BLOCKED, not mocked.
+- ABEX-owned integration (if any ABEX surface is required) is packaged only;
+  it is not claimed deployed on ABEX.
+
+---
+
+## Owner authorization to open ORQEVIA execution — 14 October 2026 (superseded by the section above)
+
+### Claimed, not independently checked
+
+- Owner instructed on 14 October 2026 to remove ORQEVIA's sandbox and blockers
+  and make execution open. This is an authority/security-policy change. Dell
+  (read-only) prepared the change list; it has not been applied.
+- Dell prepared `DELL-ORQEVIA-OPEN-EXECUTION-CHANGE-LIST-20261014.md` and
+  `ABEX-COMMAND-REMOVE-SANDBOX-BLOCKERS-20261014.md`. ABEX (single writer) is
+  to apply them.
+- Current activation remains `advisory_only`. Nothing has been activated,
+  removed, or verified yet.
+- Read-only Dell inspection of `config/agent_registry.json` (schema 2.0) shows
+  21 agents, all `model:"unassigned"`; `a17`/`a29` `"restricted"`;
+  `runtime_activation_verified:false`.
+
+### Known broken / open
+
+- The controls being removed (WASM sandbox, Stable Spine PDP, Harness PEP,
+  host guard, FAILSAFE, advisory-only skill gate) are the same controls the
+  Owner's own directive lists as A3/A4 prerequisites. This is recorded as an
+  open risk, not a completion.
+- No per-agent activation receipts have been produced; the historical
+  8 PASS / 13 FAIL remains unchanged.
+
 ## Hyper-Inference Fabric activation and PR reconciliation - ORQEVIA - 14 October 2026
 
 ### Claimed, not independently checked
