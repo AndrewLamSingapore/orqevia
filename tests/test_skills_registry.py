@@ -22,7 +22,7 @@ def test_manifest_schema_and_status():
 
 def test_every_skill_is_unqualified_and_versioned():
     manifest = _manifest()
-    assert len(manifest["skills"]) == 12
+    assert len(manifest["skills"]) == 13
     for skill in manifest["skills"]:
         assert skill["status"] == "DRAFT_CANDIDATE"
         assert skill["qualified"] is False

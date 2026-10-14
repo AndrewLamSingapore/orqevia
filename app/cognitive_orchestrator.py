@@ -44,6 +44,7 @@ class CognitivePlan:
     confidence: str
     gaps: list[str]
     reasoning_route: dict[str, Any]
+    fabric_advisory: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -115,8 +116,26 @@ class CognitiveOrchestrator:
                                                consequential=consequential).as_dict()
         if reasoning_route["selected_stage"] == "confidence_hold":
             gaps.append("Reasoning is held at the confidence gate; frontier inference is unavailable or not authorized.")
+        fabric_advisory = None
+        try:
+            # Advisory-only Hyper-Inference Fabric projection. It never grants
+            # authority or executes tools; failures are contained and cannot
+            # block the governed reasoning plan.
+            from .hyper_inference.router import AdaptiveInferenceRouter
+
+            fabric_complexity = "high" if consequential else ("medium" if confidence == "limited" else "low")
+            fabric_advisory = AdaptiveInferenceRouter().route(
+                objective=intent,
+                agent_id=agent_path[-1] if agent_path else "a01",
+                evidence=memory_context + portal_context,
+                agent_permissions={"reason.advisory"},
+                complexity=fabric_complexity,
+            ).as_dict()
+        except Exception:
+            fabric_advisory = None
         return CognitivePlan(intent, route.specialist, route.reason, agent_path, memory_context, portal_context,
-                             consequential, action, confidence, gaps, reasoning_route)
+                             consequential, action, confidence, gaps, reasoning_route,
+                             fabric_advisory=fabric_advisory)
 
     @staticmethod
     def _prompt(plan: CognitivePlan, context: str) -> str:
