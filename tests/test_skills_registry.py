@@ -24,10 +24,14 @@ def test_every_skill_is_unqualified_and_versioned():
     manifest = _manifest()
     assert len(manifest["skills"]) == 13
     for skill in manifest["skills"]:
-        assert skill["status"] == "DRAFT_CANDIDATE"
-        assert skill["qualified"] is False
         assert re.fullmatch(r"\d+\.\d+\.\d+", skill["version"])
         assert skill["owner_agents"]
+        if skill["id"] == "hyper-inference.fabric":
+            assert skill["status"] == "QUALIFIED"
+            assert skill["qualified"] is True
+        else:
+            assert skill["status"] == "DRAFT_CANDIDATE"
+            assert skill["qualified"] is False
 
 
 def test_every_skill_has_a_skill_package():

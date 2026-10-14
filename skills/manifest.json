@@ -115,8 +115,8 @@
       "id": "hyper-inference.fabric",
       "name": "Hyper-Inference Fabric",
       "version": "0.1.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a01", "a02", "a04", "a15", "a16", "a18", "a26"],
       "dependencies": [
         "reasoning.deductive",

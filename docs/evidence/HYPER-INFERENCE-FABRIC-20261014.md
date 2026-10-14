@@ -71,10 +71,11 @@ excluded from the fast gate.
 
 The fabric is advisory-only and executes no external action, grants no
 authority, performs no network calls and does not assume identical agent
-permissions. It is `DRAFT_CANDIDATE`: local unit tests pass, but Gate A
-(interface, security and error-handling qualification) and Gate B (integration
-and recovery qualification) are not yet satisfied, and activation requires a
-separate owner-approved change.
+permissions. On 2026-10-14 the owner approved activation after the ORQEVIA v1
+CI `quality`, `isolated-verifier`, and `status-authority` checks passed for
+pull request #312. `hyper-inference.fabric` is therefore `QUALIFIED`; its
+activation remains `advisory_only` and grants no tools, spending, release or
+execution authority.
 
 ## Remaining blockers
 
@@ -86,8 +87,10 @@ separate owner-approved change.
 
 ## Deployment approval requirements
 
-Before any production use, the following owner approvals are required:
-Gate A and Gate B qualification evidence, owner activation of
-`hyper-inference.fabric`, a DigitalOcean readiness check, and an independent
-Azure L7 assessment evidence package. None of these are implied by this local
-development evidence.
+No deployment was performed. DigitalOcean does not exist yet and
+`deploy/digitalocean/provider-boundary.preparation.json` remains
+`PREPARATION_ONLY` with `resources_created: false` and `spend_authorized:
+false`. Before any deployment the owner must create the DigitalOcean project
+and provide: the project/region/droplet sizing decision, a server-only runtime
+secret store, the reviewed Azure L7 assessor boundary, and explicit spend
+authorization. None of these are implied by this evidence.

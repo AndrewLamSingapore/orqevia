@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1628">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="ORQEVIA · 奥启维亚 unified operational interface">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>ORQEVIA · 奥启维亚 — Unified Interface</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-mark" src="/assets/orqevia/generated-original.png" alt="ORQEVIA logo">
+      <div class="brand-text">
+        <h1>ORQEVIA <span class="cn">· 奥启维亚</span></h1>
+        <p class="subtitle">Unified Interface</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="connection-pill" class="pill pill-offline" aria-live="polite">OFFLINE</span>
+      <span id="mode-pill" class="pill pill-mode" aria-live="polite">NORMAL</span>
+    </div>
+  </header>
+
+  <div id="banner" class="banner hidden" role="status" aria-live="assertive"></div>
+
+  <div class="app-layout">
+    <nav class="sidebar" aria-label="Primary">
+      <button class="nav-btn active" data-view="home">Home</button>
+      <button class="nav-btn" data-view="intelligence">Intelligence</button>
+      <button class="nav-btn" data-view="ideas">Ideas</button>
+      <button class="nav-btn" data-view="architecture">Architecture</button>
+      <button class="nav-btn" data-view="build">Build</button>
+      <button class="nav-btn" data-view="test">Test</button>
+      <button class="nav-btn" data-view="deploy">Deploy</button>
+      <button class="nav-btn" data-view="present">Present</button>
+      <button class="nav-btn" data-view="evidence">Evidence</button>
+      <button class="nav-btn" data-view="agents">Agents</button>
+      <button class="nav-btn" data-view="gods-eye">GOD'S EYE</button>
+      <button class="nav-btn" data-view="settings">Settings</button>
+    </nav>
+
+    <main id="main" class="content">
+      <section id="view-home" class="view active" aria-labelledby="h-home">
+        <h2 id="h-home">System Overview</h2>
+        <div class="metric-grid" id="metrics"></div>
+
+        <div class="panel">
+          <h3>Command Controls</h3>
+          <p class="muted">These buttons change this interface's local state only. They do not command the PRIME runtime; runtime pause, stop, and safe-mode commands require owner approval.</p>
+          <div class="control-row">
+            <button id="btn-pause" class="btn">Pause refresh</button>
+            <button id="btn-stop" class="btn danger">Emergency stop (UI)</button>
+            <button id="btn-safe" class="btn warn">Safe mode (UI)</button>
+            <button id="btn-resume" class="btn">Resume</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Activity History</h3>
+          <ul id="activity" class="activity"></ul>
+        </div>
+      </section>
+
+      <section id="view-intelligence" class="view" aria-labelledby="h-intelligence">
+        <h2 id="h-intelligence">Intelligence</h2>
+        <div class="panel">
+          <h3>Live Agent Fleet</h3>
+          <div id="intel-agents" class="state-zone"></div>
+        </div>
+        <div class="panel">
+          <h3>Telemetry</h3>
+          <p class="muted">Telemetry-backed agent health is only shown when PRIME is reachable. No data is simulated.</p>
+          <div id="intel-telemetry" class="state-zone"></div>
+        </div>
+      </section>
+
+      <section id="view-ideas" class="view" aria-labelledby="h-ideas">
+        <h2 id="h-ideas">Ideas</h2>
+        <div class="panel">
+          <h3>Objective / Challenge Intake</h3>
+          <p class="muted">Entries are stored locally in this browser only. Sending an objective into PRIME is not available from this read-only surface.</p>
+          <form id="idea-form" class="stack">
+            <input id="idea-title" type="text" placeholder="Objective title" required>
+            <textarea id="idea-body" placeholder="Describe the objective or challenge..." rows="4"></textarea>
+            <button class="btn primary" type="submit">Save locally</button>
+          </form>
+        </div>
+        <div class="panel">
+          <h3>Local Drafts</h3>
+          <ul id="idea-list" class="list"></ul>
+        </div>
+      </section>
+
+      <section id="view-architecture" class="view" aria-labelledby="h-architecture">
+        <h2 id="h-architecture">Architecture</h2>
+        <div class="panel">
+          <h3>Authority Boundaries</h3>
+          <ul id="boundaries" class="list"></ul>
+        </div>
+        <div class="panel">
+          <h3>Routing Policy</h3>
+          <div id="routing" class="state-zone"></div>
+        </div>
+      </section>
+
+      <section id="view-build" class="view" aria-labelledby="h-build">
+        <h2 id="h-build">Build</h2>
+        <div class="panel">
+          <h3>Engineering Workflow</h3>
+          <p class="muted">Automated build is a PRIME capability. This surface exposes readiness, not execution.</p>
+          <div id="build-state" class="state-zone">Build readiness unavailable until PRIME is connected.</div>
+        </div>
+      </section>
+
+      <section id="view-test" class="view" aria-labelledby="h-test">
+        <h2 id="h-test">Test</h2>
+        <div class="panel">
+          <h3>Verification Gates</h3>
+          <p class="muted">Unit, integration, security, accessibility, responsive-layout, and recovery tests are run in the repository. Live test execution is not performed from this surface.</p>
+          <div id="test-state" class="state-zone">Test results are reported in the repository and CI, not simulated here.</div>
+        </div>
+      </section>
+
+      <section id="view-deploy" class="view" aria-labelledby="h-deploy">
+        <h2 id="h-deploy">Deploy</h2>
+        <div class="panel">
+          <h3>Deployment Preparation</h3>
+          <p class="muted">No production deployment, live PWA change, DigitalOcean deploy, or public Authority Engine change is authorized from this surface.</p>
+          <div class="state-zone">DEPLOYMENT BLOCKED — owner approval required.</div>
+        </div>
+        <div class="panel">
+          <h3>Rollback</h3>
+          <p class="muted">Rollback remains a PRIME-governed action, gated by human approval.</p>
+        </div>
+      </section>
+
+      <section id="view-present" class="view" aria-labelledby="h-present">
+        <h2 id="h-present">Present</h2>
+        <div class="panel">
+          <h3>Submission Readiness</h3>
+          <ul id="readiness" class="checklist"></ul>
+        </div>
+        <div class="panel">
+          <h3>Judging Criteria</h3>
+          <p class="muted">Competition capabilities are embedded in ordinary objectives and workflows — not presented as a separate module.</p>
+          <ul class="list">
+            <li>Operational reliability and explicit failure states</li>
+            <li>Authentic integration with the sovereign platform</li>
+            <li>Evidence-backed capabilities, separated from unverified claims</li>
+            <li>Responsive iPhone and Dell layouts</li>
+            <li>Security, auditability, and human approval gates</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Rehearsal</h3>
+          <p class="muted">Use the navigation above to walk the full objective flow: Home → Intelligence → Ideas → Architecture → Build → Test → Deploy → Present → Evidence → Agents → Settings.</p>
+        </div>
+      </section>
+
+      <section id="view-evidence" class="view" aria-labelledby="h-evidence">
+        <h2 id="h-evidence">Evidence</h2>
+        <div class="panel">
+          <h3>Audit Trail</h3>
+          <p class="muted">Tamper-evident audit records live in PRIME's local-only audit explorer. They are not reconstructed or simulated here.</p>
+          <div id="evidence-state" class="state-zone">Audit records unavailable until a trusted local PRIME connection is available.</div>
+        </div>
+      </section>
+
+      <section id="view-agents" class="view" aria-labelledby="h-agents">
+        <h2 id="h-agents">Agents</h2>
+        <p class="muted">The existing 21-agent registry and its actual roles are read live from PRIME. Roles are never invented by this interface.</p>
+        <div id="agent-grid" class="agent-grid"></div>
+      </section>
+
+      <section id="view-gods-eye" class="view" aria-labelledby="h-gods-eye">
+        <h2 id="h-gods-eye">GOD'S EYE</h2>
+        <p class="muted">Bounded, read-only owner observatory: what is happening, what is proven, and what remains unknown. When the formal owner-authorized projection is not wired, this view reports UNKNOWN / UNAVAILABLE — it never fabricates live state or zero-counts.</p>
+        <iframe class="gods-eye-frame" src="/gods-eye/" title="GOD'S EYE observatory" loading="lazy"></iframe>
+      </section>
+
+      <section id="view-settings" class="view" aria-labelledby="h-settings">
+        <h2 id="h-settings">Settings</h2>
+        <div class="panel">
+          <h3>Connection</h3>
+          <dl class="kv">
+            <dt>PRIME upstream</dt><dd id="setting-upstream">—</dd>
+            <dt>Access mode</dt><dd>Read-only proxy</dd>
+            <dt>Data classification</dt><dd>LOCAL_ONLY</dd>
+          </dl>
+        </div>
+        <div class="panel">
+          <h3>Local UI State</h3>
+          <label class="switch"><input id="setting-safe" type="checkbox"> Safe mode (disable all mutating-looking controls)</label>
+          <label class="switch"><input id="setting-dark" type="checkbox" checked> Dark operational theme</label>
+        </div>
+        <div class="panel">
+          <h3>Local Data</h3>
+          <button id="btn-clear" class="btn danger">Clear local drafts and settings</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <span>ORQEVIA · 奥启维亚 — read-only unified interface</span>
+    <span class="muted">No production deployment · No live PWA change · No public website change</span>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

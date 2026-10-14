@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GOD'S EYE · ORQEVIA</title>
+  <link rel="stylesheet" href="gods-eye.css">
+  <script src="gods-eye.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to observations</a>
+  <header class="masthead">
+    <div><p class="eyebrow">ORQEVIA · OWNER OBSERVATION</p><h1>GOD'S EYE</h1>
+      <p class="subtitle">What is happening. What is proven. What remains unknown.</p></div>
+    <div class="refresh-controls"><span class="badge neutral">READ ONLY</span>
+      <button id="refresh" type="button">Refresh</button>
+      <a href="/">ORQEVIA Home ↗</a></div>
+  </header>
+  <div class="read-state"><p id="connection" role="status" aria-live="polite">Waiting for an authenticated observation…</p>
+    <p id="read-time">No snapshot read yet.</p></div>
+  <nav aria-label="Observations" id="navigation">
+    <a href="#overview" aria-current="page">Overview</a><a href="#agents">21 agents</a>
+    <a href="#tasks">Tasks</a><a href="#evidence">Evidence Lens</a>
+    <a href="#observatory">Observatory</a><a href="#inference">HF inference</a><a href="#semantics">Semantics</a><a href="#gates">Gates</a>
+  </nav>
+  <main id="main" tabindex="-1">
+    <section id="overview" aria-labelledby="overview-title"><div class="section-heading"><h2 id="overview-title">Current observation</h2>
+      <span id="snapshot-status" class="badge neutral">UNKNOWN</span></div>
+      <p class="boundary">Runtime, registries, deployment and evidence keep their own authority. This view does not execute work, certify agents or create proof.</p>
+      <div class="overview-grid" id="overview-cards"></div>
+      <dl class="binding" id="snapshot-binding"></dl>
+      <p id="identity-note" class="notice" hidden></p>
+    </section>
+    <section id="agents" aria-labelledby="agents-title"><div class="section-heading"><h2 id="agents-title">Permanent agents</h2>
+      <span id="agent-count" class="badge neutral">UNKNOWN / 21</span></div>
+      <p class="boundary">Registered is not running. Signed evidence is not automatically L7 certification.</p>
+      <div id="agent-cards" class="agent-grid"></div>
+    </section>
+    <section id="tasks" aria-labelledby="tasks-title"><div class="section-heading"><h2 id="tasks-title">Tasks & execution</h2></div>
+      <div id="tasks-content"></div></section>
+    <section id="evidence" aria-labelledby="evidence-title"><div class="section-heading"><h2 id="evidence-title">Evidence Lens</h2></div>
+      <p class="boundary">Integrity, currentness, independent verification and certification are different claims.</p>
+      <div id="evidence-content"></div></section>
+    <section id="observatory" aria-labelledby="observatory-title"><div class="section-heading"><h2 id="observatory-title">Capability & performance</h2></div>
+      <p class="boundary">A metric without attributable observations is UNKNOWN, not zero. WHY links show its derivation and evidence.</p>
+      <div id="observatory-content"></div></section>
+    <section id="semantics" aria-labelledby="semantics-title"><div class="section-heading"><h2 id="semantics-title">Semantic result state</h2></div>
+      <p class="boundary">Formal compatibility is a read-only projection. It cannot grant authority, establish factual correctness or award L7.</p>
+      <div id="semantics-content"></div></section>
+    <section id="inference" aria-labelledby="inference-title"><div class="section-heading"><h2 id="inference-title">Hugging Face · governed inference</h2></div>
+      <p class="boundary">Configured and credential-ready is not upstream health. Dated execution is not role quality, production acceptance or L7. HF is optional by task, never forced across all agents.</p>
+      <div id="inference-content"></div></section>
+    <section id="gates" aria-labelledby="gates-title"><div class="section-heading"><h2 id="gates-title">Acceptance & dependencies</h2></div>
+      <div id="gates-content"></div></section>
+    <section id="drilldown" aria-labelledby="drilldown-title" hidden><div class="section-heading"><h2 id="drilldown-title">Observation details</h2></div>
+      <p id="drilldown-status" role="status" aria-live="polite"></p><div id="drilldown-content"></div></section>
+  </main>
+  <footer>Bounded read-only refresh. Hidden pages back off. No model invocation or credentials in this interface.</footer>
+</body>
+</html>
