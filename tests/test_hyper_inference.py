@@ -9,6 +9,11 @@ from __future__ import annotations
 import unittest
 
 from app.hyper_inference.channels import CHANNEL_SPECS, run_channel
+from app.hyper_inference.academy_exercises import (
+    SECTION77_EXERCISES,
+    academy_qualification,
+    run_section77_exercises,
+)
 from app.hyper_inference.engines import ENGINE_SPECS, InferenceEngineRegistry, run_engine
 from app.hyper_inference.matrices import (
     CapabilityMatrix,
@@ -274,6 +279,37 @@ class AdaptiveRouterTests(unittest.TestCase):
         self.assertTrue(result.contradictions)
         self.assertTrue(result.escalation["required"])
         self.assertIn("discriminating evidence for contradictory results", result.evidence_requests)
+
+
+class AcademyExerciseTests(unittest.TestCase):
+    def test_twelve_section77_exercises_are_defined(self):
+        self.assertEqual(len(SECTION77_EXERCISES), 12)
+
+    def test_all_exercises_run_traceably_without_side_effects(self):
+        outcomes = run_section77_exercises()
+        qualification = academy_qualification(outcomes)
+        self.assertEqual(qualification["status"], "PASS")
+        self.assertTrue(all(row["trace_id"] for row in outcomes if row["status"] == "COMPLETED"))
+        self.assertTrue(all(not row["executed_external_action"] for row in outcomes))
+
+    def test_high_complexity_exercises_escalate(self):
+        outcomes = run_section77_exercises()
+        escalated = {
+            row["exercise_id"]
+            for row in outcomes
+            if row["exercise_id"].startswith(("academy.multi-model-disagreement",
+                                              "academy.tool-failure",
+                                              "academy.provider-outage"))
+            and row["escalation"]
+        }
+        self.assertEqual(
+            escalated,
+            {
+                "academy.multi-model-disagreement",
+                "academy.tool-failure",
+                "academy.provider-outage",
+            },
+        )
 
 
 if __name__ == "__main__":

@@ -34,6 +34,11 @@ from .matrices import (
     VectorStore,
 )
 from .router import AdaptiveInferenceRouter, RouterResult
+from .academy_exercises import (
+    SECTION77_EXERCISES,
+    academy_qualification,
+    run_section77_exercises,
+)
 
 __all__ = [
     "ENGINE_SPECS",
@@ -55,6 +60,9 @@ __all__ = [
     "RelationalMatrix",
     "VectorStore",
     "AdaptiveInferenceRouter",
+    "SECTION77_EXERCISES",
+    "academy_qualification",
+    "run_section77_exercises",
     "run_engine",
     "run_channel",
 ]
