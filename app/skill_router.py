@@ -107,6 +107,18 @@ def select_skill_pack(agent_id: str, task_class: str, tier: Tier) -> dict:
     chosen = {item["skill_id"] for item in selected}
     if any(not set(item["dependencies"]) <= chosen for item in selected):
         raise SkillRegistryError("selected skill is missing a dependency")
+    try:
+        from .hyper_inference.channels import CHANNEL_SPECS
+        from .hyper_inference.engines import ENGINE_SPECS
+
+        advisory_fabric = {
+            "engine_families": sorted({spec["family"] for spec in ENGINE_SPECS.values()}),
+            "channel_ids": sorted(CHANNEL_SPECS),
+            "status": "DRAFT_CANDIDATE",
+            "authority": "ADVISORY_ONLY",
+        }
+    except Exception:
+        advisory_fabric = {"available": False, "authority": "ADVISORY_ONLY"}
     return {
         "agent_id": actor,
         "registry_sha256": digest,
@@ -115,4 +127,5 @@ def select_skill_pack(agent_id: str, task_class: str, tier: Tier) -> dict:
         "tool_grants": [],
         "authority": "ADVISORY_ONLY",
         "evidence_state": "BRANCH_ROUTING_ONLY_NOT_AGENT_COMPETENCE",
+        "advisory_fabric": advisory_fabric,
     }

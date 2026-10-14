@@ -26,6 +26,7 @@ evidence (Gate B) before it may be considered operational.
 | uief.evaluation | Universal Intelligence Evaluation Framework | 1.0.0 | a18, a26, a28 | DRAFT_CANDIDATE |
 | skills.governance | Skills registry governance and versioning | 1.0.0 | a26, a29 | DRAFT_CANDIDATE |
 | orchestration.plan | Continuous skills-update orchestration | 1.0.0 | a01, a02, a15, a26 | DRAFT_CANDIDATE |
+| hyper-inference.fabric | Hyper-Inference Fabric | 0.1.0 | a01, a02, a04, a15, a16, a18, a26 | DRAFT_CANDIDATE |
 
 ## Dependency graph
 
@@ -41,6 +42,19 @@ evidence (Gate B) before it may be considered operational.
 - uief.evaluation → academy.training
 - skills.governance → (none)
 - orchestration.plan → skills.governance, uief.evaluation
+- hyper-inference.fabric → reasoning.deductive, reasoning.inductive, reasoning.abductive, matrix.multi-evidence, proxy.routing, uief.evaluation
+
+## Hyper-Inference Fabric
+
+`app/hyper_inference/` is the shared, advisory-only fabric for the reasoning
+families and inference channels in Section 77. It exposes a versioned engine
+registry (12 families), a channel registry (10 channels), mock model/tool proxy
+registries, interoperable intelligence matrix structures, and the ten-step
+adaptive inference router. The fabric never grants tools, spending, release or
+execution authority, and it does not call external services. It is tested by
+`tests/test_hyper_inference.py` (24 deterministic tests, currently passing) but
+remains `DRAFT_CANDIDATE` until Gates A and B are satisfied and owner approval
+activates it.
 
 ## Qualification workflow
 
