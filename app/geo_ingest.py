@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -82,7 +83,8 @@ class ObservationStore:
     def __init__(self, db_path: Path | str) -> None:
         self.path = Path(db_path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.path))
+        self.conn = sqlite3.connect(str(self.path), check_same_thread=False)
+        self.lock = threading.Lock()
         self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS observations (
@@ -99,29 +101,31 @@ class ObservationStore:
 
     def upsert(self, record: dict[str, Any], provenance: dict[str, Any]) -> bool:
         now = utc_now()
-        cur = self.conn.execute(
-            "SELECT ingested_at FROM observations WHERE event_id = ?", (record["event_id"],)
-        )
-        existing = cur.fetchone()
-        payload = json.dumps(record, sort_keys=True)
-        prov = json.dumps(provenance, sort_keys=True)
-        if existing:
+        with self.lock:
+            cur = self.conn.execute(
+                "SELECT ingested_at FROM observations WHERE event_id = ?", (record["event_id"],)
+            )
+            existing = cur.fetchone()
+            payload = json.dumps(record, sort_keys=True)
+            prov = json.dumps(provenance, sort_keys=True)
+            if existing:
+                self.conn.execute(
+                    "UPDATE observations SET payload=?, provenance=?, updated_at=? WHERE event_id=?",
+                    (payload, prov, now, record["event_id"]),
+                )
+                self.conn.commit()
+                return False
             self.conn.execute(
-                "UPDATE observations SET payload=?, provenance=?, updated_at=? WHERE event_id=?",
-                (payload, prov, now, record["event_id"]),
+                "INSERT INTO observations (event_id, kind, payload, provenance, ingested_at, updated_at) VALUES (?,?,?,?,?,?)",
+                (record["event_id"], record["kind"], payload, prov, record["ingested_at"], now),
             )
             self.conn.commit()
-            return False
-        self.conn.execute(
-            "INSERT INTO observations (event_id, kind, payload, provenance, ingested_at, updated_at) VALUES (?,?,?,?,?,?)",
-            (record["event_id"], record["kind"], payload, prov, record["ingested_at"], now),
-        )
-        self.conn.commit()
-        return True
+            return True
 
     def get(self, event_id: str) -> dict[str, Any] | None:
-        row = self.conn.execute("SELECT payload FROM observations WHERE event_id = ?", (event_id,)).fetchone()
-        return json.loads(row[0]) if row else None
+        with self.lock:
+            row = self.conn.execute("SELECT payload FROM observations WHERE event_id = ?", (event_id,)).fetchone()
+            return json.loads(row[0]) if row else None
 
     def query(self, *, min_lat=None, max_lat=None, min_lon=None, max_lon=None, min_time=None, max_time=None, limit=200):
         clauses, params = [], []
@@ -138,11 +142,13 @@ class ObservationStore:
         if max_time is not None:
             clauses.append("json_extract(payload, '$.observed_at') <= ?"); params.append(max_time)
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
-        rows = self.conn.execute(f"SELECT payload FROM observations {where} ORDER BY ingested_at DESC LIMIT ?", (*params, limit)).fetchall()
-        return [json.loads(row[0]) for row in rows]
+        with self.lock:
+            rows = self.conn.execute(f"SELECT payload FROM observations {where} ORDER BY ingested_at DESC LIMIT ?", (*params, limit)).fetchall()
+            return [json.loads(row[0]) for row in rows]
 
     def count(self) -> int:
-        return self.conn.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+        with self.lock:
+            return self.conn.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
 
 
 @dataclass
@@ -175,6 +181,18 @@ class Poller:
         inserted = updated = fetched = 0
         error = None
         ok = False
+        if self.config.get("status") != "READY" or not self.config.get("url"):
+            return IngestionReceipt(
+                run_id=run_id,
+                source=self.source,
+                started_at=started,
+                finished_at=utc_now(),
+                fetched=0,
+                inserted=0,
+                updated=0,
+                ok=False,
+                error=self.config.get("reason", "source not ready"),
+            )
         delay = 1
         for attempt in range(max_retries + 1):
             try:

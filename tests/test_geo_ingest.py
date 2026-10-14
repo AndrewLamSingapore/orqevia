@@ -39,3 +39,11 @@ def test_poller_produces_receipts(tmp_path):
     assert first.ok and first.inserted == 1
     assert second.ok and second.inserted == 0 and second.updated == 1
     assert store.count() == 1
+
+
+def test_poller_fails_closed_for_blocked_source(tmp_path):
+    store = ObservationStore(tmp_path / "obs.db")
+    receipt = Poller(store, source="maritime-ais").run(run_id="blocked")
+    assert receipt.ok is False
+    assert receipt.error and "credential" in receipt.error
+    assert store.count() == 0

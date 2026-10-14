@@ -9,10 +9,12 @@ excluded from retrieval, caches and citations.
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import re
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Iterable
 
 from .geospatial import haversine_km, validate_coordinate
@@ -115,6 +117,44 @@ class DocumentStore:
         for key in [key for key in self._passages if key[0] == doc_id]:
             self._passages.pop(key, None)
         self._cache.clear()
+
+    def contains(self, doc_id: str) -> bool:
+        return doc_id in self._docs
+
+    def save(self, path: Path | str) -> None:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "docs": self._docs,
+            "passages": [
+                {
+                    "doc_id": p.doc_id,
+                    "chunk_index": p.chunk_index,
+                    "text": p.text,
+                    "source": p.source,
+                    "authority_class": p.authority_class,
+                    "scope": p.scope,
+                    "doc_version": p.doc_version,
+                    "geometry": p.geometry,
+                    "observed_at": p.observed_at,
+                }
+                for p in self._passages.values()
+            ],
+        }
+        Path(path).write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+    @classmethod
+    def load(cls, path: Path | str) -> "DocumentStore":
+        store = cls()
+        source = Path(path)
+        if not source.exists():
+            return store
+        payload = json.loads(source.read_text(encoding="utf-8"))
+        for doc_id, doc in payload.get("docs", {}).items():
+            store._docs[doc_id] = doc
+        for item in payload.get("passages", []):
+            key = (item["doc_id"], item["chunk_index"])
+            store._passages[key] = Passage(**item)
+        return store
 
     def _visible(self, actor_scopes: set[str]) -> list[Passage]:
         return [p for p in self._passages.values() if p.scope in actor_scopes]

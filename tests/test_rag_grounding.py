@@ -46,3 +46,11 @@ def test_deleted_document_is_excluded():
     store = _store()
     store.delete("d1")
     assert store.retrieve("shipping lanes", actor_scopes={"APPLICATION"})["status"] == "INSUFFICIENT_EVIDENCE"
+
+
+def test_save_and_load_preserves_index(tmp_path):
+    store = _store()
+    store.save(tmp_path / "docs.json")
+    reloaded = DocumentStore.load(tmp_path / "docs.json")
+    assert reloaded.contains("d1")
+    assert reloaded.retrieve("shipping lanes", actor_scopes={"APPLICATION"})["status"] == "GROUNDED"

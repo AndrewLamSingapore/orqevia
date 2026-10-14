@@ -17,13 +17,12 @@ router = APIRouter(prefix="/api/orqevia/intelligence")
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.getenv("ORQEVIA_DATA_DIR", str(_REPO_ROOT.parents[1] / "work" / "orqevia-intelligence-data")))
 OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
-DOCUMENTS = DocumentStore()
+DOCUMENTS = DocumentStore.load(DATA_DIR / "documents.json")
 DETECTION = DetectionEngine(DATA_DIR / "alerts.json")
 
 
 class RetrieveRequest(BaseModel):
     query: str
-    scopes: list[str] = ["APPLICATION"]
     near_lat: float | None = None
     near_lon: float | None = None
     radius_km: float | None = None
@@ -72,7 +71,7 @@ def rag_retrieve(request: RetrieveRequest) -> dict:
         near = (request.near_lat, request.near_lon)
     return DOCUMENTS.retrieve(
         request.query,
-        actor_scopes=set(request.scopes),
+        actor_scopes={"APPLICATION"},
         near=near,
         radius_km=request.radius_km,
     )
@@ -80,7 +79,23 @@ def rag_retrieve(request: RetrieveRequest) -> dict:
 
 @router.post("/ingest/run")
 def ingest_run() -> dict:
-    receipt = Poller(OBSERVATIONS, source="usgs-earthquakes").run(run_id=f"run-{__import__('time').time():.0f}")
+    import time as _time
+    receipt = Poller(OBSERVATIONS, source="usgs-earthquakes").run(run_id=f"run-{_time.time():.0f}")
+    if receipt.ok:
+        for record in OBSERVATIONS.query(limit=500):
+            if DOCUMENTS.contains(record["event_id"]):
+                continue
+            DOCUMENTS.ingest(
+                doc_id=record["event_id"],
+                text=f"Earthquake magnitude {record['magnitude']} near {record.get('place') or record['event_id']}. "
+                     f"Observed at {record['observed_at']} by {record['source']}.",
+                source=record.get("source_url") or record["source"],
+                authority_class="PUBLIC_REFERENCE",
+                scope="APPLICATION",
+                geometry={"type": "Point", "coordinates": [record["location"]["lon"], record["location"]["lat"]]},
+                observed_at=record["observed_at"],
+            )
+        DOCUMENTS.save(DATA_DIR / "documents.json")
     return receipt.as_dict()
 
 
