@@ -78,8 +78,9 @@ separate owner-approved change.
 
 ## Remaining blockers
 
-- GitHub push / pull request: `gh` is not authenticated and the environment has
-  no GitHub credentials. No credential was modified.
+- Pull request opened as https://github.com/AndrewLamSingapore/orqevia/pull/312
+  using the machine's existing Git Credential Manager; no credential was
+  created or modified.
 - The three slow historical-custody tests are excluded from the fast gate; they
   are not part of routine verification.
 
