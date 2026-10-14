@@ -174,6 +174,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit only this exact Dell handover-assessment addition; prior bytes stay pinned.
+    handover_title = "## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026"
+    assert after.count(handover_title) == 1
+    handover_start = after.index(handover_title)
+    handover_end = after.index("\n## ", handover_start + len(handover_title)) + 1
+    handover_update = after[handover_start:handover_end].encode("utf-8")
+    assert len(handover_update) == 1751
+    assert hashlib.sha256(handover_update).hexdigest() == "177ea1308e0a4ff0744de75ed40e5235c8d290be86c764e35fe0783c4f791171"
+    after = after[:handover_start] + after[handover_end:]
     # Admit only this exact public-profile observation; all prior bytes stay pinned.
     profile_title = '## Public GitHub profile refresh - 13 October 2026'
     assert after.count(profile_title) == 1
