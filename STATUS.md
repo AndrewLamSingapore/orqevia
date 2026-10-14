@@ -36,6 +36,45 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026
+
+### Claimed, not independently checked
+
+- On 14 October 2026 Dell (host DESKTOP-IPV4PH9, user desktop-ipv4ph9\user)
+  completed the ORQEVIA development-handover assessment as a read-only pass and
+  then performed authorised, additive local development. No repository was
+  fetched, pulled, merged, reset, cleaned or force-pushed; no production, cloud
+  or certification action was attempted; ABEX state was not mutated.
+- Authoritative identity confirmed live: canonical remote is
+  github.com/AndrewLamSingapore/orqevia.git (renamed from prime). The local
+  clone is repos/prime.
+- Live git reconciliation: local main = 6c3c8f1, local remote-tracking
+  origin/main = f5543d0, live GitHub main (ls-remote) = 8929aca. GitHub is ahead
+  of the local clone; coaching PRs #285/#286 are merged on GitHub main but absent
+  from local main. No fetch was performed.
+- The 21-agent registry is complete and accessible: config/agent_registry.json,
+  schema 2.0, 21 registered specialist agents plus orchestrator prime; all 21
+  specialists are model: unassigned; registry_status is
+  implemented_pending_runtime_acceptance. SHA-256 recomputed this session as
+  fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff, matching
+  the frozen pin.
+- L7 certification remains UNKNOWN from Dell; the historical record says 0/21
+  and nothing here changes it.
+- Genuine gaps confirmed by search: no SKILLS.md, SKILL.md or PLAN.md existed;
+  no Intelligence Academy or 15-dimension UIEF existed; coaching and
+  tool-library components existed only in worktrees.
+- Additive local development on branch
+  codex/dell-orqevia-skills-academy-uief-20261014 (from local main 6c3c8f1):
+  added SKILLS.md, PLAN.md, skills/manifest.json, 12 skills/<id>/SKILL.md
+  packages, app/academy.py (10 training rooms), app/uief.py (15 dimensions),
+  and tests. All 23 new tests pass. These are DRAFT_CANDIDATE and NOT qualified,
+  NOT merged, NOT pushed.
+- Outstanding gates not closed from Dell: reconcile local main with GitHub main,
+  merge/push (owner/ABEX), runtime activation of the 21 agents, Azure L7
+  independent certification, and DigitalOcean readiness/provisioning.
+
+---
+
 ## Light-production observation and dated HF evidence repair — 8 October 2026
 
 ### Claimed, not independently checked
