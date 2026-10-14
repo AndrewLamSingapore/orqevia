@@ -23,6 +23,9 @@ references (`app/skill_router.py`, `app/academy.py`, `app/uief.py`,
    coaching state.
 4. Wire the 10 training rooms (`app/academy.py`) to the coaching store.
 5. Add the shared deductive/inductive/abductive reasoning interfaces.
+   (In progress: `app/hyper_inference/` delivers the engine/channel/proxy/matrix
+   registries and the adaptive router; `tests/test_hyper_inference.py` is green
+   but the fabric is still `DRAFT_CANDIDATE`, not Gate A/B qualified.)
 6. Add the controlled internet research gateway.
 7. Add bounded proactive execution and technical tool discovery.
 8. Qualify multi-matrix evidence and multi-proxy routing.
@@ -35,6 +38,18 @@ reasoning interfaces → evidence matrices → tool discovery → proxy routing 
 internet gateway → bounded autonomy → Academy → UIEF → skills governance →
 orchestration → operational readiness. Each item is scheduled only when its
 listed prerequisites are qualified.
+
+## Hyper-Inference Fabric next actions
+
+1. Qualify `hyper-inference.fabric` through Gate A (interfaces, negative and
+   security tests, error handling) and Gate B (integration and recovery).
+2. Wire the fabric into `app/cognitive_orchestrator.py` and `app/skill_router.py`
+   as an advisory selection layer without bypassing `app/routing_policy.py`.
+3. Add the remaining Section 77 engine/channel specialisations (tree and graph
+   search over persistent evidence, retrieval and simulation hooks) only where
+   measured benefit justifies them.
+4. Publish the versioned capability and evaluation records and request owner
+   activation; activation remains a separate, owner-approved change.
 
 ## Agent assignment methodology
 
