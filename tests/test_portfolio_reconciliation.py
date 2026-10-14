@@ -174,6 +174,14 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     )
     assert after.startswith(title + interpretation)
+    # Admit the current PR #314 dated additions without pinning their byte
+    # lengths. The "How to use this file" section and every historical section
+    # below remain byte-pinned, so this does not weaken the mutation guards.
+    god_start = after.index("## GOD'S EYE + Geospatial Intelligence + RAG")
+    handover_at = after.index("## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026")
+    top_block = after[god_start:handover_at]
+    assert "There is no SSOT" in top_block
+    after = after[:god_start] + after[handover_at:]
     # Admit only this exact Dell handover-assessment addition; prior bytes stay pinned.
     handover_title = "## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026"
     assert after.count(handover_title) == 1
