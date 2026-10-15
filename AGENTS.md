@@ -1,5 +1,9 @@
 # ORQEVIA status and domain ownership
 
+## Owner scope adjustment — parked forensic work (15 October 2026)
+
+Apply [the current forensic scope](docs/forensics/20261015/CURRENT-FORENSIC-SUMMARY.md) and [parked-work register](docs/forensics/20261015/PARKED-WORK.json). The listed historical semantics, additional feeds, natural live-alert qualification, full reboot/corpus/entailment qualification, OCR and encrypted PDFs are parked by the Owner. Do not schedule or reactivate them without explicit reauthorization. Preserve UNVERIFIED/unsupported evidence states; parking never means PASS. The broader execution pause remains in force except for expressly requested records cleanup.
+
 ## Master autonomous integration continuation order — 15 October 2026
 
 Apply [the total integration architecture and acceptance rules](docs/TOTAL-INTEGRATION-ARCHITECTURE.md)
