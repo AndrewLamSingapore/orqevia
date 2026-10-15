@@ -36,6 +36,23 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX forensic recovery checkpoint - 15 October 2026
+
+### Claimed, not independently checked
+
+- **PAUSED BY EXPLICIT OWNER REQUEST.** Save and resume later from [the checkpoint](docs/forensics/20261015/CHECKPOINT.md). No deployment, image build, service restart or credential export was performed.
+- ABEX host is DESKTOP-27LKJ2V. Canonical main was checked at `25675aa35baf6e6b49a4682bd6e7666c796dc4de`; PR #314 exact merge is `8a9f339ccec3fd5b2aaed103ef5fadd431143833`. Running backend/interface remain healthy at `891e3adfdd6defac00d7faef34bec06a10de4a4e`. Intelligence routes currently return 404.
+- Preserved and validated 13 SQLite backups, 686 artifact copies and eight private configuration snapshots. Captured 2,254 Git repository candidates, 2,058 common repositories and 49 unreachable-object packs; 95 dirty states remain preserved. One preexisting invalid Gitfile remains quarantined.
+- Indexed seven owning GitHub repositories: 683 PRs, 560 branches, 647 comments, 3,950 workflow runs and 1,377 deployment metadata records. Read all 202 Dell mailbox comments and current STATUS. Dispositioned all 53 saved checkpoint tasks; Golden snapshots contain 130 unique artifact IDs with zero declared content-hash mismatches.
+- Full test run: 6,076 passed / 7 failed / 4 skipped. Focused rerun: 86 passed, clearing three Node PATH failures and admitting only this new non-Verified STATUS section into the unchanged historical byte proof. Three frozen-custody failures remain recorded; protected pins and original results were untouched. Seven PWA check groups and canonical-state validation passed.
+- Integration candidate `bcfe6b55bb1b851d2a8a42f708fb9d429f08406a` is saved on `codex/abex-intelligence-integration-20261015`, with 35 focused passes and an offline bundle. Independent static review findings were repaired in source. Broader transport/UI testing, independent fix recheck, actual build/deployment/restart/persistence/rollback acceptance remain pending.
+- Real USGS isolated qualification passed ingestion of 13 observations, geospatial calculation, grounded citations, explicit alert evaluation/deduplication and subprocess persistence. It is source qualification, not live production acceptance. Aviation, AIS and geopolitical integrations remain BLOCKED.
+- Recovery remains PARTIAL: semantic directive-to-implementation mapping, inaccessible sources, Portal workflow/discussion gaps, deployment-status gaps, the Dell-only re-pin package and actual Dell assessment remain open. ABEX alone implements/merges/deploys; Dell is read-only assessor. PRIME, SSOT, the legacy 21-agent programme, DigitalOcean and Azure remain parked.
+
+Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs/forensics/20261015/FORENSIC_SOURCE_COVERAGE.md), [baseline](docs/forensics/20261015/ORQEVIA_CURRENT_BASELINE.md), [receipts](docs/forensics/20261015/VERIFICATION_AND_ACCEPTANCE_RECEIPTS.md), [measured checkpoint](docs/forensics/20261015/MEASURED_CHECKPOINT.json).
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked
@@ -243,6 +260,8 @@ tests/test_hyper_inference_integration.py`.
 
 ## ABEX direct workspace deployment - 15 October 2026
 
+Latest ABEX observed integration: Interface `360b0e8`, shared local knowledge `3534b38`, backend unchanged `891e3adf`; PRs326-329 merged after required checks. Real project PDF/DOCX/TXT/Markdown API ingestion, selected-source FAISS retrieval, Qwen answers,22uniqueUSGS observations, trusted navigation, coordinated restart and isolated recovery passed. Final25TLS smoke checks, local15tests and PWA95tests passed; CI683reported5206PASS/1SKIP. Actual browser upload is BLOCKED by Edge extension file-URL permission; historical semantic recovery remains partial and Dell assessment unreceived. [20-part integration report](docs/deployments/20261015-total-integration/INTEGRATION-REPORT.md) and [acceptance matrix](docs/deployments/20261015-total-integration/ACCEPTANCE-MATRIX.json). This dated observation does not promote Owner-only Verified sections.
+
 Latest deployed code is `24f0dc9ff1df7801e5e6a1e59a1e5686d926e773`, image `sha256:a3c5b3608bdfc954f5b8b703b63ec826c5780531ee7972f33411a6d212b82cec`. Owner-browser source synchronization refreshed 19 real observations. The approved Edge owner device stays trusted across refresh, a fresh direct tab and service restart. [Deployment and browser evidence](docs/deployments/20261015-direct-workspace/DEPLOYMENT-AND-BROWSER-ACCEPTANCE.json). The earlier deployed revision below is retained as dated history.
 
 Observed by ABEX, not promoted to Owner Verified: deployed Interface source
@@ -273,6 +292,20 @@ review remains separate and does not block this authorized access repair.
 ### ABEX intelligence partial deployment paused — 15 October 2026
 
 Owner explicitly paused after the packaging correction. Candidate `bcfe6b55bb1b851d2a8a42f708fb9d429f08406a` was extended with two runtime fixes: valid local base-image references and safe configured-data initialization in the shallow companion image. The broadened candidate run passed 204 tests; the focused post-fix run passed 34. The internal companion and additive Interface image are running healthy, the backend remains unchanged at `891e3adf`, the prior Interface is retained for rollback, and 13 fresh SQLite backups passed integrity checks. Real USGS ingestion inserted 14 observations; geospatial reads, cited RAG, history, restart persistence, anonymous denial and suspension denial passed. Browser/Interface-path acceptance, live alert firing, second restart, rollback drill, Dell assessment, merge and final acceptance remain incomplete. This is a paused partial deployment, not a Verified claim.
+
+## ABEX intelligence partial deployment paused — 15 October 2026
+
+Owner explicitly paused after the packaging correction. Candidate `bcfe6b55bb1b851d2a8a42f708fb9d429f08406a` was extended with two runtime fixes: valid local base-image references and safe configured-data initialization in the shallow companion image. The broadened candidate run passed 204 tests; the focused post-fix run passed 34. The internal companion and additive Interface image are running healthy, the backend remains unchanged at `891e3adf`, the prior Interface is retained for rollback, and 13 fresh SQLite backups passed integrity checks. Real USGS ingestion inserted 14 observations; geospatial reads, cited RAG, history, restart persistence, anonymous denial and suspension denial passed. Browser/Interface-path acceptance, live alert firing, second restart, rollback drill, Dell assessment, merge and final acceptance remain incomplete. This is a paused partial deployment, not a Verified claim.
+
+## Resumed operational qualification — 15 October 2026 07:11 UTC
+
+Owner explicitly resumed deployment. Candidate remains `6bad0b54d6ddab2b69cf2c72498a17c4c4bc5915`; canonical main resolved to `25675aa35baf6e6b49a4682bd6e7666c796dc4de`. Coordinated companion/Interface restart, full original-Interface rollback and candidate restoration PASSED. Original container served PWA over verified TLS; the same candidate container was restored. Observations SQLite integrity is ok and observations/documents/alerts file hashes matched before and after the complete successful drill. Backend container identity/start time unchanged. Evidence: `RESUME-ACCEPTANCE-20261015T070932Z.json`.
+
+Anonymous external intelligence API/UI requests returned 401 over verified TLS; external PWA returned 200. Internal manifest, sources, health, events, distance, radius, alerts, history, baseline and RAG returned 200. Formal semantic God's Eye API returned its intended 503 (parked formal stack); this is separate from the active geospatial map, which still requires browser acceptance. Evidence: `runtime/RESUMED-INTERNAL-ENDPOINTS.json`. Fresh real USGS ingestion fetched 10 records, inserted 1 and updated 9; 15 total persisted observations; live alert count remains zero.
+
+Original failed probe receipts are retained: initial internal `/health` was the wrong companion URL, and first rollback probe expected 200 from original Interface `/health`, which returns 404. Corrected successful drill uses the actual configured container healthcheck and external `/pwa/` route. No failure evidence was removed.
+
+Remaining: owner-session authenticated external-path qualification, actual browser/map visual acceptance, real alert firing, Dell independent assessment, merge and final publication/operational acceptance. Browser automation failed twice with `Unable to load browser request-header policy`; current Interface has no unexpired PWA sessions and no configured client credentials. Owner was asked to sign in through the normal flow; no new identity or session was fabricated. Provider-blocked aviation/maritime/geopolitical feeds remain external limitations. Deployment stays running healthy; this is not an Owner pause or final acceptance.
 
 ## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026
 

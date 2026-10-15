@@ -1,0 +1,183 @@
+{
+  "at_utc": "2026-10-15T08:52:11.852511+00:00",
+  "state": "PASS",
+  "trusted_device_restoration": "PASS_WITHOUT_ENROLLMENT",
+  "selected_source_retrieval": "PASS",
+  "checks": [
+    {
+      "path": "/pwa/api/enroll",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "cc18a9c4fd61550a35ba09f856a259b3eace028fd033abd36aa05a16398ba94f"
+    },
+    {
+      "path": "/api/orqevia/knowledge/health",
+      "actual": 401,
+      "expected": 401,
+      "tls_verified": true,
+      "sha256": "f063711c3fcfbee1c427a6ebb6698e817b9b64b9ac12325b120b6abca5400bb1"
+    },
+    {
+      "path": "/pwa/",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "7bacbfbaa11d127641cfbd876b3769200a1b16b377b85680e0b27ed622130209"
+    },
+    {
+      "path": "/pwa/?view=intelligence",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "7bacbfbaa11d127641cfbd876b3769200a1b16b377b85680e0b27ed622130209"
+    },
+    {
+      "path": "/pwa/?view=gods-eye",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "7bacbfbaa11d127641cfbd876b3769200a1b16b377b85680e0b27ed622130209"
+    },
+    {
+      "path": "/pwa/knowledge.mjs",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "4a3e012ec8e1e6ded0bad88e3750aa9b3d6edda17bd0f25722f61d8ac1e4f185"
+    },
+    {
+      "path": "/pwa/workspace-tools.mjs",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "a0f58a3b866ad2febd74774bcfd63c6a4ea4b88d9849d8405d2f2db22e5fe4a0"
+    },
+    {
+      "path": "/pwa/release.mjs",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "0aa7ce3ba94f30556e7d5d35fbfd4503ed4e3f5bb5f9086219e66e92c481d871"
+    },
+    {
+      "path": "/api/orqevia/manifest",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "09022ba2a9c2329c1f87be923b162ec5b492a9c8bbafaebb3baf3de2536f6a30"
+    },
+    {
+      "path": "/api/orqevia/intelligence/health",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "df9a2a6a4e818076306e376cd8668f58936cd05d9a040cd6b539a92d9a643f28"
+    },
+    {
+      "path": "/api/orqevia/intelligence/sources",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "182d439c931b30bebf40f72a08b5b9cd73323be44fa3142199d53471245fd201"
+    },
+    {
+      "path": "/api/orqevia/intelligence/geo/events?limit=200",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "80e688ecb7aef242bb0bfb83834c4a718335de23b988aeadbb9b138271e991be"
+    },
+    {
+      "path": "/api/orqevia/intelligence/geo/distance?lat1=0&lon1=0&lat2=1&lon2=1",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "0767f1ed8815d854a27e0d10e104aa0088908def45be334e4749d71b0da8d4ee"
+    },
+    {
+      "path": "/api/orqevia/intelligence/geo/radius?lat=0&lon=0&radius_km=40000",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "80e688ecb7aef242bb0bfb83834c4a718335de23b988aeadbb9b138271e991be"
+    },
+    {
+      "path": "/api/orqevia/intelligence/history/timeline",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "0f8152348ac33afc58c9ec05bd39aff416abfcc52a140a4ff4bf2fdd2122a448"
+    },
+    {
+      "path": "/api/orqevia/intelligence/detection/alerts",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "f43c62200c7815091a6fe618461fbcb6ffd38e0f8ff7aaa9ee863ab0f5d47092"
+    },
+    {
+      "path": "/api/orqevia/intelligence/predictive/baseline",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "f42d34b92a3fc0a80a247fb875944fd5c029b479809ed68be79336469bb172b6"
+    },
+    {
+      "path": "/api/orqevia/knowledge/health",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "4fa8b5f949d831fa71ebb3c8dc5d372c469a9ad8dcec97d8d20bb4489199451b"
+    },
+    {
+      "path": "/api/orqevia/knowledge/workspace",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "6fe25023976befed09210afad83e3274f07f39273d23852932786c73955414cf"
+    },
+    {
+      "path": "/api/orqevia/knowledge/documents",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "e2e0b0a6218266988cd096d4a0122155ca6e4b546eb9e517043b5b2520622936"
+    },
+    {
+      "path": "/api/orqevia/knowledge/ideas",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "5f3656b2d42e97090c1de17c6290f4652c65c7ab7cbe8e6d2bd8beede6693f96"
+    },
+    {
+      "path": "/api/orqevia/knowledge/documents",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "e2e0b0a6218266988cd096d4a0122155ca6e4b546eb9e517043b5b2520622936"
+    },
+    {
+      "path": "/api/orqevia/knowledge/retrieve",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "1134a17c323016a8f6be79a304264c62279e375016e92c23c2c52f7a8cda6420"
+    },
+    {
+      "path": "/pwa/api/session",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "f0821d80102f766dbef377ac8ed547e2ac83d3a02dd0674a0003d9cb4c1fb2c1"
+    },
+    {
+      "path": "/pwa/api/logout",
+      "actual": 200,
+      "expected": 200,
+      "tls_verified": true,
+      "sha256": "3e58c6fcf10a31770582814c2babfd1ff71bb1a72cae32cdb1c1a428f406d47f"
+    }
+  ]
+}

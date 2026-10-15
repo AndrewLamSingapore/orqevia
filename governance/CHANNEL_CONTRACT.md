@@ -18,11 +18,15 @@ current deployment status.
    observations; `system.manifest.json` binds ORQEVIA components. STATUS.md
    records portfolio status claims and their evidence classification. No
    parallel portfolio status pointer is maintained.
-3. ABEX/PRIME owns runtime coordination. Dell is an authenticated client,
-   development/synchronization node and independent verifier. PWA and voice use
-   the same Interface contract. Client identity never increases authority.
-4. There are 21 canonical logical agents. A12 Builder maps to a17 and A13 Test
-   Engineer to a18. Registered count does not imply active inference workers.
+3. ABEX alone owns ORQEVIA implementation, merge, deployment and operational
+   execution. Dell is an independent read-only reviewer and forensic assessor.
+   PWA and voice use the same Interface contract. Client identity never
+   increases authority. Earlier development/synchronization assignments are
+   retained in Git history and superseded by the Owner's recovery directive.
+4. Discover actual identities and permissions from current source and runtime
+   evidence. The historical 21-agent programme is parked; its preserved registry
+   and role mappings do not establish an active governing requirement, current
+   execution permission, live worker count or certification.
 5. Ordinary bounded work executes directly with observation and evidence;
    universal TAP/Harness pre-approval is superseded. Authentication, ownership,
    resource limits and narrow consequential controls remain. Logging is not a
