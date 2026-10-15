@@ -60,7 +60,9 @@ def historical_validation(tmp_path, mode):
     assert mode in {'audit', 'old', 'fresh'}
     target = tmp_path / 'historical-source'
     target.mkdir()
-    archive = subprocess.check_output(['git', 'archive', '--format=tar', REVISION], cwd=ROOT)
+    # Windows core.autocrlf can transform git-archive output, violating the
+    # exact historical byte pins despite unchanged blobs. Preserve source bytes.
+    archive = subprocess.check_output(['git', '-c', 'core.autocrlf=false', '-c', 'core.eol=lf', 'archive', '--format=tar', REVISION], cwd=ROOT)
     with tarfile.open(fileobj=io.BytesIO(archive), mode='r:') as source:
         source.extractall(target, filter='data')
     subprocess.run(['git', 'init', str(target)], check=True, capture_output=True)
