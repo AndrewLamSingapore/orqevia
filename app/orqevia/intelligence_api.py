@@ -16,7 +16,12 @@ from ..rag_grounding import DocumentStore
 router = APIRouter(prefix="/api/orqevia/intelligence")
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = Path(os.getenv("ORQEVIA_DATA_DIR", str(_REPO_ROOT.parents[1] / "work" / "orqevia-intelligence-data")))
+_configured_data_dir = os.getenv("ORQEVIA_DATA_DIR")
+DATA_DIR = Path(
+    _configured_data_dir
+    if _configured_data_dir
+    else _REPO_ROOT.parent / "work" / "orqevia-intelligence-data"
+)
 OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
 DOCUMENTS = DocumentStore.load(DATA_DIR / "documents.json")
 DETECTION = DetectionEngine(DATA_DIR / "alerts.json")

@@ -18,3 +18,11 @@ The Interface image extends existing891e3adf additively using `Dockerfile.interf
 8. Restart only companion then Interface through the same authorized mechanism, verifying persisted observations/documents/alerts, saved sessions/TLS/legacy data and health. Rollback stops candidateInterface and renames/starts preserved oldInterface; companion canstop without mutating existing backend/data. Do not delete candidate or original data. Test suspension marker and resume exact marker ownership before claiming operational readiness.
 
 No shipping claim may be made from configuration, image build or merge alone. A failed critical control blocks the affected new path. Existing source tests and isolated USGS receipt are source qualification, not production acceptance. External aviation/AIS/ACLED stay BLOCKED. Academy,Hyper-Inference,Scaffolding remain source components rather than silently activated production agents.
+
+## Partial deployment pause — 15 October 2026
+
+Owner paused work after the packaging correction. The invalid raw image-ID defaults in both Dockerfiles were replaced with the verified local `orqevia:official-logo-891e3adf` tag after independently matching image ID `sha256:36c11eeb...`. A container-only `ORQEVIA_DATA_DIR` initialization failure was also repaired. The broader candidate suite passed 204 tests; the focused post-fix suite passed 34 tests.
+
+The internal companion is running with no host port and persistent named storage. Real USGS ingestion inserted 14 observations, and authenticated health, geospatial retrieval, evidence-grounded RAG, history, restart persistence, anonymous denial and suspension denial passed. The Interface is healthy on the additive candidate image, with the previous Interface retained as `prime-epoch-20260919-interface-1-rollback-20261015T065636Z`. The backend remains unchanged at `891e3adf`; 13 fresh SQLite backups passed integrity checks.
+
+Acceptance remains incomplete: browser and actual Interface-path verification, live alert firing, second restart, full rollback exercise, Dell independent assessment, merge and final status publication were not performed. Do not resume these steps until explicit Owner instruction.
