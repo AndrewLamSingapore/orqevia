@@ -1,7 +1,7 @@
 import {InterfaceAPI, safeID} from './core.mjs';
 
 export function telemetryFreshness(value, now=Date.now()) {
-  if(value?.schema_version!=='orqevia.telemetry.v1'||typeof value.source?.instance!=='string'||typeof value.source?.revision!=='string'||!Array.isArray(value.metrics)||!Array.isArray(value.agents)||value.agents.length!==21||new Set(value.agents.map(a=>a?.agent_id)).size!==21||value.agents.some(a=>!safeID(a?.agent_id))) return 'UNKNOWN';
+  if(value?.schema_version!=='orqevia.telemetry.v1'||typeof value.source?.instance!=='string'||typeof value.source?.revision!=='string'||!Array.isArray(value.metrics)||!Array.isArray(value.agents)||value.agents.length>1000||new Set(value.agents.map(a=>a?.agent_id)).size!==value.agents.length||value.agents.some(a=>!safeID(a?.agent_id))) return 'UNKNOWN';
   const timestamp=Date.parse(value.observed_at), ttl=value.freshness_seconds;
   if(!Number.isFinite(timestamp)||!Number.isFinite(ttl)||ttl<=0||ttl>60||timestamp>now+5000) return 'UNKNOWN';
   return now-timestamp>ttl*1000?'STALE':'OBSERVED';

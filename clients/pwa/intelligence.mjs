@@ -35,13 +35,13 @@ if(typeof document!=='undefined'){
  }
  function retrieval(){
   const p=panel('Knowledge retrieval · cited public observations'), form=node('form'), label=node('label','Search stored knowledge'), input=node('input'), button=node('button','Retrieve'), out=node('div');input.required=true;input.maxLength=4096;input.id='intelligence-query';label.htmlFor=input.id;button.type='submit';form.append(label,input,button);p.append(form,out);
-  form.addEventListener('submit',async e=>{e.preventDefault();const epoch=generation;button.disabled=true;out.textContent='Retrieving cited evidence…';try{const result=await request('/api/orqevia/intelligence/rag/retrieve',{body:{query:input.value},signal:AbortSignal.timeout(30000)});if(epoch!==generation)return;out.replaceChildren(node('p',`Retrieval: ${result.status||'UNKNOWN'}`),node('pre',JSON.stringify(result,null,2)));for(const citation of result.citations||[])source(out,'Open cited source',citation.source);}catch(err){if(epoch===generation)out.textContent=`Retrieval unavailable: ${err.message}. Retry when the service is available.`;}finally{button.disabled=false;}});
+  form.addEventListener('submit',async e=>{e.preventDefault();const epoch=generation;button.disabled=true;out.textContent='Retrieving cited evidence…';try{const result=await request('/api/orqevia/intelligence/rag/retrieve',{body:{query:input.value},signal:AbortSignal.timeout(30000)});if(epoch!==generation)return;out.replaceChildren(node('p',`Retrieval: ${result.status||'UNKNOWN'}`),node('pre',JSON.stringify(result,null,2)));for(const citation of result.results||[])source(out,'Open cited source',citation.source);}catch(err){if(epoch===generation)out.textContent=`Retrieval unavailable: ${err.message}. Retry when the service is available.`;}finally{button.disabled=false;}});
  }
  async function refresh(){
   if(!['intelligence','gods-eye'].includes(active)||pending)return;
   $('intelligence-title').textContent=active==='gods-eye'?"God's Eye":'Intelligence';
   if(!navigator.onLine){root.replaceChildren();status('offline','Offline. Reconnect and press Refresh. No cached private data is shown.');return;}
-  if(!session){root.replaceChildren();status('loading','Restoring trusted access. If trust has expired, use the recovery form below.');return;}
+  if(!session){root.replaceChildren();const access=document.documentElement?.dataset.accessState;status(access==='untrusted'?'error':'loading',access==='untrusted'?'This device is not currently trusted. Restore access once using the recovery form below.':'Restoring trusted access. If the connection is unavailable, retry below.');return;}
   const epoch=generation, controller=new AbortController();pending=controller;const timer=setTimeout(()=>controller.abort(),30000);root.replaceChildren();status('loading','Loading authorized observations…');
   const specs=[['health','/api/orqevia/intelligence/health'],['events','/api/orqevia/intelligence/geo/events?limit=200'],['alerts','/api/orqevia/intelligence/detection/alerts'],['sources','/api/orqevia/intelligence/sources'],['history','/api/orqevia/intelligence/history/timeline'],['telemetry','/interface/v1/telemetry']];
   try{
@@ -68,7 +68,7 @@ if(typeof document!=='undefined'){
  window.addEventListener('orqevia-view',e=>{active=e.detail.name;generation++;pending?.abort();pending=null;void refresh();});
  window.addEventListener('offline',()=>{generation++;pending?.abort();pending=null;root.replaceChildren();status('offline','Offline. Reconnect to recover authorized observations.');});
  window.addEventListener('online',()=>void refresh());$('intelligence-refresh').addEventListener('click',()=>void refresh());
- setInterval(()=>{if(!document.hidden)void refresh();},30000);
+ setInterval(()=>{if(!document.hidden&&document.activeElement?.tagName!=='INPUT')void refresh();},30000);
  // Reuse the shell's existing handshake; do not race a second session refresh.
  window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));
  void refresh();

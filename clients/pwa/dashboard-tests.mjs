@@ -17,3 +17,6 @@ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.ok(html.includes('id="objective-form"'));assert.ok(html.includes('id="enrollment-form"'));assert.ok(html.includes('id="artifact-section"'));
 assert.ok(!html.includes('21/21 agents ready'));assert.ok(!/>\s*100%\s*</.test(html));
 console.log('Dashboard source, freshness, duplicate-agent rejection, PWA identity and API cache boundary: 12 assertions PASS');
+
+assert.equal(telemetryFreshness({...report,agents:[]},time),'OBSERVED');
+assert.equal(telemetryFreshness({...report,agents:report.agents.slice(0,2)},time),'OBSERVED');
