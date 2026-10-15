@@ -1,5 +1,7 @@
 # CP01 — preserved, before production deployment
 
+> **15 October 2026 partial-deployment pause:** Owner later resumed CP01, then paused again after the packaging fix. The backend remains unchanged at `891e3adf`; the internal intelligence companion and additive Interface candidate are running healthy, with the old Interface retained for rollback. Real USGS ingestion and persistence passed. Browser/Interface-path acceptance, live alert firing, second restart, rollback drill, Dell review, merge and final acceptance remain incomplete. See current `STATUS.md` and the ABEX local forensic checkpoint before resuming.
+
 This is a durable resumption checkpoint. Production backend and Interface remain healthy at891e3adf. No image build, service replacement, database migration, credential change or public listener was performed. Existing coaching remains paused; parked programmes remain parked.
 
 Measured evidence:13validated database backups,686matchingartifactcopies;683PRs/560branches;53savedtasks dispositioned;2,254localGitcandidates/2,058commonrepositories preserved,49unreachableobjectpacks. One preexisting invalidGitfile remains quarantined;95dirty states are retained, not erased. Recovery is PARTIAL, with accessible-boundary and semantic-review gaps recorded.

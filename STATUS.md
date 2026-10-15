@@ -1,5 +1,9 @@
 # STATUS.md — Portfolio status record
 
+## ABEX intelligence partial deployment paused — 15 October 2026
+
+Owner explicitly paused after the packaging correction. Candidate `bcfe6b55bb1b851d2a8a42f708fb9d429f08406a` was extended with two runtime fixes: valid local base-image references and safe configured-data initialization in the shallow companion image. The broadened candidate run passed 204 tests; the focused post-fix run passed 34. The internal companion and additive Interface image are running healthy, the backend remains unchanged at `891e3adf`, the prior Interface is retained for rollback, and 13 fresh SQLite backups passed integrity checks. Real USGS ingestion inserted 14 observations; geospatial reads, cited RAG, history, restart persistence, anonymous denial and suspension denial passed. Browser/Interface-path acceptance, live alert firing, second restart, rollback drill, Dell assessment, merge and final acceptance remain incomplete. This is a paused partial deployment, not a Verified claim.
+
 Interpretation updated: 6 October 2026. Dated observations below retain their original dates.
 
 STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.
