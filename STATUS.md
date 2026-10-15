@@ -36,6 +36,31 @@ If you are an AI agent updating this file:
 
 ---
 
+## AI Scaffolding Engine - ORQEVIA - 15 October 2026
+
+### Claimed, not independently checked
+
+- Dell (host DESKTOP-IPV4PH9) added the permanent AI Scaffolding Engine as
+  `app/scaffolding.py` v1.0.0 plus `tests/test_scaffolding.py` on branch
+  `codex/dell-ai-scaffolding-engine-20261015`, based on `origin/main`
+  `2f19067d3461770d8076d3f2264f713c86dd726c`.
+- Nine factories: project, agent, skill, knowledge/RAG, geospatial, God's Eye
+  adapter, infrastructure, verification and read-only repair planning, behind a
+  `ScaffoldingEngine` facade.
+- Generator/validator only: generated agents and skills default to
+  `advisory_only`, no tool grants and `human_approval: required_for_execution`;
+  the engine grants no network, subprocess, deployment or execution authority.
+- Local tests: `tests/test_scaffolding.py` 11 passed; regression
+  `tests/test_fast_acceptance.py` 4 passed.
+- Not deployed and not runtime-activated; review/merge is the next step.
+
+### Known broken / open
+
+- Independent review and a scaffolded acceptance application remain outstanding
+  before any production use.
+
+---
+
 ## GOD'S EYE + Geospatial Intelligence + RAG — implementation, 14 October 2026
 
 ### Claimed, not independently checked
