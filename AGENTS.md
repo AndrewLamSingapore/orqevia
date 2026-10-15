@@ -1,8 +1,12 @@
 # ORQEVIA status and domain ownership
 
+## Owner resume after preservation cleanup (15 October 2026)
+
+The Owner has lifted the execution pause. Continue the authorized active mission from its saved state, preserving completed work and required security/release checks. [Git preservation cleanup](docs/forensics/20261015/GIT-PRESERVATION-CLOSURE.md) closes verified custody and Windows formatting tasks. Previously parked optional work remains parked unless specifically reactivated. Older pause records are dated history, not current execution instructions.
+
 ## Owner scope adjustment — parked forensic work (15 October 2026)
 
-Apply [the current forensic scope](docs/forensics/20261015/CURRENT-FORENSIC-SUMMARY.md) and [parked-work register](docs/forensics/20261015/PARKED-WORK.json). The listed historical semantics, additional feeds, natural live-alert qualification, full reboot/corpus/entailment qualification, OCR and encrypted PDFs are parked by the Owner. Do not schedule or reactivate them without explicit reauthorization. Preserve UNVERIFIED/unsupported evidence states; parking never means PASS. The broader execution pause remains in force except for expressly requested records cleanup.
+Apply [the current forensic scope](docs/forensics/20261015/CURRENT-FORENSIC-SUMMARY.md) and [parked-work register](docs/forensics/20261015/PARKED-WORK.json). The listed historical semantics, additional feeds, natural live-alert qualification, full reboot/corpus/entailment qualification, OCR and encrypted PDFs are parked by the Owner. Do not schedule or reactivate them without explicit reauthorization. Preserve UNVERIFIED/unsupported evidence states; parking never means PASS. The subsequent Owner resume has lifted the execution pause; the listed backlog remains parked.
 
 ## Master autonomous integration continuation order — 15 October 2026
 

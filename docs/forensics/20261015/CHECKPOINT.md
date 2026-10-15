@@ -66,3 +66,8 @@ Actual browser document upload remains BLOCKED by Edge extension file-URL permis
 ## Owner scope cleanup and parking - 2026-10-15T09:12:12.809380+00:00
 
 Owner requested a forensic findings summary and parking of deep historical semantics, additional aviation/maritime/geopolitical feeds, natural live-alert firing, full host reboot/corpus/entailment qualification, OCR and encrypted PDFs. Ten unique groups are PARKED_BY_OWNER, unscheduled, requiring explicit reauthorization. The 9,656 historical UNVERIFIED classifications and original evidence remain unchanged. Repeated qualification text was deduplicated. Browser upload acceptance, publication, Dell assessment and unverified liveness/collectors were not parked. Deployment and verification remain paused; this turn authorizes records cleanup only. See PARKED-WORK.json and source/docs/forensics/20261015/CURRENT-FORENSIC-SUMMARY.md.
+
+
+## Owner resume and preservation closure - 2026-10-15T09:21:21.462721+00:00
+
+Owner explicitly lifted the execution pause after requesting Git custody and Windows-formatting cleanup. All914captured files across95dirty states matched original hashes;49packs passed isolated Git readback. The111-byte all-zero invalid .git marker was reversibly archived under a normal filename with its original private backup intact. Three historical custody tests passed again without protected pin/oracle changes. PR323 passed required checks and merged as4a7528a06fffc616f6cdd00c66119ec9e3429912. Active execution resumed; previously parked optional items remain deferred. Fresh browser upload retry is still blocked by Edge extension file-URL permission. See GIT-CUSTODY-CLEANUP.json, INVALID-GITFILE-CLEANUP.json and source/docs/forensics/20261015/GIT-PRESERVATION-CLOSURE.md.

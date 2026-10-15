@@ -1,7 +1,7 @@
 {
   "recorded_at_utc": "2026-10-15T09:12:12.809380+00:00",
   "authority": "Latest explicit Owner instruction: tidy up and park listed items aside",
-  "scope": "Documentation and backlog organization only; deployment/execution pause remains in force",
+  "scope": "Active mission resumed; listed Owner-parked backlog remains deferred",
   "default": "PARKED_BY_OWNER",
   "resume_rule": "Resume only when explicitly reauthorized by the Owner; do not automatically reactivate as release prerequisites",
   "items": [
@@ -95,5 +95,6 @@
     "raw_local_register_sha256": "1683c85450ae9a8b98ced6dbb0c2b67d513ae9cdc0105a631ee27b3455fbd6d4",
     "underlying_classifications_changed": false
   },
-  "duplicate_qualification_list": "Consolidated the repeated qualification paragraph into unique items; no duplicate work orders."
+  "duplicate_qualification_list": "Consolidated the repeated qualification paragraph into unique items; no duplicate work orders.",
+  "active_execution_resumed_at_utc": "2026-10-15T09:21:21.462721+00:00"
 }

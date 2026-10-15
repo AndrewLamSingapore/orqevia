@@ -1,0 +1,13 @@
+{
+    "archived":  "C:\\Users\\Admin\\Documents\\Codex\\2026-10-13\\ru\\work\\host-telemetry-source-quarantine-20261013T103611Z\\gitfile.invalid-preserved-20261015.bin",
+    "action":  "Reversible leaf-file archival removes invalid .git discovery marker",
+    "live_repository_modified":  false,
+    "restore":  "Rename archived leaf to .git only for forensic reproduction; original null bytes cannot reconstruct a repository",
+    "at_utc":  "2026-10-15T09:19:35.4574692Z",
+    "original":  "C:\\Users\\Admin\\Documents\\Codex\\2026-10-13\\ru\\work\\host-telemetry-source-quarantine-20261013T103611Z\\.git",
+    "state":  "PASS",
+    "sha256":  "24b920fb2f49f521a4fce8f8d0bca1098aa7b380733f96fd6de736dca5006a2e",
+    "backup":  "C:/Users/Admin/Documents/ABEX/private/forensic-recovery-20261015/quarantined-gitfile/original.gitfile",
+    "bytes":  111,
+    "content":  "All zero bytes; no recoverable Git directory pointer"
+}

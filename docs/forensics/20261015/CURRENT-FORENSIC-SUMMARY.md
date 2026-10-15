@@ -39,10 +39,10 @@ UI disclosures, unsupported-format rejection and security controls remain intact
 ## Still open, outside the parked list
 
 - Actual browser file-upload acceptance: extension file-URL permission was unavailable at the last attempted check.
-- Evidence/forensic publication PR #323: state remains as last recorded; no remote checks or merge were performed for this cleanup.
+- Evidence/forensic publication PR #323 merged after required checks as 4a7528a06fffc616f6cdd00c66119ec9e3429912.
 - Independent Dell assessment and unverified agent liveness/host collectors were not included in this parking instruction.
 
-All execution remains paused except this explicitly requested records cleanup.
+The Owner subsequently resumed active execution after the preservation cleanup.
 No containers, volumes, models, documents, sessions or deployment settings changed.
 Original audit, test results, acceptance matrix and raw register remain preserved.
 The [dated integration report](../../deployments/20261015-total-integration/INTEGRATION-REPORT.md)
