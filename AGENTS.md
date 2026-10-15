@@ -1,5 +1,26 @@
 # ORQEVIA status and domain ownership
 
+## Permanent Owner standing order — direct workspace access (15 October 2026)
+
+Apply [the interface access and acceptance standard](docs/INTERFACE-ACCESS-STANDARD.md)
+to every present and future interface, module, redesign and deployment unless
+explicitly superseded by the Owner. Open ORQEVIA → enter workspace → select any
+page → use its functionality. Restore valid trusted-device sessions in the
+background; never require enrollment for ordinary trusted navigation. Preserve
+TLS, scoped HttpOnly credentials, revocation, backend authorization and privacy.
+Every navigation item must open functional service-backed UI with explicit
+loading, empty, offline, error and recovery states. No fabricated live data.
+
+ABEX alone implements and executes. Dell independently reviews only and is not
+a prerequisite for useful, reversible progress. Do not make PRIME, former SSOT,
+the historical 21-agent registry, DigitalOcean migration or Azure certification
+mandatory dependencies of workspace access, Intelligence or God's Eye. Existing
+legacy implementation names are compatibility details, not architectural authority.
+Audit and reuse existing implementations before introducing replacements.
+Deploy and verify the whole authorized flow, including trusted refresh/restart,
+first-click Intelligence, direct God's Eye and sensitive-operation denial.
+Builds, screenshots and frontend tests alone never establish deployment acceptance.
+
 For ORQEVIA and portfolio work, review current status claims in
 [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the
 private ORQEVIA repository. It is a portfolio status record, not a source for
