@@ -51,8 +51,10 @@ If you are an AI agent updating this file:
   `advisory_only`, no tool grants and `human_approval: required_for_execution`;
   the engine grants no network, subprocess, deployment or execution authority.
 - Local tests: `tests/test_scaffolding.py` 11 passed; regression
-  `tests/test_fast_acceptance.py` 4 passed.
-- Not deployed and not runtime-activated; review/merge is the next step.
+  `tests/test_fast_acceptance.py` 4 passed. GitHub `quality`,
+  `isolated-verifier` and `status-authority` checks passed on the head.
+- Merged to `main` via PR #316 at `490a5b3595ad308dfdc8ee6a94ec92bf1ef42d1a`.
+  Still not deployed and not runtime-activated.
 
 ### Known broken / open
 
@@ -136,6 +138,17 @@ If you are an AI agent updating this file:
   open risk, not a completion.
 - No per-agent activation receipts have been produced; the historical
   8 PASS / 13 FAIL remains unchanged.
+
+### Resolution - 15 October 2026
+
+- Dell resolved the conflict in favor of machine-enforced authority and
+  deny-by-default: the 14 October "remove sandbox and blockers" instruction is
+  superseded and its prepared change list will not be applied. The existing
+  gates (WASM sandbox, Stable Spine PDP, Harness PEP, host guard, FAILSAFE,
+  advisory-only skill router, tier/capability routers) remain active.
+- `DELL-ORQEVIA-OPEN-EXECUTION-CHANGE-LIST-20261014.md` and
+  `ABEX-COMMAND-REMOVE-SANDBOX-BLOCKERS-20261014.md` are retained as historical
+  evidence, not executable instructions.
 
 ## Hyper-Inference Fabric activation and PR reconciliation - ORQEVIA - 14 October 2026
 
