@@ -30,3 +30,10 @@ test('offline and logout clear data; direct God’s Eye selection reloads withou
  const f=await fixture();f.session();await settle();await settle();navigator.onLine=false;f.listeners.get('offline')();assert.equal(f.nodes.get('intelligence-content').children.length,0);assert.equal(f.nodes.get('intelligence-state').dataset.state,'offline');
  navigator.onLine=true;f.listeners.get('orqevia-view')({detail:{name:'gods-eye'}});await settle();await settle();assert.equal(f.nodes.get('intelligence-title').textContent,"God's Eye");assert.equal(f.nodes.get('intelligence-state').dataset.state,'ready');f.session(null);assert.equal(f.nodes.get('intelligence-content').children.length,0);
 });
+
+test('source synchronization is owner-only and sends an authorized mutation request',async()=>{
+ const f=await fixture();f.session({clientId:'fixture',role:'MEMBER'});await settle();assert.equal(f.nodes.get('intelligence-ingest').hidden,true);
+ await f.nodes.get('intelligence-ingest').listeners.get('click')();assert.ok(!f.requests.some(r=>r.path.endsWith('/ingest/run')));
+ f.session({clientId:'fixture',role:'OWNER'});await settle();assert.equal(f.nodes.get('intelligence-ingest').hidden,false);
+ await f.nodes.get('intelligence-ingest').listeners.get('click')();assert.ok(f.requests.some(r=>r.path.endsWith('/ingest/run')&&r.options.method==='POST'));
+});

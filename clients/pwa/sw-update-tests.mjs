@@ -41,5 +41,5 @@ test('release checks for update and reloads at most once per generation without 
   const navigator={serviceWorker:{addEventListener(name,fn){listeners.set(name,fn);},async register(path,options){assert.equal(path,'/pwa/sw.js');assert.equal(options.scope,'/pwa/');return{async update(){updates++;}};}}};
   vm.runInNewContext(readFileSync(new URL('./release.mjs',import.meta.url),'utf8'),{navigator,location:{protocol:'https:',reload(){reloads++;}},sessionStorage:{getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value)}});
   await new Promise(resolve=>setTimeout(resolve,0));listeners.get('controllerchange')();listeners.get('controllerchange')();
-  assert.equal(updates,1);assert.equal(reloads,1);assert.deepEqual([...values.keys()],['orqevia-shell-v22:controller-reload']);
+  assert.equal(updates,1);assert.equal(reloads,1);assert.deepEqual([...values.keys()],['orqevia-shell-v23:controller-reload']);
 });

@@ -64,10 +64,18 @@ if(typeof document!=='undefined'){
   }catch(e){if(epoch===generation)status('error',`Unable to load: ${e.message}. Press Refresh to recover.`);}
   finally{clearTimeout(timer);if(pending===controller)pending=null;}
  }
- window.addEventListener('orqevia-session',e=>{generation++;pending?.abort();pending=null;session=e.detail;root.replaceChildren();void refresh();});
+ window.addEventListener('orqevia-session',e=>{generation++;pending?.abort();pending=null;session=e.detail;sync.hidden=session?.role!=='OWNER';root.replaceChildren();void refresh();});
  window.addEventListener('orqevia-view',e=>{active=e.detail.name;generation++;pending?.abort();pending=null;void refresh();});
  window.addEventListener('offline',()=>{generation++;pending?.abort();pending=null;root.replaceChildren();status('offline','Offline. Reconnect to recover authorized observations.');});
  window.addEventListener('online',()=>void refresh());$('intelligence-refresh').addEventListener('click',()=>void refresh());
+ const sync=$('intelligence-ingest');
+ sync.addEventListener('click',async()=>{
+  if(session?.role!=='OWNER'||sync.disabled)return;
+  sync.disabled=true;const epoch=generation;status('loading','Synchronizing public USGS observations…');
+  try{const result=await request('/api/orqevia/intelligence/ingest/run',{body:{},signal:AbortSignal.timeout(30000)});if(epoch!==generation)return;if(!result.ok)throw new Error('Provider ingestion failed; previous observations preserved');await refresh();}
+  catch(e){if(epoch===generation)status('error',`Source synchronization unavailable: ${e.message}. Previous observations are preserved; retry when available.`);}
+  finally{sync.disabled=false;}
+ });
  setInterval(()=>{if(!document.hidden&&document.activeElement?.tagName!=='INPUT')void refresh();},30000);
  // Reuse the shell's existing handshake; do not race a second session refresh.
  window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));
