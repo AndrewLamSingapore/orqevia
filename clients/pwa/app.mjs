@@ -76,3 +76,5 @@ $('retry-access').addEventListener('click',()=>{accessState='restoring';controls
 controls();connectSession().catch(error=>{controls();message(errorMessage(error),true);});
 
 
+
+window.addEventListener('orqevia-objective-draft',event=>{const text=event.detail?.text;if(typeof text!=='string'||!text.trim()||text.length>20000)return;void action(async()=>{await switchComposer({kind:'new'});$('objective').value=text;window.dispatchEvent(new CustomEvent('orqevia-open-view',{detail:{name:'objective'}}));});});

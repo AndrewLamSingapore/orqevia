@@ -1,8 +1,8 @@
 ARG ABEX_BASE_IMAGE=orqevia:official-logo-891e3adf
 FROM ${ABEX_BASE_IMAGE}
-COPY app/orqevia_bridge.py /app/app/orqevia_bridge.py
+COPY app/orqevia_bridge.py app/local_knowledge_bridge.py /app/app/
 COPY app/pwa_sessions.py /app/app/pwa_sessions.py
-COPY clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/dashboard.mjs clients/pwa/intelligence.mjs clients/pwa/intelligence.css clients/pwa/index.html clients/pwa/sw.js clients/pwa/release.mjs /app/app/pwa_static/
+COPY clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/dashboard.mjs clients/pwa/intelligence.mjs clients/pwa/intelligence.css clients/pwa/knowledge.mjs clients/pwa/knowledge.css clients/pwa/workspace-tools.mjs clients/pwa/index.html clients/pwa/sw.js clients/pwa/release.mjs /app/app/pwa_static/
 COPY deploy/extend-abex-interface.py /run/extend-abex-interface.py
 RUN python -B /run/extend-abex-interface.py
 ARG ORQEVIA_SOURCE_REVISION=UNKNOWN

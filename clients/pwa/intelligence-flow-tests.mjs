@@ -37,3 +37,14 @@ test('source synchronization is owner-only and sends an authorized mutation requ
  f.session({clientId:'fixture',role:'OWNER'});await settle();assert.equal(f.nodes.get('intelligence-ingest').hidden,false);
  await f.nodes.get('intelligence-ingest').listeners.get('click')();assert.ok(f.requests.some(r=>r.path.endsWith('/ingest/run')&&r.options.method==='POST'));
 });
+
+test('geographic filters validate coordinates and request the real radius API',async()=>{
+ const f=await fixture();f.session();await settle();await settle();
+ const filter=f.nodes.get('intelligence-content').children.find(p=>p.children[0]?.textContent==='Geographic filter');
+ const form=filter.children.find(n=>n.tag==='form'),fields=form.children.slice(0,3).map(l=>l.children[0]);
+ fields[0].value=91;fields[1].value=0;fields[2].value=100;
+ form.listeners.get('submit')({preventDefault(){}});assert.match(f.nodes.get('intelligence-state').textContent,/valid latitude/);
+ fields[0].value=1.35;fields[1].value=103.8;
+ form.listeners.get('submit')({preventDefault(){}});await settle();await settle();
+ assert.ok(f.requests.some(r=>r.path.includes('/geo/radius?lat=1.35&lon=103.8&radius_km=100')));
+});

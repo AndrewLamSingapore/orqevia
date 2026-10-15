@@ -7,7 +7,7 @@ export function mapPoint(location,width=960,height=480){const {lat,lon}=location
 if(typeof document!=='undefined'){
  const $=id=>document.getElementById(id), root=$('intelligence-content');
  let session=null, generation=0, pending=null, active=new URL(location.href).searchParams.get('view')||'home';
- let restoring=null;
+ let restoring=null,geoFilter=null;
  const node=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);return n;};
  const status=(state,text)=>{const n=$('intelligence-state');n.dataset.state=state;n.textContent=text;};
  function panel(title){const p=node('section');p.className='intel-panel';p.append(node('h3',title));root.append(p);return p;}
@@ -28,6 +28,15 @@ if(typeof document!=='undefined'){
   ctx.fillStyle='#83d6c1';for(const r of records){const xy=mapPoint(r.location);if(xy){ctx.beginPath();ctx.arc(...xy,4,0,2*Math.PI);ctx.fill();}}
  }
  function renderObservations(result){
+  const filter=panel('Geographic filter'), form=node('form');
+  const fields=[];
+  for(const [label,value,min,max] of [['Latitude',geoFilter?.lat,-90,90],['Longitude',geoFilter?.lon,-180,180],['Radius in kilometers',geoFilter?.radius_km,0,40075]]){
+   const l=node('label',label),input=node('input');input.type='number';input.step='any';input.min=String(min);input.max=String(max);input.required=true;input.value=value??'';l.append(input);form.append(l);fields.push(input);
+  }
+  const apply=node('button','Filter observations');apply.type='submit';const reset=node('button','Show all observations');reset.type='button';form.append(apply,reset);filter.append(form);
+  form.addEventListener('submit',event=>{event.preventDefault();const [lat,lon,radius_km]=fields.map(x=>Number(x.value));if(![lat,lon,radius_km].every(Number.isFinite)||Math.abs(lat)>90||Math.abs(lon)>180||radius_km<0||radius_km>40075){status('error','Enter valid latitude, longitude and radius bounds.');return;}geoFilter={lat,lon,radius_km};void refresh();});
+  reset.addEventListener('click',()=>{geoFilter=null;void refresh();});
+
   const p=panel("God's Eye · Geospatial observations"), rows=Array.isArray(result.records)?result.records:[];
   p.append(node('p',`${rows.length} stored observations · ${new Date().toLocaleString()} · public USGS data; not global live coverage.`));drawMap(p,rows);
   if(!rows.length)p.append(node('p','No observations stored. Refresh after an authorized ingestion run.'));
@@ -43,7 +52,7 @@ if(typeof document!=='undefined'){
   if(!navigator.onLine){root.replaceChildren();status('offline','Offline. Reconnect and press Refresh. No cached private data is shown.');return;}
   if(!session){root.replaceChildren();const access=document.documentElement?.dataset.accessState;status(access==='untrusted'?'error':'loading',access==='untrusted'?'This device is not currently trusted. Restore access once using the recovery form below.':'Restoring trusted access. If the connection is unavailable, retry below.');return;}
   const epoch=generation, controller=new AbortController();pending=controller;const timer=setTimeout(()=>controller.abort(),30000);root.replaceChildren();status('loading','Loading authorized observations…');
-  const specs=[['health','/api/orqevia/intelligence/health'],['events','/api/orqevia/intelligence/geo/events?limit=200'],['alerts','/api/orqevia/intelligence/detection/alerts'],['sources','/api/orqevia/intelligence/sources'],['history','/api/orqevia/intelligence/history/timeline'],['telemetry','/interface/v1/telemetry']];
+  const specs=[['health','/api/orqevia/intelligence/health'],['events',geoFilter?'/api/orqevia/intelligence/geo/radius?'+new URLSearchParams(geoFilter):'/api/orqevia/intelligence/geo/events?limit=200'],['alerts','/api/orqevia/intelligence/detection/alerts'],['sources','/api/orqevia/intelligence/sources'],['history','/api/orqevia/intelligence/history/timeline'],['telemetry','/interface/v1/telemetry']];
   try{
    const results=await Promise.allSettled(specs.map(([,path])=>request(path,{signal:controller.signal})));if(epoch!==generation)return;if(controller.signal.aborted)throw new Error('Service deadline exceeded');
    const values=new Map(specs.map(([key],i)=>[key,results[i]]));let failures=0;

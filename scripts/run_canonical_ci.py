@@ -141,6 +141,7 @@ def main():
     names.extend(['authorized_assessment_regressions', 'quality_role_routing_regressions'])
     names.extend(['response_schema', 'role_structured_execution',
                   'agent_cert_structured_roles','agent_cert_structured_input_roles'])
+    names.extend(['local_knowledge_boundary','workspace_capabilities'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

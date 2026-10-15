@@ -94,6 +94,7 @@ if(typeof document!=='undefined') {
   for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>view(button.dataset.view));
   for(const button of document.querySelectorAll('[data-new-objective]'))button.addEventListener('click',()=>view('objective'));
   for(const button of document.querySelectorAll('[data-open-task]'))button.addEventListener('click',()=>{view('evidence');$('resume-button').click();});
+  window.addEventListener('orqevia-open-view',e=>view(e.detail.name));
   window.addEventListener('popstate',()=>view(new URL(location.href).searchParams.get('view')||'home',false));
   view(new URL(location.href).searchParams.get('view')||'home',false);
   for(const button of document.querySelectorAll('[data-profile]'))button.addEventListener('click',()=>$('account-button').click());
