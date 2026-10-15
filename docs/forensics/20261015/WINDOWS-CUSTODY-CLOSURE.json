@@ -1,0 +1,12 @@
+{
+  "at_utc": "2026-10-15T09:21:21.462721+00:00",
+  "state": "RESOLVED_RETESTED",
+  "root_cause": "Windows core.autocrlf altered archived frozen source bytes; 46/47 compared files differed only in EOL",
+  "correction": "git -c core.autocrlf=false -c core.eol=lf archive preserves original bytes",
+  "test_result": "3 passed, 34 deselected; explicit historical_custody selection",
+  "original_reviewer_revision": "d9a4e0bdd733a4908e9fa239f6b24bef3c2dce79",
+  "protected_pins_changed": false,
+  "protected_oracle_changed": false,
+  "live_certification_claimed": false,
+  "retest_evidence": "resumed-historical-custody.log"
+}
