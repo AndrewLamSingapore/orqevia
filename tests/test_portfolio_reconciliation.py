@@ -161,6 +161,15 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    recovery_title = "## ABEX forensic recovery checkpoint - 15 October 2026"
+    assert after.count(recovery_title) == 1
+    recovery_start = after.index(recovery_title)
+    recovery_end = after.index("\n## ", recovery_start + len(recovery_title)) + 1
+    recovery = after[recovery_start:recovery_end]
+    assert "### Claimed, not independently checked" in recovery
+    assert "### Verified" not in recovery
+    assert "docs/forensics/20261015/README.md" in recovery
+    after = after[:recovery_start] + after[recovery_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.

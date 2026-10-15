@@ -36,6 +36,23 @@ If you are an AI agent updating this file:
 
 ---
 
+## ABEX forensic recovery checkpoint - 15 October 2026
+
+### Claimed, not independently checked
+
+- **PAUSED BY EXPLICIT OWNER REQUEST.** Save and resume later from [the checkpoint](docs/forensics/20261015/CHECKPOINT.md). No deployment, image build, service restart or credential export was performed.
+- ABEX host is DESKTOP-27LKJ2V. Canonical main was checked at `25675aa35baf6e6b49a4682bd6e7666c796dc4de`; PR #314 exact merge is `8a9f339ccec3fd5b2aaed103ef5fadd431143833`. Running backend/interface remain healthy at `891e3adfdd6defac00d7faef34bec06a10de4a4e`. Intelligence routes currently return 404.
+- Preserved and validated 13 SQLite backups, 686 artifact copies and eight private configuration snapshots. Captured 2,254 Git repository candidates, 2,058 common repositories and 49 unreachable-object packs; 95 dirty states remain preserved. One preexisting invalid Gitfile remains quarantined.
+- Indexed seven owning GitHub repositories: 683 PRs, 560 branches, 647 comments, 3,950 workflow runs and 1,377 deployment metadata records. Read all 202 Dell mailbox comments and current STATUS. Dispositioned all 53 saved checkpoint tasks; Golden snapshots contain 130 unique artifact IDs with zero declared content-hash mismatches.
+- Full test run: 6,076 passed / 7 failed / 4 skipped. Focused rerun: 86 passed, clearing three Node PATH failures and admitting only this new non-Verified STATUS section into the unchanged historical byte proof. Three frozen-custody failures remain recorded; protected pins and original results were untouched. Seven PWA check groups and canonical-state validation passed.
+- Integration candidate `bcfe6b55bb1b851d2a8a42f708fb9d429f08406a` is saved on `codex/abex-intelligence-integration-20261015`, with 35 focused passes and an offline bundle. Independent static review findings were repaired in source. Broader transport/UI testing, independent fix recheck, actual build/deployment/restart/persistence/rollback acceptance remain pending.
+- Real USGS isolated qualification passed ingestion of 13 observations, geospatial calculation, grounded citations, explicit alert evaluation/deduplication and subprocess persistence. It is source qualification, not live production acceptance. Aviation, AIS and geopolitical integrations remain BLOCKED.
+- Recovery remains PARTIAL: semantic directive-to-implementation mapping, inaccessible sources, Portal workflow/discussion gaps, deployment-status gaps, the Dell-only re-pin package and actual Dell assessment remain open. ABEX alone implements/merges/deploys; Dell is read-only assessor. PRIME, SSOT, the legacy 21-agent programme, DigitalOcean and Azure remain parked.
+
+Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs/forensics/20261015/FORENSIC_SOURCE_COVERAGE.md), [baseline](docs/forensics/20261015/ORQEVIA_CURRENT_BASELINE.md), [receipts](docs/forensics/20261015/VERIFICATION_AND_ACCEPTANCE_RECEIPTS.md), [measured checkpoint](docs/forensics/20261015/MEASURED_CHECKPOINT.json).
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked

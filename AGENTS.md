@@ -7,6 +7,26 @@ product code, configuration, contracts, or domain data. Each product owns those
 records in its own repository.
 Only Lam may move an item into its "Verified" sections.
 
+## Current Owner recovery and execution scope (15 October 2026)
+
+ABEX alone implements, merges, deploys and operates ORQEVIA. Dell is an
+independent read-only reviewer and forensic assessor. Historical assignments
+granting Dell implementation authority are preserved as history and do not
+grant current execution permission. PRIME, SSOT, the legacy 21-agent programme,
+DigitalOcean migration and Azure assessment plans remain parked.
+
+Always update and reconcile STATUS.md for real findings, changes and safe
+checkpoints, preserving its history and owner-only Verified sections. Keep
+source, test, merge, deployment and runtime acceptance evidence separate.
+The Owner has explicitly prioritized deploying the active merged intelligence
+release as an exception to the recovery operation's expansion hold. This does
+not activate parked work or authorize blanket security-control removal.
+
+Measure useful outcomes, conserve Codex allowance, and save resumable checkpoints
+before deployment and after verification. Record unfinished work, exact source
+revisions, running processes, evidence hashes and recovery/resume instructions.
+See docs/forensics/20261015/README.md for the bounded recovery package.
+
 Then resolve the latest canonical ORQEVIA `main` commit and read governance/operational-manifest.json
 and governance/CHANNEL_CONTRACT.md at that same commit as component and
 observation references: they describe recorded architecture and observed
