@@ -8,7 +8,7 @@ def main():
     if not args.files and not args.reindex:parser.error('Specify documents, or --reindex. No directory is overwritten implicitly.')
     try:
         client=SharedKnowledgeClient()
-        for name in args.files:print(json.dumps({'file':Path(name).name,'result':client.call('ingest',file=name)},ensure_ascii=False))
+        for name in args.files:print(json.dumps({'file':Path(name).name,'result':client.call('ingest',file=name)},ensure_ascii=True))
         if args.reindex:print(json.dumps(client.call('reindex',{})))
     except Exception:sys.exit('Shared ingestion unavailable or rejected; previous index generations preserved')
 if __name__=='__main__':main()
