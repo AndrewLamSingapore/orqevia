@@ -45,6 +45,18 @@ async function fixture(){
   return activeFixture;
 }
 
+test('startup restoration and network failure never advertise lost device trust',async()=>{
+  const f=await fixture();assert.equal(document.documentElement.dataset.accessState,'restoring');
+  f.requests[0].reject(new TypeError('fixture offline'));await settle();
+  assert.equal(document.documentElement.dataset.accessState,'unavailable');
+  assert.match(f.nodes.get('access-recovery-message').textContent,/trust has not been removed/);
+});
+
+test('only a completed server trust rejection shows enrollment recovery',async()=>{
+  const f=await fixture();f.response(0,{protocol:'jarvis.interface.v1',authenticated:false,recovery:'DEVICE_EXPIRED'});await settle();
+  assert.equal(document.documentElement.dataset.accessState,'untrusted');
+});
+
 test('logout invalidates an earlier session response before the logout request completes',async()=>{
   const f=await fixture();assert.equal(f.requests[0].url,'/pwa/api/session');
   const logout=f.nodes.get('logout-button').listeners.get('click')();
@@ -58,7 +70,7 @@ test('logout invalidates an earlier session response before the logout request c
 test('an earlier authorization failure cannot erase a newer validated session',async()=>{
   const f=await fixture();f.validate();assert.equal(f.requests.length,2);await f.authenticated('new-member');
   f.response(0,{},401);await settle();
-  assert.equal(f.nodes.get('connection-label').textContent,'Connected to PRIME');
+  assert.equal(f.nodes.get('connection-label').textContent,'Connected to ORQEVIA');
   assert.match(f.nodes.get('session-detail').textContent,/new-member/);
 });
 
@@ -80,7 +92,7 @@ for(const failed of [false,true])test(`late account-A task ${failed?'401':'resul
   f.periodic();await f.authenticated('member-b');
   f.response(2,failed?{}:{task_id:'old-private-task',revision:0,state:'COMPLETED',result:'PRIVATE ACCOUNT A'},failed?401:200);await settle();
   assert.match(f.nodes.get('session-detail').textContent,/member-b/);
-  assert.equal(f.nodes.get('connection-label').textContent,'Connected to PRIME');
+  assert.equal(f.nodes.get('connection-label').textContent,'Connected to ORQEVIA');
   assert.equal(f.nodes.get('task-result').textContent,'');
 });
 
@@ -98,5 +110,5 @@ test('late account-A local storage failure cannot disconnect account B',async()=
   const f=await fixture();let rejectOld;
   f.store.load=client=>client==='member-a'?new Promise((_resolve,reject)=>{rejectOld=reject;}):Promise.resolve({pending:null,history:[]});
   await f.authenticated('member-a');f.validate();await f.authenticated('member-b');rejectOld(new Error('fixture storage error'));await settle();
-  assert.equal(f.nodes.get('connection-label').textContent,'Connected to PRIME');assert.match(f.nodes.get('session-detail').textContent,/member-b/);
+  assert.equal(f.nodes.get('connection-label').textContent,'Connected to ORQEVIA');assert.match(f.nodes.get('session-detail').textContent,/member-b/);
 });

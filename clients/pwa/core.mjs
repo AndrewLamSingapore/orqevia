@@ -7,14 +7,14 @@ export function errorMessage(error) {
   if (error?.status === 409) return 'The previous request needs reconciliation. Keep its retry key and avoid sending a new copy.';
   if (error?.status === 404) return 'This task or file is not available to your session.';
   if (error?.status === 422 || error?.code === 'input') return 'Check the objective or file. Upload up to four text files, with combined content below 80,000 characters.';
-  if (error?.status === 429) return 'PRIME is busy. Wait a moment, then try again.';
+  if (error?.status === 429) return 'ORQEVIA is busy. Wait a moment, then try again.';
   if (error?.code === 'integrity') return 'File verification failed. No download was released. Try retrieving it again.';
   if (error?.code === 'pending') return 'An earlier objective may already be running. Retry its original text and attachments to recover it.';
-  if (error?.code === 'protocol') return 'This endpoint did not return the expected JARVIS response. Check your connection.';
+  if (error?.code === 'protocol') return 'This endpoint did not return the expected ORQEVIA response. Check your connection.';
   if (error?.code === 'storage') return 'This browser could not save retry protection. Enable site storage before sending an objective.';
   if (error?.name === 'AbortError') return 'Request paused. Reconnect to recover the task; its retry identity is preserved.';
   if (error?.code === 'timeout' || error instanceof TypeError) return 'Connection interrupted. Retry the same objective or refresh your task when online.';
-  return 'PRIME could not complete this request. Try again when the connection is available.';
+  return 'ORQEVIA could not complete this request. Try again when the connection is available.';
 }
 export function sessionActive(session, nowSeconds = Date.now() / 1000) {
   return Boolean(session?.authenticated && session.protocol === PROTOCOL && Number.isFinite(session.expiresAt) && session.expiresAt > nowSeconds && Number.isFinite(session.verifiedAt) && nowSeconds-session.verifiedAt <= 90);
@@ -50,7 +50,7 @@ export function authoritativeMetadataText(task) {
   if(value.authoritative!==true||value.task_id!==taskID(task)||value.revision!==taskRevision(task))throw new ClientError('protocol');
   const shown=item=>item===null||item===undefined||item===''?'UNKNOWN':String(item);
   const contradictions=Array.isArray(task.result?.contradictions)?task.result.contradictions.length:0;
-  return `PRIME SYSTEM RECORD\nTask UUID: ${shown(value.task_id)}\nState: ${shown(value.state)}\nCreated: ${shown(value.created_at)}\nStarted: ${shown(value.started_at)}\nCompleted: ${shown(value.completed_at)}\nRuntime: ${shown(value.runtime?.host_id)} · ${shown(value.runtime?.source_revision)}\n${contradictions?`Warning: ${contradictions} model metadata claim(s) conflict with or are unsupported by the system record.\n`:''}\nThe response below is model-generated content. Any UUID, timestamp, digest, runtime identity, or authority claim inside it is not system metadata.`;
+  return `ORQEVIA SYSTEM RECORD\nTask UUID: ${shown(value.task_id)}\nState: ${shown(value.state)}\nCreated: ${shown(value.created_at)}\nStarted: ${shown(value.started_at)}\nCompleted: ${shown(value.completed_at)}\nRuntime: ${shown(value.runtime?.host_id)} · ${shown(value.runtime?.source_revision)}\n${contradictions?`Warning: ${contradictions} model metadata claim(s) conflict with or are unsupported by the system record.\n`:''}\nThe response below is model-generated content. Any UUID, timestamp, digest, runtime identity, or authority claim inside it is not system metadata.`;
 }
 export function currentSteps(task) { const revision=taskRevision(task);return (task.steps||[]).filter(step=>(step.revision??0)===revision).slice(0,21); }
 export function resultText(task) {

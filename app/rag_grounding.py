@@ -140,7 +140,8 @@ class DocumentStore:
                 for p in self._passages.values()
             ],
         }
-        Path(path).write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+        from .atomic_json import write_json
+        write_json(path,payload,sort_keys=True)
 
     @classmethod
     def load(cls, path: Path | str) -> "DocumentStore":

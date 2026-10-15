@@ -1,7 +1,7 @@
 import {InterfaceAPI, safeID} from './core.mjs';
 
 export function telemetryFreshness(value, now=Date.now()) {
-  if(value?.schema_version!=='orqevia.telemetry.v1'||typeof value.source?.instance!=='string'||typeof value.source?.revision!=='string'||!Array.isArray(value.metrics)||!Array.isArray(value.agents)||value.agents.length!==21||new Set(value.agents.map(a=>a?.agent_id)).size!==21||value.agents.some(a=>!safeID(a?.agent_id))) return 'UNKNOWN';
+  if(value?.schema_version!=='orqevia.telemetry.v1'||typeof value.source?.instance!=='string'||typeof value.source?.revision!=='string'||!Array.isArray(value.metrics)||!Array.isArray(value.agents)||value.agents.length>1000||new Set(value.agents.map(a=>a?.agent_id)).size!==value.agents.length||value.agents.some(a=>!safeID(a?.agent_id))) return 'UNKNOWN';
   const timestamp=Date.parse(value.observed_at), ttl=value.freshness_seconds;
   if(!Number.isFinite(timestamp)||!Number.isFinite(ttl)||ttl<=0||ttl>60||timestamp>now+5000) return 'UNKNOWN';
   return now-timestamp>ttl*1000?'STALE':'OBSERVED';
@@ -26,15 +26,61 @@ export function coachingPhaseCounts(agents) {
   });
 }
 
+export function coachingDetailLines(agent) {
+  const score=value=>value===0||value===100?String(value):'UNKNOWN';
+  const date=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))?value:'UNKNOWN';
+  const lines=[`Synthetic case score: baseline ${score(agent?.baseline_score)} / latest ${score(agent?.latest_score)} (0 or 100; not role competence)`,
+    'Full role acceptance: NOT ESTABLISHED',`Last activity: ${date(agent?.last_activity_at)}`];
+  if(typeof agent?.blocker==='string') lines.push(`Blocker: ${agent.blocker.slice(0,96)}`);
+  if(Array.isArray(agent?.failures)) for(const failure of agent.failures.slice(0,6)) {
+    const errors=Array.isArray(failure?.errors)?failure.errors.filter(x=>typeof x==='string'&&/^[a-zA-Z0-9_.:-]{1,96}$/.test(x)).slice(0,12):[];
+    lines.push(`Retained failure: ${failure?.phase||'UNKNOWN'} / ${date(failure?.assessed_at)} / ${errors.join(', ')||'assessment failed'}`);
+  }
+  if(Array.isArray(agent?.coaching_actions)) lines.push(`Recorded coaching actions: ${agent.coaching_actions.length}`);
+  if(typeof agent?.coaching_method==='string') lines.push(`Method: ${agent.coaching_method.slice(0,1000)}`);
+  if(Array.isArray(agent?.reassessment_results)) for(const result of agent.reassessment_results.slice(0,2))
+    lines.push(`Synthetic reassessment: ${result?.outcome==='PASS'?'PASS':result?.outcome==='FAIL'?'FAIL':'UNKNOWN'} / ${date(result?.assessed_at)}`);
+  return lines;
+}
+
+export function normalFollowupLines(agent) {
+  const mark=value=>value===true?'PASS':value===false?'FAIL':'PENDING';
+  const lines=[`Normal-role baseline: ${mark(agent?.baseline_pass)}; reassessment: ${mark(agent?.latest_pass)}. Full role acceptance: NOT ESTABLISHED; independent Azure L7: NOT ESTABLISHED.`];
+  if(Array.isArray(agent?.baseline_errors)&&agent.baseline_errors.length)lines.push(`Original normal-role failures: ${agent.baseline_errors.slice(0,32).join(', ').slice(0,1500)}`);
+  if(Array.isArray(agent?.reassessment_results)){const latest=agent.reassessment_results.at(-1);if(latest)lines.push(`Latest reassessment: ${latest.outcome}; failures: ${(latest.errors||[]).slice(0,32).join(', ')||'none'}; execution: ${(latest.execution_error||[]).join(', ')||'completed'}`);}
+  if(Array.isArray(agent?.coaching_actions))lines.push(`Coaching actions: ${agent.coaching_actions.slice(0,8).join(', ').slice(0,1500)}`);
+  if(Array.isArray(agent?.blocker)&&agent.blocker.length)lines.push(`Blocker: ${agent.blocker.join(', ').slice(0,1500)}`);
+  if(agent?.last_activity_at)lines.push(`Normal-role last activity: ${String(agent.last_activity_at).slice(0,64)}`);
+  return lines;
+}
+
+export function normalLatestLines(value, now=Date.now()) {
+  if(value?.status!=='OBSERVED'||value.normal_denominator!==21||value.reassessed_count!==21||!Array.isArray(value.agents)||value.agents.length!==21) return null;
+  if(new Set(value.agents.map(a=>a?.agent_id)).size!==21||value.agents.some(a=>!safeID(a?.agent_id)||a.execution_bound!==true||typeof a.latest_pass!=='boolean'))return null;
+  const passed=value.agents.filter(a=>a.latest_pass).length;
+  if(value.normal_pass_count!==passed||value.normal_fail_count!==21-passed||value.full_role_accepted_count!==0||value.certification_awarded!==false)return null;
+  const observed=Date.parse(value.reconciled_at),completed=Date.parse(value.last_execution_at);
+  if(!Number.isFinite(observed)||!Number.isFinite(completed)||observed>now+5000||completed>now+5000||now-observed>60000)return null;
+  if(!/^[a-f0-9]{40}$/.test(value.assessment_runtime_revision)||!/^[a-f0-9]{40}$/.test(value.observer_runtime_revision))return null;
+  return [`Latest pinned normal cases: ${passed} / 21 pass`,
+    `${21-passed} fail; unchanged oracle replay ${new Date(observed).toLocaleString()}. Last execution ${new Date(completed).toLocaleString()}. Full end-to-end acceptance: 0 / 21 established. Azure L7: not established.`,
+    `Assessment runtime ${value.assessment_runtime_revision.slice(0,7)}; observer ${value.observer_runtime_revision.slice(0,7)}. Historical waves and failures remain retained.`];
+}
+
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
   let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, generation=null;
   function invalidatePending(){sessionEpoch++;pending?.abort();pending=null;}
   const text=(id,value)=>{if($(id))$(id).textContent=value;};
-  function view(name){
+  function view(name,updateRoute=true){
+    const known=new Set([...document.querySelectorAll('[data-view]')].map(x=>x.dataset.view));if(!known.has(name))name='home';
+    if(updateRoute){const url=new URL(location.href);url.searchParams.set('view',name);history.pushState({},'',url);}
+    const intelligence=['intelligence','gods-eye'].includes(name);
+    $('intelligence-workspace')?.classList.toggle('hidden',!intelligence);
+    window.dispatchEvent(new CustomEvent('orqevia-view',{detail:{name}}));
     $('dashboard').classList.toggle('hidden',name!=='home');
     $('task-workspace').classList.toggle('hidden',!['objective','evidence','data & tools'].includes(name));
-    $('capability-view').classList.toggle('hidden',['home','objective'].includes(name));
+    $('capability-view').classList.toggle('hidden',['home','objective','intelligence','gods-eye','coaching'].includes(name));
     $('coaching-view').classList.toggle('hidden',name!=='coaching');
     text('capability-title',name==='objective'?'New objective':name[0].toUpperCase()+name.slice(1));
     const descriptions={agents:'Registry membership is verified separately from readiness. Individual live execution and heartbeat evidence is unavailable.',evidence:'Open your owned task to retrieve its original result and integrity-checked artifacts. Other accounts’ tasks are not exposed.','data & tools':'Upload TXT, Markdown or JSON through the existing authenticated objective interface. Host CPU, memory, disk and network collectors are not configured.',settings:'Manage the existing server session and permissions through Your connection.',intelligence:'Use the existing objective interface for bounded analysis. Every returned result retains its own execution record.',ideas:'Submit an objective through the existing orchestrator. Results and evidence remain attached to the original task.',architecture:'Request architectural analysis through the existing authorized objective interface.',build:'A dedicated build runner is unavailable. Advisory objectives are available; a response is not proof that code was built.',test:'A dedicated test runner is unavailable. Source tests and genuine execution receipts are classified separately.',deploy:'Production deployment remains an owner-authorized operation; this interface has no deployment adapter.',present:'A presentation execution adapter is unavailable. Existing objectives can request a draft; no completed deck is invented.'};
@@ -48,6 +94,8 @@ if(typeof document!=='undefined') {
   for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>view(button.dataset.view));
   for(const button of document.querySelectorAll('[data-new-objective]'))button.addEventListener('click',()=>view('objective'));
   for(const button of document.querySelectorAll('[data-open-task]'))button.addEventListener('click',()=>{view('evidence');$('resume-button').click();});
+  window.addEventListener('popstate',()=>view(new URL(location.href).searchParams.get('view')||'home',false));
+  view(new URL(location.href).searchParams.get('view')||'home',false);
   for(const button of document.querySelectorAll('[data-profile]'))button.addEventListener('click',()=>$('account-button').click());
   function renderCoaching(coaching){
     const list=$('coaching-roles'), summary=$('coaching-summary');
@@ -61,18 +109,23 @@ if(typeof document!=='undefined') {
     const tick=Date.parse(coaching.controller?.last_tick_at||'');
     const controllerAvailability=Number.isFinite(tick)&&tick<=Date.now()+5000?(['OBSERVED','STALE','UNKNOWN'].includes(coaching.controller?.availability)?coaching.controller.availability:'UNKNOWN'):'UNKNOWN';
     const controller=coaching.controller?.last_state||'UNKNOWN';
-    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - internal role assessment only`);
+    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - synthetic role assessment only; full role acceptance is separate`);
     const counts=coachingPhaseCounts(coaching.agents);
     if(summary&&counts){for(const item of counts){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=`${item.assessed} / 21 assessed`;const l=document.createElement('small');l.textContent=`${item.phase}: ${item.passed} pass, ${item.failed} fail, ${item.unassessed} unassessed`;c.append(s,l);summary.append(c);}}
+    const normal=coaching.normal_followup;
+    if(summary&&normal?.status==='OBSERVED'&&normal.normal_denominator===21&&normal.agents?.length===21){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=`Normal-role reassessment: ${normal.normal_pass_count} / 21 pass`;const l=document.createElement('small');l.textContent=`${normal.reassessed_count} / 21 assessed; ${normal.normal_fail_count} fail. Full end-to-end acceptance: 0 / 21 established. Azure L7: not established.`;c.append(s,l);summary.append(c);}
     if(!counts){text('coaching-state','UNKNOWN');empty('Complete per-role observation unavailable; partial or malformed registry.');return;}
     if(!Array.isArray(coaching.agents)||coaching.agents.length===0){empty('No per-role observation (cohort unavailable or partial registry).');return;}
-    if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);list.append(row);}}
+    if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${typeof agent.role==='string'?agent.role.slice(0,128):'Role UNKNOWN'} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Synthetic acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);for(const line of coachingDetailLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
+    if(list&&normal?.status==='OBSERVED'&&normal.agents?.length===21){for(const agent of normal.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.role||'Role UNKNOWN'} - Normal-role follow-up`;row.append(name);for(const line of normalFollowupLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
   }
   function unavailable(state){latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');text('telemetry-source','No current authenticated measurement');}
   function render(){
     const state=telemetryFreshness(latest);
     if(state!=='OBSERVED'){unavailable(state);return;}
     renderCoaching(latest?.coaching??null);
+    const normalLines=normalLatestLines(latest?.normal_latest);
+    if(normalLines){const box=document.createElement('div');box.className='coaching-stat';const title=document.createElement('strong');title.textContent=normalLines[0];box.append(title);for(const line of normalLines.slice(1)){const detail=document.createElement('small');detail.textContent=line;box.append(detail);}$('coaching-summary').append(box);}
     text('telemetry-state',state);text('mobile-system-state','Observations received');
     for(const [id,name] of [['registered-count','registered_agents'],['active-count','active_job_records']]){
       const metric=latest.metrics.find(m=>m.metric_id===name);

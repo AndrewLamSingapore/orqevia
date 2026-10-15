@@ -241,6 +241,39 @@ tests/test_hyper_inference_integration.py`.
 
 ---
 
+## ABEX direct workspace deployment - 15 October 2026
+
+Latest deployed code is `24f0dc9ff1df7801e5e6a1e59a1e5686d926e773`, image `sha256:a3c5b3608bdfc954f5b8b703b63ec826c5780531ee7972f33411a6d212b82cec`. Owner-browser source synchronization refreshed 19 real observations. The approved Edge owner device stays trusted across refresh, a fresh direct tab and service restart. [Deployment and browser evidence](docs/deployments/20261015-direct-workspace/DEPLOYMENT-AND-BROWSER-ACCEPTANCE.json). The earlier deployed revision below is retained as dated history.
+
+Observed by ABEX, not promoted to Owner Verified: deployed Interface source
+`ee1baa5727b010cb1e2acf3f5db7df2448930574`, image
+`sha256:6d4a21ffc4c91e2ec311e861e32db1359f8e13442eb59f3e5b40f4069ef2b52e`.
+Backend remains unchanged at `891e3adf`. Owner explicitly approved trusting the
+current Edge profile. Normal server-issued owner enrollment completed once;
+Home, first-click Intelligence, directly accessible God's Eye, 15 real USGS
+observations, cited GROUNDED retrieval and provider links loaded in that browser.
+Refresh and coordinated normal restart retained the trusted session without
+another enrollment prompt. Companion failure produced explicit recoverable errors
+while operational telemetry remained usable. Source checks: 90 Python and 62
+frontend tests; 31 real external TLS requests using temporary owner/member devices
+passed restoration, restart, role/anonymous/CSRF denial and explicit revocation.
+Temporary test devices were revoked; the approved owner device remains trusted.
+Thirteen fresh SQLite backups passed integrity before each rollout; previous
+Interface containers and original baseline remain retained for rollback.
+
+Permanent Owner direct-access standards are merged through PR #325 at
+`3d6e2630f0d8b0bc78b23a15a193b475c7d64c99`. Agent availability and host gauges
+without collectors remain UNKNOWN/UNAVAILABLE. Aviation, maritime, geopolitical
+providers and optional formal semantic inference remain unconnected; live alert
+firing is not accepted because no qualifying event occurred. Independent Dell
+review remains separate and does not block this authorized access repair.
+
+### Historical pause record (superseded by explicit Owner resumption)
+
+### ABEX intelligence partial deployment paused — 15 October 2026
+
+Owner explicitly paused after the packaging correction. Candidate `bcfe6b55bb1b851d2a8a42f708fb9d429f08406a` was extended with two runtime fixes: valid local base-image references and safe configured-data initialization in the shallow companion image. The broadened candidate run passed 204 tests; the focused post-fix run passed 34. The internal companion and additive Interface image are running healthy, the backend remains unchanged at `891e3adf`, the prior Interface is retained for rollback, and 13 fresh SQLite backups passed integrity checks. Real USGS ingestion inserted 14 observations; geospatial reads, cited RAG, history, restart persistence, anonymous denial and suspension denial passed. Browser/Interface-path acceptance, live alert firing, second restart, rollback drill, Dell assessment, merge and final acceptance remain incomplete. This is a paused partial deployment, not a Verified claim.
+
 ## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026
 
 ### Claimed, not independently checked

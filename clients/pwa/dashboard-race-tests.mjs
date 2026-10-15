@@ -15,6 +15,8 @@ let activeRequests=[];
 afterEach(async()=>{for(const request of activeRequests){if(!request.settled)request.resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));}await settle();});
 
 async function fixture(){
+  globalThis.location={href:'https://candidate.invalid/pwa/'};
+  globalThis.history={pushState(_s,_t,url){location.href=String(url);}};
   const nodes=new Map(), listeners=new Map(), documentListeners=new Map(), intervals=[];
   const node=()=>({textContent:'',children:[],classList:{toggle(){}},setAttribute(){},replaceChildren(){this.children=[];},append(...v){this.children.push(...v);}});
   globalThis.document={hidden:false,getElementById(id){if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);},querySelectorAll(){return [];},createElement:node,addEventListener(name,fn){documentListeners.set(name,fn);}};

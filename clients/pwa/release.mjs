@@ -1,4 +1,4 @@
-const RELEASE='jarvis-shell-v16';
+const RELEASE='orqevia-shell-v23';
 
 if(location.protocol==='https:'&&'serviceWorker'in navigator){
   const reloadKey=`${RELEASE}:controller-reload`;
