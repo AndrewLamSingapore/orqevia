@@ -177,11 +177,13 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     # Admit the current PR #314 dated additions without pinning their byte
     # lengths. The "How to use this file" section and every historical section
     # below remain byte-pinned, so this does not weaken the mutation guards.
+    scaffold_start = after.index("## AI Scaffolding Engine - ORQEVIA - 15 October 2026")
     god_start = after.index("## GOD'S EYE + Geospatial Intelligence + RAG")
     handover_at = after.index("## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026")
+    assert "Scaffolding Engine" in after[scaffold_start:god_start]
     top_block = after[god_start:handover_at]
     assert "There is no SSOT" in top_block
-    after = after[:god_start] + after[handover_at:]
+    after = after[:scaffold_start] + after[handover_at:]
     # Admit only this exact Dell handover-assessment addition; prior bytes stay pinned.
     handover_title = "## Dell handover assessment and gap-closing - ORQEVIA - 14 October 2026"
     assert after.count(handover_title) == 1
