@@ -117,6 +117,30 @@ If you are an AI agent updating this file:
 
 ---
 
+## Legacy identity cleanup - ORQEVIA - 15 October 2026
+
+### Claimed, not independently checked
+
+- Renamed the local canonical checkout from `repos/prime` to `repos/orqevia`
+  and re-pointed all 14 linked worktrees; `git worktree list` resolves cleanly
+  against the new path.
+- Renamed the three JARVIS launchers to ORQEVIA (`ORQEVIA.cmd`,
+  `BENCHMARK-ORQEVIA.cmd`, `PORTAL-SMOKE-ORQEVIA.cmd`) via PR #321, updating
+  the operational-manifest command, its verifier and the two tests that read
+  them. Historical `repository_check` wording is preserved.
+- Workflow display names were already rebranded to ORQEVIA. Remaining `PRIME_*`
+  tokens are functional (environment variables, Docker tags, OIDC workflow
+  filenames) and are left unchanged. SSOT remains only a `status_authority`
+  pointer and is not a status authority.
+
+### Known broken / open
+
+- Deep historical `PRIME` references (agent-cert case evidence, protected
+  workflow filenames, OIDC identity binding) remain intentionally frozen and are
+  ABEX-gated to rename.
+
+---
+
 ## GOD'S EYE + Geospatial Intelligence + RAG — implementation, 14 October 2026
 
 ### Claimed, not independently checked
