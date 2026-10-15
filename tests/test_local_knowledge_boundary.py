@@ -5,6 +5,18 @@ from fastapi.testclient import TestClient
 import httpx
 import pytest
 
+def test_actual_additive_interface_registration_keeps_specific_knowledge_routes_first():
+    import runpy
+    from pathlib import Path
+    extend=runpy.run_path(str(Path(__file__).resolve().parents[1]/'deploy/extend-abex-interface.py'))['extend_interface']
+    namespace={'__package__':'app'}
+    exec(extend('from fastapi import FastAPI\napp=FastAPI()\n'),namespace)
+    client=TestClient(namespace['app'],base_url='https://abex.test')
+    # A missing identity must reach the private boundary, rather than the
+    # observation adapter's unknown-path 404. No live dependency is contacted.
+    assert client.get('/api/orqevia/knowledge/health').status_code==401
+    assert client.get('/api/orqevia/not-a-route').status_code==404
+
 def test_private_service_requires_existing_service_token_and_exact_owner(monkeypatch,tmp_path):
     from app import local_knowledge_service as service
     monkeypatch.setenv('ORQEVIA_SERVICE_TOKEN','fixture-existing-authority-token')
