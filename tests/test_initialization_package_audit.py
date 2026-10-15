@@ -16,6 +16,7 @@ def evidence():
     return plan,entry,(path/'execution.json').read_bytes(),(path/'review.json').read_bytes()
 
 
+@pytest.mark.historical_custody
 def test_all_29_original_cases_pass_unchanged_protected_oracle_without_claims(tmp_path):
     from tests.historical_initialization_fixture import historical_validation
     result=historical_validation(tmp_path, 'audit')

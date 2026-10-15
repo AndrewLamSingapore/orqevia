@@ -17,6 +17,7 @@ def read(suffix):
     return RUN if suffix=='/actions/runs/123' else {'total_count':1,'workflow_runs':[RUN]}
 
 
+@pytest.mark.historical_custody
 def test_actual_29_custody_validated_with_fake_guard_fixed24h_source_test_only(tmp_path):
     from tests.historical_initialization_fixture import historical_validation
     result=historical_validation(tmp_path, 'fresh')
