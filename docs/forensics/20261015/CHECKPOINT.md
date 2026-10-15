@@ -1,7 +1,5 @@
 # CP01 — preserved, before production deployment
 
-> **15 October 2026 partial-deployment pause:** Owner later resumed CP01, then paused again after the packaging fix. The backend remains unchanged at `891e3adf`; the internal intelligence companion and additive Interface candidate are running healthy, with the old Interface retained for rollback. Real USGS ingestion and persistence passed. Browser/Interface-path acceptance, live alert firing, second restart, rollback drill, Dell review, merge and final acceptance remain incomplete. See current `STATUS.md` and the ABEX local forensic checkpoint before resuming.
-
 This is a durable resumption checkpoint. Production backend and Interface remain healthy at891e3adf. No image build, service replacement, database migration, credential change or public listener was performed. Existing coaching remains paused; parked programmes remain parked.
 
 Measured evidence:13validated database backups,686matchingartifactcopies;683PRs/560branches;53savedtasks dispositioned;2,254localGitcandidates/2,058commonrepositories preserved,49unreachableobjectpacks. One preexisting invalidGitfile remains quarantined;95dirty states are retained, not erased. Recovery is PARTIAL, with accessible-boundary and semantic-review gaps recorded.
@@ -30,6 +28,14 @@ The current local allowance telemetry reports29%of the weekly window used. It is
 
 PAUSED BY EXPLICIT OWNER at 2026-10-15T06:45:45.671395+00:00. All further development, review and deployment work stops. Existing production services are left unchanged. Resume only after an explicit Owner instruction, using this checkpoint and exact saved candidate; do not repeat completed discovery.
 
+## Owner pause after partial deployment
+
+PAUSED BY EXPLICIT OWNER at 2026-10-15T07:00Z. The earlier pause was explicitly lifted and deployment resumed, then the Owner instructed ABEX to stop and save after the packaging defect was completed. Candidate source is saved and pushed at `6bad0b54d6ddab2b69cf2c72498a17c4c4bc5915`: both ABEX Dockerfiles use the verified local base tag instead of an invalid raw image ID, and intelligence data initialization no longer evaluates an invalid shallow-image fallback when `ORQEVIA_DATA_DIR` is configured. The forensic/status branch is saved and pushed at `245bd2d`.
+
+Runtime at this pause is a partial deployment, not final acceptance. The unchanged backend remains healthy on `891e3adf`. The internal `orqevia-intelligence` companion is running from the candidate image with no host port and persistent named storage. The Interface is healthy on the additive candidate image; the prior `891e3adf` Interface is preserved, stopped, as `prime-epoch-20260919-interface-1-rollback-20261015T065636Z`. Thirteen fresh SQLite backups passed integrity checks. Real USGS ingestion inserted 14 observations; authenticated health, source listing, geospatial reads, cited RAG, historical retrieval, restart persistence, anonymous denial and suspension denial passed. The current feed produced no magnitude-5 alert, so live alert firing is not accepted.
+
+Do not continue browser acceptance, Interface-path endpoint qualification, second restart, rollback drill, merge, PR status changes or Dell review until the Owner explicitly resumes. Preserve the running partial deployment and rollback container unchanged.
+
 ## Resumed operational qualification — 15 October 2026 07:11 UTC
 
 Owner explicitly resumed deployment. Candidate remains `6bad0b54d6ddab2b69cf2c72498a17c4c4bc5915`; canonical main resolved to `25675aa35baf6e6b49a4682bd6e7666c796dc4de`. Coordinated companion/Interface restart, full original-Interface rollback and candidate restoration PASSED. Original container served PWA over verified TLS; the same candidate container was restored. Observations SQLite integrity is ok and observations/documents/alerts file hashes matched before and after the complete successful drill. Backend container identity/start time unchanged. Evidence: `RESUME-ACCEPTANCE-20261015T070932Z.json`.
@@ -39,3 +45,19 @@ Anonymous external intelligence API/UI requests returned 401 over verified TLS; 
 Original failed probe receipts are retained: initial internal `/health` was the wrong companion URL, and first rollback probe expected 200 from original Interface `/health`, which returns 404. Corrected successful drill uses the actual configured container healthcheck and external `/pwa/` route. No failure evidence was removed.
 
 Remaining: owner-session authenticated external-path qualification, actual browser/map visual acceptance, real alert firing, Dell independent assessment, merge and final publication/operational acceptance. Browser automation failed twice with `Unable to load browser request-header policy`; current Interface has no unexpired PWA sessions and no configured client credentials. Owner was asked to sign in through the normal flow; no new identity or session was fabricated. Provider-blocked aviation/maritime/geopolitical feeds remain external limitations. Deployment stays running healthy; this is not an Owner pause or final acceptance.
+
+
+## Master total integration continuation - 15 October 2026
+
+Owner explicitly resumed and expanded the mission. All earlier pause records above are dated history, superseded by the active master continuation order. The current durable ledger is [TOTAL-INTEGRATION-EXECUTION.json](TOTAL-INTEGRATION-EXECUTION.json). PRs 324-328 merged through required checks. Shared existing MiniLM/FAISS/Qwen document intelligence is integrated through the primary workspace, with PDF/DOCX/TXT/Markdown deployed API ingestion, real project-source answers and USGS cross-context accepted. The preserved Streamlit and CLI entry points now use the shared service. Gateway revision 1cc68d3; local service 3534b38; backend remains 891e3adf. Final UI/diagnostic corrections are candidate 360b0e8 in PR329.
+
+External API acceptance: 25 checks PASS (`TOTAL-LIVE-ACCEPTANCE-20261015T083946Z.json`). Coordinated application restart: data hashes/observations preserved, backend unchanged, hidden Startup shortcut executed (`TOTAL-RESTART-20261015T084319Z.json`). All 13 SQLite backups restored in isolation; knowledge restore reopened 29 chunks/7 documents; all 11 prototype originals were intact before reversible entry-point consolidation. USGS actual browser sync completed200 and persisted 22 unique attributed observations.
+
+Actual trusted Edge owner browser retrieved a cited Qwen answer over a selected real architecture source, persisted Ideas across refresh, generated scaffold candidates and executed the fixed parser/index suite PASS. Browser document file selection is localized BLOCKED because the ChatGPT Edge extension lacks Allow access to file URLs; Owner was asked once to enable it. API ingestion is independently PASS. Never claim browser upload or total mission acceptance until this is resolved. No background execution beyond the active environment is claimed.
+
+
+## Final scoped operational baseline - 15 October 2026
+
+PRs326-329 are merged through required checks. Current Interface360b0e8, local service3534b38, backend unchanged891e3adf. Final image/source correspondence passed for17selected files. Final25TLS smoke checks PASS; full25request integration PASS; CI6835206PASS/1SKIP; local15PASS; PWA95PASS; historical3PASS. Actual owner browser verified source-selected Qwen generation,22USGS observations, geographic filtering, persisted Ideas, scaffold candidates, actual fixed tests and operational JSON export. Internal Streamlit diagnostic health used the same service/index/model and was stopped after acceptance. Primary workspace remains the normal entry.
+
+Actual browser document upload remains BLOCKED by Edge extension file-URL permission, requested once without bypassing it. API formats PASS. Historical semantic recovery remains partial; all9684preserved references are classified, including9656UNVERIFIED. Additional aviation/maritime/geopolitical providers and Dell assessment remain unavailable. The20-test matrix has19scopedPASS and1BLOCKED; full master-mission closure is NOT claimed. Existing forensic PR323 is being reconciled and published, not discarded. See source/docs/deployments/20261015-total-integration/INTEGRATION-REPORT.md and TOTAL-INTEGRATION-EXECUTION.json. No background execution outside the active environment is claimed.

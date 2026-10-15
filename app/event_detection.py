@@ -20,7 +20,8 @@ class DetectionEngine:
             self._persist()
 
     def _persist(self) -> None:
-        self.path.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
+        from .atomic_json import write_json
+        write_json(self.path,self.data,indent=2)
 
     def add_rule(
         self,

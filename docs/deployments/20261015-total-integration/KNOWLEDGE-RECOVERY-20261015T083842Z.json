@@ -1,0 +1,124 @@
+{
+  "at_utc": "20261015T083842Z",
+  "state": "PASS",
+  "backup": "C:\\Users\\Admin\\Documents\\ABEX\\private\\orqevia-total-integration-20261015\\knowledge-backup-20261015T083842Z",
+  "isolated_restore": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\forensic-recovery-20261015\\runtime\\knowledge-restore-20261015T083842Z",
+  "chunks": 29,
+  "documents": 7,
+  "copies": [
+    {
+      "file": "rag_index_v2/CURRENT.json",
+      "sha256": "4ca9c081d600b815c969f2ccc355ba832d3ca8623552b51cfdd7d2f02d0fff54"
+    },
+    {
+      "file": "rag_index_v2/index.faiss",
+      "sha256": "b8fd2c4ff217a8a43374225eef95fcc6a334e5b0bed334a339297b8204440392"
+    },
+    {
+      "file": "rag_index_v2/chunks.json",
+      "sha256": "27a3516e2ca3233c03cbca2ae86a01dbe5d658a536fa781cd7b481d2c6c9c180"
+    },
+    {
+      "file": "rag_index_v2/generations/5bae571576bf42aca9ea79910fc1bf11/index.faiss",
+      "sha256": "568947061655c2e4a93de351bf52ef5facbe06902af0594e5caa0f9b9226c86f"
+    },
+    {
+      "file": "rag_index_v2/generations/5bae571576bf42aca9ea79910fc1bf11/chunks.json",
+      "sha256": "d4f286ce32cc799a9f016a0805fbfe4ff9d5dd68ecde403ac384244a4ec1b56d"
+    },
+    {
+      "file": "rag_index_v2/generations/5bae571576bf42aca9ea79910fc1bf11/documents.json",
+      "sha256": "8dc1fc7ed5e333826840644d55599c4006c869e35cee8eb1f6058e96850d82a9"
+    },
+    {
+      "file": "documents/ORQEVIA_Geospatial_Test_Document.docx",
+      "sha256": "e3a68f94574d17f1a59c6a00da2ee495761517abfb96099a0a6081348fd77537"
+    },
+    {
+      "file": "documents/ORQEVIA_RAG_Test_Document.pdf",
+      "sha256": "c05f3443872f728eb6a4f4cd99c68ed04621ef1c1dc81daa7ce36ccbfc1ad726"
+    },
+    {
+      "file": "documents/test.txt",
+      "sha256": "66c3004f0e30fde8e74075a5293e5d749c16a32c985b3c4a81a421a19eb99b28"
+    },
+    {
+      "file": "documents/uploads/dbb5a1e1e1ac6ad5e1d8fb0ba473220ce8bd05ef627ba8f3efb456d26e16c798.pdf",
+      "sha256": "dbb5a1e1e1ac6ad5e1d8fb0ba473220ce8bd05ef627ba8f3efb456d26e16c798"
+    },
+    {
+      "file": "documents/uploads/a5d56dd807fd9ede5ba33ac0e8dea4d7ff8ead512942b3ac31abbe5f42d78c51.docx",
+      "sha256": "a5d56dd807fd9ede5ba33ac0e8dea4d7ff8ead512942b3ac31abbe5f42d78c51"
+    },
+    {
+      "file": "documents/uploads/aa606fe54b888095406ff42450850454236c408b638be12458896d2cfd17a809.txt",
+      "sha256": "aa606fe54b888095406ff42450850454236c408b638be12458896d2cfd17a809"
+    },
+    {
+      "file": "documents/uploads/e2ed93e105c9035204ceedc7dfaffc6498e2eeb4fd15330be42b4894b6792ba0.md",
+      "sha256": "e2ed93e105c9035204ceedc7dfaffc6498e2eeb4fd15330be42b4894b6792ba0"
+    },
+    {
+      "file": "operations/workspace-ideas.json",
+      "sha256": "46033bb1e3f038c94b592a48065bf5912af901e27f0dfffadf5152ae3ee069dd"
+    }
+  ],
+  "original_prototype_files_unchanged": [
+    {
+      "file": "orqevia_interface.py",
+      "current_sha256": "dca62bbeec523fe11a067b1c6183b60340ee8947ac77267bcd4bef7121a28034",
+      "original_sha256": "dca62bbeec523fe11a067b1c6183b60340ee8947ac77267bcd4bef7121a28034"
+    },
+    {
+      "file": "scripts/ingest.py",
+      "current_sha256": "f1df549c6865cd3bfe8bb0ff3ae9cf5ffc7426d663bc5b4b334728da26a3e2ce",
+      "original_sha256": "f1df549c6865cd3bfe8bb0ff3ae9cf5ffc7426d663bc5b4b334728da26a3e2ce"
+    },
+    {
+      "file": "scripts/orqevia_rag_v3.py",
+      "current_sha256": "9b9137a2119378c55762c1cc2561580222fffc918324ede19da06222dd74be4f",
+      "original_sha256": "9b9137a2119378c55762c1cc2561580222fffc918324ede19da06222dd74be4f"
+    },
+    {
+      "file": "scripts/rag.py",
+      "current_sha256": "cd9878bc6465c46752b9b4e52dc3bdc81eafaab3c43ac2ac8adae08b23bbf840",
+      "original_sha256": "cd9878bc6465c46752b9b4e52dc3bdc81eafaab3c43ac2ac8adae08b23bbf840"
+    },
+    {
+      "file": "rag_index/chunks.json",
+      "current_sha256": "7d852857f262883b5221cd914b2548235bdefc170d8516e488141205a1194c3d",
+      "original_sha256": "7d852857f262883b5221cd914b2548235bdefc170d8516e488141205a1194c3d"
+    },
+    {
+      "file": "rag_index/index.faiss",
+      "current_sha256": "9c6bc5ecae22695d891f99c7e1e4f140467ad8ebb7204c6b4b0542c5127ec30c",
+      "original_sha256": "9c6bc5ecae22695d891f99c7e1e4f140467ad8ebb7204c6b4b0542c5127ec30c"
+    },
+    {
+      "file": "rag_index_v2/chunks.json",
+      "current_sha256": "27a3516e2ca3233c03cbca2ae86a01dbe5d658a536fa781cd7b481d2c6c9c180",
+      "original_sha256": "27a3516e2ca3233c03cbca2ae86a01dbe5d658a536fa781cd7b481d2c6c9c180"
+    },
+    {
+      "file": "rag_index_v2/index.faiss",
+      "current_sha256": "b8fd2c4ff217a8a43374225eef95fcc6a334e5b0bed334a339297b8204440392",
+      "original_sha256": "b8fd2c4ff217a8a43374225eef95fcc6a334e5b0bed334a339297b8204440392"
+    },
+    {
+      "file": "documents/ORQEVIA_Geospatial_Test_Document.docx",
+      "current_sha256": "e3a68f94574d17f1a59c6a00da2ee495761517abfb96099a0a6081348fd77537",
+      "original_sha256": "e3a68f94574d17f1a59c6a00da2ee495761517abfb96099a0a6081348fd77537"
+    },
+    {
+      "file": "documents/ORQEVIA_RAG_Test_Document.pdf",
+      "current_sha256": "c05f3443872f728eb6a4f4cd99c68ed04621ef1c1dc81daa7ce36ccbfc1ad726",
+      "original_sha256": "c05f3443872f728eb6a4f4cd99c68ed04621ef1c1dc81daa7ce36ccbfc1ad726"
+    },
+    {
+      "file": "documents/test.txt",
+      "current_sha256": "66c3004f0e30fde8e74075a5293e5d749c16a32c985b3c4a81a421a19eb99b28",
+      "original_sha256": "66c3004f0e30fde8e74075a5293e5d749c16a32c985b3c4a81a421a19eb99b28"
+    }
+  ],
+  "production_data_overwritten": false
+}

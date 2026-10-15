@@ -1,0 +1,46 @@
+{
+  "at_utc": "20261015T084311Z",
+  "before": {
+    "knowledge_files": {
+      "rag_index_v2\\CURRENT.json": "f0131f2222fc33c3717390052ba27976f8b266486826d395b763b9dc2e06803f",
+      "rag_index_v2\\generations\\e40aeec0ef694a26a851984e0613904d\\chunks.json": "d4f286ce32cc799a9f016a0805fbfe4ff9d5dd68ecde403ac384244a4ec1b56d",
+      "rag_index_v2\\generations\\e40aeec0ef694a26a851984e0613904d\\documents.json": "8dc1fc7ed5e333826840644d55599c4006c869e35cee8eb1f6058e96850d82a9",
+      "rag_index_v2\\generations\\e40aeec0ef694a26a851984e0613904d\\index.faiss": "568947061655c2e4a93de351bf52ef5facbe06902af0594e5caa0f9b9226c86f",
+      "operations\\workspace-ideas.json": "46033bb1e3f038c94b592a48065bf5912af901e27f0dfffadf5152ae3ee069dd"
+    },
+    "observations": {
+      "count": 22,
+      "logical_sha256": "fc13773043f6b68f233d48b7e0adaf61a6efaf4e07339c25dcb0c15db4683f02",
+      "integrity": "ok"
+    }
+  },
+  "local_health_before": {
+    "service": "ORQEVIA local knowledge",
+    "index": {
+      "status": "READY",
+      "chunks": 29,
+      "documents": 7,
+      "dimensions": 384
+    },
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "embedding_state": "LOADED",
+    "generation_model": "qwen2.5:7b",
+    "last_generation": {
+      "at": "2026-10-15T08:41:24.226112+00:00",
+      "model": "qwen2.5:7b",
+      "citations_valid": true
+    },
+    "local_only": true,
+    "primary_interface": "/pwa/?view=intelligence",
+    "observed_at": "2026-10-15T08:43:12.269387+00:00",
+    "generation": {
+      "status": "MODEL_INSTALLED",
+      "model": "qwen2.5:7b",
+      "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e"
+    },
+    "initialization_error": null,
+    "source_revision": "3534b38f910488308f7b79085a64a0f70ff2ef73"
+  },
+  "state": "FAIL",
+  "error_type": "CalledProcessError"
+}

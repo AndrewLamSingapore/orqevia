@@ -1,0 +1,152 @@
+[
+  {
+    "file": "ACCEPTANCE-DOCUMENT-SOURCES.json",
+    "published_sha256": "217a207a42f37f80a54545df7074923d1a9ed557746fc3f15de5096a2b0dc63a",
+    "pre_normalization_sha256": "82d43d125976109a1b0d571f23e006f6e8de6f378e4645bb739d40306b1ade00",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "ACCEPTANCE-MATRIX.json",
+    "published_sha256": "88c73bb45d8cfe63fbf9a3a38dea762d37fe910d47f5e7ed031e2efc003cb6b0",
+    "pre_normalization_sha256": "f27a64f064e729d8472d595c2b80bc745d5835c0557d8cae8a95f1e08608d2b1",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "BROWSER-OBSERVATIONS.json",
+    "published_sha256": "f2df2a80bf9eabc99e6118309c01736b2a75701b4eb2dccb627cad3561149fc8",
+    "pre_normalization_sha256": "4a6deb85b17f6aef1663922bc92f6bdb8de0127b8884426e4d6642083cb2c86a",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "COMPONENT-STAGES.json",
+    "published_sha256": "788d6fe4b1a0d09215409e757efd00e300b861e18d492935931725f2b90a68b1",
+    "pre_normalization_sha256": "e33b5ede3eecc1010bc695daac8513f20ac208ef1254c714a4e4781d4691f276",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "DATABASE-RESTORE-PROOF.json",
+    "published_sha256": "a2e5c2f8321651d56da2ba764690f789b2fa1a40361ceda3f79384be228bfafa",
+    "pre_normalization_sha256": "268e46be51b3f0449fae653c6e993b90f60075eb334023990d9900cafcb7290d",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "DIAGNOSTIC-CONSOLIDATION.json",
+    "published_sha256": "4106788a34de1a6148b7a6cdd6c18044c87407426ba56979e3c46aed28b0a77c",
+    "pre_normalization_sha256": "3c9a8787aa8e91efcd8103b7edf21eaa11aa4658dce2996c1aff6fd184c97940",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "final-forensic-status-tests.log",
+    "published_sha256": "ecb094e98b50bfd23d467232b0c34cbdba9ebec18ca49833dc8e3c00aa9302c9",
+    "pre_normalization_sha256": "ecb094e98b50bfd23d467232b0c34cbdba9ebec18ca49833dc8e3c00aa9302c9",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "final-forensic-status-tests3.log",
+    "published_sha256": "ecb094e98b50bfd23d467232b0c34cbdba9ebec18ca49833dc8e3c00aa9302c9",
+    "pre_normalization_sha256": "ecb094e98b50bfd23d467232b0c34cbdba9ebec18ca49833dc8e3c00aa9302c9",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "FINAL-INTERFACE-SMOKE.json",
+    "published_sha256": "109404a74b9ae9a9cfbd34e82dce8978dd2d4e52a175d793754ae379efe431cf",
+    "pre_normalization_sha256": "dd4ceb53f737ed477da77d8bc0da2931a55e857d1621fbf1ad8a3a01eac44129",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "final-local-15-tests.log",
+    "published_sha256": "86f253efb856952ffa7eee42ff0a16a9d40533bd0ab9c6335325e9a117c4e9ab",
+    "pre_normalization_sha256": "86f253efb856952ffa7eee42ff0a16a9d40533bd0ab9c6335325e9a117c4e9ab",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "hidden-worker-acceptance.json",
+    "published_sha256": "d05c2e18b1eb1c7e1c934ad7f4b71e6e8e19ba5abec70389e5d2866be4bc0409",
+    "pre_normalization_sha256": "28d39cc8df3d09bbbf4c0b73a25a92d67a7c251c68df788168bcc5c55eb35b7f",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "historical-byte-retest3.log",
+    "published_sha256": "544aaade6e407f388bbb6f7bb3fe9c8c785890528b8296376502f4a5b12c7244",
+    "pre_normalization_sha256": "544aaade6e407f388bbb6f7bb3fe9c8c785890528b8296376502f4a5b12c7244",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "historical-custody-diagnosis.json",
+    "published_sha256": "64ff035612156649bbcef253b5d1a7c9e0b6e937c17dd2a858c41bb8c69204d7",
+    "pre_normalization_sha256": "8649c79a76e9c521f67a0acee07a4f0e5295132483c55ef8fe253fcbd709f38e",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "installed-diagnostic-cp1252-final.log",
+    "published_sha256": "1bcfa3278bf926702b4f7f91ad10653dd9f44e3ecd9e36c7b5362bd9a09f70cc",
+    "pre_normalization_sha256": "1bcfa3278bf926702b4f7f91ad10653dd9f44e3ecd9e36c7b5362bd9a09f70cc",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "INTEGRATION-REPORT.md",
+    "published_sha256": "5fe0f4d29aac103e4ef12153bdae5694a6de71b443cd153b9034ad048ce1a048",
+    "pre_normalization_sha256": "7d210f7c15e31c7ebfe9e63e86856ecaa1519634980c192720bccb6e6912702c",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "KNOWLEDGE-RECOVERY-20261015T083842Z.json",
+    "published_sha256": "720530a6d607951918976080d63496546b5f5038fa1c293bd4cc9a9152a13c94",
+    "pre_normalization_sha256": "e7e52c3d34d2479b709c875dd41ddf5513e2185b9b172d19dbbf524ba51b58ae",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TEST-AND-CI-EVIDENCE.json",
+    "published_sha256": "377740a8dd96092b6097d5a68264367b15baccb083787fb46e46dc770d7a5d84",
+    "pre_normalization_sha256": "2e5ac49ca10f5650a6311c27869c6ab7ae442e1e7883835dff55da795c999271",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TOTAL-DEPLOYMENT-CURRENT.json",
+    "published_sha256": "440caef321dd14a6fcb5f088e2c132a3f4cfb3e903797846a54abef00e0afdbc",
+    "pre_normalization_sha256": "d7d52cf1fdf71f1f460d14b2baf8bcb5844cda9a7d87a910111866c9ff986b32",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TOTAL-LIVE-ACCEPTANCE-20261015T083053Z.json",
+    "published_sha256": "1075e24fa1fdd652f3cd9c2d750a205ed73934ec6401c6874c9b1a1b1ce08e7d",
+    "pre_normalization_sha256": "da22b81ca9c51724d68c20e6353fe7961cdb5e7420b78e7ad729d6d2b5eff4f1",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TOTAL-LIVE-ACCEPTANCE-20261015T083946Z.json",
+    "published_sha256": "8b3fac4a8f9440eb4bd9bb1560dbd44639643d56e08b034d9615d10ba6d9f666",
+    "pre_normalization_sha256": "17b866c946d70ffd1c32d3e592b4ab02f46728316e58520db85fb59ec620982f",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "total-node-v25.log",
+    "published_sha256": "2a580b35734070d32de9fccc342d3d2108a2818cd94b5093d8ec5d1b852f4788",
+    "pre_normalization_sha256": "2a580b35734070d32de9fccc342d3d2108a2818cd94b5093d8ec5d1b852f4788",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TOTAL-RECONCILIATION-REGISTER.json",
+    "published_sha256": "3f09dbb727b5a23408b1e868475090a6e3742652349a3ce1b606b2e99fc8c36f",
+    "pre_normalization_sha256": "1683c85450ae9a8b98ced6dbb0c2b67d513ae9cdc0105a631ee27b3455fbd6d4",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TOTAL-RESTART-20261015T084311Z.json",
+    "published_sha256": "befa3de9275a60edd610923a71b1839ebc1e594371788186c8149cdfb9b816b7",
+    "pre_normalization_sha256": "b51946c1d569b9c8c148101e77ca5ae2872cf4037a2a93a29ea741b7ede0e960",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "TOTAL-RESTART-20261015T084319Z.json",
+    "published_sha256": "63fc2f1a85f43fdd7e3900d5d7413ae58d9d9d4d86226844fd0a56101c84ed83",
+    "pre_normalization_sha256": "1389a53135b11aa77c00cd5dca3c0c31eef2eaa5105b3c38394a124c1fd84e0b",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  },
+  {
+    "file": "USGS-TOTAL-INTEGRATION-PROOF.json",
+    "published_sha256": "1ab0ad2349b5384f5f5e199409b8fdf1806ac8d08fda4a4ed706b2f9c6cefa83",
+    "pre_normalization_sha256": "a3515ca4ef8f199619e068d79b49afd0a1ee86ca508393e104485408b06d09e1",
+    "normalization": "LF for UTF8 JSON/Markdown; raw operational receipts retained locally"
+  }
+]

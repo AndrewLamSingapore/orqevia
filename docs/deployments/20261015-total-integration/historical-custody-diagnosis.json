@@ -1,0 +1,329 @@
+{
+  "revision": "d9a4e0bdd733a4908e9fa239f6b24bef3c2dce79",
+  "files": 47,
+  "mismatches": [
+    {
+      "file": "scripts/agent_cert_reviewed_signing.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "905131902e37fe2c0b3dc890d4c2200b856a02633291be0a8ded17a59ae7597e",
+      "archive_sha256": "4d4b3c76eb61bf68ca48101618c0de3f59499da7d79f9746c31ca2288e1ea986"
+    },
+    {
+      "file": "app/agent_cert_role_review.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "b8f76462d828cd91e890797444b1b0a0f7ff4e3d1bb08ed22f1aa55a336008c4",
+      "archive_sha256": "42c35abe86c3c659826f82d3cea1e4751ec3ab827f814c736909f57295feca40"
+    },
+    {
+      "file": "app/agent_cert_identity_review.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "b44c0777f8282b4dab5562d436b714e5e7aec7b8fa76abb9021b46deedd50cf9",
+      "archive_sha256": "4e6aac8352571f19635be0d2411e356acdfd07802016d5f0100d4d948dd529dd"
+    },
+    {
+      "file": "app/action_records.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "905166575a9b6b8528b84449f1b462f198a07e77754a6e178fdc3086622ae102",
+      "archive_sha256": "59672277bcffce867420b3b464b923db49d398f29ef481bb15d6652e0d53e4a2"
+    },
+    {
+      "file": "app/agent_cert_initialization.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "6380b0e131b06a5012b8307bfad9a7e2626d7d0a2286f3212e4482d1881924fe",
+      "archive_sha256": "8a6c62cf1ddf9e553dc6d62b34e8cd093e31521e2a02bc35df287192aecb10c7"
+    },
+    {
+      "file": "app/agent_cert_initialization_review.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "66b4ea47cace6d71b3bacb3a535532be768c71a005acfd6ece5b548f350de7e5",
+      "archive_sha256": "466c13a624815578c9ae78233387b753cb421cca9e2d56a12d16455ada899d53"
+    },
+    {
+      "file": "app/agent_cert_secondary_roles.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "8bb6c557a00158b1bd73465c5f65686dfe19e6e7d632856fcbcdd7940cedd82b",
+      "archive_sha256": "900b8b6c80f107b3f87229e944bf67acd200b9de13921524c02ca79a89bb325b"
+    },
+    {
+      "file": "app/artifact_factory.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "68b3972190a5ff6cfaeac0c2e0250334d6b81934f3bbb78157ac44066f50c7c0",
+      "archive_sha256": "663ec7dbf0cb45664e20f08121513eff949ab32b9b024f59cad066d4c0856977"
+    },
+    {
+      "file": "app/objective_api.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "193c782a3726935ab17cbf662f2fdf971a1278ecab0a0c32281f1fba4f982952",
+      "archive_sha256": "ed722339a41eed892c7242e8f86ef833f2da4f1ed0c3094aa45cc385ead49c7d"
+    },
+    {
+      "file": "app/agent_cert_a19_cases.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "40a019c059d8aa7bad857721e5644ce1084a4357146b803b92483eba933bfdbb",
+      "archive_sha256": "5d896ed34da26d99fa3598a0e53a78f5edfb34d424145fde29166e40b8338865"
+    },
+    {
+      "file": "app/agent_cert_a19_general.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "66923906681299657b7d151af43bc5d341c1e1d18eaa96e7b93d5f2a656ab9a5",
+      "archive_sha256": "71866aa371affe245eb236ff662d6dd264707165b9c6348e72d385c4338f11c9"
+    },
+    {
+      "file": "app/agent_cert_a19_baseline.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "7b66b5537d7bac6a87ee446309b5b668f28563ba22af45905c90cf7d853fcf7a",
+      "archive_sha256": "c2de4229efcc21f0ae568c987350e4f5597a78f55e986983f8255ba633eebad9"
+    },
+    {
+      "file": "app/agent_cert_artifact_events.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "3e3b5e5473ad7c3096754860f3c8af0af0f5fae690883560738cc9c99c9c3392",
+      "archive_sha256": "9ecda8fb823597df80caa4fa7224ced64f0ac60afa85083d28bed8d573b84fc6"
+    },
+    {
+      "file": "app/agent_cert_authority_events.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "37902d33b0896782093b1cee29ab871baf0877112c14e1131720ad58c246aded",
+      "archive_sha256": "81f7be9558e4dad384d797aea97229f5c7213551a2bcb8f2d1df920623f60093"
+    },
+    {
+      "file": "app/agent_cert_event_api.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "e326fde9dc51f274f507dc29fd62f4a505b1a61a55bf70ec4d82e17d4c9d00a8",
+      "archive_sha256": "509b0ab2ae3731b598013aa18220ed56260573d126fd66bb44890b6590ec463f"
+    },
+    {
+      "file": "app/agent_cert_review_tool.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "fde445f1126a67de464a6b9b32887115d1f92ae76a76f72a0a398a1697a68aa8",
+      "archive_sha256": "ba7259f0403f59802766720ca3a987aa97d954e563b3ac2ea83415e5dfd10e29"
+    },
+    {
+      "file": "app/agent_dispatch_api.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "cc0bcda1fbc2e01706d42570fccd66ae16fdc60d0dde1780528476f19e271eb8",
+      "archive_sha256": "6f2ba8f491e746b957878b96f6596984bb4d4547c17d36e2788ae802a7bf8001"
+    },
+    {
+      "file": "app/cloud_execution.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "ad9743435bddeba33a394b52e70a340628321f1cd4be74971985d7e5b80e14ba",
+      "archive_sha256": "a53063c555547d16a09a65f8f86d121403dbb7d106048f6c6096011dbc3db132"
+    },
+    {
+      "file": "app/hf_admission.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "a308d57b51ea8c385553bb453858b0311e8f87e952bfa20f978ce7f33b6517a8",
+      "archive_sha256": "28c1779e34fb309845bb71c71d253f1db88475e804d480b721858373af5430a3"
+    },
+    {
+      "file": "app/agent_cert_role_group_two.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "7d5dfb67ceaab5dd40a2f33c8fe07f4dbdd970f85184fd631e4fb8085c94d32d",
+      "archive_sha256": "ad08eeda31591a146488b445bbb00439bc9439bccebbfb9abc844c4f8a725c0b"
+    },
+    {
+      "file": "app/agent_cert_role_g1.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "71923923a6bae37f6197dcaa99f2339fb1b768a412378b4bf0e5e3133464ca5b",
+      "archive_sha256": "b958c14cbbb3789481169e2feaaf25311fe8b00dda3695fc6a05f908b7215889"
+    },
+    {
+      "file": "app/agent_cert_cases.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "65735ae35767153572b659a160894d37679345588ecbf8660ca15dc6af3bb941",
+      "archive_sha256": "ff3a0b501f09b6e8272d67981690014cffa8ed0f4b904724d5f8bf28fc280d8c"
+    },
+    {
+      "file": "app/agent_cert_transport.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "192301c7d9f3e8fdc4a12c89605c5db1f950e061269867b2b4ad212dbac074af",
+      "archive_sha256": "c0f9e5b3a79fef89aa62e313d9d79f2d082b13c7fbd9730f97f42d383191a518"
+    },
+    {
+      "file": "app/agent_certification.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "885f14b6766dc26a0908e7aaf5b35a9420b1320f33779931cf363fd3cd6f19c6",
+      "archive_sha256": "1c1a375f5ca59eabc78d417bab6263f7c80d08ba88a7fe63f4469d8ab472b1c9"
+    },
+    {
+      "file": "app/agent_cert_azure_signer.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "7b01eded48ada441d5e22615f532a8fdb88c77c2824170a5f572aab12f8547fc",
+      "archive_sha256": "f683d9716b12993bf39d994deb7ca38935f477a80d785151974a61b6f719c94b"
+    },
+    {
+      "file": "app/agent_cert_azure_es256.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "d87081f8cbe5542c437d9f4aa12f5097d1e1de0a62349db5dc8f7337e1b97c36",
+      "archive_sha256": "a0f65a91a95e4f9e267660bcbe645385822f6a9ab72f58a5d7588ba998dd1ee9"
+    },
+    {
+      "file": "app/agent_cert_ed25519.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "0a3fd92500e685125c049e6779e573c97ffe6f20116a4982d1e06acd65af9337",
+      "archive_sha256": "08cd9b5f622ccf130b118a306e494ab273a80149476014512e5f8075a84eb334"
+    },
+    {
+      "file": "app/agent_registry.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "1d63bfb68648cab992b979c83f4d8322e3213ece0f87331ee522b29b49efa5d4",
+      "archive_sha256": "8a0a1db23d06652287b96e19691341c6f74de4dbf03d66d4723600509ac0a655"
+    },
+    {
+      "file": "config/agent_registry.json",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6",
+      "archive_sha256": "fec92b1d0e3e858bc5f4fe1b26401d053ee94b9b2358be8da379b97884d916ff"
+    },
+    {
+      "file": "config/agent_registry_migration.json",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "e328d9e3182881e5310aa73967add1f529ebbcef0aed33aa64727c683310c4a9",
+      "archive_sha256": "91d8bd362d45b1ed99b99c590b2e5c89b0d7526ade9ca7d70836c3b617b64ea5"
+    },
+    {
+      "file": "app/agent_cert_numeric.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "23b3c27fda745f34acc5ea6591a1fed2c290233032501142c1e657fe58f557a7",
+      "archive_sha256": "d67c0e6d5c4c658c7a1082f906424d64eae7730526222325c0bebef31d2ac41a"
+    },
+    {
+      "file": "app/agent_cert_rates.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "7a01429fef3e3a1894da079d37f7fbee41720d917be001163d8738029d622e1f",
+      "archive_sha256": "97a8770cffd36f34b1413543527248c36be0012b0fa9a49bdab4e35a3ed3d052"
+    },
+    {
+      "file": "app/agent_cert_weighted.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "669b0948713152c43be7f9917bc1595c7f41c0d42677b5dd49b8084116751b7c",
+      "archive_sha256": "c1cef9b3f20360596ede0b02e3cdd15b53316907f5745b6642dc674fc7c11c91"
+    },
+    {
+      "file": "app/agent_cert_boundary.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "8ee67005fb3d3f86addc3ac681cefd3969fc66b3850c12923ec40c2370c3c6ff",
+      "archive_sha256": "2a7bac3c67d214e9300a70bad8cb4adc24d4bf8b62082fe3de927a1145817f79"
+    },
+    {
+      "file": "app/agent_cert_a17_boundary.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "15d230642ca15fdbbd9a5cff300e4ad5d7a0ce22829af388bd9bce9f033d95c8",
+      "archive_sha256": "45ae9bd0909cfd9621611727decce3a556d72bda640629696528dff3ab0dbba9"
+    },
+    {
+      "file": "app/agent_cert_data_quality.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "befed44ad83c54f7201831b7d2f4fd48916bd2e8b82e723789a48b11250956a2",
+      "archive_sha256": "4e6bc8b89f040c9b6747c879f679451822ecb6c72a2b2561f58843ac38161dd6"
+    },
+    {
+      "file": "app/agent_cert_portfolio.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "b2faf50ff40b84de30159178ee563dab1c322337b12259a712075b629e459944",
+      "archive_sha256": "b63b5752e7fa2707632d2157c51e85adaa23192229538f307e8fc8da8160bc1d"
+    },
+    {
+      "file": "app/agent_cert_cost.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "fd82898a6aff713ea0f25654139ede5a24346cb8968df1cf5a03cc80ca5c81a7",
+      "archive_sha256": "95c817a1f8f64b1b3441db98d2c646706875db0fb45a255f1e6a02f4dceb9665"
+    },
+    {
+      "file": "app/agent_cert_risk.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "27bd98c4620a3d99b5903610baa235fe2e394b97e152ea0c57c0284a3dd0543a",
+      "archive_sha256": "5ce9ce7ffa454c5c1e00984bd51ae75939b0df97eefc7cda274c9d86810bb90c"
+    },
+    {
+      "file": "app/agent_cert_release.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "1933928d6b4515a8acf70f022128f848798730f8f7d646aeeddb1e6028a169fe",
+      "archive_sha256": "8798bef59ff62bbc83583e0de61f309d993ca93d466d8048b05ef0074189c18e"
+    },
+    {
+      "file": "app/agent_cert_execution.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "fb5e85ee1224d77d5ba97f8d4a87b25727e5945c2d3a400a7751c7834c19a567",
+      "archive_sha256": "7a42d4544869e0ecb42c8a8bc2b967f73427c50b5d81c3a4e11866b85498553e"
+    },
+    {
+      "file": "app/runtime_status.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "43fa193cf9734972a51390cc645f2319b54cd27c6eccc86f7d5be58d65f42989",
+      "archive_sha256": "9b1bb4abe825be53eff82fa56d3eef0b9321a1a46bfe8292c321344cd6c83141"
+    },
+    {
+      "file": "app/compute_catalog.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "6e44c679804b6213e4e73325a3667542235fe6f1ec712bb11eda9cbe054d82e1",
+      "archive_sha256": "753a67a459c1c94326641a12985ae36c55c57390116e08bb90abd93aeaae6822"
+    },
+    {
+      "file": "app/provider_runtime.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "ea64723b815a5ffe961d16e8e78add3e3c2c50592b4fe6ad51005b6e9ab35387",
+      "archive_sha256": "ff52004dcc212d2872da47e0ea62594ba57be716754bcac64b362f3dfe393760"
+    },
+    {
+      "file": "app/provider_circuit.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "21165e800260e97f92d5f6e991d266f7a90be60232f68df535007fc7606c59e3",
+      "archive_sha256": "d57ebdfb1f1321240c84d0aead9c2c69b8b7efbfcf0c03dfc1e4b03cae1cacd6"
+    },
+    {
+      "file": "app/tier_router.py",
+      "archive_present": true,
+      "line_endings_only": true,
+      "expected_sha256": "2ace861261e0c2522fb471c6375910927c9a00ef805fc30d19c1dde7e77d8d1c",
+      "archive_sha256": "0cee67e412a8ee6e9e1c2b928d8c75ea6bbb8860f358c1f64aef97bb0d2fa3b1"
+    }
+  ],
+  "runtime_or_admission_performed": false
+}

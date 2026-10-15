@@ -367,3 +367,38 @@ def test_pwa_close_reopen_and_service_restart_refresh_same_durable_identity(setu
         current=reopened.get('/pwa/api/session')
         assert current.status_code==200 and current.json()['authenticated'] is True
         assert current.json()['clientId']==identity
+
+
+def test_active_trusted_session_slides_without_changing_token_or_role(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        token=client.cookies.get(pwa.COOKIE);device=client.cookies.get(pwa.DEVICE_COOKIE)
+        with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()+30,identity))
+        renewed=client.get('/pwa/api/session')
+        assert renewed.json()['authenticated'] and renewed.json()['role']=='MEMBER'
+        assert renewed.json()['expiresAt']>time.time()+pwa.SESSION_SECONDS-10
+        assert client.cookies.get(pwa.COOKIE)==token and client.cookies.get(pwa.DEVICE_COOKIE)==device
+        assert 'no-store' in renewed.headers['cache-control']
+        assert client.post('/pwa/api/owner-authority-check',headers=HEADERS).status_code==403
+
+
+def test_expired_device_reports_recovery_and_does_not_renew_session(setup):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        enrolled,_=enroll(pwa,client)
+        with pwa.database() as db:db.execute('UPDATE devices SET expires=? WHERE client_id=?',(time.time()-1,enrolled.json()['clientId']))
+        denied=client.get('/pwa/api/session').json()
+        assert denied['authenticated'] is False and denied['recovery']=='DEVICE_EXPIRED'
+
+
+def test_service_worker_empty_destination_navigation_admits_only_public_shell(setup):
+    root,pwa,app,node=setup
+    headers={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate','Sec-Fetch-Dest':'empty'}
+    with TestClient(app,base_url=ORIGIN) as client:
+        assert client.get('/pwa/',headers=headers).status_code==200
+        assert client.get('/pwa/index.html',headers=headers).status_code==200
+        assert client.get('/pwa/api/session',headers=headers).status_code==403
+        assert client.post('/pwa/api/enroll',headers=headers,json={'code':'x'}).status_code==403
+        assert client.get('/pwa/',headers={**headers,'Origin':'https://evil.invalid'}).status_code==403
+        assert client.get('/pwa/',headers={**headers,'Sec-Fetch-Mode':'cors'}).status_code==403

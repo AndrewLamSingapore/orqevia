@@ -19,6 +19,7 @@
     status.textContent = 'LOADING';
     try {
       const res = await fetch('/api/orqevia/intelligence/geo/events?limit=500', { headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error('Observation service unavailable');
       const body = await res.json();
       const records = Array.isArray(body.records) ? body.records : [];
       drawGrid();

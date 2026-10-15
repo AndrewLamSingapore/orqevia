@@ -1,5 +1,6 @@
 """Bounded browser sessions over the existing Interface Node authority boundary."""
 import hashlib
+import logging
 import hmac
 import json
 import math
@@ -125,7 +126,9 @@ def safe_shell_navigation(request):
             and request.url.path in {'/pwa/','/pwa/index.html'}
             and request.headers.get('origin') is None
             and request.headers.get('sec-fetch-mode')=='navigate'
-            and request.headers.get('sec-fetch-dest')=='document')
+            # A service-worker/browser handoff may preserve navigate mode but
+            # present an empty destination. Only the public shell is admitted.
+            and request.headers.get('sec-fetch-dest') in {'document','empty'})
 
 def pwa_origins():
     primary=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')
@@ -195,7 +198,19 @@ def get_session(request:Request):
             if refreshed:session_token,current=refreshed
     elif session_status!='VALID':
         current=None
-    response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),**(current or {})})
+    if current and bound and not session_token and current['expiresAt']-clock()<SESSION_SECONDS/2:
+        # Extend the same opaque credential. Normal active use must not rotate
+        # cookies across tabs or require enrollment every eight hours.
+        expires=min(clock()+SESSION_SECONDS,bound['deviceExpiresAt'])
+        with database() as db:
+            changed=db.execute('UPDATE sessions SET expires=? WHERE session_hash=? AND revoked=0',
+                (expires,digest(request.cookies.get(COOKIE,'')))).rowcount
+        if changed:
+            session_token=request.cookies[COOKIE];current['expiresAt']=expires
+    recovery=None if current else ('DEVICE_REVOKED' if device_status=='REVOKED' else
+        'DEVICE_EXPIRED' if device_status=='EXPIRED' else 'TRUST_REQUIRED')
+    response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),
+        'recovery':recovery,**(current or {})},headers={'Cache-Control':'no-store'})
     if clear_credentials:
         response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
         response.delete_cookie(DEVICE_COOKIE,path='/',secure=True,httponly=True,samesite='strict')
@@ -275,7 +290,15 @@ class PWASessionMiddleware(BaseHTTPMiddleware):
         cookie_client=path.startswith('/interface/v1') and COOKIE in request.cookies
         if is_pwa or cookie_client:
             try:
-                if not origin_valid(request,request.method not in {'GET','HEAD'}):raise HTTPException(403,'Origin rejected')
+                if not origin_valid(request,request.method not in {'GET','HEAD'}):
+                    logging.getLogger(__name__).warning(
+                        'PWA origin rejected transport=%s configured_host=%s origin_match=%s fetch=%s/%s/%s',
+                        request.url.scheme,str(request.base_url).rstrip('/') in pwa_origins(),
+                        request.headers.get('origin') in {None,str(request.base_url).rstrip('/')},
+                        request.headers.get('sec-fetch-site','missing'),
+                        request.headers.get('sec-fetch-mode','missing'),
+                        request.headers.get('sec-fetch-dest','missing'))
+                    raise HTTPException(403,'Origin rejected')
                 if request.method=='OPTIONS':raise HTTPException(405,'Method unavailable')
                 if cookie_client:
                     if any(x in request.headers for x in ('authorization','x-client-id','x-jarvis-client-id')):raise HTTPException(400,'Caller identity headers forbidden')

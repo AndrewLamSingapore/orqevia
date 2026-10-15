@@ -1,5 +1,41 @@
 # ORQEVIA status and domain ownership
 
+## Master autonomous integration continuation order — 15 October 2026
+
+Apply [the total integration architecture and acceptance rules](docs/TOTAL-INTEGRATION-ARCHITECTURE.md)
+alongside the permanent interface standard. Continue authorized recoverable work
+through audit, reconciliation, implementation, tests, required CI, merge,
+deployment and actual end-to-end verification. Reuse the local RAG V2/V3, document,
+embedding, FAISS and Ollama implementations through the primary workspace; do not
+create disconnected demonstrations or silently discard recoverable work. Keep an
+item-level classification register and 20-test evidence matrix. Preserve platform
+security and required approvals; ask only for actual external or irreversible
+dependencies. ABEX implements and deploys; Dell independently reviews only.
+Retired mandatory PRIME/SSOT/21-agent, migration and certification dependencies
+remain parked. Names on compatible retained resources do not reverse this order.
+
+## Permanent Owner standing order — direct workspace access (15 October 2026)
+
+Apply [the interface access and acceptance standard](docs/INTERFACE-ACCESS-STANDARD.md)
+to every present and future interface, module, redesign and deployment unless
+explicitly superseded by the Owner. Open ORQEVIA → enter workspace → select any
+page → use its functionality. Restore valid trusted-device sessions in the
+background; never require enrollment for ordinary trusted navigation. Preserve
+TLS, scoped HttpOnly credentials, revocation, backend authorization and privacy.
+Every navigation item must open functional service-backed UI with explicit
+loading, empty, offline, error and recovery states. No fabricated live data.
+
+ABEX alone implements and executes. Dell independently reviews only and is not
+a prerequisite for useful, reversible progress. Do not make PRIME, former SSOT,
+the historical 21-agent registry, DigitalOcean migration or Azure certification
+mandatory dependencies of workspace access, Intelligence or God's Eye. Existing
+legacy implementation names are compatibility details, not architectural authority.
+Audit and reuse existing implementations before introducing replacements.
+Deploy and verify the whole authorized flow, including trusted refresh/restart,
+first-click Intelligence, direct God's Eye and sensitive-operation denial.
+Builds, screenshots and frontend tests alone never establish deployment acceptance.
+
+
 For ORQEVIA and portfolio work, review current status claims in
 [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the
 private ORQEVIA repository. It is a portfolio status record, not a source for
