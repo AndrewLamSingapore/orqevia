@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0.0",
   "owner": "Andrew Lam",
-  "name": "JARVIS PRIME",
-  "public_entrypoint": "https://authority-engine-app.vercel.app/jarvis",
-  "conversation_entrypoint": "https://authority-engine-app.vercel.app/contact?source=jarvis&intent=collaboration",
+  "name": "ORQEVIA",
+  "public_entrypoint": "https://authority-engine-app.vercel.app/orqevia",
+  "conversation_entrypoint": "https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration",
   "architecture": "docs/ARCHITECTURE_V1.md",
   "operational_source": "governance/operational-manifest.json",
   "experience": {

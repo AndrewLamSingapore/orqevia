@@ -138,7 +138,7 @@ def test_cross_site_top_level_navigation_can_load_only_the_unauthenticated_shell
         'Sec-Fetch-Site':'cross-site',
         'Sec-Fetch-Mode':'navigate',
         'Sec-Fetch-Dest':'document',
-        'Referer':'https://authority-engine-app.vercel.app/jarvis',
+        'Referer':'https://authority-engine-app.vercel.app/orqevia',
         'User-Agent':'Mozilla/5.0 (iPhone) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1',
     }
     with TestClient(app,base_url=ORIGIN) as client:

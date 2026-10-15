@@ -25,7 +25,7 @@ def test_demo_operator_enforces_safe_contract():
     assert 'executed_external_action -ne $false' in SCRIPT
     assert 'approval_required -ne $false' in SCRIPT
     assert '/api/cognitive/reason' in SCRIPT
-    assert 'https://authority-engine-app.vercel.app/api/jarvis-agent-trace' in SCRIPT
+    assert 'https://authority-engine-app.vercel.app/api/orqevia-agent-trace' in SCRIPT
     assert '$response.evaluation.released' in SCRIPT
     assert '$terminal.gate.decision' in SCRIPT
     assert 'release-gate metadata' in SCRIPT
