@@ -92,6 +92,31 @@ If you are an AI agent updating this file:
 
 ---
 
+## Test-suite minimisation and verifier re-pin preparation - ORQEVIA - 15 October 2026
+
+### Claimed, not independently checked
+
+- Full Dell pytest run on ORQEVIA main reported 6080 passed, 3 failed, 4 skipped.
+  The 3 failures are the frozen-pin custody tests, which are only green on a
+  checkout exactly at the pinned verifier revision; the 4 skips are Windows
+  symlink guards that run off-host.
+- PR #319 merged a `historical_custody` pytest marker plus `addopts` so routine
+  runs deselect those 3 custody tests. No test or evidence was deleted; they
+  remain runnable with `-m historical_custody`. Merged at
+  `26dcedefaa7d150019ecb2836f8fa89810841eba`.
+- Dell prepared, but did not apply, an ABEX-gated verifier re-pin change package
+  (`ABEX-REPIN-CHANGE-PACKAGE-20261015.md`): re-pin MAIN and the fixture REVISION
+  from `d9a4e0bd…` to the current canonical main and update 87
+  `verifier_code_revision` fields. ORIGINAL (`61335a96…`), the runtime image and
+  all evidence hashes stay fixed.
+
+### Known broken / open
+
+- Applying the re-pin is a custody re-certification that must run in the ABEX
+  protected workflow; it is not applied by Dell and remains blocked on ABEX.
+
+---
+
 ## GOD'S EYE + Geospatial Intelligence + RAG — implementation, 14 October 2026
 
 ### Claimed, not independently checked
