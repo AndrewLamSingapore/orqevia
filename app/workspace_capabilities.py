@@ -8,7 +8,7 @@ import subprocess
 import sys
 import threading
 import uuid
-from .local_knowledge import atomic_json,now
+from .local_knowledge import atomic_json,now,worker_python,worker_options
 
 LOCK=threading.RLock()
 
@@ -37,8 +37,8 @@ def scaffold(value):
 def validate_local_pipeline(root):
     base=Path(__file__).resolve().parents[1]
     target=Path(root)/'operations/validation'/uuid.uuid4().hex;target.mkdir(parents=True,exist_ok=False)
-    command=[sys.executable,'-B','-m','pytest','tests/test_local_knowledge.py','-q','--basetemp='+str(target/'fixtures')]
-    p=subprocess.run(command,cwd=base,capture_output=True,text=True,encoding='utf8',timeout=75)
+    command=[worker_python(),'-B','-m','pytest','tests/test_local_knowledge.py','-q','--basetemp='+str(target/'fixtures')]
+    p=subprocess.run(command,cwd=base,capture_output=True,text=True,encoding='utf8',timeout=75,**worker_options())
     result={'at_utc':now(),'status':'PASS' if p.returncode==0 else 'FAIL','exit_code':p.returncode,
         'suite':'fixed local document/index regression tests','output_tail':(p.stdout+'\n'+p.stderr)[-12000:],
         'classification':'ISOLATED_FIXTURES_NOT_PRODUCTION_CORPUS_OR_MODEL_ACCEPTANCE'}
