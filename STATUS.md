@@ -63,6 +63,35 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dell sweep and reconciliation - ORQEVIA - 15 October 2026
+
+### Claimed, not independently checked
+
+- Dell swept the seven local repositories and GitHub. All seven local working
+  trees are clean and their canonical remotes match
+  `github.com/AndrewLamSingapore/*`.
+- Merged this session: PR #316 (AI Scaffolding Engine) at
+  `490a5b3595ad308dfdc8ee6a94ec92bf1ef42d1a` and PR #317 (conflict resolution
+  and merge record) at `04d60fd42b929d69c646b9e9f24a6e4f4fb66c0c`; `main` is
+  now `04d60fd42b929d69c646b9e9f24a6e4f4fb66c0c`.
+- Conflict resolved: the 14 October "remove sandbox and blockers" instruction is
+  superseded; the security gates remain active and unchanged.
+- Open pull requests observed: orqevia holds a large backlog of preserved
+  evidence drafts (not touched); the-portal, authority-engine, sky-tablet,
+  game-platform and velyqua hold owner branding drafts plus a few Dependabot
+  dependency bumps (left open for review, not silently closed).
+- Local cleanup: two empty pytest temp directories could not be removed because
+  the sandbox denied directory deletion; no evidence was deleted. Evidence
+  directories, virtual environments and draft/evidence pull requests were
+  deliberately preserved.
+
+### Known broken / open
+
+- Stale Dependabot refs and PRIME-branded workflow display names remain tidy-up
+  candidates; workflow filename renames stay ABEX-gated (OIDC identity binding).
+
+---
+
 ## GOD'S EYE + Geospatial Intelligence + RAG — implementation, 14 October 2026
 
 ### Claimed, not independently checked
