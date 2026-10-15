@@ -82,3 +82,23 @@ def test_query_budget_interruption_never_becomes_a_partial_or_zero_count(draft,m
     monkeypatch.setattr(module.time,'monotonic',lambda: next(ticks,1.0))
     values=module.telemetry_store_counts()
     assert values['compute_jobs']=={'status':'UNAVAILABLE','count':None,'active_count':None}
+
+
+def test_agent_activity_classifies_queue_state_without_inventing_liveness(draft):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT)')
+        db.executemany('INSERT INTO compute_jobs VALUES(?,?,?,?)',[
+            ('1','a01','completed','2026-10-15T01:00:00Z'),
+            ('2','a01','running','2026-10-15T02:00:00Z'),
+            ('3','a02','queued','2026-10-15T03:00:00Z')])
+    assert module.agent_activity()=={
+        'a01':{'status':'running','observed_at':'2026-10-15T02:00:00Z'},
+        'a02':{'status':'queued','observed_at':'2026-10-15T03:00:00Z'}}
+
+
+def test_agent_activity_requires_agent_identity_column(draft):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,status TEXT)')
+    assert module.agent_activity() is None

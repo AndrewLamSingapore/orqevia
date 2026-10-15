@@ -41,12 +41,36 @@ def telemetry_store_counts():
     }
 
 
+def agent_activity():
+    """Collect bounded queue-backed activity without claiming process liveness."""
+    root = Path(os.getenv('PRIME_DATA_DIR', '/data')).resolve()
+    path = root/'compute-queue.db'
+    if not path.is_file():
+        return None
+    db = None
+    try:
+        db = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0.2)
+        columns = {row[1] for row in db.execute('PRAGMA table_info(compute_jobs)')}
+        if not {'agent', 'status'}.issubset(columns):
+            return None
+        timestamp = 'updated_at' if 'updated_at' in columns else 'NULL'
+        return {row[0]: {'status': row[1], 'observed_at': row[2]} for row in db.execute(
+            f"SELECT agent,status,{timestamp} FROM compute_jobs WHERE rowid IN "
+            "(SELECT MAX(rowid) FROM compute_jobs GROUP BY agent)")}
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return None
+    finally:
+        if db is not None:
+            db.close()
+
+
 def snapshot(client_id, role):
     observed = datetime.now(timezone.utc).isoformat()
     registry = load_agent_registry()
     stores = telemetry_store_counts()
     from .coaching_observation import coaching_snapshot
     coaching = coaching_snapshot(Path(os.getenv('PRIME_DATA_DIR','/data')))
+    activity = agent_activity()
     instance = os.getenv('PRIME_INTERFACE_HOST_ID', 'UNKNOWN')
     revision = os.getenv('PRIME_INTERFACE_RUNTIME_REVISION', 'UNKNOWN')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', instance):
@@ -68,14 +92,22 @@ def snapshot(client_id, role):
                metric('stored_objectives', stores['objectives']['count'], stores['objectives']['status'], 'objective-store')]
     for name, unit in [('cpu', 'percent'), ('memory', 'percent'), ('disk', 'percent'), ('network_latency', 'ms')]:
         metrics.append(metric(name, None, 'UNAVAILABLE', 'HOST_COLLECTOR_NOT_CONFIGURED', unit))
+    agents=[]
+    for agent in registry['agents']:
+        record=activity.get(agent['id']) if activity is not None else None
+        status=record['status'] if record else None
+        availability=('RUNNING' if status=='running' else 'QUEUED' if status in {'queued','awaiting_approval'}
+                      else 'IDLE' if record else 'NOT_OBSERVED' if activity is not None else 'COLLECTOR_UNAVAILABLE')
+        agents.append({'agent_id':agent['id'],'name':agent['name'],'registration':'REGISTERED',
+                       'availability':availability,'heartbeat':record['observed_at'] if record else None,
+                       'activity_source':'compute-queue'})
+    ready=sum(item['availability'] in {'RUNNING','QUEUED','IDLE'} for item in agents) if activity is not None else None
     return {'schema_version': 'orqevia.telemetry.v1', 'snapshot_id': str(uuid.uuid4()),
             'observed_at': observed, 'freshness_seconds': 60,
             'audience': {'client_id': client_id, 'role': role},
             'source': {'system': 'ORQEVIA', 'instance': instance, 'revision': revision},
-            'metrics': metrics, 'ready_agent_count': None,
-            'agents': [{'agent_id': agent['id'], 'name': agent['name'],
-                        'registration': 'REGISTERED', 'availability': 'UNKNOWN',
-                        'heartbeat': None} for agent in registry['agents']],
+            'metrics': metrics, 'ready_agent_count': ready,
+            'agents': agents,
             'coaching': coaching,
             'privacy': {'aggregate_only': True, 'private_tasks_exposed': False,
                         'credentials_exposed': False}}

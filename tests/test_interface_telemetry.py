@@ -20,7 +20,7 @@ def test_snapshot_reads_store_counts_without_inventing_agent_or_host_health(monk
     assert metrics['active_job_records']['value'] == 1
     assert metrics['registered_agents']['value'] == 21
     assert len({a['agent_id'] for a in report['agents']}) == 21
-    assert all(a['availability'] == 'UNKNOWN' and a['heartbeat'] is None for a in report['agents'])
+    assert all(a['availability'] == 'COLLECTOR_UNAVAILABLE' and a['heartbeat'] is None for a in report['agents'])
     assert report['ready_agent_count'] is None
     assert all(metrics[n]['value'] is None for n in ['cpu', 'memory', 'disk', 'network_latency'])
     assert report['source']['instance'] == 'ISOLATED-SOURCE-TEST'
