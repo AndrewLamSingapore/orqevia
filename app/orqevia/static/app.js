@@ -35,10 +35,11 @@ function saveJSON(key, value) {
 }
 
 async function api(path) {
+  if (path !== 'api/status') return { connected: false, reason: 'not_exposed_by_intelligence_surface' };
   try {
-    const res = await fetch("/api/orqevia/proxy/" + path, { headers: { Accept: "application/json" } });
+    const res = await fetch('/api/orqevia/intelligence/health', { headers: { Accept: "application/json" } });
     const body = await res.json();
-    return body && body.connected ? body : { connected: false, reason: body && body.reason };
+    return {connected:res.ok && body.ok === true,data:body,scope:'intelligence_companion'};
   } catch {
     return { connected: false, reason: "unreachable" };
   }
@@ -132,6 +133,12 @@ function metric(label, value, kind) {
 
 function renderMetrics() {
   const d = state.status ? state.status.data : null;
+  if (state.connected && state.status.scope === 'intelligence_companion') {
+    $('metrics').innerHTML = metric('Intelligence service','Connected','good') +
+      metric('Persisted observations',d.observation_count) +
+      metric('Ingestion',d.ingestion_suspended ? 'Suspended' : 'Owner initiated');
+    return;
+  }
   if (!state.connected || !d) {
     $("metrics").innerHTML =
       metric("Connection", "OFFLINE", "bad") +
@@ -154,6 +161,12 @@ function renderMetrics() {
 
 function renderIntel() {
   const zone = $("intel-agents");
+  if (state.connected && state.status.scope === 'intelligence_companion') {
+    zone.className='state-zone online';
+    zone.textContent='Public geospatial observations are available in God\'s Eye. Agent activation is separately governed.';
+    $('intel-telemetry').textContent='Connected to the authenticated intelligence companion; this view does not assert peer or agent runtime readiness.';
+    return;
+  }
   if (!state.connected) {
     zone.className = "state-zone error";
     zone.textContent = "PRIME unavailable — agent fleet not loaded.";
@@ -202,9 +215,9 @@ async function refreshStatus() {
   state.connected = !!status.connected;
   state.status = status;
   if (state.connected) {
-    logActivity("PRIME connected — status refreshed");
+    logActivity("ORQEVIA intelligence connected — status refreshed");
   } else {
-    logActivity("PRIME unreachable — showing offline/unavailable states");
+    logActivity("ORQEVIA intelligence unreachable — showing offline/unavailable states");
   }
   renderMetrics();
   renderIntel();

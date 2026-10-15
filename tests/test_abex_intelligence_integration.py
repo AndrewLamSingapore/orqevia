@@ -83,3 +83,63 @@ def test_active_gods_eye_is_map_and_extension_preserves_existing_runtime():
     assert 'text+' in extension and "text.replace(needle,needle+" in extension
     docker=(root/'deploy/Dockerfile.interface-intelligence-abex').read_text()
     assert 'COPY app /app/app' not in docker
+
+@pytest.mark.parametrize('kind',['documents','alerts'])
+def test_failed_atomic_json_write_preserves_previous_restart_state(monkeypatch,tmp_path,kind):
+    from app import atomic_json
+    from app.rag_grounding import DocumentStore
+    from app.event_detection import DetectionEngine
+    if kind=='documents':
+        path=tmp_path/'documents.json';store=DocumentStore()
+        store.ingest(doc_id='public',text='earthquake preserved evidence',source='USGS',authority_class='PUBLIC_REFERENCE',scope='APPLICATION')
+        store.save(path)
+        operation=lambda:store.save(path)
+        readback=lambda:DocumentStore.load(path).retrieve('earthquake',actor_scopes={'APPLICATION'})['status']=='GROUNDED'
+    else:
+        path=tmp_path/'alerts.json';store=DetectionEngine(path)
+        store.add_rule('r',min_magnitude=5,geo_scope=None,severity='HIGH',cooldown_seconds=60)
+        operation=lambda:store.add_rule('new',min_magnitude=6,geo_scope=None,severity='HIGH',cooldown_seconds=60)
+        readback=lambda:set(DetectionEngine(path).data['rules'])=={'r'}
+    before=path.read_bytes()
+    monkeypatch.setattr(atomic_json.os,'replace',lambda *args:(_ for _ in ()).throw(OSError('controlled atomic commit failure')))
+    with pytest.raises(OSError):operation()
+    assert path.read_bytes()==before and readback()
+
+def test_ui_health_uses_the_authenticated_companion_and_error_is_not_empty_map():
+    root=Path(__file__).resolve().parents[1]
+    js=(root/'app/orqevia/static/app.js').read_text(encoding='utf-8')
+    assert "fetch('/api/orqevia/intelligence/health'" in js
+    assert 'fetch("/api/orqevia/proxy/"' not in js
+    mapjs=(root/'app/orqevia/static/gods-eye/map.js').read_text(encoding='utf-8')
+    assert 'if (!res.ok) throw' in mapjs
+
+def test_production_entry_requires_server_authentication(monkeypatch,tmp_path):
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('PRIME_SPINE_TOKEN','test-existing-authority-token')
+    from app.orqevia.deployment import app
+    client=TestClient(app)
+    assert client.get('/api/orqevia/intelligence/health').status_code==401
+    assert client.get('/api/orqevia/intelligence/health',headers={'Authorization':'Bearer test-existing-authority-token'}).status_code==200
+
+def test_bridge_real_origin_checks_and_private_upstream_headers(monkeypatch):
+    import httpx
+    from app import orqevia_bridge as bridge
+    monkeypatch.setenv('PRIME_PWA_ORIGIN','https://abex.test')
+    monkeypatch.setenv('PRIME_SPINE_TOKEN','test-existing-authority-token')
+    monkeypatch.setattr(bridge.pwa_sessions,'require_session',lambda req:{'clientId':'pwa:fixture','role':'OWNER'})
+    recorded=[]
+    def upstream(request):
+        assert request.url.host=='intelligence' and request.url.port==8100
+        assert request.headers['Authorization']=='Bearer test-existing-authority-token'
+        assert 'cookie' not in request.headers
+        recorded.append(request)
+        return httpx.Response(200,json={'ok':True})
+    original=httpx.AsyncClient
+    monkeypatch.setattr(bridge.httpx,'AsyncClient',lambda **options:original(transport=httpx.MockTransport(upstream),**options))
+    app=FastAPI();app.include_router(bridge.router)
+    client=TestClient(app,base_url='https://abex.test',cookies={bridge.pwa_sessions.COOKIE:'fixture'})
+    path='/api/orqevia/intelligence/ingest/run'
+    assert client.post(path).status_code==403
+    assert client.post(path,headers={'Origin':'https://evil.test','X-JARVIS-PWA':'1'}).status_code==403
+    assert client.post(path,headers={'Origin':'https://abex.test','X-JARVIS-PWA':'1'}).status_code==200
+    assert len(recorded)==1
