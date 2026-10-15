@@ -1,4 +1,4 @@
-const CACHE='orqevia-shell-v21';
+const CACHE='orqevia-shell-v22';
 const SHELL=['/pwa/','/pwa/index.html','/pwa/style.css','/pwa/recovery.js','/pwa/release.mjs','/pwa/app.mjs','/pwa/dashboard.mjs','/pwa/intelligence.mjs','/pwa/intelligence.css','/pwa/dashboard.css','/pwa/core.mjs','/pwa/storage.mjs','/pwa/voice.mjs','/pwa/manifest.webmanifest','/pwa/icons/orqevia-official-v1-192.png','/pwa/icons/orqevia-official-v1-512.png','/pwa/icons/orqevia-official-v1-apple-touch.png','/pwa/icons/orqevia-official-v1-favicon-16.png','/pwa/icons/orqevia-official-v1-favicon-32.png','/pwa/icons/orqevia-official-v1-favicon-48.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>(key.startsWith('jarvis-shell-')||key.startsWith('orqevia-shell-'))&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
