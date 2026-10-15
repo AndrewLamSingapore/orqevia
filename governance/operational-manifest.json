@@ -203,7 +203,7 @@
     "note": "Existing event implementations remain; no new authenticated PRIME pull/ack acceptance was observed in this public-release task."
   },
   "dell_runtime": {
-    "command": "ORQEVIA.cmd status",
+    "command": "JARVIS.cmd status",
     "runtime_sha": "17fad78d410dca5d9101483cb777a2b9b619bac3",
     "observed_image": "prime:sha-17fad78",
     "verified_at_utc": "2026-09-26T07:25:32Z",
