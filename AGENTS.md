@@ -21,6 +21,7 @@ Deploy and verify the whole authorized flow, including trusted refresh/restart,
 first-click Intelligence, direct God's Eye and sensitive-operation denial.
 Builds, screenshots and frontend tests alone never establish deployment acceptance.
 
+
 For ORQEVIA and portfolio work, review current status claims in
 [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the
 private ORQEVIA repository. It is a portfolio status record, not a source for
