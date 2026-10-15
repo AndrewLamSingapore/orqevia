@@ -1,0 +1,8 @@
+ARG ABEX_BASE_IMAGE=sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419
+FROM ${ABEX_BASE_IMAGE}
+WORKDIR /service
+COPY app /service/app
+ARG ORQEVIA_SOURCE_REVISION=UNKNOWN
+ENV ORQEVIA_SOURCE_REVISION=${ORQEVIA_SOURCE_REVISION} PYTHONDONTWRITEBYTECODE=1
+LABEL org.opencontainers.image.revision=${ORQEVIA_SOURCE_REVISION}
+CMD ["python","-B","-m","uvicorn","app.orqevia.deployment:app","--host","0.0.0.0","--port","8100","--no-proxy-headers","--workers","1"]

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -19,6 +20,7 @@ DATA_DIR = Path(os.getenv("ORQEVIA_DATA_DIR", str(_REPO_ROOT.parents[1] / "work"
 OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
 DOCUMENTS = DocumentStore.load(DATA_DIR / "documents.json")
 DETECTION = DetectionEngine(DATA_DIR / "alerts.json")
+INGEST_LOCK = threading.Lock()
 
 
 class RetrieveRequest(BaseModel):
@@ -49,23 +51,29 @@ def geo_events(
     max_lon: float | None = None,
     limit: int = 200,
 ) -> dict:
+    if not 1 <= limit <= 500:
+        raise HTTPException(400, 'Limit must be between 1 and 500')
     records = OBSERVATIONS.query(min_lat=min_lat, max_lat=max_lat, min_lon=min_lon, max_lon=max_lon, limit=limit)
     return {"count": len(records), "records": records}
 
 
 @router.get("/geo/radius")
 def geo_radius(lat: float, lon: float, radius_km: float) -> dict:
+    if not 0 <= radius_km <= 40075:
+        raise HTTPException(400, 'Radius is outside supported bounds')
     try:
         validate_coordinate(lat, lon)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    records = OBSERVATIONS.query()
+    records = OBSERVATIONS.query(limit=500)
     within = [r for r in records if haversine_km(lat, lon, r["location"]["lat"], r["location"]["lon"]) <= radius_km]
     return {"count": len(within), "records": within}
 
 
 @router.post("/rag/retrieve")
 def rag_retrieve(request: RetrieveRequest) -> dict:
+    if not request.query.strip() or len(request.query) > 4096:
+        raise HTTPException(400, 'A bounded retrieval query is required')
     near = None
     if request.near_lat is not None and request.near_lon is not None:
         near = (request.near_lat, request.near_lon)
@@ -79,10 +87,27 @@ def rag_retrieve(request: RetrieveRequest) -> dict:
 
 @router.post("/ingest/run")
 def ingest_run() -> dict:
+    if not INGEST_LOCK.acquire(blocking=False):
+        raise HTTPException(429, 'Ingestion already in progress')
+    try:
+        return _ingest_run()
+    finally:
+        INGEST_LOCK.release()
+
+
+def _ingest_run() -> dict:
     import time as _time
-    receipt = Poller(OBSERVATIONS, source="usgs-earthquakes").run(run_id=f"run-{_time.time():.0f}")
+    total_bytes=sum(p.stat().st_size for p in DATA_DIR.iterdir() if p.is_file())
+    if total_bytes > 128*1024*1024 or OBSERVATIONS.count()>10000:
+        raise HTTPException(507, 'Intelligence storage budget reached; existing observations preserved')
+    receipt = Poller(OBSERVATIONS, source="usgs-earthquakes").run(
+        run_id=f"run-{_time.time_ns()}", timeout_seconds=20, max_retries=0)
     if receipt.ok:
+        if 'usgs-magnitude-5' not in DETECTION.data['rules']:
+            DETECTION.add_rule('usgs-magnitude-5', min_magnitude=5.0, geo_scope=None,
+                severity='HIGH', cooldown_seconds=86400)
         for record in OBSERVATIONS.query(limit=500):
+            DETECTION.evaluate(record)
             if DOCUMENTS.contains(record["event_id"]):
                 continue
             DOCUMENTS.ingest(
@@ -97,6 +122,31 @@ def ingest_run() -> dict:
             )
         DOCUMENTS.save(DATA_DIR / "documents.json")
     return receipt.as_dict()
+
+
+@router.get('/health')
+def intelligence_health() -> dict:
+    return {'ok': True, 'source_revision': os.getenv('ORQEVIA_SOURCE_REVISION', 'UNKNOWN'),
+        'observation_count': OBSERVATIONS.count(), 'ingestion_suspended': (DATA_DIR/'suspended').exists(),
+        'persisted_source': 'USGS public observations', 'provider_runtime_acceptance': 'SEPARATE_RECEIPT_REQUIRED'}
+
+
+@router.get('/history/timeline')
+def historical_timeline(limit: int = 200) -> dict:
+    from ..historical_intelligence import validate_timeline
+    if not 1 <= limit <= 500:
+        raise HTTPException(400, 'Limit must be between 1 and 500')
+    return validate_timeline(OBSERVATIONS.query(limit=limit))
+
+
+@router.get('/predictive/baseline')
+def predictive_baseline() -> dict:
+    from dataclasses import asdict
+    from ..predictive_intelligence import evaluate_last_value_baseline
+    rows=OBSERVATIONS.query(limit=500)
+    return {**asdict(evaluate_last_value_baseline(
+        [(r['observed_at'],r['magnitude']) for r in rows if r.get('observed_at')])),
+        'disclosure': 'Last-value sequence benchmark only; not earthquake prediction or an accepted predictive service'}
 
 
 @router.get("/detection/alerts")

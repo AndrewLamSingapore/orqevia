@@ -314,4 +314,10 @@ class Poller:
 def _http_fetch(url: str, timeout_seconds: int) -> dict:
     req = urllib.request.Request(url, headers={"User-Agent": "ORQEVIA-geo-ingest/1.0 (Dell local)"})
     with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
-        return json.loads(response.read().decode("utf-8"))
+        raw=response.read(5_000_001)
+        if len(raw)>5_000_000:
+            raise ValueError('Source payload exceeds bound')
+        payload=json.loads(raw.decode('utf-8'))
+        if not isinstance(payload,dict) or not isinstance(payload.get('features'),list) or len(payload['features'])>2000:
+            raise ValueError('USGS source feature bound exceeded')
+        return payload

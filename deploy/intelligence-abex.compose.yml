@@ -1,0 +1,39 @@
+# Additive internal service only. Existing ABEX services and data remain owned by
+# their current deployment; do not run a broad compose up on legacy overlays.
+services:
+  intelligence:
+    image: ${ORQEVIA_INTELLIGENCE_IMAGE:?candidate image required}
+    restart: unless-stopped
+    env_file:
+      - ${ORQEVIA_PRIVATE_ENV_FILE:?private existing server token export required}
+    environment:
+      ORQEVIA_DATA_DIR: /data/intelligence
+      ORQEVIA_SOURCE_REVISION: ${ORQEVIA_SOURCE_REVISION:?source revision required}
+    volumes:
+      - intelligence-data:/data
+    networks:
+      abex:
+        aliases: [intelligence]
+    read_only: true
+    tmpfs: [/tmp:size=16m,noexec,nosuid]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: '2'}
+    healthcheck:
+      test: [CMD, python, -B, -c, "import os,urllib.request; r=urllib.request.Request('http://127.0.0.1:8100/api/orqevia/intelligence/health',headers={'Authorization':'Bearer '+os.environ['PRIME_SPINE_TOKEN']}); assert urllib.request.urlopen(r,timeout=3).status==200"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+volumes:
+  intelligence-data:
+    name: orqevia-intelligence-data
+networks:
+  abex:
+    external: true
+    name: prime-epoch-20260919_default

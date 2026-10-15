@@ -1,0 +1,8 @@
+ARG ABEX_BASE_IMAGE=sha256:36c11eebd2e4f2f5806088e976c22fb9393805f5338881f1004d82a373fad419
+FROM ${ABEX_BASE_IMAGE}
+COPY app/orqevia_bridge.py /app/app/orqevia_bridge.py
+COPY deploy/extend-abex-interface.py /run/extend-abex-interface.py
+RUN python -B /run/extend-abex-interface.py
+ARG ORQEVIA_SOURCE_REVISION=UNKNOWN
+ENV ORQEVIA_INTELLIGENCE_SOURCE_REVISION=${ORQEVIA_SOURCE_REVISION}
+LABEL org.orqevia.intelligence.revision=${ORQEVIA_SOURCE_REVISION}
