@@ -243,6 +243,8 @@ tests/test_hyper_inference_integration.py`.
 
 ## ABEX direct workspace deployment - 15 October 2026
 
+Latest deployed code is `24f0dc9ff1df7801e5e6a1e59a1e5686d926e773`, image `sha256:a3c5b3608bdfc954f5b8b703b63ec826c5780531ee7972f33411a6d212b82cec`. Owner-browser source synchronization refreshed 19 real observations. The approved Edge owner device stays trusted across refresh, a fresh direct tab and service restart. [Deployment and browser evidence](docs/deployments/20261015-direct-workspace/DEPLOYMENT-AND-BROWSER-ACCEPTANCE.json). The earlier deployed revision below is retained as dated history.
+
 Observed by ABEX, not promoted to Owner Verified: deployed Interface source
 `ee1baa5727b010cb1e2acf3f5db7df2448930574`, image
 `sha256:6d4a21ffc4c91e2ec311e861e32db1359f8e13442eb59f3e5b40f4069ef2b52e`.
