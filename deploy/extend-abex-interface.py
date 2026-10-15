@@ -3,7 +3,7 @@ from pathlib import Path
 p=Path('/app/app/interface_server.py')
 text=p.read_text(encoding='utf-8')
 if 'orqevia_bridge' in text:raise RuntimeError('Interface already extended')
-p.write_text(text+'\nfrom .orqevia_bridge import router as intelligence_bridge_router\napp.include_router(intelligence_bridge_router)\n',encoding='utf-8')
+p.write_text(text+'\nfrom .orqevia_bridge import router as intelligence_bridge_router\napp.include_router(intelligence_bridge_router)\nfrom .local_knowledge_bridge import router as knowledge_bridge_router\napp.include_router(knowledge_bridge_router)\n',encoding='utf-8')
 p=Path('/app/app/pwa_static/index.html')
 text=p.read_text(encoding='utf-8')
 needle='<div class="function-grid">'

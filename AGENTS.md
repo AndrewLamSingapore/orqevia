@@ -1,5 +1,19 @@
 # ORQEVIA status and domain ownership
 
+## Master autonomous integration continuation order — 15 October 2026
+
+Apply [the total integration architecture and acceptance rules](docs/TOTAL-INTEGRATION-ARCHITECTURE.md)
+alongside the permanent interface standard. Continue authorized recoverable work
+through audit, reconciliation, implementation, tests, required CI, merge,
+deployment and actual end-to-end verification. Reuse the local RAG V2/V3, document,
+embedding, FAISS and Ollama implementations through the primary workspace; do not
+create disconnected demonstrations or silently discard recoverable work. Keep an
+item-level classification register and 20-test evidence matrix. Preserve platform
+security and required approvals; ask only for actual external or irreversible
+dependencies. ABEX implements and deploys; Dell independently reviews only.
+Retired mandatory PRIME/SSOT/21-agent, migration and certification dependencies
+remain parked. Names on compatible retained resources do not reverse this order.
+
 ## Permanent Owner standing order — direct workspace access (15 October 2026)
 
 Apply [the interface access and acceptance standard](docs/INTERFACE-ACCESS-STANDARD.md)

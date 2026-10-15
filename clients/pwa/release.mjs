@@ -1,4 +1,4 @@
-const RELEASE='orqevia-shell-v23';
+const RELEASE='orqevia-shell-v24';
 
 if(location.protocol==='https:'&&'serviceWorker'in navigator){
   const reloadKey=`${RELEASE}:controller-reload`;
