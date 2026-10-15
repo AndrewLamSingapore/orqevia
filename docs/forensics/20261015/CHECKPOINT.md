@@ -29,3 +29,13 @@ The current local allowance telemetry reports29%of the weekly window used. It is
 ## Owner pause
 
 PAUSED BY EXPLICIT OWNER at 2026-10-15T06:45:45.671395+00:00. All further development, review and deployment work stops. Existing production services are left unchanged. Resume only after an explicit Owner instruction, using this checkpoint and exact saved candidate; do not repeat completed discovery.
+
+## Resumed operational qualification — 15 October 2026 07:11 UTC
+
+Owner explicitly resumed deployment. Candidate remains `6bad0b54d6ddab2b69cf2c72498a17c4c4bc5915`; canonical main resolved to `25675aa35baf6e6b49a4682bd6e7666c796dc4de`. Coordinated companion/Interface restart, full original-Interface rollback and candidate restoration PASSED. Original container served PWA over verified TLS; the same candidate container was restored. Observations SQLite integrity is ok and observations/documents/alerts file hashes matched before and after the complete successful drill. Backend container identity/start time unchanged. Evidence: `RESUME-ACCEPTANCE-20261015T070932Z.json`.
+
+Anonymous external intelligence API/UI requests returned 401 over verified TLS; external PWA returned 200. Internal manifest, sources, health, events, distance, radius, alerts, history, baseline and RAG returned 200. Formal semantic God's Eye API returned its intended 503 (parked formal stack); this is separate from the active geospatial map, which still requires browser acceptance. Evidence: `runtime/RESUMED-INTERNAL-ENDPOINTS.json`. Fresh real USGS ingestion fetched 10 records, inserted 1 and updated 9; 15 total persisted observations; live alert count remains zero.
+
+Original failed probe receipts are retained: initial internal `/health` was the wrong companion URL, and first rollback probe expected 200 from original Interface `/health`, which returns 404. Corrected successful drill uses the actual configured container healthcheck and external `/pwa/` route. No failure evidence was removed.
+
+Remaining: owner-session authenticated external-path qualification, actual browser/map visual acceptance, real alert firing, Dell independent assessment, merge and final publication/operational acceptance. Browser automation failed twice with `Unable to load browser request-header policy`; current Interface has no unexpired PWA sessions and no configured client credentials. Owner was asked to sign in through the normal flow; no new identity or session was fabricated. Provider-blocked aviation/maritime/geopolitical feeds remain external limitations. Deployment stays running healthy; this is not an Owner pause or final acceptance.
