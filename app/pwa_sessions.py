@@ -126,7 +126,9 @@ def safe_shell_navigation(request):
             and request.url.path in {'/pwa/','/pwa/index.html'}
             and request.headers.get('origin') is None
             and request.headers.get('sec-fetch-mode')=='navigate'
-            and request.headers.get('sec-fetch-dest')=='document')
+            # A service-worker/browser handoff may preserve navigate mode but
+            # present an empty destination. Only the public shell is admitted.
+            and request.headers.get('sec-fetch-dest') in {'document','empty'})
 
 def pwa_origins():
     primary=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')

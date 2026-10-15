@@ -390,3 +390,15 @@ def test_expired_device_reports_recovery_and_does_not_renew_session(setup):
         with pwa.database() as db:db.execute('UPDATE devices SET expires=? WHERE client_id=?',(time.time()-1,enrolled.json()['clientId']))
         denied=client.get('/pwa/api/session').json()
         assert denied['authenticated'] is False and denied['recovery']=='DEVICE_EXPIRED'
+
+
+def test_service_worker_empty_destination_navigation_admits_only_public_shell(setup):
+    root,pwa,app,node=setup
+    headers={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate','Sec-Fetch-Dest':'empty'}
+    with TestClient(app,base_url=ORIGIN) as client:
+        assert client.get('/pwa/',headers=headers).status_code==200
+        assert client.get('/pwa/index.html',headers=headers).status_code==200
+        assert client.get('/pwa/api/session',headers=headers).status_code==403
+        assert client.post('/pwa/api/enroll',headers=headers,json={'code':'x'}).status_code==403
+        assert client.get('/pwa/',headers={**headers,'Origin':'https://evil.invalid'}).status_code==403
+        assert client.get('/pwa/',headers={**headers,'Sec-Fetch-Mode':'cors'}).status_code==403
