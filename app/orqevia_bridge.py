@@ -1,9 +1,10 @@
 """Bounded forwarding through the existing TLS client/session boundary."""
 import os
+import asyncio
 from urllib.parse import urlsplit
 import httpx
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import Response
+from fastapi.responses import Response, RedirectResponse
 from . import pwa_sessions
 from .interface_contract import authorize
 from .interface_node import client_policy
@@ -43,7 +44,7 @@ async def forward(request, path, *, mutation=False):
     if len(token) < 16:
         raise HTTPException(503, 'Intelligence service authority unavailable')
     try:
-        body = await pwa_sessions.bounded_body(request, 16384) if request.method == 'POST' else b''
+        body = await asyncio.wait_for(pwa_sessions.bounded_body(request, 16384),3) if request.method == 'POST' else b''
         async with httpx.AsyncClient(timeout=httpx.Timeout(25,connect=3),follow_redirects=False,trust_env=False) as client:
             async with client.stream(request.method,base+path,params=request.query_params,
                     content=body,headers={'Authorization':'Bearer '+token,'X-ORQEVIA-Actor':actor,
@@ -58,7 +59,7 @@ async def forward(request, path, *, mutation=False):
                     'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',
                     'Referrer-Policy':'no-referrer',
                     'Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'"})
-    except (httpx.HTTPError,ValueError):
+    except (httpx.HTTPError,ValueError,TimeoutError):
         raise HTTPException(503,'Intelligence service unavailable') from None
 
 @router.api_route('/api/orqevia/{path:path}',methods=['GET','POST'])
@@ -69,6 +70,8 @@ async def intelligence_api(request: Request,path: str):
 
 @router.get('/orqevia/{path:path}')
 async def intelligence_ui(request: Request,path: str):
+    if not path:
+        return RedirectResponse('/pwa/?view=intelligence',status_code=307)
     if any(part in {'..','.'} for part in path.split('/')) or '\\' in path or ':' in path:
         raise HTTPException(404,'Unavailable asset')
     if path and not path.endswith(('.html','.js','.css','.png','.webmanifest')):
