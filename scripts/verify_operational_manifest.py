@@ -232,8 +232,8 @@ def assess_static(
         result.error("PRIME published image tag does not match release_sha")
 
     dell = value.get("dell_runtime", {})
-    if dell.get("command") != "JARVIS.cmd status":
-        result.error("Dell acceptance command must be JARVIS.cmd status")
+    if dell.get("command") != "ORQEVIA.cmd status":
+        result.error("Dell acceptance command must be ORQEVIA.cmd status")
     if prime.get("state") == "UNVERIFIED" and prime.get("runtime_sha") is not None:
         result.error("unverified current PRIME runtime_sha must be null; retain historical identity separately")
     if abex.get("state") == "VERIFIED" and prime.get("runtime_sha") != abex.get("source_sha"):

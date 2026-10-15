@@ -44,7 +44,7 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         self.assertIn("HTTP 404", script)
 
     def test_one_click_menu_covers_lifecycle(self):
-        menu = (ROOT / "JARVIS.cmd").read_text(encoding="utf-8")
+        menu = (ROOT / "ORQEVIA.cmd").read_text(encoding="utf-8")
         for action in ("start", "status", "doctor", "repair", "open", "stop"):
             self.assertIn(f"-Action {action}", menu)
 

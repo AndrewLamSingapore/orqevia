@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class P1CompletionToolingTests(unittest.TestCase):
     def test_windows_operator_is_powershell_51_safe_and_propagates_failures(self):
         script = (ROOT / "scripts" / "jarvis.ps1").read_text(encoding="utf-8")
-        wrapper = (ROOT / "JARVIS.cmd").read_text(encoding="utf-8")
+        wrapper = (ROOT / "ORQEVIA.cmd").read_text(encoding="utf-8")
         self.assertTrue(script.isascii())
         self.assertIn("EnableDelayedExpansion", wrapper)
         self.assertIn("exit /b !ERRORLEVEL!", wrapper)
@@ -28,7 +28,7 @@ class P1CompletionToolingTests(unittest.TestCase):
             self.assertIn(dimension, source)
         self.assertIn('host == "ollama"', source)
         self.assertIn('Path("/.dockerenv").exists()', source)
-        runner = (ROOT / "BENCHMARK-JARVIS.cmd").read_text(encoding="utf-8")
+        runner = (ROOT / "BENCHMARK-ORQEVIA.cmd").read_text(encoding="utf-8")
         self.assertIn("docker cp", runner)
         self.assertIn("--allow-docker-internal", runner)
         self.assertIn("local-model-benchmark.json", runner)
@@ -45,7 +45,7 @@ class P1CompletionToolingTests(unittest.TestCase):
             self.assertIn(boundary, source)
         self.assertIn("--generate-safe-smoke", source)
         self.assertIn('"credential_exposed": False', source)
-        runner = (ROOT / "PORTAL-SMOKE-JARVIS.cmd").read_text(encoding="utf-8")
+        runner = (ROOT / "PORTAL-SMOKE-ORQEVIA.cmd").read_text(encoding="utf-8")
         self.assertIn("PORTAL_RESULT_TOKEN", runner)
         self.assertIn("--generate-safe-smoke", runner)
         self.assertIn("portal-smoke-result.json", runner)
