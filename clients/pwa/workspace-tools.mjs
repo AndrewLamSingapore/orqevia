@@ -29,7 +29,7 @@ if(typeof document!=='undefined'){
    }
   }catch(e){if(epoch===generation)status.textContent=e.message;}
  }
- window.addEventListener('orqevia-view',e=>{active=e.detail.name;void render();});
+ window.addEventListener('orqevia-view',e=>{active=e.detail.name;queueMicrotask(()=>void render());});
  window.addEventListener('orqevia-session',e=>{const changed=session?.clientId!==e.detail?.clientId||session?.role!==e.detail?.role;session=e.detail;if(changed)void render();});
  window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));void render();
 }

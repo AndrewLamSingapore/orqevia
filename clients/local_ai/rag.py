@@ -7,5 +7,5 @@ def main():
     if args.command=='search' and not args.question:parser.error('Search requires a question')
     try:result=SharedKnowledgeClient().call('reindex',{}) if args.command=='build' else SharedKnowledgeClient().call('retrieve',{'question':args.question})
     except Exception:sys.exit('Shared retrieval service unavailable or rejected; original V1 index preserved')
-    print(json.dumps(result,indent=2,ensure_ascii=False))
+    print(json.dumps(result,indent=2,ensure_ascii=True))
 if __name__=='__main__':main()

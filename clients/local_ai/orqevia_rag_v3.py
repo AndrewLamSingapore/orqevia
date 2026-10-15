@@ -11,5 +11,5 @@ def main():
     if not question or not 1<=args.top_k<=5:parser.error('Supply a question and top-k between 1 and 5')
     try:result=SharedKnowledgeClient().call('retrieve' if args.retrieve_only else 'answer',{'question':question,'top_k':args.top_k})
     except Exception:sys.exit('Shared knowledge service unavailable or request rejected; original indexes preserved')
-    print(json.dumps(result,indent=2,ensure_ascii=False))
+    print(json.dumps(result,indent=2,ensure_ascii=True))
 if __name__=='__main__':main()
