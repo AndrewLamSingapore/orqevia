@@ -72,6 +72,7 @@ structural work — not a rewrite.
 | L1 theme layer + Dockerfile ship | Implemented; Node suites green |
 | L1.1 responsive fit (web + iPhone) | Implemented (browser QA pending) |
 | Zero-tap open access (session auto-admit) | Implemented; pytest 4 + 32 green locally |
+| Interface deployment (additive overlay, rollback preserved) | **Deployed 2026-10-16 12:57 SGT**; live checks green (open access OWNER, theme 200, dup-link fix, attestation 200) |
 | L2–L5 | Planned |
 | Security verification report | Planned |
 | Deployment + rollback | Not started (blocked until RC) |
