@@ -66,21 +66,21 @@ jobs:
         with:
           persist-credentials: false
       - name: Build production image
-        run: docker build -t prime:acceptance --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+        run: docker build -t orqevia:acceptance --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Verify exact source and packaged certification reviewer
         run: |
-          test "$(docker image inspect prime:acceptance --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$GITHUB_SHA"
-          docker run --rm --entrypoint python prime:acceptance -c "import os; from app import agent_cert_review_tool, agent_cert_role_review, agent_cert_transport; assert os.environ['PRIME_RUNTIME_REVISION'] == '$GITHUB_SHA'"
+          test "$(docker image inspect orqevia:acceptance --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$GITHUB_SHA"
+          docker run --rm --entrypoint python orqevia:acceptance -c "import os; from app import agent_cert_review_tool, agent_cert_role_review, agent_cert_transport; assert os.environ['PRIME_RUNTIME_REVISION'] == '$GITHUB_SHA'"
       - name: Create isolated acceptance network
-        run: docker network create prime-acceptance
+        run: docker network create orqevia-acceptance
       - name: Verify current production entrypoint, artifact, and restart
         run: |
-          docker volume create prime-current-data
-          docker run -d --name prime-current --network prime-acceptance \
-            -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
+          docker volume create orqevia-current-data
+          docker run -d --name orqevia-current --network orqevia-acceptance \
+            -v orqevia-current-data:/data -e PRIME_DATA_DIR=/data \
             -e PRIME_REGISTRY_V1_ENABLED=1 \
-            -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
-          receipt=$(docker run --rm -i --network container:prime-current python:3.12-slim python - <<'PY'
+            -e PRIME_SPINE_TOKEN=acceptance-secret orqevia:acceptance
+          receipt=$(docker run --rm -i --network container:orqevia-current python:3.12-slim python - <<'PY'
           import hashlib, json, time, urllib.error, urllib.request
           base='http://127.0.0.1:8000'
           for _ in range(30):
@@ -115,12 +115,12 @@ jobs:
           task_id=${receipt%%|*}
           artifact_id=${receipt#*|}
           test -n "$task_id" && test -n "$artifact_id"
-          docker rm -f prime-current
-          docker run -d --name prime-current --network prime-acceptance \
-            -v prime-current-data:/data -e PRIME_DATA_DIR=/data \
+          docker rm -f orqevia-current
+          docker run -d --name orqevia-current --network orqevia-acceptance \
+            -v orqevia-current-data:/data -e PRIME_DATA_DIR=/data \
             -e PRIME_REGISTRY_V1_ENABLED=1 \
-            -e PRIME_SPINE_TOKEN=acceptance-secret prime:acceptance
-          docker run --rm -i --network container:prime-current \
+            -e PRIME_SPINE_TOKEN=acceptance-secret orqevia:acceptance
+          docker run --rm -i --network container:orqevia-current \
             -e TASK_ID="$task_id" -e ARTIFACT_ID="$artifact_id" python:3.12-slim python - <<'PY'
           import hashlib, json, os, time, urllib.request
           base='http://127.0.0.1:8000'
@@ -138,16 +138,16 @@ jobs:
           PY
       - name: Benchmark 50 current production deterministic HTTP cases
         run: |
-          docker run --rm --network container:prime-current \
+          docker run --rm --network container:orqevia-current \
             --mount "type=bind,source=$GITHUB_WORKSPACE/benchmarks,target=/benchmarks,readonly" \
             python:3.12-slim python /benchmarks/run_production_entrypoint.py --cases 50
       - name: Container logs on failure
         if: failure()
         run: |
-          docker logs prime-current || true
+          docker logs orqevia-current || true
       - name: Remove disposable acceptance resources
         if: always()
         run: |
-          docker rm -f prime-current 2>/dev/null || true
-          docker volume rm prime-current-data 2>/dev/null || true
-          docker network rm prime-acceptance 2>/dev/null || true
+          docker rm -f orqevia-current 2>/dev/null || true
+          docker volume rm orqevia-current-data 2>/dev/null || true
+          docker network rm orqevia-acceptance 2>/dev/null || true
