@@ -23,7 +23,7 @@ def verify() -> dict[str, object]:
         "read_aloud_uses_governed_result": "voice.speak(spokenText(currentTask))" in (pwa / "app.mjs").read_text(encoding="utf-8"),
         "authoritative_session_refresh": "setInterval(" in (pwa / "app.mjs").read_text(encoding="utf-8") and "verifiedAt" in (pwa / "core.mjs").read_text(encoding="utf-8"),
         "deterministic_startup_recovery": (pwa / "recovery.js").is_file() and "startup-recovery" in (pwa / "index.html").read_text(encoding="utf-8"),
-        "canonical_branding": all("jarvis-prime-v1-" in icon["src"] for icon in json.loads((pwa / "manifest.webmanifest").read_text(encoding="utf-8"))["icons"]),
+        "canonical_branding": all("orqevia-official-v1-" in icon["src"] for icon in json.loads((pwa / "manifest.webmanifest").read_text(encoding="utf-8"))["icons"]),
     }
     return {"verifier": "jarvis-candidate-v1", "checks": checks, "passed": sum(checks.values()), "total": len(checks), "production_touched": False, "physical_phone_tested": False, "node_output_tail": node.stdout.splitlines()[-6:]}
 
