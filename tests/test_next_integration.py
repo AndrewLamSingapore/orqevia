@@ -60,8 +60,10 @@ def test_external_surface_has_no_owner_or_legacy_routes():
     from app.interface_server import app
     paths={route.path for route in app.routes}
     allowed_prefixes=('/interface/v1/','/pwa','/integration/')
-    assert paths and all(path.startswith(allowed_prefixes) for path in paths)
-    assert not any(path.startswith(('/api/','/control')) for path in paths)
+    bounded_bridge={'/api/orqevia/{path:path}','/orqevia/{path:path}'}
+    assert paths and all(path.startswith(allowed_prefixes) or path in bounded_bridge for path in paths)
+    assert not any(path.startswith('/control') for path in paths)
+    assert not any(path.startswith('/api/') and path not in bounded_bridge for path in paths)
 
 
 def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkeypatch):

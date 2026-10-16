@@ -187,6 +187,15 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    sweep_title = "## Dual-writer governance, sweep fixes and ABEX handoff - 16 October 2026"
+    assert after.count(sweep_title) == 1
+    sweep_start = after.index(sweep_title)
+    sweep_end = after.index("\n## ", sweep_start + len(sweep_title)) + 1
+    sweep = after[sweep_start:sweep_end]
+    assert "### Claimed, not independently checked" in sweep
+    assert "### Verified" not in sweep
+    assert "docs/ABEX-RUNBOOK-20261016.md" in sweep
+    after = after[:sweep_start] + after[sweep_end:]
     recovery_title = "## ABEX forensic recovery checkpoint - 15 October 2026"
     assert after.count(recovery_title) == 1
     recovery_start = after.index(recovery_title)
