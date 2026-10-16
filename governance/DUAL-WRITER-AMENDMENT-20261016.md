@@ -1,3 +1,6 @@
+> Superseded 16 October 2026 by
+> [governance/SINGLE-ENTITY-AUTHORITY-AMENDMENT-20261016.md](SINGLE-ENTITY-AUTHORITY-AMENDMENT-20261016.md).
+
 # Dual-writer build authority amendment - 16 October 2026
 
 Owner authorization: Lam approved this amendment on 16 October 2026, converting
