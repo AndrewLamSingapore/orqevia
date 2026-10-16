@@ -114,7 +114,7 @@ def geo_features(min_lat: float | None = None, max_lat: float | None = None,
             features.append({'type':'Feature','id':record['event_id'],'geometry':{'type':'Point','coordinates':[lon,lat]},'properties':record})
         return {'type':'FeatureCollection','features':features,'count':len(features),'limit':limit,'offset':offset,
                 'next_offset':offset+limit if len(records)==limit else None,'as_of':datetime.now(timezone.utc).isoformat(),
-                'scope':'PUBLIC_REFERENCE','attribution':'U.S. Geological Survey','coverage':'Stored observations only; not live global coverage'}
+        'scope':'PUBLIC_REFERENCE','attribution':'U.S. Geological Survey','coverage':'Stored observations only; Singapore-centred regional USGS window; not live global coverage'}
     except (ValueError,TypeError,OverflowError):
         raise HTTPException(422,'Invalid geographic filter or stored coordinate') from None
 

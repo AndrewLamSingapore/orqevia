@@ -14,20 +14,72 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlencode
 
 from .geospatial import validate_coordinate
+
+
+# Owner decision 2026-10-16: God's Eye observations are scoped to the
+# Singapore region instead of United States coverage. Singapore itself is
+# aseismic; the honest useful window is the surrounding region whose events
+# are felt in Singapore (Sumatra, Java, Malay Peninsula, Borneo). Public USGS
+# data remains the source and is attributed as such.
+SINGAPORE_REGION: dict[str, Any] = {
+    "name": "Singapore region",
+    "center": {"lat": 1.3521, "lon": 103.8198},
+    "bbox": {"min_latitude": -7.0, "max_latitude": 9.0, "min_longitude": 93.0, "max_longitude": 119.0},
+    "min_magnitude": 2.5,
+    "window_days": 30,
+    "limit": 500,
+}
+
+
+def region_bbox_env_override() -> dict[str, float] | None:
+    import os
+    raw = os.environ.get("ORQEVIA_GEO_REGION_BBOX", "").strip()
+    if not raw:
+        return None
+    try:
+        min_lon, min_lat, max_lon, max_lat = (float(part) for part in raw.split(","))
+    except (TypeError, ValueError):
+        return None
+    if not (-90 <= min_lat < max_lat <= 90 and -180 <= min_lon < max_lon <= 180):
+        return None
+    return {"min_latitude": min_lat, "max_latitude": max_lat, "min_longitude": min_lon, "max_longitude": max_lon}
+
+
+def build_source_url(config: dict[str, Any], *, now: datetime | None = None) -> str:
+    """Compose the live query URL; the Singapore window is the date-bounded FDSN query."""
+    if config.get("feed") != "fdsn":
+        return str(config.get("url") or "")
+    region = config["region"]
+    bbox = region_bbox_env_override() or region["bbox"]
+    start = (now or datetime.now(timezone.utc)) - timedelta(days=region["window_days"])
+    query = urlencode({
+        "format": "geojson",
+        "starttime": start.strftime("%Y-%m-%dT%H:%M:%S"),
+        "minlatitude": bbox["min_latitude"], "maxlatitude": bbox["max_latitude"],
+        "minlongitude": bbox["min_longitude"], "maxlongitude": bbox["max_longitude"],
+        "minmagnitude": region["min_magnitude"],
+        "orderby": "time",
+        "limit": region["limit"],
+    })
+    return f"{config['fdsn_endpoint']}?{query}"
 
 
 SOURCES: dict[str, dict[str, Any]] = {
     "usgs-earthquakes": {
         "kind": "earthquake",
-        "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson",
+        "feed": "fdsn",
+        "fdsn_endpoint": "https://earthquake.usgs.gov/fdsnws/event/1/query",
+        "url": "https://earthquake.usgs.gov/fdsnws/event/1/query",
+        "region": SINGAPORE_REGION,
         "attribution": "U.S. Geological Survey",
         "permitted_use": "Public domain USGS feed",
-        "coverage": "Global",
+        "coverage": "Singapore region (Sumatra/Java/Malay Peninsula window); not global",
         "refresh_interval_seconds": 300,
         "freshness_seconds": 900,
         "credential": None,
@@ -276,7 +328,8 @@ class Poller:
         delay = 1
         for attempt in range(max_retries + 1):
             try:
-                doc = self.fetch(self.config["url"], timeout_seconds)
+                source_url = build_source_url(self.config)
+                doc = self.fetch(source_url, timeout_seconds)
                 features = (doc.get("features") or []) if isinstance(doc, dict) else []
                 for feature in features:
                     fetched += 1
@@ -284,7 +337,7 @@ class Poller:
                     provenance = {
                         "provider": self.source,
                         "retrieved_at": utc_now(),
-                        "source_url": self.config["url"],
+                        "source_url": source_url,
                         "transformation_version": "orqevia.usgs.v1",
                     }
                     if self.store.upsert(record, provenance):
