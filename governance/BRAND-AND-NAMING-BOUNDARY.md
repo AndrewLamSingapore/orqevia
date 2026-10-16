@@ -31,6 +31,18 @@ records present this origin clearly.
   the source). Candidate verifier renamed
   `scripts/verify_jarvis_candidate.py` → `scripts/verify_orqevia_candidate.py`.
 
+**Superseded 2026-10-16 (night, epoch flip — PRs #366/#367):**
+
+- Compose service `prime` → `backend`; project default `prime` → `orqevia`;
+  labels `com.lamjarvis.*` → `com.orqevia.*`; operator tooling
+  `scripts/jarvis.ps1` → `scripts/orqevia.ps1`; the observatory-verifier pin
+  contract now targets `backend`. Regression tests fail if `com.lamjarvis` or
+  `prime:local` reappear.
+- The live ABEX stack moved to project `orqevia-epoch-20261016` (containers
+  `orqevia-epoch-20261016-{backend,interface,ollama}-1`); the previous epoch's
+  containers, volumes and `.env` are stopped-but-retained as rollback
+  (`operations/orqevia-epoch-20261016/FLIP-RECEIPT.md`).
+
 ## Deliberately staged (compatibility or signing-closure bound)
 
 Renaming these tonight would break a live wire contract or the protected
@@ -40,7 +52,7 @@ Owner can order the migration round at any time.
 | Identifier | Why it stays (for now) | Root-fix path |
 |---|---|---|
 | `jarvis.interface.v1` protocol string + `X-Jarvis-PWA`/`X-PRIME-Protocol` headers | Cached clients negotiate on it; renaming breaks old installs | Dual-accept round: server accepts both, client switches, then removal after cache expiry |
-| `PRIME_*` environment variables (PRIME_DATA_DIR, PRIME_SPINE_TOKEN, PRIME_INTERFACE_*, …) and `prime-epoch-20260919` project/container names | Live services, backups and runbooks reference them | Env-var aliasing round (read new name, fall back to old), then compose/project rename with fresh rollback receipts |
+| `PRIME_*` environment variables (PRIME_DATA_DIR, PRIME_SPINE_TOKEN, PRIME_INTERFACE_*, …) and internal container paths (`/run/prime-*`, `/data/prime-spine.db`, `/data/jarvis-memory.db`) | The running interface image and stopped rollback stack read them; renaming without a parallel-read round breaks the rollback path | Env-var aliasing round (read new name, fall back to old), then a compose flip, then removal — with fresh rollback receipts. Project/container/service/label names were already superseded on 2026-10-16 night. |
 | `app/agent_dispatch_api.py` (`JARVIS_IDENTITY_CONTRACT` alias) and other files in the 47-file verifier closure | These exact bytes anchor the completed fresh29-20261016 signing closure | A new dated closure validation round, then rename with re-pins |
 | Golden manifests (`governance/golden-gen1/2`) and their frozen architecture docs (`docs/JARVIS-PRIME-*`) | SHA-256 pinned baselines | Re-issue as a new generation with updated verifier pins |
 | Dated historical evidence (`docs/evidence/**`, `governance/observations/**`, receipts like `ABEX_RUNTIME_RECEIPT_17FAD78`) | They record what was true on their date | Never rewritten; history keeps its names by definition |
