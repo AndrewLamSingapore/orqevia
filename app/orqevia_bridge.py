@@ -15,6 +15,7 @@ API_PATHS = {
     'intelligence/sources': {'GET'}, 'intelligence/health': {'GET'},
     'intelligence/geo/events': {'GET'}, 'intelligence/geo/distance': {'GET'},
     'intelligence/geo/radius': {'GET'}, 'intelligence/rag/retrieve': {'POST'},
+    'intelligence/geo/features': {'GET'}, 'intelligence/geo/regions': {'GET'},
     'intelligence/ingest/run': {'POST'}, 'intelligence/detection/alerts': {'GET'},
     'intelligence/history/timeline': {'GET'}, 'intelligence/predictive/baseline': {'GET'},
 }
@@ -58,7 +59,7 @@ async def forward(request, path, *, mutation=False):
                     headers={'Content-Type':upstream.headers.get('content-type','application/octet-stream'),
                     'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',
                     'Referrer-Policy':'no-referrer',
-                    'Content-Security-Policy':"default-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'"})
+                    'Content-Security-Policy':"default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'"})
     except (httpx.HTTPError,ValueError,TimeoutError):
         raise HTTPException(503,'Intelligence service unavailable') from None
 
@@ -74,6 +75,6 @@ async def intelligence_ui(request: Request,path: str):
         return RedirectResponse('/pwa/?view=intelligence',status_code=307)
     if any(part in {'..','.'} for part in path.split('/')) or '\\' in path or ':' in path:
         raise HTTPException(404,'Unavailable asset')
-    if path and not path.endswith(('.html','.js','.css','.png','.webmanifest')):
+    if path and not path.endswith(('.html','.js','.mjs','.css','.png','.webmanifest')):
         raise HTTPException(404,'Unavailable asset')
     return await forward(request,'/'+path)

@@ -1,5 +1,22 @@
 # STATUS.md — Portfolio status record
 
+## Geospatial/vector candidate — 16 October 2026
+
+### Claimed, not independently checked
+
+- Dedicated branch `codex/geospatial-vector-20261016` adds opt-in pgvector/PostGIS
+  adapters and shared MapLibre PWA/companion mapping. Existing SQLite/FAISS
+  defaults and production services remain unchanged.
+- Agent-observed isolated qualification: 15 real PostgreSQL/MiniLM tests,
+  40 Python regressions, 39 Node tests and 11 Chromium checks; real USGS
+  ingestion, authenticated document retrieval, owner isolation, mobile layout,
+  candidate image build and disposable database restore exercised.
+- Existing local Qwen generated-answer workflow also returned authenticated
+  HTTP 200 with valid passage citations; factual entailment is not certified.
+- Production migration, deployment and Owner-device acceptance remain open. See
+  [candidate evidence](docs/GEOSPATIAL-VECTOR-VERIFICATION.md) and
+  [release/rollback runbook](docs/GEOSPATIAL-VECTOR-RUNBOOK.md).
+
 Interpretation updated: 6 October 2026. Dated observations below retain their original dates.
 
 STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.

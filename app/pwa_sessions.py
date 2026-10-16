@@ -360,6 +360,6 @@ class PWASessionMiddleware(BaseHTTPMiddleware):
             response.headers['Cache-Control']='no-store'
             response.headers['Referrer-Policy']='no-referrer'
             response.headers['X-Content-Type-Options']='nosniff'
-            response.headers['Content-Security-Policy']="default-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+            response.headers['Content-Security-Policy']="default-src 'self'; connect-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
             return response
         return await call_next(request)
