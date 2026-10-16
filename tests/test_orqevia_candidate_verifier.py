@@ -2,9 +2,9 @@ import importlib.util
 from pathlib import Path
 
 
-def test_independent_jarvis_candidate_verifier():
-    path = Path(__file__).resolve().parents[1] / "scripts" / "verify_jarvis_candidate.py"
-    spec = importlib.util.spec_from_file_location("verify_jarvis_candidate", path)
+def test_independent_orqevia_candidate_verifier():
+    path = Path(__file__).resolve().parents[1] / "scripts" / "verify_orqevia_candidate.py"
+    spec = importlib.util.spec_from_file_location("verify_orqevia_candidate", path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
