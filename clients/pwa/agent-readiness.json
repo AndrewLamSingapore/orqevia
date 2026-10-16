@@ -1,0 +1,317 @@
+{
+ "schema": "orqevia.agent-readiness.v1",
+ "basis": "Signed fresh 20261016 initialization batch (29 cases) \u2014 protected run 38871679860; l7 not awarded; not installation",
+ "generated_from": "governance/agent-cert-reviewed-cases.json",
+ "batch_digest": "a7eea39dbfb8376915efbef6e7928e47db90eb0a3d3fbd4353bedb3647232b1f",
+ "signed_case_count": 29,
+ "agents": {
+  "a01": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a01",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a02": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a02",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a03",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a04": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a04",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a08",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a05": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a05",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a23",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a06": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a06",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a07": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a07",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a09": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a09",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a10": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a10",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a12": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a11",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a12",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a13": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a13",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a14": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a14",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a15": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a15",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a16": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a16",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a17": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a17",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a18": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a18",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a27",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a19": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a19",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a20": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a20",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a24",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a21": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a21",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a22",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a26": {
+   "initialization_signed": 2,
+   "cases": [
+    {
+     "capability_id": "responsibility.a25",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    },
+    {
+     "capability_id": "responsibility.a26",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a28": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a28",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  },
+  "a29": {
+   "initialization_signed": 1,
+   "cases": [
+    {
+     "capability_id": "responsibility.a29",
+     "dimension": "baseline",
+     "test_case": "initialization",
+     "certified_at": "2026-10-16T06:24:52.785415+00:00",
+     "expires_at": "2026-10-17T06:24:52.785415+00:00"
+    }
+   ]
+  }
+ }
+}
