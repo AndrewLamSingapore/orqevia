@@ -19,7 +19,7 @@ not an Owner acceptance, production deployment or claim about the physical iPhon
 | Interactive MapLibre integration | TESTED | Shared PWA/companion module; local 6.14.0 assets; actual Chromium WebGL, controls, filtering and evidence inspection |
 | Mobile layout | TESTED | 390×844 Chromium viewport: no horizontal overflow; screenshot captured; physical iPhone NOT tested |
 | Loading/empty/error/recovery | TESTED | Live-load and recovery, explicitly labelled fault-injected empty/503 responses |
-| Basemap tiles | NOT APPLICABLE | Self-contained graticule style; no tile dependency, imagery, roads or geographic labels claimed |
+| Basemap geography | TESTED | Locally bundled public-domain Natural Earth land polygons plus graticule; licensed/pinned source and attribution; no external tile dependency, imagery, roads or geographic labels claimed |
 | Backend and frontend regressions | TESTED | 40 focused existing Python tests; 39 Node tests; no complete 6,000+ test sweep claimed |
 | Optional PostgreSQL suite | TESTED | 15 real DB/model tests; missing live URL causes SKIP rather than false PASS |
 | Browser acceptance suite | TESTED | 11 checks; no browser errors and no external style/tile requests |
@@ -54,8 +54,8 @@ See GEOSPATIAL-VECTOR-RUNBOOK.md for dependency/license review, runtime role
 grants, opt-in backend flags, migration, data preservation, operator-managed
 target selection, staging and non-destructive rollback. Review and CI remain
 separate from local test evidence. No paid services, production credential
-exports or broad security changes were performed. CSP permits same-origin map
-workers and MapLibre's required inline styles; auth/origin/owner checks remain.
+exports or broad security changes were performed. CSP permits same-origin map workers without enabling unsafe inline styles;
+auth/origin/owner checks remain.
 
 Original test output, JSON receipts, database backup and desktop/mobile PNGs are
 retained locally outside Git. Only curated non-secret implementation evidence

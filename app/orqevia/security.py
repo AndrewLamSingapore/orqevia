@@ -48,6 +48,8 @@ def install(app):
                 with (root/'execution-audit.jsonl').open('a',encoding='utf-8') as log:
                     log.write(json.dumps({**event,'phase':'completed','status':response.status_code})+'\n');log.flush()
             response.headers['Cache-Control']='no-store'
+            if request.url.path == '/gods-eye/map.html':
+                response.headers['Content-Security-Policy']="default-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
             return response
         except OSError:
             return JSONResponse({'detail':'Execution audit unavailable'},status_code=503)

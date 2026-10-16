@@ -38,10 +38,11 @@ justifies it. Preserve versions and source hashes; filter by owner in SQL and
 row-level security before ranking. Store geometry in EPSG:4326 with a GiST index.
 Public observation scope remains separate from private document ownership.
 
-Bundle MapLibre locally. Default to a self-contained graticule style with no
-external tile service, demo tiles, keys or quota dependency. Clearly disclose
-the absent basemap; an operator-approved same-origin style can be configured
-later with its own license and attribution review. Plot only supplied coordinates.
+Bundle MapLibre locally. Use a self-contained graticule and locally bundled
+public-domain Natural Earth land polygons, with no external tile service, demo
+tiles, keys or quota dependency. Disclose generalized coastlines and the absence
+of streets/imagery. An operator-approved richer style can be configured later
+with its own license/attribution review. Plot only supplied observation coordinates.
 
 ## Release boundary
 

@@ -17,12 +17,12 @@ export async function mountCommandMap(host,{records=[],fetcher=fetch}={}){
  const navigate=el('button','Go to coordinates');navigate.type='submit';const refresh=el('button','Refresh observations');refresh.type='button';
  controls.append(label('Source',source),label('Time',time),label('Observations',layer),label('Latitude',lat),label('Longitude',lon),navigate,refresh);
  const canvas=el('div');canvas.className='command-map-canvas';canvas.setAttribute('aria-label','Interactive geospatial observation map');
- const list=el('div');list.className='command-map-evidence';wrapper.append(controls,status,count,canvas,el('p','Coordinate grid · no external basemap configured. Pan, zoom or enter coordinates. U.S. Geological Survey observations; stored data is not live global coverage.'),list);host.append(wrapper);
+ const list=el('div');list.className='command-map-evidence';wrapper.append(controls,status,count,canvas,el('p','Natural Earth land · self-hosted public-domain basemap; generalized coastlines, no streets or imagery. Pan, zoom or enter coordinates. U.S. Geological Survey observations; stored data is not live global coverage.'),list);host.append(wrapper);
  let map,dead=false,controller,epoch=0;const destroy=()=>{dead=true;epoch++;controller?.abort();map?.remove();};
  const observer=new MutationObserver(()=>{if(!host.isConnected){destroy();observer.disconnect();}});observer.observe(document.documentElement,{childList:true,subtree:true});
  try{
   const lib=await loadLibrary();if(dead)return {destroy};
-  map=new lib.Map({container:canvas,style:{version:8,sources:{grid:{type:'geojson',data:graticule()}},layers:[{id:'background',type:'background',paint:{'background-color':'#071426'}},{id:'grid',type:'line',source:'grid',paint:{'line-color':'#244766','line-width':1}}]},center:[103.8,1.3],zoom:1});map.addControl(new lib.NavigationControl(),'top-right');
+  map=new lib.Map({container:canvas,style:{version:8,sources:{land:{type:'geojson',data:'/pwa/vendor/natural-earth-land.geojson',attribution:'Made with Natural Earth (public domain)'},grid:{type:'geojson',data:graticule()}},layers:[{id:'background',type:'background',paint:{'background-color':'#071426'}},{id:'land',type:'fill',source:'land',paint:{'fill-color':'#15334a','fill-outline-color':'#37637a'}},{id:'grid',type:'line',source:'grid',paint:{'line-color':'#244766','line-width':1}}]},center:[103.8,1.3],zoom:1});map.addControl(new lib.NavigationControl(),'top-right');
   map.on('error',()=>{if(!dead)status.textContent='Map rendering error. Refresh to retry; source records remain available in the workspace.';});
   await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('Map initialization timed out')),15000);map.once('load',()=>{clearTimeout(timeout);resolve();});});if(dead)return {destroy};
   map.addSource('observations',{type:'geojson',data:observationFeatures(records),cluster:true,clusterRadius:40});

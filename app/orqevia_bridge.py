@@ -59,7 +59,7 @@ async def forward(request, path, *, mutation=False):
                     headers={'Content-Type':upstream.headers.get('content-type','application/octet-stream'),
                     'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',
                     'Referrer-Policy':'no-referrer',
-                    'Content-Security-Policy':"default-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'"})
+                    'Content-Security-Policy':"default-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'"})
     except (httpx.HTTPError,ValueError,TimeoutError):
         raise HTTPException(503,'Intelligence service unavailable') from None
 

@@ -21,9 +21,13 @@ Read GEOSPATIAL-VECTOR-ASSESSMENT.md before provisioning.
   license in `clients/pwa/vendor/MAPLIBRE-LICENSE.txt`. Rebuild with
   `pnpm --dir clients/pwa install --frozen-lockfile --ignore-scripts` then
   `pnpm --dir clients/pwa run build:map`. No demonstration tile server is used.
-  The built-in coordinate grid is operational without third-party tiles;
-  geographic labels/roads/imagery are NOT provided. Adding a basemap requires
-  an approved provider, licensing, attribution, quota and privacy decision.
+  The built-in grid and locally bundled Natural Earth 1:110m public-domain land
+  polygons work without third-party tiles. The exact source commit and SHA-256
+  are in `vendor/NATURAL-EARTH-NOTICE.txt`; terms are at
+  https://www.naturalearthdata.com/about/terms-of-use/. These generalized
+  coastlines are for orientation, not navigation. Labels/roads/imagery are NOT
+  provided. Adding richer tiles requires an approved provider, licensing,
+  attribution, quota and privacy decision.
 
 ## Isolated qualification (never production credentials)
 
