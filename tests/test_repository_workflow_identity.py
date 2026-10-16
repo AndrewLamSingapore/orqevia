@@ -65,8 +65,12 @@ def test_distinct_consumed_batches_and_workflow_history_paths_preserved():
         assert validator.REPOSITORY == REPOSITORY
         source = (ROOT/'scripts'/Path(validator.__file__).name).read_text()
         assert "'/actions/workflows/'+WORKFLOW+'/runs?event=workflow_dispatch&per_page=100'" in source
-        workflow = (ROOT/'.github/workflows'/validator.WORKFLOW).read_text()
-        assert 'github.run_attempt == 1' in workflow and 'github.ref_protected' in workflow
+    # The superseded fixed29 workflow file is retired by this PR; its identity
+    # stays pinned in the validator constants and dated history. Only the live
+    # fresh29 workflow must still carry the protected-run guards.
+    assert not (ROOT/'.github/workflows'/old_batch.WORKFLOW).exists()
+    workflow = (ROOT/'.github/workflows'/fresh_batch.WORKFLOW).read_text()
+    assert 'github.run_attempt == 1' in workflow and 'github.ref_protected' in workflow
 
 
 @pytest.mark.parametrize('field,value', [
