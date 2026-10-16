@@ -20,7 +20,7 @@
     stored in this script or in the repository.
 
 .EXAMPLE
-    .\scripts\read-only-deepseek.ps1 -Question "Explain what tools/dell_truth_reconciler/core.py does."
+    .\scripts\read-only-deepseek.ps1 -Question "Explain what scripts/check_status_authority.py does."
 
 .EXAMPLE
     .\scripts\read-only-deepseek.ps1 -Path scripts/check_canonical_state.py,STATUS.md -Question "Review these two files for contradictions."

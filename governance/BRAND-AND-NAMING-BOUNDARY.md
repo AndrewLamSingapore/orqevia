@@ -54,10 +54,11 @@ categories. Treat each as frozen until an explicit Owner decision re-pins it.
    - docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md
    Referenced by the golden manifests with SHA-256 pins.
 
-## Legacy SSOT-era tooling (retire candidates, separate opt-in)
+## Legacy SSOT-era tooling (retired and removed)
 
-The Dell truth-reconciler and node-sync tools are retired-era integrations and
-can be removed in a separate, recorded change if the Owner confirms:
+The Dell truth-reconciler and node-sync tools were retired and removed from
+source on 16 October 2026. They remain recoverable from Git history as
+historical evidence:
 
 - tools/dell_truth_reconciler/**
 - tools/dell_node_sync/**
@@ -65,6 +66,7 @@ can be removed in a separate, recorded change if the Owner confirms:
 - config/dell-node-sync.example.json
 - scripts/install_dell_truth_reconciler.ps1
 - scripts/install_dell_node_sync.ps1
+- scripts/run_dell_truth_reconciler.ps1
 - scripts/run_dell_node_sync.ps1
 - docs/DELL_TRUTH_RECONCILER.md
 - docs/DELL_NODE_SYNCHRONIZATION.md
