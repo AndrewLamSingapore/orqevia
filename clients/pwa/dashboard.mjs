@@ -139,7 +139,7 @@ if(typeof document!=='undefined') {
       if(ok)hostObserved++;
       text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'—');
     }
-    text('telemetry-source',`${latest.source.instance} · observed ${new Date(latest.observed_at).toLocaleTimeString()} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
+    text('telemetry-source',`${latest.source.instance} · observed ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(latest.observed_at))} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
     const list=$('agent-provenance-list');list.replaceChildren();
     for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · availability ${agent.availability}`;row.append(title,status);list.append(row);}
   }
