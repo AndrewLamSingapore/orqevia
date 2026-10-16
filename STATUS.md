@@ -258,6 +258,39 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
 
 ---
 
+## Installation verification, brand archive and readiness — 16 October 2026
+
+### Claimed, not independently checked
+
+- **Protected installation executed:** the candidate binding of the signed 29
+  initialization cases to their agent-owned domains was independently
+  re-verified under protection — registry digest, all 29 owned-domain
+  definitions, and a live fetch of the signed artifact of run `38871679860` —
+  and accepted: protected run `38889594060`, attempt 1 (one-shot), success;
+  receipt `PROTECTED_INSTALLATION_VERIFIED`, 29 records, installation digest
+  `7356c507…`, `runtime_activated=false`, `l7_awarded=false`. The candidate and
+  its design (`governance/INSTALLATION-ROUND-DESIGN-20261016.md`) record the
+  registry's strict byte lock: per-agent model/origin bindings ride the next
+  sanctioned closure re-issue.
+- **Agent readiness is evidence-backed and visible:** the Agents view annotates
+  every agent with its signed initialization count ("INITIALIZATION SIGNED"),
+  sourced from `clients/pwa/agent-readiness.json` (21/21 agents, 29 cases;
+  batch digest `a7eea39d…`).
+- **Brand archive stored in GitHub:** the canonical app icon (master, light
+  variant, SVG source, favicon, provenance README) lives in
+  `docs/brand/app-icon/`; the master is byte-identical to the file on the
+  Owner's Desktop (`c4810b92…`); the full install set remains in
+  `clients/pwa/icons/orqevia-command-v1-*`.
+- **Origin surfaces live:** footer "Private by design · Born in Singapore,
+  2026", structured-data `foundingDate`/`foundingLocation`, manifest
+  description — verified served on the live interface.
+- **PostgreSQL qualification environment live on ABEX:** isolated loopback dev
+  stack (PostGIS + pgvector) with the migration and restricted role
+  provisioned; 8 real database integration tests passed locally; the remainder
+  require the embedding stack present in the companion image.
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked
