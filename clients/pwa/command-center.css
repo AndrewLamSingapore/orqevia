@@ -48,6 +48,26 @@ body{
 .desktop-navigation button[aria-current="true"]{background:rgba(22,143,232,.16);border-color:var(--line-strong);box-shadow:var(--cc-glow)}
 .mobile-navigation{border-top:1px solid var(--line);background:linear-gradient(180deg,rgba(7,26,43,.96),rgba(3,11,22,.98));padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px)}
 
+/* Command Shell (L2): grouped navigation domains */
+.desktop-navigation .navigation-logo{margin:0 auto 6px}
+.desktop-navigation button{width:100%}
+.desktop-navigation .nav-group{
+  margin:10px 0 3px;
+  padding:8px 2px 0;
+  border-top:1px solid var(--line);
+  font-size:9px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.desktop-navigation .nav-group:first-of-type{margin-top:6px}
+.desktop-navigation button[data-new-objective]{
+  border:1px solid var(--line-strong);
+  background:rgba(22,143,232,.12);
+  color:var(--accent);
+}
+.desktop-navigation button[data-new-objective]:hover{background:rgba(54,197,255,.16)}
+
 /* Panels */
 .dashboard-card,.panel{border:1px solid var(--line);box-shadow:var(--cc-shadow)}
 .card-heading h2{letter-spacing:.05em;text-transform:uppercase;font-size:.85em}
