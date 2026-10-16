@@ -147,7 +147,7 @@ try {
     }
 
     Write-Host "JARVIS PRIME is healthy and the signed sanitized trace relay is active."
-    Write-Host "Public read: https://authority-engine-app.vercel.app/api/jarvis-agent-trace"
+    Write-Host "Public read: https://authority-engine-app.vercel.app/api/orqevia-agent-trace"
 } finally {
     Pop-Location
 }

@@ -36,6 +36,16 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dual-writer governance, sweep fixes and ABEX handoff - 16 October 2026
+
+### Claimed, not independently checked
+
+- Owner-authorized dual-writer governance amendment merged (PR #333): ABEX and Dell are co-writers for implementation and merge; ABEX remains the sole deployer/operator and runtime acceptance authority. See `governance/DUAL-WRITER-AMENDMENT-20261016.md`.
+- Full-sweep fixes merged (PR #334): completed the ORQEVIA PWA rebrand (frozen `jarvis-prime-v1` icon bytes renamed to `orqevia-official-v1`, missing favicons generated, obsolete generic icons removed), repaired the external-surface route guard, and fixed a Windows timestamp flake in backend admission.
+- Governance tidy-up (PR #335): added `governance/BRAND-AND-NAMING-BOUNDARY.md` and retired the legacy Dell SSOT truth-reconciler and node-sync tools. CI hygiene (PR #336): pinned GitHub Actions to exact commits and removed dead `feat/prime-*` push triggers.
+- Source-level checks reported by Codex, not independently verified by Lam: full pytest 6100 passed / 4 failed before the fixes and targeted suites green after; telemetry 120 passed; God's Eye/RAG/AI Scaffold 54 passed; status-authority and canonical-state pass.
+- Host collector implemented in source (`app/host_metrics.py`, `scripts/collect-host-metrics.ps1`) but not yet run on ABEX. Remaining ABEX-side work: host collector wiring, Hugging Face CLI reachability, fresh measured compute profile, deployment and acceptance receipts, and 21-agent model binding and native activation. See `docs/ABEX-RUNBOOK-20261016.md`.
+
 ## ABEX forensic recovery checkpoint - 15 October 2026
 
 ### Claimed, not independently checked
@@ -50,6 +60,41 @@ If you are an AI agent updating this file:
 - Recovery remains PARTIAL: semantic directive-to-implementation mapping, inaccessible sources, Portal workflow/discussion gaps, deployment-status gaps, the Dell-only re-pin package and actual Dell assessment remain open. ABEX alone implements/merges/deploys; Dell is read-only assessor. PRIME, SSOT, the legacy 21-agent programme, DigitalOcean and Azure remain parked.
 
 Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs/forensics/20261015/FORENSIC_SOURCE_COVERAGE.md), [baseline](docs/forensics/20261015/ORQEVIA_CURRENT_BASELINE.md), [receipts](docs/forensics/20261015/VERIFICATION_AND_ACCEPTANCE_RECEIPTS.md), [measured checkpoint](docs/forensics/20261015/MEASURED_CHECKPOINT.json).
+
+## Public entrypoint reconciliation and iPhone/website visibility - ORQEVIA - 15 October 2026
+
+### Claimed, not independently checked
+
+- Reconcile the retired `/jarvis` public entrypoint with the live `/orqevia`
+  surface. Authority Engine gained a client-side redirect from `/jarvis` and
+  `/jarvis/agents` to `/orqevia` and `/orqevia/agents`. ORQEVIA's README,
+  `governance/public-experience.json`, `governance/operational-manifest.json`,
+  `scripts/run-governed-demo.ps1`, `scripts/enable-public-trace.ps1` and
+  `tests/test_governed_demo_contract.py` now reference the `/orqevia` and
+  `/api/orqevia-*` endpoints. `tests/test_pwa_sessions.py`'s navigation Referer
+  example uses `/orqevia`.
+- Local verification: `npm run build` for authority-engine passed (Vite build
+  completed); ORQEVIA `python -m pytest tests/test_governed_demo_contract.py
+  tests/test_pwa_sessions.py -q` passed 32 tests.
+- Live observation from Dell (DESKTOP-IPV4PH9, Wi-Fi 192.168.1.17/24):
+  `https://authority-engine-app.vercel.app/orqevia` returned HTTP 200 and
+  `https://authority-engine-app.vercel.app/api/health` returned `ok:true` with
+  revision `b19c93d7ae51ee7c7b1c150a584dfb66ad6ca2b6`; the deployed bundle
+  contains the ORQEVIA page. The old `/jarvis` route resolved to the
+  "Signal lost" 404 shell before the redirect.
+- The LAN workspace `https://192.168.1.23:8443/pwa/` (used by the iPhone PWA and
+  the public page's "Open ORQEVIA" link) is unreachable from Dell: ping to
+  `192.168.1.23` returned "Destination host unreachable" from `192.168.1.17`,
+  and HTTPS timed out.
+
+### Known broken / open
+
+- The iPhone PWA cannot load until ABEX is online at a reachable address and on
+  the same network as the phone. This needs an owner/ABEX-side check (power,
+  Wi-Fi, current IP); Dell did not mutate ABEX.
+- The redirect and entrypoint edits are source/PR-only until merged and
+  deployed. Historical `/jarvis` references in `docs/portfolio/archive` and
+  `docs/evidence` are preserved as history, not rewritten.
 
 ---
 

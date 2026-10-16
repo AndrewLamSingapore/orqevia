@@ -11,8 +11,8 @@ $Root = Split-Path -Parent $PSScriptRoot
 $EnvFile = Join-Path $Root ".env"
 $JarvisOperator = Join-Path $PSScriptRoot "jarvis.ps1"
 $LocalReasonUrl = "http://127.0.0.1:8000/api/cognitive/reason"
-$PublicTraceUrl = "https://authority-engine-app.vercel.app/api/jarvis-agent-trace"
-$PublicConsoleUrl = "https://authority-engine-app.vercel.app/jarvis/agents"
+$PublicTraceUrl = "https://authority-engine-app.vercel.app/api/orqevia-agent-trace"
+$PublicConsoleUrl = "https://authority-engine-app.vercel.app/orqevia/agents"
 $Intent = "Analyze the JARVIS runtime authority architecture and identify one read-only operational integrity check for its governed agent path."
 $Context = "Local verification only. Reasoning and inspection only."
 
