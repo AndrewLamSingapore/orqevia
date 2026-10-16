@@ -120,7 +120,7 @@ if(typeof document!=='undefined') {
     if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${typeof agent.role==='string'?agent.role.slice(0,128):'Role UNKNOWN'} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Synthetic acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);for(const line of coachingDetailLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
     if(list&&normal?.status==='OBSERVED'&&normal.agents?.length===21){for(const agent of normal.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.role||'Role UNKNOWN'} - Normal-role follow-up`;row.append(name);for(const line of normalFollowupLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
   }
-  function unavailable(state){latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');text('telemetry-source','No current authenticated measurement');}
+  function unavailable(state){latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');for(const id of ['metric-cpu','metric-memory','metric-disk','metric-network_latency'])text(id,'—');text('telemetry-source','No current authenticated measurement');}
   function render(){
     const state=telemetryFreshness(latest);
     if(state!=='OBSERVED'){unavailable(state);return;}
@@ -132,7 +132,14 @@ if(typeof document!=='undefined') {
       const metric=latest.metrics.find(m=>m.metric_id===name);
       text(id,metric?.collection_status==='OBSERVED'&&Number.isSafeInteger(metric.value)&&metric.value>=0?String(metric.value):'—');
     }
-    text('telemetry-source',`${latest.source.instance} · observed ${new Date(latest.observed_at).toLocaleTimeString()} · host gauges unavailable`);
+    let hostObserved=0;
+    for(const [id,name] of [['metric-cpu','cpu'],['metric-memory','memory'],['metric-disk','disk'],['metric-network_latency','network_latency']]){
+      const metric=latest.metrics.find(m=>m.metric_id===name);
+      const ok=metric?.collection_status==='OBSERVED'&&Number.isFinite(metric.value)&&metric.value>=0;
+      if(ok)hostObserved++;
+      text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'—');
+    }
+    text('telemetry-source',`${latest.source.instance} · observed ${new Date(latest.observed_at).toLocaleTimeString()} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
     const list=$('agent-provenance-list');list.replaceChildren();
     for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · availability ${agent.availability}`;row.append(title,status);list.append(row);}
   }
