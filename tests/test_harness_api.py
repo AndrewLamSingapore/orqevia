@@ -15,11 +15,11 @@ os.environ["PRIME_HARNESS_PILOT_ENABLED"] = "1"
 os.environ["PRIME_QUEUE_CONCURRENCY"] = "1"
 
 from app import (agent_dispatch_api, artifact_delivery, compute_queue_api,
-                 engineering_api, harness_api, interface_node, objective_api,
+                 harness_api, interface_node, objective_api,
                  spine_api)
 app = FastAPI()
 for router in (harness_api.router, agent_dispatch_api.router, objective_api.router,
-               engineering_api.router, artifact_delivery.router,
+               artifact_delivery.router,
                interface_node.router, compute_queue_api.router):
     app.include_router(router)
 from app.job_queue import JobQueue, QueuePolicy

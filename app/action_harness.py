@@ -75,7 +75,6 @@ class HarnessPolicy:
     advisory_fail_open_on_ledger_failure: bool = False
     advisory_agents: frozenset[str] = field(default_factory=frozenset)
     artifact_agents: frozenset[str] = field(default_factory=frozenset)
-    wasm_agents: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass(frozen=True)
@@ -264,13 +263,7 @@ class ActionHarness:
                         and parameters.get('scope') == 'prime-artifact-store'
                         and parameters.get('allow_cloud') is False
                         and parameters.get('external_execution') is False)
-            wasm = (envelope.get('actor_id') in self.policy.wasm_agents
-                    and envelope.get('action') == 'sandbox.wasm.execute' and not privileged
-                    and isinstance(parameters,Mapping)
-                    and parameters.get('scope') == 'wasm-no-imports'
-                    and parameters.get('allow_cloud') is False
-                    and parameters.get('external_execution') is False)
-            if not (advisory or artifact or wasm):
+            if not (advisory or artifact):
                 return "actor is outside the Harness v0 pilot", privileged
         authorization = envelope.get("authorization")
         if not isinstance(authorization, Mapping):

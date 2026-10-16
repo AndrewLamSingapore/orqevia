@@ -6,10 +6,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class RuntimeOperationsContractTests(unittest.TestCase):
-    def test_production_dependencies_include_wasm_sandbox_runtime(self):
-        requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
-        self.assertIn("wasmtime==48.0.0", requirements)
-
     def test_backend_healthcheck_authenticates_without_embedding_a_secret(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         healthcheck = next(line for line in compose.splitlines() if "urllib.request.Request" in line)

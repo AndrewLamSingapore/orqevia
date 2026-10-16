@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI,Header
 from .agent_dispatch_api import router as agents
 from .objective_api import router as objectives
-from .engineering_api import router as engineering
 from .artifact_delivery import router as artifacts
 from .interface_node import router as interface
 from .interface_contract import router as dell_interface
@@ -24,7 +23,7 @@ async def lifespan(app):
 
 
 app=FastAPI(title='PRIME direct-execution candidate',lifespan=lifespan)
-for router in (agents,objectives,engineering,artifacts,interface,dell_interface,compute,certification_events):app.include_router(router)
+for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events):app.include_router(router)
 
 
 @app.get('/health')

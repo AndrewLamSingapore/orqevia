@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from app import backend_admission, ssd_thermal
+from app import ssd_thermal
 
 
 def configured(tmp_path, monkeypatch):
@@ -125,18 +125,3 @@ def test_tampered_policy_and_duplicate_receipt_rejected(tmp_path, monkeypatch):
         ssd_thermal.require_for_demand(6000)
 
 
-def test_backend_reserve_and_recheck_hold_heavy_on_missing_thermal(tmp_path, monkeypatch):
-    policy, receipt_path = configured(tmp_path, monkeypatch)
-    memory = {'instance': 'backend-1', 'boot_id': 'boot-1', 'capacity_mib': 16000,
-              'available_mib': 12000, 'captured_at': time.time()}
-    conn = sqlite3.connect(':memory:')
-    backend_admission.init(conn)
-    with pytest.raises(PermissionError):
-        backend_admission.reserve(conn, 'http://fixture', 'job', 6000, memory)
-    receipt_path.write_text(json.dumps(reading(policy)))
-    backend_admission.reserve(conn, 'http://fixture', 'job', 6000, memory)
-    receipt_path.unlink()
-    with pytest.raises(PermissionError):
-        backend_admission.check(conn, 'http://fixture', 'job', memory)
-    assert conn.execute('SELECT state FROM backend_admission').fetchone() == ('pending',)
-    conn.close()

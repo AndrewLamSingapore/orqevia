@@ -55,8 +55,7 @@ def _runtime() -> tuple[ActionHarness, ActionEnvelopeIssuer]:
     if _runtime_cache is None or _runtime_fingerprint != fingerprint:
         policy = HarnessPolicy(policy_version=version, advisory_agents=frozenset(
             registered_agent_ids(include_orchestrator=False) if agents_enabled else ()),
-            artifact_agents=frozenset({'a09'} if agents_enabled else ()),
-            wasm_agents=frozenset({'a17','a18'} if agents_enabled else ()))
+            artifact_agents=frozenset({'a09'} if agents_enabled else ()))
         issuer = ActionEnvelopeIssuer(secret, key_id="prime-authority-v0")
         harness = ActionHarness(db_path, {issuer.key_id: secret}, policy)
         _runtime_cache, _runtime_fingerprint = (harness, issuer), fingerprint
@@ -93,7 +92,6 @@ def status(authorization: str | None = Header(default=None)):
         "pilot_agents": sorted(harness.policy.pilot_agents),
         "advisory_agents": sorted(harness.policy.advisory_agents),
         "artifact_agents": sorted(harness.policy.artifact_agents),
-        "bounded_wasm_agents": sorted(harness.policy.wasm_agents),
         "cloud_overflow": False,
         "local_concurrency": compute_queue_api.queue.policy.global_concurrency,
         "counts": counts,
