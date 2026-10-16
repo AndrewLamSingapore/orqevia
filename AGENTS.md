@@ -11,6 +11,16 @@ Harness, host guard, FAILSAFE and the WASM sandbox) are unchanged. Only Lam may
 move an item into STATUS.md "Verified" sections. This amendment supersedes any
 single-writer wording elsewhere in this file.
 
+## Brand and naming boundary (16 October 2026)
+
+The product brand is ORQEVIA and the repository is AndrewLamSingapore/orqevia;
+SSOT.json is retired. Remaining SSOT/JARVIS/PRIME text is retained deliberately
+and is categorized in
+[governance/BRAND-AND-NAMING-BOUNDARY.md](governance/BRAND-AND-NAMING-BOUNDARY.md).
+Do not blanket-rename or delete those identifiers: frozen golden manifests, the
+byte-pinned operational manifest, internal runtime identifiers, and historical
+evidence are preserved on purpose.
+
 ## Owner resume after preservation cleanup (15 October 2026)
 
 The Owner has lifted the execution pause. Continue the authorized active mission from its saved state, preserving completed work and required security/release checks. [Git preservation cleanup](docs/forensics/20261015/GIT-PRESERVATION-CLOSURE.md) closes verified custody and Windows formatting tasks. Previously parked optional work remains parked unless specifically reactivated. Older pause records are dated history, not current execution instructions.
