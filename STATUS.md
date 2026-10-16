@@ -218,6 +218,46 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
 
 ---
 
+## Signing closure, command identity and Singapore origin — 16 October 2026
+
+### Claimed, not independently checked
+
+- **Fresh 20261016 initialization batch signed end-to-end:** the exact 29 admitted rows were
+  signed by the unchanged protected Azure ES256 signer — run `38871679860`, artifact
+  `prime-independent-signed-cases-8e6cea0c2ef4a1540290e6f203772274d1f352db-38871679860`,
+  `state=SIGNED_CASE_EVIDENCE`, 29/29, `l7_awarded=false`; all 29 signatures re-verified
+  locally against the pinned public key. Two blockers were resolved at root: the Azure
+  federated credential still pinned the pre-rename `prime` subject (re-pinned on the Azure
+  portal under the Owner's full-control mandate; exact record in
+  `operations/fresh29-20261016/AZURE-FEDERATION-REPIN-20261016.md`), and the vault's Azure
+  subscription had been disabled (Owner upgraded to pay-as-you-go).
+- **Command identity:** the ORQEVIA command icon v1 replaced the legacy glyph across the
+  install surface (manifest, apple-touch, favicons, maskable, favicon.ico; PRs #355/#356),
+  and `tests/test_pwa_branding.py` now rejects the legacy bytes under any name; the marketed
+  "official" repo icon drift was repaired with the real logo; the CA trust profile serves as
+  `ORQEVIA-ABEX-HTTPS.mobileconfig` with ORQEVIA display names (the certificate CN is
+  preserved — it is the trust anchor every installed device pins).
+- **Governed identity corrected at the source:** the response contract still demanded the old
+  name while the runtime prompt said ORQEVIA; it is now `app/orqevia_response_contract.py`
+  requiring the ORQEVIA name, with the candidate verifier renamed to match; recovery flag
+  `orqeviaReady`; service-worker cache `orqevia-shell-v27` with release-coherence tests.
+- **Singapore focus:** God's Eye observations are scoped to the Singapore regional window
+  (PR #357 — 34 US-scoped rows archived to `operations/orqevia-icon-20261016/` and removed;
+  18 real regional observations live, newest two days old); the map opens on the region; all
+  timestamps render in SGT; geographic defaults are Singapore; document language is
+  `en-SG`; observation freshness labels now report honest event age and collection time
+  (PR #360), with a refresh hint only when the collection is genuinely old.
+- **Origin stated by Owner directive:** ORQEVIA, and its twenty-one canonical agents, were
+  born in Singapore in 2026 (`governance/ORQEVIA-ORIGIN.md`; product footer, structured data
+  `foundingDate`/`foundingLocation`, and the manifest; PR #359).
+- **Verification:** 19/19 interface pathways 200; telemetry fully OBSERVED (7 metrics,
+  21 agent rows, coaching present); 14/14 Node suites and 159 pytest checks green; interface
+  rollback chain preserved through six dated snapshots plus committed rollback images; a
+  daily regional collection task ("ABEX ORQEVIA Geo Sync", 06:00 SGT) installed and
+  validated idempotent.
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked
