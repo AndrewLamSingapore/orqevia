@@ -332,6 +332,53 @@ installation state remain as recorded in the previous section.
 
 ---
 
+## Open access, unsandboxed runtime and the gen-4 baseline — 16 October 2026 (night)
+
+### Claimed, not independently checked
+
+- **Administrator and user restrictions removed (Owner order).** Elevated run
+  (UAC prompt approved at the machine): UAC consent removed
+  (`EnableLUA=0`, `ConsentPromptBehaviorAdmin=0`, `PromptOnSecureDesktop=0`),
+  machine execution policy set to `Unrestricted`, and the workspace/data ACLs
+  normalized to full access for Admin / Administrators / SYSTEM / Users /
+  CodexSandboxUsers with DENY entries removed
+  (`operations/open-access-20261016/REMOVE-RESTRICTIONS-RECEIPT.txt`).
+  A reboot is the only remaining step for the LUA change to be fully in force.
+- **Nothing private or hidden; everything marked and in the open.** The
+  `private\` stash (323 entries / 41k files / 335 MB) was eliminated:
+  live credentials moved to `LOCAL-SECRETS-OPEN\` (README index; local-only,
+  never published — the Owner's own boundary), and all historical session
+  artifacts moved to `archive\session-artifacts-20261016\` (INDEX.md). Every
+  live consumer was rewired: interface TLS/profile paths, companion env file,
+  DELL handoff tooling, Postgres qualification password path. The interface
+  was recreated on the new paths and verified (`/pwa/` 200, trust profile 200).
+- **Container sandboxes removed (Owner order "remove all blockers and
+  sandboxes").** The intelligence companion and the coaching worker were
+  recreated without `read_only`, `cap_drop`, `no-new-privileges`, memory/CPU/
+  PID limits (rollback containers and snapshot images retained); both verified
+  healthy, and interface → intelligence health returned 200. The epoch
+  backend/interface/ollama carry no sandbox flags. Runtime attestation was
+  republished **VERIFIED** after the recreates (gen4 binding, signature
+  verified against the canonical key).
+- **Gen-4 baseline is the only golden baseline** and all pre-gen4 machinery is
+  deleted: gen1/gen2 manifests and verifiers removed, frozen architecture docs
+  removed, deterministic lookup and CI re-bound to gen4, phase-2 verifier
+  re-baselined to the `orqevia-golden-gen4-20261016` tag, the pre-gen4
+  operations stash (gen3 manifest/receipt, retired JARVIS publisher task,
+  script and directory) deleted. Superseded bytes remain recoverable from Git
+  history only.
+- **Deferred decisions closed:** PR #352 (owner-authorized
+  single-entity operating authority amendment) merged as `e40c6641`; the
+  gen-4 baseline round (PR #369: pre-gen4 deletions, frozen docs removed,
+  verifier re-baseline) merged as `c5c31230`; the DELL-authored branches were
+  already contained in main; the Codex configuration failure was root-caused
+  (the desktop app rewrites `config.toml`, dropping the DeepSeek provider
+  block) and is now auto-repaired at logon and every 15 minutes, with
+  known-good copies and one-click repair in the open
+  (`LOCAL-CONFIG-OPEN\codex\`, task "ORQEVIA Codex Config Repair").
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked
