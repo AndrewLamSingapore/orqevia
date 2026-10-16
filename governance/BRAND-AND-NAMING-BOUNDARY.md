@@ -6,6 +6,10 @@ product. It applies to every channel and every agent.
 
 ## The product brand is ORQEVIA (奥启维亚) — only
 
+**Origin (stated 2026-10-16): ORQEVIA and its 21 canonical agents were born in
+Singapore in 2026** (`governance/ORQEVIA-ORIGIN.md`). Product surfaces and
+records present this origin clearly.
+
 **Changed and verified 2026-10-16 (command-icon mission):**
 
 - Install identity: new `clients/pwa/icons/orqevia-command-v1-*` family

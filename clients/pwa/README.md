@@ -2,6 +2,8 @@
 
 # ORQEVIA mobile PWA
 
+ORQEVIA (奥启维亚) was born in Singapore in 2026 — together with its 21 canonical agents.
+
 Canonical mobile/voice client for v1. This is a static, dependency-free browser client of the existing ABEX Interface Node. PRIME orchestration, provider credentials and execution remain on ABEX. Native iOS tooling is not a v1 dependency.
 
 ## Hosting contract
