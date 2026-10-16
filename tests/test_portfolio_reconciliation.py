@@ -228,6 +228,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(repin_update) == 1237
     assert hashlib.sha256(repin_update).hexdigest() == "cd958bf0143e5da81af6f436ec599c1c98ffc7be7951c58541d122371c92b80f"
     after = after[:repin_start] + after[repin_end:]
+    # Admit only this exact access-reconciliation / protected-batch / command-shell
+    # consolidation section; all prior bytes stay pinned.
+    recon_title = "## Access reconciliation, protected batch and command shell — 16 October 2026"
+    assert after.count(recon_title) == 1
+    recon_start = after.index(recon_title)
+    recon_end = after.index("\n## ", recon_start + len(recon_title)) + 1
+    recon_update = after[recon_start:recon_end].encode("utf-8")
+    assert len(recon_update) == 6213
+    assert hashlib.sha256(recon_update).hexdigest() == "f760fa392da1c7ca86e95cf1294740b270973fe5fcd540ebe3ace05393268b96"
+    after = after[:recon_start] + after[recon_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
