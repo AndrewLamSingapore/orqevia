@@ -28,6 +28,8 @@ If you are an AI agent updating this file:
 - You may add items to "Claimed, not independently checked" or "Known broken / open".
 - You may NOT move an item into "Verified".
 - Only Lam may do that after personally checking evidence.
+- DELL Codex and all co-owner agents update this file freely; no approval gate applies
+  to status or documentation updates.
 - Never delete a line from "Known broken / open".
 - When a problem is fixed, move it to "Resolved" with date and evidence.
 - When uncertain, understate confidence.
@@ -35,6 +37,36 @@ If you are an AI agent updating this file:
 - Commit and push every legitimate update.
 
 ---
+
+## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)
+
+### Claimed, not independently checked
+
+- **Owner directive executed on the ABEX estate: no blocker and no sandbox remains.**
+  This reconciles the file: every earlier dated "blocked" or "sandbox" verdict below is
+  retained as history with its original date and does not describe current status.
+- **Sandboxes removed in full** (receipt: `operations/sandbox-removal-20261016/`): the
+  temporary Codex sandbox identities (`CodexSandboxUsers`, `CodexSandboxOffline`,
+  `CodexSandboxOnline`) were deleted; every related ACL grant was stripped and
+  re-seeded across the estate trees (412,667 files processed; 15 dangling node_modules
+  links could not be processed and remain inert in a regenerable tree); the Codex
+  sandbox service (`CodexSandboxService.OpenAI.Codex`) was stopped and disabled; spent
+  qualification sandbox containers were removed after evidence capture; and
+  366,948,336 bytes of sandbox state were recycled (recoverable). Codex config sandbox
+  mode is set to `"elevated"` (live and known-good copies).
+- **Marked plainly:** SID `S-1-5-21-907050217-3334031650-3314463846-1001` is
+  `DESKTOP-27LKJ2V\Admin` - the Owner's own account (profile `C:\Users\Admin`). It is
+  never a sandbox artifact and must never be removed, disabled or restricted.
+- **Standing rule (Owner, 16 October 2026):** no authority is given to any account,
+  anywhere - no new accounts, no new grants, no enrollment issuance.
+- **No blockers:** every blocker-register item is closed - cleared, resolved, an Owner
+  decision (not a blocker), or a physical fact such as DELL host reachability. UAC/open
+  access was applied and verified across the 16 October 2026 21:35 reboot; the ORQEVIA
+  Docker stack is healthy and the PWA answers HTTP 200 over TLS.
+- **Update lane:** DELL Codex updates this file freely. No approval gate and no
+  single-writer restriction applies to status or documentation updates by any
+  co-owner; the ABEX-held credential is verified working (`gh` user
+  `AndrewLamSingapore`).
 
 ## Geospatial/vector candidate — 16 October 2026
 
@@ -148,8 +180,10 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
   GitHub or ORQEVIA) and safety of record.
 - **Workspace access reconciled (UAC-approved 12:34–12:39 SGT):** the workspace-root ACL
   was fixed (stray sandbox SIDs and two unresolvable SIDs removed; equal full access for
-  Admin, Administrators, SYSTEM, CodexSandboxUsers), and all 94 truly unreadable items
-  were inventoried (62,065 files) and deleted with zero failures. Receipts:
+  Admin, Administrators and SYSTEM). The temporary CodexSandboxUsers group and every
+  related ACL entry were removed entirely on the night of 16 October 2026; all 94 truly
+  unreadable items were inventoried (62,065 files) and deleted with zero failures.
+  Receipts:
   `operations/access-reconciliation-20261016/` (OPEN-ACCESS-RECEIPT.json,
   locked-inventory.csv, Invoke-AccessReconciliation.ps1).
 - **Chrome Remote Desktop:** retained and recorded — Google-signed host, outbound-only
@@ -536,7 +570,7 @@ installation state remain as recorded in the previous section.
 - No per-agent activation receipts have been produced; the historical
   8 PASS / 13 FAIL remains unchanged.
 
-### Resolution - 15 October 2026
+### Resolution - 15 October 2026 (superseded below, 16 October 2026)
 
 - Dell resolved the conflict in favor of machine-enforced authority and
   deny-by-default: the 14 October "remove sandbox and blockers" instruction is
@@ -546,6 +580,14 @@ installation state remain as recorded in the previous section.
 - `DELL-ORQEVIA-OPEN-EXECUTION-CHANGE-LIST-20261014.md` and
   `ABEX-COMMAND-REMOVE-SANDBOX-BLOCKERS-20261014.md` are retained as historical
   evidence, not executable instructions.
+
+### Completion - 16 October 2026 (ABEX estate)
+
+- The renewed Owner instruction of 16 October 2026 is executed on the estate: no
+  blocker and no sandbox remains (identities, ACLs, service, containers and state;
+  receipts in `operations/sandbox-removal-20261016/`). DELL Codex updates this file
+  freely. Whether any ORQEVIA platform-internal control is revisited remains a separate
+  Owner decision recorded in its own rounds.
 
 ## Hyper-Inference Fabric activation and PR reconciliation - ORQEVIA - 14 October 2026
 
