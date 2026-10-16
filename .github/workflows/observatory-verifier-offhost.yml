@@ -49,24 +49,24 @@ jobs:
           import yaml
 
           config = json.loads((Path(os.environ["RUNNER_TEMP"]) / "observatory-verifier" / "compose.json").read_text())
-          prime = config["services"]["prime"]
+          prime = config["services"]["backend"]
           assert prime["environment"]["PRIME_AGENT_CERT_AZURE_ES256_ENABLED"] == "1"
           assert prime["environment"]["PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE"] == "/run/prime-cert-verifier-pin.json"
           mounts = [item for item in prime["volumes"] if item["target"] == "/run/prime-cert-verifier-pin.json"]
           assert len(mounts) == 1 and mounts[0]["read_only"] is True
           assert mounts[0].get("bind", {}).get("create_host_path") is not True
           override = yaml.safe_load(Path("deploy/observatory-verifier-pin.override.yml").read_text())
-          requested = override["services"]["prime"]["volumes"]
+          requested = override["services"]["backend"]["volumes"]
           assert len(requested) == 1 and requested[0]["bind"]["create_host_path"] is False
           PY
       - name: Build disposable runtime image with only reviewed public pin
-        run: docker build --tag prime:observatory-verifier-candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+        run: docker build --tag orqevia:observatory-verifier-candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Probe packaged authenticated route with synthetic signed record
         shell: bash
         run: |
           set -euo pipefail
           pin_sha256="$(cat "$RUNNER_TEMP/observatory-verifier/pin.sha256")"
-          docker run -d --name prime-observatory-verifier-ci \
+          docker run -d --name orqevia-observatory-verifier-ci \
             --env PRIME_DATA_DIR=/data \
             --env PRIME_SPINE_TOKEN=fixture-owner-secret \
             --env PRIME_AGENT_CERT_AZURE_ES256_ENABLED=1 \
@@ -75,8 +75,8 @@ jobs:
             --mount "type=bind,source=$RUNNER_TEMP/observatory-verifier/data,target=/data" \
             --mount "type=bind,source=$RUNNER_TEMP/observatory-verifier/public-pin.json,target=/run/prime-cert-verifier-pin.json,readonly" \
             --mount "type=bind,source=$GITHUB_WORKSPACE/scripts/observatory_verifier_image_smoke.py,target=/run/observatory-smoke.py,readonly" \
-            --entrypoint python prime:observatory-verifier-candidate \
+            --entrypoint python orqevia:observatory-verifier-candidate \
             -m uvicorn app.production_entry:app --host 127.0.0.1 --port 8000 \
             --no-proxy-headers --lifespan off
-          trap 'docker rm -f prime-observatory-verifier-ci >/dev/null 2>&1 || true' EXIT
-          docker exec prime-observatory-verifier-ci python /run/observatory-smoke.py probe
+          trap 'docker rm -f orqevia-observatory-verifier-ci >/dev/null 2>&1 || true' EXIT
+          docker exec orqevia-observatory-verifier-ci python /run/observatory-smoke.py probe

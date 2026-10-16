@@ -15,13 +15,13 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $ComposeFile = Join-Path $Root "docker-compose.yml"
 $EnvFile = Join-Path $Root ".env"
-$Project = "prime"
+$Project = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME } else { "orqevia" }
 $LocalBase = "http://127.0.0.1:8000"
 $ExpectedVersion = "7.3.1.1-evidence-grounded"
 $script:Checkpoint = $null
 
 function Write-Step([string]$Message) {
-    Write-Host "[JARVIS] $Message" -ForegroundColor Cyan
+    Write-Host "[ORQEVIA] $Message" -ForegroundColor Cyan
 }
 
 function Invoke-Docker {
@@ -100,8 +100,8 @@ function Get-ContainerRows([switch]$All) {
 
 function Save-Checkpoint {
     if ($script:Checkpoint) { return $script:Checkpoint }
-    $base = Join-Path ([Environment]::GetFolderPath("LocalApplicationData")) "JARVIS\checkpoints"
-    if (-not $base.Trim()) { $base = Join-Path $env:TEMP "JARVIS-checkpoints" }
+    $base = Join-Path ([Environment]::GetFolderPath("LocalApplicationData")) "ORQEVIA\checkpoints"
+    if (-not $base.Trim()) { $base = Join-Path $env:TEMP "ORQEVIA-checkpoints" }
     $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMdd_HHmmssZ")
     $script:Checkpoint = Join-Path $base $stamp
     New-Item -ItemType Directory -Force -Path $script:Checkpoint | Out-Null
@@ -128,10 +128,11 @@ function Get-VolumeForContainer([string]$ContainerId, [string]$Destination) {
 function Adopt-PersistentVolumes {
     $rows = Get-ContainerRows
     if (-not (Get-EnvValue "PRIME_DATA_VOLUME")) {
-        $source = $rows | Where-Object { $_.Service -eq "prime" } | Select-Object -First 1
+        # "prime" is kept in the adoption match only, to recover volumes from pre-rename stacks.
+        $source = $rows | Where-Object { $_.Service -in @("backend", "prime") } | Select-Object -First 1
         if ($source) {
             $volume = Get-VolumeForContainer $source.Id "/data"
-            if ($volume) { Set-EnvValue "PRIME_DATA_VOLUME" $volume; Write-Step "Adopted the existing PRIME data volume." }
+            if ($volume) { Set-EnvValue "PRIME_DATA_VOLUME" $volume; Write-Step "Adopted the existing ORQEVIA data volume." }
         }
     }
     if (-not (Get-EnvValue "OLLAMA_DATA_VOLUME")) {
@@ -148,20 +149,21 @@ function Assert-PersistentVolumes {
     $primeVolume = Get-EnvValue "PRIME_DATA_VOLUME"
     $ollamaVolume = Get-EnvValue "OLLAMA_DATA_VOLUME"
     if (-not $primeVolume -or -not $ollamaVolume) {
-        throw "PRIME_DATA_VOLUME and OLLAMA_DATA_VOLUME must identify recovered, independently verified volumes. JARVIS will not invent recovery state."
+        throw "PRIME_DATA_VOLUME and OLLAMA_DATA_VOLUME must identify recovered, independently verified volumes. ORQEVIA will not invent recovery state."
     }
     $required = @($primeVolume, $ollamaVolume)
     $existing = @(Invoke-Docker -Arguments @("volume", "ls", "--format", "{{.Name}}"))
     foreach ($volume in $required) {
         if ($volume -notin $existing) {
-            throw "Required recovered volume '$volume' does not exist. JARVIS will not create a blank replacement."
+            throw "Required recovered volume '$volume' does not exist. ORQEVIA will not create a blank replacement."
         }
     }
 }
 
 function Assert-NoConflictingCoreContainers {
     $legacy = @(Get-ContainerRows | Where-Object {
-        $_.Project -ne $Project -and $_.Service -in @("prime", "ollama", "model-init")
+        # "prime" is the legacy service name, kept for detection of pre-rename stacks.
+        $_.Project -ne $Project -and $_.Service -in @("backend", "prime", "ollama", "model-init")
     })
     if ($legacy.Count -eq 0) { return }
     throw "Conflicting containers require explicit owner review; nothing was stopped or removed: $($legacy.Name -join ', ')"
@@ -177,9 +179,9 @@ function Assert-NoConflictingEdgeContainers {
 
 function Assert-PortAvailable {
     $rows = @(Get-ContainerRows | Where-Object { $_.Ports -match "127\.0\.0\.1:8000->|0\.0\.0\.0:8000->|\[::\]:8000->" })
-    $unexpected = @($rows | Where-Object { $_.Project -ne $Project -and $_.Service -ne "prime" })
+    $unexpected = @($rows | Where-Object { $_.Project -ne $Project -and $_.Service -notin @("backend", "prime") })
     if ($unexpected.Count -gt 0) {
-        throw "Port 8000 belongs to unrelated container $($unexpected[0].Name). JARVIS left it untouched."
+        throw "Port 8000 belongs to unrelated container $($unexpected[0].Name). ORQEVIA left it untouched."
     }
 }
 
@@ -206,8 +208,8 @@ function Wait-ForPrime {
             if ($health.ok -eq $true) { return $health }
         } catch { Start-Sleep -Seconds 3 }
     } while ((Get-Date) -lt $deadline)
-    $logs = Invoke-Docker -Arguments (Get-ComposeArgs @("logs", "--tail", "80", "prime")) -AllowFailure
-    throw "PRIME did not become healthy within $TimeoutSeconds seconds.`n$($logs -join [Environment]::NewLine)"
+    $logs = Invoke-Docker -Arguments (Get-ComposeArgs @("logs", "--tail", "80", "backend")) -AllowFailure
+    throw "ORQEVIA backend did not become healthy within $TimeoutSeconds seconds.`n$($logs -join [Environment]::NewLine)"
 }
 
 function Test-PrimeContract([switch]$Quiet) {
@@ -237,15 +239,15 @@ function Test-PrimeContract([switch]$Quiet) {
             if ((Get-HttpStatus "$public$path") -ne 404) { $failures.Add("public $path is not blocked with HTTP 404") }
         }
     }
-    if ($failures.Count -gt 0) { throw "JARVIS contract failed:`n- $($failures -join "`n- ")" }
-    if (-not $Quiet) { Write-Host "JARVIS is healthy, local-only, approval-gated and no-actuation." -ForegroundColor Green }
+    if ($failures.Count -gt 0) { throw "ORQEVIA contract failed:`n- $($failures -join "`n- ")" }
+    if (-not $Quiet) { Write-Host "ORQEVIA is healthy, local-only, approval-gated and no-actuation." -ForegroundColor Green }
 }
 
 function Resolve-TunnelMode {
     return $Tunnel.IsPresent -or ((Get-EnvValue "PRIME_INTEGRATION_TOKEN") -and (Get-EnvValue "CLOUDFLARE_TUNNEL_TOKEN"))
 }
 
-function Start-Jarvis([switch]$RepairOnly) {
+function Start-OrqeviaStack([switch]$RepairOnly) {
     Assert-Docker
     Invoke-Docker -Arguments (Get-ComposeArgs @("config", "--quiet")) | Out-Null
     Adopt-PersistentVolumes
@@ -257,19 +259,19 @@ function Start-Jarvis([switch]$RepairOnly) {
     $useTunnel = [bool](Resolve-TunnelMode)
     $primeImage = Get-EnvValue "PRIME_IMAGE"
     if ($primeImage) {
-        Write-Step "Pulling the exact PRIME image."
-        Invoke-Docker -Arguments (Get-ComposeArgs @("pull", "prime")) | Out-Null
+        Write-Step "Pulling the exact ORQEVIA image."
+        Invoke-Docker -Arguments (Get-ComposeArgs @("pull", "backend")) | Out-Null
         $up = @("up", "-d", "--remove-orphans", "--no-build")
     } else {
         Write-Step "No PRIME_IMAGE is pinned; building the checked-out source."
         $up = @("up", "-d", "--remove-orphans", "--build")
     }
-    Write-Step "Starting the canonical PRIME project."
+    Write-Step "Starting the canonical ORQEVIA project."
     Invoke-Docker -Arguments (Get-ComposeArgs $up $useTunnel) | Out-Null
     Wait-ForPrime | Out-Null
     Test-PrimeContract -Quiet
     if ($useTunnel) { Assert-NoConflictingEdgeContainers }
-    Write-Host "JARVIS READY - $LocalBase/control" -ForegroundColor Green
+    Write-Host "ORQEVIA READY - $LocalBase/control" -ForegroundColor Green
     if (-not $NoOpen) { Start-Process "$LocalBase/control" }
 }
 
@@ -284,41 +286,42 @@ function Invoke-Doctor {
     Write-Step "Validating Compose."
     Invoke-Docker -Arguments (Get-ComposeArgs @("config", "--quiet")) | Out-Null
     $rows = Get-ContainerRows -All
-    $runningLegacy = @($rows | Where-Object { $_.Project -ne $Project -and $_.Status -match '^Up ' -and $_.Service -in @("prime", "ollama", "model-init", "integration-gateway", "cloudflared") })
+    # Legacy pre-rename service names are included so foreign stacks are still detected.
+    $runningLegacy = @($rows | Where-Object { $_.Project -ne $Project -and $_.Status -match '^Up ' -and $_.Service -in @("backend", "prime", "ollama", "model-init", "integration-gateway", "cloudflared") })
     if ($runningLegacy.Count -gt 0) {
         Write-Host "Running legacy containers: $($runningLegacy.Name -join ', ')" -ForegroundColor Yellow
-    } else { Write-Host "No running legacy JARVIS containers." -ForegroundColor Green }
+    } else { Write-Host "No running legacy (pre-rename) containers." -ForegroundColor Green }
     Show-Status
 }
 
-function Update-Jarvis {
-    if (-not $Image) { throw "Use -Image ghcr.io/andrewlamsingapore/prime:sha-<verified-commit>." }
-    if ($Image -notmatch '^ghcr\.io/andrewlamsingapore/prime:sha-[0-9a-f]{7,40}$') {
-        throw "The image must be a commit-addressable AndrewLamSingapore/prime GHCR image."
+function Update-OrqeviaStack {
+    if (-not $Image) { throw "Use -Image ghcr.io/andrewlamsingapore/orqevia:sha-<verified-commit>." }
+    if ($Image -notmatch '^ghcr\.io/andrewlamsingapore/orqevia:sha-[0-9a-f]{7,40}$') {
+        throw "The image must be a commit-addressable AndrewLamSingapore/orqevia GHCR image."
     }
     Save-Checkpoint | Out-Null
     Set-EnvValue "PRIME_IMAGE" $Image
-    Write-Step "Pinned the verified PRIME image without changing secrets or volumes."
-    Start-Jarvis
+    Write-Step "Pinned the verified ORQEVIA image without changing secrets or volumes."
+    Start-OrqeviaStack
 }
 
 function Test-SourceContract {
     if (-not (Test-Path $ComposeFile)) { throw "docker-compose.yml is missing." }
     $source = Get-Content $ComposeFile -Raw
-    foreach ($required in @('name: ${COMPOSE_PROJECT_NAME:-prime}', '${PRIME_BIND_ADDRESS:-127.0.0.1}', 'com.lamjarvis.managed', '${PRIME_DATA_VOLUME:-prime-data}', '${OLLAMA_DATA_VOLUME:-prime-ollama-data}')) {
+    foreach ($required in @('name: ${COMPOSE_PROJECT_NAME:-orqevia}', '${PRIME_BIND_ADDRESS:-127.0.0.1}', 'com.orqevia.managed', '${PRIME_DATA_VOLUME:-orqevia-data}', '${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}')) {
         if (-not $source.Contains($required)) { throw "Compose contract is missing: $required" }
     }
-    Write-Host "PASS: JARVIS source operations contract." -ForegroundColor Green
+    Write-Host "PASS: ORQEVIA source operations contract." -ForegroundColor Green
 }
 
 Set-Location $Root
 switch ($Action) {
-    "start" { Start-Jarvis }
-    "stop" { Assert-Docker; Invoke-Docker -Arguments (Get-ComposeArgs @("down", "--remove-orphans")) | Out-Null; Write-Host "JARVIS stopped. Volumes retained." -ForegroundColor Yellow }
+    "start" { Start-OrqeviaStack }
+    "stop" { Assert-Docker; Invoke-Docker -Arguments (Get-ComposeArgs @("down", "--remove-orphans")) | Out-Null; Write-Host "ORQEVIA stopped. Volumes retained." -ForegroundColor Yellow }
     "status" { Show-Status }
     "doctor" { Invoke-Doctor }
     "repair" { Assert-Docker; Save-Checkpoint | Out-Null; Invoke-Doctor; Write-Host "Repair is inventory-only until recovered state is independently accepted." -ForegroundColor Yellow }
     "open" { Start-Process "$LocalBase/control" }
-    "update" { Update-Jarvis }
+    "update" { Update-OrqeviaStack }
     "contract" { Test-SourceContract }
 }

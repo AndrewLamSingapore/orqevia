@@ -10,7 +10,7 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
         self.assertIn("wasmtime==48.0.0", requirements)
 
-    def test_prime_healthcheck_authenticates_without_embedding_a_secret(self):
+    def test_backend_healthcheck_authenticates_without_embedding_a_secret(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         healthcheck = next(line for line in compose.splitlines() if "urllib.request.Request" in line)
         self.assertIn("os.environ['PRIME_SPINE_TOKEN']", healthcheck)
@@ -19,15 +19,19 @@ class RuntimeOperationsContractTests(unittest.TestCase):
 
     def test_compose_is_one_stable_local_project(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-        self.assertIn("name: ${COMPOSE_PROJECT_NAME:-prime}", compose)
+        self.assertIn("name: ${COMPOSE_PROJECT_NAME:-orqevia}", compose)
         self.assertIn('${PRIME_BIND_ADDRESS:-127.0.0.1}', compose)
-        self.assertIn('com.lamjarvis.managed: "true"', compose)
-        self.assertIn("${PRIME_DATA_VOLUME:-prime-data}", compose)
-        self.assertIn("${OLLAMA_DATA_VOLUME:-prime-ollama-data}", compose)
+        self.assertIn('com.orqevia.managed: "true"', compose)
+        self.assertIn("${PRIME_DATA_VOLUME:-orqevia-data}", compose)
+        self.assertIn("${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}", compose)
+        self.assertNotIn("com.lamjarvis", compose)
+        self.assertNotIn("prime:local", compose)
+        self.assertIn("\n  backend:\n", compose)
+        self.assertIn("ORQEVIA-ABEX-HTTPS.mobileconfig", compose)
         self.assertEqual(compose.count("external: true"), 2)
 
     def test_windows_operator_preserves_data_and_checks_every_surface(self):
-        script = (ROOT / "scripts" / "jarvis.ps1").read_text(encoding="utf-8")
+        script = (ROOT / "scripts" / "orqevia.ps1").read_text(encoding="utf-8")
         self.assertIn("Save-Checkpoint", script)
         self.assertIn("Adopt-PersistentVolumes", script)
         self.assertIn("Assert-PersistentVolumes", script)
@@ -39,7 +43,7 @@ class RuntimeOperationsContractTests(unittest.TestCase):
             self.assertIn(path, script)
 
     def test_public_gateway_never_exposes_control_surface(self):
-        script = (ROOT / "scripts" / "jarvis.ps1").read_text(encoding="utf-8")
+        script = (ROOT / "scripts" / "orqevia.ps1").read_text(encoding="utf-8")
         self.assertIn('foreach ($path in @("/control", "/api/status", "/api/control-surface/manifest"))', script)
         self.assertIn("HTTP 404", script)
 
@@ -66,7 +70,7 @@ class RuntimeOperationsContractTests(unittest.TestCase):
         example = (ROOT / ".env.example").read_text(encoding="utf-8")
         self.assertIn("PRIME_REGISTRY_V1_ENABLED=1", example)
 
-    def test_hf_overlay_mounts_only_governed_read_only_inputs_to_prime(self):
+    def test_hf_overlay_mounts_only_governed_read_only_inputs_to_backend(self):
         overlay = (ROOT / "docker-compose.huggingface.yml").read_text(encoding="utf-8")
         self.assertIn("PRIME_PROVIDER_CATALOG: /run/prime-models/huggingface.json", overlay)
         self.assertIn("PRIME_HF_PROVIDER_CATALOG_FILE:-./config/provider-catalog.huggingface.example.json", overlay)
@@ -94,9 +98,9 @@ class RuntimeOperationsContractTests(unittest.TestCase):
 
     def test_owner_account_reaches_pairing_authority_and_client_interface(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-        prime, interface = compose.split("  interface:", 1)
+        backend, interface = compose.split("  interface:", 1)
         setting = "PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}"
-        self.assertIn(setting, prime)
+        self.assertIn(setting, backend)
         self.assertIn(setting, interface)
         self.assertEqual(compose.count(setting), 2)
 

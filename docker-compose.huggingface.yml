@@ -1,7 +1,7 @@
 # Opt-in HF credential mount. The base Compose stack does not require this file.
 # PRIME_HF_TOKEN_FILE is a host path only; never put token bytes in Compose env.
 services:
-  prime:
+  backend:
     environment:
       PRIME_PROVIDER_CATALOG: /run/prime-models/huggingface.json
     volumes:

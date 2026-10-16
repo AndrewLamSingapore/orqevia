@@ -1,16 +1,16 @@
-name: ${COMPOSE_PROJECT_NAME:-prime}
+name: ${COMPOSE_PROJECT_NAME:-orqevia}
 
 services:
-  prime:
+  backend:
     build:
       context: .
       args:
         PRIME_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
-    image: ${PRIME_IMAGE:-prime:local}
+    image: ${PRIME_IMAGE:-orqevia:local}
     labels:
-      com.lamjarvis.managed: "true"
-      com.lamjarvis.role: "prime"
-      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+      com.orqevia.managed: "true"
+      com.orqevia.role: "backend"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
     ports:
       - "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000"
     environment:
@@ -18,7 +18,7 @@ services:
       # Queue admission compares this declaration with the measured profile.
       # Keep N=1 unless an isolated qualification authorizes a higher value.
       OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
-      PRIME_NODE_ID: ${PRIME_NODE_ID:-prime-node-01}
+      PRIME_NODE_ID: ${PRIME_NODE_ID:-orqevia-node-01}
       PRIME_NODE_ROLE: ${PRIME_NODE_ROLE:-control-compute}
       PRIME_INTERFACE_HOST_ID: ${PRIME_INTERFACE_HOST_ID:-}
       PRIME_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
@@ -74,7 +74,7 @@ services:
       PRIME_SSD_THERMAL_POLICY: ${PRIME_SSD_THERMAL_POLICY:-}
       PRIME_SSD_THERMAL_POLICY_SHA256: ${PRIME_SSD_THERMAL_POLICY_SHA256:-}
       PRIME_SSD_THERMAL_RECEIPT: ${PRIME_SSD_THERMAL_RECEIPT:-}
-      # Optional, SHA-256-pinned file inside the existing prime-data volume.
+      # Optional, SHA-256-pinned file inside the existing orqevia-data volume.
       # Empty values leave production's measured-profile gate disabled at N=1.
       PRIME_MEASURED_COMPUTE_PROFILE: ${PRIME_MEASURED_COMPUTE_PROFILE:-}
       PRIME_MEASURED_COMPUTE_PROFILE_SHA256: ${PRIME_MEASURED_COMPUTE_PROFILE_SHA256:-}
@@ -93,7 +93,7 @@ services:
       PRIME_CLOUD_INPUT_USD_MTOK: ${PRIME_CLOUD_INPUT_USD_MTOK:-0}
       PRIME_CLOUD_OUTPUT_USD_MTOK: ${PRIME_CLOUD_OUTPUT_USD_MTOK:-0}
     volumes:
-      - prime-data:/data
+      - orqevia-data:/data
     depends_on:
       ollama:
         condition: service_healthy
@@ -113,11 +113,11 @@ services:
 
   interface:
     profiles: ["clients"]
-    image: ${PRIME_IMAGE:-prime:local}
+    image: ${PRIME_INTERFACE_IMAGE:-${PRIME_IMAGE:-orqevia:local}}
     labels:
-      com.lamjarvis.managed: "true"
-      com.lamjarvis.role: "thin-client-interface"
-      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+      com.orqevia.managed: "true"
+      com.orqevia.role: "thin-client-interface"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
     command: ["uvicorn", "app.interface_server:app", "--host", "0.0.0.0", "--port", "8443", "--no-proxy-headers", "--ssl-keyfile", "/run/prime-tls/server.key", "--ssl-certfile", "/run/prime-tls/server.crt"]
     ports:
       - "${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}:${PRIME_INTERFACE_PORT:-8443}:8443"
@@ -143,7 +143,7 @@ services:
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
       PRIME_HOST_METRICS_RECEIPT: /run/prime-host-metrics/host-metrics.json
     volumes:
-      - prime-data:/data
+      - orqevia-data:/data
       - type: bind
         source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.crt
         target: /run/prime-tls/server.crt
@@ -162,7 +162,7 @@ services:
         read_only: true
         bind:
           create_host_path: false
-      - "${PRIME_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/JARVIS-ABEX-HTTPS.mobileconfig:ro"
+      - "${PRIME_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/ORQEVIA-ABEX-HTTPS.mobileconfig:ro"
       - type: bind
         source: ${PRIME_HOST_METRICS_DIR:-./deploy/unconfigured-host-metrics}
         target: /run/prime-host-metrics
@@ -170,7 +170,7 @@ services:
         bind:
           create_host_path: false
     depends_on:
-      prime:
+      backend:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import ssl, urllib.request; context=ssl.create_default_context(cafile='/run/prime-tls/ca.crt'); urllib.request.urlopen('${PRIME_PWA_ORIGIN:-https://invalid}/pwa/', context=context, timeout=5).read()"]
@@ -187,9 +187,9 @@ services:
   ollama:
     image: ${OLLAMA_IMAGE:?Set OLLAMA_IMAGE to a reviewed immutable tag or digest}
     labels:
-      com.lamjarvis.managed: "true"
-      com.lamjarvis.role: "model-runtime"
-      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+      com.orqevia.managed: "true"
+      com.orqevia.role: "model-runtime"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
     environment:
       OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
       OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
@@ -199,7 +199,7 @@ services:
       OLLAMA_FLASH_ATTENTION: ${OLLAMA_FLASH_ATTENTION:-true}
       OLLAMA_KV_CACHE_TYPE: ${OLLAMA_KV_CACHE_TYPE:-q8_0}
     volumes:
-      - ollama-data:/root/.ollama
+      - orqevia-ollama-data:/root/.ollama
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
@@ -215,9 +215,9 @@ services:
   model-init:
     image: ${OLLAMA_IMAGE:?Set OLLAMA_IMAGE to a reviewed immutable tag or digest}
     labels:
-      com.lamjarvis.managed: "true"
-      com.lamjarvis.role: "model-init"
-      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+      com.orqevia.managed: "true"
+      com.orqevia.role: "model-init"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
     environment:
       OLLAMA_HOST: http://ollama:11434
       PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
@@ -242,16 +242,16 @@ services:
     image: ${CADDY_IMAGE:?Set CADDY_IMAGE to a reviewed immutable tag or digest}
     profiles: ["tunnel"]
     labels:
-      com.lamjarvis.managed: "true"
-      com.lamjarvis.role: "integration-gateway"
-      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+      com.orqevia.managed: "true"
+      com.orqevia.role: "integration-gateway"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
     environment:
       PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
     command: ["/bin/sh", "-c", "test -n \"$${PRIME_INTEGRATION_TOKEN}\" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
-      prime:
+      backend:
         condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 15s
@@ -263,9 +263,9 @@ services:
     image: ${CLOUDFLARED_IMAGE:?Set CLOUDFLARED_IMAGE to a reviewed immutable tag or digest}
     profiles: ["tunnel"]
     labels:
-      com.lamjarvis.managed: "true"
-      com.lamjarvis.role: "tunnel"
-      com.lamjarvis.node: "${PRIME_NODE_ID:-prime-node-01}"
+      com.orqevia.managed: "true"
+      com.orqevia.role: "tunnel"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     command: tunnel --no-autoupdate --loglevel info --metrics 0.0.0.0:2000 run
@@ -283,9 +283,9 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
 volumes:
-  prime-data:
+  orqevia-data:
     external: true
-    name: ${PRIME_DATA_VOLUME:-prime-data}
-  ollama-data:
+    name: ${PRIME_DATA_VOLUME:-orqevia-data}
+  orqevia-ollama-data:
     external: true
-    name: ${OLLAMA_DATA_VOLUME:-prime-ollama-data}
+    name: ${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}

@@ -9,11 +9,11 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
 $EnvFile = Join-Path $Root ".env"
-$JarvisOperator = Join-Path $PSScriptRoot "jarvis.ps1"
+$OrqeviaOperator = Join-Path $PSScriptRoot "orqevia.ps1"
 $LocalReasonUrl = "http://127.0.0.1:8000/api/cognitive/reason"
 $PublicTraceUrl = "https://authority-engine-app.vercel.app/api/orqevia-agent-trace"
 $PublicConsoleUrl = "https://authority-engine-app.vercel.app/orqevia/agents"
-$Intent = "Analyze the JARVIS runtime authority architecture and identify one read-only operational integrity check for its governed agent path."
+$Intent = "Analyze the ORQEVIA runtime authority architecture and identify one read-only operational integrity check for its governed agent path."
 $Context = "Local verification only. Reasoning and inspection only."
 
 function Write-Step([string]$Message) {
@@ -55,8 +55,8 @@ function New-LocalToken {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+','-').Replace('/','_')
 }
 
-if (-not (Test-Path -LiteralPath $JarvisOperator)) {
-    throw "Canonical JARVIS operator not found: $JarvisOperator"
+if (-not (Test-Path -LiteralPath $OrqeviaOperator)) {
+    throw "Canonical ORQEVIA operator not found: $OrqeviaOperator"
 }
 
 Write-Step "Preparing local cognitive authentication"
@@ -69,10 +69,10 @@ if (-not $token) {
     Write-Host "Existing private local cognitive token found." -ForegroundColor Green
 }
 
-Write-Step "Starting the canonical JARVIS stack"
-& powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $JarvisOperator -Action start -NoOpen -TimeoutSeconds $TimeoutSeconds
+Write-Step "Starting the canonical ORQEVIA stack"
+& powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $OrqeviaOperator -Action start -NoOpen -TimeoutSeconds $TimeoutSeconds
 if ($LASTEXITCODE -ne 0) {
-    throw "Canonical JARVIS start operator reported a failure."
+    throw "Canonical ORQEVIA start operator reported a failure."
 }
 
 Write-Step "Submitting one real governed read-only task"
