@@ -36,4 +36,4 @@ volumes:
 networks:
   abex:
     external: true
-    name: prime-epoch-20260919_default
+    name: ${ORQEVIA_EPOCH_NETWORK:?epoch network required}
