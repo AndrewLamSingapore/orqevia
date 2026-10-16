@@ -1,10 +1,6 @@
 name: Observatory public verifier off-host
 
 on:
-  push:
-    branches:
-      - feat/prime-observatory-protected-verifier-20261006
-      - feat/prime-unified-release-20261006
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -17,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
       - name: Install candidate dependencies

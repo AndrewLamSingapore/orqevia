@@ -1,8 +1,6 @@
 name: Release Acceptance
 
 on:
-  push:
-    branches: [feat/prime-unified-release-20261006, feat/prime-agent-l7-20261007]
   workflow_dispatch:
   workflow_call:
 
