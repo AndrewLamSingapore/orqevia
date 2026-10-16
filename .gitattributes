@@ -8,7 +8,6 @@ governance/agent-cert-verifier-azure-pins.json text eol=lf
 docs/evidence/EVIDENCE_LENS_PRODUCTION_QUALIFICATION_20260927.json -text
 # Preserve exact-byte Golden verification inputs on Windows. The Gen 1
 # runtime receipt's accepted checkout form is historically CRLF.
-docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md -text
 docs/evidence/ABEX_RUNTIME_RECEIPT_17FAD78_20260926.json text eol=crlf
 docs/evidence/DELL-ABEX-CORRECTED-INDEPENDENT-VERIFICATION-20260926.json -text
 docs/evidence/PHASE2_RUNTIME_RECEIPT_B171253_20260927.json -text

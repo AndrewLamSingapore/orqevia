@@ -9,10 +9,12 @@ repository. STATUS.md records portfolio status and evidence classification only.
 The operational reference records architecture, component revisions and dated
 observations; it cannot establish current runtime status.
 
-Golden Generation 2 is the frozen accepted non-audio architecture, described by
-`docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md` and
-`governance/golden-gen2-manifest.json`. Golden Generation 1 and its immutable
-manifest remain the preserved rollback/reference. Architecture v1 remains the
+Golden Generation 4 is the current accepted non-audio baseline, binding the
+ORQEVIA epoch runtime per role in `governance/golden-gen4-manifest.json`; the
+deterministic architecture lookup serves from the same record. Pre-gen4
+baselines were removed on 2026-10-16 per Owner order and remain recoverable
+from Git history. The living architecture reference is
+`docs/TOTAL-INTEGRATION-ARCHITECTURE.md`. Architecture v1 remains the
 implementation foundation: ABEX PRIME, authenticated
 Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and direct
 observed execution with narrow consequential controls. Runtime acceptance is

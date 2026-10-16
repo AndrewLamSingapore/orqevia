@@ -14,7 +14,7 @@ COPY_FILES = (
     'governance/CHANNEL_CONTRACT.md', 'governance/operational-manifest.json',
     'governance/JARVIS_Resume_Checkpoint.generated.md',
     'governance/golden-gen4-manifest.json',
-    'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md',
+    'docs/TOTAL-INTEGRATION-ARCHITECTURE.md',
 )
 
 

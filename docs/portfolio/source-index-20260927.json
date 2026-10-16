@@ -138,7 +138,7 @@
   ],
   "canonical_git_evidence": [
     {"path": "governance/portfolio-release-20260927.json", "bytes": 7697, "sha256": "041d99b972456ab5f7bdd388842aced3b7c8f779871c8a3eef2bf7876e3c8016"},
-    {"path": "governance/golden-gen2-manifest.json", "bytes": 3075, "sha256": "8c013e913e4a75df737346ea98bfdd531afcb9a39bd21bdb1c9c406d64b2fbc0"},
+    {"path": "governance/golden-gen4-manifest.json", "bytes": 2305, "sha256": "1c7f82e464cf41879b7511c91e945e8e0676fe75808220869b444d6d2d74f710"},
     {"path": "docs/evidence/PHASE2_RUNTIME_RECEIPT_B171253_20260927.json", "bytes": 4878, "sha256": "4f250145fe150f79f6a85fefe547a956a5f8ca6751a031ee8a6dacfd97ad1af5"},
     {"path": "docs/evidence/PORTFOLIO_RELEASE_20260927.md", "bytes": 3207, "sha256": "23cdf71376d9f3952b152e24240b88341e65795c8ee908e5fe356c6455d2c5a0"}
   ],

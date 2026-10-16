@@ -16,8 +16,8 @@ def validate(value: dict) -> list[str]:
     require = lambda condition, message: None if condition else errors.append(message)
     require(value.get("schema_version") == "jarvis.phase2-candidate.v1", "schema")
     require(value.get("state") == "CANDIDATE_NOT_DEPLOYED", "candidate_state")
-    require(value.get("parent_golden", {}).get("tag") == "jarvis-prime-golden-gen1-20260926", "golden_parent")
-    require(value.get("parent_golden", {}).get("commit") == "26f7d49cfe7134f8665dda5886111e91b574554d", "golden_commit")
+    require(value.get("parent_golden", {}).get("tag") == "orqevia-golden-gen4-20261016", "golden_parent")
+    require(value.get("parent_golden", {}).get("commit") == "48648edd8d2640f12f8086b9910deec865519326", "golden_commit")
     for key in ("implementation", "architecture", "gap_analysis"):
         require((ROOT / value.get("source", {}).get(key, "missing")).is_file(), "missing:" + key)
     for path in ("app/evidence_product.py", "app/prime_evidence_adapter.py", "app/phase2_evidence_adapter.py",

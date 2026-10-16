@@ -76,6 +76,8 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
         ('accepted_scope', 'PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED',
          'ORQEVIA_BRANDED_RUNTIME_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED'),
         ('former_generation', 'jarvis-prime-golden-gen1-20260926', 'jarvis-prime-golden-gen2-20260927'),
+        ('architecture', 'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md',
+         'docs/TOTAL-INTEGRATION-ARCHITECTURE.md'),
         ('dell_post_promotion', 'PROMOTION_VERIFICATION_PASS', 'UNVERIFIED'),
     )
     for field, prior, corrected in golden_corrections:
