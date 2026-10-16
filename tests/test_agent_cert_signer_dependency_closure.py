@@ -9,7 +9,7 @@ import textwrap
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / '.github/workflows/prime-verifier-signer.yml'
+WORKFLOW = ROOT / '.github/workflows/orqevia-verifier-signer.yml'
 CHECK_NAME = 'Check owning initialization verification imports (no signing)'
 SCRATCH_DATA = '${{ runner.temp }}/prime-verifier-domains'
 EXPECTED_PINS = ('cryptography==50.0.2', 'httpx==0.28.1', 'fastapi==0.116.1')

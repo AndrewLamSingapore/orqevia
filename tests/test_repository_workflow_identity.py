@@ -14,13 +14,13 @@ from scripts import validate_fresh_initialization_20261011 as fresh_batch
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'AndrewLamSingapore/orqevia'
-CALLER = REPOSITORY + '/.github/workflows/prime-verifier-oidc.yml@refs/heads/main'
-SIGNER = REPOSITORY + '/.github/workflows/prime-verifier-signer.yml@refs/heads/main'
+CALLER = REPOSITORY + '/.github/workflows/orqevia-verifier-oidc.yml@refs/heads/main'
+SIGNER = REPOSITORY + '/.github/workflows/orqevia-verifier-signer.yml@refs/heads/main'
 
 
 def test_reusable_workflow_and_claim_bindings_agree():
-    caller = (ROOT/'.github/workflows/prime-verifier-oidc.yml').read_text()
-    signer = (ROOT/'.github/workflows/prime-verifier-signer.yml').read_text()
+    caller = (ROOT/'.github/workflows/orqevia-verifier-oidc.yml').read_text()
+    signer = (ROOT/'.github/workflows/orqevia-verifier-signer.yml').read_text()
     assert 'uses: ' + SIGNER.removesuffix('refs/heads/main') + 'main' in caller
     assert CALLER in caller and CALLER in signer
     assert canary.CALLER == CALLER and canary.SIGNER == SIGNER
@@ -28,7 +28,7 @@ def test_reusable_workflow_and_claim_bindings_agree():
     assert 'secrets: inherit' not in caller + signer
 
 
-@pytest.mark.parametrize('workflow', ['prime-verifier-oidc.yml', 'prime-verifier-signer.yml'])
+@pytest.mark.parametrize('workflow', ['orqevia-verifier-oidc.yml', 'orqevia-verifier-signer.yml'])
 @pytest.mark.parametrize('repository,protected,event,expected_pass', [
     (REPOSITORY, 'true', 'workflow_dispatch', True),
     ('AndrewLamSingapore/prime', 'true', 'workflow_dispatch', False),
@@ -58,7 +58,7 @@ def test_retired_repository_denied_before_github_history_read(validator):
 
 def test_distinct_consumed_batches_and_workflow_history_paths_preserved():
     assert old_batch.WORKFLOW == 'prime-initialization-validation.yml'
-    assert fresh_batch.WORKFLOW == 'prime-fresh-initialization-validation-20261011.yml'
+    assert fresh_batch.WORKFLOW == 'orqevia-fresh-initialization-validation-20261011.yml'
     assert old_batch.BATCH == '9792f8d3ef5f9a72ca4d9ef0501ed74ce7a7363d5555e39151d59eb9b26d98d5'
     assert fresh_batch.BATCH == 'ccf4a0137006aac948d83b2f7791629ff62092791f2401b2fe9b157d309cec9e'
     for validator in (old_batch, fresh_batch):

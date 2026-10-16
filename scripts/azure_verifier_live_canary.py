@@ -17,8 +17,8 @@ CLIENT_ID = "d3779443-01fe-4bdc-9986-9db3ae98893e"
 TENANT_ID = "067196c1-a282-4f8d-a7c5-753ca4ae5b48"
 AUDIENCE = "api://AzureADTokenExchange"
 SUBJECT = "repo:AndrewLamSingapore@313231443/orqevia@1345668764:ref:refs/heads/main"
-CALLER = "AndrewLamSingapore/orqevia/.github/workflows/prime-verifier-oidc.yml@refs/heads/main"
-SIGNER = "AndrewLamSingapore/orqevia/.github/workflows/prime-verifier-signer.yml@refs/heads/main"
+CALLER = "AndrewLamSingapore/orqevia/.github/workflows/orqevia-verifier-oidc.yml@refs/heads/main"
+SIGNER = "AndrewLamSingapore/orqevia/.github/workflows/orqevia-verifier-signer.yml@refs/heads/main"
 KEY_PREFIX = "https://abexprimeverify26.vault.azure.net/keys/prime-agent-cert-verifier/"
 
 

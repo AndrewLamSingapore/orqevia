@@ -15,7 +15,7 @@ from scripts.audit_initialization_package import audit,MAIN,ORIGINAL,ROOT
 from scripts.sign_admitted_agent_cases import parse
 
 REPOSITORY='AndrewLamSingapore/orqevia'
-WORKFLOW='prime-fresh-initialization-validation-20261011.yml'
+WORKFLOW='orqevia-fresh-initialization-validation-20261011.yml'
 BATCH='ccf4a0137006aac948d83b2f7791629ff62092791f2401b2fe9b157d309cec9e'
 PLAN='governance/agent-cert-initialization-proposed-fields-20261011.json'
 IMAGE='sha256:1554813d96cef71e9c649b820690cdd897e2f44ab9bd0f80a9314ddd76978f68'
