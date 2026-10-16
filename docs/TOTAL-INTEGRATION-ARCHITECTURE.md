@@ -1,8 +1,9 @@
 # ORQEVIA unified operational architecture
 
-Owner master continuation orders, 15 October 2026. ABEX and Dell are co-writers
-for implementation and merge; ABEX alone deploys and operates. Dell independently
-reviews. This extends the permanent interface standard.
+Owner master continuation orders, 15 October 2026. Dell, ABEX and the Owner form
+one shared operating authority for implementation, merge, deployment and
+operation, each where it holds actual host access and credentials. This extends
+the permanent interface standard.
 Preserve completed work and authoritative domain ownership. No parked cloud
 migration, certification or historical registry is a prerequisite for access or RAG.
 

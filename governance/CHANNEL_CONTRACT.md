@@ -18,14 +18,13 @@ current deployment status.
    observations; `system.manifest.json` binds ORQEVIA components. STATUS.md
    records portfolio status claims and their evidence classification. No
    parallel portfolio status pointer is maintained.
-3. ABEX and Dell are co-writers for ORQEVIA implementation and merge: both may
-   branch, commit, open and merge pull requests. ABEX alone owns deployment and
-   operational execution, and remains the runtime acceptance and production
-   authority unless the Owner separately amends that. Dell is an independent
-   reviewer and forensic assessor in addition to its build authority. The
+3. Dell, ABEX and the Owner form one shared ORQEVIA operating authority: each
+   may branch, commit, open and merge pull requests, and each may deploy or
+   operate ORQEVIA where it holds actual host access and credentials. The
    fail-closed runtime gates (Stable Spine, Action Harness, host guard, FAILSAFE
-   and the WASM sandbox) are unchanged by this amendment. PWA and voice use the
-   same Interface contract. Client identity never increases authority. Earlier
+   and the WASM sandbox) are unchanged by this amendment, and only the Owner
+   moves items into STATUS.md "Verified" sections. PWA and voice use the same
+   Interface contract. Client identity never increases authority. Earlier
    development/synchronization assignments are retained in Git history and
    superseded by the Owner's recovery directive.
 4. Discover actual identities and permissions from current source and runtime
