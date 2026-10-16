@@ -257,6 +257,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(closing_update) == 2921
     assert hashlib.sha256(closing_update).hexdigest() == "ff170e7d4cdb49089932a2268acccffa35b021caf1d25b141e127415a564803b"
     after = after[:closing_start] + after[closing_end:]
+    # Admit only this exact installation-verification/brand-archive/readiness
+    # section; all prior bytes stay pinned.
+    install_title = "## Installation verification, brand archive and readiness — 16 October 2026"
+    assert after.count(install_title) == 1
+    install_start = after.index(install_title)
+    install_end = after.index("\n## ", install_start + len(install_title)) + 1
+    install_update = after[install_start:install_end].encode("utf-8")
+    assert len(install_update) == 1920
+    assert hashlib.sha256(install_update).hexdigest() == "bf4b279e1ccfd6e1a23cc56e259ca593e9b39bbf38d3e73c6e6317f49124706e"
+    after = after[:install_start] + after[install_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
