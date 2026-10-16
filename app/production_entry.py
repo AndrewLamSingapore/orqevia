@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
@@ -68,7 +70,20 @@ def local_verifier_authorization(request: Request):
     return expected
 
 
-app = FastAPI(title='PRIME local control', lifespan=direct_entry.lifespan,
+@asynccontextmanager
+async def _lifespan(application):
+    """Start the governed compute worker pool with the application.
+
+    Idempotent (WorkerPool.start returns when threads exist). Without this the
+    shared queue accepts jobs but nothing claims them until an operator starts
+    a pool manually — the exact silent stall class observed on 16 October 2026.
+    """
+    async with direct_entry.lifespan(application) as state:
+        compute_queue_api.start_compute_queue()
+        yield state
+
+
+app = FastAPI(title='PRIME local control', lifespan=_lifespan,
               docs_url=None, redoc_url=None, openapi_url=None)
 
 _AZURE_CERT_PIN = Path(__file__).resolve().parent.parent / 'governance' / 'agent-cert-verifier-azure-pins.json'
