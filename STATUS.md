@@ -119,6 +119,88 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
 
 ---
 
+## Access reconciliation, protected batch and command shell — 16 October 2026
+
+### Claimed, not independently checked
+
+- **Co-owner parity recorded by Owner directive:** OWNER, ABEX, Codex, DELL Codex PC and
+  ORQEVIA are co-owners with equal shared authority and privileges, deciding
+  autonomously; the named set is not exhaustive — additional elite administrators and
+  users exist. **Minimal guardrails** is a permanent operating directive; the remaining
+  guardrails are physical limits, the Owner's data boundary (no private ABEX material to
+  GitHub or ORQEVIA) and safety of record.
+- **Workspace access reconciled (UAC-approved 12:34–12:39 SGT):** the workspace-root ACL
+  was fixed (stray sandbox SIDs and two unresolvable SIDs removed; equal full access for
+  Admin, Administrators, SYSTEM, CodexSandboxUsers), and all 94 truly unreadable items
+  were inventoried (62,065 files) and deleted with zero failures. Receipts:
+  `operations/access-reconciliation-20261016/` (OPEN-ACCESS-RECEIPT.json,
+  locked-inventory.csv, Invoke-AccessReconciliation.ps1).
+- **Chrome Remote Desktop:** retained and recorded — Google-signed host, outbound-only
+  via Google's relay, host configuration administrator-only. Open item resolved as
+  "retained + recorded".
+- **Interface defaults (permanent, 16 October 2026):** one-tap, code-free access (open
+  mode default) and the perfect-fit requirement for web and iPhone screens — recorded as
+  standing Owner instructions (SOI-06, SOI-07); both verified live on every deploy since.
+- **Host telemetry live:** `/interface/v1/telemetry` reports OBSERVED CPU, memory, disk
+  and workspace metrics from the SYSTEM collector task ("ABEX Host Metrics Collector",
+  one-minute cadence); the UNKNOWN producer state is closed. The Command Overview
+  gauges were subsequently bound to those observed values (floating-point percentages
+  render; the availability label is honest; stale values clear on invalidation) —
+  PR #348, deployed to the live interface.
+- **Fresh 20261016 initialization batch executed and protected-validated:** 29/29 cases
+  collected (batch digest `a7eea39dbfb8376915efbef6e7928e47db90eb0a3d3fbd4353bedb3647232b1f`);
+  runtime closure port `80dcb94f` aligned main with the deployed runtime for the 46-file
+  set; the one-shot protected workflow ran on main (`orqevia-fresh-initialization-validation-20261016.yml`,
+  run `38861038816`, attempt 1 — success; artifact
+  `initialization-a7eea39dbfb83769-validation-38861038816-attempt-1`; all 29 oracles PASS;
+  fixed +24 h expiry; `signature NOT_PERFORMED`; `l7 false`; `installed false`).
+  Re-dispatch is refused by design: each dated batch mints a fresh run history.
+- **Fresh batch Stage 2 admission and signing dispatch:** the exact 29 protected rows were
+  admitted (PR #349; committed manifest blob sha256 equals the protected
+  `proposed_manifest_sha256 acf5e44e…`), pre-dispatch dry-run of the signer flow passed
+  29/29, and the protected signer was dispatched (`orqevia-verifier-oidc.yml`, run
+  `38864460391`). The run failed closed at the protected Azure canary step — the Azure
+  federated credential still matches the pre-rename subject (last success 2026-10-07,
+  before the repository rename). The one owner-side fix is recorded in
+  `operations/fresh29-20261016/SIGNING-BLOCKER-AZURE-FEDERATION-20261016.md`; ABEX
+  re-dispatches on confirmation while the fixed +24 h admission window holds.
+- **Merge train completed:** PRs #339, #340, #341 (closed as not viable), #342, #343 and
+  #344 — workflow-file renames to `orqevia-*` with OIDC self-reference re-pins, manifest
+  redate with mirror regeneration, host-collector write fix, telemetry reader ship, and
+  the fresh batch. The verifier re-pin closure is recorded in the section above.
+- **Command Center L2 deployed:** PR #345 (grouped command-domain shell —
+  COMMAND / OPERATIONS / WORKSPACE / SYSTEM; all 14 views preserved; zero-tap access;
+  responsive fit for web and iPhone) merged to main `9beebe85` and deployed to the live
+  interface (image `orqevia:interface-l2shell-9beebe8`, healthy; attestation publisher
+  refreshed post-swap; rollback image `orqevia:rollback-l1-live-20261016T0644Z` retained
+  plus the older rollback container). Receipts: `operations/command-center-l2-20261016/`.
+  Browser QA of the live surface (truthful screenshots, desktop and 390×844 iPhone
+  viewport) verified the fit requirement: no overlapping navigation, no clipping, safe-area
+  bottom bar, and grouped command navigation rendering as designed.
+- **DELL branch consolidation:** DELL's two pushed branches — `codex/dell-db-architecture-20261016`
+  (`0d32427a`: SQLite persistence verification, backup/restore-test tool, 5 tests) and
+  `codex/dell-scaffolding-review-acceptance-20261016` (`af638d90`) — were merged with
+  current main by ABEX without history rewrite (DELL commit SHAs preserved) and landed as
+  PRs #346/#347. Scaffolding closure: three engine defects fixed (per-instance
+  `generated_at`; generated-project test self-containment; JSON resolution via
+  `Path(__file__)`), end-to-end acceptance added, `tests/test_scaffolding.py` +
+  `tests/test_fast_acceptance.py` 18 passed, review record
+  `docs/scaffolding-independent-review-20261016.md`. The engine remains not deployed and
+  not runtime-activated. (DELL's STATUS draft text is folded here because it rewrote a
+  byte-pinned historical section.)
+- **DELL gh-auth blocker resolved on the ABEX side:** DELL's `gh` token is invalid and
+  DELL cannot re-authenticate; ABEX holds a verified valid credential. Resolution
+  package: `operations/dell-co-owner/DELL-GH-AUTH-RESOLUTION-20261016.md` — device-flow
+  path (primary; no secret transport) plus an ACL-locked handoff file and
+  `Set-DellGhAuth.ps1` (fallback). The final hop is owner-bridged: no ABEX→DELL channel
+  exists (reachability re-probed: ping True, SMB 445 open, no DELL credentials on ABEX),
+  and secrets never go to GitHub or into agent chats.
+- **Outward flow:** none. No estate secrets were found in the six public repositories;
+  `orqevia.com` serves a third-party-styled "Orqevia Bank" site unrelated to this estate
+  (flagged); no ORQEVIA cloud host exists yet.
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked
