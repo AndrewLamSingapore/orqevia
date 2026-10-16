@@ -68,7 +68,7 @@ def test_local_control_plane_survives_simulated_external_dependency_loss(tmp_pat
     assert executed == []
 
     chinese = user_facing_contract("你叫什么名字？")
-    assert "JARVIS" in chinese
+    assert "ORQEVIA · 奥启维亚" in chinese
     assert "Simplified Chinese" in chinese
 
 

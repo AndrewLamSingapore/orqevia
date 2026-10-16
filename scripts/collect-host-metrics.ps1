@@ -54,7 +54,13 @@ $temporary = Join-Path $OutputDirectory ([System.IO.Path]::GetRandomFileName())
 try {
     [System.IO.File]::WriteAllText($temporary, $json, [System.Text.UTF8Encoding]::new($false))
     if ([System.IO.File]::Exists($OutputPath)) {
-        [System.IO.File]::Replace($temporary, $OutputPath, $null)
+        # Copy-overwrite instead of File.Replace: Replace fails on this
+        # bridged/NTFS path shape ("The path is not of a legal form") and the
+        # per-minute refresh silently stalled (observed on ABEX, 2026-10-16).
+        # A torn read is treated as a missing receipt by the reader, which is
+        # the documented fail-safe behaviour.
+        [System.IO.File]::Copy($temporary, $OutputPath, $true)
+        [System.IO.File]::Delete($temporary)
     } else {
         [System.IO.File]::Move($temporary, $OutputPath)
     }

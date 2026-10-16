@@ -15,6 +15,7 @@ HEADERS={'Origin':ORIGIN,'X-Jarvis-PWA':'1'}
 def setup(monkeypatch,tmp_path):
     root=tmp_path/'pwa-fixture';root.mkdir()
     monkeypatch.setenv('PRIME_DATA_DIR',str(root));monkeypatch.setenv('PRIME_PWA_ORIGIN',ORIGIN)
+    monkeypatch.setenv('PRIME_PWA_ACCESS_MODE','pairing')  # gate machinery covered here; open default in test_pwa_open_access.py
     monkeypatch.delenv('PRIME_PWA_ADDITIONAL_ORIGINS',raising=False)
     monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
