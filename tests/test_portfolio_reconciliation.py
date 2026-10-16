@@ -238,6 +238,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(recon_update) == 6213
     assert hashlib.sha256(recon_update).hexdigest() == "f760fa392da1c7ca86e95cf1294740b270973fe5fcd540ebe3ace05393268b96"
     after = after[:recon_start] + after[recon_end:]
+    # Admit this exact dated candidate report; all previous history remains pinned.
+    geo_title = '## Geospatial/vector candidate — 16 October 2026'
+    assert after.count(geo_title) == 1
+    geo_start = after.index(geo_title)
+    geo_end = after.index('\n## ', geo_start + len(geo_title)) + 1
+    geo_update = after[geo_start:geo_end].encode('utf-8')
+    assert len(geo_update) == 964
+    assert hashlib.sha256(geo_update).hexdigest() == 'e440b686ba8ca497429ff1eb1fef2769fc9d369043d552d995b311c97fed5e72'
+    after = after[:geo_start] + after[geo_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.

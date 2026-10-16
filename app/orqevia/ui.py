@@ -58,6 +58,14 @@ VIEWS = [
 
 app = FastAPI(title="ORQEVIA Unified Interface", docs_url=None, redoc_url=None, openapi_url=None)
 app.include_router(intelligence_router)
+PWA_ASSETS=Path(__file__).resolve().parents[2]/'clients'/'pwa'
+if not PWA_ASSETS.exists():PWA_ASSETS=Path(__file__).resolve().parents[1]/'pwa_static'
+app.mount('/pwa',StaticFiles(directory=PWA_ASSETS),name='map-assets')
+
+from ..postgres_intelligence import DatabaseUnavailable
+@app.exception_handler(DatabaseUnavailable)
+async def database_unavailable(request, exc):
+    return JSONResponse({'detail':'Configured PostgreSQL backend unavailable; existing data preserved'},status_code=503)
 
 
 @app.get("/api/orqevia/manifest")

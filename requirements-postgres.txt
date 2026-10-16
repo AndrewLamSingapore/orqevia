@@ -1,0 +1,2 @@
+# Optional backend; existing requirements and default FAISS/SQLite stay intact.
+psycopg[binary]==3.3.3

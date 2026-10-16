@@ -2,6 +2,10 @@ ARG ABEX_BASE_IMAGE=orqevia:official-logo-891e3adf
 FROM ${ABEX_BASE_IMAGE}
 WORKDIR /service
 COPY app /service/app
+COPY clients/pwa /service/clients/pwa
+COPY requirements-postgres.txt /service/requirements-postgres.txt
+ARG ORQEVIA_POSTGRES_ENABLED=0
+RUN if [ "$ORQEVIA_POSTGRES_ENABLED" = "1" ]; then python -m pip install --no-cache-dir -r requirements-postgres.txt; fi
 ARG ORQEVIA_SOURCE_REVISION=UNKNOWN
 ENV ORQEVIA_SOURCE_REVISION=${ORQEVIA_SOURCE_REVISION} PYTHONDONTWRITEBYTECODE=1
 LABEL org.opencontainers.image.revision=${ORQEVIA_SOURCE_REVISION}

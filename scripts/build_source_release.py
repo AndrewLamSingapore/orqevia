@@ -14,7 +14,7 @@ def build(output):
     for name in sorted(set(files)):
         source=ROOT/name
         if not source.is_file():continue
-        if name.startswith(('app/','config/','contracts/','docs/','deploy/')) or name in {'requirements.txt','system.manifest.json'}:
+        if name.startswith(('app/','config/','contracts/','docs/','deploy/')) or name in {'requirements.txt','requirements-postgres.txt','system.manifest.json'}:
             target=output/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
         if name.startswith('clients/pwa/') and source.name not in {'tests.mjs','followup-tests.mjs','revision-tests.mjs','make-icons.mjs','README.md'}:
             target=output/'app/pwa_static'/source.relative_to(ROOT/'clients/pwa');target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)

@@ -110,7 +110,7 @@ def test_ui_health_uses_the_authenticated_companion_and_error_is_not_empty_map()
     js=(root/'app/orqevia/static/app.js').read_text(encoding='utf-8')
     assert "fetch('/api/orqevia/intelligence/health'" in js
     assert 'fetch("/api/orqevia/proxy/"' not in js
-    mapjs=(root/'app/orqevia/static/gods-eye/map.js').read_text(encoding='utf-8')
+    mapjs=(root/'clients/pwa/command-map.mjs').read_text(encoding='utf-8')
     assert 'if (!res.ok) throw' in mapjs
 
 def test_production_entry_requires_server_authentication(monkeypatch,tmp_path):

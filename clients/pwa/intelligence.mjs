@@ -4,6 +4,7 @@ export function safeSource(value){try{const u=new URL(value);return u.protocol==
 export function freshness(value,now=Date.now()){const at=Date.parse(value);return Number.isFinite(at)&&at<=now+5000?(now-at<=900000?'FRESH':'STALE'):'UNKNOWN';}
 export function mapPoint(location,width=960,height=480){const {lat,lon}=location||{};return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180?[(lon+180)/360*width,(90-lat)/180*height]:null;}
 
+import {mountCommandMap} from './command-map.mjs';
 if(typeof document!=='undefined'){
  const $=id=>document.getElementById(id), root=$('intelligence-content');
  let session=null, generation=0, pending=null, active=new URL(location.href).searchParams.get('view')||'home';
@@ -22,10 +23,8 @@ if(typeof document!=='undefined'){
   if(!r.ok){const e=new Error(r.status===401?'Device trust is unavailable. Use the recovery form below.':`Service returned ${r.status}`);e.status=r.status;throw e;}return r.json();
  }
  function drawMap(p,records){
-  const c=node('canvas');c.width=960;c.height=480;c.setAttribute('aria-label','World grid with attributed earthquake observations; equivalent records below');p.append(c);
-  const ctx=c.getContext('2d');if(!ctx){p.append(node('p','Canvas unavailable. All observations remain listed below.'));return;}
-  ctx.strokeStyle='#456064';for(let x=0;x<=960;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,480);ctx.stroke();}for(let y=0;y<=480;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(960,y);ctx.stroke();}
-  ctx.fillStyle='#83d6c1';for(const r of records){const xy=mapPoint(r.location);if(xy){ctx.beginPath();ctx.arc(...xy,4,0,2*Math.PI);ctx.fill();}}
+  if(!document.defaultView){p.append(node('p','Interactive map requires a browser. Observation records are listed below.'));return;}
+  void mountCommandMap(p,{records});
  }
  function renderObservations(result){
   const filter=panel('Geographic filter'), form=node('form');

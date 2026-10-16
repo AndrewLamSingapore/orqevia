@@ -12,6 +12,7 @@ from ..event_detection import DetectionEngine
 from ..geo_ingest import SOURCES, ObservationStore, Poller
 from ..geospatial import haversine_km, validate_coordinate
 from ..rag_grounding import DocumentStore
+from ..postgres_intelligence import PostgresObservationStore
 
 router = APIRouter(prefix="/api/orqevia/intelligence")
 
@@ -22,7 +23,12 @@ DATA_DIR = Path(
     if _configured_data_dir
     else _REPO_ROOT.parent / "work" / "orqevia-intelligence-data"
 )
-OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
+if os.getenv('ORQEVIA_OBSERVATION_BACKEND','sqlite') == 'postgres':
+    OBSERVATIONS = PostgresObservationStore()
+elif os.getenv('ORQEVIA_OBSERVATION_BACKEND','sqlite') == 'sqlite':
+    OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
+else:
+    raise RuntimeError('Unknown observation backend')
 DOCUMENTS = DocumentStore.load(DATA_DIR / "documents.json")
 DETECTION = DetectionEngine(DATA_DIR / "alerts.json")
 INGEST_LOCK = threading.Lock()
@@ -70,9 +76,53 @@ def geo_radius(lat: float, lon: float, radius_km: float) -> dict:
         validate_coordinate(lat, lon)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if isinstance(OBSERVATIONS, PostgresObservationStore):
+        records=OBSERVATIONS.query(lat=lat,lon=lon,radius_km=radius_km,limit=500)
+        return {'count':len(records),'records':records}
     records = OBSERVATIONS.query(limit=500)
     within = [r for r in records if haversine_km(lat, lon, r["location"]["lat"], r["location"]["lon"]) <= radius_km]
     return {"count": len(within), "records": within}
+
+
+@router.get('/geo/features')
+def geo_features(min_lat: float | None = None, max_lat: float | None = None,
+                 min_lon: float | None = None, max_lon: float | None = None,
+                 min_time: str | None = None, max_time: str | None = None,
+                 source: str | None = None, limit: int = 200, offset: int = 0) -> dict:
+    from datetime import datetime, timezone
+    import math
+    try:
+        if not 1<=limit<=500 or not 0<=offset<=100000:raise ValueError('Invalid pagination')
+        bounds=(min_lat,max_lat,min_lon,max_lon)
+        if any(v is not None for v in bounds):
+            if any(v is None or not math.isfinite(v) for v in bounds) or not -90<=min_lat<=max_lat<=90 or not -180<=min_lon<=max_lon<=180:
+                raise ValueError('A valid complete bounding box is required')
+        for stamp in (min_time,max_time):
+            if stamp and datetime.fromisoformat(stamp.replace('Z','+00:00')).tzinfo is None:raise ValueError('Timezone required')
+        if source and source!='USGS':raise ValueError('Unsupported source filter')
+        if isinstance(OBSERVATIONS,PostgresObservationStore):
+            records=OBSERVATIONS.query(min_lat=min_lat,max_lat=max_lat,min_lon=min_lon,max_lon=max_lon,min_time=min_time,max_time=max_time,source=source,limit=limit,offset=offset)
+        else:
+            # Compatibility path for the preserved bounded public SQLite store.
+            records=OBSERVATIONS.query(min_lat=min_lat,max_lat=max_lat,min_lon=min_lon,max_lon=max_lon,min_time=min_time,max_time=max_time,limit=10000)
+            records=[r for r in records if not source or r.get('source')==source][offset:offset+limit]
+        features=[]
+        for record in records:
+            location=record.get('location') or {}
+            lat,lon=validate_coordinate(location.get('lat'),location.get('lon'))
+            if not math.isfinite(lat) or not math.isfinite(lon):continue
+            features.append({'type':'Feature','id':record['event_id'],'geometry':{'type':'Point','coordinates':[lon,lat]},'properties':record})
+        return {'type':'FeatureCollection','features':features,'count':len(features),'limit':limit,'offset':offset,
+                'next_offset':offset+limit if len(records)==limit else None,'as_of':datetime.now(timezone.utc).isoformat(),
+                'scope':'PUBLIC_REFERENCE','attribution':'U.S. Geological Survey','coverage':'Stored observations only; not live global coverage'}
+    except (ValueError,TypeError,OverflowError):
+        raise HTTPException(422,'Invalid geographic filter or stored coordinate') from None
+
+
+@router.get('/geo/regions')
+def geo_regions() -> dict:
+    if not isinstance(OBSERVATIONS,PostgresObservationStore):raise HTTPException(503,'Regional aggregation requires the opt-in PostGIS backend')
+    return {'grid_degrees':10,'regions':OBSERVATIONS.regions(),'scope':'PUBLIC_REFERENCE'}
 
 
 @router.post("/rag/retrieve")
