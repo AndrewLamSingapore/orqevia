@@ -93,6 +93,31 @@ def device_state(request):
 
 def device(request):return device_state(request)[1]
 
+def access_mode():
+    """Owner directive 2026-10-16: default to one-tap, code-free access.
+
+    'open'    - the session endpoint admits this browser without any code.
+    'pairing' - the historical pairing-code trust gate.
+    Unknown values fail closed to 'pairing'."""
+    mode=os.getenv('PRIME_PWA_ACCESS_MODE','open').strip().lower()
+    return mode if mode in {'open','pairing'} else 'pairing'
+
+def _auto_admit(request):
+    """Issue a durable session without any pairing code (open access mode).
+
+    Reached only through the same origin-validated /pwa routes as every other
+    session action. Role and owner binding stay bounded by configuration."""
+    now=clock();raw=secrets.token_urlsafe(32);device_raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex
+    role=os.getenv('PRIME_PWA_AUTO_ROLE','OWNER').strip().upper()
+    if role not in {'OWNER','MEMBER'}:raise HTTPException(503,'PWA role unavailable')
+    account=os.getenv('PRIME_PWA_OWNER_ACCOUNT_ID') or None
+    if account is not None and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,63}',account):raise HTTPException(503,'Owner account unavailable')
+    internal_token(client)
+    with database() as db:
+        db.execute('INSERT INTO sessions(session_hash,client_id,expires,revoked,owner_account_id,role) VALUES(?,?,?,0,?,?)',(digest(raw),client,now+SESSION_SECONDS,account,role))
+        db.execute('INSERT INTO devices VALUES(?,?,?,0,?,?)',(digest(device_raw),client,now+DEVICE_SECONDS,account,role))
+    return raw,device_raw,{'clientId':client,'expiresAt':now+SESSION_SECONDS,'role':role,'ownerAccountId':account}
+
 def _cookies(response,session_token,device_token=None):
     if session_token:response.set_cookie(COOKIE,session_token,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
     if device_token:response.set_cookie(DEVICE_COOKIE,device_token,max_age=DEVICE_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
@@ -198,6 +223,12 @@ def get_session(request:Request):
             if refreshed:session_token,current=refreshed
     elif session_status!='VALID':
         current=None
+    if not current and access_mode()=='open':
+        try:
+            session_token,device_token,current=_auto_admit(request)
+            clear_credentials=False
+        except HTTPException:
+            current=None
     if current and bound and not session_token and current['expiresAt']-clock()<SESSION_SECONDS/2:
         # Extend the same opaque credential. Normal active use must not rotate
         # cookies across tabs or require enrollment every eight hours.
