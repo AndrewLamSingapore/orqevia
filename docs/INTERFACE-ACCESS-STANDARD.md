@@ -33,7 +33,8 @@ No fabricated data or silent blank screens. Every data panel needs loading,
 empty, offline, error and retry behavior. Partial service failure must not disable
 unrelated working panels. Navigation, back and refresh preserve page identity.
 
-ABEX owns implementation and execution. Dell independently reviews only.
+ABEX and Dell own implementation and merge. ABEX alone executes runtime
+operations. Dell independently reviews.
 Do not impose historical PRIME/SSOT/21-agent, DigitalOcean or Azure certification
 as access or implementation dependencies. Retain compatible running services
 and existing records without treating legacy names as current architecture.

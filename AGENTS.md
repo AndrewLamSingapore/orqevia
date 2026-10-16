@@ -1,5 +1,16 @@
 # ORQEVIA status and domain ownership
 
+## Owner amendment - dual-writer build authority (16 October 2026)
+
+The Owner has amended the single-writer boundary: ABEX and Dell are now
+co-writers for ORQEVIA implementation and merge. Dell may branch, commit, push,
+open and merge pull requests. ABEX alone deploys and operates ORQEVIA, and
+remains the runtime acceptance and production authority unless the Owner
+separately amends that. The fail-closed runtime gates (Stable Spine, Action
+Harness, host guard, FAILSAFE and the WASM sandbox) are unchanged. Only Lam may
+move an item into STATUS.md "Verified" sections. This amendment supersedes any
+single-writer wording elsewhere in this file.
+
 ## Owner resume after preservation cleanup (15 October 2026)
 
 The Owner has lifted the execution pause. Continue the authorized active mission from its saved state, preserving completed work and required security/release checks. [Git preservation cleanup](docs/forensics/20261015/GIT-PRESERVATION-CLOSURE.md) closes verified custody and Windows formatting tasks. Previously parked optional work remains parked unless specifically reactivated. Older pause records are dated history, not current execution instructions.
@@ -18,7 +29,8 @@ embedding, FAISS and Ollama implementations through the primary workspace; do no
 create disconnected demonstrations or silently discard recoverable work. Keep an
 item-level classification register and 20-test evidence matrix. Preserve platform
 security and required approvals; ask only for actual external or irreversible
-dependencies. ABEX implements and deploys; Dell independently reviews only.
+dependencies. ABEX and Dell both implement; ABEX deploys. Dell independently
+reviews and may merge.
 Retired mandatory PRIME/SSOT/21-agent, migration and certification dependencies
 remain parked. Names on compatible retained resources do not reverse this order.
 
@@ -33,8 +45,8 @@ TLS, scoped HttpOnly credentials, revocation, backend authorization and privacy.
 Every navigation item must open functional service-backed UI with explicit
 loading, empty, offline, error and recovery states. No fabricated live data.
 
-ABEX alone implements and executes. Dell independently reviews only and is not
-a prerequisite for useful, reversible progress. Do not make PRIME, former SSOT,
+ABEX and Dell both implement; ABEX alone executes runtime operations. Dell
+independently reviews and is not a prerequisite for useful, reversible progress. Do not make PRIME, former SSOT,
 the historical 21-agent registry, DigitalOcean migration or Azure certification
 mandatory dependencies of workspace access, Intelligence or God's Eye. Existing
 legacy implementation names are compatibility details, not architectural authority.
@@ -53,10 +65,11 @@ Only Lam may move an item into its "Verified" sections.
 
 ## Current Owner recovery and execution scope (15 October 2026)
 
-ABEX alone implements, merges, deploys and operates ORQEVIA. Dell is an
-independent read-only reviewer and forensic assessor. Historical assignments
-granting Dell implementation authority are preserved as history and do not
-grant current execution permission. PRIME, SSOT, the legacy 21-agent programme,
+ABEX and Dell are co-writers for ORQEVIA implementation and merge. ABEX alone
+deploys and operates ORQEVIA, and remains the runtime acceptance authority.
+Dell is an independent reviewer and forensic assessor in addition to its build
+authority. Historical assignments granting Dell implementation authority are
+preserved as history. PRIME, SSOT, the legacy 21-agent programme,
 DigitalOcean migration and Azure assessment plans remain parked.
 
 Always update and reconcile STATUS.md for real findings, changes and safe
