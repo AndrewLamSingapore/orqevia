@@ -2,6 +2,7 @@
 // No credentials or provider tokens are stored in JavaScript or browser storage.
 export function safeSource(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:null;}catch{return null;}}
 export function freshness(value,now=Date.now()){const at=Date.parse(value);return Number.isFinite(at)&&at<=now+5000?(now-at<=900000?'FRESH':'STALE'):'UNKNOWN';}
+export function agoLabel(value,now=Date.now()){const at=Date.parse(value);if(!Number.isFinite(at))return 'event time unknown';const s=Math.max(0,(now-at)/1000);if(s<3600)return `event ${Math.max(1,Math.round(s/60))}m ago`;if(s<86400)return `event ${Math.round(s/3600)}h ago`;if(s<604800)return `event ${Math.round(s/86400)}d ago`;return `event ${Math.round(s/604800)}w ago`;}
 export function mapPoint(location,width=960,height=480){const {lat,lon}=location||{};return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180?[(lon+180)/360*width,(90-lat)/180*height]:null;}
 
 import {mountCommandMap} from './command-map.mjs';
@@ -37,9 +38,9 @@ if(typeof document!=='undefined'){
   reset.addEventListener('click',()=>{geoFilter=null;void refresh();});
 
   const p=panel("God's Eye · Geospatial observations"), rows=Array.isArray(result.records)?result.records:[];
-  p.append(node('p',`${rows.length} stored observations · ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date())} SGT · public USGS data; not global live coverage.`));drawMap(p,rows);
+  const collected=rows.map(r=>Date.parse(r.ingested_at)).filter(Number.isFinite).sort((a,b)=>b-a)[0];p.append(node('p',`${rows.length} stored observations · collected ${Number.isFinite(collected)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(collected))+' SGT':'time unknown'} · public USGS data; not global live coverage.${Number.isFinite(collected)&&Date.now()-collected>86400000?' Press Sync USGS now to refresh the collection.':''}`));drawMap(p,rows);
   if(!rows.length)p.append(node('p','No observations stored. Refresh after an authorized ingestion run.'));
-  for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${freshness(r.ingested_at)}`,r);source(d,'Original provider evidence',r.source_url);}
+  for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${agoLabel(r.observed_at)}`,r);source(d,'Original provider evidence',r.source_url);}
  }
  function retrieval(){
   const p=panel('Knowledge retrieval · cited public observations'), form=node('form'), label=node('label','Search stored knowledge'), input=node('input'), button=node('button','Retrieve'), out=node('div');input.required=true;input.maxLength=4096;input.id='intelligence-query';label.htmlFor=input.id;button.type='submit';form.append(label,input,button);p.append(form,out);
