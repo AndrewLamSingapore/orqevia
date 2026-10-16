@@ -29,22 +29,22 @@ jobs:
           PRIME_DATA_DIR: /tmp/prime-test
         run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/api/integrations/portal/experiments' in paths; assert '/api/integrations/velyqua/events' in paths; assert '/api/integrations/portal/results/flush' in paths"
       - name: Build container
-        run: docker build -t prime:portal-integration .
+        run: docker build -t orqevia:portal-integration .
       - name: Container health and API smoke
         run: |
-          docker network create prime-portal-integration
-          docker run -d --name fake-ollama --network prime-portal-integration --network-alias ollama \
+          docker network create orqevia-portal-integration
+          docker run -d --name fake-ollama --network orqevia-portal-integration --network-alias ollama \
             -v "${{ github.workspace }}/tests:/fixture:ro" \
             python:3.12-alpine python /fixture/fake_ollama.py
-          docker run -d --name prime-smoke --network prime-portal-integration -p 18000:8000 \
+          docker run -d --name orqevia-smoke --network orqevia-portal-integration -p 18000:8000 \
             -e PRIME_DATA_DIR=/data \
             -e PRIME_INTEGRATION_TOKEN=smoke-integration-token \
             -e OLLAMA_BASE_URL=http://ollama:11434 \
             -e PRIME_FAST_MODEL=gemma3:1b \
             -e PRIME_DEEP_MODEL=gemma3:1b \
             -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
-            prime:portal-integration
-          trap 'docker logs prime-smoke || true; docker logs fake-ollama || true; docker rm -f prime-smoke fake-ollama || true' EXIT
+            orqevia:portal-integration
+          trap 'docker logs orqevia-smoke || true; docker logs fake-ollama || true; docker rm -f orqevia-smoke fake-ollama || true' EXIT
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:18000/health >/tmp/health.json; then break; fi
             sleep 1
