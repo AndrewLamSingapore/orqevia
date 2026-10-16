@@ -5,7 +5,7 @@
 - ORQEVIA component reference: https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json
 - Recorded architecture release: `jarvis-prime-unified-2026-09-15`
 - Manifest snapshot state: **STALE** (dated, not a current runtime verdict)
-- Source observation: `2026-09-26T07:48:05Z`
+- Source observation: `2026-10-16T05:20:00Z`
 - Architecture: ABEX PRIME; Dell/PWA/voice clients; 21 agents; direct observed bounded work.
 - This applies to ChatGPT, Codex, Sol and Astra. Model memory and old chats are not current authority.
 - Source publication does not prove deployment. Historical Dell observations do not prove ABEX identity.
