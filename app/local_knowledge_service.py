@@ -17,7 +17,8 @@ from .local_knowledge import KnowledgeEngine,MAX_UPLOAD
 from . import workspace_capabilities
 
 ROOT=Path(os.environ.get('ORQEVIA_LOCAL_AI_ROOT',str(Path.home()/'orqevia-ai')))
-ENGINE=KnowledgeEngine(ROOT)
+from .postgres_intelligence import knowledge_engine
+ENGINE=knowledge_engine(ROOT)
 SLOT=threading.BoundedSemaphore(1)
 
 @asynccontextmanager

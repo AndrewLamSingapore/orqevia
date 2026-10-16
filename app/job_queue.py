@@ -472,9 +472,17 @@ class JobQueue:
                                                         provider.model,row['ram_mb'],
                                                         global_concurrency=self.policy.global_concurrency)
                     except PermissionError:
-                        provider,reason,estimate=self._route(c,row,providers,local_unavailable=True)
-                        if not provider:
-                            continue
+                        # Crash hygiene (2026-10-16 stall): reclaim leases whose
+                        # holder job is already terminal/unknown, then retry once.
+                        self._reclaim_terminal_leases(c)
+                        try:
+                            backend_admission.reserve_model(c,self.backend_endpoint,row['id'],
+                                                            provider.model,row['ram_mb'],
+                                                            global_concurrency=self.policy.global_concurrency)
+                        except PermissionError:
+                            provider,reason,estimate=self._route(c,row,providers,local_unavailable=True)
+                            if not provider:
+                                continue
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
                              lease_until=?,cloud_inflight=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status IN ('queued','held')""",
@@ -485,6 +493,24 @@ class JobQueue:
                 if provider.kind=='local':
                     backend_admission.cancel(c,self.backend_endpoint,row['id'])
         return None
+
+    def _reclaim_terminal_leases(self, c) -> None:
+        """Delete backend inference leases whose holder job is terminal or gone.
+
+        An orphaned lease whose holder job already failed silently refuses every
+        later claim under `backend inference lease occupied`; reclaiming it here
+        keeps the queue self-healing after crashes.
+        """
+        try:
+            rows = list(c.execute("SELECT endpoint, job_id FROM backend_admission"))
+        except Exception:
+            return
+        for endpoint, job_id in rows:
+            holder = c.execute("SELECT status FROM compute_jobs WHERE id=?", (job_id,)).fetchone()
+            status = holder[0] if holder else None
+            if status is None or status in ("failed", "completed", "cancelled", "budget_blocked"):
+                c.execute("DELETE FROM backend_admission WHERE endpoint=? AND job_id=?", (endpoint, job_id))
+                self._event(c, job_id, "stale_lease_reclaimed", {"endpoint": endpoint, "holder_status": status})
 
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
                output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,

@@ -2,8 +2,10 @@
 // No credentials or provider tokens are stored in JavaScript or browser storage.
 export function safeSource(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:null;}catch{return null;}}
 export function freshness(value,now=Date.now()){const at=Date.parse(value);return Number.isFinite(at)&&at<=now+5000?(now-at<=900000?'FRESH':'STALE'):'UNKNOWN';}
+export function agoLabel(value,now=Date.now()){const at=Date.parse(value);if(!Number.isFinite(at))return 'event time unknown';const s=Math.max(0,(now-at)/1000);if(s<3600)return `event ${Math.max(1,Math.round(s/60))}m ago`;if(s<86400)return `event ${Math.round(s/3600)}h ago`;if(s<604800)return `event ${Math.round(s/86400)}d ago`;return `event ${Math.round(s/604800)}w ago`;}
 export function mapPoint(location,width=960,height=480){const {lat,lon}=location||{};return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180?[(lon+180)/360*width,(90-lat)/180*height]:null;}
 
+import {mountCommandMap} from './command-map.mjs';
 if(typeof document!=='undefined'){
  const $=id=>document.getElementById(id), root=$('intelligence-content');
  let session=null, generation=0, pending=null, active=new URL(location.href).searchParams.get('view')||'home';
@@ -22,15 +24,13 @@ if(typeof document!=='undefined'){
   if(!r.ok){const e=new Error(r.status===401?'Device trust is unavailable. Use the recovery form below.':`Service returned ${r.status}`);e.status=r.status;throw e;}return r.json();
  }
  function drawMap(p,records){
-  const c=node('canvas');c.width=960;c.height=480;c.setAttribute('aria-label','World grid with attributed earthquake observations; equivalent records below');p.append(c);
-  const ctx=c.getContext('2d');if(!ctx){p.append(node('p','Canvas unavailable. All observations remain listed below.'));return;}
-  ctx.strokeStyle='#456064';for(let x=0;x<=960;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,480);ctx.stroke();}for(let y=0;y<=480;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(960,y);ctx.stroke();}
-  ctx.fillStyle='#83d6c1';for(const r of records){const xy=mapPoint(r.location);if(xy){ctx.beginPath();ctx.arc(...xy,4,0,2*Math.PI);ctx.fill();}}
+  if(!document.defaultView){p.append(node('p','Interactive map requires a browser. Observation records are listed below.'));return;}
+  void mountCommandMap(p,{records});
  }
  function renderObservations(result){
   const filter=panel('Geographic filter'), form=node('form');
   const fields=[];
-  for(const [label,value,min,max] of [['Latitude',geoFilter?.lat,-90,90],['Longitude',geoFilter?.lon,-180,180],['Radius in kilometers',geoFilter?.radius_km,0,40075]]){
+  for(const [label,value,min,max] of [['Latitude',geoFilter?.lat??1.3521,-90,90],['Longitude',geoFilter?.lon??103.8198,-180,180],['Radius in kilometers',geoFilter?.radius_km??1500,0,40075]]){
    const l=node('label',label),input=node('input');input.type='number';input.step='any';input.min=String(min);input.max=String(max);input.required=true;input.value=value??'';l.append(input);form.append(l);fields.push(input);
   }
   const apply=node('button','Filter observations');apply.type='submit';const reset=node('button','Show all observations');reset.type='button';form.append(apply,reset);filter.append(form);
@@ -38,9 +38,9 @@ if(typeof document!=='undefined'){
   reset.addEventListener('click',()=>{geoFilter=null;void refresh();});
 
   const p=panel("God's Eye · Geospatial observations"), rows=Array.isArray(result.records)?result.records:[];
-  p.append(node('p',`${rows.length} stored observations · ${new Date().toLocaleString()} · public USGS data; not global live coverage.`));drawMap(p,rows);
+  const collected=rows.map(r=>Date.parse(r.ingested_at)).filter(Number.isFinite).sort((a,b)=>b-a)[0];p.append(node('p',`${rows.length} stored observations · collected ${Number.isFinite(collected)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(collected))+' SGT':'time unknown'} · public USGS data; not global live coverage.${Number.isFinite(collected)&&Date.now()-collected>86400000?' Press Sync USGS now to refresh the collection.':''}`));drawMap(p,rows);
   if(!rows.length)p.append(node('p','No observations stored. Refresh after an authorized ingestion run.'));
-  for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${freshness(r.ingested_at)}`,r);source(d,'Original provider evidence',r.source_url);}
+  for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${agoLabel(r.observed_at)}`,r);source(d,'Original provider evidence',r.source_url);}
  }
  function retrieval(){
   const p=panel('Knowledge retrieval · cited public observations'), form=node('form'), label=node('label','Search stored knowledge'), input=node('input'), button=node('button','Retrieve'), out=node('div');input.required=true;input.maxLength=4096;input.id='intelligence-query';label.htmlFor=input.id;button.type='submit';form.append(label,input,button);p.append(form,out);
@@ -62,9 +62,9 @@ if(typeof document!=='undefined'){
    const telemetry=values.get('telemetry'), op=panel('Operational visibility · agents and tasks');
    if(telemetry.status==='fulfilled'){
     const t=telemetry.value,at=Date.parse(t.observed_at), ttl=t.freshness_seconds*1000, fresh=Number.isFinite(at)&&at<=Date.now()+5000&&ttl>0&&ttl<=60000&&Date.now()-at<=ttl;
-    op.append(node('p',`Telemetry: ${fresh?'OBSERVED':'STALE / UNKNOWN'} · ${t.observed_at||'unknown time'}. Registration is separate from agent availability.`));
+    op.append(node('p',`Telemetry: ${fresh?'OBSERVED':'STALE / UNKNOWN'} · ${Number.isFinite(at)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(at))+' SGT':(t.observed_at||'unknown time')}. Registration is separate from agent availability.`));
     for(const m of t.metrics||[])record(op,m.metric_id,m);
-    for(const a of t.agents||[])record(op,`${a.agent_id} · ${a.availability||'UNKNOWN'}`,a);
+    let readyMap=null;try{const rr=await fetcher('/pwa/agent-readiness.json',{cache:'no-store'});if(rr&&rr.ok){const rj=await rr.json();readyMap=rj&&rj.agents&&!Array.isArray(rj.agents)?rj.agents:null;}}catch{}for(const a of t.agents||[]){const signed=readyMap&&readyMap[a.agent_id]&&readyMap[a.agent_id].initialization_signed;record(op,`${a.agent_id} · ${a.availability||'UNKNOWN'}${signed?` · INITIALIZATION SIGNED (${signed})`:''}`,a);}
    }else{op.append(node('p',`Operational telemetry unavailable: ${telemetry.reason.message}. Intelligence remains independently usable.`));failures++;}
    const tasks=node('a','Open your owned tasks and original artifacts');tasks.href='/pwa/?view=evidence';op.append(tasks);
    for(const [key,title] of [['alerts','Alerts, exceptions and anomalies'],['history','Historical event feed'],['sources','Providers and provenance']]){const p=panel(title),r=values.get(key);if(r.status==='fulfilled'){if(key==='alerts'&&!r.value.alerts?.length)p.append(node('p','No alerts have fired. This does not assert that no hazards exist.'));record(p,'Inspect underlying records',r.value);}else{p.append(node('p',`Unavailable: ${r.reason.message}`));failures++;}}

@@ -1,0 +1,100 @@
+name: ORQEVIA OIDC claim and exchange probe (diagnostic, non-signing)
+
+# Diagnostic only: prints selected OIDC claims and the Azure token-exchange
+# AADSTS error code when the exchange fails. It never requests a signing key,
+# never prints a token or assertion, and awards nothing.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  probe:
+    if: github.repository == 'AndrewLamSingapore/orqevia' && github.ref == 'refs/heads/main' && github.ref_protected && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Print selected claims and attempt token exchange
+        run: |
+          python - <<'PY'
+          import base64, hashlib, json, os, urllib.parse, urllib.request
+
+          url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
+          sep = "&" if "?" in url else "?"
+          req = urllib.request.Request(
+              url + sep + urllib.parse.urlencode({"audience": "api://AzureADTokenExchange"}),
+              headers={"Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]},
+          )
+          assertion = json.load(urllib.request.urlopen(req, timeout=15))["value"]
+          payload = assertion.split(".")[1]
+          claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+          keep = ("iss", "aud", "sub", "repository", "repository_id", "repository_owner_id",
+                  "ref", "ref_protected", "ref_type", "workflow_ref", "job_workflow_ref",
+                  "workflow_sha", "job_workflow_sha", "event_name")
+          for name in keep:
+              print(f"claim[{name}] = {claims.get(name)}")
+
+          body = urllib.parse.urlencode({
+              "client_id": "d3779443-01fe-4bdc-9986-9db3ae98893e",
+              "scope": "https://vault.azure.net/.default",
+              "grant_type": "client_credentials",
+              "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+              "client_assertion": assertion,
+          }).encode("ascii")
+          try:
+              with urllib.request.urlopen(urllib.request.Request(
+                      "https://login.microsoftonline.com/067196c1-a282-4f8d-a7c5-753ca4ae5b48/oauth2/v2.0/token",
+                      data=body, method="POST",
+                      headers={"Content-Type": "application/x-www-form-urlencoded"}),
+                      timeout=20) as response:
+                  parsed = json.loads(response.read(65536))
+              print("EXCHANGE_OK token_type=" + str(parsed.get("token_type")) + " expires_in=" + str(parsed.get("expires_in")))
+              token = parsed.get("access_token")
+              pin = json.load(open("governance/agent-cert-verifier-azure-pins.json", encoding="utf-8"))
+              key_id = pin["key_id"]
+              payload = json.dumps({
+                  "alg": "ES256",
+                  "value": base64.urlsafe_b64encode(hashlib.sha256(b"probe").digest()).rstrip(b"=").decode(),
+              }, separators=(",", ":")).encode("ascii")
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(
+                          key_id + "/sign?api-version=7.4", data=payload, method="POST",
+                          headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"}),
+                          timeout=20) as response:
+                      signed = json.loads(response.read(65536))
+                  print("VAULT_SIGN_OK kid_match=" + str(signed.get("kid") == key_id) + " value_len=" + str(len(str(signed.get("value")))))
+              except Exception as vault_error:
+                  raw = ""
+                  if hasattr(vault_error, "read"):
+                      try:
+                          raw = vault_error.read(65536).decode("utf-8", "replace")
+                      except Exception:
+                          raw = ""
+                  try:
+                      parsed = json.loads(raw)
+                      print("VAULT_SIGN_ERROR status=" + str(getattr(vault_error, "code", "?")) +
+                            " code=" + str(parsed.get("error", {}).get("code")) +
+                            " message=" + str(parsed.get("error", {}).get("message"))[:200])
+                  except Exception:
+                      print("VAULT_SIGN_ERROR status=" + str(getattr(vault_error, "code", "?")))
+          except Exception as error:
+              raw = ""
+              if hasattr(error, "read"):
+                  try:
+                      raw = error.read(65536).decode("utf-8", "replace")
+                  except Exception:
+                      raw = ""
+              try:
+                  parsed = json.loads(raw)
+                  print("EXCHANGE_ERROR code=" + str(parsed.get("error")))
+                  print("EXCHANGE_ERROR description=" + str(parsed.get("error_description"))[:400])
+              except Exception:
+                  print("EXCHANGE_ERROR unparsed_status=" + str(getattr(error, "code", "?")))
+          PY

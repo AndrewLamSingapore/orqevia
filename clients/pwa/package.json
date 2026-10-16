@@ -1,0 +1,1 @@
+{"name":"orqevia-map-assets","private":true,"type":"module","scripts":{"build:map":"node build-map-assets.mjs"},"dependencies":{"maplibre-gl":"6.14.0"}}

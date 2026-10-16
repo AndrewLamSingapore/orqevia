@@ -36,6 +36,23 @@ If you are an AI agent updating this file:
 
 ---
 
+## Geospatial/vector candidate — 16 October 2026
+
+### Claimed, not independently checked
+
+- Dedicated branch `codex/geospatial-vector-20261016` adds opt-in pgvector/PostGIS
+  adapters and shared MapLibre PWA/companion mapping. Existing SQLite/FAISS
+  defaults and production services remain unchanged.
+- Agent-observed isolated qualification: 15 real PostgreSQL/MiniLM tests,
+  40 Python regressions, 39 Node tests and 11 Chromium checks; real USGS
+  ingestion, authenticated document retrieval, owner isolation, mobile layout,
+  candidate image build and disposable database restore exercised.
+- Existing local Qwen generated-answer workflow also returned authenticated
+  HTTP 200 with valid passage citations; factual entailment is not certified.
+- Production migration, deployment and Owner-device acceptance remain open. See
+  [candidate evidence](docs/GEOSPATIAL-VECTOR-VERIFICATION.md) and
+  [release/rollback runbook](docs/GEOSPATIAL-VECTOR-RUNBOOK.md).
+
 ## Dual-writer governance, sweep fixes and ABEX handoff - 16 October 2026
 
 ### Claimed, not independently checked
@@ -116,6 +133,202 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
   current verifier as a new dated evidence batch; the one-shot protected fresh29 workflow must
   not be dispatched against the drifted closure. Recorded by Codex; not yet independently
   checked by Lam.
+
+---
+
+## Access reconciliation, protected batch and command shell — 16 October 2026
+
+### Claimed, not independently checked
+
+- **Co-owner parity recorded by Owner directive:** OWNER, ABEX, Codex, DELL Codex PC and
+  ORQEVIA are co-owners with equal shared authority and privileges, deciding
+  autonomously; the named set is not exhaustive — additional elite administrators and
+  users exist. **Minimal guardrails** is a permanent operating directive; the remaining
+  guardrails are physical limits, the Owner's data boundary (no private ABEX material to
+  GitHub or ORQEVIA) and safety of record.
+- **Workspace access reconciled (UAC-approved 12:34–12:39 SGT):** the workspace-root ACL
+  was fixed (stray sandbox SIDs and two unresolvable SIDs removed; equal full access for
+  Admin, Administrators, SYSTEM, CodexSandboxUsers), and all 94 truly unreadable items
+  were inventoried (62,065 files) and deleted with zero failures. Receipts:
+  `operations/access-reconciliation-20261016/` (OPEN-ACCESS-RECEIPT.json,
+  locked-inventory.csv, Invoke-AccessReconciliation.ps1).
+- **Chrome Remote Desktop:** retained and recorded — Google-signed host, outbound-only
+  via Google's relay, host configuration administrator-only. Open item resolved as
+  "retained + recorded".
+- **Interface defaults (permanent, 16 October 2026):** one-tap, code-free access (open
+  mode default) and the perfect-fit requirement for web and iPhone screens — recorded as
+  standing Owner instructions (SOI-06, SOI-07); both verified live on every deploy since.
+- **Host telemetry live:** `/interface/v1/telemetry` reports OBSERVED CPU, memory, disk
+  and workspace metrics from the SYSTEM collector task ("ABEX Host Metrics Collector",
+  one-minute cadence); the UNKNOWN producer state is closed. The Command Overview
+  gauges were subsequently bound to those observed values (floating-point percentages
+  render; the availability label is honest; stale values clear on invalidation) —
+  PR #348, deployed to the live interface.
+- **Fresh 20261016 initialization batch executed and protected-validated:** 29/29 cases
+  collected (batch digest `a7eea39dbfb8376915efbef6e7928e47db90eb0a3d3fbd4353bedb3647232b1f`);
+  runtime closure port `80dcb94f` aligned main with the deployed runtime for the 46-file
+  set; the one-shot protected workflow ran on main (`orqevia-fresh-initialization-validation-20261016.yml`,
+  run `38861038816`, attempt 1 — success; artifact
+  `initialization-a7eea39dbfb83769-validation-38861038816-attempt-1`; all 29 oracles PASS;
+  fixed +24 h expiry; `signature NOT_PERFORMED`; `l7 false`; `installed false`).
+  Re-dispatch is refused by design: each dated batch mints a fresh run history.
+- **Fresh batch Stage 2 admission and signing dispatch:** the exact 29 protected rows were
+  admitted (PR #349; committed manifest blob sha256 equals the protected
+  `proposed_manifest_sha256 acf5e44e…`), pre-dispatch dry-run of the signer flow passed
+  29/29, and the protected signer was dispatched (`orqevia-verifier-oidc.yml`, run
+  `38864460391`). The run failed closed at the protected Azure canary step — the Azure
+  federated credential still matches the pre-rename subject (last success 2026-10-07,
+  before the repository rename). The one owner-side fix is recorded in
+  `operations/fresh29-20261016/SIGNING-BLOCKER-AZURE-FEDERATION-20261016.md`; ABEX
+  re-dispatches on confirmation while the fixed +24 h admission window holds.
+- **Merge train completed:** PRs #339, #340, #341 (closed as not viable), #342, #343 and
+  #344 — workflow-file renames to `orqevia-*` with OIDC self-reference re-pins, manifest
+  redate with mirror regeneration, host-collector write fix, telemetry reader ship, and
+  the fresh batch. The verifier re-pin closure is recorded in the section above.
+- **Command Center L2 deployed:** PR #345 (grouped command-domain shell —
+  COMMAND / OPERATIONS / WORKSPACE / SYSTEM; all 14 views preserved; zero-tap access;
+  responsive fit for web and iPhone) merged to main `9beebe85` and deployed to the live
+  interface (image `orqevia:interface-l2shell-9beebe8`, healthy; attestation publisher
+  refreshed post-swap; rollback image `orqevia:rollback-l1-live-20261016T0644Z` retained
+  plus the older rollback container). Receipts: `operations/command-center-l2-20261016/`.
+  Browser QA of the live surface (truthful screenshots, desktop and 390×844 iPhone
+  viewport) verified the fit requirement: no overlapping navigation, no clipping, safe-area
+  bottom bar, and grouped command navigation rendering as designed.
+- **DELL branch consolidation:** DELL's two pushed branches — `codex/dell-db-architecture-20261016`
+  (`0d32427a`: SQLite persistence verification, backup/restore-test tool, 5 tests) and
+  `codex/dell-scaffolding-review-acceptance-20261016` (`af638d90`) — were merged with
+  current main by ABEX without history rewrite (DELL commit SHAs preserved) and landed as
+  PRs #346/#347. Scaffolding closure: three engine defects fixed (per-instance
+  `generated_at`; generated-project test self-containment; JSON resolution via
+  `Path(__file__)`), end-to-end acceptance added, `tests/test_scaffolding.py` +
+  `tests/test_fast_acceptance.py` 18 passed, review record
+  `docs/scaffolding-independent-review-20261016.md`. The engine remains not deployed and
+  not runtime-activated. (DELL's STATUS draft text is folded here because it rewrote a
+  byte-pinned historical section.)
+- **DELL gh-auth blocker resolved on the ABEX side:** DELL's `gh` token is invalid and
+  DELL cannot re-authenticate; ABEX holds a verified valid credential. Resolution
+  package: `operations/dell-co-owner/DELL-GH-AUTH-RESOLUTION-20261016.md` — device-flow
+  path (primary; no secret transport) plus an ACL-locked handoff file and
+  `Set-DellGhAuth.ps1` (fallback). The final hop is owner-bridged: no ABEX→DELL channel
+  exists (reachability re-probed: ping True, SMB 445 open, no DELL credentials on ABEX),
+  and secrets never go to GitHub or into agent chats.
+- **Outward flow:** none. No estate secrets were found in the six public repositories;
+  `orqevia.com` serves a third-party-styled "Orqevia Bank" site unrelated to this estate
+  (flagged); no ORQEVIA cloud host exists yet.
+
+---
+
+## Signing closure, command identity and Singapore origin — 16 October 2026
+
+### Claimed, not independently checked
+
+- **Fresh 20261016 initialization batch signed end-to-end:** the exact 29 admitted rows were
+  signed by the unchanged protected Azure ES256 signer — run `38871679860`, artifact
+  `prime-independent-signed-cases-8e6cea0c2ef4a1540290e6f203772274d1f352db-38871679860`,
+  `state=SIGNED_CASE_EVIDENCE`, 29/29, `l7_awarded=false`; all 29 signatures re-verified
+  locally against the pinned public key. Two blockers were resolved at root: the Azure
+  federated credential still pinned the pre-rename `prime` subject (re-pinned on the Azure
+  portal under the Owner's full-control mandate; exact record in
+  `operations/fresh29-20261016/AZURE-FEDERATION-REPIN-20261016.md`), and the vault's Azure
+  subscription had been disabled (Owner upgraded to pay-as-you-go).
+- **Command identity:** the ORQEVIA command icon v1 replaced the legacy glyph across the
+  install surface (manifest, apple-touch, favicons, maskable, favicon.ico; PRs #355/#356),
+  and `tests/test_pwa_branding.py` now rejects the legacy bytes under any name; the marketed
+  "official" repo icon drift was repaired with the real logo; the CA trust profile serves as
+  `ORQEVIA-ABEX-HTTPS.mobileconfig` with ORQEVIA display names (the certificate CN is
+  preserved — it is the trust anchor every installed device pins).
+- **Governed identity corrected at the source:** the response contract still demanded the old
+  name while the runtime prompt said ORQEVIA; it is now `app/orqevia_response_contract.py`
+  requiring the ORQEVIA name, with the candidate verifier renamed to match; recovery flag
+  `orqeviaReady`; service-worker cache `orqevia-shell-v27` with release-coherence tests.
+- **Singapore focus:** God's Eye observations are scoped to the Singapore regional window
+  (PR #357 — 34 US-scoped rows archived to `operations/orqevia-icon-20261016/` and removed;
+  18 real regional observations live, newest two days old); the map opens on the region; all
+  timestamps render in SGT; geographic defaults are Singapore; document language is
+  `en-SG`; observation freshness labels now report honest event age and collection time
+  (PR #360), with a refresh hint only when the collection is genuinely old.
+- **Origin stated by Owner directive:** ORQEVIA, and its twenty-one canonical agents, were
+  born in Singapore in 2026 (`governance/ORQEVIA-ORIGIN.md`; product footer, structured data
+  `foundingDate`/`foundingLocation`, and the manifest; PR #359).
+- **Verification:** 19/19 interface pathways 200; telemetry fully OBSERVED (7 metrics,
+  21 agent rows, coaching present); 14/14 Node suites and 159 pytest checks green; interface
+  rollback chain preserved through six dated snapshots plus committed rollback images; a
+  daily regional collection task ("ABEX ORQEVIA Geo Sync", 06:00 SGT) installed and
+  validated idempotent.
+
+---
+
+## Installation verification, brand archive and readiness — 16 October 2026
+
+### Claimed, not independently checked
+
+- **Protected installation executed:** the candidate binding of the signed 29
+  initialization cases to their agent-owned domains was independently
+  re-verified under protection — registry digest, all 29 owned-domain
+  definitions, and a live fetch of the signed artifact of run `38871679860` —
+  and accepted: protected run `38889594060`, attempt 1 (one-shot), success;
+  receipt `PROTECTED_INSTALLATION_VERIFIED`, 29 records, installation digest
+  `7356c507…`, `runtime_activated=false`, `l7_awarded=false`. The candidate and
+  its design (`governance/INSTALLATION-ROUND-DESIGN-20261016.md`) record the
+  registry's strict byte lock: per-agent model/origin bindings ride the next
+  sanctioned closure re-issue.
+- **Agent readiness is evidence-backed and visible:** the Agents view annotates
+  every agent with its signed initialization count ("INITIALIZATION SIGNED"),
+  sourced from `clients/pwa/agent-readiness.json` (21/21 agents, 29 cases;
+  batch digest `a7eea39d…`).
+- **Brand archive stored in GitHub:** the canonical app icon (master, light
+  variant, SVG source, favicon, provenance README) lives in
+  `docs/brand/app-icon/`; the master is byte-identical to the file on the
+  Owner's Desktop (`c4810b92…`); the full install set remains in
+  `clients/pwa/icons/orqevia-command-v1-*`.
+- **Origin surfaces live:** footer "Private by design · Born in Singapore,
+  2026", structured-data `foundingDate`/`foundingLocation`, manifest
+  description — verified served on the live interface.
+- **PostgreSQL qualification environment live on ABEX:** isolated loopback dev
+  stack (PostGIS + pgvector) with the migration and restricted role
+  provisioned; 8 real database integration tests passed locally; the remainder
+  require the embedding stack present in the companion image.
+
+---
+
+## ORQEVIA epoch supersession and worker execution — 16 October 2026 (night)
+
+### Claimed, not independently checked
+
+- **PRIME naming superseded on the deployment surface:** compose project and
+  service rename merged (PR #367, `48648edd`) — service `backend`, project
+  default `orqevia`, labels `com.orqevia.*`, operator script
+  `scripts/orqevia.ps1`, observatory-verifier pin contract moved to `backend`;
+  regression tests now fail if `com.lamjarvis` or `prime:local` reappear.
+  Remaining PRIME/JARVIS identifiers are staged with root-fix paths in
+  `governance/BRAND-AND-NAMING-BOUNDARY.md` (env-var aliasing round, wire
+  dual-accept round, next dated closure round; history is never rewritten).
+- **Live epoch flip on ABEX:** project `prime-epoch-20260919` stopped with
+  containers, volumes and `.env` retained as rollback; new project
+  `orqevia-epoch-20261016` runs healthy (`backend`, `interface`, `ollama`;
+  `model-init` one-shot completed) from merged main `48648edd`, backend image
+  digest `sha256:aca892c4…`, with `production_entry.py` and `job_queue.py`
+  verified byte-identical to the checkout. Data volumes were copied
+  (76 MB data / 4.1 GB models) and the existing iPhone TLS and profile
+  material reused — no device re-provisioning.
+- **Worker self-start proven live:** the compute queue now starts with the
+  application and reclaims terminal-holder inference leases (PR #366,
+  `d1ab5ef`); the 16 October wave stall was an orphaned `backend_admission`
+  lease, fixed live before the wave drained to 21/21 terminal. After the flip,
+  canary objective `59eb3ab6…` reached COMPLETED with no manual worker start;
+  queue counts read 324 completed / 16 failed (wave end-state preserved).
+- **Companion and data paths verified after the flip:** the intelligence
+  companion is attached to the new epoch network (alias `intelligence`);
+  interface → intelligence health returned 200; a manual geo sync fetched and
+  updated the 18 regional observations; the host-metrics receipt is present in
+  the interface mount.
+- **Rollback armed:** stopped old containers, untouched old volumes,
+  `private\orqevia-epoch-20261016\old-epoch.env.bak`, and container commit
+  snapshots (`orqevia:rollback-epoch-backend-20261016T121843Z`,
+  `orqevia:rollback-epoch-interface-20261016T121843Z`).
+
+No certification is awarded or renewed by this record; signing and
+installation state remain as recorded in the previous section.
 
 ---
 

@@ -15,7 +15,7 @@ services:
       abex:
         aliases: [intelligence]
     read_only: true
-    tmpfs: [/tmp:size=16m,noexec,nosuid]
+    tmpfs: ["/tmp:size=16m,noexec,nosuid"]
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     mem_limit: 256m
@@ -36,4 +36,4 @@ volumes:
 networks:
   abex:
     external: true
-    name: prime-epoch-20260919_default
+    name: ${ORQEVIA_EPOCH_NETWORK:?epoch network required}

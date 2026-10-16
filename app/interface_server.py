@@ -55,9 +55,9 @@ async def transport_and_protocol(request: Request, call_next):
     response = await call_next(request)
     response.headers['X-PRIME-Protocol'] = PROTOCOL
     response.headers['Cache-Control'] = 'no-store'
-    if request.url.path == '/pwa/JARVIS-ABEX-HTTPS.mobileconfig' and response.status_code == 200:
+    if request.url.path == '/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig' and response.status_code == 200:
         response.headers['Content-Type'] = 'application/x-apple-aspen-config'
-        response.headers['Content-Disposition'] = 'attachment; filename="JARVIS-ABEX-HTTPS.mobileconfig"'
+        response.headers['Content-Disposition'] = 'attachment; filename="ORQEVIA-ABEX-HTTPS.mobileconfig"'
     return response
 
 

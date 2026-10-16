@@ -1,7 +1,7 @@
 # Optional exact-version public-key rotation. Apply with docker-compose.yml.
 # The host file is reviewed deployment configuration, never agent evidence.
 services:
-  prime:
+  backend:
     environment:
       PRIME_AGENT_CERT_AZURE_ES256_ENABLED: "1"
       PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE: /run/prime-cert-verifier-pin.json

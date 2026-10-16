@@ -6,6 +6,7 @@
   <title>GOD'S EYE · Geospatial Map</title>
   <link rel="stylesheet" href="gods-eye.css">
   <link rel="stylesheet" href="map.css">
+  <link rel="stylesheet" href="/pwa/command-map.css">
 </head>
 <body>
   <header class="masthead">
@@ -14,10 +15,8 @@
     <div class="refresh-controls"><button id="refresh" type="button">Refresh</button><a href="/orqevia/">ORQEVIA ↗</a></div>
   </header>
   <div class="map-wrap">
-    <canvas id="map" width="960" height="480" aria-label="World map with geospatial observations"></canvas>
-    <div class="map-meta"><span id="count">0 observations</span><span id="status">IDLE</span></div>
+    <div id="interactive-map"></div>
   </div>
-  <ul id="events" class="event-list"></ul>
-  <script src="map.js"></script>
+  <script type="module" src="map.js"></script>
 </body>
 </html>

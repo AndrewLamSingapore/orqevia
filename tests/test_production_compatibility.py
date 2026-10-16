@@ -262,7 +262,7 @@ def test_allowlisted_network_reconciliation_executes_once(shell, monkeypatch):
     monkeypatch.setenv('PRIME_SURVIVAL_NETWORK_PROBE_URL', target)
     monkeypatch.setenv('PRIME_SURVIVAL_CLOUD_PROBE_URL', target)
     monkeypatch.setenv('PRIME_SURVIVAL_FETCH_ALLOWLIST', target)
-    monkeypatch.setenv('PRIME_SURVIVAL_AUTHORITY_REF', 'prime-epoch-20260919:owner')
+    monkeypatch.setenv('PRIME_SURVIVAL_AUTHORITY_REF', 'orqevia-epoch-20261016:owner')
     monkeypatch.setattr(survival, '_probe', lambda url: True)
     calls = []
 
@@ -280,7 +280,7 @@ def test_allowlisted_network_reconciliation_executes_once(shell, monkeypatch):
     queued = client.post('/control/api/survival/queue', headers=headers, json={
         'objective_id': 'network-acceptance', 'operation_type': 'web.research',
         'payload_ref': target, 'idempotency_key': 'network-acceptance-idempotency',
-        'authorization_ref': 'prime-epoch-20260919:owner',
+        'authorization_ref': 'orqevia-epoch-20261016:owner',
     })
     assert queued.status_code == 202, queued.text
     first = client.post('/control/api/survival/reconcile', headers=headers)

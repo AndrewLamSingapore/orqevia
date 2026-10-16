@@ -165,13 +165,24 @@ def run(pin):
             or os.environ.get("GITHUB_REF_PROTECTED") != "true"
             or os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"):
         raise ValueError("protected main required")
-    assertion = _oidc()
-    bearer = _azure_token(assertion)
+    # Stage-tagged failures: the operator can tell WHICH protected step failed
+    # (claims / exchange / vault / verify) without any secret being printed.
+    try:
+        assertion = _oidc()
+    except Exception:
+        raise ValueError("stage:claims") from None
+    try:
+        bearer = _azure_token(assertion)
+    except Exception:
+        raise ValueError("stage:exchange") from None
     message = ("prime.independent-verifier.live-canary.v1\n"
                + os.environ["GITHUB_SHA"] + "\n" + os.environ["GITHUB_RUN_ID"]).encode("ascii")
-    signature = _sign(key_id, hashlib.sha256(message).digest(), bearer)
+    try:
+        signature = _sign(key_id, hashlib.sha256(message).digest(), bearer)
+    except Exception:
+        raise ValueError("stage:vault") from None
     if not verify(public, message, signature) or verify(public, message + b"!", signature):
-        raise ValueError("Azure signature verification failed")
+        raise ValueError("stage:verify")
     print(json.dumps({
         "result": "AZURE_PROTECTED_SIGN_VERIFY_TAMPER_PASS",
         "scope": "isolated cryptographic canary, not agent certification",
@@ -188,9 +199,11 @@ def main():
         with open("governance/agent-cert-verifier-azure-pins.json", encoding="utf-8") as stream:
             pin = json.load(stream, object_pairs_hook=_unique)
         run(pin)
-    except Exception:
-        # Never print assertion, bearer, upstream body or exception chain.
-        raise SystemExit("protected Azure signing canary unavailable") from None
+    except Exception as error:
+        # Never print assertion, bearer, upstream body or exception chain. The
+        # stage tag and short type/message support protected diagnosis.
+        detail = f"{type(error).__name__}:{str(error)[:80]}"
+        raise SystemExit("protected Azure signing canary unavailable [" + detail + "]") from None
 
 
 if __name__ == "__main__":

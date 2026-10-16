@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="rgb(10,18,30)"/><stop offset="1" stop-color="rgb(4,7,12)"/>
+  </linearGradient></defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="300" fill="none" stroke="rgb(54,197,255)" stroke-width="44"
+          stroke-dasharray="1665.04 219.91" stroke-dashoffset="-104.72" stroke-linecap="butt"
+          transform="rotate(-90 512 512)"/>
+  <circle cx="738.41" cy="708.82" r="30" fill="rgb(57,217,138)"/>
+  <line x1="512.00" y1="168.00" x2="512.00" y2="118.00" stroke="rgb(201,214,228)" stroke-width="16" stroke-linecap="round"/><line x1="856.00" y1="512.00" x2="906.00" y2="512.00" stroke="rgb(201,214,228)" stroke-width="16" stroke-linecap="round"/><line x1="512.00" y1="856.00" x2="512.00" y2="906.00" stroke="rgb(201,214,228)" stroke-width="16" stroke-linecap="round"/><line x1="168.00" y1="512.00" x2="118.00" y2="512.00" stroke="rgb(201,214,228)" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="212" fill="none" stroke="rgb(35,59,88)" stroke-width="5"/>
+  <polygon points="512.00,420.00 530.38,493.62 604.00,512.00 530.38,530.38 512.00,604.00 493.62,530.38 420.00,512.00 493.62,493.62" fill="rgb(201,214,228)"/>
+</svg>

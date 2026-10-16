@@ -12,7 +12,7 @@ async function fixture({empty=false,fail=false}={}){
  globalThis.window={addEventListener(n,f){listeners.set(n,f);},dispatchEvent(e){listeners.get(e.type)?.(e);}};
  globalThis.setInterval=f=>{intervals.push(f);};
  globalThis.fetch=async(path,options)=>{requests.push({path,options});const payload=path.endsWith('session')?{authenticated:true}:path.includes('/geo/events')?{records:empty?[]:[{event_id:'usgs-real-shaped-fixture',magnitude:5,place:'Fixture only',location:{lat:1,lon:2},source_url:'https://earthquake.usgs.gov/example',ingested_at:new Date().toISOString()}]}:path.includes('rag/retrieve')?{status:'GROUNDED',results:[{source:'https://earthquake.usgs.gov/example'}]}:path.includes('telemetry')?{observed_at:new Date().toISOString(),freshness_seconds:60,agents:[],metrics:[]}:path.endsWith('/alerts')?{alerts:[]}:path.endsWith('/health')?{ok:true}:{};return new Response(JSON.stringify(payload),{status:fail&&path.endsWith('/health')?503:200,headers:{'content-type':'application/json'}});};
- await import('data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('./intelligence.mjs',import.meta.url),'utf8')+'\n//'+(++serial)).toString('base64'));
+ await import(new URL('./intelligence.mjs?test='+(++serial),import.meta.url));
  return {nodes,listeners,requests,intervals,session(value={clientId:'fixture',role:'OWNER'}){listeners.get('orqevia-session')({detail:value});},text(){const all=[];function walk(n){all.push(n.textContent);for(const c of n.children||[])walk(c);}walk(nodes.get('intelligence-content'));return all.join('\n');}};
 }
 test('first Intelligence session loads real service panels with variable agent list and cited RAG',async()=>{

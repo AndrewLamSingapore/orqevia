@@ -1,10 +1,13 @@
 import json
+import subprocess
+import sys
 
 import pytest
 
 from app.scaffolding import (
     SCAFFOLD_VERSION,
     ScaffoldError,
+    ScaffoldResult,
     ScaffoldingEngine,
     generate_agent,
     generate_geospatial_app,
@@ -140,4 +143,80 @@ def test_engine_facade_and_version():
     assert engine.version == SCAFFOLD_VERSION
     result = engine.project({"name": "Via Facade"})
     assert result.template_version == SCAFFOLD_VERSION
+
+
+def test_generated_at_is_per_instance():
+    from dataclasses import MISSING
+    from datetime import datetime
+
+    field_info = ScaffoldResult.__dataclass_fields__["generated_at"]
+    # Regression: the timestamp must be produced per instance by a
+    # default_factory, not frozen once at class-definition time (which shared
+    # a single import-time timestamp across every generated artifact).
+    assert field_info.default_factory is not MISSING
+    assert field_info.default is MISSING
+
+    first = ScaffoldResult(kind="probe", artifact_id="a", files={})
+    second = ScaffoldResult(kind="probe", artifact_id="b", files={})
+    datetime.fromisoformat(first.generated_at)
+    datetime.fromisoformat(second.generated_at)
+
+
+def test_generated_project_self_test_imports_handler():
+    result = generate_project({"name": "Self Test"})
+    test_module = result.files["tests/test_app.py"]
+    assert "from backend.app import PORT, Handler" in test_module
+    assert "callable(Handler)" in test_module
+    assert "import urllib.request" not in test_module
+
+
+def test_scaffolded_acceptance_application_end_to_end(tmp_path):
+    project = generate_project({"name": "Acceptance App", "port": 8099})
+    agent = generate_agent(
+        {
+            "agent_id": "acceptance-reviewer",
+            "name": "Acceptance Reviewer",
+            "role": "review",
+            "capabilities": ["review"],
+            "tools": ["editor"],
+        }
+    )
+    skill = generate_skill(
+        {"skill_id": "review.acceptance", "name": "Acceptance review", "description": "Review candidate artifacts"}
+    )
+
+    project_dir = tmp_path / "project"
+    agent_dir = tmp_path / "agent"
+    skill_dir = tmp_path / "skill"
+    materialize(project, str(project_dir))
+    materialize(agent, str(agent_dir))
+    materialize(skill, str(skill_dir))
+
+    # The scaffolded applications' own test suites must pass.
+    for label, cwd in (("project", project_dir), ("agent", agent_dir), ("skill", skill_dir)):
+        run = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q"],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        assert run.returncode == 0, f"{label} generated tests failed:\n{run.stdout}\n{run.stderr}"
+
+    # Fail-closed safety properties hold across generated artifacts.
+    agent_spec = json.loads((agent_dir / "agents" / "acceptance-reviewer" / "agent.json").read_text(encoding="utf-8"))
+    assert agent_spec["execution_authority"] == "none"
+    assert agent_spec["advisory_only"] is True
+    assert agent_spec["human_approval"] == "required_for_execution"
+    assert agent_spec["tools"] == ["editor"]
+    assert agent_spec["permissions"] == []
+
+    skill_spec = json.loads((skill_dir / "skills" / "review.acceptance" / "skill.json").read_text(encoding="utf-8"))
+    assert skill_spec["authority"] == "advisory_only"
+    assert skill_spec["required_tools"] == []
+
+    # No generated file may embed credential-like content.
+    for result in (project, agent, skill):
+        for name, content in result.files.items():
+            assert scan_secrets(content) == [], f"secret-like content in {name}"
 

@@ -1,84 +1,62 @@
-# Brand and naming boundary
+# Brand and naming boundary — Owner decision 2026-10-16
 
-This is the single reference for what is renamed versus what intentionally still
-says SSOT, JARVIS or PRIME. It applies to every channel (ChatGPT, Codex, Sol,
-Astra, ABEX, Dell) and every agent.
+This is the single reference for the ORQEVIA naming state after the Owner
+decision of 16 October 2026: **"no more PRIME, JARVIS, SSOT"** in the ORQEVIA
+product. It applies to every channel and every agent.
 
-## Already renamed or retired
+## The product brand is ORQEVIA (奥启维亚) — only
 
-- Product brand: ORQEVIA (奥启维亚).
-- Repository: AndrewLamSingapore/orqevia (renamed from prime).
-- PWA user-facing brand and install assets: ORQEVIA (`orqevia-official-v1-*`).
-- SSOT.json: retired and absent; `scripts/check_status_authority.py` rejects its
-  reappearance.
+**Origin (stated 2026-10-16): ORQEVIA and its 21 canonical agents were born in
+Singapore in 2026** (`governance/ORQEVIA-ORIGIN.md`). Product surfaces and
+records present this origin clearly.
 
-## What must NOT be blanket-renamed or removed
+**Changed and verified 2026-10-16 (command-icon mission):**
 
-The remaining SSOT/JARVIS/PRIME text falls into five deliberately preserved
-categories. Treat each as frozen until an explicit Owner decision re-pins it.
+- Install identity: new `clients/pwa/icons/orqevia-command-v1-*` family
+  (dark master 1024, SVG source, light variant, PWA 192/512, maskable 512,
+  apple-touch 180, favicons 16/32/48, `favicon.ico`). The legacy dark "lime J"
+  artwork that the re-brand had mistakenly kept in `orqevia-official-v1-*` is
+  **deleted**; `tests/test_pwa_branding.py` now fails if those bytes reappear
+  under any name.
+- In-app brand mark: the real ORQEVIA logo restored to
+  `icons/orqevia-official-v1-192.png` (the wrapper previously carried the old
+  glyph). Only this one file remains from the `orqevia-official-v1` line.
+- Manifest, index head, service worker cache list (`orqevia-shell-v27`),
+  recovery flag (`orqeviaReady`) and the PWA README all updated to the new
+  identity.
+- Response contract: `app/jarvis_response_contract.py` → renamed
+  `app/orqevia_response_contract.py`; an answer that omits **ORQEVIA** when
+  asked its name is now flagged `product_identity_missing` (previously the
+  contract still demanded the old name — the identity split-brain is fixed at
+  the source). Candidate verifier renamed
+  `scripts/verify_jarvis_candidate.py` → `scripts/verify_orqevia_candidate.py`.
 
-1. Frozen golden manifests
-   - governance/golden-gen1-manifest.json
-   - governance/golden-gen2-manifest.json
-   These freeze the internal baseline identity (`jarvis-prime-golden-*`),
-   `production_authority: ABEX`, and the internal "ABEX PRIME" identity. Their
-   hashes are verified by `scripts/verify_golden_gen1.py` and
-   `scripts/verify_golden_gen2.py`.
+**Superseded 2026-10-16 (night, epoch flip — PRs #366/#367):**
 
-2. Byte-pinned operational manifest
-   - governance/operational-manifest.json
-   Contains `JARVIS_PRIME_CURRENT_SSOT.md` (human resume mirror title),
-   `truth_reconciliation`, `repository_registry`, and superseded-SSOT references.
-   `tests/test_portfolio_reconciliation.py` byte-pins its authority prose and
-   evidence hashes; editing requires a matching, recorded test update.
+- Compose service `prime` → `backend`; project default `prime` → `orqevia`;
+  labels `com.lamjarvis.*` → `com.orqevia.*`; operator tooling
+  `scripts/jarvis.ps1` → `scripts/orqevia.ps1`; the observatory-verifier pin
+  contract now targets `backend`. Regression tests fail if `com.lamjarvis` or
+  `prime:local` reappear.
+- The live ABEX stack moved to project `orqevia-epoch-20261016` (containers
+  `orqevia-epoch-20261016-{backend,interface,ollama}-1`); the previous epoch's
+  containers, volumes and `.env` are stopped-but-retained as rollback
+  (`operations/orqevia-epoch-20261016/FLIP-RECEIPT.md`).
 
-3. Internal runtime identifiers (functional, not brand)
-   - Environment names such as PRIME_DATA_DIR, PRIME_COMPUTE_QUEUE_DB,
-     PRIME_SPINE_TOKEN, PRIME_LOCAL_ADMISSION_MODE, PRIME_QUEUE_CONCURRENCY,
-     PRIME_INTERFACE_*, and OLLAMA_*.
-   - Modules and contracts such as app/jarvis_response_contract.py,
-     app/prime_evidence_adapter.py, contracts/prime-execution-record-v1.schema.json,
-     and portfolio-contracts.
-   - Docker images/tags (`prime:sha-*`) and workflow identity files
-     (`orqevia-verifier-oidc.yml`, `orqevia-verifier-signer.yml`; OIDC identity-bound).
-   Renaming these breaks runtime configuration, signing identity, or deployments.
+## Deliberately staged (compatibility or signing-closure bound)
 
-4. Historical evidence
-   - docs/evidence/**, governance/observations/**,
-     governance/reconciliations/**, docs/deployments/**,
-     governance/agent-cert-case-evidence/**.
-   These are dated records; the old names inside them are preserved history.
+Renaming these tonight would break a live wire contract or the protected
+signing closure that was just completed. Each has an exact unblock path; the
+Owner can order the migration round at any time.
 
-5. Frozen architecture documents
-   - docs/JARVIS-PRIME-GOLDEN-BASELINE-ARCHITECTURE.md
-   - docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md
-   Referenced by the golden manifests with SHA-256 pins.
+| Identifier | Why it stays (for now) | Root-fix path |
+|---|---|---|
+| `jarvis.interface.v1` protocol string + `X-Jarvis-PWA`/`X-PRIME-Protocol` headers | Cached clients negotiate on it; renaming breaks old installs | Dual-accept round: server accepts both, client switches, then removal after cache expiry |
+| `PRIME_*` environment variables (PRIME_DATA_DIR, PRIME_SPINE_TOKEN, PRIME_INTERFACE_*, …) and internal container paths (`/run/prime-*`, `/data/prime-spine.db`, `/data/jarvis-memory.db`) | The running interface image and stopped rollback stack read them; renaming without a parallel-read round breaks the rollback path | Env-var aliasing round (read new name, fall back to old), then a compose flip, then removal — with fresh rollback receipts. Project/container/service/label names were already superseded on 2026-10-16 night. |
+| `app/agent_dispatch_api.py` (`JARVIS_IDENTITY_CONTRACT` alias) and other files in the 47-file verifier closure | These exact bytes anchor the completed fresh29-20261016 signing closure | A new dated closure validation round, then rename with re-pins |
+| Golden manifests (`governance/golden-gen1/2`) and their frozen architecture docs (`docs/JARVIS-PRIME-*`) | SHA-256 pinned baselines | Re-issue as a new generation with updated verifier pins |
+| Dated historical evidence (`docs/evidence/**`, `governance/observations/**`, receipts like `ABEX_RUNTIME_RECEIPT_17FAD78`) | They record what was true on their date | Never rewritten; history keeps its names by definition |
 
-## Legacy SSOT-era tooling (retired and removed)
-
-The Dell truth-reconciler and node-sync tools were retired and removed from
-source on 16 October 2026. They remain recoverable from Git history as
-historical evidence:
-
-- tools/dell_truth_reconciler/**
-- tools/dell_node_sync/**
-- config/dell-truth-reconciler.example.json
-- config/dell-node-sync.example.json
-- scripts/install_dell_truth_reconciler.ps1
-- scripts/install_dell_node_sync.ps1
-- scripts/run_dell_truth_reconciler.ps1
-- scripts/run_dell_node_sync.ps1
-- docs/DELL_TRUTH_RECONCILER.md
-- docs/DELL_NODE_SYNCHRONIZATION.md
-- tests/test_truth_reconciler.py
-- tests/test_dell_node_sync.py
-
-Note: contracts/truth-reconciliation-v1.schema.json stays because the
-operational manifest still references it as `truth_reconciliation.result_contract`.
-
-## Rule for everyone
-
-SSOT/JARVIS/PRIME in the five preserved categories are compatibility or
-historical identifiers, not the product brand. Do not rename, delete, or
-"clean up" them without an Owner decision and a re-pinned manifest or golden
-record. The product brand is ORQEVIA.
+Until those rounds run, PRIME/JARVIS in the categories above are compatibility
+or historical identifiers — never the product brand. Nothing user-facing may
+present them as the app's name.

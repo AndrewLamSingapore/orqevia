@@ -1,0 +1,625 @@
+{
+ "schema": "orqevia.agent-cert-installation.v1",
+ "status": "CANDIDATE_INSTALLATION \u2014 CLAIMED, NOT PROTECTED-EXECUTED",
+ "batch": "fresh29-20261016",
+ "batch_digest": "a7eea39dbfb8376915efbef6e7928e47db90eb0a3d3fbd4353bedb3647232b1f",
+ "signed_run": "38871679860",
+ "registry_sha256": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6",
+ "installed_at_utc": "2026-10-16T10:15:38.958163+00:00",
+ "record_count": 29,
+ "unresolved_domains": [],
+ "records": [
+  {
+   "agent_id": "a01",
+   "capability_id": "responsibility.a01",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "0d70c307f0b4515c4548811bbfee90baae36cf42a6d59c60a96fed5e395226c8",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a02",
+   "capability_id": "responsibility.a02",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "a6add075b74f3ed8cb993b895abb20ba30fe03e179d1636a2d14e4a4b730eb3f",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a02",
+   "capability_id": "responsibility.a03",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "4794f0196d92bfe07a63737f265e13b6ddea557fc057e4d777bfce7234169973",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a04",
+   "capability_id": "responsibility.a04",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "679f476d44f1f4a520c694abe5beda1e9f1968ccff4e34048ba3f8d7cc7f7e35",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a04",
+   "capability_id": "responsibility.a08",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "a8420eafc3aa1d79c0129026ee2ee08658d24e9b9acf08ac08349d4825f1b973",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a05",
+   "capability_id": "responsibility.a05",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "298b8e830285794a40dafd62ef94e60958b7e887efa95187b4ef6cfa9d0054de",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a05",
+   "capability_id": "responsibility.a23",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "fb8b5be7da9ded3f1a31fa910682d0dc1feca5d6ef9f7208d33cb6c4b702668d",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a06",
+   "capability_id": "responsibility.a06",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "f8f6d137f1e8c75dd33dfb41d894c97f04abb7756f1410d0b9910bd71e0cfcc7",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a07",
+   "capability_id": "responsibility.a07",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "f9877b9e29f8e7059894a5e7c1baea61cf15f9b787d195867ad3c29a6c3e9fc9",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a09",
+   "capability_id": "responsibility.a09",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "70b6638ed06791a9c0059328062b1818fff266759e8f64e3de517b78f21f834a",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a10",
+   "capability_id": "responsibility.a10",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "4195629a221c1c3fd6ea9801e2d5a3e343a783f7b81c7695c29da02ec70ff542",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a12",
+   "capability_id": "responsibility.a11",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "5f3c71b48555b1532a03d8920ad75beeff37359040ca7b3aa2ab91ca7fb02d58",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a12",
+   "capability_id": "responsibility.a12",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "ccfa2fc2fb68375d0592f9ccc1af78438a8d4259ced5006eae13c3d8e1106792",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a13",
+   "capability_id": "responsibility.a13",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "571b72f6a74370d631ec97e9e24e06943dda2c3ef23abcb6ccacb02994be68b7",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a14",
+   "capability_id": "responsibility.a14",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "60cce43de5d4860d6005671ebc0a36906e78ba0c2aa666599373cbc8dbdf63cf",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a15",
+   "capability_id": "responsibility.a15",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "8b7191b912df8cea2de9ac904e3aa1e83c6fb23306693ef947a7069edc731681",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a16",
+   "capability_id": "responsibility.a16",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "74fcca439bdab2a5805c66f741fe73ed21920818a37a13e0df03dcf3e7ba7479",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a17",
+   "capability_id": "responsibility.a17",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "7d57a260dce29fea17f7e813b0ad1e252ad6ef38c4aa4e6e5de1bfe7b3d0dd5a",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a18",
+   "capability_id": "responsibility.a18",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "e6be7f757793fe1a52e69d9ab57d06695f9ec0079a5e79b95d352a7d496657d0",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a18",
+   "capability_id": "responsibility.a27",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "d61bcd095cf03b256b2334382f7049f03ca11fb9ef358744fe988065a06c7f58",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a19",
+   "capability_id": "responsibility.a19",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "469c36c7ca5d55ec9b5c0e524ed74e61c39ac0d239dba9001d5f705d82fcdc89",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a20",
+   "capability_id": "responsibility.a20",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "ec80a856c5fd3df601914f81bf96ea386db967c052c4d2c5d2734e5531b4d84c",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a20",
+   "capability_id": "responsibility.a24",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "7cca1f5f13816308927c2f02306ecefc4e255242a7f7537dfc0b35e142523c8d",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a21",
+   "capability_id": "responsibility.a21",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "e771b25bd35702b846809e9d1e3705f6cc1e2d339511694c9c3a1c7adb2ccbd2",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a21",
+   "capability_id": "responsibility.a22",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "49a46e764ca67319b910399c6a005cc3ecc041087f395e5104bcbe7e2775b3e6",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a26",
+   "capability_id": "responsibility.a25",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "0527ac5a1c382153a0285599fdc05bb28b1008c6124a05d259ba3de11fbe89e3",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a26",
+   "capability_id": "responsibility.a26",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "06854784c358dac18455eea1cdcd899d26f85f19b5597d69489c321cb3896bef",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a28",
+   "capability_id": "responsibility.a28",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "e693cacf87d5b5ef4d8cdc1363184350856d2f93179bc592f61568f14422d021",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  },
+  {
+   "agent_id": "a29",
+   "capability_id": "responsibility.a29",
+   "dimension": "baseline",
+   "test_case": "initialization",
+   "owned_domain": {
+    "definition_sha256": "f4f7eaa6eb520f051588d05452e9f8bdfa224d1c0324f23fc65abc5274b0bbb0",
+    "definition_keys": [
+     "definition",
+     "definition_sha256",
+     "registry",
+     "request_contract",
+     "selected_capability",
+     "selected_capability_sha256"
+    ]
+   },
+   "owned_domain_note": "definition digest of the module-resolved owned domain; full definition stays registry-owned",
+   "case_signature_present": true,
+   "runtime_activated": false,
+   "l7_awarded": false
+  }
+ ],
+ "boundaries": [
+  "Not L7 and not capability certification; installation is an evidence binding only",
+  "No runtime activation, no flag changes, no production mutation",
+  "A protected installation round must independently verify this candidate before any acceptance"
+ ]
+}

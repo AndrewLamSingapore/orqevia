@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class P1CompletionToolingTests(unittest.TestCase):
     def test_windows_operator_is_powershell_51_safe_and_propagates_failures(self):
-        script = (ROOT / "scripts" / "jarvis.ps1").read_text(encoding="utf-8")
+        script = (ROOT / "scripts" / "orqevia.ps1").read_text(encoding="utf-8")
         wrapper = (ROOT / "ORQEVIA.cmd").read_text(encoding="utf-8")
         self.assertTrue(script.isascii())
         self.assertIn("EnableDelayedExpansion", wrapper)
