@@ -36,6 +36,33 @@ def test_missing_stores_are_unavailable_not_zero(monkeypatch, tmp_path):
     assert active['collection_status'] == 'UNAVAILABLE' and active['value'] is None
 
 
+def test_configured_host_collector_is_observed(monkeypatch, tmp_path):
+    from app.interface_telemetry import snapshot
+    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', 'ISOLATED-SOURCE-TEST')
+    monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_REVISION', 'a' * 40)
+    receipt = tmp_path / 'host-metrics.json'
+    receipt.write_text(json.dumps({
+        'schema': 'orqevia.host-metrics.v1',
+        'host_id': 'ISOLATED-SOURCE-TEST',
+        'boot_id': 'boot-1',
+        'collector_id': 'abex-host-metrics-v1',
+        'captured_at': time.time(),
+        'cpu_percent': 10.0,
+        'memory_percent': 20.0,
+        'disk_percent': 30.0,
+        'network_latency_ms': 2.0,
+    }), encoding='utf-8')
+    monkeypatch.setenv('PRIME_HOST_METRICS_RECEIPT', str(receipt))
+    report = snapshot('fixture-client', 'MEMBER')
+    metrics = {m['metric_id']: m for m in report['metrics']}
+    assert metrics['cpu']['value'] == 10.0 and metrics['cpu']['collection_status'] == 'OBSERVED'
+    assert metrics['cpu']['producer'] == 'host-collector'
+    assert metrics['memory']['value'] == 20.0
+    assert metrics['disk']['value'] == 30.0
+    assert metrics['network_latency']['value'] == 2.0
+
+
 def test_container_packages_every_dashboard_shell_asset():
     from pathlib import Path
     root=Path(__file__).parents[1]

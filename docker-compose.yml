@@ -141,6 +141,7 @@ services:
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
       PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      PRIME_HOST_METRICS_RECEIPT: /run/prime-host-metrics/host-metrics.json
     volumes:
       - prime-data:/data
       - type: bind
@@ -162,6 +163,12 @@ services:
         bind:
           create_host_path: false
       - "${PRIME_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/JARVIS-ABEX-HTTPS.mobileconfig:ro"
+      - type: bind
+        source: ${PRIME_HOST_METRICS_DIR:-./deploy/unconfigured-host-metrics}
+        target: /run/prime-host-metrics
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       prime:
         condition: service_healthy

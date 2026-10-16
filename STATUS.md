@@ -36,6 +36,16 @@ If you are an AI agent updating this file:
 
 ---
 
+## Dual-writer governance, sweep fixes and ABEX handoff - 16 October 2026
+
+### Claimed, not independently checked
+
+- Owner-authorized dual-writer governance amendment merged (PR #333): ABEX and Dell are co-writers for implementation and merge; ABEX remains the sole deployer/operator and runtime acceptance authority. See `governance/DUAL-WRITER-AMENDMENT-20261016.md`.
+- Full-sweep fixes merged (PR #334): completed the ORQEVIA PWA rebrand (frozen `jarvis-prime-v1` icon bytes renamed to `orqevia-official-v1`, missing favicons generated, obsolete generic icons removed), repaired the external-surface route guard, and fixed a Windows timestamp flake in backend admission.
+- Governance tidy-up (PR #335): added `governance/BRAND-AND-NAMING-BOUNDARY.md` and retired the legacy Dell SSOT truth-reconciler and node-sync tools. CI hygiene (PR #336): pinned GitHub Actions to exact commits and removed dead `feat/prime-*` push triggers.
+- Source-level checks reported by Codex, not independently verified by Lam: full pytest 6100 passed / 4 failed before the fixes and targeted suites green after; telemetry 120 passed; God's Eye/RAG/AI Scaffold 54 passed; status-authority and canonical-state pass.
+- Host collector implemented in source (`app/host_metrics.py`, `scripts/collect-host-metrics.ps1`) but not yet run on ABEX. Remaining ABEX-side work: host collector wiring, Hugging Face CLI reachability, fresh measured compute profile, deployment and acceptance receipts, and 21-agent model binding and native activation. See `docs/ABEX-RUNBOOK-20261016.md`.
+
 ## ABEX forensic recovery checkpoint - 15 October 2026
 
 ### Claimed, not independently checked

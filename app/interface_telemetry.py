@@ -90,8 +90,13 @@ def snapshot(client_id, role):
     metrics = [metric('registered_agents', len(registry['agents']), 'OBSERVED', 'agent-registry'),
                metric('active_job_records', active, 'OBSERVED' if active is not None else 'UNAVAILABLE', 'compute-queue'),
                metric('stored_objectives', stores['objectives']['count'], stores['objectives']['status'], 'objective-store')]
-    for name, unit in [('cpu', 'percent'), ('memory', 'percent'), ('disk', 'percent'), ('network_latency', 'ms')]:
-        metrics.append(metric(name, None, 'UNAVAILABLE', 'HOST_COLLECTOR_NOT_CONFIGURED', unit))
+    from .host_metrics import host_metrics
+    host = host_metrics()
+    host_producer = 'host-collector' if host['configured'] else 'HOST_COLLECTOR_NOT_CONFIGURED'
+    for name, unit, field in [('cpu', 'percent', 'cpu_percent'), ('memory', 'percent', 'memory_percent'),
+                              ('disk', 'percent', 'disk_percent'), ('network_latency', 'ms', 'network_latency_ms')]:
+        value = host['values'].get(field)
+        metrics.append(metric(name, value, 'OBSERVED' if value is not None else 'UNAVAILABLE', host_producer, unit))
     agents=[]
     for agent in registry['agents']:
         record=activity.get(agent['id']) if activity is not None else None
