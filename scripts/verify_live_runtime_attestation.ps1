@@ -1,10 +1,10 @@
 [CmdletBinding()]
 param(
     [string]$BaseUri = 'https://192.168.1.23:8443/pwa',
-    [string]$ExpectedSource = 'b171253566e7c879283d2aacf699ae6c1ec8988e',
-    [string]$ExpectedImageDigest = 'sha256:1cfbefa03a0a68d162242ccf5139f498eee3594e01bb0e568ff4f71ca187b2b5',
-    [string]$ExpectedGeneration = 'jarvis-prime-golden-gen2-20260927',
-    [string]$ExpectedReceiptDigest = 'sha256:4f250145fe150f79f6a85fefe547a956a5f8ca6751a031ee8a6dacfd97ad1af5',
+    [string]$ExpectedSource = '48648edd8d2640f12f8086b9910deec865519326',
+    [string]$ExpectedImageDigest = 'sha256:aca892c4f19a4426e960d273ee0e9524f7bfe7f08bb80b902e7cbc73b82d36f3',
+    [string]$ExpectedGeneration = 'orqevia-golden-gen4-20261016',
+    [string]$ExpectedReceiptDigest = 'sha256:cd0b58cfc289ca9443ed5a15ee62dc744bccadb9f9ec436889546b6b8e39d14a',
     [switch]$AllowUntrustedTransportCertificate
 )
 
@@ -18,10 +18,17 @@ New-Item -ItemType Directory -Path $temporary | Out-Null
 try {
     $jsonPath = Join-Path $temporary 'runtime-attestation.json'
     $signaturePath = "$jsonPath.sig"
-    $request = @{ UseBasicParsing = $true }
-    if ($AllowUntrustedTransportCertificate) { $request.SkipCertificateCheck = $true }
-    Invoke-WebRequest @request -Uri "$BaseUri/runtime-attestation.json" -OutFile $jsonPath
-    Invoke-WebRequest @request -Uri "$BaseUri/runtime-attestation.json.sig" -OutFile $signaturePath
+    if ($AllowUntrustedTransportCertificate -and $PSVersionTable.PSVersion.Major -lt 7) {
+        # Windows PowerShell 5.1 has no -SkipCertificateCheck; use the system curl.
+        & curl.exe -k -s "$BaseUri/runtime-attestation.json" -o $jsonPath
+        & curl.exe -k -s "$BaseUri/runtime-attestation.json.sig" -o $signaturePath
+        if ($LASTEXITCODE -ne 0) { throw 'Attestation fetch failed' }
+    } else {
+        $request = @{ UseBasicParsing = $true }
+        if ($AllowUntrustedTransportCertificate) { $request.SkipCertificateCheck = $true }
+        Invoke-WebRequest @request -Uri "$BaseUri/runtime-attestation.json" -OutFile $jsonPath
+        Invoke-WebRequest @request -Uri "$BaseUri/runtime-attestation.json.sig" -OutFile $signaturePath
+    }
 
     $actualFingerprint = (ssh-keygen -lf $canonicalKey -E sha256).Split(' ')[1]
     if ($actualFingerprint -ne $expectedFingerprint) { throw 'Canonical attestation public-key fingerprint mismatch' }

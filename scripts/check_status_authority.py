@@ -40,8 +40,8 @@ def validate_status_authority(root: Path = ROOT) -> None:
     assert 'each product repository owns its own source' in channel
     mirror = (root / 'governance/JARVIS_Resume_Checkpoint.generated.md').read_text(encoding='utf-8')
     assert 'This dated mirror does not establish current deployment' in mirror
-    for name in ('governance/golden-gen2-manifest.json',
-                 'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md'):
+    for name in ('governance/golden-gen4-manifest.json',
+                 'docs/TOTAL-INTEGRATION-ARCHITECTURE.md'):
         assert (root / name).is_file(), f'Golden reference missing: {name}'
 
 

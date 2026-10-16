@@ -3,14 +3,14 @@
   "candidate_id": "jarvis-prime-phase2-unified-intelligence-20260926",
   "state": "CANDIDATE_NOT_DEPLOYED",
   "parent_golden": {
-    "tag": "jarvis-prime-golden-gen1-20260926",
-    "commit": "26f7d49cfe7134f8665dda5886111e91b574554d",
-    "manifest": "governance/golden-gen1-manifest.json"
+    "tag": "orqevia-golden-gen4-20261016",
+    "commit": "48648edd8d2640f12f8086b9910deec865519326",
+    "manifest": "governance/golden-gen4-manifest.json"
   },
   "source": {
     "branch": "feat/phase2-unified-intelligence-20260926",
     "implementation": "app/phase2_intelligence.py",
-    "architecture": "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md",
+    "architecture": "docs/TOTAL-INTEGRATION-ARCHITECTURE.md",
     "gap_analysis": "docs/evidence/PHASE2_GAP_ANALYSIS_20260926.md"
   },
   "capabilities": {

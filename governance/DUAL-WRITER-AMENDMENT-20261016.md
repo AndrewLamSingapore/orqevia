@@ -46,6 +46,17 @@ push capability by authenticating on the Dell host under the Owner account (for
 example `gh auth login` or a fine-grained personal access token scoped to this
 repository). No collaborator addition is required or was performed.
 
+## Addendum - 16 October 2026 (night), owner order
+
+Owner order "delete anything before gen4" superseded the untouched-frozen-baseline
+clause above for the golden manifests only: `governance/golden-gen1-manifest.json`
+and `governance/golden-gen2-manifest.json` were removed (recoverable from Git
+history) and re-issued as `governance/golden-gen4-manifest.json` binding the
+ORQEVIA epoch runtime per role (backend `48648edd`, interface build `891e3adf`),
+with updated verifier pins. `governance/operational-manifest.json` received the
+matching golden_architecture block update, admitted by the pinned reconciliation
+test. All other clauses remain in force.
+
 ## Status record
 
 A dated, non-Verified STATUS.md entry should follow through the normal

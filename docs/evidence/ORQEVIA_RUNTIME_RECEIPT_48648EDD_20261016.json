@@ -1,0 +1,43 @@
+{
+  "schema_version": "orqevia.runtime-receipt.v1",
+  "observed_at_utc": "2026-10-16T12:41:19.176206+00:00",
+  "scope": "ORQEVIA_LIVE_RUNTIME_OBSERVATION",
+  "epoch": "orqevia-epoch-20261016",
+  "accepted_source_commit": "48648edd8d2640f12f8086b9910deec865519326",
+  "interface_source_revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e",
+  "backend_image_digest": "sha256:aca892c4f19a4426e960d273ee0e9524f7bfe7f08bb80b902e7cbc73b82d36f3",
+  "interface_image_digest": "sha256:4e78da5c05254beef17bebd50be4300986fac9a5f28ca27905f4846530f4a388",
+  "roles": {
+    "backend": {
+      "container": "orqevia-epoch-20261016-backend-1",
+      "container_id": "1fc858f011c3e1ca717ba10a5d54d02968fe7a172ef7c8b1030b99ab5bed1a21",
+      "container_created_at": "2026-10-16T12:19:14.135208674Z",
+      "started_at": "2026-10-16T12:19:27.261444313Z",
+      "health": "healthy",
+      "running": true,
+      "image_digest": "sha256:aca892c4f19a4426e960d273ee0e9524f7bfe7f08bb80b902e7cbc73b82d36f3",
+      "image_tags": [
+        "orqevia:epoch-20261016-backend"
+      ],
+      "source_revision": "48648edd8d2640f12f8086b9910deec865519326"
+    },
+    "interface": {
+      "container": "orqevia-epoch-20261016-interface-1",
+      "container_id": "5f33fa9c1502fd5f6d2d477a8448cbdcda6e1efaa564a6e9d1854d98dd7de8c1",
+      "container_created_at": "2026-10-16T12:19:14.336521947Z",
+      "started_at": "2026-10-16T12:19:33.025964595Z",
+      "health": "healthy",
+      "running": true,
+      "image_digest": "sha256:4e78da5c05254beef17bebd50be4300986fac9a5f28ca27905f4846530f4a388",
+      "image_tags": [
+        "orqevia:interface-readiness-ui-v1"
+      ],
+      "source_revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e"
+    }
+  },
+  "notes": [
+    "Backend and interface are separate images with per-role source revisions.",
+    "The epoch supersession (PR #366/#367) replaced the retired epoch containers; this receipt binds the successor runtime.",
+    "Observation only: no container was started, stopped, replaced or restarted."
+  ]
+}

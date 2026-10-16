@@ -60,6 +60,30 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
         for key in keys[:-1]:
             node = node[key]
         node[keys[-1]] = prior
+    # Gen4 re-issue (owner order 2026-10-16): only the golden_architecture block
+    # moves; assert each prior -> current pair explicitly, then restore the
+    # snapshot values so every other pinned byte must still match exactly.
+    golden = manifest['golden_architecture']
+    original_golden = original['golden_architecture']
+    golden_corrections = (
+        ('active_generation', 2, 4),
+        ('architecture_state', 'FROZEN', 'CURRENT'),
+        ('manifest', 'governance/golden-gen2-manifest.json', 'governance/golden-gen4-manifest.json'),
+        ('immutable_reference', 'jarvis-prime-golden-gen2-20260927', 'orqevia-golden-gen4-20261016'),
+        ('runtime_source_sha', 'b171253566e7c879283d2aacf699ae6c1ec8988e',
+         '48648edd8d2640f12f8086b9910deec865519326'),
+        ('runtime_image', 'prime:phase2-audio-diagnostic-b171253', 'orqevia:epoch-20261016-backend'),
+        ('accepted_scope', 'PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED',
+         'ORQEVIA_BRANDED_RUNTIME_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED'),
+        ('former_generation', 'jarvis-prime-golden-gen1-20260926', 'jarvis-prime-golden-gen2-20260927'),
+        ('architecture', 'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md',
+         'docs/TOTAL-INTEGRATION-ARCHITECTURE.md'),
+        ('dell_post_promotion', 'PROMOTION_VERIFICATION_PASS', 'UNVERIFIED'),
+    )
+    for field, prior, corrected in golden_corrections:
+        assert original_golden[field] == prior
+        assert golden[field] == corrected
+        golden[field] = prior
     # Dated manifest refresh: only the observation date moves; all prior
     # bytes and the STALE status remain pinned to the original snapshot.
     assert original["as_of_utc"] == "2026-09-26T07:48:05Z"

@@ -13,8 +13,8 @@ COPY_FILES = (
     'STATUS.md', 'AGENTS.md', 'README.md', 'governance/README.md',
     'governance/CHANNEL_CONTRACT.md', 'governance/operational-manifest.json',
     'governance/JARVIS_Resume_Checkpoint.generated.md',
-    'governance/golden-gen2-manifest.json',
-    'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md',
+    'governance/golden-gen4-manifest.json',
+    'docs/TOTAL-INTEGRATION-ARCHITECTURE.md',
 )
 
 
