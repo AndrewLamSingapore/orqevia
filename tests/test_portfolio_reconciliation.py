@@ -247,6 +247,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(geo_update) == 964
     assert hashlib.sha256(geo_update).hexdigest() == 'e440b686ba8ca497429ff1eb1fef2769fc9d369043d552d995b311c97fed5e72'
     after = after[:geo_start] + after[geo_end:]
+    # Admit only this exact signing-closure/identity/Singapore-origin section;
+    # all prior bytes stay pinned.
+    closing_title = "## Signing closure, command identity and Singapore origin — 16 October 2026"
+    assert after.count(closing_title) == 1
+    closing_start = after.index(closing_title)
+    closing_end = after.index("\n## ", closing_start + len(closing_title)) + 1
+    closing_update = after[closing_start:closing_end].encode("utf-8")
+    assert len(closing_update) == 2921
+    assert hashlib.sha256(closing_update).hexdigest() == "ff170e7d4cdb49089932a2268acccffa35b021caf1d25b141e127415a564803b"
+    after = after[:closing_start] + after[closing_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
