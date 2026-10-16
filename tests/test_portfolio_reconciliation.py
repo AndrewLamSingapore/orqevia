@@ -34,6 +34,32 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
         assert original[section][field] == prior
         assert manifest[section][field] == corrected
         manifest[section][field] = prior
+    # Account only for the dated /jarvis -> /orqevia entrypoint corrections
+    # from the public-entrypoint reconciliation; every other field must still
+    # equal the original snapshot byte-for-byte.
+    def at(doc, path):
+        node = doc
+        for key in path:
+            node = node[key]
+        return node
+    pointer_corrections = (
+        (("public_experience", "entrypoint"),
+         "https://authority-engine-app.vercel.app/jarvis",
+         "https://authority-engine-app.vercel.app/orqevia"),
+        (("supersession", "current_public_entrypoint"),
+         "https://authority-engine-app.vercel.app/jarvis",
+         "https://authority-engine-app.vercel.app/orqevia"),
+        (("systems", "authority", "jarvis_status_url"),
+         "https://authority-engine-app.vercel.app/api/jarvis-status",
+         "https://authority-engine-app.vercel.app/api/orqevia-status"),
+    )
+    for keys, prior, corrected in pointer_corrections:
+        assert at(original, keys) == prior
+        assert at(manifest, keys) == corrected
+        node = manifest
+        for key in keys[:-1]:
+            node = node[key]
+        node[keys[-1]] = prior
     assert manifest == original
     assert manifest["status"] == "STALE"
     assert reference["current_acceptance"] == "UNVERIFIED"
@@ -179,6 +205,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert "### Verified" not in recovery
     assert "docs/forensics/20261015/README.md" in recovery
     after = after[:recovery_start] + after[recovery_end:]
+    # Admit only this exact public-entrypoint reconciliation; all prior bytes stay pinned.
+    entry_title = "## Public entrypoint reconciliation and iPhone/website visibility - ORQEVIA - 15 October 2026"
+    assert after.count(entry_title) == 1
+    entry_start = after.index(entry_title)
+    entry_end = after.index("\n## ", entry_start + len(entry_title)) + 1
+    entry_update = after[entry_start:entry_end].encode("utf-8")
+    assert len(entry_update) == 2017
+    assert hashlib.sha256(entry_update).hexdigest() == "f6ecf71876abaf8434cfc02dbef7048dea29690e258d0e5b2cf2ef1b959b0dfc"
+    after = after[:entry_start] + after[entry_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.

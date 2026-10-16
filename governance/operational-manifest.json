@@ -78,7 +78,7 @@
       "production_deployment_url": "https://authority-engine-imn1d105c-andrew-lam-singapore.vercel.app",
       "production_state": "READY",
       "health_url": "https://authority-engine-app.vercel.app/api/health",
-      "jarvis_status_url": "https://authority-engine-app.vercel.app/api/jarvis-status",
+      "jarvis_status_url": "https://authority-engine-app.vercel.app/api/orqevia-status",
       "state": "ALIGNED_VERIFIED",
       "publication_mode": "explicit_draft_only",
       "sanitized_observability": true,
@@ -344,7 +344,7 @@
     "historical_main": "fd90ea15604473b0ade8cc2278176a36a0b658ab",
     "integrated_candidate": "bd11e2373894f9d8806d6aaf1e3557cb8823c0f7",
     "owner_instruction_date": "2026-09-15",
-    "current_public_entrypoint": "https://authority-engine-app.vercel.app/jarvis",
+    "current_public_entrypoint": "https://authority-engine-app.vercel.app/orqevia",
     "retired_public_links": [
       "legacy J Console site",
       "owner-only Relationship Console from public navigation",
@@ -492,7 +492,7 @@
   ],
   "public_experience": {
     "contract": "governance/public-experience.json",
-    "entrypoint": "https://authority-engine-app.vercel.app/jarvis",
+    "entrypoint": "https://authority-engine-app.vercel.app/orqevia",
     "scope": "Public showcase, navigation and enquiries; no private runtime exposure."
   },
   "qualified_local_prime_baseline": {
