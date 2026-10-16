@@ -1,0 +1,60 @@
+{
+  "schema_version": "orqevia.golden-baseline.v1",
+  "golden_baseline_id": "orqevia-golden-gen4-20261016",
+  "generation": 4,
+  "architecture_state": "CURRENT",
+  "scope": "ORQEVIA_BRANDED_RUNTIME_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
+  "supersedes": {
+    "golden_baseline_id": "orqevia-golden-gen3-20261016",
+    "reason": "gen3 bound the pre-epoch runtime (source 891e3adf) whose containers were removed in the PRIME-free epoch supersession; gen4 binds the epoch runtime per role (backend 48648edd build; interface remains the 891e3adf-labelled build)."
+  },
+  "source": {
+    "repository": "AndrewLamSingapore/orqevia",
+    "accepted_commit": "48648edd8d2640f12f8086b9910deec865519326"
+  },
+  "build": {
+    "image_tag": "orqevia:epoch-20261016-backend",
+    "image_id": "sha256:aca892c4f19a4426e960d273ee0e9524f7bfe7f08bb80b902e7cbc73b82d36f3",
+    "role": "backend",
+    "source_revision": "48648edd8d2640f12f8086b9910deec865519326"
+  },
+  "interface_build": {
+    "image_tag": "orqevia:interface-readiness-ui-v1",
+    "image_id": "sha256:4e78da5c05254beef17bebd50be4300986fac9a5f28ca27905f4846530f4a388",
+    "role": "interface",
+    "source_revision": "891e3adfdd6defac00d7faef34bec06a10de4a4e"
+  },
+  "runtime_receipt": {
+    "path": "docs/evidence/ORQEVIA_RUNTIME_RECEIPT_48648EDD_20261016.json",
+    "sha256": "cd0b58cfc289ca9443ed5a15ee62dc744bccadb9f9ec436889546b6b8e39d14a"
+  },
+  "acceptance": {
+    "state": "VERIFIED_WITH_EXPLICIT_AUDIO_EXCLUSION",
+    "accepted_at_utc": "2026-10-16T12:21:00+00:00"
+  },
+  "interface": {
+    "endpoint": "https://192.168.1.23:8443/pwa/",
+    "exposure": "LAN_ONLY",
+    "protocol": "jarvis.interface.v1"
+  },
+  "audio": {
+    "read_aloud": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED",
+    "production_critical": false,
+    "owner_waiver": true
+  },
+  "authority": {
+    "production_authority": "ABEX",
+    "identity_enforcement": "SERVER_SIDE",
+    "member_inherits_owner": false,
+    "model_content_grants_authority": false,
+    "agent_delegation_grants_authority": false
+  },
+  "qualification": {
+    "scope": "EPOCH_SUPERSESSION_OPERATIONAL_VERIFICATION",
+    "independent_review": "UNVERIFIED",
+    "unresolved_p0": 0,
+    "unresolved_p1": 0,
+    "unresolved_p2_accepted_scope": 0,
+    "evidence": "operations/orqevia-epoch-20261016/FLIP-RECEIPT.md"
+  }
+}

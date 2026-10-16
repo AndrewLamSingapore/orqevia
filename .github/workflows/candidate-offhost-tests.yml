@@ -77,21 +77,18 @@ jobs:
           from app import system_architecture
 
           root = Path('/app/governance')
-          gen1_bytes = (root / 'golden-gen1-manifest.json').read_bytes()
-          gen2_bytes = (root / 'golden-gen2-manifest.json').read_bytes()
-          assert hashlib.sha256(gen1_bytes).hexdigest() == 'f2cad4bcf6ba7d00d9640796e1bc250d2018b1a1d335aef929dbf552330c9275'
-          assert hashlib.sha256(gen2_bytes).hexdigest() == '8c013e913e4a75df737346ea98bfdd531afcb9a39bd21bdb1c9c406d64b2fbc0'
-          gen1 = json.loads(gen1_bytes)
-          gen2 = json.loads(gen2_bytes)
-          assert gen1['generation'] == 1 and gen2['generation'] == 2
-          assert gen2['rollback']['former_golden_baseline'] == gen1['golden_baseline_id']
+          gen4_bytes = (root / 'golden-gen4-manifest.json').read_bytes()
+          assert hashlib.sha256(gen4_bytes).hexdigest() == '1c7f82e464cf41879b7511c91e945e8e0676fe75808220869b444d6d2d74f710'
+          gen4 = json.loads(gen4_bytes)
+          assert gen4['generation'] == 4
+          assert gen4['golden_baseline_id'] == 'orqevia-golden-gen4-20261016'
           historic = system_architecture.architecture_answer('Is JARVIS PRIME Golden Gen1 accepted?')
           platform = system_architecture.architecture_answer('Explain the ABEX and Dell architecture relationship')
           assert historic['status'] == 'UNVERIFIED'
-          assert 'HISTORICAL GOLDEN GEN1 ROLLBACK' in historic['text']
-          assert gen1['source']['accepted_commit'] in historic['text']
+          assert 'HISTORICAL GOLDEN GEN1/2/3 RECORDS ARE RETIRED' in historic['text']
           assert platform['status'] == 'UNVERIFIED'
           assert 'PRODUCTION AUTHORITY/HOST: ABEX' in platform['text']
+          assert 'GOLDEN GENERATION: 4' in platform['text']
           assert 'Dell live peer verification requires a separate current round-trip.' in platform['text']
           PY
       - name: Smoke isolated TLS startup and unauthenticated denial
