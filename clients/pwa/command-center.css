@@ -80,3 +80,36 @@ dialog{border:1px solid var(--line);background:var(--panel);box-shadow:var(--cc-
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
+
+/* Responsive fit (web page + iPhone) — Owner directive 2026-10-16:
+   the interface must fit perfectly in a browser window and on iPhone screens. */
+html{-webkit-text-size-adjust:100%;overflow-x:clip}
+body{min-height:100dvh;overflow-x:clip;overscroll-behavior-y:none}
+img,svg,canvas,video{max-width:100%;height:auto}
+.app-shell{width:100%}
+.workspace-layout{min-height:calc(100dvh - 94px)}
+.dashboard-card{min-width:0}
+.gauges,.overview-grid,.dashboard-top,.dashboard-middle,.dashboard-bottom{min-width:0}
+dialog{max-height:calc(100dvh - 32px);overflow:auto}
+.notice{max-width:100%}
+
+@media (max-width:700px){
+  .app-shell{
+    padding-left:calc(16px + env(safe-area-inset-left));
+    padding-right:calc(16px + env(safe-area-inset-right));
+    padding-bottom:calc(112px + env(safe-area-inset-bottom));
+  }
+  .overview-grid{grid-template-columns:repeat(2,1fr)}
+  .workspace-layout{min-height:0}
+  .mobile-navigation{backdrop-filter:blur(10px)}
+  main{padding-bottom:env(safe-area-inset-bottom)}
+}
+
+@media (max-width:430px){
+  .gauges{grid-template-columns:repeat(2,1fr)}
+  .dashboard-card{padding:12px}
+}
+
+@media (max-width:360px){
+  .topbar .brand{font-size:15px}
+}

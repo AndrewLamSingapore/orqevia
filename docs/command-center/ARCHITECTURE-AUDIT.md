@@ -69,7 +69,9 @@ structural work — not a rewrite.
 |---|---|
 | Architecture audit (this doc) | Implemented, evidence-cited |
 | Integration map (§1–2) | Implemented |
-| L1 theme layer + Dockerfile ship | Implemented (tests pending in this commit) |
+| L1 theme layer + Dockerfile ship | Implemented; Node suites green |
+| L1.1 responsive fit (web + iPhone) | Implemented (browser QA pending) |
+| Zero-tap open access (session auto-admit) | Implemented; pytest 4 + 32 green locally |
 | L2–L5 | Planned |
 | Security verification report | Planned |
 | Deployment + rollback | Not started (blocked until RC) |
