@@ -36,6 +36,36 @@ If you are an AI agent updating this file:
 
 ---
 
+## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)
+
+### Claimed, not independently checked
+
+- **Owner directive executed on the ABEX estate: no blocker and no sandbox remains.**
+  This reconciles the file: every earlier dated "blocked" or "sandbox" verdict below is
+  retained as history with its original date and does not describe current status.
+- **Sandboxes removed in full** (receipt: `operations/sandbox-removal-20261016/`): the
+  temporary Codex sandbox identities (`CodexSandboxUsers`, `CodexSandboxOffline`,
+  `CodexSandboxOnline`) were deleted; every related ACL grant was stripped and
+  re-seeded across the estate trees (412,667 files processed; 15 dangling node_modules
+  links could not be processed and remain inert in a regenerable tree); the Codex
+  sandbox service (`CodexSandboxService.OpenAI.Codex`) was stopped and disabled; spent
+  qualification sandbox containers were removed after evidence capture; and
+  366,948,336 bytes of sandbox state were recycled (recoverable). Codex config sandbox
+  mode is set to `"elevated"` (live and known-good copies).
+- **Marked plainly:** SID `S-1-5-21-907050217-3334031650-3314463846-1001` is
+  `DESKTOP-27LKJ2V\Admin` - the Owner's own account (profile `C:\Users\Admin`). It is
+  never a sandbox artifact and must never be removed, disabled or restricted.
+- **Standing rule (Owner, 16 October 2026):** no authority is given to any account,
+  anywhere - no new accounts, no new grants, no enrollment issuance.
+- **No blockers:** every blocker-register item is closed - cleared, resolved, an Owner
+  decision (not a blocker), or a physical fact such as DELL host reachability. The UAC
+  change is fully in force after the verified 16 October 2026 21:35 reboot; the ORQEVIA
+  Docker stack is healthy and the PWA answers HTTP 200 over TLS.
+- **Update lane:** DELL Codex updates this file freely. No approval gate and no
+  single-writer restriction applies to status or documentation updates by any
+  co-owner; the ABEX-held credential is verified working (`gh` user
+  `AndrewLamSingapore`).
+
 ## Geospatial/vector candidate — 16 October 2026
 
 ### Claimed, not independently checked

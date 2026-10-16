@@ -216,6 +216,15 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact estate reconciliation section; all prior bytes stay pinned.
+    estate_title = "## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)"
+    assert after.count(estate_title) == 1
+    estate_start = after.index(estate_title)
+    estate_end = after.index("\n## ", estate_start + len(estate_title)) + 1
+    estate_update = after[estate_start:estate_end].encode("utf-8")
+    assert len(estate_update) == 2077
+    assert hashlib.sha256(estate_update).hexdigest() == "0cc13853177b7150d0a2c4c521946c90199afd257123d0eec3c6d36312d47e5b"
+    after = after[:estate_start] + after[estate_end:]
     sweep_title = "## Dual-writer governance, sweep fixes and ABEX handoff - 16 October 2026"
     assert after.count(sweep_title) == 1
     sweep_start = after.index(sweep_title)
