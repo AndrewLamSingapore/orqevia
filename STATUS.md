@@ -291,6 +291,47 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
 
 ---
 
+## ORQEVIA epoch supersession and worker execution — 16 October 2026 (night)
+
+### Claimed, not independently checked
+
+- **PRIME naming superseded on the deployment surface:** compose project and
+  service rename merged (PR #367, `48648edd`) — service `backend`, project
+  default `orqevia`, labels `com.orqevia.*`, operator script
+  `scripts/orqevia.ps1`, observatory-verifier pin contract moved to `backend`;
+  regression tests now fail if `com.lamjarvis` or `prime:local` reappear.
+  Remaining PRIME/JARVIS identifiers are staged with root-fix paths in
+  `governance/BRAND-AND-NAMING-BOUNDARY.md` (env-var aliasing round, wire
+  dual-accept round, next dated closure round; history is never rewritten).
+- **Live epoch flip on ABEX:** project `prime-epoch-20260919` stopped with
+  containers, volumes and `.env` retained as rollback; new project
+  `orqevia-epoch-20261016` runs healthy (`backend`, `interface`, `ollama`;
+  `model-init` one-shot completed) from merged main `48648edd`, backend image
+  digest `sha256:aca892c4…`, with `production_entry.py` and `job_queue.py`
+  verified byte-identical to the checkout. Data volumes were copied
+  (76 MB data / 4.1 GB models) and the existing iPhone TLS and profile
+  material reused — no device re-provisioning.
+- **Worker self-start proven live:** the compute queue now starts with the
+  application and reclaims terminal-holder inference leases (PR #366,
+  `d1ab5ef`); the 16 October wave stall was an orphaned `backend_admission`
+  lease, fixed live before the wave drained to 21/21 terminal. After the flip,
+  canary objective `59eb3ab6…` reached COMPLETED with no manual worker start;
+  queue counts read 324 completed / 16 failed (wave end-state preserved).
+- **Companion and data paths verified after the flip:** the intelligence
+  companion is attached to the new epoch network (alias `intelligence`);
+  interface → intelligence health returned 200; a manual geo sync fetched and
+  updated the 18 regional observations; the host-metrics receipt is present in
+  the interface mount.
+- **Rollback armed:** stopped old containers, untouched old volumes,
+  `private\orqevia-epoch-20261016\old-epoch.env.bak`, and container commit
+  snapshots (`orqevia:rollback-epoch-backend-20261016T121843Z`,
+  `orqevia:rollback-epoch-interface-20261016T121843Z`).
+
+No certification is awarded or renewed by this record; signing and
+installation state remain as recorded in the previous section.
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked

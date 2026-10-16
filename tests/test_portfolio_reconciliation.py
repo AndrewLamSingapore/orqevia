@@ -267,6 +267,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(install_update) == 1920
     assert hashlib.sha256(install_update).hexdigest() == "bf4b279e1ccfd6e1a23cc56e259ca593e9b39bbf38d3e73c6e6317f49124706e"
     after = after[:install_start] + after[install_end:]
+    # Admit only this exact ORQEVIA epoch supersession record; all prior bytes
+    # stay pinned.
+    epoch_title = "## ORQEVIA epoch supersession and worker execution — 16 October 2026 (night)"
+    assert after.count(epoch_title) == 1
+    epoch_start = after.index(epoch_title)
+    epoch_end = after.index("\n## ", epoch_start + len(epoch_title)) + 1
+    epoch_update = after[epoch_start:epoch_end].encode("utf-8")
+    assert len(epoch_update) == 2452
+    assert hashlib.sha256(epoch_update).hexdigest() == "48a96cf60e632f1c522c99b5d58f2a2ab6c61cfb8d80038e59d86a30a2c06cf9"
+    after = after[:epoch_start] + after[epoch_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
