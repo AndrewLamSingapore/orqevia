@@ -301,6 +301,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(epoch_update) == 2452
     assert hashlib.sha256(epoch_update).hexdigest() == "48a96cf60e632f1c522c99b5d58f2a2ab6c61cfb8d80038e59d86a30a2c06cf9"
     after = after[:epoch_start] + after[epoch_end:]
+    # Admit only this exact open-access / unsandboxed / gen-4 record; all prior
+    # bytes stay pinned.
+    open_title = "## Open access, unsandboxed runtime and the gen-4 baseline — 16 October 2026 (night)"
+    assert after.count(open_title) == 1
+    open_start = after.index(open_title)
+    open_end = after.index("\n## ", open_start + len(open_title)) + 1
+    open_update = after[open_start:open_end].encode("utf-8")
+    assert len(open_update) == 2960
+    assert hashlib.sha256(open_update).hexdigest() == "db016dcf6936144b5529c4ab6e9ef69829a4a0c1b07584b1648f659e3d457f29"
+    after = after[:open_start] + after[open_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
