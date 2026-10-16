@@ -11,12 +11,12 @@ class InterfaceServerTests(unittest.TestCase):
         static = next(r.app for r in interface_server.app.routes if getattr(r, 'path', '') == '/pwa')
         body=b'public-profile-fixture'
         with patch.dict('os.environ', {'PRIME_PWA_ORIGIN':'https://testserver'}), patch.object(static, 'check_config', AsyncMock()), patch.object(static, 'get_response', AsyncMock(return_value=Response(body))), TestClient(interface_server.app, base_url='https://testserver') as client:
-            response=client.get('/pwa/JARVIS-ABEX-HTTPS.mobileconfig')
+            response=client.get('/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig')
             assert response.content==body
             assert response.headers['content-type']=='application/x-apple-aspen-config'
-            assert response.headers['content-disposition']=='attachment; filename="JARVIS-ABEX-HTTPS.mobileconfig"'
+            assert response.headers['content-disposition']=='attachment; filename="ORQEVIA-ABEX-HTTPS.mobileconfig"'
         with patch.dict('os.environ', {'PRIME_PWA_ORIGIN':'https://testserver'}), TestClient(interface_server.app, base_url='https://testserver') as client:
-            missing=client.get('/pwa/JARVIS-ABEX-HTTPS.mobileconfig')
+            missing=client.get('/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig')
             assert missing.status_code==404
             assert 'content-disposition' not in missing.headers
 
