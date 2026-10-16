@@ -52,7 +52,7 @@ def measured_slots(tmp_path, monkeypatch, slots):
     compute_profile.runtime_compute_profile.cache_clear()
 
 
-def receipt_after_completion(path, db):
+def receipt_after_completion(path, db, **kwargs):
     with sqlite3.connect(db) as c:
         completed_at = c.execute('SELECT captured_after FROM backend_admission_refresh WHERE endpoint=?',
                                  (ENDPOINT,)).fetchone()[0]
@@ -60,7 +60,7 @@ def receipt_after_completion(path, db):
     # admission requires a strictly newer sample, not an equal timestamp.
     while time.time() <= completed_at:
         time.sleep(0.001)
-    receipt(path)
+    receipt(path, **kwargs)
 
 
 @pytest.fixture
@@ -284,7 +284,7 @@ def test_backend_limit_and_cancellation_completion_accounting(tmp_path, backend)
     finally:
         c.close()
     assert q.claim('two', [LOCAL]) is None  # receipt predates completion
-    receipt(backend, available=4000)
+    receipt_after_completion(backend, q.db_path, available=4000)
     assert q.claim('two', [LOCAL])['id'] == next_job['id']
 
 
