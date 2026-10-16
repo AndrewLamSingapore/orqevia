@@ -64,13 +64,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Build disposable candidate image
-        run: docker build --tag prime:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+        run: docker build --tag orqevia:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Verify packaged runtime and PWA without production data
-        run: docker run --rm --entrypoint python prime:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
+        run: docker run --rm --entrypoint python orqevia:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
       - name: Verify packaged Golden records are readable by the deterministic lookup
         shell: bash
         run: |
-          docker run --rm -i --entrypoint python prime:candidate - <<'PY'
+          docker run --rm -i --entrypoint python orqevia:candidate - <<'PY'
           import json
           import hashlib
           from pathlib import Path
@@ -95,25 +95,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/prime-ci-tls"
+          mkdir -p "$RUNNER_TEMP/orqevia-ci-tls"
           openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
-            -keyout "$RUNNER_TEMP/prime-ci-tls/server.key" \
-            -out "$RUNNER_TEMP/prime-ci-tls/server.crt" \
+            -keyout "$RUNNER_TEMP/orqevia-ci-tls/server.key" \
+            -out "$RUNNER_TEMP/orqevia-ci-tls/server.crt" \
             -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1' >/dev/null 2>&1
-          cp "$RUNNER_TEMP/prime-ci-tls/server.crt" "$RUNNER_TEMP/prime-ci-tls/ca.crt"
-          docker run -d --name prime-ci-tls --publish 127.0.0.1:18443:8443 \
+          cp "$RUNNER_TEMP/orqevia-ci-tls/server.crt" "$RUNNER_TEMP/orqevia-ci-tls/ca.crt"
+          docker run -d --name orqevia-ci-tls --publish 127.0.0.1:18443:8443 \
             --env PRIME_PWA_ORIGIN=https://127.0.0.1:18443 \
-            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.crt,target=/run/prime-tls/server.crt,readonly" \
-            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/server.key,target=/run/prime-tls/server.key,readonly" \
-            --mount "type=bind,source=$RUNNER_TEMP/prime-ci-tls/ca.crt,target=/run/prime-tls/ca.crt,readonly" \
-            prime:candidate uvicorn app.interface_server:app --host 0.0.0.0 --port 8443 \
+            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/server.crt,target=/run/prime-tls/server.crt,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/server.key,target=/run/prime-tls/server.key,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/ca.crt,target=/run/prime-tls/ca.crt,readonly" \
+            orqevia:candidate uvicorn app.interface_server:app --host 0.0.0.0 --port 8443 \
               --no-proxy-headers --ssl-keyfile /run/prime-tls/server.key \
               --ssl-certfile /run/prime-tls/server.crt
-          trap 'docker rm -f prime-ci-tls >/dev/null 2>&1 || true' EXIT
-          docker exec prime-ci-tls sh -c 'test ! -e /run/prime-tls/ca.key'
+          trap 'docker rm -f orqevia-ci-tls >/dev/null 2>&1 || true' EXIT
+          docker exec orqevia-ci-tls sh -c 'test ! -e /run/prime-tls/ca.key'
           ready=false
           for attempt in {1..20}; do
-            if curl -fsS --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
+            if curl -fsS --cacert "$RUNNER_TEMP/orqevia-ci-tls/ca.crt" \
                 https://127.0.0.1:18443/pwa/ -o /dev/null; then
               ready=true
               break
@@ -122,28 +122,28 @@ jobs:
           done
           test "$ready" = true
           status=$(curl -sS -o /dev/null -w '%{http_code}' \
-            --cacert "$RUNNER_TEMP/prime-ci-tls/ca.crt" \
+            --cacert "$RUNNER_TEMP/orqevia-ci-tls/ca.crt" \
             https://127.0.0.1:18443/interface/v1/health)
           test "$status" = 401
       - name: Export exact tested candidate image
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/prime-image"
-          docker image inspect prime:candidate --format '{{json .}}' > "$RUNNER_TEMP/prime-image/image-inspect.json"
-          python - "$RUNNER_TEMP/prime-image/image-inspect.json" "$GITHUB_SHA" <<'PY'
+          mkdir -p "$RUNNER_TEMP/orqevia-image"
+          docker image inspect orqevia:candidate --format '{{json .}}' > "$RUNNER_TEMP/orqevia-image/image-inspect.json"
+          python - "$RUNNER_TEMP/orqevia-image/image-inspect.json" "$GITHUB_SHA" <<'PY'
           import json, sys
           image = json.load(open(sys.argv[1]))
           assert image['Config']['Labels']['org.opencontainers.image.revision'] == sys.argv[2]
           PY
-          docker save prime:candidate | gzip -1 > "$RUNNER_TEMP/prime-image/prime-candidate.tar.gz"
-          (cd "$RUNNER_TEMP/prime-image" && sha256sum prime-candidate.tar.gz image-inspect.json > SHA256SUMS)
-          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/prime-image/SOURCE_REVISION"
+          docker save orqevia:candidate | gzip -1 > "$RUNNER_TEMP/orqevia-image/orqevia-candidate.tar.gz"
+          (cd "$RUNNER_TEMP/orqevia-image" && sha256sum orqevia-candidate.tar.gz image-inspect.json > SHA256SUMS)
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/orqevia-image/SOURCE_REVISION"
       - name: Preserve image for separately gated deployment
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: prime-candidate-image-${{ github.sha }}
-          path: ${{ runner.temp }}/prime-image/
+          name: orqevia-candidate-image-${{ github.sha }}
+          path: ${{ runner.temp }}/orqevia-image/
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
