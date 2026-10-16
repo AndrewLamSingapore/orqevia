@@ -1,0 +1,82 @@
+/* ORQEVIA Command Center — layer 1: tactical theme tokens + panel polish.
+   Loaded after all existing sheets. Re-skins the workspace through the existing
+   token system (:root variables in style.css); no layout or behavior changes. */
+
+:root{
+  color-scheme:dark;
+  --bg:#030B16;
+  --panel:#071A2B;
+  --surface:#0B2338;
+  --line:#14324F;
+  --line-strong:#1E4A73;
+  --muted:#9CB5C9;
+  --text:#E7F2FC;
+  --accent:#36C5FF;
+  --accent-strong:#168FE8;
+  --ok:#39D98A;
+  --warn:#F5B544;
+  --danger:#F06464;
+  --radius:16px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Cascadia Mono",monospace;
+  --cc-shadow:0 10px 28px rgba(2,7,15,.55);
+  --cc-glow:0 0 0 1px rgba(54,197,255,.14),0 0 22px rgba(22,143,232,.10);
+}
+
+body{
+  background:
+    radial-gradient(1200px 620px at 85% -10%,rgba(22,143,232,.10),transparent 60%),
+    radial-gradient(900px 520px at -10% 110%,rgba(54,197,255,.07),transparent 55%),
+    var(--bg);
+}
+
+/* Chrome */
+.topbar{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(11,35,56,.92),rgba(7,26,43,.88));
+  backdrop-filter:blur(10px);
+}
+.brand strong,.brand-sub{letter-spacing:.04em}
+.connection{font-variant-numeric:tabular-nums}
+#dashboard-clock{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dot{border:1px solid rgba(57,217,138,.55)}
+.dot.offline{border-color:rgba(240,100,100,.6)}
+
+/* Navigation */
+.desktop-navigation{border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(7,26,43,.9),rgba(3,11,22,.9))}
+.desktop-navigation button{border:1px solid transparent;border-radius:10px;letter-spacing:.02em}
+.desktop-navigation button:hover{background:rgba(54,197,255,.08);border-color:var(--line)}
+.desktop-navigation button[aria-current="true"]{background:rgba(22,143,232,.16);border-color:var(--line-strong);box-shadow:var(--cc-glow)}
+.mobile-navigation{border-top:1px solid var(--line);background:linear-gradient(180deg,rgba(7,26,43,.96),rgba(3,11,22,.98));padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px)}
+
+/* Panels */
+.dashboard-card,.panel{border:1px solid var(--line);box-shadow:var(--cc-shadow)}
+.card-heading h2{letter-spacing:.05em;text-transform:uppercase;font-size:.85em}
+.card-heading span,.source-label,.badge{letter-spacing:.06em}
+.badge{border:1px solid var(--line-strong);background:rgba(22,143,232,.12)}
+.gauges .gauge-ring{border-color:var(--line-strong);box-shadow:inset 0 0 18px rgba(22,143,232,.12)}
+.gauge-ring strong,#metric-cpu,#metric-memory,#metric-disk,#metric-network_latency,#task-id,.task-meta,.task-meta span{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dashboard-tasks table th{font-size:.72em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.dashboard-tasks table td,.dashboard-tasks table th{padding:.55rem .6rem}
+.empty-record{color:var(--muted)}
+
+/* Buttons + inputs */
+.primary{background:linear-gradient(180deg,var(--accent-strong),#0F6DB4);border-color:var(--line-strong)}
+.primary:hover{filter:brightness(1.08)}
+.secondary,.icon-button,.text-button{border-color:var(--line)}
+.secondary:hover,.icon-button:hover{background:rgba(54,197,255,.10)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Notices + dialogs */
+.notice{border:1px solid var(--line-strong);background:rgba(11,35,56,.92)}
+.notice.error{border-color:rgba(240,100,100,.55)}
+dialog{border:1px solid var(--line);background:var(--panel);box-shadow:var(--cc-shadow)}
+
+/* Status color helpers (usable by any new component) */
+.cc-ok{color:var(--ok)}.cc-warn{color:var(--warn)}.cc-crit{color:var(--danger)}.cc-mono{font-family:var(--mono)}
+
+/* Scrollbars (subtle, non-essential) */
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
