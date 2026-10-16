@@ -40,7 +40,7 @@ categories. Treat each as frozen until an explicit Owner decision re-pins it.
      app/prime_evidence_adapter.py, contracts/prime-execution-record-v1.schema.json,
      and portfolio-contracts.
    - Docker images/tags (`prime:sha-*`) and workflow identity files
-     (`prime-verifier-oidc.yml`, `prime-verifier-signer.yml`; OIDC identity-bound).
+     (`orqevia-verifier-oidc.yml`, `orqevia-verifier-signer.yml`; OIDC identity-bound).
    Renaming these breaks runtime configuration, signing identity, or deployments.
 
 4. Historical evidence

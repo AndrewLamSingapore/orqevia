@@ -217,7 +217,7 @@ def test_missing_or_private_upstream_code_error_is_sanitized(tmp_path):
 
 
 def test_workflow_remains_fixed_protected_main_without_signing_inputs():
-    workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/prime-verifier-signer.yml').read_text()
+    workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/orqevia-verifier-signer.yml').read_text()
     assert 'workflow_call:' in workflow and '\n  inputs:' not in workflow
     assert 'REF_PROTECTED' in workflow and 'refs/heads/main' in workflow
     assert 'EVENT_NAME' in workflow and 'workflow_dispatch' in workflow

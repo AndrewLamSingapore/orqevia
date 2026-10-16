@@ -60,6 +60,11 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
         for key in keys[:-1]:
             node = node[key]
         node[keys[-1]] = prior
+    # Dated manifest refresh: only the observation date moves; all prior
+    # bytes and the STALE status remain pinned to the original snapshot.
+    assert original["as_of_utc"] == "2026-09-26T07:48:05Z"
+    assert manifest["as_of_utc"] == "2026-10-16T05:20:00Z"
+    manifest["as_of_utc"] = original["as_of_utc"]
     assert manifest == original
     assert manifest["status"] == "STALE"
     assert reference["current_acceptance"] == "UNVERIFIED"
