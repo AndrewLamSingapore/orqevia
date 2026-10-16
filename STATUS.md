@@ -98,6 +98,27 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
 
 ---
 
+## Verifier re-pin resolution — 16 October 2026
+
+### Claimed, not independently checked
+
+- The ABEX-side verifier re-pin request (`ABEX-REPIN-CHANGE-PACKAGE-20261015`) is resolved by
+  evidence and **closed as not viable**: no valid re-pin target newer than `d9a4e0bd` exists.
+  The protected verifier closure drifted by eight files between `d9a4e0bd` and current
+  canonical main (three 12 October runtime/verifier fixes; exact SHA-256 pairs in
+  `governance/VERIFIER-REPIN-CLOSURE-20261016.md`), so moving `MAIN`, the fixture revision or
+  the 87 `verifier_code_revision` fields to a newer commit would deny custody by design.
+- Executed evidence: with pins moved to current main the three `historical_custody` tests fail;
+  with the existing pins they pass (3 passed, 34 deselected) and the default suites pass
+  (185 passed). `d9a4e0bd` remains the maximal valid pin; `ORIGINAL` (`61335a96`) and the
+  fixture revision stay frozen.
+- Advancing initialization certification now requires re-executing the 29 cases under the
+  current verifier as a new dated evidence batch; the one-shot protected fresh29 workflow must
+  not be dispatched against the drifted closure. Recorded by Codex; not yet independently
+  checked by Lam.
+
+---
+
 ## AI Scaffolding Engine - ORQEVIA - 15 October 2026
 
 ### Claimed, not independently checked

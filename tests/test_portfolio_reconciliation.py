@@ -219,6 +219,15 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(entry_update) == 2017
     assert hashlib.sha256(entry_update).hexdigest() == "f6ecf71876abaf8434cfc02dbef7048dea29690e258d0e5b2cf2ef1b959b0dfc"
     after = after[:entry_start] + after[entry_end:]
+    # Admit only this exact verifier re-pin resolution; all prior bytes stay pinned.
+    repin_title = "## Verifier re-pin resolution — 16 October 2026"
+    assert after.count(repin_title) == 1
+    repin_start = after.index(repin_title)
+    repin_end = after.index("\n## ", repin_start + len(repin_title)) + 1
+    repin_update = after[repin_start:repin_end].encode("utf-8")
+    assert len(repin_update) == 1237
+    assert hashlib.sha256(repin_update).hexdigest() == "cd958bf0143e5da81af6f436ec599c1c98ffc7be7951c58541d122371c92b80f"
+    after = after[:repin_start] + after[repin_end:]
     # The 6 October interpretation changed only the opening date and scope
     # paragraphs. Require those exact bytes before restoring the 4 October
     # opening, so any unaccounted edit still fails the frozen history proof.
