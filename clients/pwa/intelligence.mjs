@@ -29,7 +29,7 @@ if(typeof document!=='undefined'){
  function renderObservations(result){
   const filter=panel('Geographic filter'), form=node('form');
   const fields=[];
-  for(const [label,value,min,max] of [['Latitude',geoFilter?.lat,-90,90],['Longitude',geoFilter?.lon,-180,180],['Radius in kilometers',geoFilter?.radius_km,0,40075]]){
+  for(const [label,value,min,max] of [['Latitude',geoFilter?.lat??1.3521,-90,90],['Longitude',geoFilter?.lon??103.8198,-180,180],['Radius in kilometers',geoFilter?.radius_km??1500,0,40075]]){
    const l=node('label',label),input=node('input');input.type='number';input.step='any';input.min=String(min);input.max=String(max);input.required=true;input.value=value??'';l.append(input);form.append(l);fields.push(input);
   }
   const apply=node('button','Filter observations');apply.type='submit';const reset=node('button','Show all observations');reset.type='button';form.append(apply,reset);filter.append(form);
@@ -37,7 +37,7 @@ if(typeof document!=='undefined'){
   reset.addEventListener('click',()=>{geoFilter=null;void refresh();});
 
   const p=panel("God's Eye · Geospatial observations"), rows=Array.isArray(result.records)?result.records:[];
-  p.append(node('p',`${rows.length} stored observations · ${new Date().toLocaleString()} · public USGS data; not global live coverage.`));drawMap(p,rows);
+  p.append(node('p',`${rows.length} stored observations · ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date())} SGT · public USGS data; not global live coverage.`));drawMap(p,rows);
   if(!rows.length)p.append(node('p','No observations stored. Refresh after an authorized ingestion run.'));
   for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${freshness(r.ingested_at)}`,r);source(d,'Original provider evidence',r.source_url);}
  }
@@ -61,7 +61,7 @@ if(typeof document!=='undefined'){
    const telemetry=values.get('telemetry'), op=panel('Operational visibility · agents and tasks');
    if(telemetry.status==='fulfilled'){
     const t=telemetry.value,at=Date.parse(t.observed_at), ttl=t.freshness_seconds*1000, fresh=Number.isFinite(at)&&at<=Date.now()+5000&&ttl>0&&ttl<=60000&&Date.now()-at<=ttl;
-    op.append(node('p',`Telemetry: ${fresh?'OBSERVED':'STALE / UNKNOWN'} · ${t.observed_at||'unknown time'}. Registration is separate from agent availability.`));
+    op.append(node('p',`Telemetry: ${fresh?'OBSERVED':'STALE / UNKNOWN'} · ${Number.isFinite(at)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(at))+' SGT':(t.observed_at||'unknown time')}. Registration is separate from agent availability.`));
     for(const m of t.metrics||[])record(op,m.metric_id,m);
     for(const a of t.agents||[])record(op,`${a.agent_id} · ${a.availability||'UNKNOWN'}`,a);
    }else{op.append(node('p',`Operational telemetry unavailable: ${telemetry.reason.message}. Intelligence remains independently usable.`));failures++;}
