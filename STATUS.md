@@ -118,10 +118,21 @@ Evidence: [recovery package](docs/forensics/20261015/README.md), [coverage](docs
 - Merged to `main` via PR #316 at `490a5b3595ad308dfdc8ee6a94ec92bf1ef42d1a`.
   Still not deployed and not runtime-activated.
 
+### Resolved — 16 October 2026
+
+- Independent review and a scaffolded acceptance application are complete on
+  `codex/dell-scaffolding-review-acceptance-20261016` (based on `main`
+  `9f2e9cac7d1b6b945cb7d7d3d288176a7ed81322`). The review fixed three defects in
+  `app/scaffolding.py` and added an end-to-end acceptance test that materializes
+  a project, agent and skill and runs each one's own test suite.
+  `tests/test_scaffolding.py` + `tests/test_fast_acceptance.py`: 18 passed.
+  Review record: `docs/scaffolding-independent-review-20261016.md`. The engine
+  remains not deployed and not runtime-activated.
+
 ### Known broken / open
 
-- Independent review and a scaffolded acceptance application remain outstanding
-  before any production use.
+- None open in this section; deployment and runtime activation remain separate
+  authority decisions tracked outside the Scaffolding Engine.
 
 ---
 

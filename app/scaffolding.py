@@ -23,7 +23,7 @@ import hashlib
 import json
 import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
@@ -63,7 +63,7 @@ class ScaffoldResult:
     files: Mapping[str, str]
     warnings: Tuple[str, ...] = ()
     template_version: str = SCAFFOLD_VERSION
-    generated_at: str = _utcnow_iso()
+    generated_at: str = field(default_factory=_utcnow_iso)
 
     def fingerprint(self) -> str:
         digest = hashlib.sha256()
@@ -283,11 +283,12 @@ def generate_project(spec: Mapping[str, Any]) -> ScaffoldResult:
             ");\n"
         )
     files["tests/test_app.py"] = (
-        "import urllib.request\n\n"
-        "from backend.app import PORT\n\n\n"
+        "import sys\n"
+        "from pathlib import Path\n\n"
+        "sys.path.insert(0, str(Path(__file__).resolve().parents[1]))\n\n"
+        "from backend.app import PORT, Handler\n\n\n"
         "def test_health_endpoint_contract():\n"
         "    assert PORT > 0\n"
-        "    # Integration assertion runs only when the server is intentionally started.\n"
         "    assert callable(Handler)\n"
     )
     files["deploy/Dockerfile"] = (
@@ -363,7 +364,8 @@ def generate_agent(spec: Mapping[str, Any]) -> ScaffoldResult:
             f"agents/{agent_id}/test_agent.py",
             f"def test_{agent_id.replace('-', '_')}_is_fail_closed():\n"
             "    import json\n"
-            "    spec = json.load(open('agent.json', encoding='utf-8'))\n"
+            "    from pathlib import Path\n"
+            "    spec = json.loads(Path(__file__).with_name('agent.json').read_text(encoding='utf-8'))\n"
             "    assert spec['execution_authority'] == 'none'\n"
             "    assert spec['advisory_only'] is True\n"
             "    assert spec['human_approval'] == 'required_for_execution'\n",
@@ -424,7 +426,8 @@ def generate_skill(spec: Mapping[str, Any]) -> ScaffoldResult:
             f"skills/{skill_id}/tests/test_skill.py",
             "def test_skill_is_advisory_only():\n"
             "    import json\n"
-            "    spec = json.load(open('skill.json', encoding='utf-8'))\n"
+            "    from pathlib import Path\n"
+            "    spec = json.loads((Path(__file__).resolve().parent.parent / 'skill.json').read_text(encoding='utf-8'))\n"
             "    assert spec['authority'] == 'advisory_only'\n"
             "    assert spec['required_tools'] == []\n",
         ),
