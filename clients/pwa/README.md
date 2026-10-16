@@ -1,6 +1,6 @@
 > Portfolio status authority: [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the private ORQEVIA repository. This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
 
-# JARVIS mobile PWA
+# ORQEVIA mobile PWA
 
 Canonical mobile/voice client for v1. This is a static, dependency-free browser client of the existing ABEX Interface Node. PRIME orchestration, provider credentials and execution remain on ABEX. Native iOS tooling is not a v1 dependency.
 
@@ -68,5 +68,5 @@ node clients/pwa/tests.mjs
 
 Focused candidate continuation tests: `node clients/pwa/followup-tests.mjs` — 6 passing tests for terminal/revision preconditions, exact request schema, task/revision-bound retry identity, wrong acknowledgment rejection, non-retried conflicts and explicit composer/voice integration. These are not a deployed or physical-device acceptance claim. The shell cache version is incremented for the updated composer/core assets.
 
-`make-icons.mjs` reproduces the included geometric PNG icons without external assets or dependencies. It is not required at runtime.
+`make-icons.mjs` reproduces every committed `icons/orqevia-command-v1-*.png` (the ORQEVIA command install icon: dark master, PWA sizes, maskable, apple-touch, favicons and the light variant) from pure geometry, and assembles `icons/favicon.ico` — without external assets or dependencies. `icons/orqevia-command-v1.svg` carries the same geometry as the vector source. `icons/orqevia-official-v1-192.png` is the in-app ORQEVIA brand mark (unchanged by the icon script). None of this is required at runtime.
 
