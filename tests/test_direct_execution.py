@@ -20,8 +20,7 @@ def isolated(monkeypatch,tmp_path):
     monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
     monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
     monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
-    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE','golden_n1')
-    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
+    for name in ('PRIME_MEASURED_COMPUTE_PROFILE',
                  'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
     yield
@@ -34,13 +33,10 @@ def no_gate(*args,**kwargs):raise AssertionError('Legacy authority gate called')
 @pytest.fixture
 def api(monkeypatch,tmp_path):
     from app import compute_queue_api as compute
-    from app import backend_admission
     from app.action_harness import ActionHarness
     from app.agent_runtime import AgentAuthorityRuntime
     from app.job_queue import JobQueue
     monkeypatch.setattr(compute,'queue',JobQueue(str(tmp_path/'queue.db'),compute.POLICY))
-    # This fixture tests authenticated routing, not measured model admission.
-    monkeypatch.setattr(backend_admission,'reserve_model',lambda *_args,**_kw:None)
     monkeypatch.setattr(compute,'_validate_job_lease',no_gate)
     monkeypatch.setattr(ActionHarness,'authorize',no_gate)
     monkeypatch.setattr(AgentAuthorityRuntime,'begin_path',no_gate)
@@ -116,21 +112,6 @@ def test_secrets_redacted(tmp_path):
     ledger.emit(ActionRecord('t','a17','test','fixture',parameters_summary={'api_key':'secret-value','text':'Bearer abc'}),'started')
     assert ledger.flush();raw=ledger.path.read_text();assert 'secret-value' not in raw and 'Bearer abc' not in raw
     ledger.close()
-
-
-def test_direct_sandbox_and_containment(api,monkeypatch):
-    client,_=api
-    import app.engineering_api as engineering
-    monkeypatch.setattr(engineering,'require_bounded_work_capacity',lambda:None)
-    headers={'Authorization':'Bearer isolated-test-owner'}
-    for role in ('A12 Builder','A13 Test Engineer'):
-        result=client.post('/api/agents/engineering/wasm',headers=headers,json={
-            'role':role,'source':'(module (func (export "answer") (result i32) i32.const 42))','export':'answer'})
-        assert result.status_code==200,result.text
-        assert result.json()['result']['result']==42
-    denied=client.post('/api/agents/engineering/wasm',headers=headers,json={
-        'role':'A12 Builder','source':'(module (import "host" "run" (func)))','export':'run'})
-    assert denied.status_code==422
 
 
 def test_parallel_failure_isolation_and_repair(tmp_path):

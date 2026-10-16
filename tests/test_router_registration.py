@@ -7,7 +7,6 @@ class RouterTests(unittest.TestCase):
         paths={r.path for r in app.routes}
         self.assertIn("/api/agents/dispatch",paths)
         self.assertIn("/api/agents/objectives",paths)
-        self.assertIn("/api/agents/engineering/wasm",paths)
         self.assertIn("/api/compute-queue/jobs",paths)
         self.assertNotIn("/api/harness/pilot/dispatch",paths)
         self.assertNotIn("/api/integrations/portal/experiments",paths)

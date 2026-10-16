@@ -29,7 +29,6 @@ PLATFORM_POLICY: dict[str, str] = {
     "memory.read": "AUTO",
     "memory.propose": "BOUNDED_AUTO",
     "artifact.create": "BOUNDED_AUTO",
-    "sandbox.wasm.execute": "BOUNDED_AUTO",
     "email.draft": "BOUNDED_AUTO",
     "calendar.create": "GATED",
     "email.send": "GATED",
@@ -63,7 +62,6 @@ def classify_action(envelope: Mapping[str, Any], trust: Mapping[str, Any] | None
     platform = PLATFORM_POLICY.get(action, "GATED")
     bounded_sinks = {
         'artifact.create': ('prime-artifact-store', 'artifact-factory', {'a09'}),
-        'sandbox.wasm.execute': ('wasm-no-imports', 'wasm-sandbox', {'a17','a18'}),
     }
     if action in bounded_sinks:
         scope,connector,actors=bounded_sinks[action]

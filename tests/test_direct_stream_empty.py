@@ -59,16 +59,19 @@ def test_completion_marker_requires_actual_text(content,ok,monkeypatch,tmp_path)
             with pytest.raises(RuntimeError,match='Incomplete or empty'):asyncio.run(call)
 
 
-def test_golden_direct_stream_rejects_unobserved_model(monkeypatch,tmp_path):
+def test_direct_stream_allows_model_without_admission_gate(monkeypatch,tmp_path):
+    import json
     for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
                  'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
     monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
-    with patch('app.direct_stream.httpx.AsyncClient', side_effect=AssertionError('backend contacted')):
-        with pytest.raises(PermissionError,match='requires measured'):
-            asyncio.run(infer({'timeout_seconds':5,'prompt':'fixture','ram_mb':1024},
-                              SimpleNamespace(model='qwen3:14b'),
-                              settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive=0,
-                                                       context_tokens=128,max_output_tokens=8),
-                              capacity=lambda _:None,options=lambda:{}))
+    def reply(request):
+        return httpx.Response(200, text=json.dumps({'done': True, 'message': {'content': 'ok'}}) + '\n')
+    client = httpx.AsyncClient(transport=httpx.MockTransport(reply))
+    with patch('app.direct_stream.httpx.AsyncClient', return_value=client):
+        result = asyncio.run(infer({'timeout_seconds':5,'prompt':'fixture','ram_mb':1024},
+                                   SimpleNamespace(model='qwen3:14b'),
+                                   settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive=0,
+                                                            context_tokens=128,max_output_tokens=8),
+                                   capacity=lambda _:None,options=lambda:{}))
+        assert result['result'] == 'ok'

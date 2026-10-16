@@ -25,7 +25,7 @@ class EffectClass(IntEnum):
 
 
 _READ_ACTIONS = {"web.search", "agent.infer", "status.read", "filesystem.read"}
-_APPLICATION_ACTIONS = {"artifact.create", "sandbox.wasm.execute"}
+_APPLICATION_ACTIONS = {"artifact.create"}
 _HOST_ACTIONS = {"executor.run", "host.execute", "repair.run", "tool.execute"}
 
 _STORAGE = (

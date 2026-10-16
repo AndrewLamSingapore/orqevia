@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Callable
 
 from .agent_registry import RegistryError, canonical_agent_id
-from . import backend_admission
 
 
 TERMINAL = {"completed", "failed", "cancelled", "budget_blocked"}
@@ -145,10 +144,9 @@ class JobQueue:
               agent TEXT NOT NULL, key_sha256 TEXT NOT NULL, request_sha256 TEXT NOT NULL,
               job_id TEXT NOT NULL, PRIMARY KEY(agent,key_sha256));
             """)
-            # executescript commits implicitly; keep the admission key migration
-            # and subsequent column upgrades in one SQLite write transaction.
+            # executescript commits implicitly; keep the column upgrades in one
+            # SQLite write transaction.
             c.execute("BEGIN IMMEDIATE")
-            backend_admission.init(c)
 
             if 'classification' not in {r[1] for r in c.execute('PRAGMA table_info(compute_jobs)')}:
                 c.execute("ALTER TABLE compute_jobs ADD COLUMN classification TEXT DEFAULT 'R0'")
@@ -244,8 +242,6 @@ class JobQueue:
             row=c.execute('SELECT status,provider FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
             if not row:raise KeyError(job_id)
             if row['status'] not in TERMINAL:
-                if row['status']=='running':
-                    backend_admission.cancel(c,self.backend_endpoint,job_id)
                 c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=CASE WHEN status='held' THEN 0 ELSE actual_cost_usd END,updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
                 self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
         self.wake.set()
@@ -354,8 +350,7 @@ class JobQueue:
                 self._event(c, jid, 'cloud_reserved', binding)
         return [self.get(item[0]) for item in prepared]
 
-    def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider],
-               *, local_unavailable: bool = False) -> tuple[Provider | None,str,float]:
+    def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider]) -> tuple[Provider | None,str,float]:
         local_names={p.name for p in providers if p.kind=="local"}
         if row['preferred_provider']:
             providers=[p for p in providers if p.name==row['preferred_provider']]
@@ -384,7 +379,7 @@ class JobQueue:
             if row["model"] and row["model"]!=p.model:continue
             if not row["model"] and row["model_role"]!="auto" and not p.name.endswith("-"+row["model_role"]):continue
             local.append(p)
-        if local and not local_unavailable:return local[0],"local capacity available",0
+        if local:return local[0],"local capacity available",0
         if not row["allow_cloud"]:
             return None,"local capacity unavailable; cloud not permitted",0
         from .tier_router import classify_for_cloud
@@ -464,25 +459,6 @@ class JobQueue:
                         self._event(c,row["id"],"budget_blocked",{"reason":reason,"estimate":estimate})
                     continue
                 ts=utcnow();lease=time.time()+row["timeout_seconds"]+30
-                if provider.kind=='local':
-                    # The SQLite write transaction makes this reservation atomic
-                    # with the scheduler claim across workers and processes.
-                    try:
-                        backend_admission.reserve_model(c,self.backend_endpoint,row['id'],
-                                                        provider.model,row['ram_mb'],
-                                                        global_concurrency=self.policy.global_concurrency)
-                    except PermissionError:
-                        # Crash hygiene (2026-10-16 stall): reclaim leases whose
-                        # holder job is already terminal/unknown, then retry once.
-                        self._reclaim_terminal_leases(c)
-                        try:
-                            backend_admission.reserve_model(c,self.backend_endpoint,row['id'],
-                                                            provider.model,row['ram_mb'],
-                                                            global_concurrency=self.policy.global_concurrency)
-                        except PermissionError:
-                            provider,reason,estimate=self._route(c,row,providers,local_unavailable=True)
-                            if not provider:
-                                continue
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
                              lease_until=?,cloud_inflight=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status IN ('queued','held')""",
@@ -490,27 +466,7 @@ class JobQueue:
                 if changed.rowcount:
                     self._event(c,row["id"],"claimed",{"worker":worker_id,"provider":provider.name,"reason":reason})
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
-                if provider.kind=='local':
-                    backend_admission.cancel(c,self.backend_endpoint,row['id'])
         return None
-
-    def _reclaim_terminal_leases(self, c) -> None:
-        """Delete backend inference leases whose holder job is terminal or gone.
-
-        An orphaned lease whose holder job already failed silently refuses every
-        later claim under `backend inference lease occupied`; reclaiming it here
-        keeps the queue self-healing after crashes.
-        """
-        try:
-            rows = list(c.execute("SELECT endpoint, job_id FROM backend_admission"))
-        except Exception:
-            return
-        for endpoint, job_id in rows:
-            holder = c.execute("SELECT status FROM compute_jobs WHERE id=?", (job_id,)).fetchone()
-            status = holder[0] if holder else None
-            if status is None or status in ("failed", "completed", "cancelled", "budget_blocked"):
-                c.execute("DELETE FROM backend_admission WHERE endpoint=? AND job_id=?", (endpoint, job_id))
-                self._event(c, job_id, "stale_lease_reclaimed", {"endpoint": endpoint, "holder_status": status})
 
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
                output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,
@@ -533,7 +489,6 @@ class JobQueue:
             if inference_receipt is not None:
                 c.execute('UPDATE compute_jobs SET inference_receipt=? WHERE id=?',
                           (json.dumps(inference_receipt,sort_keys=True,separators=(',',':'),allow_nan=False),job_id))
-            backend_admission.cancel(c,self.backend_endpoint,job_id)
             cost=None if actual_cost_usd is None else max(0.0,float(actual_cost_usd)); ts=utcnow()
             budget_cost=row['estimated_cost_usd'] if cost is None else cost
             over=budget_cost>row["max_cost_usd"] or self._daily_spend(c)+budget_cost>self.policy.daily_cost_ceiling_usd
@@ -557,7 +512,6 @@ class JobQueue:
                 self._event(c, row['id'], 'reservation_expired', {'dispatched': False})
             rows=c.execute("SELECT * FROM compute_jobs WHERE status='running' AND lease_until<?",(time.time(),)).fetchall()
             for row in rows:
-                backend_admission.cancel(c,self.backend_endpoint,row['id'])
                 status="queued" if not row['allow_cloud'] and row["attempts"]<=row["max_retries"] else "failed"
                 # Worker expiry cannot prove HTTP cleanup. Cloud identity and
                 # occupancy survive until its trusted executor actually settles;
@@ -601,7 +555,6 @@ class WorkerPool:
                 continue
             provider=next(p for p in self.providers if p.name==job["provider"])
             try:
-                job['_admission_db'] = self.queue.db_path
                 self.queue.finish(job["id"],**self.execute(job,provider))
             except Exception as exc:
                 if provider.kind=='cloud':

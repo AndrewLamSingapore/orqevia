@@ -27,13 +27,6 @@ def candidate_global_concurrency(environment, profile):
 
 
 class QueueParallelCandidateTests(unittest.TestCase):
-    def setUp(self):
-        # Exercise scheduler overlap with a fake executor; admission is N=1
-        # until a measured backend authorizes more than one local generation.
-        guard = mock.patch('app.job_queue.backend_admission.reserve_model')
-        guard.start()
-        self.addCleanup(guard.stop)
-
     def test_default_and_invalid_overrides_remain_one(self):
         profile = {"normal_concurrency": 2}
         for environment in ({}, {"PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"},
