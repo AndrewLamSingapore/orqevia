@@ -26,6 +26,7 @@ app.mount('/pwa', StaticFiles(directory=os.getenv('PRIME_PWA_STATIC_DIR',
     str(Path(__file__).with_name('pwa_static'))), html=True, check_dir=False), name='pwa')
 
 PROTOCOL = 'jarvis.interface.v1'
+ORQEVIA_PROTOCOL = 'orqevia.interface.v1'
 ERRORS = {
     401: ('AUTHENTICATION_REQUIRED', 'Client authentication required'),
     403: ('CLIENT_SCOPE_DENIED', 'Client scope expired or unavailable'),
@@ -45,6 +46,7 @@ def error_response(status: int):
     # may contain prompts, bearer credentials, private paths or provider errors.
     return JSONResponse({'protocol': PROTOCOL, 'error': {'code': code, 'message': message,
         'retryable': False}}, status_code=status, headers={'X-PRIME-Protocol': PROTOCOL,
+        'X-ORQEVIA-Protocol': ORQEVIA_PROTOCOL,
         'Cache-Control': 'no-store'})
 
 
@@ -54,6 +56,7 @@ async def transport_and_protocol(request: Request, call_next):
         return error_response(426)
     response = await call_next(request)
     response.headers['X-PRIME-Protocol'] = PROTOCOL
+    response.headers['X-ORQEVIA-Protocol'] = ORQEVIA_PROTOCOL
     response.headers['Cache-Control'] = 'no-store'
     if request.url.path == '/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig' and response.status_code == 200:
         response.headers['Content-Type'] = 'application/x-apple-aspen-config'
