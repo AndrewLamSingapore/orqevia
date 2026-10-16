@@ -15,12 +15,16 @@ jobs:
     timeout-minutes: 5
     permissions:
       id-token: write
-      contents: none
+      contents: read
     steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
       - name: Print selected claims and attempt token exchange
         run: |
           python - <<'PY'
-          import base64, json, os, urllib.parse, urllib.request
+          import base64, hashlib, json, os, urllib.parse, urllib.request
 
           url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
           sep = "&" if "?" in url else "?"
@@ -52,6 +56,34 @@ jobs:
                       timeout=20) as response:
                   parsed = json.loads(response.read(65536))
               print("EXCHANGE_OK token_type=" + str(parsed.get("token_type")) + " expires_in=" + str(parsed.get("expires_in")))
+              token = parsed.get("access_token")
+              pin = json.load(open("governance/agent-cert-verifier-azure-pins.json", encoding="utf-8"))
+              key_id = pin["key_id"]
+              payload = json.dumps({
+                  "alg": "ES256",
+                  "value": base64.urlsafe_b64encode(hashlib.sha256(b"probe").digest()).rstrip(b"=").decode(),
+              }, separators=(",", ":")).encode("ascii")
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(
+                          key_id + "/sign?api-version=7.4", data=payload, method="POST",
+                          headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"}),
+                          timeout=20) as response:
+                      signed = json.loads(response.read(65536))
+                  print("VAULT_SIGN_OK kid_match=" + str(signed.get("kid") == key_id) + " value_len=" + str(len(str(signed.get("value")))))
+              except Exception as vault_error:
+                  raw = ""
+                  if hasattr(vault_error, "read"):
+                      try:
+                          raw = vault_error.read(65536).decode("utf-8", "replace")
+                      except Exception:
+                          raw = ""
+                  try:
+                      parsed = json.loads(raw)
+                      print("VAULT_SIGN_ERROR status=" + str(getattr(vault_error, "code", "?")) +
+                            " code=" + str(parsed.get("error", {}).get("code")) +
+                            " message=" + str(parsed.get("error", {}).get("message"))[:200])
+                  except Exception:
+                      print("VAULT_SIGN_ERROR status=" + str(getattr(vault_error, "code", "?")))
           except Exception as error:
               raw = ""
               if hasattr(error, "read"):
