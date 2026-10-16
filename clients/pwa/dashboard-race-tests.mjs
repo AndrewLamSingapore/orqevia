@@ -132,3 +132,37 @@ test('Parent telemetry expiry clears coaching before returning from render',asyn
   assert.equal(f.nodes.get('coaching-roles').children.length,0);
   assert.equal(f.nodes.get('coaching-state').textContent,'STALE');
 });
+
+test('Observed host gauges render values and honest availability text',async()=>{
+  const f=await fixture();f.session({role:'OWNER'});
+  f.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date().toISOString(),freshness_seconds:60,
+    audience:{client_id:'fixture-client'},metrics:[
+      {metric_id:'registered_agents',collection_status:'OBSERVED',value:21},
+      {metric_id:'cpu',collection_status:'OBSERVED',value:0.0},
+      {metric_id:'memory',collection_status:'OBSERVED',value:41.5809824346},
+      {metric_id:'disk',collection_status:'OBSERVED',value:19.6828439854},
+      {metric_id:'network_latency',collection_status:'OBSERVED',value:3.5}],
+    source:{instance:'ABEX',revision:'a'.repeat(40)},coaching:null,agents:[]}),
+    {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
+  await settle();
+  assert.equal(f.nodes.get('metric-cpu').textContent,'0');
+  assert.equal(f.nodes.get('metric-memory').textContent,'41.6');
+  assert.equal(f.nodes.get('metric-disk').textContent,'19.7');
+  assert.equal(f.nodes.get('metric-network_latency').textContent,'3.5');
+  assert.match(f.nodes.get('telemetry-source').textContent,/host metrics OBSERVED/);
+});
+
+test('Absent host metrics stay unknown; logout clears previously observed gauge values',async()=>{
+  const f=await fixture();f.session({role:'OWNER'});f.respond(0);await settle();
+  assert.equal(f.nodes.get('metric-cpu').textContent,'—');
+  assert.match(f.nodes.get('telemetry-source').textContent,/host gauges unavailable/);
+  const g=await fixture();g.session({role:'OWNER'});
+  g.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date().toISOString(),freshness_seconds:60,
+    audience:{client_id:'fixture-client'},metrics:[{metric_id:'cpu',collection_status:'OBSERVED',value:7}],
+    source:{instance:'ABEX',revision:'a'.repeat(40)},coaching:null,agents:[]}),
+    {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
+  await settle();
+  assert.equal(g.nodes.get('metric-cpu').textContent,'7');
+  g.session(null);
+  assert.equal(g.nodes.get('metric-cpu').textContent,'—');
+});
