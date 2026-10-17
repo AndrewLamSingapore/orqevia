@@ -1,4 +1,4 @@
-"""Bounded, selective DATA-ONLY context packs for canonical PRIME agents.
+"""Bounded, selective DATA-ONLY context packs for canonical ORQEVIA agents.
 
 This is a pure preparation boundary, not a retrieval service, prompt executor, or
 authority decision. The caller supplies trusted constraints and source-labelled

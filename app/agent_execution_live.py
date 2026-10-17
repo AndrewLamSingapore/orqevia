@@ -13,7 +13,7 @@ def observe_live_baseline(agent_id: str, capability_id: str, *, authorization: s
                           timeout_seconds: float = 30) -> dict:
     """Run one local-only registered-agent canary through existing dispatch.
 
-    Must execute in the PRIME service process (or an equally configured
+    Must execute in the ORQEVIA service process (or an equally configured
     authenticated runtime) so it shares the governed queue. The credential is
     never included in the returned evidence or passed to an agent prompt.
     """

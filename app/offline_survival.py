@@ -3,7 +3,7 @@
 Three guarantees, as code rather than documentation:
 
 A. LOCAL-FIRST - local identity, orchestration, memory, artifacts, governance and local model
-   inference already live in PRIME's own stores; this module adds the deliberate capability
+   inference already live in ORQEVIA's own stores; this module adds the deliberate capability
    state machine so the runtime reports what is local, degraded or unavailable instead of
    inferring whole-system failure from one unreachable provider.
 

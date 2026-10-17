@@ -40,7 +40,7 @@ def _require_integration_token(
     if not expected:
         raise HTTPException(
             status_code=503,
-            detail="PRIME integration authentication is not configured",
+            detail="ORQEVIA integration authentication is not configured",
         )
     scheme, _, supplied = (authorization or "").partition(" ")
     if (

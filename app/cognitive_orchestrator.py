@@ -1,4 +1,4 @@
-"""PRIME cognitive orchestrator.
+"""ORQEVIA cognitive orchestrator.
 
 Builds governed context, routes through the canonical agent registry, executes
 inference through the model gateway, and never executes consequential actions
@@ -139,7 +139,7 @@ class CognitiveOrchestrator:
 
     @staticmethod
     def _prompt(plan: CognitivePlan, context: str) -> str:
-        return f"""PRIME GOVERNED REASONING REQUEST
+        return f"""ORQEVIA GOVERNED REASONING REQUEST
 Intent: {plan.intent}
 Specialist domain: {plan.specialist}
 Canonical agent path: {' -> '.join(plan.agent_path)}

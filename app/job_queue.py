@@ -1,4 +1,4 @@
-"""Governed, persistent shared compute queue for all PRIME agents."""
+"""Governed, persistent shared compute queue for all ORQEVIA agents."""
 from __future__ import annotations
 
 import json

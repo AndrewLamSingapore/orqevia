@@ -160,7 +160,7 @@ def client_identity(client_id: str | None,authorization: str | None,capability: 
 
 
 def owner_transport():
-    # This credential stays inside PRIME; only bounded advisory methods below
+    # This credential stays inside ORQEVIA; only bounded advisory methods below
     # may use it. No caller-supplied URL, action, tool, approval, or model allowed.
     token=os.getenv('PRIME_SPINE_TOKEN','')
     if not token:raise HTTPException(503,'Authority plane unavailable')

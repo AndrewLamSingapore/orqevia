@@ -1,4 +1,4 @@
-"""Read-only JARVIS Control Surface composed around PRIME's existing APIs."""
+"""Read-only JARVIS Control Surface composed around ORQEVIA's existing APIs."""
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -43,7 +43,7 @@ def control_surface_manifest() -> dict:
         "name": "JARVIS Control Surface",
         "version": "2.0.0",
         "mode": "approval-gated",
-        "authority": "PRIME CORE",
+        "authority": "ORQEVIA CORE",
         "availability": {
             "host": "local-only",
             "control_url": "http://127.0.0.1:8000/control",

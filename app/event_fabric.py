@@ -1,4 +1,4 @@
-"""Durable, idempotent portfolio inbox plus governed PRIME projectors."""
+"""Durable, idempotent portfolio inbox plus governed ORQEVIA projectors."""
 from __future__ import annotations
 import json, os, sqlite3, uuid
 from datetime import datetime, timezone

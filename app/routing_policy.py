@@ -1,4 +1,4 @@
-"""Frozen PRIME reasoning-routing policy.
+"""Frozen ORQEVIA reasoning-routing policy.
 
 This module decides which reasoning stage may run next.  It does not call a
 model, execute an action, or grant authority.  Keeping the decision pure makes

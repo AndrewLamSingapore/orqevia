@@ -14,7 +14,7 @@
 <body>
 <div class="shell">
   <aside class="rail">
-    <div class="brand">JARVIS <b>PRIME</b></div>
+    <div class="brand">JARVIS <b>ORQEVIA</b></div>
     <div class="mode">● APPROVAL-GATED CONTROL SURFACE</div>
     <nav class="nav" aria-label="Control Surface views">
       <button class="active" data-view="overview">Overview</button>
@@ -25,12 +25,12 @@
       <button data-view="actions">Actions</button>
       <button data-view="audit">Audit</button>
     </nav>
-    <div class="rail-note">PRIME CORE is the only cognitive control plane. This surface presents state and proposals; it does not create authority.</div>
+    <div class="rail-note">ORQEVIA CORE is the only cognitive control plane. This surface presents state and proposals; it does not create authority.</div>
   </aside>
   <main class="main">
     <header class="top">
       <div><div class="eyebrow">Owner Intelligence Workspace</div><h1 id="title">Overview</h1><div class="muted" id="subtitle">State → priorities → evidence → guidance</div></div>
-      <div class="status"><span class="pill good" id="health">Checking PRIME…</span><span class="pill">Local-only</span><span class="pill">Approval decisions</span><span class="pill">No actuation</span><span class="pill good">Trusted local access</span></div>
+      <div class="status"><span class="pill good" id="health">Checking ORQEVIA…</span><span class="pill">Local-only</span><span class="pill">Approval decisions</span><span class="pill">No actuation</span><span class="pill good">Trusted local access</span></div>
     </header>
 
     <section class="view active" id="overview"><div class="grid">
@@ -68,11 +68,11 @@ async function health(){
     const response=await fetch('/health',{cache:'no-store'}),d=await response.json();
     if(!((response.status===200&&d.ok===true)||(response.status===503&&d.ok===false)))throw new Error('Invalid health response');
     const state=d.ok?'healthy':'degraded';
-    $('health').textContent='● PRIME '+state;
+    $('health').textContent='● ORQEVIA '+state;
     $('health').className='pill '+(d.ok?'good':'error');
     return {state,integrity:d.integrity||'UNKNOWN',modelsReady:d.models?.ready};
   }catch{
-    $('health').textContent='● PRIME unavailable';
+    $('health').textContent='● ORQEVIA unavailable';
     $('health').className='pill error';
     return {state:'unknown',integrity:'UNKNOWN',modelsReady:null};
   }
@@ -83,7 +83,7 @@ async function loadOverview(){
     workspaceSnapshot={generated_at:new Date().toISOString(),health:observed,status,projects,actions,approvals,artifacts,reviews,boundaries:{local_only:true,read_only:true,no_actuation:true}};
     const pendingActions=actions.filter(x=>x.status==='pending').length,pendingApprovals=approvals.filter(x=>x.status==='pending').length,activeProjects=projects.filter(x=>['active','running','queued','draft'].includes(x.status)).length;
     $('overviewMetrics').innerHTML=[['Health',observed.state],['Active projects',activeProjects],['Verified evidence',artifacts.length],['Pending actions',pendingActions],['Pending approvals',pendingApprovals],['Agent jobs',status.agent_jobs??0]].map(x=>'<div class="metric"><strong>'+esc(x[1])+'</strong>'+esc(x[0])+'</div>').join('');
-    const guidance=[{tone:observed.state==='healthy'?'good':observed.state==='degraded'?'warn':'',title:'PRIME health',text:observed.state==='unknown'?'Live health could not be confirmed.':`Runtime integrity: ${observed.integrity}. Model readiness: ${observed.modelsReady===true?'ready':observed.modelsReady===false?'not ready':'unknown'}.`}];
+    const guidance=[{tone:observed.state==='healthy'?'good':observed.state==='degraded'?'warn':'',title:'ORQEVIA health',text:observed.state==='unknown'?'Live health could not be confirmed.':`Runtime integrity: ${observed.integrity}. Model readiness: ${observed.modelsReady===true?'ready':observed.modelsReady===false?'not ready':'unknown'}.`}];
     if(pendingApprovals)guidance.push({tone:'warn',title:'Review requested',text:pendingApprovals+' approval request(s) are waiting. This workspace will not resolve them.'});
     if(pendingActions)guidance.push({tone:'warn',title:'Proposals waiting',text:pendingActions+' proposed action(s) remain observe-only.'});
     if(!activeProjects)guidance.push({tone:'',title:'No active project',text:'JARVIS has no active project requiring attention.'});

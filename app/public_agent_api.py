@@ -1,6 +1,6 @@
 """Public-safe JARVIS agent runtime metadata.
 
-Disabled by default. When PRIME is deliberately exposed through a trusted public
+Disabled by default. When ORQEVIA is deliberately exposed through a trusted public
 relay, PRIME_PUBLIC_AGENT_TRACE=1 enables a strictly sanitized read-only trace.
 """
 from __future__ import annotations
