@@ -226,6 +226,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert "### Verified" not in audit
     assert "374 remote branches" in audit
     after = after[:audit_start] + after[audit_end:]
+    # Admit only this exact permanent-readiness and role-acceptance-start record;
+    # all prior bytes remain pinned.
+    readiness_title = "## Permanent readiness gate and full-role acceptance start - 17 October 2026"
+    assert after.count(readiness_title) == 1
+    readiness_start = after.index(readiness_title)
+    readiness_end = after.index("\n## ", readiness_start + len(readiness_title)) + 1
+    readiness_update = after[readiness_start:readiness_end].encode("utf-8")
+    assert len(readiness_update) == 2279
+    assert hashlib.sha256(readiness_update).hexdigest() == "2d534a9a4aa400da82688400581993839722ee24342c7a1378a3e947205c2254"
+    after = after[:readiness_start] + after[readiness_end:]
     # Admit only this exact estate reconciliation section; all prior bytes stay pinned.
     estate_title = "## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)"
     assert after.count(estate_title) == 1
