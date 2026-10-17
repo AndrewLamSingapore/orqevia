@@ -7,6 +7,15 @@ export function telemetryFreshness(value, now=Date.now()) {
   return now-timestamp>ttl*1000?'STALE':'OBSERVED';
 }
 
+export function agentReadinessSummary(value) {
+  const observed=value?.observed_agent_count,fresh=value?.fresh_agent_count,ready=value?.ready_agent_count;
+  if(![observed,fresh,ready].every(Number.isSafeInteger)||[observed,fresh,ready].some(n=>n<0||n>21)) return null;
+  if(fresh>observed||ready>fresh) return null;
+  const models=value?.model_runtime;
+  if(!models||typeof models!=='object'||typeof models.ready!=='boolean'||!Array.isArray(models.required_models)||!Array.isArray(models.missing_models)) return null;
+  return `Observed history ${observed} / 21 · fresh queue ${fresh} / 21 · ready ${ready} / 21`;
+}
+
 export function coachingStatus(value, now=Date.now()) {
   if(value===null||typeof value!=='object'||!Array.isArray(value.agents)) return 'UNKNOWN';
   if(value.status==='UNAVAILABLE') return 'UNAVAILABLE';
@@ -128,6 +137,8 @@ if(typeof document!=='undefined') {
     const normalLines=normalLatestLines(latest?.normal_latest);
     if(normalLines){const box=document.createElement('div');box.className='coaching-stat';const title=document.createElement('strong');title.textContent=normalLines[0];box.append(title);for(const line of normalLines.slice(1)){const detail=document.createElement('small');detail.textContent=line;box.append(detail);}$('coaching-summary').append(box);}
     text('telemetry-state',state);text('mobile-system-state','Observations received');
+    const readiness=agentReadinessSummary(latest);
+    text('mobile-ready',readiness?'ready '+(latest.ready_agent_count)+' / 21':'— / 21');
     for(const [id,name] of [['registered-count','registered_agents'],['active-count','active_job_records']]){
       const metric=latest.metrics.find(m=>m.metric_id===name);
       text(id,metric?.collection_status==='OBSERVED'&&Number.isSafeInteger(metric.value)&&metric.value>=0?String(metric.value):'—');
@@ -139,7 +150,7 @@ if(typeof document!=='undefined') {
       if(ok)hostObserved++;
       text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'—');
     }
-    text('telemetry-source',`${latest.source.instance} · observed ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(latest.observed_at))} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
+    text('telemetry-source',`${latest.source.instance} · ${readiness||'agent readiness UNKNOWN'} · observed ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(latest.observed_at))} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
     const list=$('agent-provenance-list');list.replaceChildren();
     for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · availability ${agent.availability}`;row.append(title,status);list.append(row);}
   }

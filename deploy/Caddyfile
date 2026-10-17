@@ -5,7 +5,7 @@
 :8080 {
 	@health path /health
 	handle @health {
-		reverse_proxy prime:8000
+		reverse_proxy backend:8000
 	}
 
 	@authenticated_integrations {
@@ -13,7 +13,7 @@
 		header Authorization "Bearer {$PRIME_INTEGRATION_TOKEN}"
 	}
 	handle @authenticated_integrations {
-		reverse_proxy prime:8000
+		reverse_proxy backend:8000
 	}
 
 	handle /api/integrations/* {

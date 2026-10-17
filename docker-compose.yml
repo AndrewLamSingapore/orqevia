@@ -79,6 +79,7 @@ services:
       PRIME_MEASURED_COMPUTE_PROFILE: ${PRIME_MEASURED_COMPUTE_PROFILE:-}
       PRIME_MEASURED_COMPUTE_PROFILE_SHA256: ${PRIME_MEASURED_COMPUTE_PROFILE_SHA256:-}
       PRIME_AGENT_CONCURRENCY: ${PRIME_AGENT_CONCURRENCY:-1}
+      PRIME_READY_ACTIVITY_MAX_AGE_SECONDS: ${PRIME_READY_ACTIVITY_MAX_AGE_SECONDS:-3600}
       PRIME_LOCAL_RAM_MB: ${PRIME_LOCAL_RAM_MB:-32768}
       PRIME_LOCAL_VRAM_MB: ${PRIME_LOCAL_VRAM_MB:-0}
       PRIME_CLOUD_WAIT_SECONDS: ${PRIME_CLOUD_WAIT_SECONDS:-300}
@@ -105,7 +106,7 @@ services:
       timeout: 8s
       retries: 5
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 30s
     logging:
       driver: json-file
@@ -142,6 +143,7 @@ services:
       PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
       PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
       PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      PRIME_READY_ACTIVITY_MAX_AGE_SECONDS: ${PRIME_READY_ACTIVITY_MAX_AGE_SECONDS:-3600}
       PRIME_HOST_METRICS_RECEIPT: /run/prime-host-metrics/host-metrics.json
     volumes:
       - orqevia-data:/data
@@ -179,7 +181,7 @@ services:
       timeout: 8s
       retries: 5
       start_period: 20s
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 15s
     logging:
       driver: json-file
@@ -207,7 +209,7 @@ services:
       timeout: 8s
       retries: 12
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 30s
     logging:
       driver: json-file
@@ -254,7 +256,7 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 15s
     logging:
       driver: json-file
@@ -277,11 +279,32 @@ services:
         read_only: true
         bind:
           create_host_path: false
-    restart: unless-stopped
+    restart: always
     stop_grace_period: 15s
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
+
+  # Permanent DELL trust bootstrap: serves only the public estate CA, iOS
+  # profile, assessment script and pathway runbook. No secrets.
+  trust-bootstrap:
+    image: ${CADDY_IMAGE:?Set CADDY_IMAGE to a reviewed immutable tag or digest}
+    labels:
+      com.orqevia.managed: "true"
+      com.orqevia.role: "trust-bootstrap"
+      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+    command: ["caddy", "file-server", "--listen", ":8081", "--root", "/bootstrap"]
+    ports:
+      - "${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}:8081:8081"
+    volumes:
+      - type: bind
+        source: C:\Users\Admin\Documents\ABEX\operations\dell-co-owner\bootstrap
+        target: /bootstrap
+        read_only: true
+    restart: always
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
 
 volumes:
   orqevia-data:

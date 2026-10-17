@@ -1,13 +1,79 @@
-"""Bounded workspace aggregates, never agent readiness or private task content."""
+"""Bounded workspace aggregates with evidence-bound runtime readiness."""
 from datetime import datetime, timezone
+import json
 import os
 from pathlib import Path
 import re
 import sqlite3
 import time
+import urllib.request
 import uuid
 
 from .agent_registry import load_agent_registry
+
+
+def activity_is_fresh(value, *, now, max_age_seconds):
+    """Return true only for a timestamped observation inside the allowed clock window."""
+    if not isinstance(value, str) or not isinstance(max_age_seconds, int):
+        return False
+    try:
+        observed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if observed.tzinfo is None:
+            observed = observed.replace(tzinfo=timezone.utc)
+        age = now - observed.timestamp()
+    except (OverflowError, TypeError, ValueError):
+        return False
+    return -5 <= age <= max_age_seconds
+
+
+def queue_freshness_seconds():
+    """Read the permanent queue-observation window, failing closed if malformed."""
+    raw = os.getenv('PRIME_READY_ACTIVITY_MAX_AGE_SECONDS', '3600').strip()
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return value if 60 <= value <= 86400 else None
+
+
+def model_runtime_readiness(timeout=2.0):
+    """Probe the local model runtime and require every configured model."""
+    required = []
+    for name in ('PRIME_FAST_MODEL', 'PRIME_DEEP_MODEL',
+                 'PRIME_EVALUATOR_MODEL', 'PRIME_EMBED_MODEL'):
+        value = os.getenv(name, '').strip()
+        if value and value not in required:
+            required.append(value)
+    endpoint = os.getenv('OLLAMA_BASE_URL', 'http://ollama:11434').rstrip('/')
+    observed_at = datetime.now(timezone.utc).isoformat()
+    try:
+        with urllib.request.urlopen(endpoint + '/api/tags', timeout=timeout) as response:
+            payload = json.loads(response.read(2_000_000).decode('utf-8'))
+        available = {
+            str(item.get('name'))
+            for item in payload.get('models', [])
+            if isinstance(item, dict) and item.get('name')
+        }
+        missing = [name for name in required if name not in available]
+        return {
+            'status': 'OBSERVED',
+            'ready': response.status == 200 and not missing and bool(required),
+            'endpoint': endpoint,
+            'required_models': required,
+            'missing_models': missing,
+            'observed_at': observed_at,
+            'network_probe_performed': True,
+        }
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return {
+            'status': 'UNAVAILABLE',
+            'ready': False,
+            'endpoint': endpoint,
+            'required_models': required,
+            'missing_models': required,
+            'observed_at': observed_at,
+            'network_probe_performed': True,
+        }
 
 
 def telemetry_store_counts():
@@ -64,13 +130,14 @@ def agent_activity():
             db.close()
 
 
-def snapshot(client_id, role):
+def snapshot(client_id, role, *, model_runtime_probe=None):
     observed = datetime.now(timezone.utc).isoformat()
     registry = load_agent_registry()
     stores = telemetry_store_counts()
     from .coaching_observation import coaching_snapshot
     coaching = coaching_snapshot(Path(os.getenv('PRIME_DATA_DIR','/data')))
     activity = agent_activity()
+    model_runtime = model_runtime_probe or model_runtime_readiness()
     instance = os.getenv('PRIME_INTERFACE_HOST_ID', 'UNKNOWN')
     revision = os.getenv('PRIME_INTERFACE_RUNTIME_REVISION', 'UNKNOWN')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', instance):
@@ -106,12 +173,63 @@ def snapshot(client_id, role):
         agents.append({'agent_id':agent['id'],'name':agent['name'],'registration':'REGISTERED',
                        'availability':availability,'heartbeat':record['observed_at'] if record else None,
                        'activity_source':'compute-queue'})
-    ready=sum(item['availability'] in {'RUNNING','QUEUED','IDLE'} for item in agents) if activity is not None else None
+    observed_count = (
+        sum(item['availability'] in {'RUNNING','QUEUED','IDLE'} for item in agents)
+        if activity is not None else None
+    )
+    max_age_seconds = queue_freshness_seconds()
+    now_epoch = datetime.fromisoformat(observed).timestamp()
+    fresh_agent_ids = []
+    if activity is not None and max_age_seconds is not None:
+        fresh_agent_ids = [
+            agent['agent_id']
+            for agent in agents
+            if agent['agent_id'] in activity
+            and activity_is_fresh(
+                activity[agent['agent_id']]['observed_at'],
+                now=now_epoch,
+                max_age_seconds=max_age_seconds,
+            )
+        ]
+    fresh_count = len(fresh_agent_ids) if activity is not None and max_age_seconds is not None else None
+    queue_ready = observed_count == len(registry['agents'])
+    ready = (
+        fresh_count
+        if queue_ready and fresh_count == len(registry['agents']) and model_runtime['ready']
+        else 0 if activity is not None and model_runtime['status'] == 'OBSERVED'
+        else None
+    )
+    metrics.append(metric('observed_agents', observed_count,
+                          'OBSERVED' if observed_count is not None else 'UNAVAILABLE',
+                          'compute-queue'))
+    metrics.append(metric('fresh_agents', fresh_count,
+                          'OBSERVED' if fresh_count is not None else 'UNAVAILABLE',
+                          'compute-queue'))
+    metrics.append(metric('ready_agents', ready,
+                          'OBSERVED' if ready is not None else 'UNAVAILABLE',
+                          'agent-registry+compute-queue+model-runtime'))
+    not_fresh_agent_ids = (
+        [agent['agent_id'] for agent in agents if agent['agent_id'] not in fresh_agent_ids]
+        if fresh_count is not None else []
+    )
     return {'schema_version': 'orqevia.telemetry.v1', 'snapshot_id': str(uuid.uuid4()),
             'observed_at': observed, 'freshness_seconds': 60,
             'audience': {'client_id': client_id, 'role': role},
             'source': {'system': 'ORQEVIA', 'instance': instance, 'revision': revision},
-            'metrics': metrics, 'ready_agent_count': ready,
+            'metrics': metrics,
+            'ready_agent_count': ready,
+            'observed_agent_count': observed_count,
+            'fresh_agent_count': fresh_count,
+            'readiness_scope': 'CURRENT_MODEL_RUNTIME_AND_QUEUE_ROUTABLE',
+            'queue_freshness': {
+                'status': 'OBSERVED' if fresh_count is not None else 'UNAVAILABLE',
+                'max_age_seconds': max_age_seconds,
+                'fresh_agent_count': fresh_count,
+                'not_fresh_agent_count': len(not_fresh_agent_ids) if fresh_count is not None else None,
+                'not_fresh_agent_ids': not_fresh_agent_ids,
+                'rule': 'latest queue observation must be timestamped, within max age, and no more than five seconds in the future',
+            },
+            'model_runtime': model_runtime,
             'agents': agents,
             'coaching': coaching,
             'privacy': {'aggregate_only': True, 'private_tasks_exposed': False,

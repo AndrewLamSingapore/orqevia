@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {telemetryFreshness} from './dashboard.mjs';
+import {agentReadinessSummary,telemetryFreshness} from './dashboard.mjs';
 const time=Date.parse('2026-10-12T01:00:00Z');
 const report={schema_version:'orqevia.telemetry.v1',source:{instance:'fixture',revision:'a'.repeat(40)},observed_at:new Date(time).toISOString(),freshness_seconds:60,metrics:[],agents:Array.from({length:21},(_,i)=>({agent_id:`fixture-${i}`}))};
 assert.equal(telemetryFreshness(report,time),'OBSERVED');
@@ -9,6 +9,12 @@ assert.equal(telemetryFreshness({...report,observed_at:'not a timestamp'},time),
 assert.equal(telemetryFreshness({...report,observed_at:new Date(time+6000).toISOString()},time),'UNKNOWN');
 assert.equal(telemetryFreshness({...report,freshness_seconds:3600},time),'UNKNOWN');
 assert.equal(telemetryFreshness({...report,agents:[...report.agents.slice(0,20),report.agents[0]]},time),'UNKNOWN');
+const models={ready:true,required_models:['gemma3:1b'],missing_models:[]};
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:21,model_runtime:models}),'Observed history 21 / 21 · fresh queue 21 / 21 · ready 21 / 21');
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:18,ready_agent_count:0,model_runtime:models}),'Observed history 21 / 21 · fresh queue 18 / 21 · ready 0 / 21');
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:22,model_runtime:models}),null);
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:null,ready_agent_count:0,model_runtime:models}),null);
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:0,model_runtime:null}),null);
 const manifest=JSON.parse(readFileSync(new URL('./manifest.webmanifest',import.meta.url),'utf8'));
 assert.equal(manifest.id,'/pwa/');assert.equal(manifest.scope,'/pwa/');assert.equal(manifest.start_url,'/pwa/');
 const sw=readFileSync(new URL('./sw.js',import.meta.url),'utf8');
@@ -16,7 +22,7 @@ assert.ok(sw.includes("'/pwa/dashboard.mjs'"));assert.ok(!sw.includes("'/interfa
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.ok(html.includes('id="objective-form"'));assert.ok(html.includes('id="enrollment-form"'));assert.ok(html.includes('id="artifact-section"'));
 assert.ok(!html.includes('21/21 agents ready'));assert.ok(!/>\s*100%\s*</.test(html));
-console.log('Dashboard source, freshness, duplicate-agent rejection, PWA identity and API cache boundary: 12 assertions PASS');
+console.log('Dashboard source, freshness, agent-readiness separation, duplicate-agent rejection, PWA identity and API cache boundary: 17 assertions PASS');
 
 assert.equal(telemetryFreshness({...report,agents:[]},time),'OBSERVED');
 assert.equal(telemetryFreshness({...report,agents:report.agents.slice(0,2)},time),'OBSERVED');
