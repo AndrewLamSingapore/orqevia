@@ -192,10 +192,9 @@ def snapshot(client_id, role, *, model_runtime_probe=None):
             )
         ]
     fresh_count = len(fresh_agent_ids) if activity is not None and max_age_seconds is not None else None
-    queue_ready = observed_count == len(registry['agents'])
     ready = (
         fresh_count
-        if queue_ready and fresh_count == len(registry['agents']) and model_runtime['ready']
+        if fresh_count is not None and model_runtime['ready']
         else 0 if activity is not None and model_runtime['status'] == 'OBSERVED'
         else None
     )

@@ -147,7 +147,7 @@ def test_ready_agents_require_fresh_timestamps_but_observed_history_remains(monk
     )
     assert report['observed_agent_count'] == 21
     assert report['fresh_agent_count'] == 18
-    assert report['ready_agent_count'] == 0
+    assert report['ready_agent_count'] == 18
     assert set(report['queue_freshness']['not_fresh_agent_ids']) == set(agents[-3:])
 
 
