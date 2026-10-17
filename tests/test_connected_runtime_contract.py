@@ -58,6 +58,23 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         )
         self.assertNotIn("Get-Content .env", script)
 
+    def test_permanent_coaching_controller_has_no_container_sandbox_limits(self) -> None:
+        compose = (ROOT / "deploy" / "agent-coaching.compose.yml").read_text(
+            encoding="utf-8"
+        )
+        for restriction in (
+            "read_only:",
+            "network_mode: none",
+            "cap_drop:",
+            "security_opt:",
+            "mem_limit:",
+            "cpus:",
+            "pids_limit:",
+        ):
+            self.assertNotIn(restriction, compose)
+        self.assertIn("restart: always", compose)
+        self.assertIn("name: ${ORQEVIA_EPOCH_NETWORK:-orqevia-epoch-20261016_default}", compose)
+
 
 if __name__ == "__main__":
     unittest.main()
