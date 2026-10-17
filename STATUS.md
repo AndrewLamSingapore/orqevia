@@ -59,9 +59,9 @@ Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 Octo
   as ready merely because the agent appears in the registry.
 - The deployed backend and interface were rebuilt from the merged revision.
   Their observed image IDs are
-  `sha256:a14f5f479a7f6fa4904f3dec196237fd9ab1ba1a12a93b0231f756e87b9b02b3`
+  `sha256:f32467884e19049cef746f8c4b11f91c4faaa5f83c2c8de61a018c556721ef57`
   and
-  `sha256:826bbd25c71e5dafba31384dc20cd259979506111aa42eebb5c71d44664a8ae5`;
+  `sha256:01ceb5d5cb5b2f488ffc0549b6169e02497bdfa99fbe0af8efc4b9eea65aba81`;
   both are healthy. All nine persistent runtime containers report
   `restart: always`.
 - The live registry contains 21 agents and all 21 have historical queue
@@ -94,12 +94,15 @@ Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 Octo
   available boundary for this run (`a02`, `a05`, `a07`, `a13`, `a29`). The other
   16 remain failures; `a17` and `a18` are separately blocked because their
   registered `sandbox.wasm.execute` tool no longer exists.
+- Authenticated Cloudflare Access was completed in the signed-in owner browser.
+  The protected PWA survived reload, verified Owner authority, displayed host
+  metrics and **21/21 observed, fresh and ready**, and exposed the authenticated
+  coaching surface.
 - The coaching controller, supervisor, five-minute collector and one-minute
   watchdog are active. Coaching remains **21/21 sessions DONE** and separately
   recorded as synthetic internal assessment.
-- Full role acceptance remains **0/21**, not 21/21. The 21-role register now
-  specifies a retained representative result, required tool or delegation
-  receipt and independent reassessment for each role.
+- Full role acceptance is **5/21**, not 21/21. All 21 role results, failures,
+  tool gaps and delegation receipts are retained in the acceptance register.
 - Source verification: focused contracts **50/50 passed**; PWA dashboard suites
   passed; full suite `6027 passed, 16 skipped, 3 deselected, 102 subtests
   passed`; GitHub CI, STATUS authority, observatory verifier and CodeQL passed.
