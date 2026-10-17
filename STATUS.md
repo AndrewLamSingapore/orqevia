@@ -76,6 +76,11 @@ Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 Octo
   `ABEX-ORQEVIA-Agent-Liveness` task reruns the same one-at-a-time canary every
   50 minutes. This establishes queue liveness only, not role competence or full
   acceptance.
+- A forced-exit probe showed that the Docker restart policy alone did not bring
+  the killed support container back on this Docker Desktop runtime. The
+  `ABEX-ORQEVIA-Runtime-Watchdog` was added at one-minute cadence for all nine
+  containers plus the supervisor and collector; an independent forced-exit
+  recovery of `trust-bootstrap` returned it to `running` and HTTP 200.
 - The coaching controller, supervisor, five-minute collector and one-minute
   watchdog are active. Coaching remains **21/21 sessions DONE** and separately
   recorded as synthetic internal assessment.
