@@ -216,6 +216,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit the dated 17 October health-audit/sweep section; all prior bytes stay pinned.
+    audit_title = "## ORQEVIA repository health audit and GitHub sweep - 17 October 2026"
+    assert after.count(audit_title) == 1
+    audit_start = after.index(audit_title)
+    audit_end = after.index("\n## ", audit_start + len(audit_title)) + 1
+    audit = after[audit_start:audit_end]
+    assert "### Claimed, not independently checked" in audit
+    assert "### Verified" not in audit
+    assert "374 remote branches" in audit
+    after = after[:audit_start] + after[audit_end:]
     # Admit only this exact estate reconciliation section; all prior bytes stay pinned.
     estate_title = "## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)"
     assert after.count(estate_title) == 1
