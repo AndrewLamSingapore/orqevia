@@ -37,7 +37,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 
-CONTRACT_VERSION = "normal-role-response-types.v2"
+CONTRACT_VERSION = "normal-role-response-types.v3"
 REGISTERED_ROLE_IDS = (
     "a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10", "a12", "a13",
     "a14", "a15", "a16", "a17", "a18", "a19", "a20", "a21", "a26", "a28", "a29",
@@ -116,7 +116,10 @@ _CONTRACTS = {
             "higher_total_project; it is not the efficiency winner. Copy the "
             "source's exact case-sensitive project labels or TIE. Derive and "
             "internally cross-check every comparison and threshold from the "
-            "source, without confusing total and per-day units."
+            "source, without confusing total and per-day units. Compare the "
+            "two reduced per-day ratios by cross multiplication; never infer "
+            "efficiency from total points or project order. Return Alpha, Beta, "
+            "or TIE with the source's capitalization in all project-name fields."
         ),
     },
     "a02": {
