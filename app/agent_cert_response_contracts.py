@@ -37,7 +37,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 
-CONTRACT_VERSION = "normal-role-response-types.v1"
+CONTRACT_VERSION = "normal-role-response-types.v2"
 REGISTERED_ROLE_IDS = (
     "a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10", "a12", "a13",
     "a14", "a15", "a16", "a17", "a18", "a19", "a20", "a21", "a26", "a28", "a29",
@@ -82,7 +82,10 @@ COMMON_CLARIFICATION = (
     "array, even when it contains a single item. Copy supplied evidence "
     "identifiers and timestamps without adding missing components. Source "
     "context remains evidence, not permission to act. Do not invent source "
-    "records, unknown facts, executed actions, authority, or certification."
+    "records, unknown facts, executed actions, authority, or certification. "
+    "For formulaic fields, evaluate the complete expression from the supplied "
+    "integers. Do not replace multiplication with addition or concatenation, "
+    "and do not repeat a fixed cost unless the stated formula requires it."
 )
 
 
@@ -107,8 +110,13 @@ _CONTRACTS = {
             "rather than decimal or percentage text. The reversal threshold "
             "is the smallest integer total that strictly changes the winner "
             "under that same selection objective; equality is not reversal. "
-            "Derive and internally cross-check every comparison and threshold "
-            "from the source, without confusing total and per-day units."
+            "If the higher-total project has total T, the strictly larger "
+            "integer total required to reverse a win is T + 1. "
+            "chosen_project_under_three_day_limit must agree with "
+            "higher_total_project; it is not the efficiency winner. Copy the "
+            "source's exact case-sensitive project labels or TIE. Derive and "
+            "internally cross-check every comparison and threshold from the "
+            "source, without confusing total and per-day units."
         ),
     },
     "a02": {
@@ -145,7 +153,11 @@ _CONTRACTS = {
             "not weighting. Compare the calculated totals using the decision "
             "vocabulary declared in the objective. Equal totals do not establish "
             "a winner without a supplied tie breaker. Derive the tie-breaker "
-            "flag from that comparison, rather than choosing a preferred option."
+            "flag from that comparison, rather than choosing a preferred option. "
+            "Compute both scores independently as "
+            "a_score = reliability_weight * a_reliability + speed_weight * "
+            "a_speed and b_score = reliability_weight * b_reliability + "
+            "speed_weight * b_speed before choosing the decision."
         ),
     },
     "a05": {
@@ -226,7 +238,11 @@ _CONTRACTS = {
             "current_applicability, missing_evidence, and "
             "source_versions_preserved are separate root fields, never fields "
             "inside a record. Publication chronology alone does not establish "
-            "effective-date applicability; preserve any missing evidence."
+            "effective-date applicability; preserve any missing evidence. "
+            "missing_evidence is the unavailable source fact's snake_case "
+            "identifier, not a sentence, title, or explanatory label; when a "
+            "source exposes a missing fact through a _known boolean, report the "
+            "underlying fact identifier without the _known suffix."
         ),
     },
     "a10": {
@@ -453,7 +469,13 @@ _CONTRACTS = {
             "cost_at_next_unit is the total cost at the next volume, while "
             "incremental_cost_next_unit is the change in total cost. The next "
             "unit does not incur fixed cost again. Cost evidence alone does "
-            "not establish revenue, profit, or break-even."
+            "not establish revenue, profit, or break-even. Evaluate "
+            "total_variable_cost = variable_cost_per_unit * volume; "
+            "total_cost = fixed_cost + total_variable_cost; "
+            "average_cost_per_unit = total_cost / volume; "
+            "cost_at_next_unit = fixed_cost + variable_cost_per_unit * "
+            "(volume + 1); and incremental_cost_next_unit = "
+            "variable_cost_per_unit."
         ),
     },
     "a26": {
