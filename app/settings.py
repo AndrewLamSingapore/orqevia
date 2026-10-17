@@ -21,6 +21,15 @@ def _int_env(name: str, default: int, minimum: int, maximum: int) -> int:
     return max(minimum, min(maximum, value))
 
 
+def _keep_alive_env(name: str, default: str) -> str | int:
+    value = _env(name, default)
+    try:
+        numeric = int(value)
+    except ValueError:
+        return value
+    return numeric
+
+
 @dataclass(frozen=True)
 class PrimeSettings:
     ollama_base_url: str
@@ -32,7 +41,7 @@ class PrimeSettings:
     compute_profile: str = "compat"
     context_tokens: int = 8192
     max_output_tokens: int = 2048
-    keep_alive: str = "10m"
+    keep_alive: str | int = "10m"
 
     def __post_init__(self) -> None:
         if not self.evaluator_model:
@@ -58,7 +67,7 @@ class PrimeSettings:
             multi_specialist_workers=_int_env("PRIME_MULTI_SPECIALIST_WORKERS", worker_default, 1, 6),
             context_tokens=_int_env("PRIME_CONTEXT_TOKENS", context_default, 2048, 131072),
             max_output_tokens=_int_env("PRIME_MAX_OUTPUT_TOKENS", output_default, 256, 32768),
-            keep_alive=_env("PRIME_MODEL_KEEP_ALIVE", "10m"),
+            keep_alive=_keep_alive_env("PRIME_MODEL_KEEP_ALIVE", "10m"),
         )
 
     @property
