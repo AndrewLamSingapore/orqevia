@@ -36,6 +36,19 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA repository health audit and GitHub sweep - 17 October 2026
+
+### Claimed, not independently checked
+
+- Repository visibility changed PRIVATE -> PUBLIC on 17 October 2026 (owner-authorized Codex action from Dell DESKTOP-IPV4PH9). No LICENSE existed at the time; a MIT LICENSE was added in this pass. Revertible to private on owner request.
+- Security tooling enabled (this session, verified via GitHub API): secret scanning = enabled, push protection = enabled, Dependabot vulnerability alerts = enabled, Dependabot automated security fixes = enabled, code scanning (CodeQL default setup) = configured for python + javascript-typescript + actions with an initial scan run started. No committed secrets found: .env is git-ignored and untracked, and no .env/.pem/.key/private-key object exists anywhere in full history.
+- GitHub sweep (this session): deleted 374 remote branches - 131 merged into origin/main (their commits stay in main) and 243 unmerged - and deleted 14 superseded jarvis-prime-phase2-candidate-* tags. Remaining remote heads: main plus a newly-created dependabot/pip/pypdf-6.19.0 branch. Remaining tags (6): PRIME_SAFEPOINT_SSOT_GITHUB_MATURE_V1, jarvis-prime-golden-gen1-20260926, jarvis-prime-golden-gen2-20260927, jarvis-prime-phase2-audio-diagnostic-b171253-20260927, jarvis-prime-phase2-session-recovery-qualified-20260926, orqevia-golden-gen4-20261016. Every deleted branch tip is preserved locally on Dell (origin/* refs) and in work/orqevia-sweep-20261017-branch-snapshot.txt for restore-on-request.
+- Local cleanup (this session, Dell): removed 12 git-ignored/untracked cache directories (16.78 MiB), deleted _archive-202609-evidence-20261016 (20 verification reports, 0.11 MiB), and ran git gc --prune=now (96 -> 12 unreachable objects). No reachable commit, branch, tag content, or main-branch file was altered by the sweep itself.
+- Measurements (this session, read-only): GitHub diskUsage 10,280 KB; local .git 12.06 MiB; working tree 34.94 MiB. At audit start origin/main was 772 commits (main has since advanced through PR #375 during concurrent activity) and 1,606 unique commits were reachable across all refs. pytest collected 6,082/6,085 tests in 3.71 s. CI runs on GitHub-hosted ubuntu-latest (one windows-latest job); recent runs are green.
+- DELL "active end-to-end build machine" claim: PARTIALLY VERIFIED. Dell DESKTOP-IPV4PH9 (Latitude 7320, i7-1185G7 4C/8T, 31.73 GiB RAM, Windows 11 Pro build 26300, Docker 29.6.2, Python 3.12.10, Node 24.19.0) is the active local development/test workstation. It is NOT verified as the end-to-end build machine, because CI builds on GitHub-hosted runners and production/runtime acceptance belongs to ABEX (DESKTOP-BGD97NB).
+
+Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 October 2026 by Codex on Dell DESKTOP-IPV4PH9. No history was rewritten and no commit was squashed or force-pushed.
+
 ## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)
 
 ### Claimed, not independently checked
