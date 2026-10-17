@@ -67,6 +67,7 @@ services:
       PRIME_FRONTIER_API_KEY: ${PRIME_FRONTIER_API_KEY:-}
       PRIME_FRONTIER_MODEL: ${PRIME_FRONTIER_MODEL:-}
       PRIME_FRONTIER_MAX_INPUT_CHARS: ${PRIME_FRONTIER_MAX_INPUT_CHARS:-60000}
+      PRIME_PROVIDER_CATALOG: ${PRIME_PROVIDER_CATALOG:-/app/config/provider-catalog.active.json}
       PRIME_QUEUE_CONCURRENCY: ${PRIME_QUEUE_CONCURRENCY:-1}
       PRIME_LOCAL_ADMISSION_MODE: ${PRIME_LOCAL_ADMISSION_MODE:-golden_n1}
       PRIME_BACKEND_MEMORY_RECEIPT: ${PRIME_BACKEND_MEMORY_RECEIPT:-}
@@ -95,6 +96,18 @@ services:
       PRIME_CLOUD_OUTPUT_USD_MTOK: ${PRIME_CLOUD_OUTPUT_USD_MTOK:-0}
     volumes:
       - orqevia-data:/data
+      - type: bind
+        source: ${PRIME_PROVIDER_CATALOG_FILE:-./config/provider-catalog.active.json}
+        target: /app/config/provider-catalog.active.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PRIME_HF_TOKEN_FILE:-./deploy/unconfigured-hf-token}
+        target: /run/secrets/hf_token
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       ollama:
         condition: service_healthy
