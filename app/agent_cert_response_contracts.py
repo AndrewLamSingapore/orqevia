@@ -37,7 +37,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 
-CONTRACT_VERSION = "normal-role-response-types.v4"
+CONTRACT_VERSION = "normal-role-response-types.v5"
 REGISTERED_ROLE_IDS = (
     "a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10", "a12", "a13",
     "a14", "a15", "a16", "a17", "a18", "a19", "a20", "a21", "a26", "a28", "a29",
@@ -248,7 +248,9 @@ _CONTRACTS = {
             "missing_evidence is the unavailable source fact's snake_case "
             "identifier, not a sentence, title, or explanatory label; when a "
             "source exposes a missing fact through a _known boolean, report the "
-            "underlying fact identifier without the _known suffix."
+            "underlying fact identifier without the _known suffix. The supplied "
+            "objective explicitly names effective_date; copy that exact literal "
+            "token into missing_evidence and do not paraphrase it."
         ),
     },
     "a10": {
