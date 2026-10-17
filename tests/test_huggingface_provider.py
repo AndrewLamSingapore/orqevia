@@ -10,6 +10,7 @@ from app.cloud_execution import adapter_for
 from app.compute_catalog import load_catalog
 from app.compute_queue_api import SubmitJob
 from app.provider_runtime import HuggingFaceProvider, ModelSpec, ProviderFailure, complete
+from app.settings import PrimeSettings
 
 
 MODEL = ModelSpec('openai/gpt-oss-20b:groq', 'hf-chat-candidate', 'MINI', 4096, 64)
@@ -25,6 +26,13 @@ def test_submit_job_preserves_declared_task_class():
         max_cost_usd=0.01,
     )
     assert body.model_dump()['task_class'] == 'classification'
+
+
+def test_infinite_model_residency_is_serialized_as_numeric_keep_alive(monkeypatch):
+    monkeypatch.setenv('PRIME_MODEL_KEEP_ALIVE', '-1')
+    assert PrimeSettings.from_env().keep_alive == -1
+    monkeypatch.setenv('PRIME_MODEL_KEEP_ALIVE', '10m')
+    assert PrimeSettings.from_env().keep_alive == '10m'
 
 
 def test_active_external_catalog_is_qualified_pinned_and_secret_free():
