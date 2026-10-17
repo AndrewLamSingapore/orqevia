@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sqlite3
+from pathlib import Path
 
 import httpx
 import pytest
@@ -11,6 +12,23 @@ from app.provider_runtime import HuggingFaceProvider, ModelSpec, ProviderFailure
 
 
 MODEL = ModelSpec('openai/gpt-oss-20b:groq', 'hf-chat-candidate', 'MINI', 4096, 64)
+
+
+def test_active_external_catalog_is_qualified_pinned_and_secret_free():
+    path = Path(__file__).resolve().parents[1] / 'config' / 'provider-catalog.active.json'
+    entries = load_catalog(path)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry['id'] == 'hf-gemma-nano'
+    assert entry['enabled'] is True
+    assert entry['location'] == 'cloud'
+    assert entry['provider_kind'] == 'huggingface'
+    assert entry['qualification_status'] == 'QUALIFIED'
+    assert entry['allowed_task_classes'] == ['classification']
+    assert entry['model'] == 'google/gemma-3-4b-it:deepinfra'
+    assert entry['endpoint'] == HuggingFaceProvider.ENDPOINT
+    assert entry['secret_ref'] == 'file:HF_TOKEN'
+    assert not any(key in entry for key in ('api_key', 'secret', 'credential', 'password', 'token'))
 
 
 def stream_response():

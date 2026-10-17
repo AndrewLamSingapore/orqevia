@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "status": "ACTIVE_VERIFIED_CLASSIFICATION_ROUTE",
+  "verified_at_utc": "2026-10-17T06:42:00Z",
+  "verification": {
+    "method": "MINIMAL_NON_SENSITIVE_CHAT_COMPLETION",
+    "request": "Reply with exactly READY",
+    "response": "READY",
+    "http_status": 200
+  },
+  "models": [
+    {
+      "id": "hf-gemma-nano",
+      "provider_kind": "huggingface",
+      "endpoint": "https://router.huggingface.co/v1/chat/completions",
+      "model": "google/gemma-3-4b-it:deepinfra",
+      "tier": "NANO",
+      "location": "cloud",
+      "enabled": true,
+      "qualification_status": "QUALIFIED",
+      "qualification_scope": "BOUNDED_NANO_CLASSIFICATION_ROUTE_ONLY_NOT_GENERAL_QUALITY_L7_OR_ACCEPTED_PRODUCTION",
+      "allowed_task_classes": [
+        "classification"
+      ],
+      "context_tokens": 4096,
+      "output_tokens": 64,
+      "input_usd_million": "0.05",
+      "output_usd_million": "0.10",
+      "price_source": "https://deepinfra.com/google/gemma-3-4b-it",
+      "price_observation_receipt": "HF-PUBLIC-MAPPING-PRICE-20261007T033417Z.json",
+      "secret_ref": "file:HF_TOKEN",
+      "concurrency": 1,
+      "max_retries": 0,
+      "task_budgets": {
+        "classification": {
+          "context_tokens": 4096,
+          "output_tokens": 64,
+          "timeout_seconds": 20
+        },
+        "default": {
+          "context_tokens": 4096,
+          "output_tokens": 64,
+          "timeout_seconds": 20
+        }
+      }
+    }
+  ]
+}
