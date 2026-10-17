@@ -113,6 +113,12 @@ Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 Octo
 - Windows Memory Diagnostic reported installed-memory hardware errors. Heavy
   21-agent stress testing remains prohibited until OEM/MemTest86 and a clean
   post-repair test establish recovery.
+- **Current amendment:** hardware status is **NO_CURRENT_FAULT_OBSERVED**. The
+  Owner confirms that the SSD has been replaced and the earlier high-temperature
+  condition is historical. The prior Memory Diagnostic error remains preserved
+  as monitoring evidence, not an active repair gate. Normal role acceptance and
+  21-agent work may proceed; a new WHEA, bugcheck, memory-diagnostic,
+  data-integrity, or storage-health failure would reopen diagnosis.
 
 ## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)
 
