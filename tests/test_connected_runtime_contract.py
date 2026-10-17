@@ -36,7 +36,7 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         )
         self.assertIn('respond "Unauthorized" 401', caddyfile)
         self.assertIn('respond "Not Found" 404', caddyfile)
-        self.assertEqual(caddyfile.count("reverse_proxy prime:8000"), 2)
+        self.assertEqual(caddyfile.count("reverse_proxy backend:8000"), 2)
 
     def test_bootstrap_preserves_recovered_secrets_and_requires_explicit_new_epoch(self) -> None:
         script = (

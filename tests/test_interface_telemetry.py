@@ -2,16 +2,23 @@ import hashlib
 import json
 import sqlite3
 import time
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
 def test_snapshot_reads_store_counts_without_inventing_agent_or_host_health(monkeypatch, tmp_path):
-    from app.interface_telemetry import snapshot
+    from app import interface_telemetry
+    snapshot = interface_telemetry.snapshot
     monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
     monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', 'ISOLATED-SOURCE-TEST')
     monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_REVISION', 'a' * 40)
+    monkeypatch.setattr(interface_telemetry, 'model_runtime_readiness', lambda: {
+        'status': 'UNAVAILABLE', 'ready': False, 'endpoint': 'test',
+        'required_models': [], 'missing_models': [], 'observed_at': 'test',
+        'network_probe_performed': False,
+    })
     with sqlite3.connect(tmp_path / 'compute-queue.db') as db:
         db.execute('create table compute_jobs(id text,status text)')
         db.executemany('insert into compute_jobs values(?,?)', [('1', 'completed'), ('2', 'running'), ('3', 'failed')])
@@ -22,6 +29,8 @@ def test_snapshot_reads_store_counts_without_inventing_agent_or_host_health(monk
     assert len({a['agent_id'] for a in report['agents']}) == 21
     assert all(a['availability'] == 'COLLECTOR_UNAVAILABLE' and a['heartbeat'] is None for a in report['agents'])
     assert report['ready_agent_count'] is None
+    assert report['observed_agent_count'] is None
+    assert report['readiness_scope'] == 'CURRENT_MODEL_RUNTIME_AND_QUEUE_ROUTABLE'
     assert all(metrics[n]['value'] is None for n in ['cpu', 'memory', 'disk', 'network_latency'])
     assert report['source']['instance'] == 'ISOLATED-SOURCE-TEST'
     assert report['privacy']['private_tasks_exposed'] is False
@@ -29,7 +38,13 @@ def test_snapshot_reads_store_counts_without_inventing_agent_or_host_health(monk
 
 
 def test_missing_stores_are_unavailable_not_zero(monkeypatch, tmp_path):
-    from app.interface_telemetry import snapshot
+    from app import interface_telemetry
+    monkeypatch.setattr(interface_telemetry, 'model_runtime_readiness', lambda: {
+        'status': 'UNAVAILABLE', 'ready': False, 'endpoint': 'test',
+        'required_models': [], 'missing_models': [], 'observed_at': 'test',
+        'network_probe_performed': False,
+    })
+    snapshot = interface_telemetry.snapshot
     monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
     report = snapshot('fixture-client', 'MEMBER')
     active = next(m for m in report['metrics'] if m['metric_id'] == 'active_job_records')
@@ -37,7 +52,13 @@ def test_missing_stores_are_unavailable_not_zero(monkeypatch, tmp_path):
 
 
 def test_configured_host_collector_is_observed(monkeypatch, tmp_path):
-    from app.interface_telemetry import snapshot
+    from app import interface_telemetry
+    monkeypatch.setattr(interface_telemetry, 'model_runtime_readiness', lambda: {
+        'status': 'UNAVAILABLE', 'ready': False, 'endpoint': 'test',
+        'required_models': [], 'missing_models': [], 'observed_at': 'test',
+        'network_probe_performed': False,
+    })
+    snapshot = interface_telemetry.snapshot
     monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
     monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', 'ISOLATED-SOURCE-TEST')
     monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_REVISION', 'a' * 40)
@@ -61,6 +82,100 @@ def test_configured_host_collector_is_observed(monkeypatch, tmp_path):
     assert metrics['memory']['value'] == 20.0
     assert metrics['disk']['value'] == 30.0
     assert metrics['network_latency']['value'] == 2.0
+
+
+def test_ready_agents_require_observed_queue_and_current_models(monkeypatch, tmp_path):
+    from app import interface_telemetry
+    from app.agent_registry import registered_agent_ids
+    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    agents = sorted(registered_agent_ids(include_orchestrator=False))
+    current = datetime.now(timezone.utc).isoformat()
+    with sqlite3.connect(tmp_path / 'compute-queue.db') as db:
+        db.execute('create table compute_jobs(id text,agent text,status text,updated_at text)')
+        db.executemany(
+            'insert into compute_jobs values(?,?,?,?)',
+            [(str(i), agent, 'completed', current) for i, agent in enumerate(agents)],
+        )
+    ready_runtime = {
+        'status': 'OBSERVED', 'ready': True, 'endpoint': 'test',
+        'required_models': ['gemma3:1b'], 'missing_models': [],
+        'observed_at': 'test', 'network_probe_performed': True,
+    }
+    report = interface_telemetry.snapshot(
+        'fixture-client', 'MEMBER', model_runtime_probe=ready_runtime
+    )
+    assert report['observed_agent_count'] == 21
+    assert report['fresh_agent_count'] == 21
+    assert report['ready_agent_count'] == 21
+    assert report['queue_freshness']['not_fresh_agent_ids'] == []
+
+    missing_runtime = dict(ready_runtime, ready=False, missing_models=['gemma3:4b'])
+    report = interface_telemetry.snapshot(
+        'fixture-client', 'MEMBER', model_runtime_probe=missing_runtime
+    )
+    assert report['observed_agent_count'] == 21
+    assert report['fresh_agent_count'] == 21
+    assert report['ready_agent_count'] == 0
+
+
+def test_ready_agents_require_fresh_timestamps_but_observed_history_remains(monkeypatch, tmp_path):
+    from app import interface_telemetry
+    from app.agent_registry import registered_agent_ids
+    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('PRIME_READY_ACTIVITY_MAX_AGE_SECONDS', '60')
+    agents = sorted(registered_agent_ids(include_orchestrator=False))
+    current = datetime.now(timezone.utc)
+    rows = []
+    for index, agent in enumerate(agents):
+        timestamp = (
+            None if index == 20
+            else (current - timedelta(seconds=120)).isoformat() if index == 19
+            else (current + timedelta(seconds=10)).isoformat() if index == 18
+            else current.isoformat()
+        )
+        rows.append((str(index), agent, 'completed', timestamp))
+    with sqlite3.connect(tmp_path / 'compute-queue.db') as db:
+        db.execute('create table compute_jobs(id text,agent text,status text,updated_at text)')
+        db.executemany('insert into compute_jobs values(?,?,?,?)', rows)
+    ready_runtime = {
+        'status': 'OBSERVED', 'ready': True, 'endpoint': 'test',
+        'required_models': ['gemma3:1b'], 'missing_models': [],
+        'observed_at': 'test', 'network_probe_performed': True,
+    }
+    report = interface_telemetry.snapshot(
+        'fixture-client', 'MEMBER', model_runtime_probe=ready_runtime
+    )
+    assert report['observed_agent_count'] == 21
+    assert report['fresh_agent_count'] == 18
+    assert report['ready_agent_count'] == 0
+    assert set(report['queue_freshness']['not_fresh_agent_ids']) == set(agents[-3:])
+
+
+def test_malformed_freshness_window_fails_closed(monkeypatch, tmp_path):
+    from app import interface_telemetry
+    from app.agent_registry import registered_agent_ids
+    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('PRIME_READY_ACTIVITY_MAX_AGE_SECONDS', 'not-a-number')
+    current = datetime.now(timezone.utc).isoformat()
+    agents = sorted(registered_agent_ids(include_orchestrator=False))
+    with sqlite3.connect(tmp_path / 'compute-queue.db') as db:
+        db.execute('create table compute_jobs(id text,agent text,status text,updated_at text)')
+        db.executemany(
+            'insert into compute_jobs values(?,?,?,?)',
+            [(str(i), agent, 'completed', current) for i, agent in enumerate(agents)],
+        )
+    ready_runtime = {
+        'status': 'OBSERVED', 'ready': True, 'endpoint': 'test',
+        'required_models': ['gemma3:1b'], 'missing_models': [],
+        'observed_at': 'test', 'network_probe_performed': True,
+    }
+    report = interface_telemetry.snapshot(
+        'fixture-client', 'MEMBER', model_runtime_probe=ready_runtime
+    )
+    assert report['observed_agent_count'] == 21
+    assert report['fresh_agent_count'] is None
+    assert report['ready_agent_count'] == 0
+    assert report['queue_freshness']['status'] == 'UNAVAILABLE'
 
 
 def test_container_packages_every_dashboard_shell_asset():

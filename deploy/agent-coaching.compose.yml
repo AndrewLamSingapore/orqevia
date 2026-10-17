@@ -5,8 +5,8 @@ services:
   coaching:
     image: ${PRIME_COACHING_IMAGE:?pinned coaching image required}
     command: [python, -B, -m, app.agent_coaching]
-    # Resume across normal Docker/host restarts; a deliberate stop stays stopped.
-    restart: unless-stopped
+    # Owner requirement: the coaching controller must remain permanently active.
+    restart: always
     read_only: true
     network_mode: none
     cap_drop: [ALL]
