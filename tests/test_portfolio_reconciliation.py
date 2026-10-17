@@ -233,8 +233,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     readiness_start = after.index(readiness_title)
     readiness_end = after.index("\n## ", readiness_start + len(readiness_title)) + 1
     readiness_update = after[readiness_start:readiness_end].encode("utf-8")
-    assert len(readiness_update) == 2983
-    assert hashlib.sha256(readiness_update).hexdigest() == "95229484220d762d8a483b74adc25ac19842dc6cd78d9962b4f9f9ba97cdeab9"
+    assert len(readiness_update) == 3948
+    assert hashlib.sha256(readiness_update).hexdigest() == "bfcc2687af400f4edd874cb6253eb42310d53c9a9334e8cf75390e1087806705"
     after = after[:readiness_start] + after[readiness_end:]
     # Admit only this exact estate reconciliation section; all prior bytes stay pinned.
     estate_title = "## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)"

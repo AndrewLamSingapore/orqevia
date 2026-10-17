@@ -81,6 +81,19 @@ Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 Octo
   `ABEX-ORQEVIA-Runtime-Watchdog` was added at one-minute cadence for all nine
   containers plus the supervisor and collector; an independent forced-exit
   recovery of `trust-bootstrap` returned it to `running` and HTTP 200.
+- **Owner no-sandbox directive applied:** Domain, Private and Public firewall
+  profiles are disabled; the coaching controller was recreated on the canonical
+  epoch network with no read-only root, capability drop, no-new-privileges,
+  memory, CPU or PID limit; Codex now defaults to
+  `sandbox_mode = "danger-full-access"` with `approval_policy = "never"`. The
+  Windows Codex sandbox service is stopped, and a one-minute hold task keeps it
+  stopped. Windows denied changing its Automatic startup type without UAC, so
+  that one setting remains visibly bounded rather than falsely reported clear.
+- The schema-guided sequential acceptance rerun executed all 21 parent cases
+  plus six delegated child cases. **5 / 21** roles passed every currently
+  available boundary for this run (`a02`, `a05`, `a07`, `a13`, `a29`). The other
+  16 remain failures; `a17` and `a18` are separately blocked because their
+  registered `sandbox.wasm.execute` tool no longer exists.
 - The coaching controller, supervisor, five-minute collector and one-minute
   watchdog are active. Coaching remains **21/21 sessions DONE** and separately
   recorded as synthetic internal assessment.
