@@ -49,6 +49,45 @@ If you are an AI agent updating this file:
 
 Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 October 2026 by Codex on Dell DESKTOP-IPV4PH9. No history was rewritten and no commit was squashed or force-pushed.
 
+## Permanent readiness gate and full-role acceptance start - 17 October 2026
+
+### Claimed, not independently checked
+
+- PR **#380** merged as `12df582261bca898e79bba6c943ac2b84b97f1c4`.
+  Readiness now reports historical queue participation, fresh queue evidence
+  and model-gated readiness separately. A stale agent observation cannot count
+  as ready merely because the agent appears in the registry.
+- The deployed backend and interface were rebuilt from the merged revision.
+  Their observed image IDs are
+  `sha256:a14f5f479a7f6fa4904f3dec196237fd9ab1ba1a12a93b0231f756e87b9b02b3`
+  and
+  `sha256:826bbd25c71e5dafba31384dc20cd259979506111aa42eebb5c71d44664a8ae5`;
+  both are healthy. All nine persistent runtime containers report
+  `restart: always`.
+- The live registry contains 21 agents and all 21 have historical queue
+  participation. At the first post-deployment observation, fresh queue evidence
+  was **0/21**, readiness was **0/21**, and the configured model inventory
+  (`gemma3:1b`, `gemma3:4b`,
+  `embeddinggemma:300m-qat-q4_0`) was present. The zero is the intended
+  fail-closed result for queue evidence older than the configured one-hour
+  window, not an empty registry or missing model.
+- The coaching controller, supervisor, five-minute collector and one-minute
+  watchdog are active. Coaching remains **21/21 sessions DONE** and separately
+  recorded as synthetic internal assessment.
+- Full role acceptance remains **0/21**, not 21/21. The 21-role register now
+  specifies a retained representative result, required tool or delegation
+  receipt and independent reassessment for each role.
+- Source verification: focused contracts **50/50 passed**; PWA dashboard suites
+  passed; full suite `6027 passed, 16 skipped, 3 deselected, 102 subtests
+  passed`; GitHub CI, STATUS authority, observatory verifier and CodeQL passed.
+- Cloudflare Access correctly redirected anonymous public requests with HTTP
+  `302` to the configured Access team. Authenticated acceptance remains
+  unverified because no authenticated browser session or service token was
+  available.
+- Windows Memory Diagnostic reported installed-memory hardware errors. Heavy
+  21-agent stress testing remains prohibited until OEM/MemTest86 and a clean
+  post-repair test establish recovery.
+
 ## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)
 
 ### Claimed, not independently checked
