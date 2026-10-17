@@ -71,6 +71,11 @@ Evidence: GitHub REST/API and local git/PowerShell measurements recorded 17 Octo
   `embeddinggemma:300m-qat-q4_0`) was present. The zero is the intended
   fail-closed result for queue evidence older than the configured one-hour
   window, not an empty registry or missing model.
+- A bounded sequential 1B-model liveness sweep then completed all **21/21**
+  jobs, and live telemetry reported **21/21 fresh** and **21/21 ready**. The
+  `ABEX-ORQEVIA-Agent-Liveness` task reruns the same one-at-a-time canary every
+  50 minutes. This establishes queue liveness only, not role competence or full
+  acceptance.
 - The coaching controller, supervisor, five-minute collector and one-minute
   watchdog are active. Coaching remains **21/21 sessions DONE** and separately
   recorded as synthetic internal assessment.
