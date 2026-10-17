@@ -37,7 +37,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 
-CONTRACT_VERSION = "normal-role-response-types.v3"
+CONTRACT_VERSION = "normal-role-response-types.v4"
 REGISTERED_ROLE_IDS = (
     "a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10", "a12", "a13",
     "a14", "a15", "a16", "a17", "a18", "a19", "a20", "a21", "a26", "a28", "a29",
@@ -160,7 +160,10 @@ _CONTRACTS = {
             "Compute both scores independently as "
             "a_score = reliability_weight * a_reliability + speed_weight * "
             "a_speed and b_score = reliability_weight * b_reliability + "
-            "speed_weight * b_speed before choosing the decision."
+            "speed_weight * b_speed before choosing the decision. Compute "
+            "weighted_A and weighted_B separately. Never use b_reliability or "
+            "b_speed without its corresponding weight. Compare weighted_A with "
+            "weighted_B; if equal, use TIE and set missing_tie_breaker true."
         ),
     },
     "a05": {
