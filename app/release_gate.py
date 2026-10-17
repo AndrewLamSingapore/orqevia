@@ -1,6 +1,6 @@
 """Public-safe release gate observability.
 
-Stores only bounded aggregate evaluator metadata keyed by PRIME trace ID. No
+Stores only bounded aggregate evaluator metadata keyed by ORQEVIA trace ID. No
 prompt, answer, rationale, claim text, evidence text, credentials or endpoints
 are persisted here. The sidecar is deliberately independent from the authority
 ledger so evaluation observability cannot mutate authorization decisions.

@@ -16,13 +16,13 @@ SPECIALISTS = {
     },
     "data": {
         "name": "Data Specialist",
-        "purpose": "Analyzes only real local datasets explicitly available to PRIME; never invents rows, databases, measurements, users, percentages, locations or behavioral observations.",
+        "purpose": "Analyzes only real local datasets explicitly available to ORQEVIA; never invents rows, databases, measurements, users, percentages, locations or behavioral observations.",
         "departments": {"data"},
         "keywords": {"data", "metric", "baseline", "measure", "analysis", "cash flow", "forecast"},
     },
     "engineering": {
         "name": "Engineering Specialist",
-        "purpose": "Designs, validates and improves internal technical artifacts within PRIME's existing safety boundary.",
+        "purpose": "Designs, validates and improves internal technical artifacts within ORQEVIA's existing safety boundary.",
         "departments": {"engineering"},
         "keywords": {"code", "build", "test", "system", "architecture", "engineering", "implement"},
     },
@@ -105,7 +105,7 @@ def build_task_brief(*, objective_title: str, objective_description: str, projec
     cfg = SPECIALISTS.get(specialist, SPECIALISTS["strategy"])
     context_block = context_summary.strip()[:5000] if context_summary else "No prior compacted mission context."
     evidence_block = evidence_context.strip()[:14000] if evidence_context else "NO VERIFIED EVIDENCE IS ATTACHED TO THIS MISSION."
-    return f"""PRIME INTERNAL MISSION BRIEF
+    return f"""ORQEVIA INTERNAL MISSION BRIEF
 
 OBJECTIVE
 {objective_title}

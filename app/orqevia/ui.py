@@ -1,7 +1,7 @@
 """Standalone, read-only ORQEVIA unified interface surface.
 
 This module serves the responsive ORQEVIA interface and an allow-listed,
-read-only proxy into PRIME's existing public/read endpoints. It is deliberately
+read-only proxy into ORQEVIA's existing public/read endpoints. It is deliberately
 NOT mounted into the production ``app.main`` or ``app.interface_server`` apps.
 
 Run it separately, for example:
@@ -13,7 +13,7 @@ Security properties
 * Only GET requests are forwarded.
 * Only an explicit allow-list of read-only paths is forwarded.
 * Authorization and cookie headers are never forwarded upstream.
-* The surface never writes, executes, or mutates PRIME state.
+* The surface never writes, executes, or mutates ORQEVIA state.
 """
 from __future__ import annotations
 

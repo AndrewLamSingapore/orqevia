@@ -40,7 +40,7 @@ AGENTS={
 "data":{"name":"Data Agent","purpose":"Inspects and reasons over local CSV/JSON datasets."},
 "coding":{"name":"Coding Agent","purpose":"Generates, validates and safely tests code in a local workspace."},
 "actions":{"name":"Actions Agent","purpose":"Queues mutating actions for explicit approval."},
-"automation":{"name":"Automation Agent","purpose":"Runs persistent local schedules while PRIME is online."},
+"automation":{"name":"Automation Agent","purpose":"Runs persistent local schedules while ORQEVIA is online."},
 "governor":{"name":"Executive Governor","purpose":"Enforces constitution, authority boundaries and institutional policy."},
 "executive":{"name":"Executive Orchestrator","purpose":"Turns approved objectives into bounded internal organizational work."},
 "portfolio":{"name":"Portfolio Agent","purpose":"Coordinates objectives, projects, dependencies and priorities."},
@@ -52,7 +52,7 @@ AGENTS={
 "evaluator":{"name":"Evaluator Agent","purpose":"Scores task artifacts against intent and quality."},
 "artifact_curator":{"name":"Artifact Curator","purpose":"Persists internal deliverables with provenance."},
 "loop_manager":{"name":"Closed Loop Manager","purpose":"Reviews completed projects and proposes bounded next work."},
-"orchestrator":{"name":"PRIME Orchestrator","purpose":"Rewrites queued work into clean self-contained mission briefs and routes it to the right specialist."},
+"orchestrator":{"name":"ORQEVIA Orchestrator","purpose":"Rewrites queued work into clean self-contained mission briefs and routes it to the right specialist."},
 "supervisor":{"name":"Agent Supervisor","purpose":"Monitors bounded jobs, controls retries and stops failed or low-confidence work from silently progressing."},
 "compactor":{"name":"Context Compactor","purpose":"Distills verified mission outcomes into durable compact context without carrying raw execution clutter."},
 "economic":{"name":"Economic Specialist","purpose":"Connects work to income, cash flow, assets, liabilities, career capital and long-term wealth."},
@@ -60,7 +60,7 @@ AGENTS={
 "career":{"name":"Career Specialist","purpose":"Turns career objectives into evidence-backed internal positioning, targeting and conversion plans."},
 
 }
-BASE_SYSTEM=("You are PRIME V7, a private local multi-agent AI. Use authoritative saved facts. "
+BASE_SYSTEM=("You are ORQEVIA V7, a private local multi-agent AI. Use authoritative saved facts. "
 "Never invent personal facts. Use only supplied/retrieved evidence for source claims. "
 "Never claim an action, research step or code execution that did not actually occur. Be concise, useful and honest.")
 ALIASES={"favorite city":["favourite city","preferred city","fav city"],"favorite food":["favourite food","preferred food"],"favorite color":["favourite color","favourite colour","favorite colour"],"goal":["main goal","primary goal"],"project":["current project"],"name":["my name"]}
@@ -256,7 +256,7 @@ async def phase3_verify(task_title,task_description,content,*,specialist="strate
   return 0,"revise","GROUNDING FAIL: "+guard_feedback,"deterministic_grounding_guard"
 
  evidence_label=evidence_context[:12000] if evidence_context else "NO VERIFIED EXTERNAL/DATA EVIDENCE ATTACHED."
- prompt=f"""You are PRIME Phase 3.1.1 Evidence-Grounded Evaluator.
+ prompt=f"""You are ORQEVIA Phase 3.1.1 Evidence-Grounded Evaluator.
 TASK: {task_title}
 DESCRIPTION: {task_description}
 SPECIALIST: {specialist}
@@ -306,7 +306,7 @@ async def phase3_review_project(project_id):
  finally:c.close()
  if not tasks or any(t["status"]!="completed" for t in tasks):return None
  packet="\n\n".join([f"TASK: {t['title']}\nARTIFACT: "+next((a["content"] for a in arts if a["task_id"]==t["id"]),"No artifact")[:4500] for t in tasks])
- prompt=f"""You are PRIME Phase 3 Closed Loop Manager.
+ prompt=f"""You are ORQEVIA Phase 3 Closed Loop Manager.
 PROJECT: {p['title']}
 DESCRIPTION: {p['description']}
 COMPLETED WORK:
@@ -574,7 +574,7 @@ async def orchestrate(q,remember=True,automation=False):
   if remember and not automation:
    try:v=await embed_one(q)
    except:v=None
-   save_memory(f'User: {q}\nPRIME: {draft}','conversation',v)
+   save_memory(f'User: {q}\nORQEVIA: {draft}','conversation',v)
   finish_run(rid,tid,'completed',trace,draft)
   return {'answer':draft,'agents':agents,'route':'orchestrated','model':model,'run_id':rid}
  except Exception as e:
@@ -997,8 +997,8 @@ def _deterministic_fallback_plan(obj,depts):
   {"title":"Establish economic baseline","description":"Organize known facts, assumptions, constraints, assets, liabilities, income sources and missing information relevant to the objective."},
   {"title":"Define measurable outcomes","description":"Translate the objective into measurable internal targets, milestones and decision criteria."},
   {"title":"Map opportunity portfolio","description":"Identify and rank internal workstreams by expected impact, feasibility, urgency and dependencies."},
-  {"title":"Create execution queue","description":"Break the highest-value workstreams into bounded internal tasks for the appropriate PRIME departments."},
-  {"title":"Define review metrics","description":"Specify what PRIME should measure to determine whether the plan is improving outcomes and where iteration is required."}
+  {"title":"Create execution queue","description":"Break the highest-value workstreams into bounded internal tasks for the appropriate ORQEVIA departments."},
+  {"title":"Define review metrics","description":"Specify what ORQEVIA should measure to determine whether the plan is improving outcomes and where iteration is required."}
  ]
  return {"project_title":f"{title} — Internal Execution Plan"[:300],
          "project_description":"Safe internal execution plan derived from the active objective. All consequential external and financial actions remain outside autonomous authority.",
@@ -1048,7 +1048,7 @@ async def organization_cycle():
  valid_depts={d['name'] for d in depts}
  if not valid_depts:raise HTTPException(503,'No active departments are available.')
 
- prompt=f"""You are PRIME V7 Phase 2's Executive Orchestrator under a strict constitution.
+ prompt=f"""You are ORQEVIA V7 Phase 2's Executive Orchestrator under a strict constitution.
 OBJECTIVE:
 Title: {obj['title']}
 Description: {obj['description']}
@@ -1228,7 +1228,7 @@ async def autonomous_cycle():
      c.execute("UPDATE org_project_tasks SET status='active',updated_at=? WHERE id=?",(now(),task_id));c.commit()
     finally:c.close()
 
-   prompt=f"""You are PRIME V7 Phase 2 performing one INTERNAL task.
+   prompt=f"""You are ORQEVIA V7 Phase 2 performing one INTERNAL task.
 Department: {item['department']}
 Task: {item['title']}
 Description: {item['description']}
@@ -1331,14 +1331,14 @@ def mark_evidence_blocked(item,run_id,jid,reason,specialist):
  content=(
   "DATA_REQUIRED\n\n"
   "Result\n"
-  "PRIME cannot perform this quantitative mission yet because no verified local dataset is available.\n\n"
+  "ORQEVIA cannot perform this quantitative mission yet because no verified local dataset is available.\n\n"
   "Evidence actually used\n"
-  "None. PRIME intentionally refused to invent transaction records, databases, users, amounts, percentages, locations, or behavioral observations.\n\n"
+  "None. ORQEVIA intentionally refused to invent transaction records, databases, users, amounts, percentages, locations, or behavioral observations.\n\n"
   "Assumptions and uncertainties\n"
   "No analytical conclusion is made until the required evidence is supplied.\n\n"
   "Recommended INTERNAL next step\n"
   "Upload a CSV or JSON dataset in the Data tab. For spending analysis, include at minimum a date, amount, currency, and category or merchant field. "
-  "After upload, PRIME will automatically release evidence-blocked Data tasks back to the queue."
+  "After upload, ORQEVIA will automatically release evidence-blocked Data tasks back to the queue."
  )
  aid=create_artifact(item["task_id"],item["project_id"],run_id,item["title"],content,"blocked_evidence",0,reason)
  with WRITE_LOCK:
@@ -1408,7 +1408,7 @@ def mission_packet(item):
   p=c.execute("SELECT p.*,o.title objective_title,o.description objective_description FROM org_projects p LEFT JOIN org_objectives o ON o.id=p.objective_id WHERE p.id=?",(item['project_id'],)).fetchone()
  finally:c.close()
  return {
-  'objective_title':(p['objective_title'] if p and p['objective_title'] else 'Active PRIME objective'),
+  'objective_title':(p['objective_title'] if p and p['objective_title'] else 'Active ORQEVIA objective'),
   'objective_description':(p['objective_description'] if p and p['objective_description'] else ''),
   'project_title':(p['title'] if p else 'Internal project'),
  }
@@ -1427,7 +1427,7 @@ async def execute_orchestrated_job(run_id,item):
  try:
   while attempts<ORCH_MAX_ATTEMPTS:
    attempts+=1;update_agent_job(jid,attempts=attempts,last_status=f'attempt {attempts} running')
-   system=(BASE_SYSTEM+" You are the "+SPECIALISTS[route.specialist]['name']+" inside PRIME's governed orchestration layer. Follow the mission brief exactly. You have no direct external authority.")
+   system=(BASE_SYSTEM+" You are the "+SPECIALISTS[route.specialist]['name']+" inside ORQEVIA's governed orchestration layer. Follow the mission brief exactly. You have no direct external authority.")
    d=await ollama_post('/api/chat',{'model':DEEP_MODEL,'messages':[{'role':'system','content':system},{'role':'user','content':brief if attempts==1 else brief+f"\n\nSUPERVISOR REVISION REQUEST\n{feedback}\nRevise the deliverable; do not expand scope."}],'stream':False},900)
    content=d['message']['content'].strip()[:24000]
    if not aid:aid=create_artifact(item['task_id'],item['project_id'],run_id,item['title'],content)
@@ -1707,7 +1707,7 @@ async def phase3_verified_cycle():
       try:c.execute("UPDATE org_project_tasks SET status='blocked_evidence',updated_at=? WHERE id=?",(now(),task_id));c.execute("UPDATE org_department_queue SET status='blocked_evidence',lease_until=NULL,updated_at=? WHERE id=?",(now(),item['id']));c.commit()
       finally:c.close()
      summary.append({'task':item['title'],'status':'blocked_evidence','artifact_id':aid});break
-    prompt=f"""You are PRIME V7 Phase 3 executing one INTERNAL task.
+    prompt=f"""You are ORQEVIA V7 Phase 3 executing one INTERNAL task.
 Department: {item['department']}
 Task: {item['title']}
 Description: {item['description']}
@@ -1755,13 +1755,13 @@ Do not invent evidence or perform external/consequential actions."""
   watchdog_event('critical','phase3_cycle_crash',run_id,{'error':str(e)});raise
 
 
-HTML=r"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PRIME V7 AUTONOMOUS ORGANIZATION — PHASE 3.1.1</title><style>
+HTML=r"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ORQEVIA V7 AUTONOMOUS ORGANIZATION — PHASE 3.1.1</title><style>
 body{margin:0;background:#080b0f;color:#f5f7fb;font-family:Segoe UI,Arial}.w{max-width:1180px;margin:auto;padding:24px}.brand{font-size:38px;font-weight:800}.sub,.muted{color:#9eabba}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.tabs button,button,input,textarea,select{font:inherit;border:1px solid #334459;border-radius:10px;background:#0b1016;color:#f5f7fb;padding:10px}.c{background:#121821;border:1px solid #293646;border-radius:15px;padding:16px;margin:11px 0}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.hidden{display:none}.good{color:#8ef0a3}.warn{color:#ffe08c}.primary{background:#f4f6f8;color:#111;font-weight:700}.danger{color:#ffbec7;border-color:#70404a}.msg{white-space:pre-wrap;line-height:1.5;margin:10px 0}textarea{width:100%;box-sizing:border-box;min-height:100px}input[type=text]{min-width:260px;flex:1}.metric{border:1px solid #293646;border-radius:12px;padding:12px}.metric b{display:block;font-size:20px}.line{padding:10px 0;border-bottom:1px solid #293646}.small{font-size:13px}pre{white-space:pre-wrap;max-height:420px;overflow:auto}
-</style></head><body><div class="w"><div class="brand">PRIME V7 AUTONOMOUS ORGANIZATION — PHASE 3.1.1</div><div class="sub">PRIME-native orchestration • evidence-grounded specialists • provenance gates • supervised retries • compacted verified context • approvals • closed loop retained</div><div class="tabs"><button onclick="tab('chat')">Chat</button><button onclick="tab('governance')">Governance</button><button onclick="tab('objectives')">Objectives</button><button onclick="tab('organization')">Organization</button><button onclick="tab('operations')">Operations</button><button onclick="tab('orchestration')">Orchestration</button><button onclick="tab('performance')">Performance</button><button onclick="tab('evidence')">Evidence</button><button onclick="tab('approvals')">Approvals</button><button onclick="tab('agents')">Agents</button><button onclick="tab('research')">Research</button><button onclick="tab('data')">Data</button><button onclick="tab('coding')">Coding</button><button onclick="tab('actions')">Actions</button><button onclick="tab('automation')">Automation</button><button onclick="tab('knowledge')">Knowledge</button><button onclick="tab('memory')">Memory</button><button onclick="tab('system')">System</button></div>
+</style></head><body><div class="w"><div class="brand">ORQEVIA V7 AUTONOMOUS ORGANIZATION — PHASE 3.1.1</div><div class="sub">PRIME-native orchestration • evidence-grounded specialists • provenance gates • supervised retries • compacted verified context • approvals • closed loop retained</div><div class="tabs"><button onclick="tab('chat')">Chat</button><button onclick="tab('governance')">Governance</button><button onclick="tab('objectives')">Objectives</button><button onclick="tab('organization')">Organization</button><button onclick="tab('operations')">Operations</button><button onclick="tab('orchestration')">Orchestration</button><button onclick="tab('performance')">Performance</button><button onclick="tab('evidence')">Evidence</button><button onclick="tab('approvals')">Approvals</button><button onclick="tab('agents')">Agents</button><button onclick="tab('research')">Research</button><button onclick="tab('data')">Data</button><button onclick="tab('coding')">Coding</button><button onclick="tab('actions')">Actions</button><button onclick="tab('automation')">Automation</button><button onclick="tab('knowledge')">Knowledge</button><button onclick="tab('memory')">Memory</button><button onclick="tab('system')">System</button></div>
 <section id="governance" class="hidden"><div class="c"><h3>Constitution</h3><div id="constitution"></div></div><div class="c"><h3>Authority grants</h3><div class="row"><select id="gscope"><option>internal_planning</option><option>internal_research</option><option>internal_data_analysis</option><option>internal_code_drafting</option><option>internal_document_creation</option></select><input id="gdesc" type="text" placeholder="Narrow authority description"><button onclick="grantAuthority()">Grant</button></div><div id="grants"></div></div><div class="c"><h3>Institutional event ledger</h3><div id="orgevents"></div></div></section><section id="objectives" class="hidden"><div class="c"><h3>Strategic objectives</h3><input id="otitle" type="text" placeholder="Objective title"><textarea id="odesc" placeholder="Objective description"></textarea><input id="opri" type="number" min="1" max="100" value="50"><button onclick="createObjective()">Create active objective</button></div><div class="c"><div id="objectivelist"></div></div></section><section id="organization" class="hidden"><div class="c"><h3>Bounded organization cycle</h3><p class="muted">Turns the highest-priority active objective into an internal draft project and planned tasks. Use Enqueue project to move planned tasks into Operations. External consequential actions remain prohibited.</p><button class="primary" onclick="orgCycle()">Run organization cycle</button><pre id="orgout"></pre></div><div class="c"><h3>Departments</h3><div id="departments"></div></div><div class="c"><h3>Projects and tasks</h3><div id="projects"></div></div></section><section id="operations" class="hidden"><div class="c"><h3>Persistent Operations</h3><p class="muted">Queue internal work, then run verified bounded cycles. Every completed task must produce a persisted artifact and pass evaluation. Completed projects enter the closed-loop review gate.</p><button class="primary" onclick="runAutonomy()">Run Phase 3 verified cycle</button><pre id="autonomyout"></pre></div><div class="c"><h3>Department Queue</h3><div id="queueview"></div></div><div class="c"><h3>Portfolios</h3><input id="pname" placeholder="Portfolio name"><textarea id="pdesc" placeholder="Portfolio description"></textarea><button onclick="createPortfolio()">Create portfolio</button><div id="portfolios"></div></div><div class="c"><h3>Recurring Internal Jobs</h3><input id="rname" placeholder="Job name"><select id="rscope"><option>internal_planning</option><option>internal_research</option><option>internal_data_analysis</option><option>internal_code_drafting</option><option>internal_document_creation</option></select><select id="rcadence"><option>hourly</option><option>daily</option></select><button onclick="createRecurring()">Create job</button><div id="recurring"></div></div></section>
-<section id="orchestration" class="hidden"><div class="c"><h3>PRIME Orchestration Layer</h3><p class="muted">One PRIME voice routes queued internal missions to bounded specialists, supervises retries, verifies outputs, stores results in an async inbox, and compacts verified mission context. Existing governance and approval gates remain authoritative.</p><button class="primary" onclick="runOrchestration()">Run orchestrated cycle</button> <button onclick="drainInbox()">Drain completed-result inbox</button><pre id="orchout"></pre></div><div class="grid" id="orchmetrics"></div><div class="c"><h3>Specialist Jobs</h3><div id="orchjobs"></div></div><div class="c"><h3>Agent Inbox</h3><div id="orchinbox"></div></div><div class="c"><h3>Compacted Mission Context</h3><div id="orchcontext"></div></div></section>
+<section id="orchestration" class="hidden"><div class="c"><h3>ORQEVIA Orchestration Layer</h3><p class="muted">One ORQEVIA voice routes queued internal missions to bounded specialists, supervises retries, verifies outputs, stores results in an async inbox, and compacts verified mission context. Existing governance and approval gates remain authoritative.</p><button class="primary" onclick="runOrchestration()">Run orchestrated cycle</button> <button onclick="drainInbox()">Drain completed-result inbox</button><pre id="orchout"></pre></div><div class="grid" id="orchmetrics"></div><div class="c"><h3>Specialist Jobs</h3><div id="orchjobs"></div></div><div class="c"><h3>Agent Inbox</h3><div id="orchinbox"></div></div><div class="c"><h3>Compacted Mission Context</h3><div id="orchcontext"></div></div></section>
 <section id="performance" class="hidden"><div class="c"><h3>Performance & Watchdog</h3><div id="perfview"></div></div></section>
-<section id="evidence" class="hidden"><div class="c"><h3>Evidence & Review</h3><p class="muted">Only <b>verified</b> or <b>human_verified</b> artifacts are trusted evidence. blocked_evidence, needs_review and rejected artifacts are not promoted into durable mission context.</p><div id="artifactview"></div></div><div class="c"><h3>Closed-loop Project Reviews</h3><div id="reviewview"></div></div></section><section id="approvals" class="hidden"><div class="c"><h3>Approval Gates</h3><div id="approvalview"></div></div></section><section id="chat"><div class="c"><b>Status:</b> <span id="st">checking…</span><span id="ct" class="muted"></span></div><div id="log" class="c"><div class="msg"><b>PRIME:</b> Phase 3.1.1 evidence-grounded orchestration is running locally.</div></div><div class="c"><textarea id="q" placeholder="Ask PRIME..."></textarea><button class="primary" onclick="send()">Send</button> <label><input id="rem" type="checkbox" checked> Remember locally</label><span id="route" class="muted small"></span></div></section>
+<section id="evidence" class="hidden"><div class="c"><h3>Evidence & Review</h3><p class="muted">Only <b>verified</b> or <b>human_verified</b> artifacts are trusted evidence. blocked_evidence, needs_review and rejected artifacts are not promoted into durable mission context.</p><div id="artifactview"></div></div><div class="c"><h3>Closed-loop Project Reviews</h3><div id="reviewview"></div></div></section><section id="approvals" class="hidden"><div class="c"><h3>Approval Gates</h3><div id="approvalview"></div></div></section><section id="chat"><div class="c"><b>Status:</b> <span id="st">checking…</span><span id="ct" class="muted"></span></div><div id="log" class="c"><div class="msg"><b>ORQEVIA:</b> Phase 3.1.1 evidence-grounded orchestration is running locally.</div></div><div class="c"><textarea id="q" placeholder="Ask PRIME..."></textarea><button class="primary" onclick="send()">Send</button> <label><input id="rem" type="checkbox" checked> Remember locally</label><span id="route" class="muted small"></span></div></section>
 <section id="agents" class="hidden"><div class="grid" id="agentgrid"></div></section>
 <section id="research" class="hidden"><div class="c"><h3>Research Agent</h3><input id="rq" type="text" placeholder="Research question"><textarea id="rurls" placeholder="Paste 1-5 public URLs, one per line"></textarea><button onclick="researchRun()">Research sources</button><pre id="rout"></pre></div></section>
 <section id="data" class="hidden"><div class="c"><h3>Data Agent</h3><input id="dfile" type="file" accept=".csv,.json"><button onclick="dataUpload()">Upload dataset</button><div id="datasets"></div></div><div class="c"><input id="did" type="text" placeholder="Dataset ID"><input id="dq" type="text" placeholder="Question about dataset"><button onclick="dataAsk()">Ask Data Agent</button><pre id="dout"></pre></div></section>
@@ -1775,7 +1775,7 @@ body{margin:0;background:#080b0f;color:#f5f7fb;font-family:Segoe UI,Arial}.w{max
 const E=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function tab(n){document.querySelectorAll('section').forEach(s=>s.classList.toggle('hidden',s.id!==n));if(n==='governance')loadGovernance();if(n==='objectives')loadObjectives();if(n==='organization')loadOrganization();if(n==='operations')loadOperations();if(n==='orchestration')loadOrchestration();if(n==='performance')loadPerformance();if(n==='agents')loadAgents();if(n==='data')loadData();if(n==='actions')loadActions();if(n==='automation')loadAutos();if(n==='knowledge')loadDocs();if(n==='memory')loadMem();if(n==='evidence')loadEvidence();if(n==='approvals')loadApprovals()}
 async function status(){try{let d=await (await fetch('/api/status')).json();st.innerHTML=d.fast_ready&&d.memory_ready?'<span class="good">AI models ready</span>':'<span class="warn">Models preparing</span>';ct.textContent=` • facts ${d.facts} • memories ${d.memories} • datasets ${d.datasets} • actions ${d.pending_actions} • automations ${d.automations} • objectives ${d.objectives} • projects ${d.projects} • portfolios ${d.portfolios} • queued ${d.queued_tasks} • runs ${d.autonomous_runs} • artifacts ${d.artifacts} • verified ${d.verified_artifacts} • approvals ${d.pending_approvals} • orchestrations ${d.orchestration_runs} • agent jobs ${d.agent_jobs} • inbox ${d.agent_inbox}`}catch{st.textContent='status error'}}
-async function send(){let m=q.value.trim();if(!m)return;q.value='';log.innerHTML+=`<div class="msg"><b>You:</b> ${E(m)}</div>`;let d=await (await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m,remember:rem.checked})})).json();log.innerHTML+=`<div class="msg"><b>PRIME:</b> ${E(d.answer||d.detail)}</div>`;route.textContent=(d.agents||[]).join(' → ');status()}
+async function send(){let m=q.value.trim();if(!m)return;q.value='';log.innerHTML+=`<div class="msg"><b>You:</b> ${E(m)}</div>`;let d=await (await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m,remember:rem.checked})})).json();log.innerHTML+=`<div class="msg"><b>ORQEVIA:</b> ${E(d.answer||d.detail)}</div>`;route.textContent=(d.agents||[]).join(' → ');status()}
 async function loadAgents(){let d=await (await fetch('/api/agents')).json();agentgrid.innerHTML=Object.values(d.agents).map(a=>`<div class="metric"><b>${E(a.name)}</b><div>${E(a.purpose)}</div></div>`).join('')}
 async function researchRun(){rout.textContent='Researching...';let urls=rurls.value.split(/\n+/).filter(Boolean);let r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:rq.value,urls})});let d=await r.json();rout.textContent=d.answer||d.detail||JSON.stringify(d,null,2)}
 async function dataUpload(){let f=dfile.files[0];if(!f)return;let fd=new FormData();fd.append('file',f);let d=await (await fetch('/api/datasets/upload',{method:'POST',body:fd})).json();alert(d.id?`Dataset ID: ${d.id}`:(d.detail||'failed'));loadData();status()}
@@ -1824,7 +1824,7 @@ async function createPortfolio(){let r=await fetch('/api/portfolios',{method:'PO
 async function createRecurring(){let r=await fetch('/api/recurring-jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:rname.value,scope:rscope.value,cadence:rcadence.value})});let d=await r.json();if(!r.ok){alert(d.detail||'Failed');return}rname.value='';loadOperations();status()}
 async function runAutonomy(){autonomyout.textContent='Running Phase 3 verified cycle...';let r=await fetch('/api/phase3/verified-cycle',{method:'POST'});let d=await r.json();autonomyout.textContent=JSON.stringify(d,null,2);loadOperations();loadPerformance();loadEvidence();loadApprovals();status()}
 async function loadOperations(){let q=await (await fetch('/api/queue')).json();queueview.innerHTML=q.map(x=>`<div class="line"><b>${E(x.department)}</b> — ${E(x.status)} — ${E(x.title)}</div>`).join('')||'<span class="muted">Queue empty.</span>';let p=await (await fetch('/api/portfolios')).json();portfolios.innerHTML=p.map(x=>`<div class="line"><b>${E(x.name)}</b> — ${E(x.status)}<div>${E(x.description)}</div></div>`).join('')||'<span class="muted">No portfolios.</span>';let r=await (await fetch('/api/recurring-jobs')).json();recurring.innerHTML=r.map(x=>`<div class="line"><b>${E(x.name)}</b> — ${E(x.scope)} — ${E(x.cadence)} — ${E(x.status)}</div>`).join('')||'<span class="muted">No recurring jobs.</span>'}
-async function runOrchestration(){orchout.textContent='PRIME Orchestrator is routing and supervising bounded specialist work...';let r=await fetch('/api/orchestration/cycle',{method:'POST'});let d=await r.json();orchout.textContent=r.ok?JSON.stringify(d,null,2):(d.detail||'Orchestration cycle failed');loadOrchestration();loadOperations();loadEvidence();loadApprovals();loadPerformance();status()}
+async function runOrchestration(){orchout.textContent='ORQEVIA Orchestrator is routing and supervising bounded specialist work...';let r=await fetch('/api/orchestration/cycle',{method:'POST'});let d=await r.json();orchout.textContent=r.ok?JSON.stringify(d,null,2):(d.detail||'Orchestration cycle failed');loadOrchestration();loadOperations();loadEvidence();loadApprovals();loadPerformance();status()}
 async function drainInbox(){let r=await fetch('/api/orchestration/inbox/drain',{method:'POST'});let d=await r.json();orchout.textContent=JSON.stringify(d,null,2);loadOrchestration();status()}
 async function loadOrchestration(){let d=await (await fetch('/api/orchestration')).json();let c=d.counts||{};orchmetrics.innerHTML=`<div class="metric"><b>${c.orchestration_runs||0}</b>orchestration runs</div><div class="metric"><b>${c.agent_jobs||0}</b>agent jobs</div><div class="metric"><b>${c.running_agent_jobs||0}</b>running jobs</div><div class="metric"><b>${c.agent_inbox||0}</b>unread results</div><div class="metric"><b>${c.context_summaries||0}</b>context summaries</div>`;orchjobs.innerHTML=(d.jobs||[]).map(x=>`<div class="line"><b>${E(x.specialist)}</b> — ${E(x.status)} — attempts ${x.attempts}/${x.max_attempts}<div>${E(x.last_status||'')}</div><div class="small muted">task ${E(x.task_id||'')}</div></div>`).join('')||'<span class="muted">No orchestrated jobs yet.</span>';orchinbox.innerHTML=(d.inbox||[]).map(x=>`<div class="line"><b>${E(x.kind)}</b> — ${E(x.status)} — ${E(x.created_at)}</div>`).join('')||'<span class="muted">Inbox empty.</span>';orchcontext.innerHTML=(d.context||[]).map(x=>`<div class="line"><div class="msg">${E(x.summary||'')}</div><div class="small muted">${E(x.scope_type)} ${E(x.scope_id)} • ${E(x.created_at)}</div></div>`).join('')||'<span class="muted">No compacted mission context yet.</span>'}
 async function loadPerformance(){let d=await (await fetch('/api/performance')).json();perfview.innerHTML=`<h4>Autonomous runs</h4>${d.runs.map(x=>`<div class="line"><b>${E(x.status)}</b> — cycles ${x.cycles} — completed ${x.tasks_completed} — failures ${x.failures}</div>`).join('')||'<span class="muted">No runs.</span>'}<h4>Watchdog</h4>${d.watchdog.map(x=>`<div class="line"><b>${E(x.severity)}</b> — ${E(x.event_type)}</div>`).join('')||'<span class="muted">No watchdog events.</span>'}`}

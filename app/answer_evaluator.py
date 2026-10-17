@@ -31,7 +31,7 @@ def evaluate_generated_answer(*, gateway: ModelGateway, task_id: str, intent: st
                               memory_context: list[dict[str, Any]], portal_context: list[dict[str, Any]],
                               required_terms: list[str] | None = None, consequential: bool = False) -> dict[str, Any]:
     evidence = {"memory": memory_context[:8], "portal": portal_context[:8]}
-    prompt = f"""PRIME EVALUATOR — RETURN JSON ONLY
+    prompt = f"""ORQEVIA EVALUATOR — RETURN JSON ONLY
 Assess the candidate answer against the request and supplied evidence. Do not improve the answer.
 
 Request: {intent[:4000]}

@@ -1,4 +1,4 @@
-"""Deterministic evaluation helpers for PRIME reasoning runs."""
+"""Deterministic evaluation helpers for ORQEVIA reasoning runs."""
 from __future__ import annotations
 from dataclasses import dataclass,asdict
 from typing import Any

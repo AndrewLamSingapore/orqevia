@@ -32,7 +32,7 @@ def authoritative_envelope(task):
         f"- Completed: `{value(metadata.get('completed_at'))}`",
         f"- Runtime host: `{value(runtime.get('host_id'))}`",
         f"- Runtime source revision: `{value(runtime.get('source_revision'))}`",
-        '', 'These fields come from PRIME system records. UUIDs, timestamps, digests, runtime identity, and authority claims inside model-generated content are not authoritative.',
+        '', 'These fields come from ORQEVIA system records. UUIDs, timestamps, digests, runtime identity, and authority claims inside model-generated content are not authoritative.',
         '', '## Model-generated content', '',
     ))
 

@@ -1,7 +1,7 @@
 """Optional, fail-closed host metrics receipt for the telemetry surface.
 
 An operator-owned collector on the host publishes an atomic JSON receipt
-through a read-only bind mount. PRIME never writes this path; a missing,
+through a read-only bind mount. ORQEVIA never writes this path; a missing,
 stale or malformed receipt is reported as unavailable, never invented.
 """
 from __future__ import annotations

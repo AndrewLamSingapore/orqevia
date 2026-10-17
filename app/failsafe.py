@@ -1,4 +1,4 @@
-"""Deterministic JARVIS PRIME FAILSAFE v0.
+"""Deterministic JARVIS ORQEVIA FAILSAFE v0.
 
 FAILSAFE has negative authority only: it may freeze consequential execution,
 record containment state, and require explicit validated recovery. It never

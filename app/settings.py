@@ -1,4 +1,4 @@
-"""PRIME runtime configuration loader."""
+"""ORQEVIA runtime configuration loader."""
 from __future__ import annotations
 
 import json

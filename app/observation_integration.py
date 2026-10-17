@@ -1,4 +1,4 @@
-"""Deterministic VELYQUA evidence validation and PRIME result evaluation.
+"""Deterministic VELYQUA evidence validation and ORQEVIA result evaluation.
 
 This module is deliberately model-free. It summarizes attributable evidence
 without turning observation counts into scientific support or execution
