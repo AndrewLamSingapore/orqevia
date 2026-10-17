@@ -1,4 +1,4 @@
-"""Durable, local compute accounting for PRIME reasoning calls."""
+"""Durable, local compute accounting for ORQEVIA reasoning calls."""
 from __future__ import annotations
 
 import json

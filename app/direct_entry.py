@@ -22,7 +22,7 @@ async def lifespan(app):
         close_ledgers()
 
 
-app=FastAPI(title='PRIME direct-execution candidate',lifespan=lifespan)
+app=FastAPI(title='ORQEVIA direct-execution candidate',lifespan=lifespan)
 for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events):app.include_router(router)
 
 

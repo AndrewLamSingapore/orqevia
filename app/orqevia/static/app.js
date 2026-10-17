@@ -97,7 +97,7 @@ function setPill() {
 
   const banner = $("banner");
   if (state.stopped) {
-    banner.textContent = "Emergency stop engaged (local UI state). Polling halted; PRIME runtime has not been commanded.";
+    banner.textContent = "Emergency stop engaged (local UI state). Polling halted; ORQEVIA runtime has not been commanded.";
     banner.className = "banner stop";
   } else if (state.safeMode) {
     banner.textContent = "Safe mode engaged (local UI state). Mutating-looking controls are disabled.";
@@ -142,7 +142,7 @@ function renderMetrics() {
   if (!state.connected || !d) {
     $("metrics").innerHTML =
       metric("Connection", "OFFLINE", "bad") +
-      metric("Objective", "PRIME unavailable", "warn") +
+      metric("Objective", "ORQEVIA unavailable", "warn") +
       metric("Evidence", "No simulated data", "warn");
     return;
   }
@@ -169,7 +169,7 @@ function renderIntel() {
   }
   if (!state.connected) {
     zone.className = "state-zone error";
-    zone.textContent = "PRIME unavailable — agent fleet not loaded.";
+    zone.textContent = "ORQEVIA unavailable — agent fleet not loaded.";
     return;
   }
   const agents = Object.values((state.status && state.status.data && state.status.data.agents) || {});
@@ -178,13 +178,13 @@ function renderIntel() {
     ? agents.map((a) => `<div class="line"><b>${esc(a.name || a.id)}</b> — ${esc(a.purpose || "—")}</div>`).join("")
     : "No agent fleet data returned.";
   $("intel-telemetry").className = "state-zone online";
-  $("intel-telemetry").textContent = "Telemetry is sourced from PRIME /api/status only when connected.";
+  $("intel-telemetry").textContent = "Telemetry is sourced from ORQEVIA /api/status only when connected.";
 }
 
 function renderAgents() {
   const grid = $("agent-grid");
   if (!state.connected || !state.agents.length) {
-    grid.innerHTML = `<div class="state-zone error">PRIME unavailable — 21-agent registry not loaded. Roles are never invented.</div>`;
+    grid.innerHTML = `<div class="state-zone error">ORQEVIA unavailable — 21-agent registry not loaded. Roles are never invented.</div>`;
     return;
   }
   grid.innerHTML = state.agents
@@ -202,7 +202,7 @@ function renderRouting() {
     : null;
   if (!state.connected || !manifest) {
     zone.className = "state-zone error";
-    zone.textContent = "Routing policy unavailable until PRIME is connected.";
+    zone.textContent = "Routing policy unavailable until ORQEVIA is connected.";
     return;
   }
   zone.className = "state-zone online";

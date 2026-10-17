@@ -8,8 +8,8 @@ const overviewSource = source.slice(source.indexOf('async function loadOverview(
 
 test('a reachable 503 health response is degraded, while transport failure is unknown', async () => {
   for (const [response, expected, label] of [
-    [{ok:true, status:200, json:async()=>({ok:true,integrity:'ok',models:{ready:true}})}, 'healthy', '● PRIME healthy'],
-    [{ok:false, status:503, json:async()=>({ok:false,integrity:'ok',models:{ready:false}})}, 'degraded', '● PRIME degraded'],
+    [{ok:true, status:200, json:async()=>({ok:true,integrity:'ok',models:{ready:true}})}, 'healthy', '● ORQEVIA healthy'],
+    [{ok:false, status:503, json:async()=>({ok:false,integrity:'ok',models:{ready:false}})}, 'degraded', '● ORQEVIA degraded'],
   ]) {
     const node = {};
     const health = new Function('fetch', '$', `${healthSource}; return health;`)(async()=>response,()=>node);
@@ -20,7 +20,7 @@ test('a reachable 503 health response is degraded, while transport failure is un
   const node = {};
   const health = new Function('fetch', '$', `${healthSource}; return health;`)(async()=>{throw new TypeError('offline')},()=>node);
   assert.deepEqual(await health(), {state:'unknown',integrity:'UNKNOWN',modelsReady:null});
-  assert.equal(node.textContent, '● PRIME unavailable');
+  assert.equal(node.textContent, '● ORQEVIA unavailable');
 });
 
 test('contradictory health status and payload cannot render healthy', async () => {
@@ -31,7 +31,7 @@ test('contradictory health status and payload cannot render healthy', async () =
     const node = {};
     const health = new Function('fetch', '$', `${healthSource}; return health;`)(async()=>response,()=>node);
     assert.deepEqual(await health(), {state:'unknown',integrity:'UNKNOWN',modelsReady:null});
-    assert.equal(node.textContent, '● PRIME unavailable');
+    assert.equal(node.textContent, '● ORQEVIA unavailable');
   }
 });
 
@@ -45,5 +45,5 @@ test('overview uses observed health instead of defaulting a missing status field
   await loadOverview();
   assert.match(nodes.overviewMetrics.innerHTML, /degraded/);
   assert.match(nodes.guidance.innerHTML, /Model readiness: not ready/);
-  assert.doesNotMatch(nodes.guidance.innerHTML, /PRIME integrity.*healthy/);
+  assert.doesNotMatch(nodes.guidance.innerHTML, /ORQEVIA integrity.*healthy/);
 });

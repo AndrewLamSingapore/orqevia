@@ -1,4 +1,4 @@
-"""Protected API and executors for PRIME's governed shared job queue."""
+"""Protected API and executors for ORQEVIA's governed shared job queue."""
 from __future__ import annotations
 
 import os

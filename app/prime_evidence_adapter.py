@@ -1,4 +1,4 @@
-"""Thin candidate-only adapter from canonical PRIME task metadata to v0.1 envelopes."""
+"""Thin candidate-only adapter from canonical ORQEVIA task metadata to v0.1 envelopes."""
 from __future__ import annotations
 
 from typing import Any
@@ -11,7 +11,7 @@ def adapt_task(task: dict[str, Any], *, claims: list[dict[str, Any]], observatio
     """Map server-owned fields; never infer missing authority or metadata from model content."""
     required=("task_id","objective","actor_id","actor_type","authority_scope","authority_source","created_at","status")
     missing=[key for key in required if not task.get(key)]
-    if missing: raise ValueError("missing canonical PRIME fields: "+",".join(missing))
+    if missing: raise ValueError("missing canonical ORQEVIA fields: "+",".join(missing))
     return {"schema_version":SCHEMA,"action_id":task["task_id"],"objective":task["objective"],
             "actor":{"type":task["actor_type"],"id":task["actor_id"]},
             "authority":{"scope":task["authority_scope"],"source":task["authority_source"]},

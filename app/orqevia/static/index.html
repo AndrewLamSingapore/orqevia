@@ -52,7 +52,7 @@
 
         <div class="panel">
           <h3>Command Controls</h3>
-          <p class="muted">These buttons change this interface's local state only. They do not command the PRIME runtime; runtime pause, stop, and safe-mode commands require owner approval.</p>
+          <p class="muted">These buttons change this interface's local state only. They do not command the ORQEVIA runtime; runtime pause, stop, and safe-mode commands require owner approval.</p>
           <div class="control-row">
             <button id="btn-pause" class="btn">Pause refresh</button>
             <button id="btn-stop" class="btn danger">Emergency stop (UI)</button>
@@ -75,7 +75,7 @@
         </div>
         <div class="panel">
           <h3>Telemetry</h3>
-          <p class="muted">Telemetry-backed agent health is only shown when PRIME is reachable. No data is simulated.</p>
+          <p class="muted">Telemetry-backed agent health is only shown when ORQEVIA is reachable. No data is simulated.</p>
           <div id="intel-telemetry" class="state-zone"></div>
         </div>
       </section>
@@ -84,7 +84,7 @@
         <h2 id="h-ideas">Ideas</h2>
         <div class="panel">
           <h3>Objective / Challenge Intake</h3>
-          <p class="muted">Entries are stored locally in this browser only. Sending an objective into PRIME is not available from this read-only surface.</p>
+          <p class="muted">Entries are stored locally in this browser only. Sending an objective into ORQEVIA is not available from this read-only surface.</p>
           <form id="idea-form" class="stack">
             <input id="idea-title" type="text" placeholder="Objective title" required>
             <textarea id="idea-body" placeholder="Describe the objective or challenge..." rows="4"></textarea>
@@ -113,8 +113,8 @@
         <h2 id="h-build">Build</h2>
         <div class="panel">
           <h3>Engineering Workflow</h3>
-          <p class="muted">Automated build is a PRIME capability. This surface exposes readiness, not execution.</p>
-          <div id="build-state" class="state-zone">Build readiness unavailable until PRIME is connected.</div>
+          <p class="muted">Automated build is a ORQEVIA capability. This surface exposes readiness, not execution.</p>
+          <div id="build-state" class="state-zone">Build readiness unavailable until ORQEVIA is connected.</div>
         </div>
       </section>
 
@@ -167,8 +167,8 @@
         <h2 id="h-evidence">Evidence</h2>
         <div class="panel">
           <h3>Audit Trail</h3>
-          <p class="muted">Tamper-evident audit records live in PRIME's local-only audit explorer. They are not reconstructed or simulated here.</p>
-          <div id="evidence-state" class="state-zone">Audit records unavailable until a trusted local PRIME connection is available.</div>
+          <p class="muted">Tamper-evident audit records live in ORQEVIA's local-only audit explorer. They are not reconstructed or simulated here.</p>
+          <div id="evidence-state" class="state-zone">Audit records unavailable until a trusted local ORQEVIA connection is available.</div>
         </div>
       </section>
 
@@ -189,7 +189,7 @@
         <div class="panel">
           <h3>Connection</h3>
           <dl class="kv">
-            <dt>PRIME upstream</dt><dd id="setting-upstream">—</dd>
+            <dt>ORQEVIA upstream</dt><dd id="setting-upstream">—</dd>
             <dt>Access mode</dt><dd>Read-only proxy</dd>
             <dt>Data classification</dt><dd>LOCAL_ONLY</dd>
           </dl>

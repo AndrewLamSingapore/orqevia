@@ -1,4 +1,4 @@
-"""Authenticated production adapter for PRIME Offline Survival.
+"""Authenticated production adapter for ORQEVIA Offline Survival.
 
 The core state machine stays provider-agnostic.  This adapter exposes only
 bounded, local control-plane operations and deliberately avoids executing any

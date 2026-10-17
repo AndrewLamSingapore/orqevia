@@ -39,7 +39,7 @@ def runtime_compute_profile():
     """Treat a malformed optional envelope as absent, retaining baseline N=1.
 
     The strict loader remains available to diagnostics/tests. Runtime callers
-    must not make PRIME unavailable because an optional profile is malformed.
+    must not make ORQEVIA unavailable because an optional profile is malformed.
     """
     try:
         return load_compute_profile()

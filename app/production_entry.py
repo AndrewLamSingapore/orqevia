@@ -83,7 +83,7 @@ async def _lifespan(application):
         yield state
 
 
-app = FastAPI(title='PRIME local control', lifespan=_lifespan,
+app = FastAPI(title='ORQEVIA local control', lifespan=_lifespan,
               docs_url=None, redoc_url=None, openapi_url=None)
 
 _AZURE_CERT_PIN = Path(__file__).resolve().parent.parent / 'governance' / 'agent-cert-verifier-azure-pins.json'

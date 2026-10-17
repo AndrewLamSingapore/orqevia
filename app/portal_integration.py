@@ -1,7 +1,7 @@
-"""Cross-project Portal -> PRIME experiment ingestion.
+"""Cross-project Portal -> ORQEVIA experiment ingestion.
 
 Pure, deterministic contract validation and specialist routing live here so the
-integration can be tested without starting Ollama or PRIME's full runtime.
+integration can be tested without starting Ollama or ORQEVIA's full runtime.
 """
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def route_candidate(candidate: dict[str, Any]) -> dict[str, str]:
 def build_experiment_spec(candidate: dict[str, Any]) -> dict[str, Any]:
     """Create a bounded draft spec from a validated candidate.
 
-    PRIME does not manufacture empirical evidence here. A spec is marked
+    ORQEVIA does not manufacture empirical evidence here. A spec is marked
     verified only when provenance exists; otherwise it remains draft and asks
     for evidence explicitly.
     """
