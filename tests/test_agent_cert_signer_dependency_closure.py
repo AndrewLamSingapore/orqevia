@@ -135,7 +135,7 @@ print(json.dumps({'scope': 'INSTALLED_CLOSURE_ONLY_NOT_LINUX_CI', 'distributions
 
 def probe(tmp_path, pins, check, mode='scratch'):
     environment = {name: value for name, value in os.environ.items()
-                   if not name.startswith(('PRIME_', 'AZURE_', 'ACTIONS_', 'HF_', 'OPENAI_'))
+                   if not name.startswith(('PRIME_', 'ORQEVIA_', 'AZURE_', 'ACTIONS_', 'HF_', 'OPENAI_'))
                    and name not in ('PYTHONPATH', 'PYTEST_ADDOPTS')}
     environment['PYTHONDONTWRITEBYTECODE'] = '1'
     if mode == 'scratch':

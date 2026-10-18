@@ -216,6 +216,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this dated full-sweep repair record; all prior bytes remain
+    # pinned and no new claim may alter historical sections.
+    repair_title = "## ORQEVIA full-sweep test isolation repair - 18 October 2026"
+    assert after.count(repair_title) == 1
+    repair_start = after.index(repair_title)
+    repair_end = after.index("\n## ", repair_start + len(repair_title)) + 1
+    repair_update = after[repair_start:repair_end].encode("utf-8")
+    assert len(repair_update) == 1253
+    assert hashlib.sha256(repair_update).hexdigest() == "077c5fe7bd676d4e86ed9dc8b3da3a5575d9a3e6346410ec6f025fe18a7fe8b8"
+    after = after[:repair_start] + after[repair_end:]
     # Admit the dated 17 October health-audit/sweep section; all prior bytes stay pinned.
     audit_title = "## ORQEVIA repository health audit and GitHub sweep - 17 October 2026"
     assert after.count(audit_title) == 1
