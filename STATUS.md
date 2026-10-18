@@ -36,6 +36,28 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA full-sweep test isolation repair - 18 October 2026
+
+### Claimed, not independently checked
+
+- Canonical source `main` and the live ABEX product runtime were both observed
+  at `d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`.
+- The full Python sweep initially reproduced one failure in
+  `test_agent_cert_signer_dependency_closure`: the child probe removed ambient
+  `PRIME_*` variables but retained the mirrored `ORQEVIA_*` name, allowing a
+  parent test-data path to leak into a scenario intended to prove default-path
+  denial.
+- The probe now removes both the legacy and current environment-variable name
+  families. The focused suite passes **6/6**, and the complete post-fix suite
+  passes **6,030 tests, 20 skipped, 3 deselected and 102 subtests**.
+- Canonical CI passes **5,177 tests, 4 skipped and 92 subtests**; all PWA,
+  command-map and control-surface JavaScript suites pass.
+- The live nine-container stack remains healthy, the local PWA returns HTTP
+  200, Cloudflare Access returns the expected authentication redirect, and
+  protected backend/local-knowledge endpoints deny anonymous access.
+- This branch changes test isolation and this status record only. It does not
+  alter product runtime code or deploy a new runtime image.
+
 ## ORQEVIA repository health audit and GitHub sweep - 17 October 2026
 
 ### Claimed, not independently checked
