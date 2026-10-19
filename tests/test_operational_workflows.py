@@ -46,9 +46,17 @@ class OperationalWorkflowTests(unittest.TestCase):
 
     def test_production_shell_mount_precedes_root_app_without_starting_workers(self):
         from app.production_entry import app
-        routes=[getattr(route,'path',None) for route in app.routes]
-        assert '/api/workflows/objectives' in routes
-        assert routes.index('/api/workflows/objectives')<routes.index('')
+        assert '/api/workflows/objectives' in app.openapi()['paths']
+        workflow_index=next(
+            index for index,route in enumerate(app.routes)
+            if hasattr(route,'original_router')
+            and '/api/workflows/objectives' in {
+                getattr(child,'path',None) for child in route.original_router.routes
+            }
+        )
+        root_index=next(index for index,route in enumerate(app.routes)
+                        if getattr(route,'path',None)=='')
+        assert workflow_index<root_index
 
     def test_inconsistent_rows_truthful_failed_validation_artifact(self):
         result=self.submit({'objective':'Validate inconsistent rows','rows':[

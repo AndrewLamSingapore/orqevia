@@ -4,7 +4,7 @@ from app.entry import app
 
 class RouterTests(unittest.TestCase):
     def test_routes_registered(self):
-        paths={r.path for r in app.routes}
+        paths=set(app.openapi()["paths"])
         self.assertIn("/api/agents/dispatch",paths)
         self.assertIn("/api/agents/objectives",paths)
         self.assertIn("/api/compute-queue/jobs",paths)

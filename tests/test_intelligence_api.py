@@ -1,3 +1,4 @@
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app import geo_ingest
@@ -26,7 +27,9 @@ def test_end_to_end_api_path(monkeypatch, tmp_path):
     ia.DOCUMENTS = DocumentStore()
     ia.DETECTION = DetectionEngine(tmp_path / "alerts.json")
     monkeypatch.setattr(geo_ingest, "_http_fetch", lambda url, timeout: {"features": [FEATURE]})
-    client = TestClient(ia.router)
+    api = FastAPI()
+    api.include_router(ia.router)
+    client = TestClient(api)
 
     ingest = client.post("/api/orqevia/intelligence/ingest/run")
     assert ingest.status_code == 200 and ingest.json()["inserted"] == 1
