@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app import observability
-from app.observability import ObservabilitySettings, install_observability
+from app.observability import PRIVACY_FASTAPI_TELEMETRY, ObservabilitySettings, install_observability
 
 
 class Receiver(BaseHTTPRequestHandler):
@@ -35,7 +35,7 @@ class Receiver(BaseHTTPRequestHandler):
 
 
 def build_app(instrumented: bool, endpoint: str):
-    app = FastAPI()
+    app = FastAPI(telemetry=PRIVACY_FASTAPI_TELEMETRY)
 
     @app.get("/health")
     def health():

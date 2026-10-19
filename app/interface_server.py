@@ -13,8 +13,10 @@ from . import pwa_sessions
 import os
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+from .observability import PRIVACY_FASTAPI_TELEMETRY
 
-app=FastAPI(title='JARVIS ABEX Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None)
+app=FastAPI(title='JARVIS ABEX Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None,
+    telemetry=PRIVACY_FASTAPI_TELEMETRY)
 app.include_router(router)
 app.include_router(pwa_sessions.router)
 app.add_middleware(pwa_sessions.PWASessionMiddleware)

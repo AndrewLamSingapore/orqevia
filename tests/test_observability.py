@@ -140,6 +140,20 @@ def test_disabled_install_performs_no_network_probe():
     assert result == {"status": "DISABLED", "network_probe_performed": False}
 
 
+def test_production_apps_disable_native_fastapi_telemetry(tmp_path, monkeypatch):
+    monkeypatch.setenv("PRIME_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("ORQEVIA_LOCAL_AI_ROOT", str(tmp_path / "local-ai"))
+    from app.interface_server import app as interface_app
+    from app.local_knowledge_service import app as knowledge_app
+    from app.production_entry import app as production_app
+
+    for app in (production_app, interface_app, knowledge_app):
+        assert app._telemetry["tracing"] is False
+        assert app._telemetry["metrics"] is False
+        assert app._telemetry["logs"] is False
+        assert app._telemetry["operation_spans"] is False
+
+
 def test_missing_opentelemetry_degrades_to_noop(monkeypatch):
     monkeypatch.setattr(observability, "_TRACER", None)
     monkeypatch.setattr(observability, "_OTEL_AVAILABLE", False)

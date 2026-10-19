@@ -1,5 +1,5 @@
-fastapi==0.116.1
-uvicorn[standard]==0.35.0
+fastapi==0.143.1
+uvicorn[standard]==0.54.0
 httpx==0.28.1
 python-multipart==0.0.31
 pypdf==6.19.0

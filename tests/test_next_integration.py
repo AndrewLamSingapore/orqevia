@@ -58,9 +58,13 @@ def test_invalid_deterministic_input_is_blocked_not_completed(tmp_path,monkeypat
 
 def test_external_surface_has_no_owner_or_legacy_routes():
     from app.interface_server import app
-    paths={route.path for route in app.routes}
+    paths=set(app.openapi()["paths"])
+    paths.update(route.path for route in app.routes if hasattr(route,"path"))
     allowed_prefixes=('/interface/v1/','/pwa','/integration/')
-    bounded_bridge={'/api/orqevia/{path:path}','/orqevia/{path:path}'}
+    bounded_bridge={
+        '/api/orqevia/{path:path}','/orqevia/{path:path}',
+        '/api/orqevia/{path}','/orqevia/{path}',
+    }
     assert paths and all(path.startswith(allowed_prefixes) or path in bounded_bridge for path in paths)
     assert not any(path.startswith('/control') for path in paths)
     assert not any(path.startswith('/api/') and path not in bounded_bridge for path in paths)

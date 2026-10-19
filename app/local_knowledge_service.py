@@ -15,7 +15,7 @@ from fastapi import FastAPI,HTTPException,Request
 from fastapi.responses import JSONResponse
 from .local_knowledge import KnowledgeEngine,MAX_UPLOAD
 from . import workspace_capabilities
-from .observability import install_observability
+from .observability import PRIVACY_FASTAPI_TELEMETRY, install_observability
 
 ROOT=Path(os.environ.get('ORQEVIA_LOCAL_AI_ROOT',str(Path.home()/'orqevia-ai')))
 from .postgres_intelligence import knowledge_engine
@@ -29,7 +29,8 @@ async def lifespan(app):
     except Exception:ENGINE.last_error='EMBEDDING_INITIALIZATION_FAILED'
     yield
 
-app=FastAPI(title='ORQEVIA local knowledge',docs_url=None,redoc_url=None,openapi_url=None,lifespan=lifespan)
+app=FastAPI(title='ORQEVIA local knowledge',docs_url=None,redoc_url=None,openapi_url=None,lifespan=lifespan,
+    telemetry=PRIVACY_FASTAPI_TELEMETRY)
 OBSERVABILITY=install_observability(app)
 
 def audit(action,phase,status=None):
