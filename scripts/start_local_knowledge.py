@@ -24,7 +24,7 @@ def main():
     # background wait does not change services or weaken their health checks.
     for attempt in range(20):
         try:
-            result=subprocess.run([str(DOCKER),'inspect','prime-epoch-20260919-interface-1'],capture_output=True,text=True,timeout=20,check=True,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+            result=subprocess.run([str(DOCKER),'inspect','orqevia-epoch-20261016-interface-1'],capture_output=True,text=True,timeout=20,check=True,stdin=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
             break
         except (OSError,subprocess.SubprocessError):
             if attempt==19:raise RuntimeError('Existing Docker Interface unavailable') from None
@@ -37,7 +37,20 @@ def main():
         with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request,timeout=3) as response:
             if response.status==200:return
     except OSError:pass
-    child_env=os.environ.copy();child_env.update({
+    child_env=os.environ.copy()
+    minilm_onnx=config.get('minilm_onnx')
+    if minilm_onnx is not None:
+        if not isinstance(minilm_onnx,dict):
+            raise RuntimeError('Invalid MiniLM ONNX startup configuration')
+        required={'model_dir','model_sha256'}
+        if not required <= minilm_onnx.keys():
+            raise RuntimeError('Incomplete MiniLM ONNX startup configuration')
+        child_env.update({
+            'ORQEVIA_MINILM_BACKEND':str(minilm_onnx.get('backend','onnx-cpu')),
+            'ORQEVIA_MINILM_ONNX_DIR':str(minilm_onnx['model_dir']),
+            'ORQEVIA_MINILM_ONNX_SHA256':str(minilm_onnx['model_sha256']),
+            'ORQEVIA_MINILM_ONNX_THREADS':str(minilm_onnx.get('threads',2))})
+    child_env.update({
         'ORQEVIA_SERVICE_TOKEN':token,'ORQEVIA_OWNER_ACCOUNT':account,
         'ORQEVIA_LOCAL_AI_ROOT':config['data_root'],'HF_HUB_OFFLINE':'1',
         'ORQEVIA_LOCAL_RELEASE':config['release'],

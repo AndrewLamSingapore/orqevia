@@ -14,9 +14,12 @@ from pydantic import BaseModel, Field
 
 from .client_auth import authenticate_owner
 from .higgsfield_media import (
+    HiggsfieldCatalogSnapshot,
     HiggsfieldCliDiscovery,
+    HiggsfieldGenerationReceipt,
     HiggsfieldMediaService,
     HiggsfieldMediaSettings,
+    HiggsfieldValidationReceipt,
 )
 from .media_generation import MediaJobRequest, MediaProviderError
 
@@ -55,12 +58,37 @@ def _service() -> HiggsfieldMediaService:
     if _SERVICE is None:
         settings = HiggsfieldMediaSettings.from_env()
         discovery = None
-        if settings.cli_executable:
+        if settings.catalog_file and settings.catalog_sha256_file:
+            discovery = HiggsfieldCatalogSnapshot(
+                settings.catalog_file,
+                settings.catalog_sha256_file,
+                max_age_seconds=settings.catalog_max_age_seconds,
+            )
+        elif settings.cli_executable:
             try:
                 discovery = HiggsfieldCliDiscovery(settings.cli_executable)
             except MediaProviderError:
                 discovery = None
-        _SERVICE = HiggsfieldMediaService(settings, discovery=discovery)
+        validation = None
+        if settings.validation_file and settings.validation_sha256_file:
+            validation = HiggsfieldValidationReceipt(
+                settings.validation_file,
+                settings.validation_sha256_file,
+                max_age_seconds=settings.validation_max_age_seconds,
+            )
+        generation = None
+        if settings.generation_file and settings.generation_sha256_file:
+            generation = HiggsfieldGenerationReceipt(
+                settings.generation_file,
+                settings.generation_sha256_file,
+                max_age_seconds=settings.generation_max_age_seconds,
+            )
+        _SERVICE = HiggsfieldMediaService(
+            settings,
+            discovery=discovery,
+            validation=validation,
+            generation=generation,
+        )
     return _SERVICE
 
 
@@ -74,6 +102,8 @@ def _http_error(error: MediaProviderError) -> HTTPException:
         "PROVIDER_DISABLED": 503,
         "CREDENTIAL_UNAVAILABLE": 503,
         "CLI_UNAVAILABLE": 503,
+        "CATALOG_UNAVAILABLE": 503,
+        "CATALOG_STALE": 503,
         "PROVIDER_AUTHENTICATION": 502,
         "PROVIDER_INSUFFICIENT_CREDITS": 402,
         "PROVIDER_CONCURRENCY": 429,

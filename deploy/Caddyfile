@@ -5,7 +5,10 @@
 :8080 {
 	@health path /health
 	handle @health {
-		reverse_proxy backend:8000
+		# Gateway liveness only. Backend health remains protected by its
+		# loopback/trusted-peer boundary and is checked inside the backend.
+		header X-ORQEVIA-Health-Scope "GATEWAY_ONLY"
+		respond "ok" 200
 	}
 
 	@authenticated_integrations {

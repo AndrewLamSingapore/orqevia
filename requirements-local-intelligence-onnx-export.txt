@@ -1,0 +1,4 @@
+# Export-only tooling. Install in a separate environment because Optimum ONNX
+# currently constrains transformers below the version used by the runtime.
+onnx==1.23.2
+optimum-onnx==0.1.0

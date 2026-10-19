@@ -83,6 +83,8 @@ class KnowledgeEngine:
     def __init__(self,root,*,encoder=None,generator=None,extractor=None):
         self.root=Path(root).resolve();self.store=self.root/'rag_index_v2';self.documents=self.root/'documents'
         self.encoder=encoder;self.generator=generator;self.lock=threading.RLock()
+        self.embedding_backend='INJECTED' if encoder is not None else 'LAZY_AUTO'
+        self.embedding_identity=None
         self.extractor=extractor
         self.last_generation=None;self.last_error=None
 
@@ -124,12 +126,35 @@ class KnowledgeEngine:
 
     def _encoder(self):
         if self.encoder is None:
+            backend=os.getenv('ORQEVIA_MINILM_BACKEND','auto').strip().lower()
+            model_dir=os.getenv('ORQEVIA_MINILM_ONNX_DIR','').strip()
+            model_sha256=os.getenv('ORQEVIA_MINILM_ONNX_SHA256','').strip()
+            if backend not in {'auto','torch','onnx','onnx-cpu'}:
+                raise ValueError('Unknown MiniLM embedding backend')
+            use_onnx=backend in {'onnx','onnx-cpu'} or (
+                backend=='auto' and bool(model_dir or model_sha256)
+            )
+            if use_onnx:
+                if not model_dir or not model_sha256:
+                    raise ValueError('ONNX embedding model directory and digest are required')
+                try:threads=int(os.getenv('ORQEVIA_MINILM_ONNX_THREADS','2'))
+                except ValueError:raise ValueError('ONNX embedding thread count must be an integer') from None
+                from .onnx_embedding import OnnxMiniLMEncoder
+                self.encoder=OnnxMiniLMEncoder(model_dir,model_sha256,model_name=EMBEDDING_MODEL,threads=threads)
+                self.embedding_backend='ONNX_CPU'
+                self.embedding_identity=self.encoder.identity
+                return self.encoder
             # Existing downloaded model only. No credentials, downloads, custom
             # remote code or external embedding service are required.
             import torch
             torch.set_num_threads(2)
             from sentence_transformers import SentenceTransformer
             self.encoder=SentenceTransformer(EMBEDDING_MODEL,local_files_only=True,trust_remote_code=False,device='cpu')
+            self.embedding_backend='TORCH_CPU'
+            self.embedding_identity={
+                'backend':'torch_cpu','model':EMBEDDING_MODEL,
+                'model_sha256':None,'provider':'PyTorch CPU','dimensions':384,
+            }
         return self.encoder
 
     def _embed(self,texts):
@@ -150,6 +175,7 @@ class KnowledgeEngine:
             except (OSError,ValueError,RuntimeError,ImportError,KeyError):indexed={'status':'UNAVAILABLE'}
         return {'service':'ORQEVIA local knowledge','index':indexed,'embedding_model':EMBEDDING_MODEL,
             'embedding_state':'LOADED' if self.encoder is not None else 'CACHED_MODEL_REQUIRED_ON_FIRST_REQUEST',
+            'embedding_backend':self.embedding_backend,'embedding_runtime':self.embedding_identity,
             'generation_model':GENERATION_MODEL,'last_generation':self.last_generation,
             'local_only':True,'primary_interface':'/pwa/?view=intelligence','observed_at':now()}
 

@@ -95,10 +95,18 @@ services:
       PRIME_CLOUD_INPUT_USD_MTOK: ${PRIME_CLOUD_INPUT_USD_MTOK:-0}
       PRIME_CLOUD_OUTPUT_USD_MTOK: ${PRIME_CLOUD_OUTPUT_USD_MTOK:-0}
       ORQEVIA_HIGGSFIELD_ENABLED: ${ORQEVIA_HIGGSFIELD_ENABLED:-0}
-      ORQEVIA_HIGGSFIELD_API_KEY_REF: ${ORQEVIA_HIGGSFIELD_API_KEY_REF:-env:ORQEVIA_HIGGSFIELD_API_KEY}
-      ORQEVIA_HIGGSFIELD_API_KEY: ${ORQEVIA_HIGGSFIELD_API_KEY:-}
+      ORQEVIA_HIGGSFIELD_API_KEY_REF: ${ORQEVIA_HIGGSFIELD_API_KEY_REF:-file:HIGGSFIELD_API_KEY}
       ORQEVIA_HIGGSFIELD_API_KEY_ID_REF: ${ORQEVIA_HIGGSFIELD_API_KEY_ID_REF:-}
       ORQEVIA_HIGGSFIELD_API_KEY_SECRET_REF: ${ORQEVIA_HIGGSFIELD_API_KEY_SECRET_REF:-}
+      ORQEVIA_HIGGSFIELD_CATALOG_FILE: /run/orqevia-inputs/higgsfield-catalog.json
+      ORQEVIA_HIGGSFIELD_CATALOG_SHA256_FILE: /run/orqevia-inputs/higgsfield-catalog.json.sha256
+      ORQEVIA_HIGGSFIELD_CATALOG_MAX_AGE_SECONDS: ${ORQEVIA_HIGGSFIELD_CATALOG_MAX_AGE_SECONDS:-86400}
+      ORQEVIA_HIGGSFIELD_VALIDATION_FILE: /run/orqevia-inputs/higgsfield-provider-validation.json
+      ORQEVIA_HIGGSFIELD_VALIDATION_SHA256_FILE: /run/orqevia-inputs/higgsfield-provider-validation.json.sha256
+      ORQEVIA_HIGGSFIELD_VALIDATION_MAX_AGE_SECONDS: ${ORQEVIA_HIGGSFIELD_VALIDATION_MAX_AGE_SECONDS:-86400}
+      ORQEVIA_HIGGSFIELD_GENERATION_FILE: /run/orqevia-inputs/higgsfield-generation-acceptance.json
+      ORQEVIA_HIGGSFIELD_GENERATION_SHA256_FILE: /run/orqevia-inputs/higgsfield-generation-acceptance.json.sha256
+      ORQEVIA_HIGGSFIELD_GENERATION_MAX_AGE_SECONDS: ${ORQEVIA_HIGGSFIELD_GENERATION_MAX_AGE_SECONDS:-31536000}
       ORQEVIA_MEDIA_DB: ${ORQEVIA_MEDIA_DB:-/data/media-jobs.db}
       ORQEVIA_MEDIA_MAX_COST_USD: ${ORQEVIA_MEDIA_MAX_COST_USD:-0.25}
       ORQEVIA_MEDIA_MAX_JOBS_PER_DAY: ${ORQEVIA_MEDIA_MAX_JOBS_PER_DAY:-3}
@@ -122,6 +130,14 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      - type: bind
+        source: ${ORQEVIA_HIGGSFIELD_CATALOG_DIR:-C:/ProgramData/ORQEVIA/inputs}
+        target: /run/orqevia-inputs
+        read_only: true
+        bind:
+          create_host_path: false
+    secrets:
+      - higgsfield_api_key
     depends_on:
       ollama:
         condition: service_healthy
@@ -340,3 +356,7 @@ volumes:
   orqevia-ollama-data:
     external: true
     name: ${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}
+
+secrets:
+  higgsfield_api_key:
+    file: ${ORQEVIA_HIGGSFIELD_API_KEY_FILE:-C:/Users/Admin/Documents/ABEX/secrets/higgsfield_api_key.txt}
