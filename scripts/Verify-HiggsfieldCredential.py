@@ -1,4 +1,5 @@
 """Verify the Higgsfield REST key with a non-billable estimate request."""
+
 from __future__ import annotations
 
 import argparse
@@ -95,18 +96,22 @@ def main() -> int:
     digest = hashlib.sha256(raw).hexdigest()
     atomic_write(args.output, raw)
     atomic_write(digest_path, (digest + "\n").encode("ascii"))
-    print(json.dumps({
-        "result": result,
-        "credential_format_verified": credential_ready,
-        "provider_authentication_verified": result == "PASSED",
-        "estimate_verified": result == "PASSED",
-        "billable_generation_submitted": False,
-        "estimated_usd": receipt["estimated_usd"],
-        "estimated_credits": receipt["estimated_credits"],
-        "error_code": error_code,
-        "receipt": str(args.output.resolve()),
-        "sha256": digest,
-    }))
+    print(
+        json.dumps(
+            {
+                "result": result,
+                "credential_format_verified": credential_ready,
+                "provider_authentication_verified": result == "PASSED",
+                "estimate_verified": result == "PASSED",
+                "billable_generation_submitted": False,
+                "estimated_usd": receipt["estimated_usd"],
+                "estimated_credits": receipt["estimated_credits"],
+                "error_code": error_code,
+                "receipt": str(args.output.resolve()),
+                "sha256": digest,
+            }
+        )
+    )
     return 0 if result == "PASSED" else 2
 
 

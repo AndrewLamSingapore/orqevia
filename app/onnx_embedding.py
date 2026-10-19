@@ -1,4 +1,5 @@
 """Optional local-only ONNX encoder for the existing MiniLM/FAISS RAG path."""
+
 from __future__ import annotations
 
 import hashlib
@@ -94,11 +95,7 @@ class OnnxMiniLMEncoder:
                 },
             )[0]
             vector = np.asarray(output, dtype=np.float32)
-            if (
-                vector.ndim != 2
-                or vector.shape[1] != self.dimensions
-                or not np.isfinite(vector).all()
-            ):
+            if vector.ndim != 2 or vector.shape[1] != self.dimensions or not np.isfinite(vector).all():
                 raise OnnxEncoderError("Invalid ONNX embedding output")
             batches.append(vector)
         if not batches:

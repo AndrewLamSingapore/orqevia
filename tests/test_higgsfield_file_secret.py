@@ -1,4 +1,5 @@
 """Fixed-path file-secret contract for the optional Higgsfield provider."""
+
 import pytest
 
 from app import secret_refs
@@ -6,10 +7,12 @@ from app.higgsfield_media import HiggsfieldApiProvider, HiggsfieldMediaSettings
 
 
 def provider(reference="file:HIGGSFIELD_API_KEY"):
-    return HiggsfieldApiProvider(HiggsfieldMediaSettings(
-        enabled=False,
-        api_key_ref=reference,
-    ))
+    return HiggsfieldApiProvider(
+        HiggsfieldMediaSettings(
+            enabled=False,
+            api_key_ref=reference,
+        )
+    )
 
 
 def test_higgsfield_file_secret_is_fixed_read_only_reference(monkeypatch, tmp_path):
@@ -35,9 +38,7 @@ def test_higgsfield_file_secret_is_fixed_read_only_reference(monkeypatch, tmp_pa
     "contents",
     ("", "key-id:key-secret\n", "key id:key-secret", "x" * 4097),
 )
-def test_higgsfield_file_secret_rejects_invalid_or_empty_content(
-    monkeypatch, tmp_path, contents
-):
+def test_higgsfield_file_secret_rejects_invalid_or_empty_content(monkeypatch, tmp_path, contents):
     mounted = tmp_path / "higgsfield_api_key"
     mounted.write_text(contents, encoding="ascii")
     monkeypatch.setattr(secret_refs, "HIGGSFIELD_API_KEY_FILE", str(mounted))

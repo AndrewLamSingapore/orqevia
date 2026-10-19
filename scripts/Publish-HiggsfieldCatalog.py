@@ -1,4 +1,5 @@
 """Publish sanitized Windows-CLI discovery for the read-only backend mount."""
+
 from __future__ import annotations
 
 import argparse
@@ -56,15 +57,19 @@ def main() -> int:
     digest = hashlib.sha256(raw).hexdigest()
     atomic_write(args.output, raw)
     atomic_write(digest_path, (digest + "\n").encode("ascii"))
-    print(json.dumps({
-        "output": str(args.output.resolve()),
-        "digest_file": str(digest_path.resolve()),
-        "sha256": digest,
-        "cli_version": cli_version,
-        "model_count": catalog["model_count"],
-        "workflow_count": catalog["workflow_count"],
-        "execution_authority": "NONE_DISCOVERY_ONLY",
-    }))
+    print(
+        json.dumps(
+            {
+                "output": str(args.output.resolve()),
+                "digest_file": str(digest_path.resolve()),
+                "sha256": digest,
+                "cli_version": cli_version,
+                "model_count": catalog["model_count"],
+                "workflow_count": catalog["workflow_count"],
+                "execution_authority": "NONE_DISCOVERY_ONLY",
+            }
+        )
+    )
     return 0
 
 

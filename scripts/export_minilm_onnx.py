@@ -1,4 +1,5 @@
 """Export the cached MiniLM sentence encoder to a pinned local ONNX artifact."""
+
 from __future__ import annotations
 
 import argparse

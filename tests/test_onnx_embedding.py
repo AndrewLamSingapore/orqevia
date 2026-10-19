@@ -1,4 +1,5 @@
 """Contract tests for the optional hash-pinned ONNX MiniLM encoder."""
+
 import hashlib
 
 import numpy as np

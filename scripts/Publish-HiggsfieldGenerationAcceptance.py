@@ -1,4 +1,5 @@
 """Publish a sanitized live-generation acceptance receipt for the backend."""
+
 from __future__ import annotations
 
 import argparse
@@ -102,10 +103,7 @@ def publish(acceptance_receipt: Path, *, output: Path, secret_file: Path) -> dic
         maximum_cost_usd = float(value.get("maximum_cost_usd"))
     except (TypeError, ValueError):
         raise SystemExit("acceptance receipt cost fields are invalid") from None
-    if (
-        not 0 <= estimated_usd <= maximum_cost_usd <= 0.25
-        or not maximum_cost_usd > 0
-    ):
+    if not 0 <= estimated_usd <= maximum_cost_usd <= 0.25 or not maximum_cost_usd > 0:
         raise SystemExit("acceptance receipt cost bound is invalid")
     outputs = []
     for output_record in value["outputs"]:
@@ -134,16 +132,16 @@ def publish(acceptance_receipt: Path, *, output: Path, secret_file: Path) -> dic
             or re.fullmatch(r"[A-Za-z0-9.-]{1,255}", output_record["host"]) is None
         ):
             raise SystemExit("acceptance artifact integrity check failed")
-        outputs.append({
-            "bytes": expected_bytes,
-            "sha256": expected_sha256,
-            "host": output_record["host"][:255],
-        })
+        outputs.append(
+            {
+                "bytes": expected_bytes,
+                "sha256": expected_sha256,
+                "host": output_record["host"][:255],
+            }
+        )
 
     secret_refs.HIGGSFIELD_API_KEY_FILE = str(secret_file.resolve())
-    provider = HiggsfieldApiProvider(
-        HiggsfieldMediaSettings(enabled=False, api_key_ref="file:HIGGSFIELD_API_KEY")
-    )
+    provider = HiggsfieldApiProvider(HiggsfieldMediaSettings(enabled=False, api_key_ref="file:HIGGSFIELD_API_KEY"))
     fingerprint = provider.credential_fingerprint()
     if fingerprint is None:
         raise SystemExit("credential fingerprint is unavailable")
