@@ -14,16 +14,17 @@
 tooling deployment; security PR
 [#400](https://github.com/AndrewLamSingapore/orqevia/pull/400) passed all nine
 required checks and merged as
-`86e26da41168f899ad04174135bc5a23765a46d9`. The backend, interface, and separate
+`97a9f936e6d166a334ea4eb949f563d8f3c3a230`. The backend, interface, and separate
 local RAG release run the patched exact source. There are no unresolved
-blockers and GitHub reports zero open Dependabot alerts.
+blockers, and Dependabot, secret scanning and code scanning each report zero
+open alerts.
 
 ## Implemented source
 
 - Branch: `codex/tooling-assurance-20261019`
 - Main implementation: `dfd822b`
 - Protected-closure remediation: `18c6d2e`
-- Merge commit / deployed revision: `86e26da`
+- Merge commit / deployed revision: `97a9f93`
 - Canonical base at task start: `9da6020` (`origin/main`)
 
 Core files:
@@ -50,7 +51,7 @@ account, paid service, or external collector was introduced.
 ### Source and browser
 
 ```text
-Full Python: 6049 passed, 20 skipped, 3 deselected, 102 subtests passed
+Full Python: 6052 passed, 20 skipped, 3 deselected, 102 subtests passed
 Focused Observability/media: 17 passed
 Protected closure/initialization/Observability: 14 passed
 RAG/knowledge source suite: 35 passed, 1 skipped
@@ -102,11 +103,11 @@ Live RAG probe: 7 indexed documents; retrieval returned 2 hits; answer returned
 `CITED_MODEL_INTERPRETATION` using the installed local model with 2 citations.
 
 The live backend and interface run image
-`orqevia:tooling-20261019-86e26da-exact`
-(`sha256:376a96f6bd061e3e6375cb4d21ef7ffcf9714584f44ffeca8987c18bb6eeb95c`)
-at source `86e26da41168f899ad04174135bc5a23765a46d9`. The separate loopback RAG
+`orqevia:tooling-20261019-97a9f93-exact`
+(`sha256:bc3d591841ddd8b6cc1835051fa8fbd8ad304807ef56d8d2b952a1fbcc3eaac1`)
+at source `97a9f936e6d166a334ea4eb949f563d8f3c3a230`. The separate loopback RAG
 service runs exact release
-`86e26da41168f899ad04174135bc5a23765a46d9-exact`.
+`97a9f936e6d166a334ea4eb949f563d8f3c3a230-exact`.
 
 ## Security and cost assessment
 

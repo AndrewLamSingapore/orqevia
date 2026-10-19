@@ -147,11 +147,11 @@ Results:
 ## Final regression result
 
 ```text
-6049 passed, 20 skipped, 3 deselected, 102 subtests passed
+6052 passed, 20 skipped, 3 deselected, 102 subtests passed
 ```
 
 The full Python suite completed in 337.74 seconds. The security-remediation
-merge is `86e26da41168f899ad04174135bc5a23765a46d9`; the deployed full-stack
+merge is `97a9f936e6d166a334ea4eb949f563d8f3c3a230`; the deployed full-stack
 canary passed 12/12 and registered-agent queue liveness passed 21/21.
 
 ## Files introduced or changed

@@ -216,6 +216,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    sweep_title = "## ORQEVIA ABEX sweep and CodeQL closure - 19 October 2026"
+    assert after.count(sweep_title) == 1
+    sweep_start = after.index(sweep_title)
+    sweep_end = after.index("\n## ", sweep_start + len(sweep_title)) + 1
+    sweep_update = after[sweep_start:sweep_end].encode("utf-8")
+    assert len(sweep_update) == 2132
+    assert hashlib.sha256(sweep_update).hexdigest() == "320b244e61bf04515e4ae9d18d9d16ba445917816cf9f5a5e49a4dc762db197b"
+    assert b"### Claimed, not independently checked" in sweep_update
+    assert b"### Verified" not in sweep_update
+    after = after[:sweep_start] + after[sweep_end:]
     security_title = "## ORQEVIA Starlette security remediation deployment - 19 October 2026"
     assert after.count(security_title) == 1
     security_start = after.index(security_title)
