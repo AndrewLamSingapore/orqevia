@@ -38,7 +38,7 @@ If you are an AI agent updating this file:
 
 ## ORQEVIA release, role acceptance and naming migration - 19 October 2026
 
-### Claimed, not independently checked
+### Verified (Owner-authorized, 19 October 2026)
 
 - PR **#405** passed all required checks and merged as
   `f982e2a39ff569869e493b7743feebcd7bd48901`. It contains the Higgsfield
@@ -69,20 +69,23 @@ If you are an AI agent updating this file:
 - Runtime attestation is `VERIFIED` against Golden generation
   `orqevia-golden-gen6-20261019`, live source/image `2ad1074`, with no mismatch
   reasons.
-- Only Lam may promote these acceptance results into a Verified section after
-  personally checking the cited evidence.
 - Seven signed-closure files remain byte-identical and continue to receive
   their historical environment names through a one-way lookup bridge. Final
   removal requires a new signed certification closure.
 
+### Resolved (19 October 2026)
+
+- Windows Time resynchronized at 17:58:05 SGT. It reports
+  `Leap Indicator: 0`, stratum 4, source `sg.pool.ntp.org`.
+- The obsolete `ABEX-ORQEVIA-CodexSandbox-HoldStopped` task was removed with
+  Owner-approved UAC elevation. The Codex sandbox service and Copilot mDNS rule
+  remain absent.
+
 ### Known broken / open
 
-- Windows Time has a successful `sg.pool.ntp.org` observation and is within
-  roughly 0.06 seconds, but still reports `Leap Indicator: 3`. A forced resync
-  requires an approved UAC elevation.
-- The obsolete `ABEX-ORQEVIA-CodexSandbox-HoldStopped` task remains while its
-  Codex sandbox service and the Copilot mDNS rule are absent. Task removal also
-  requires UAC.
+- Seven byte-pinned signed-closure files still require a new signed
+  certification closure before their legacy names and compatibility lookup can
+  be removed.
 - Startup tasks remain user-logon triggered; pre-logon operation is not
   established.
 
