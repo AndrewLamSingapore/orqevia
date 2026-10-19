@@ -416,18 +416,23 @@ def canon(s):
   if n in {norm(k),*(norm(x) for x in vs)}:return k
  return re.sub(r'^(my|the|your)\s+','',n)
 def extract_fact(text):
- t=text.strip().rstrip('.!?')
- for p in [r'(?i)^(?:please\s+)?remember(?:\s+that)?\s+my\s+(.+?)\s+is\s+(.+)$',r'(?i)^my\s+(.+?)\s+is\s+(.+?)(?:\s*[,.]?\s*remember\s+this)?$',r'(?i)^remember\s+my\s+(.+?)\s+is\s+(.+)$']:
-  m=re.match(p,t)
-  if m:
-   k,v=canon(m.group(1)),m.group(2).strip().rstrip('.!?');return (k,v,'preference' if 'favorite' in k else 'fact') if k and v else None
+ t=text.strip().rstrip('.!?')[:4096];lower=t.lower()
+ prefixes=('please remember that my ','please remember my ','remember that my ','remember my ','my ')
+ prefix=next((value for value in prefixes if lower.startswith(value)),None)
+ if prefix is None:return None
+ body=t[len(prefix):]
+ for suffix in (', remember this',' remember this'):
+  if body.lower().endswith(suffix):body=body[:-len(suffix)].rstrip()
+ if ' is ' not in body:return None
+ k,v=body.split(' is ',1);k,v=canon(k),v.strip().rstrip('.!?')
+ return (k,v,'preference' if 'favorite' in k else 'fact') if k and v else None
  return None
 def recall_key(text):
- t=norm(text)
+ t=norm(text[:4096])
  for pre in ['do you know ','do you remember ','can you remember ','remind me of ','tell me ','please tell me ']:
   if t.startswith(pre):t=t[len(pre):]
- m=re.match(r'(?:what is|whats) my (.+)$',t)
- if m:return canon(m.group(1))
+ for pre in ('what is my ','whats my '):
+  if t.startswith(pre):return canon(t[len(pre):]) or None
  for k,vs in ALIASES.items():
   if any(x in t for x in {norm(k),*(norm(v) for v in vs)}):return k
  return None
@@ -1511,8 +1516,8 @@ async def orchestration_smoke():
   d=await ollama_post('/api/chat',{'model':DEEP_MODEL,'messages':[{'role':'system','content':BASE_SYSTEM},{'role':'user','content':brief}],'stream':False},900)
   content=(d.get('message') or {}).get('content','').strip()
   model_ok=bool(content)
- except Exception as e:
-  model_error=str(e)[:1200]
+ except Exception:
+  model_error='MODEL_EXECUTION_FAILED'
 
  safe_static="""Result
 Create an internal opportunity inventory and rank options by expected upside, effort, reversibility and time-to-value.
