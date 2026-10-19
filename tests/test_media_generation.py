@@ -87,4 +87,3 @@ def test_media_job_store_owner_scope_and_status_update(tmp_path):
     )
     store.update(job.request_id, completed)
     assert store.get(job.request_id, owner_id="owner-a")["status"] == "completed"
-

@@ -5,6 +5,7 @@ generation is an optional external capability and never inherits ORQEVIA agent
 tool authority. External submission requires explicit cloud data permission,
 charge acknowledgement and a bounded cost estimate.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,6 +20,7 @@ import uuid
 from contextlib import closing
 from pathlib import Path
 from typing import Any, Mapping, Protocol
+from .observability import traced
 
 
 MEDIA_OPERATIONS = frozenset({"image", "video", "audio", "workflow", "3d"})
@@ -171,7 +173,12 @@ class MediaJobRequest:
             raise MediaProviderError("INVALID_TASK_ID", pre_execution=True)
         if self.operation not in MEDIA_OPERATIONS:
             raise MediaProviderError("UNSUPPORTED_MEDIA_OPERATION", pre_execution=True)
-        if not isinstance(self.model_path, str) or not _MODEL_PATH.fullmatch(self.model_path) or ".." in self.model_path or "//" in self.model_path:
+        if (
+            not isinstance(self.model_path, str)
+            or not _MODEL_PATH.fullmatch(self.model_path)
+            or ".." in self.model_path
+            or "//" in self.model_path
+        ):
             raise MediaProviderError("INVALID_MODEL_PATH", pre_execution=True)
         if not isinstance(self.payload, Mapping):
             raise MediaProviderError("INVALID_MEDIA_PAYLOAD", pre_execution=True)
@@ -269,15 +276,20 @@ class MediaJobStore:
             )
             """
         )
-        connection.execute("CREATE INDEX IF NOT EXISTS media_jobs_owner_status ON media_jobs(owner_id, provider_id, status)")
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS media_jobs_owner_status ON media_jobs(owner_id, provider_id, status)"
+        )
         connection.execute("CREATE INDEX IF NOT EXISTS media_jobs_created ON media_jobs(created_at)")
         return connection
 
+    @traced("media.db.begin", {"component": "media", "operation": "db_begin"})
     def begin(self, request: MediaJobRequest, *, owner_id: str, provider_id: str) -> dict[str, Any]:
         digest = payload_digest(request.payload)
         now = utcnow()
         with closing(self._connect()) as connection, connection:
-            existing = connection.execute("SELECT * FROM media_jobs WHERE idempotency_key=?", (request.idempotency_key,)).fetchone()
+            existing = connection.execute(
+                "SELECT * FROM media_jobs WHERE idempotency_key=?", (request.idempotency_key,)
+            ).fetchone()
             if existing:
                 if (
                     existing["request_sha256"] != digest
@@ -307,7 +319,11 @@ class MediaJobStore:
                     now,
                 ),
             )
-            return dict(connection.execute("SELECT * FROM media_jobs WHERE idempotency_key=?", (request.idempotency_key,)).fetchone())
+            return dict(
+                connection.execute(
+                    "SELECT * FROM media_jobs WHERE idempotency_key=?", (request.idempotency_key,)
+                ).fetchone()
+            )
 
     def active_count(self, *, owner_id: str, provider_id: str) -> int:
         active = frozenset({"queued", "in_progress"})
@@ -327,6 +343,7 @@ class MediaJobStore:
             ).fetchone()
             return int(row["count"])
 
+    @traced("media.db.update", {"component": "media", "operation": "db_update"})
     def update(self, request_id: str, job: MediaJob) -> None:
         with closing(self._connect()) as connection, connection:
             cursor = connection.execute(
@@ -349,6 +366,7 @@ class MediaJobStore:
             if cursor.rowcount != 1:
                 raise MediaProviderError("JOB_NOT_FOUND", pre_execution=True)
 
+    @traced("media.db.submitted", {"component": "media", "operation": "db_submitted"})
     def set_submitted(self, idempotency_key: str, job: MediaJob) -> None:
         with closing(self._connect()) as connection, connection:
             cursor = connection.execute(
@@ -388,4 +406,3 @@ class MediaJobStore:
                 (request_id, owner_id),
             ).fetchone()
             return dict(row) if row else None
-

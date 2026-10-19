@@ -3,6 +3,7 @@
 Routes remain present but fail closed unless the optional provider is explicitly
 enabled and configured. No endpoint grants media tools to the 21 agents.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -146,4 +147,3 @@ async def media_cancel(request_id: str, authorization: str | None = Header(defau
         return await _service().cancel(request_id, owner_id=owner)
     except MediaProviderError as error:
         raise _http_error(error) from None
-

@@ -111,10 +111,12 @@ def test_api_provider_rejects_off_origin_status_and_cancel_urls():
     provider = HiggsfieldApiProvider(
         settings(),
         secret_resolver=lambda _: "id:secret",
-        transport=httpx.MockTransport(lambda request: httpx.Response(
-            200,
-            json={**submit_body(), "status_url": "https://evil.invalid/status"},
-        )),
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                json={**submit_body(), "status_url": "https://evil.invalid/status"},
+            )
+        ),
     )
     with pytest.raises(MediaProviderError, match="INVALID_PROVIDER_URL"):
         asyncio.run(provider.submit(media_request(), MediaEstimate(Decimal("0.01"))))
@@ -143,7 +145,9 @@ def test_api_provider_retries_status_with_backoff_and_maps_outputs():
     )
     job = asyncio.run(provider.status(REQUEST_ID, status_url=STATUS_URL))
     assert job.status == "completed"
-    assert job.outputs == ({"type": "image", "url": "https://cdn.example.com/result.png", "retention": "PROVIDER_MANAGED_AT_LEAST_7_DAYS"},)
+    assert job.outputs == (
+        {"type": "image", "url": "https://cdn.example.com/result.png", "retention": "PROVIDER_MANAGED_AT_LEAST_7_DAYS"},
+    )
     assert delays == [1]
 
 
@@ -169,14 +173,18 @@ def test_api_provider_cancel_requires_queued_state_and_returns_202():
 def test_service_uses_estimate_limits_and_durable_idempotency(tmp_path):
     class Provider:
         provider_id = "higgsfield"
+
         def __init__(self):
             self.estimates = 0
             self.submits = 0
+
         def health(self):
             return {"readiness": "READY"}
+
         async def estimate(self, request):
             self.estimates += 1
             return MediaEstimate(Decimal("0.09"), Decimal("1.5"))
+
         async def submit(self, request, estimate):
             self.submits += 1
             return MediaJob(
@@ -188,12 +196,26 @@ def test_service_uses_estimate_limits_and_durable_idempotency(tmp_path):
                 task_id=request.task_id,
                 estimated_usd=estimate.usd,
             )
+
         async def status(self, request_id, *, status_url=None):
-            return MediaJob(request_id=request_id, status="completed", provider="higgsfield",
-                            operation="image", model_path="official/model/path", task_id="task-higgsfield-1")
+            return MediaJob(
+                request_id=request_id,
+                status="completed",
+                provider="higgsfield",
+                operation="image",
+                model_path="official/model/path",
+                task_id="task-higgsfield-1",
+            )
+
         async def cancel(self, request_id, *, cancel_url=None):
-            return MediaJob(request_id=request_id, status="canceled", provider="higgsfield",
-                            operation="image", model_path="official/model/path", task_id="task-higgsfield-1")
+            return MediaJob(
+                request_id=request_id,
+                status="canceled",
+                provider="higgsfield",
+                operation="image",
+                model_path="official/model/path",
+                task_id="task-higgsfield-1",
+            )
 
     provider = Provider()
     service = HiggsfieldMediaService(
@@ -273,4 +295,3 @@ def test_media_routes_require_owner_auth(monkeypatch):
     response = client.get("/media/v1/health", headers={"Authorization": "Bearer fixture-owner-token"})
     assert response.status_code == 200
     assert response.json()["provider"] == "higgsfield"
-

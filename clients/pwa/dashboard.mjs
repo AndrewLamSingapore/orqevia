@@ -82,7 +82,7 @@ if(typeof document!=='undefined') {
   function invalidatePending(){sessionEpoch++;pending?.abort();pending=null;}
   const text=(id,value)=>{if($(id))$(id).textContent=value;};
   function view(name,updateRoute=true){
-    const known=new Set([...document.querySelectorAll('[data-view]')].map(x=>x.dataset.view));if(!known.has(name))name='home';
+    const known=new Set([...document.querySelectorAll('[data-view]')].map(x=>x.dataset.view));known.add('objective');if(!known.has(name))name='home';
     if(updateRoute){const url=new URL(location.href);url.searchParams.set('view',name);history.pushState({},'',url);}
     const intelligence=['intelligence','gods-eye'].includes(name);
     $('intelligence-workspace')?.classList.toggle('hidden',!intelligence);

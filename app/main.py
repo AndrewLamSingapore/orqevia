@@ -1423,7 +1423,7 @@ async def execute_orchestrated_job(run_id,item):
  jid=create_agent_job(run_id,item,route.specialist,brief,ORCH_MAX_ATTEMPTS)
  if route.specialist=='data' and not evidence_context:
   return mark_evidence_blocked(item,run_id,jid,"DATA_REQUIRED: no verified local CSV/JSON dataset exists in PRIME.",route.specialist)
- started=time.monotonic();attempts=0;retries=0;aid=None
+ started=time.monotonic();attempts=0;retries=0;aid=None;feedback=''
  try:
   while attempts<ORCH_MAX_ATTEMPTS:
    attempts+=1;update_agent_job(jid,attempts=attempts,last_status=f'attempt {attempts} running')

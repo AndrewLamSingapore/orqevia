@@ -1,0 +1,55 @@
+[project]
+name = "orqevia-runtime-toolchain"
+version = "0.0.0"
+description = "Reproducible development and verification environment for ORQEVIA"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "cryptography==50.0.2",
+    "fastapi==0.116.1",
+    "httpx==0.28.1",
+    "opentelemetry-api==1.45.1",
+    "opentelemetry-exporter-otlp-proto-http==1.45.1",
+    "opentelemetry-sdk==1.45.1",
+    "pandas==2.3.1",
+    "psutil==7.2.2",
+    "pypdf==6.19.0",
+    "python-docx==1.2.0",
+    "python-multipart==0.0.31",
+    "uvicorn[standard]==0.35.0",
+    "wasmtime==48.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.17.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = [
+    ".git",
+    ".pytest_cache",
+    ".pytest-tmp-*",
+    ".venv",
+    "__pycache__",
+    "clients/dell/build",
+    "node_modules",
+]
+
+[tool.ruff.lint]
+select = ["E9", "F"]
+# Legacy modules intentionally contain compact single-line functions and dynamic
+# imports. These baseline exclusions keep the deterministic runtime untouched;
+# scripts/check_ruff_changed.py applies the full E9/F rules to every changed file.
+ignore = ["F401", "F403", "F405", "F811", "F841"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

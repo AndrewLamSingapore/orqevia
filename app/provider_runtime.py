@@ -10,6 +10,7 @@ from typing import Protocol, AsyncIterator
 from urllib.parse import urlsplit
 import httpx
 from .provider_circuit import CircuitRejected
+from .observability import trace_headers
 
 
 @dataclass(frozen=True)
@@ -164,7 +165,8 @@ class ChatCompletionProvider:
         body=self.request_body(model,messages,output_tokens)
         try:
             async with httpx.AsyncClient(transport=self.transport,timeout=30,follow_redirects=False) as client:
-                async with client.stream('POST',self.endpoint,headers={'Authorization':'Bearer '+key},json=body) as response:
+                request_headers=trace_headers({'Authorization':'Bearer '+key})
+                async with client.stream('POST',self.endpoint,headers=request_headers,json=body) as response:
                     if response.status_code>=300:
                         try:delay=max(0,min(30,float(response.headers.get('Retry-After','0'))))
                         except ValueError:delay=0

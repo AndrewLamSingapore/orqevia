@@ -305,7 +305,7 @@ class OfflineSurvival:
                 else:
                     disposition[name] = "DEGRADED"
         return {
-            "mode": f"OFFLINE — LOCAL INTELLIGENCE" if self._state is CapabilityState.OFFLINE else self._state.value,
+            "mode": "OFFLINE — LOCAL INTELLIGENCE" if self._state is CapabilityState.OFFLINE else self._state.value,
             "internet": "AVAILABLE" if self._network_available is True else "UNAVAILABLE" if self._network_available is False else "UNKNOWN",
             "cloud_model": "AVAILABLE" if self._provider_available is True else "UNAVAILABLE" if self._provider_available is False else "UNKNOWN",
             "local_model": "READY" if local_model_ready else "UNVERIFIED",

@@ -36,7 +36,7 @@ Session validation rejects superseded responses. Task, history, upload and
 artifact rendering carry the originating client and session generation, so an
 account change cannot render an earlier account's late response. Ordinary
 same-client refresh preserves its owned result. The functional candidate uses
-shell `jarvis-shell-v16` while preserving `/pwa/`, the manifest and icon identity,
+shell `orqevia-shell-v28` while preserving `/pwa/`, the manifest and icon identity,
 cookie names and existing client-scoped IndexedDB references. A shell update is
 source readiness until an installed browser/PWA update is observed.
 
@@ -69,6 +69,26 @@ node clients/pwa/tests.mjs
 11 tests cover retry identity, result selection, bounded SSE, retry bounds, cookie/CSRF request shape, artifact corruption, task/protocol mismatch, safe error presentation, offline-cache scope, atomic-storage source and explicit voice consent. All 11 passed on the available Windows runtime. Browser and physical-phone acceptance are performed separately against the integrated backend; these Node tests do not claim microphone/device qualification.
 
 Focused candidate continuation tests: `node clients/pwa/followup-tests.mjs` — 6 passing tests for terminal/revision preconditions, exact request schema, task/revision-bound retry identity, wrong acknowledgment rejection, non-retried conflicts and explicit composer/voice integration. These are not a deployed or physical-device acceptance claim. The shell cache version is incremented for the updated composer/core assets.
+
+## Browser assurance
+
+`clients/pwa` pins Node 22 in `.nvmrc`, pnpm 12.14.0 in `package.json`,
+Playwright 1.63.0 in the lockfile, and the service-worker shell as
+`orqevia-shell-v28`.
+
+```powershell
+corepack pnpm install --frozen-lockfile
+corepack pnpm exec playwright install chromium firefox webkit
+corepack pnpm test:unit
+corepack pnpm test:browser
+```
+
+The Playwright suite runs Chromium, Firefox and WebKit against a loopback-only
+test server. It verifies desktop and mobile layout, primary navigation,
+accessible labels, manifest/service-worker cache primitives, offline shell
+behavior where the Playwright engines support it, and a complete mocked
+objective submission. Traces, videos, screenshots and JSON/HTML reports are
+written under `browser-results/`, which is intentionally excluded from Git.
 
 `make-icons.mjs` reproduces every committed `icons/orqevia-command-v1-*.png` (the ORQEVIA command install icon: dark master, PWA sizes, maskable, apple-touch, favicons and the light variant) from pure geometry, and assembles `icons/favicon.ico` — without external assets or dependencies. `icons/orqevia-command-v1.svg` carries the same geometry as the vector source. `icons/orqevia-official-v1-192.png` is the in-app ORQEVIA brand mark (unchanged by the icon script). None of this is required at runtime.
 

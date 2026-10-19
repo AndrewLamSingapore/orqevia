@@ -5,6 +5,7 @@ Higgsfield CLI is treated as a bounded, read-only discovery surface and is never
 used as a general command runner. This module is not registered as an agent tool
 and no caller can fall through from this provider to an unrelated model.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -24,7 +25,6 @@ import httpx
 
 from .action_records import ActionRecord, action_ledger
 from .media_generation import (
-    ACTIVE_STATUSES,
     TERMINAL_STATUSES,
     MediaEstimate,
     MediaJob,
@@ -34,6 +34,7 @@ from .media_generation import (
     decimal_value,
     utcnow,
 )
+from .observability import record_counter, span, trace_headers
 from .secret_refs import SecretUnavailable, resolve_secret
 
 
@@ -243,7 +244,7 @@ class HiggsfieldApiProvider:
         }
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
-        return headers
+        return trace_headers(headers)
 
     async def _json_response(self, response: httpx.Response) -> dict[str, Any]:
         correlation = _bounded_correlation(response.headers.get("x-correlation-id"))
@@ -264,9 +265,15 @@ class HiggsfieldApiProvider:
             raise MediaProviderError("DATA_LOCALITY", pre_execution=True)
         headers = self._headers()
         try:
-            async with self._client() as client:
-                response = await client.post(f"/estimate/{request.model_path}", headers=headers, json=request.payload)
-                body = await self._json_response(response)
+            with span(
+                "media.provider",
+                {"component": "media", "provider": self.provider_id, "operation": "estimate"},
+            ):
+                async with self._client() as client:
+                    response = await client.post(
+                        f"/estimate/{request.model_path}", headers=headers, json=request.payload
+                    )
+                    body = await self._json_response(response)
         except httpx.TimeoutException:
             raise MediaProviderError("PROVIDER_TIMEOUT") from None
         except httpx.TransportError:
@@ -289,9 +296,13 @@ class HiggsfieldApiProvider:
         last: MediaProviderError | None = None
         for attempt in range(2):
             try:
-                async with self._client() as client:
-                    response = await client.post(f"/{request.model_path}", headers=headers, json=request.payload)
-                    body = await self._json_response(response)
+                with span(
+                    "media.provider",
+                    {"component": "media", "provider": self.provider_id, "operation": "submit"},
+                ):
+                    async with self._client() as client:
+                        response = await client.post(f"/{request.model_path}", headers=headers, json=request.payload)
+                        body = await self._json_response(response)
                 request_id = str(body.get("request_id") or "")
                 if not _UUID.fullmatch(request_id):
                     raise MediaProviderError(
@@ -324,19 +335,25 @@ class HiggsfieldApiProvider:
                 last = MediaProviderError("PROVIDER_TIMEOUT", retryable=True)
             except httpx.TransportError:
                 last = MediaProviderError("PROVIDER_TRANSPORT_FAILURE", retryable=True)
-            await self.sleep(1.5 ** attempt)
+            await self.sleep(1.5**attempt)
         raise last or MediaProviderError("PROVIDER_FAILURE")
 
     async def status(self, request_id: str, *, status_url: str | None = None) -> MediaJob:
         if not _UUID.fullmatch(request_id):
             raise MediaProviderError("INVALID_REQUEST_ID", pre_execution=True)
-        url = _https_url(status_url or f"{self.settings.api_base_url}/requests/{request_id}/status", host="api.higgsfield.ai")
+        url = _https_url(
+            status_url or f"{self.settings.api_base_url}/requests/{request_id}/status", host="api.higgsfield.ai"
+        )
         last: MediaProviderError | None = None
         for attempt in range(3):
             try:
-                async with self._client() as client:
-                    response = await client.get(url, headers=self._headers())
-                    body = await self._json_response(response)
+                with span(
+                    "media.provider",
+                    {"component": "media", "provider": self.provider_id, "operation": "status"},
+                ):
+                    async with self._client() as client:
+                        response = await client.get(url, headers=self._headers())
+                        body = await self._json_response(response)
                 if str(body.get("request_id")) != request_id:
                     raise MediaProviderError("PROVIDER_REQUEST_ID_MISMATCH")
                 status = body.get("status")
@@ -350,7 +367,11 @@ class HiggsfieldApiProvider:
                     model_path="",
                     task_id="",
                     outputs=_media_outputs(body),
-                    error_code="PROVIDER_GENERATION_FAILED" if status == "failed" else "PROVIDER_CONTENT_REJECTED" if status == "nsfw" else None,
+                    error_code="PROVIDER_GENERATION_FAILED"
+                    if status == "failed"
+                    else "PROVIDER_CONTENT_REJECTED"
+                    if status == "nsfw"
+                    else None,
                     correlation_id=_bounded_correlation(response.headers.get("x-correlation-id")),
                     updated_at=utcnow(),
                     status_url=url,
@@ -363,7 +384,7 @@ class HiggsfieldApiProvider:
                 last = MediaProviderError("PROVIDER_TIMEOUT", retryable=True)
             except httpx.TransportError:
                 last = MediaProviderError("PROVIDER_TRANSPORT_FAILURE", retryable=True)
-            await self.sleep(2 ** attempt)
+            await self.sleep(2**attempt)
         raise last or MediaProviderError("PROVIDER_FAILURE")
 
     async def cancel(self, request_id: str, *, cancel_url: str | None = None) -> MediaJob:
@@ -372,10 +393,16 @@ class HiggsfieldApiProvider:
         current = await self.status(request_id)
         if current.status != "queued":
             raise MediaProviderError("JOB_NOT_CANCELABLE", pre_execution=True)
-        url = _https_url(cancel_url or f"{self.settings.api_base_url}/requests/{request_id}/cancel", host="api.higgsfield.ai")
+        url = _https_url(
+            cancel_url or f"{self.settings.api_base_url}/requests/{request_id}/cancel", host="api.higgsfield.ai"
+        )
         try:
-            async with self._client() as client:
-                response = await client.post(url, headers=self._headers())
+            with span(
+                "media.provider",
+                {"component": "media", "provider": self.provider_id, "operation": "cancel"},
+            ):
+                async with self._client() as client:
+                    response = await client.post(url, headers=self._headers())
             if response.status_code != 202:
                 try:
                     body = response.json()
@@ -469,15 +496,39 @@ class HiggsfieldCliDiscovery:
     @staticmethod
     def _safe_env() -> dict[str, str]:
         allowed = {
-            "USERPROFILE", "APPDATA", "LOCALAPPDATA", "TEMP", "TMP",
-            "SYSTEMROOT", "WINDIR", "PATH", "PATHEXT", "HOME",
-            "USERNAME", "USERDOMAIN", "USERDOMAIN_ROAMINGPROFILE", "SYSTEMDRIVE",
-            "PROGRAMDATA", "PROGRAMFILES", "PROGRAMFILES(X86)",
-            "COMMONPROGRAMFILES", "COMMONPROGRAMFILES(X86)",
-            "COMSPEC", "ALLUSERSPROFILE", "PUBLIC", "HOMEDRIVE", "HOMEPATH",
-            "PROCESSOR_ARCHITECTURE", "NUMBER_OF_PROCESSORS",
-            "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
-            "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE",
+            "USERPROFILE",
+            "APPDATA",
+            "LOCALAPPDATA",
+            "TEMP",
+            "TMP",
+            "SYSTEMROOT",
+            "WINDIR",
+            "PATH",
+            "PATHEXT",
+            "HOME",
+            "USERNAME",
+            "USERDOMAIN",
+            "USERDOMAIN_ROAMINGPROFILE",
+            "SYSTEMDRIVE",
+            "PROGRAMDATA",
+            "PROGRAMFILES",
+            "PROGRAMFILES(X86)",
+            "COMMONPROGRAMFILES",
+            "COMMONPROGRAMFILES(X86)",
+            "COMSPEC",
+            "ALLUSERSPROFILE",
+            "PUBLIC",
+            "HOMEDRIVE",
+            "HOMEPATH",
+            "PROCESSOR_ARCHITECTURE",
+            "NUMBER_OF_PROCESSORS",
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "ALL_PROXY",
+            "NO_PROXY",
+            "SSL_CERT_FILE",
+            "SSL_CERT_DIR",
+            "REQUESTS_CA_BUNDLE",
             "NODE_EXTRA_CA_CERTS",
         }
         return {key: value for key, value in os.environ.items() if key in allowed}
@@ -519,12 +570,20 @@ class HiggsfieldCliDiscovery:
         if not isinstance(models, list) or not isinstance(workflows, list):
             raise MediaProviderError("CLI_RESPONSE_INVALID")
         model_rows = [
-            {"display_name": str(item.get("display_name", ""))[:200], "job_type": str(item.get("job_type", ""))[:100], "type": str(item.get("type", ""))[:20]}
+            {
+                "display_name": str(item.get("display_name", ""))[:200],
+                "job_type": str(item.get("job_type", ""))[:100],
+                "type": str(item.get("type", ""))[:20],
+            }
             for item in models
             if isinstance(item, dict) and _CLI_NAME.fullmatch(str(item.get("job_type", "")))
         ]
         workflow_rows = [
-            {"display_name": str(item.get("display_name", ""))[:200], "job_type": str(item.get("job_type", ""))[:100], "type": str(item.get("type", ""))[:20]}
+            {
+                "display_name": str(item.get("display_name", ""))[:200],
+                "job_type": str(item.get("job_type", ""))[:100],
+                "type": str(item.get("type", ""))[:20],
+            }
             for item in workflows
             if isinstance(item, dict) and _CLI_NAME.fullmatch(str(item.get("job_type", "")))
         ]
@@ -585,7 +644,17 @@ class HiggsfieldMediaService:
         self.discovery = discovery
         self.store = store or MediaJobStore(settings.database_path)
 
-    def _audit(self, action: str, request_id: str | None, task_id: str, *, phase: str, owner_id: str, model_path: str, **details: Any) -> None:
+    def _audit(
+        self,
+        action: str,
+        request_id: str | None,
+        task_id: str,
+        *,
+        phase: str,
+        owner_id: str,
+        model_path: str,
+        **details: Any,
+    ) -> None:
         record = ActionRecord(
             task_id=task_id or (request_id or "media"),
             agent_id=owner_id,
@@ -624,10 +693,26 @@ class HiggsfieldMediaService:
             estimate = await self.provider.estimate(request)
             if estimate.usd > self.settings.max_cost_usd or estimate.usd > request.max_cost_usd:
                 raise MediaProviderError("COST_LIMIT_EXCEEDED", pre_execution=True)
-            self._audit("media.estimate", None, request.task_id, phase="completed", owner_id=owner_id, model_path=request.model_path, estimated_usd=str(estimate.usd))
+            self._audit(
+                "media.estimate",
+                None,
+                request.task_id,
+                phase="completed",
+                owner_id=owner_id,
+                model_path=request.model_path,
+                estimated_usd=str(estimate.usd),
+            )
             return estimate
         except MediaProviderError as error:
-            self._audit("media.estimate", None, request.task_id, phase="failed", owner_id=owner_id, model_path=request.model_path, error=error.code)
+            self._audit(
+                "media.estimate",
+                None,
+                request.task_id,
+                phase="failed",
+                owner_id=owner_id,
+                model_path=request.model_path,
+                error=error.code,
+            )
             raise
 
     def _public_or_existing(self, row: Mapping[str, Any]) -> dict[str, Any]:
@@ -657,10 +742,16 @@ class HiggsfieldMediaService:
         existing = self.store.get_by_idempotency(request.idempotency_key, owner_id=owner_id)
         if existing and existing["request_id"]:
             return self._public_or_existing(existing)
-        if self.store.active_count(owner_id=owner_id, provider_id=self.provider_id()) >= self.settings.max_concurrent_jobs:
+        if (
+            self.store.active_count(owner_id=owner_id, provider_id=self.provider_id())
+            >= self.settings.max_concurrent_jobs
+        ):
             raise MediaProviderError("MAX_CONCURRENT_JOBS", pre_execution=True)
         since = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
-        if self.store.count_since(owner_id=owner_id, provider_id=self.provider_id(), since=since) >= self.settings.max_jobs_per_day:
+        if (
+            self.store.count_since(owner_id=owner_id, provider_id=self.provider_id(), since=since)
+            >= self.settings.max_jobs_per_day
+        ):
             raise MediaProviderError("DAILY_JOB_LIMIT", pre_execution=True)
         estimate = await self.provider.estimate(request)
         if estimate.usd > self.settings.max_cost_usd or estimate.usd > request.max_cost_usd:
@@ -671,14 +762,45 @@ class HiggsfieldMediaService:
         try:
             job = await self.provider.submit(request, estimate)
             self.store.set_submitted(request.idempotency_key, job)
-            self._audit("media.submit", job.request_id, request.task_id, phase="completed", owner_id=owner_id, model_path=request.model_path, estimated_usd=str(estimate.usd))
+            self._audit(
+                "media.submit",
+                job.request_id,
+                request.task_id,
+                phase="completed",
+                owner_id=owner_id,
+                model_path=request.model_path,
+                estimated_usd=str(estimate.usd),
+            )
             self.store.update(job.request_id, job)
+            record_counter(
+                "orqevia.media.jobs",
+                1,
+                {"provider": self.provider_id(), "operation": request.operation, "status": job.status},
+            )
             return {
                 **job.as_public_dict(),
                 "idempotency_key": request.idempotency_key,
             }
         except MediaProviderError as error:
-            self._audit("media.submit", None, request.task_id, phase="failed", owner_id=owner_id, model_path=request.model_path, error=error.code)
+            record_counter(
+                "orqevia.media.jobs",
+                1,
+                {
+                    "provider": self.provider_id(),
+                    "operation": request.operation,
+                    "status": "ERROR",
+                    "error_code": error.code,
+                },
+            )
+            self._audit(
+                "media.submit",
+                None,
+                request.task_id,
+                phase="failed",
+                owner_id=owner_id,
+                model_path=request.model_path,
+                error=error.code,
+            )
             raise
 
     async def status(self, request_id: str, *, owner_id: str) -> dict[str, Any]:
@@ -727,5 +849,12 @@ class HiggsfieldMediaService:
             cancel_url=row.get("cancel_url"),
         )
         self.store.update(request_id, job)
-        self._audit("media.cancel", request_id, row["task_id"], phase="completed", owner_id=owner_id, model_path=row["model_path"])
+        self._audit(
+            "media.cancel",
+            request_id,
+            row["task_id"],
+            phase="completed",
+            owner_id=owner_id,
+            model_path=row["model_path"],
+        )
         return job.as_public_dict()
