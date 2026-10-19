@@ -18,15 +18,25 @@ import time
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
-from opentelemetry import context, metrics, propagate, trace
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import SpanKind, Status, StatusCode
+try:
+    from opentelemetry import context, metrics, propagate, trace
+    from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.trace import SpanKind, Status, StatusCode
+except ImportError:
+    context = metrics = propagate = trace = None
+    OTLPMetricExporter = OTLPSpanExporter = None
+    MeterProvider = PeriodicExportingMetricReader = Resource = None
+    TracerProvider = BatchSpanProcessor = None
+    SpanKind = Status = StatusCode = None
+    _OTEL_AVAILABLE = False
+else:
+    _OTEL_AVAILABLE = True
 
 
 _SAFE_ATTRIBUTES = frozenset(
@@ -54,6 +64,17 @@ _TRACE_PROVIDER = None
 _METER_PROVIDER = None
 _COUNTERS: dict[str, Any] = {}
 _HISTOGRAMS: dict[str, Any] = {}
+
+
+class _NoopSpan:
+    def set_attribute(self, *_args, **_kwargs) -> None:
+        return None
+
+    def set_status(self, *_args, **_kwargs) -> None:
+        return None
+
+    def record_exception(self, *_args, **_kwargs) -> None:
+        return None
 
 
 @dataclass(frozen=True)
@@ -119,22 +140,30 @@ def _safe_attributes(attributes: Mapping[str, Any] | None) -> dict[str, Any]:
 
 
 def tracer():
-    return _TRACER or trace.get_tracer("orqevia.noop")
+    if _TRACER is not None:
+        return _TRACER
+    return trace.get_tracer("orqevia.noop") if trace is not None else None
 
 
 def meter():
-    return _METER or metrics.get_meter("orqevia.noop")
+    if _METER is not None:
+        return _METER
+    return metrics.get_meter("orqevia.noop") if metrics is not None else None
 
 
 @contextmanager
 def span(name: str, attributes: Mapping[str, Any] | None = None):
     current = tracer()
+    if current is None:
+        yield _NoopSpan()
+        return
     with current.start_as_current_span(name[:120], attributes=_safe_attributes(attributes)) as value:
         try:
             yield value
         except Exception as error:
-            value.record_exception(error)
-            value.set_status(Status(StatusCode.ERROR))
+            if Status is not None and StatusCode is not None:
+                value.record_exception(error)
+                value.set_status(Status(StatusCode.ERROR))
             raise
 
 
@@ -193,6 +222,8 @@ def record_duration(
 
 def trace_headers(headers: Mapping[str, str] | None = None) -> dict[str, str]:
     carrier = dict(headers or {})
+    if propagate is None:
+        return carrier
     try:
         propagate.inject(carrier)
     except Exception:
@@ -225,7 +256,7 @@ class ObservabilityMiddleware:
         self.duration = self.meter_instance.create_histogram("orqevia.http.server.duration", unit="ms")
 
     async def __call__(self, scope, receive, send):
-        if scope.get("type") != "http":
+        if scope.get("type") != "http" or not _OTEL_AVAILABLE:
             await self.app(scope, receive, send)
             return
         carrier = {key.decode("latin-1").lower(): value.decode("latin-1") for key, value in scope.get("headers", [])}
@@ -290,6 +321,12 @@ def install_observability(app, settings: ObservabilitySettings | None = None) ->
     settings = settings or ObservabilitySettings.from_env()
     if not settings.enabled:
         return {"status": "DISABLED", "network_probe_performed": False}
+    if not _OTEL_AVAILABLE:
+        return {
+            "status": "UNAVAILABLE",
+            "error": "OPENTELEMETRY_NOT_INSTALLED",
+            "network_probe_performed": False,
+        }
     try:
         endpoint = settings.validated_endpoint()
     except ValueError as error:

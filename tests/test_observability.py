@@ -138,3 +138,22 @@ def test_disabled_install_performs_no_network_probe():
     app = FastAPI()
     result = observability.install_observability(app, ObservabilitySettings(enabled=False))
     assert result == {"status": "DISABLED", "network_probe_performed": False}
+
+
+def test_missing_opentelemetry_degrades_to_noop(monkeypatch):
+    monkeypatch.setattr(observability, "_TRACER", None)
+    monkeypatch.setattr(observability, "_OTEL_AVAILABLE", False)
+    monkeypatch.setattr(observability, "trace", None)
+    monkeypatch.setattr(observability, "propagate", None)
+    with span("optional.noop", {"component": "rag"}) as current:
+        current.set_attribute("status", "OK")
+    assert trace_headers({"content-type": "application/json"}) == {"content-type": "application/json"}
+    result = observability.install_observability(
+        FastAPI(),
+        ObservabilitySettings(enabled=True),
+    )
+    assert result == {
+        "status": "UNAVAILABLE",
+        "error": "OPENTELEMETRY_NOT_INSTALLED",
+        "network_probe_performed": False,
+    }

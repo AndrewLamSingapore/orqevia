@@ -37,7 +37,6 @@ queue accounting or full-stack canary.
 | Boundary | Telemetry |
 |---|---|
 | FastAPI production entrypoint | HTTP method/route class/status, duration, error |
-| Reasoning model HTTP calls | outgoing `traceparent`/`tracestate` |
 | Local knowledge HTTP bridge | outgoing trace context |
 | Local RAG ingest/reindex/retrieve/answer | nested internal spans |
 | Ollama generation request | outgoing trace context |
@@ -45,6 +44,10 @@ queue accounting or full-stack canary.
 | Agent job worker | job execution span, count, duration, status |
 | Media provider calls | estimate/submit/status/cancel spans |
 | Media SQLite lifecycle | durable-operation spans |
+
+The protected verifier closure requires `app/provider_runtime.py` to remain
+byte-identical to its reviewed revision. Outbound trace propagation was therefore
+not added there; the protected file and its trust chain are unchanged.
 
 ## Privacy controls
 
