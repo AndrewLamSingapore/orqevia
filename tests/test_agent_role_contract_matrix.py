@@ -39,8 +39,8 @@ class FakeLedger:
 @pytest.fixture
 def dispatch_harness(monkeypatch):
     queue, ledger = FakeQueue(), FakeLedger()
-    monkeypatch.setenv("PRIME_SPINE_TOKEN", "fixture-owner-token")
-    monkeypatch.setenv("PRIME_REGISTRY_V1_ENABLED", "1")
+    monkeypatch.setenv("ORQEVIA_SPINE_TOKEN", "fixture-owner-token")
+    monkeypatch.setenv("ORQEVIA_REGISTRY_V1_ENABLED", "1")
     monkeypatch.setattr(compute_queue_api, "queue", queue)
     monkeypatch.setattr(compute_queue_api, "providers", lambda: [])
     monkeypatch.setattr(compute_catalog, "load_catalog", lambda: [])
@@ -104,7 +104,7 @@ def test_authentication_and_registry_switch_fail_before_enqueue(dispatch_harness
     client, queue, ledger = dispatch_harness
     payload = {"capability": "responsibility.a01", "objective": "Advise."}
     assert client.post("/api/agents/dispatch", json=payload).status_code == 401
-    monkeypatch.setenv("PRIME_REGISTRY_V1_ENABLED", "0")
+    monkeypatch.setenv("ORQEVIA_REGISTRY_V1_ENABLED", "0")
     response = client.post(
         "/api/agents/dispatch",
         headers={"Authorization": "Bearer fixture-owner-token"},

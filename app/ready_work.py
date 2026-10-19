@@ -206,9 +206,9 @@ def shared_ready_scheduler() -> ReadyWorkScheduler:
                     value = default
                 return max(1, min(maximum, value))
             _shared_scheduler = ReadyWorkScheduler(
-                max_parallel=bound("PRIME_READY_WORK_CONCURRENCY", 3, 8),
-                max_pending=bound("PRIME_READY_WORK_PENDING", 128, 1024),
-                memory_budget_mb=bound("PRIME_READY_WORK_MEMORY_MB", 8192, 32768),
+                max_parallel=bound("ORQEVIA_READY_WORK_CONCURRENCY", 3, 8),
+                max_pending=bound("ORQEVIA_READY_WORK_PENDING", 128, 1024),
+                memory_budget_mb=bound("ORQEVIA_READY_WORK_MEMORY_MB", 8192, 32768),
             )
         return _shared_scheduler
 
@@ -229,7 +229,7 @@ def run_ready_work(items: list[WorkItem], *, max_parallel: int = 2,
     running = {}
     held_writes: set[str] = set()
     deferred: dict[str, int] = {item.id: 0 for item in items}
-    if scheduler is None and os.getenv("PRIME_SHARED_READY_WORK_ENABLED", "0") == "1":
+    if scheduler is None and os.getenv("ORQEVIA_SHARED_READY_WORK_ENABLED", "0") == "1":
         scheduler = shared_ready_scheduler()
     scope = nullcontext(scheduler) if scheduler else ThreadPoolExecutor(
         max_workers=max_parallel, thread_name_prefix="prime-ready")

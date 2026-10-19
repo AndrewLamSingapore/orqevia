@@ -20,8 +20,8 @@ NOW = datetime(2026, 10, 7, 1, 0, tzinfo=timezone.utc)
 
 @pytest.fixture
 def setup(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', AUTH[7:])
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path / 'does-not-exist'))
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', AUTH[7:])
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path / 'does-not-exist'))
     monkeypatch.setattr(observation, '_now', lambda: NOW)
     entry = {'id': 'hf-fixture', 'model': 'fixture/model:provider',
              'provider_kind': 'huggingface', 'enabled': True,
@@ -57,14 +57,14 @@ def _lens_fixture():
         'job_completed_at': '2026-10-07T00:59:59+00:00'}
     _digest(attempt)
     value = {'record_id': f'objective:{task_id}:r0', 'task_id': task_id, 'revision': 0,
-        'source': 'PRIME_OBJECTIVE_STORE', 'integrity': 'VALID', 'currentness': 'CURRENT',
+        'source': 'ORQEVIA_OBJECTIVE_STORE', 'integrity': 'VALID', 'currentness': 'CURRENT',
         'verification': 'UNVERIFIED', 'result_state': 'COMPLETED',
         'observed': {'task_id': task_id, 'revision': 0, 'agent_ids': ['a20'],
             'execution_state': 'COMPLETED', 'inference_attempts': {
                 'schema_version': 'jarvis.inference-attempts.v1', 'source': 'COMPUTE_LEDGER',
                 'verification': 'UNVERIFIED', 'digest_scope': 'SANITIZED_PROJECTION_NOT_SIGNATURE',
                 'status': 'OBSERVED', 'attempts': [attempt]}},
-        'proof': {'producer': 'PRIME_OBJECTIVE_STORE', 'captured_at': '2026-10-07T00:59:59+00:00',
+        'proof': {'producer': 'ORQEVIA_OBJECTIVE_STORE', 'captured_at': '2026-10-07T00:59:59+00:00',
             'currentness_basis': 'OBJECTIVE_SNAPSHOT_EQUALITY', 'time_freshness': 'UNKNOWN',
             'unproven': ['independent_claim_verification', 'production_acceptance',
                          'source_revision_binding', 'runtime_image_binding']}}

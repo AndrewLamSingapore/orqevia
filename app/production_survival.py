@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .offline_survival import OfflineSurvival, OperationRejected
 from .offline_survival import DependencyClass
 from .memory import MemoryStore
+from .path_migration import migrate_legacy_database
 
 
 class DeferredRequest(BaseModel):
@@ -55,7 +56,7 @@ _memory_path: Path | None = None
 
 
 def _db_path() -> Path:
-    root = Path(os.getenv("PRIME_DATA_DIR", "/data").strip() or "/data")
+    root = Path(os.getenv("ORQEVIA_DATA_DIR", "/data").strip() or "/data")
     return root / "offline-queue.db"
 
 
@@ -73,7 +74,8 @@ def runtime() -> OfflineSurvival:
 def memory() -> MemoryStore:
     """Return governed memory on the same durable external data volume."""
     global _memory, _memory_path
-    path = Path(os.getenv("PRIME_MEMORY_DB", str(_db_path().parent / "jarvis-memory.db")))
+    path = Path(os.getenv("ORQEVIA_MEMORY_DB", str(_db_path().parent / "orqevia-memory.db")))
+    migrate_legacy_database(path, "jarvis-memory.db")
     with _lock:
         if _memory is None or _memory_path != path:
             _memory = MemoryStore(str(path))
@@ -95,7 +97,7 @@ def _probe(url: str) -> bool | None:
 
 
 def _allowlist() -> set[str]:
-    return {item.strip() for item in os.getenv("PRIME_SURVIVAL_FETCH_ALLOWLIST", "").split(",") if item.strip()}
+    return {item.strip() for item in os.getenv("ORQEVIA_SURVIVAL_FETCH_ALLOWLIST", "").split(",") if item.strip()}
 
 
 def _fetch_receipt(operation) -> dict[str, Any]:
@@ -126,8 +128,8 @@ def _fetch_receipt(operation) -> dict[str, Any]:
 
 def capability_status() -> dict[str, Any]:
     survival = runtime()
-    network = _probe(os.getenv("PRIME_SURVIVAL_NETWORK_PROBE_URL", "").strip())
-    cloud = _probe(os.getenv("PRIME_SURVIVAL_CLOUD_PROBE_URL", "").strip())
+    network = _probe(os.getenv("ORQEVIA_SURVIVAL_NETWORK_PROBE_URL", "").strip())
+    cloud = _probe(os.getenv("ORQEVIA_SURVIVAL_CLOUD_PROBE_URL", "").strip())
     # The state machine needs booleans. Unknown probes are reported as unknown and
     # must not manufacture ONLINE; retain the last deliberate state instead.
     if network is not None and cloud is not None:
@@ -135,7 +137,8 @@ def capability_status() -> dict[str, Any]:
 
     ollama = _probe(os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/") + "/api/tags")
     data = _db_path().parent
-    memory_path = Path(os.getenv("PRIME_MEMORY_DB", str(data / "jarvis-memory.db")))
+    memory_path = Path(os.getenv("ORQEVIA_MEMORY_DB", str(data / "orqevia-memory.db")))
+    migrate_legacy_database(memory_path, "jarvis-memory.db")
     memory_ready = False
     if memory_path.is_file():
         try:
@@ -197,13 +200,13 @@ def build_router(authorize) -> APIRouter:
     @router.post("/reconcile")
     def reconcile():
         survival = runtime()
-        network = _probe(os.getenv("PRIME_SURVIVAL_NETWORK_PROBE_URL", "").strip())
-        cloud = _probe(os.getenv("PRIME_SURVIVAL_CLOUD_PROBE_URL", "").strip())
+        network = _probe(os.getenv("ORQEVIA_SURVIVAL_NETWORK_PROBE_URL", "").strip())
+        cloud = _probe(os.getenv("ORQEVIA_SURVIVAL_CLOUD_PROBE_URL", "").strip())
         if network is None or cloud is None:
             raise HTTPException(503, "capability probes are not fully configured")
         survival.observe(network=network, provider=cloud)
         expected_authority = os.getenv(
-            "PRIME_SURVIVAL_AUTHORITY_REF", "prime-epoch-20260919:owner"
+            "ORQEVIA_SURVIVAL_AUTHORITY_REF", "prime-epoch-20260919:owner"
         ).strip()
         results = survival.reconcile(
             executors={"web.research": _fetch_receipt},

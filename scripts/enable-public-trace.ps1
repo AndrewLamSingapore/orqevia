@@ -67,25 +67,25 @@ $existing = Read-EnvMap $EnvPath
 $secret = ""
 if (Test-Path $SecretFile) {
     $private = Read-EnvMap $SecretFile
-    if ($private.Contains('PRIME_PUBLIC_TRACE_SECRET')) {
-        $secret = [string]$private['PRIME_PUBLIC_TRACE_SECRET']
+    if ($private.Contains('ORQEVIA_PUBLIC_TRACE_SECRET')) {
+        $secret = [string]$private['ORQEVIA_PUBLIC_TRACE_SECRET']
     }
 }
-if (-not $secret -and $existing.Contains('PRIME_PUBLIC_TRACE_SECRET')) {
-    $secret = [string]$existing['PRIME_PUBLIC_TRACE_SECRET']
+if (-not $secret -and $existing.Contains('ORQEVIA_PUBLIC_TRACE_SECRET')) {
+    $secret = [string]$existing['ORQEVIA_PUBLIC_TRACE_SECRET']
 }
 if ($secret.Length -lt 32) {
-    throw "PRIME_PUBLIC_TRACE_SECRET is missing or too short."
+    throw "ORQEVIA_PUBLIC_TRACE_SECRET is missing or too short."
 }
 
 $values = @{
-    PRIME_IMAGE = $PrimeImage
-    PRIME_PUBLIC_AGENT_TRACE = "0"
-    PRIME_PUBLIC_TRACE_RELAY_URL = $RelayUrl
-    PRIME_PUBLIC_TRACE_PUBLISHER_ID = $PublisherId
-    PRIME_PUBLIC_TRACE_SECRET = $secret
-    PRIME_PUBLIC_TRACE_INTERVAL_SECONDS = "15"
-    PRIME_QUEUE_CONCURRENCY = "2"
+    ORQEVIA_IMAGE = $PrimeImage
+    ORQEVIA_PUBLIC_AGENT_TRACE = "0"
+    ORQEVIA_PUBLIC_TRACE_RELAY_URL = $RelayUrl
+    ORQEVIA_PUBLIC_TRACE_PUBLISHER_ID = $PublisherId
+    ORQEVIA_PUBLIC_TRACE_SECRET = $secret
+    ORQEVIA_PUBLIC_TRACE_INTERVAL_SECONDS = "15"
+    ORQEVIA_QUEUE_CONCURRENCY = "2"
 }
 Set-EnvValues -Path $EnvPath -Values $values
 Write-Host "JARVIS public-safe trace configuration written to .env. The source secret file was preserved."
@@ -96,7 +96,7 @@ if (-not $ApplyRestart) {
 }
 
 $effective = Read-EnvMap $EnvPath
-$primeDataVolume = if ($effective.Contains('PRIME_DATA_VOLUME') -and $effective['PRIME_DATA_VOLUME']) { [string]$effective['PRIME_DATA_VOLUME'] } else { 'prime-data' }
+$primeDataVolume = if ($effective.Contains('ORQEVIA_DATA_VOLUME') -and $effective['ORQEVIA_DATA_VOLUME']) { [string]$effective['ORQEVIA_DATA_VOLUME'] } else { 'prime-data' }
 $ollamaDataVolume = if ($effective.Contains('OLLAMA_DATA_VOLUME') -and $effective['OLLAMA_DATA_VOLUME']) { [string]$effective['OLLAMA_DATA_VOLUME'] } else { 'prime-ollama-data' }
 
 Push-Location $RepoRoot

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 _TMP = tempfile.TemporaryDirectory()
-os.environ["PRIME_DATA_DIR"] = _TMP.name
+os.environ["ORQEVIA_DATA_DIR"] = _TMP.name
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

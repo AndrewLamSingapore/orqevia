@@ -22,11 +22,11 @@ COMPLETED = '2026-10-08T00:00:03+00:00'
 @pytest.fixture
 def domain(tmp_path, monkeypatch):
     # Queue is constructed at import. No import until its temporary path exists.
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'fixture-queue.db'))
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'a' * 40)
-    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', 'sha256:' + 'b' * 64)
-    monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', 'ABEX')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'fixture-queue.db'))
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', 'a' * 40)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_IMAGE_DIGEST', 'sha256:' + 'b' * 64)
+    monkeypatch.setenv('ORQEVIA_INTERFACE_HOST_ID', 'ABEX')
     from app import objective_api
     def authenticate(token):
         if token != 'fixture-owner':

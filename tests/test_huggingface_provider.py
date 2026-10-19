@@ -29,9 +29,9 @@ def test_submit_job_preserves_declared_task_class():
 
 
 def test_infinite_model_residency_is_serialized_as_numeric_keep_alive(monkeypatch):
-    monkeypatch.setenv('PRIME_MODEL_KEEP_ALIVE', '-1')
+    monkeypatch.setenv('ORQEVIA_MODEL_KEEP_ALIVE', '-1')
     assert PrimeSettings.from_env().keep_alive == -1
-    monkeypatch.setenv('PRIME_MODEL_KEEP_ALIVE', '10m')
+    monkeypatch.setenv('ORQEVIA_MODEL_KEEP_ALIVE', '10m')
     assert PrimeSettings.from_env().keep_alive == '10m'
 
 
@@ -136,8 +136,8 @@ def test_qualified_hf_route_flows_through_governed_queue_and_outcome(monkeypatch
              'input_usd_million': '0.1', 'output_usd_million': '0.5'}
     catalog = tmp_path / 'catalog.json'
     catalog.write_text(json.dumps({'models': [entry]}))
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_PROVIDER_CATALOG', str(catalog))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_PROVIDER_CATALOG', str(catalog))
     monkeypatch.setenv('HF_TOKEN', 'fixture-secret')
     calls = []
 
@@ -217,10 +217,10 @@ def test_agent_dispatch_reaches_hf_through_governed_queue(monkeypatch, tmp_path)
              'input_usd_million': '0.1', 'output_usd_million': '0.5'}
     catalog = tmp_path / 'catalog.json'
     catalog.write_text(json.dumps({'models': [entry]}))
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_PROVIDER_CATALOG', str(catalog))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-owner')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_PROVIDER_CATALOG', str(catalog))
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-owner')
     monkeypatch.setenv('HF_TOKEN', 'fixture-secret')
     monkeypatch.setattr(compute, 'queue', JobQueue(tmp_path / 'queue.db',
                         QueuePolicy(global_concurrency=1, per_agent_concurrency=1,

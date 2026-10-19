@@ -98,7 +98,7 @@ def main() -> int:
     tasks = validate_tasks(json.loads(args.tasks.read_text(encoding="utf-8")) if args.tasks else DEFAULT_TASKS)
     available = [item["name"] for item in request_json(args.base_url.rstrip("/") + "/api/tags").get("models", [])]
     configured = []
-    for key in ("PRIME_FAST_MODEL", "PRIME_DEEP_MODEL"):
+    for key in ("ORQEVIA_FAST_MODEL", "ORQEVIA_DEEP_MODEL"):
         model = os.environ.get(key, "").strip()
         if model and model in available and model not in configured:
             configured.append(model)

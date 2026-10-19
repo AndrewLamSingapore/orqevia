@@ -7,14 +7,14 @@ control_plane:
   autonomous_actions: false
   physical_actuation: false
 node:
-  id_env: PRIME_NODE_ID
+  id_env: ORQEVIA_NODE_ID
   default_id: prime-node-01
-  role_env: PRIME_NODE_ROLE
+  role_env: ORQEVIA_NODE_ROLE
   default_role: control-compute
 persistence:
   prime_data:
     mount: /data
-    volume_env: PRIME_DATA_VOLUME
+    volume_env: ORQEVIA_DATA_VOLUME
     default_volume: prime-data
     durable: true
   model_data:
@@ -24,9 +24,9 @@ persistence:
     durable: true
 interfaces:
   local_control:
-    bind_env: PRIME_BIND_ADDRESS
+    bind_env: ORQEVIA_BIND_ADDRESS
     default_bind: 127.0.0.1
-    port_env: PRIME_PORT
+    port_env: ORQEVIA_PORT
     default_port: 8000
   health: /health
   control: /control

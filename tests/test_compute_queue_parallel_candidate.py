@@ -29,15 +29,15 @@ def candidate_global_concurrency(environment, profile):
 class QueueParallelCandidateTests(unittest.TestCase):
     def test_default_and_invalid_overrides_remain_one(self):
         profile = {"normal_concurrency": 2}
-        for environment in ({}, {"PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"},
-                            {"PRIME_LOCAL_ADMISSION_MODE": "measured", "PRIME_QUEUE_CONCURRENCY": "2"},
-                            {"PRIME_LOCAL_ADMISSION_MODE": "measured", "PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "bad"},
-                            {"PRIME_LOCAL_ADMISSION_MODE": "measured", "PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "1"}):
+        for environment in ({}, {"ORQEVIA_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"},
+                            {"ORQEVIA_LOCAL_ADMISSION_MODE": "measured", "ORQEVIA_QUEUE_CONCURRENCY": "2"},
+                            {"ORQEVIA_LOCAL_ADMISSION_MODE": "measured", "ORQEVIA_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "bad"},
+                            {"ORQEVIA_LOCAL_ADMISSION_MODE": "measured", "ORQEVIA_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "1"}):
             with self.subTest(environment=environment):
                 self.assertEqual(candidate_global_concurrency(environment, profile), 1)
 
     def test_requires_measured_envelope(self):
-        environment = {"PRIME_LOCAL_ADMISSION_MODE": "measured", "PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"}
+        environment = {"ORQEVIA_LOCAL_ADMISSION_MODE": "measured", "ORQEVIA_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"}
         for profile in (None, {}, {"normal_concurrency": 1}, {"normal_concurrency": True},
                         {"normal_concurrency": "2"}):
             with self.subTest(profile=profile):
@@ -45,7 +45,7 @@ class QueueParallelCandidateTests(unittest.TestCase):
         self.assertEqual(candidate_global_concurrency(environment, {"normal_concurrency": 2}), 2)
 
     def test_three_requires_matching_backend_and_measured_envelope(self):
-        environment = {"PRIME_LOCAL_ADMISSION_MODE": "measured", "PRIME_QUEUE_CONCURRENCY": "3", "OLLAMA_NUM_PARALLEL": "3"}
+        environment = {"ORQEVIA_LOCAL_ADMISSION_MODE": "measured", "ORQEVIA_QUEUE_CONCURRENCY": "3", "OLLAMA_NUM_PARALLEL": "3"}
         self.assertEqual(candidate_global_concurrency(environment, {"normal_concurrency": 3}), 3)
         self.assertEqual(candidate_global_concurrency(environment, {"normal_concurrency": 2}), 1)
         self.assertEqual(candidate_global_concurrency({**environment, "OLLAMA_NUM_PARALLEL": "2"},
@@ -53,7 +53,7 @@ class QueueParallelCandidateTests(unittest.TestCase):
 
     def test_fake_executor_two_distinct_agents_and_per_agent_limit(self):
         policy = QueuePolicy(global_concurrency=candidate_global_concurrency(
-            {"PRIME_LOCAL_ADMISSION_MODE": "measured", "PRIME_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"},
+            {"ORQEVIA_LOCAL_ADMISSION_MODE": "measured", "ORQEVIA_QUEUE_CONCURRENCY": "2", "OLLAMA_NUM_PARALLEL": "2"},
             {"normal_concurrency": 2}), per_agent_concurrency=1,
             local_ram_mb=8192, local_vram_mb=0)
         self.assertEqual(policy.global_concurrency, 2)

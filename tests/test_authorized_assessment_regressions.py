@@ -6,7 +6,7 @@ from tests.test_agent_cert_authority_chain import configured, runtime, collect
 
 @pytest.mark.parametrize('prior_authority', [False, True])
 def test_authorized_assessment_does_not_create_or_require_spine(runtime, prior_authority):
-    spine = runtime.root / 'prime-spine.db'
+    spine = runtime.root / 'orqevia-spine.db'
     assert not spine.exists()
     if prior_authority:
         prior = collect(runtime, 'authority:complete')

@@ -168,7 +168,7 @@ class OfflineSurvival:
         backoff_max_seconds: float = 1800.0,
     ) -> None:
         if db_path is None:
-            data = Path(os.getenv("PRIME_DATA_DIR", "/data").strip() or "/data")
+            data = Path(os.getenv("ORQEVIA_DATA_DIR", "/data").strip() or "/data")
             data.mkdir(parents=True, exist_ok=True)
             db_path = data / "offline-queue.db"
         self.db_path = str(db_path)

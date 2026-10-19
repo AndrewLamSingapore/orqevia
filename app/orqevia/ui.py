@@ -6,7 +6,7 @@ NOT mounted into the production ``app.main`` or ``app.interface_server`` apps.
 
 Run it separately, for example:
 
-    PRIME_BASE_URL=http://127.0.0.1:8000 uvicorn app.orqevia.ui:app --port 8100
+    ORQEVIA_BASE_URL=http://127.0.0.1:8000 uvicorn app.orqevia.ui:app --port 8100
 
 Security properties
 -------------------
@@ -29,7 +29,7 @@ from ..observability import PRIVACY_FASTAPI_TELEMETRY
 from .intelligence_api import router as intelligence_router
 
 STATIC_DIR = Path(__file__).with_name("static")
-UPSTREAM = os.getenv("PRIME_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+UPSTREAM = os.getenv("ORQEVIA_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 TIMEOUT = max(0.5, float(os.getenv("ORQEVIA_UPSTREAM_TIMEOUT", "3.0")))
 
 # Only these read-only paths may be proxied. Mutating endpoints are absent on

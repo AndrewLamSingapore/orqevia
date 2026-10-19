@@ -7,7 +7,7 @@ the exact 64-character hex `digest` of each profiled model; admission checks
 the live `/api/version` and `/api/tags` identity before reserving a model.
 
 Measured N=2 or N=3 additionally requires `prime.backend-memory.v2` in the
-same `PRIME_BACKEND_MEMORY_RECEIPT` operator-owned, atomically published,
+same `ORQEVIA_BACKEND_MEMORY_RECEIPT` operator-owned, atomically published,
 read-only file. The v2 receipt retains all v1 fields and adds:
 
 ```json

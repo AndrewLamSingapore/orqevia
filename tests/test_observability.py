@@ -141,7 +141,7 @@ def test_disabled_install_performs_no_network_probe():
 
 
 def test_production_apps_disable_native_fastapi_telemetry(tmp_path, monkeypatch):
-    monkeypatch.setenv("PRIME_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("ORQEVIA_LOCAL_AI_ROOT", str(tmp_path / "local-ai"))
     from app.interface_server import app as interface_app
     from app.local_knowledge_service import app as knowledge_app

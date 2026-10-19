@@ -29,6 +29,8 @@ def _golden_pwa_sessions():
 
 
 def _golden_session(golden, root, raw, client, role, *, device_raw, monkeypatch):
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(root))
+    # The pinned historical Golden module reads its immutable legacy env key.
     monkeypatch.setenv("PRIME_DATA_DIR", str(root))
     with closing(golden.database()) as db:
         db.execute(
@@ -90,6 +92,7 @@ def test_disposable_replay_keeps_golden_owner_member_authority(tmp_path, monkeyp
 
     capture_delta(base, final, package)
     replay_delta(base, package, restored, manifest_digest(package))
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(restored))
     monkeypatch.setenv("PRIME_DATA_DIR", str(restored))
     owner = SimpleNamespace(cookies={golden.COOKIE: owner_raw, golden.DEVICE_COOKIE: owner_device})
     member = SimpleNamespace(cookies={golden.COOKIE: member_raw, golden.DEVICE_COOKIE: member_device})
@@ -120,6 +123,7 @@ def test_byte_exact_replay_does_not_hide_golden_authority_incompatibility(tmp_pa
     capture_delta(base, final, package)
     replay_delta(base, package, restored, manifest_digest(package))
     assert _inventory(restored) == _inventory(final)
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(restored))
     monkeypatch.setenv("PRIME_DATA_DIR", str(restored))
     owner = SimpleNamespace(cookies={golden.COOKIE: owner_raw, golden.DEVICE_COOKIE: owner_device})
     with pytest.raises(golden.HTTPException) as denied:

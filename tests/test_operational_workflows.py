@@ -14,9 +14,9 @@ from app.artifact_factory import ArtifactFactory
 
 class OperationalWorkflowTests(unittest.TestCase):
     def setUp(self):
-        self.root=Path(os.environ['PRIME_DATA_DIR']).parent/('workflow-case-'+uuid.uuid4().hex)
+        self.root=Path(os.environ['ORQEVIA_DATA_DIR']).parent/('workflow-case-'+uuid.uuid4().hex)
         self.root.mkdir(parents=True)
-        self.env=patch.dict(os.environ,{'PRIME_DATA_DIR':str(self.root),'PRIME_SPINE_TOKEN':'workflow-owner-fixture'})
+        self.env=patch.dict(os.environ,{'ORQEVIA_DATA_DIR':str(self.root),'ORQEVIA_SPINE_TOKEN':'workflow-owner-fixture'})
         self.env.start()
         app=FastAPI();app.include_router(workflows.router)
         self.client=TestClient(app)

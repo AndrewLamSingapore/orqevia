@@ -10,9 +10,9 @@ from app.artifact_factory import ArtifactFactory
 
 @pytest.fixture
 def configured(tmp_path, monkeypatch):
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'd' * 40)
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', 'd' * 40)
     monkeypatch.setattr(dispatch, 'authenticate_owner', lambda _: None)
     monkeypatch.setattr(runtime_status, 'production_health',
                         lambda: {'observation': 'OBSERVED', 'http_status': 200,
@@ -36,7 +36,7 @@ def test_a19_report_binds_source_and_effective_capability(configured):
 
 @pytest.mark.parametrize('source', ['', 'UNKNOWN', 'bad' * 14])
 def test_missing_or_invalid_source_never_becomes_a_current_revision(configured, monkeypatch, source):
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', source)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', source)
     result = dispatch.dispatch_request(dispatch.AgentRequest(
         capability='responsibility.a19', objective=runtime_status.OBJECTIVE), 'owner-test')
     assert result['artifact']['runtime_revision'] == 'UNKNOWN'

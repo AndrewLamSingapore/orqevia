@@ -69,7 +69,7 @@ class PublicTracePublisherTests(unittest.TestCase):
         self.assertEqual(publisher.publish_once()["state"], "disabled")
 
     def test_disabled_without_explicit_publisher_identity(self):
-        with patch.dict(os.environ, {"PRIME_PUBLIC_TRACE_PUBLISHER_ID": ""}):
+        with patch.dict(os.environ, {"ORQEVIA_PUBLIC_TRACE_PUBLISHER_ID": ""}):
             publisher = PublicTracePublisher(DummyAuthority(), url="https://relay.example", secret="s" * 48)
         self.assertFalse(publisher.enabled)
         self.assertEqual(publisher.publish_once()["state"], "disabled")

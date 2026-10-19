@@ -9,15 +9,15 @@ from fastapi.testclient import TestClient
 
 ORIGIN='https://192.168.1.23:8443'
 PUBLIC_ORIGIN='https://jarvis.lamjarvis.com'
-HEADERS={'Origin':ORIGIN,'X-Jarvis-PWA':'1'}
+HEADERS={'Origin':ORIGIN,'X-ORQEVIA-PWA':'1'}
 
 @pytest.fixture
 def setup(monkeypatch,tmp_path):
     root=tmp_path/'pwa-fixture';root.mkdir()
-    monkeypatch.setenv('PRIME_DATA_DIR',str(root));monkeypatch.setenv('PRIME_PWA_ORIGIN',ORIGIN)
-    monkeypatch.setenv('PRIME_PWA_ACCESS_MODE','pairing')  # gate machinery covered here; open default in test_pwa_open_access.py
-    monkeypatch.delenv('PRIME_PWA_ADDITIONAL_ORIGINS',raising=False)
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(root));monkeypatch.setenv('ORQEVIA_PWA_ORIGIN',ORIGIN)
+    monkeypatch.setenv('ORQEVIA_PWA_ACCESS_MODE','pairing')  # gate machinery covered here; open default in test_pwa_open_access.py
+    monkeypatch.delenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',raising=False)
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
     app=FastAPI();app.include_router(pwa.router);app.include_router(pwa.owner_router);app.include_router(interface_contract.router)
     @app.get('/pwa/',response_class=HTMLResponse)
@@ -57,15 +57,15 @@ def test_csrf_host_spoof_and_caller_identity_rejected(setup):
         assert client.post('/pwa/api/logout',headers={**HEADERS,'Origin':'https://evil.invalid'}).status_code==403
         assert client.get('/pwa/api/session',headers={'Host':'evil.invalid'}).status_code==403
         assert client.get('/interface/v1/health',headers={'Authorization':'Bearer spoof'}).status_code==400
-        assert client.get('/interface/v1/health',headers={'X-Jarvis-Client-Id':'dell:spoof'}).status_code==400
+        assert client.get('/interface/v1/health',headers={'X-ORQEVIA-Client-ID':'dell:spoof'}).status_code==400
 
 def test_exact_public_origin_opt_in_preserves_lan_and_authentication(setup,monkeypatch):
     root,pwa,app,node=setup
-    public_headers={'Origin':PUBLIC_ORIGIN,'X-Jarvis-PWA':'1'}
+    public_headers={'Origin':PUBLIC_ORIGIN,'X-ORQEVIA-PWA':'1'}
     with TestClient(app,base_url=ORIGIN) as lan,TestClient(app,base_url=PUBLIC_ORIGIN) as public:
         assert lan.get('/pwa/').status_code==200
         assert public.get('/pwa/').status_code==403
-        monkeypatch.setenv('PRIME_PWA_ADDITIONAL_ORIGINS',PUBLIC_ORIGIN)
+        monkeypatch.setenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',PUBLIC_ORIGIN)
         assert lan.get('/pwa/').status_code==200
         assert public.get('/pwa/').status_code==200
         navigation={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate','Sec-Fetch-Dest':'document'}
@@ -90,8 +90,8 @@ def test_exact_public_origin_opt_in_preserves_lan_and_authentication(setup,monke
 
 def test_public_origin_rejects_host_origin_csrf_proxy_and_identity_spoofs(setup,monkeypatch):
     root,pwa,app,node=setup
-    monkeypatch.setenv('PRIME_PWA_ADDITIONAL_ORIGINS',PUBLIC_ORIGIN)
-    public_headers={'Origin':PUBLIC_ORIGIN,'X-Jarvis-PWA':'1'}
+    monkeypatch.setenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',PUBLIC_ORIGIN)
+    public_headers={'Origin':PUBLIC_ORIGIN,'X-ORQEVIA-PWA':'1'}
     with TestClient(app,base_url=PUBLIC_ORIGIN) as public,TestClient(app,base_url=ORIGIN) as lan:
         assert public.get('/pwa/',headers={'Host':'evil.invalid'}).status_code==403
         assert public.get('/pwa/',headers={'Origin':ORIGIN}).status_code==403
@@ -99,7 +99,7 @@ def test_public_origin_rejects_host_origin_csrf_proxy_and_identity_spoofs(setup,
         assert public.post('/pwa/api/logout').status_code==403
         assert public.post('/pwa/api/logout',headers={'Origin':PUBLIC_ORIGIN}).status_code==403
         assert public.post('/pwa/api/logout',headers={**public_headers,'Origin':ORIGIN}).status_code==403
-        assert public.post('/pwa/api/logout',headers={**public_headers,'X-Jarvis-PWA':'0'}).status_code==403
+        assert public.post('/pwa/api/logout',headers={**public_headers,'X-ORQEVIA-PWA':'0'}).status_code==403
         assert public.get('/pwa/api/session',headers={'Sec-Fetch-Site':'cross-site'}).status_code==403
         assert public.options('/pwa/api/session',headers=public_headers).status_code==405
         assert public.post('/pwa/api/uploads',headers={**public_headers,'X-Filename':'note.txt'},content=b'text').status_code==401
@@ -109,7 +109,7 @@ def test_public_origin_rejects_host_origin_csrf_proxy_and_identity_spoofs(setup,
         assert public.post('/pwa/api/logout').status_code==403
         assert public.post('/pwa/api/logout',headers={'Origin':PUBLIC_ORIGIN}).status_code==403
         assert public.get('/pwa/api/session').json()['authenticated'] is True
-        assert public.get('/interface/v1/health',headers={'X-Jarvis-Client-Id':'dell:spoof'}).status_code==400
+        assert public.get('/interface/v1/health',headers={'X-ORQEVIA-Client-ID':'dell:spoof'}).status_code==400
         assert public.get('/interface/v1/health',headers={'Authorization':'Bearer spoof'}).status_code==400
         assert public.get('/interface/v1/health',headers={'Origin':ORIGIN}).status_code==403
         assert public.post('/interface/v1/objectives',headers={'Origin':PUBLIC_ORIGIN},json={'objective':'Not dispatched'}).status_code==403
@@ -127,7 +127,7 @@ def test_public_origin_rejects_host_origin_csrf_proxy_and_identity_spoofs(setup,
 ])
 def test_invalid_additional_origin_configuration_fails_closed(setup,monkeypatch,invalid):
     root,pwa,app,node=setup
-    monkeypatch.setenv('PRIME_PWA_ADDITIONAL_ORIGINS',invalid)
+    monkeypatch.setenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',invalid)
     with TestClient(app,base_url=ORIGIN) as lan,TestClient(app,base_url=PUBLIC_ORIGIN) as public:
         assert lan.get('/pwa/').status_code==403
         assert public.get('/pwa/').status_code==403
@@ -196,7 +196,7 @@ def test_interactive_loopback_pairing_and_expired_code(setup):
     root,pwa,app,node=setup
     owner=FastAPI();owner.include_router(pwa.owner_router)
     with TestClient(owner,base_url='http://127.0.0.1:8000',client=('127.0.0.1',45000)) as local:
-        headers={'Origin':'http://127.0.0.1:8000','X-Jarvis-PWA':'1','Authorization':'Bearer fixture-owner-credential-never-production'}
+        headers={'Origin':'http://127.0.0.1:8000','X-ORQEVIA-PWA':'1','Authorization':'Bearer fixture-owner-credential-never-production'}
         response=local.post('/pwa/owner/pairing',headers=headers)
         assert response.status_code==200 and response.headers['cache-control']=='no-store'
         assert response.json()['role']=='MEMBER'
@@ -208,7 +208,7 @@ def test_interactive_loopback_pairing_and_expired_code(setup):
 def test_owner_and_member_roles_are_server_issued_and_persisted(setup):
     root,pwa,app,node=setup
     owner=FastAPI();owner.include_router(pwa.owner_router)
-    headers={'Origin':'http://127.0.0.1:8000','X-Jarvis-PWA':'1','Authorization':'Bearer fixture-owner-credential-never-production'}
+    headers={'Origin':'http://127.0.0.1:8000','X-ORQEVIA-PWA':'1','Authorization':'Bearer fixture-owner-credential-never-production'}
     with TestClient(owner,base_url='http://127.0.0.1:8000',client=('127.0.0.1',45000)) as local:
         owner_code=local.post('/pwa/owner/pairing',headers=headers,json={'role':'OWNER'}).json()['code']
         member_code=local.post('/pwa/owner/pairing',headers=headers,json={'role':'MEMBER'}).json()['code']
@@ -234,13 +234,13 @@ def test_owner_and_member_roles_are_server_issued_and_persisted(setup):
 
 def test_missing_policy_config_stays_local_only_and_bounded(setup,monkeypatch):
     root,pwa,app,node=setup
-    monkeypatch.delenv('PRIME_PWA_DATA_CLASSIFICATION',raising=False);monkeypatch.delenv('PRIME_PWA_MAX_COST_USD',raising=False)
+    monkeypatch.delenv('ORQEVIA_PWA_DATA_CLASSIFICATION',raising=False);monkeypatch.delenv('ORQEVIA_PWA_MAX_COST_USD',raising=False)
     with TestClient(app,base_url=ORIGIN) as client:
         response,_=enroll(pwa,client);identity=response.json()['clientId']
         assert pwa.client_policy(identity)['data_classification']=='LOCAL_ONLY'
-        monkeypatch.setenv('PRIME_PWA_DATA_CLASSIFICATION','CLOUD_PERMITTED');monkeypatch.setenv('PRIME_PWA_MAX_COST_USD','.05')
+        monkeypatch.setenv('ORQEVIA_PWA_DATA_CLASSIFICATION','CLOUD_PERMITTED');monkeypatch.setenv('ORQEVIA_PWA_MAX_COST_USD','.05')
         assert pwa.client_policy(identity)['max_cost_usd']==.05
-        monkeypatch.setenv('PRIME_PWA_MAX_COST_USD','1000')
+        monkeypatch.setenv('ORQEVIA_PWA_MAX_COST_USD','1000')
         with pytest.raises(Exception):pwa.client_policy(identity)
 
 def test_enrollment_attempt_bound_and_unauthenticated_upload(setup,monkeypatch):
@@ -258,7 +258,7 @@ def test_explicit_owner_link_shares_exact_dell_task_artifact_only(setup,monkeypa
     from app.artifact_factory import ArtifactFactory
     dell='dell:fixture';token='fixture-dell-token'
     policy={dell:{'token_sha256':pwa.digest(token),'expires_at':time.time()+300,'capabilities':pwa.SCOPES,'owner_account_id':'owner:fixture'}}
-    monkeypatch.setenv('PRIME_INTERFACE_CLIENTS_JSON',json.dumps(policy))
+    monkeypatch.setenv('ORQEVIA_INTERFACE_CLIENTS_JSON',json.dumps(policy))
     meta=ArtifactFactory(root/'artifacts').create(kind='json',content='{"actual":12}',task_id='same-task',creator='a10',provenance='Fixture verified output')
     with node.db_connect() as db:db.execute('INSERT INTO requests VALUES(?,?,?,?)',(dell,'key','hash','same-task'))
     monkeypatch.setattr(node.objective_api,'get',lambda task,auth:{'id':task,'state':'COMPLETED','steps':[]})
@@ -274,14 +274,14 @@ def test_explicit_owner_link_shares_exact_dell_task_artifact_only(setup,monkeypa
         assert unrelated.get(route).status_code==404
         assert unrelated.get(route,headers={'X-Owner-Account-Id':'owner:fixture'}).status_code==404
         # Server-side rebinding is not allowed to silently change preserved ownership.
-        policy[dell]['owner_account_id']='different-owner';monkeypatch.setenv('PRIME_INTERFACE_CLIENTS_JSON',json.dumps(policy))
+        policy[dell]['owner_account_id']='different-owner';monkeypatch.setenv('ORQEVIA_INTERFACE_CLIENTS_JSON',json.dumps(policy))
         assert linked.get(route).status_code==503
 
 def test_existing_unlinked_session_not_broadened_by_environment(setup,monkeypatch):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:
         response,_=enroll(pwa,client)
-        monkeypatch.setenv('PRIME_PWA_OWNER_ACCOUNT_ID','owner:fixture')
+        monkeypatch.setenv('ORQEVIA_PWA_OWNER_ACCOUNT_ID','owner:fixture')
         assert 'owner_account_id' not in pwa.client_policy(response.json()['clientId'])
 
 def test_durable_device_refresh_preserves_identity_role_and_running_task(setup):

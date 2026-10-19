@@ -12,9 +12,9 @@ def interface(monkeypatch, tmp_path):
     from app import interface_contract as contract, compute_queue_api as compute
     from app.action_records import close_ledgers
     from app.job_queue import JobQueue, QueuePolicy
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-owner')
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-owner')
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
     monkeypatch.setenv('FIXTURE_INTERFACE_CLOUD_KEY', 'fixture-only-key')
     catalog = tmp_path / 'catalog.json'
     catalog.write_text(json.dumps({'models': [{'id': 'fixture-cloud', 'model': 'fixture-model',
@@ -22,7 +22,7 @@ def interface(monkeypatch, tmp_path):
         'endpoint': 'https://fixture.invalid/v1/chat/completions',
         'secret_ref': 'env:FIXTURE_INTERFACE_CLOUD_KEY', 'output_tokens': 128,
         'context_tokens': 4096, 'input_usd_million': 1, 'output_usd_million': 1}]}))
-    monkeypatch.setenv('PRIME_PROVIDER_CATALOG', str(catalog))
+    monkeypatch.setenv('ORQEVIA_PROVIDER_CATALOG', str(catalog))
     monkeypatch.setattr(compute, 'queue', JobQueue(tmp_path / 'queue.db',
         QueuePolicy(global_concurrency=1, per_agent_concurrency=1, max_job_cost_usd=1,
                     daily_cost_ceiling_usd=2, cloud_wait_seconds=0)))
@@ -30,7 +30,7 @@ def interface(monkeypatch, tmp_path):
               'expires_at': time.time()+300, 'capabilities': ['health.read', 'objective.submit', 'task.read']}
     def configure(**values):
         policy.update(values)
-        monkeypatch.setenv('PRIME_INTERFACE_CLIENTS_JSON', json.dumps({'dell': policy}))
+        monkeypatch.setenv('ORQEVIA_INTERFACE_CLIENTS_JSON', json.dumps({'dell': policy}))
     configure()
     app = FastAPI()
     app.include_router(contract.router)

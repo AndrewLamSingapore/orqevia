@@ -32,8 +32,8 @@ jobs:
         run: python -m pip install -r requirements.txt -r requirements-sandbox.txt pytest
       - name: Validate STATUS authority and run offline deterministic security and integration tests
         run: |
-          export PRIME_DATA_DIR="$RUNNER_TEMP/prime-fixtures"
-          export PRIME_COMPUTE_QUEUE_DB="$PRIME_DATA_DIR/queue.db"
+          export ORQEVIA_DATA_DIR="$RUNNER_TEMP/prime-fixtures"
+          export ORQEVIA_COMPUTE_QUEUE_DB="$ORQEVIA_DATA_DIR/queue.db"
           python scripts/check_canonical_state.py
           python scripts/run_canonical_ci.py
       - name: Parse opt-in HF Compose secret mount without credential
@@ -41,7 +41,7 @@ jobs:
           OLLAMA_IMAGE: ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532
           CADDY_IMAGE: caddy@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e
           CLOUDFLARED_IMAGE: cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4
-          PRIME_HF_TOKEN_FILE: /tmp/placeholder-not-a-token
+          ORQEVIA_HF_TOKEN_FILE: /tmp/placeholder-not-a-token
         run: docker compose -f docker-compose.yml -f docker-compose.huggingface.yml config --quiet
       - name: PWA protocol, voice fallback, idempotency and revision tests
         run: |
@@ -87,8 +87,8 @@ jobs:
           uv run pytest --version
       - name: Run canonical state gate in locked environment
         env:
-          PRIME_DATA_DIR: ${{ runner.temp }}/orqevia-tooling-fixtures
-          PRIME_COMPUTE_QUEUE_DB: ${{ runner.temp }}/orqevia-tooling-fixtures/queue.db
+          ORQEVIA_DATA_DIR: ${{ runner.temp }}/orqevia-tooling-fixtures
+          ORQEVIA_COMPUTE_QUEUE_DB: ${{ runner.temp }}/orqevia-tooling-fixtures/queue.db
         run: uv run python scripts/run_canonical_ci.py
       - name: Run observability and media-provider tests
         run: >-

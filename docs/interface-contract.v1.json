@@ -1,13 +1,13 @@
 {
-  "contract": "jarvis.interface.v1",
+  "contract": "orqevia.interface.v1",
   "version": "1.0.0-candidate",
   "status": "IMPLEMENTED_ASGI_FIXTURE_VALIDATED_NOT_DEPLOYED",
   "wire_schemas": "interface-contract.schemas.v1.json",
-  "runtime_identity": "host.id from required PRIME_INTERFACE_HOST_ID; runtime_version from PRIME_INTERFACE_RUNTIME_VERSION; candidate_status from PRIME_INTERFACE_CANDIDATE_STATUS. Version/status default UNKNOWN; explicit host and candidate/qualification labeling is required for test listeners. These labels do not themselves establish deployment or qualification.",
-  "error_normalization": "Dedicated app.interface_server returns protocol/error.code/error.message/error.retryable; it never reflects raw request inputs or exception text. X-PRIME-Protocol header identifies protocol. Ambiguous errors never authorize automatic replay.",
+  "runtime_identity": "host.id from required ORQEVIA_INTERFACE_HOST_ID; runtime_version from ORQEVIA_INTERFACE_RUNTIME_VERSION; candidate_status from ORQEVIA_INTERFACE_CANDIDATE_STATUS. Version/status default UNKNOWN; explicit host and candidate/qualification labeling is required for test listeners. These labels do not themselves establish deployment or qualification.",
+  "error_normalization": "Dedicated app.interface_server returns protocol/error.code/error.message/error.retryable; it never reflects raw request inputs or exception text. X-ORQEVIA-Protocol header identifies protocol. Ambiguous errors never authorize automatic replay.",
   "host": {
-    "id": "configured by PRIME_INTERFACE_HOST_ID",
-    "role": "AUTHORITATIVE_PRIME_HOST"
+    "id": "configured by ORQEVIA_INTERFACE_HOST_ID",
+    "role": "AUTHORITATIVE_ORQEVIA_HOST"
   },
   "client": {
     "role": "THIN_CLIENT",
@@ -17,7 +17,7 @@
     "scheme": "https",
     "http_status": 426,
     "pin_algorithm": "SHA-256 of DER SubjectPublicKeyInfo; lowercase hexadecimal",
-    "pin_configuration": "PRIME_INTERFACE_SPKI_SHA256",
+    "pin_configuration": "ORQEVIA_INTERFACE_SPKI_SHA256",
     "pin_trust": "Dell must compare the TLS peer SPKI to an independently adopted pin; the identity body is not a trust anchor.",
     "deployment": "Requires real certificate/private-key reference and trusted TLS listener. Do not expose legacy /api/interface/v1 or owner routes to thin clients. No TLS or firewall configuration changed by this implementation.",
     "fixtures": "ASGI TestClient https base_url is a local transport simulation, not a TLS roundtrip."
@@ -27,7 +27,7 @@
       "X-Client-ID": "configured client identifier",
       "Authorization": "Bearer credential; never log"
     },
-    "policy_configuration": "PRIME_INTERFACE_CLIENTS_JSON",
+    "policy_configuration": "ORQEVIA_INTERFACE_CLIENTS_JSON",
     "policy_fields": {
       "token_sha256": "SHA-256 verifier, never plaintext credential",
       "expires_at": "Unix seconds, must be in future",

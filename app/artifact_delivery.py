@@ -64,7 +64,7 @@ def create_task_artifact(task_id,authorization):
                 step.get('job',{}).get('status') in {'queued','running','awaiting_approval'}
                 for step in task.get('steps',[])):
             raise HTTPException(409,'Task still has unfinished work')
-        factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+        factory=ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'artifacts')
         rendered=markdown_result(task)
         kind='markdown' if rendered else 'json'
         content=rendered or json.dumps(task,indent=2,sort_keys=True)
@@ -96,7 +96,7 @@ def materialize(task_id: str,authorization: str | None=Header(None)):
 @router.get('/{artifact_id}')
 def retrieve(artifact_id: str,authorization: str | None=Header(None)):
     authenticate_owner(authorization)
-    factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+    factory=ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'artifacts')
     try:metadata,raw=factory.retrieve(artifact_id)
     except (ValueError,KeyError,FileNotFoundError):raise HTTPException(404,'Artifact unavailable')
     from .public_task_errors import publishable_task_artifact

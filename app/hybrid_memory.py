@@ -24,7 +24,7 @@ class HybridMemory:
         self.settings = settings or SETTINGS
         self.ollama_url = self.settings.ollama_base_url
         self.embedding_model = self.settings.embedding_model
-        self.index_batch = max(1, min(256, int(os.getenv("PRIME_EMBED_INDEX_BATCH", "64"))))
+        self.index_batch = max(1, min(256, int(os.getenv("ORQEVIA_EMBED_INDEX_BATCH", "64"))))
         self.last_status: dict[str, Any] = {"mode": "not_run", "degraded": False, "reason": None}
         with self.store.connect() as db:
             db.execute("""create table if not exists memory_embeddings(

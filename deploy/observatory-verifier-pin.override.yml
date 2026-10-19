@@ -3,13 +3,13 @@
 services:
   backend:
     environment:
-      PRIME_AGENT_CERT_AZURE_ES256_ENABLED: "1"
-      PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE: /run/prime-cert-verifier-pin.json
-      PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256: ${PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256:?Set reviewed public pin digest}
+      ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED: "1"
+      ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE: /run/orqevia-cert-verifier-pin.json
+      ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256: ${ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256:?Set reviewed public pin digest}
     volumes:
       - type: bind
-        source: ${PRIME_AGENT_CERT_AZURE_ES256_PIN_HOST_FILE:?Set absolute reviewed public pin path}
-        target: /run/prime-cert-verifier-pin.json
+        source: ${ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_HOST_FILE:?Set absolute reviewed public pin path}
+        target: /run/orqevia-cert-verifier-pin.json
         read_only: true
         bind:
           create_host_path: false

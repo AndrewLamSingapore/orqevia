@@ -1,10 +1,10 @@
 # Reuse an independently retained, locally pinned runtime dependency layer.
 # No packages, models or credentials are downloaded during this build.
-ARG PRIME_COACHING_BASE_IMAGE
-FROM ${PRIME_COACHING_BASE_IMAGE}
+ARG ORQEVIA_COACHING_BASE_IMAGE
+FROM ${ORQEVIA_COACHING_BASE_IMAGE}
 COPY app /app/app
 COPY config /app/config
-ARG PRIME_COACHING_SOURCE_REVISION
-ENV PRIME_COACHING_SOURCE_REVISION=$PRIME_COACHING_SOURCE_REVISION
-LABEL org.opencontainers.image.revision=$PRIME_COACHING_SOURCE_REVISION
+ARG ORQEVIA_COACHING_SOURCE_REVISION
+ENV ORQEVIA_COACHING_SOURCE_REVISION=$ORQEVIA_COACHING_SOURCE_REVISION
+LABEL org.opencontainers.image.revision=$ORQEVIA_COACHING_SOURCE_REVISION
 CMD ["python", "-B", "-m", "app.agent_coaching"]

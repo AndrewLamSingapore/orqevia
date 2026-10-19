@@ -40,7 +40,7 @@ def test_successful_model_result_materializes_as_markdown(tmp_path,monkeypatch):
     monkeypatch.setattr(artifact_delivery,'authenticate_owner',lambda *_:None)
     monkeypatch.setattr(artifact_delivery.objective_api,'connect',DB)
     monkeypatch.setattr(artifact_delivery.objective_api,'get',lambda *_:task)
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
     first=artifact_delivery.create_task_artifact('task','fixture')
     again=artifact_delivery.create_task_artifact('task','fixture')
     metadata,raw=artifact_delivery.ArtifactFactory(tmp_path/'artifacts').retrieve(first['artifact_id'])
@@ -62,7 +62,7 @@ def test_failed_turn_without_text_remains_truthful_json_snapshot(tmp_path,monkey
     monkeypatch.setattr(artifact_delivery,'authenticate_owner',lambda *_:None)
     monkeypatch.setattr(artifact_delivery.objective_api,'connect',DB)
     monkeypatch.setattr(artifact_delivery.objective_api,'get',lambda *_:task)
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
     item=artifact_delivery.create_task_artifact('task','fixture')
     assert item['type']=='json'
 

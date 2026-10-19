@@ -8,7 +8,7 @@ import pytest
 
 @pytest.fixture
 def draft(monkeypatch,tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
     from app import interface_telemetry
     return interface_telemetry,tmp_path
 

@@ -30,8 +30,8 @@ jobs:
       - name: One-shot protected public validation
         env:
           GH_READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PRIME_DATA_DIR: ${{ runner.temp }}/prime-initialization-validation-domains
-          PRIME_COMPUTE_QUEUE_DB: ${{ runner.temp }}/prime-initialization-validation-domains/compute-queue.db
+          ORQEVIA_DATA_DIR: ${{ runner.temp }}/prime-initialization-validation-domains
+          ORQEVIA_COMPUTE_QUEUE_DB: ${{ runner.temp }}/prime-initialization-validation-domains/compute-queue.db
         run: python -B -m scripts.validate_fresh_initialization_20261011
       - name: Preserve exact validation or failure custody
         if: always()

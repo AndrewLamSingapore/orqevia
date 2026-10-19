@@ -26,7 +26,7 @@ jobs:
         run: python -m scripts.verify_portal_integration
       - name: Import composed runtime
         env:
-          PRIME_DATA_DIR: /tmp/prime-test
+          ORQEVIA_DATA_DIR: /tmp/prime-test
         run: python -c "from app.entry import app; paths={r.path for r in app.routes}; assert '/health' in paths; assert '/api/integrations/portal/experiments' in paths; assert '/api/integrations/velyqua/events' in paths; assert '/api/integrations/portal/results/flush' in paths"
       - name: Build container
         run: docker build -t orqevia:portal-integration .
@@ -37,12 +37,12 @@ jobs:
             -v "${{ github.workspace }}/tests:/fixture:ro" \
             python:3.12-alpine python /fixture/fake_ollama.py
           docker run -d --name orqevia-smoke --network orqevia-portal-integration -p 18000:8000 \
-            -e PRIME_DATA_DIR=/data \
-            -e PRIME_INTEGRATION_TOKEN=smoke-integration-token \
+            -e ORQEVIA_DATA_DIR=/data \
+            -e ORQEVIA_INTEGRATION_TOKEN=smoke-integration-token \
             -e OLLAMA_BASE_URL=http://ollama:11434 \
-            -e PRIME_FAST_MODEL=gemma3:1b \
-            -e PRIME_DEEP_MODEL=gemma3:1b \
-            -e PRIME_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
+            -e ORQEVIA_FAST_MODEL=gemma3:1b \
+            -e ORQEVIA_DEEP_MODEL=gemma3:1b \
+            -e ORQEVIA_EMBED_MODEL=embeddinggemma:300m-qat-q4_0 \
             orqevia:portal-integration
           trap 'docker logs orqevia-smoke || true; docker logs fake-ollama || true; docker rm -f orqevia-smoke fake-ollama || true' EXIT
           for i in $(seq 1 30); do

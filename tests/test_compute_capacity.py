@@ -23,7 +23,7 @@ def settings(**overrides):
 
 def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
     with tempfile.TemporaryDirectory() as directory:
-        monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', os.path.join(directory, 'queue.db'))
+        monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', os.path.join(directory, 'queue.db'))
         # The gateway requires an independently measured peak, even when the
         # operator memory receipt itself is valid.
         raw = json.dumps({'schema':'abex.measured-compute.v1',
@@ -33,8 +33,8 @@ def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
                           'models':{'evaluator:1':{'peak_mib':1024,'digest':'a'*64}}}).encode()
         profile = tmp_path / 'measured-profile.json'
         profile.write_bytes(raw)
-        monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE', str(profile))
-        monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
+        monkeypatch.setenv('ORQEVIA_MEASURED_COMPUTE_PROFILE', str(profile))
+        monkeypatch.setenv('ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
         compute_profile.load_compute_profile.cache_clear()
         compute_profile.runtime_compute_profile.cache_clear()
         monkeypatch.setattr(compute_profile, 'verify_runtime_identity', lambda *_, **__: None)
@@ -61,11 +61,11 @@ def test_evaluator_role_and_throughput_are_recorded(monkeypatch,tmp_path):
 
 
 def test_golden_gateway_local_inference_needs_no_measured_telemetry(monkeypatch,tmp_path):
-    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_BACKEND_MEMORY_RECEIPT',
-                 'PRIME_MEASURED_COMPUTE_PROFILE', 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
-                 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_LOCAL_ADMISSION_MODE', 'ORQEVIA_BACKEND_MEMORY_RECEIPT',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE', 'ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
     gateway = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'ledger.db')),
                            settings=settings(fast_model='gemma3:1b'))
     gateway._post = lambda *_args: {'response': 'baseline answer', 'done': True}
@@ -73,11 +73,11 @@ def test_golden_gateway_local_inference_needs_no_measured_telemetry(monkeypatch,
 
 
 def test_gateway_allows_deep_model_without_a_measured_profile(monkeypatch,tmp_path):
-    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
-                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_BACKEND_MEMORY_RECEIPT', 'ORQEVIA_MEASURED_COMPUTE_PROFILE',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256', 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1')
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    monkeypatch.setenv('ORQEVIA_LOCAL_ADMISSION_MODE', 'golden_n1')
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
     gateway = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'ledger.db')),
                            settings=settings(fast_model='gemma3:1b', deep_model='qwen3:14b'))
     gateway._post = lambda *_args: {'response': 'deep answer', 'done': True}
@@ -85,7 +85,7 @@ def test_gateway_allows_deep_model_without_a_measured_profile(monkeypatch,tmp_pa
 
 
 def test_max_profile_defaults_are_bounded():
-    with patch.dict(os.environ, {"PRIME_COMPUTE_PROFILE": "max"}, clear=True):
+    with patch.dict(os.environ, {"ORQEVIA_COMPUTE_PROFILE": "max"}, clear=True):
         value = PrimeSettings.from_env()
     assert value.compute_profile == "max"
     assert value.multi_specialist_workers == 4

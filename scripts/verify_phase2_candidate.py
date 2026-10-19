@@ -20,7 +20,7 @@ def validate(value: dict) -> list[str]:
     require(value.get("parent_golden", {}).get("commit") == "48648edd8d2640f12f8086b9910deec865519326", "golden_commit")
     for key in ("implementation", "architecture", "gap_analysis"):
         require((ROOT / value.get("source", {}).get(key, "missing")).is_file(), "missing:" + key)
-    for path in ("app/evidence_product.py", "app/prime_evidence_adapter.py", "app/phase2_evidence_adapter.py",
+    for path in ("app/evidence_product.py", "app/orqevia_evidence_adapter.py", "app/phase2_evidence_adapter.py",
                  "governance/action-envelope-v0.1.schema.json", "governance/evidence-product-v0.1-manifest.json",
                  "docs/ACTION-ENVELOPE-STANDARD-v0.1.md", "examples/evidence-lens/index.html"):
         require((ROOT / path).is_file(), "missing_product:" + path)

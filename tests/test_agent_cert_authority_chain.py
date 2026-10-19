@@ -27,7 +27,7 @@ CODE = 'f' * 40
 def runtime(configured, monkeypatch):
     from app import artifact_delivery, client_auth, compute_queue_api, objective_api
     from app.action_records import ActionLedger
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', TOKEN)
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', TOKEN)
     for module in (dispatch, objective_api, api, artifact_delivery):
         monkeypatch.setattr(module, 'authenticate_owner', client_auth.authenticate_owner)
     compute_queue_api.queue.policy = SimpleNamespace(global_concurrency=1)

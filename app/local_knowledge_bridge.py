@@ -31,7 +31,7 @@ async def knowledge(request:Request,path:str):
     parsed=urlsplit(base)
     if parsed.scheme!='http' or parsed.netloc!='host.docker.internal:8150' or parsed.path or parsed.query or parsed.fragment:
         raise HTTPException(503,'Local intelligence target unavailable')
-    token=os.getenv('PRIME_SPINE_TOKEN','').strip()
+    token=os.getenv('ORQEVIA_SPINE_TOKEN','').strip()
     if len(token)<16:raise HTTPException(503,'Service authority unavailable')
     try:
         limit=8*1024*1024 if path=='ingest' else 16000

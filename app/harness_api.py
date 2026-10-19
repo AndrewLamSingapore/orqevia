@@ -27,7 +27,7 @@ _runtime_fingerprint: tuple[str, str, str] | None = None
 
 
 def _enabled() -> bool:
-    return os.getenv("PRIME_HARNESS_PILOT_ENABLED", "1").strip().lower() in {
+    return os.getenv("ORQEVIA_HARNESS_PILOT_ENABLED", "1").strip().lower() in {
         "1", "true", "yes", "on",
     }
 
@@ -36,8 +36,8 @@ def _runtime() -> tuple[ActionHarness, ActionEnvelopeIssuer]:
     global _runtime_cache, _runtime_fingerprint
     if not _enabled():
         raise HTTPException(status_code=503, detail="Harness v0 pilot is disabled")
-    token = os.getenv("PRIME_SPINE_TOKEN", "").strip()
-    explicit = os.getenv("PRIME_HARNESS_SIGNING_SECRET", "").strip()
+    token = os.getenv("ORQEVIA_SPINE_TOKEN", "").strip()
+    explicit = os.getenv("ORQEVIA_HARNESS_SIGNING_SECRET", "").strip()
     if not token:
         raise HTTPException(status_code=503, detail="Stable Spine authority is not configured")
     secret = explicit.encode() if explicit else hashlib.sha256(
@@ -46,11 +46,11 @@ def _runtime() -> tuple[ActionHarness, ActionEnvelopeIssuer]:
     if len(secret) < 32:
         raise HTTPException(status_code=503, detail="Harness signing secret must contain at least 32 bytes")
     db_path = os.getenv(
-        "PRIME_HARNESS_DB",
-        str(Path(os.getenv("PRIME_DATA_DIR", "/data")) / "action-harness.db"),
+        "ORQEVIA_HARNESS_DB",
+        str(Path(os.getenv("ORQEVIA_DATA_DIR", "/data")) / "action-harness.db"),
     )
-    version = os.getenv("PRIME_HARNESS_POLICY_VERSION", "harness-v0").strip() or "harness-v0"
-    agents_enabled = os.getenv('PRIME_REGISTRY_V1_ENABLED','0') == '1'
+    version = os.getenv("ORQEVIA_HARNESS_POLICY_VERSION", "harness-v0").strip() or "harness-v0"
+    agents_enabled = os.getenv('ORQEVIA_REGISTRY_V1_ENABLED','0') == '1'
     fingerprint = (db_path, version, hashlib.sha256(secret).hexdigest(), agents_enabled)
     if _runtime_cache is None or _runtime_fingerprint != fingerprint:
         policy = HarnessPolicy(policy_version=version, advisory_agents=frozenset(

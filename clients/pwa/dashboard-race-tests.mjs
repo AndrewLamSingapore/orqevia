@@ -12,7 +12,7 @@ const source=readFileSync(target,'utf8').replace("'./core.mjs'",JSON.stringify(c
 const settle=()=>new Promise(resolve=>setTimeout(resolve,0));
 let fixtureSerial=0;
 let activeRequests=[];
-afterEach(async()=>{for(const request of activeRequests){if(!request.settled)request.resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));}await settle();});
+afterEach(async()=>{for(const request of activeRequests){if(!request.settled)request.resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));}await settle();});
 
 async function fixture(){
   globalThis.location={href:'https://candidate.invalid/pwa/'};
@@ -35,7 +35,7 @@ async function fixture(){
       requests[i].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date(observed).toISOString(),freshness_seconds:60,
         audience:{client_id:audience},metrics:[{metric_id:'registered_agents',collection_status:'OBSERVED',value:21}],source:{instance,revision:'a'.repeat(40)},
         coaching,agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,name:'fixture',registration:'REGISTERED',availability:'UNKNOWN'}))}),
-        {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
+        {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
     }
   };
 }
@@ -74,7 +74,7 @@ test('A delayed prior-session success cannot repopulate telemetry after logout',
 test('A delayed old authorization failure cannot erase a newer session measurement',async()=>{
   const f=await fixture();f.session({role:'OWNER'});f.session(null);f.session({role:'MEMBER'});
   assert.equal(f.requests.length,2);f.respond(1,'NEW-SESSION');await settle();
-  f.requests[0].resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));await settle();
+  f.requests[0].resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));await settle();
   assert.equal(f.nodes.get('telemetry-state').textContent,'OBSERVED');
   assert.match(f.nodes.get('telemetry-source').textContent,/NEW-SESSION/);
   assert.equal(f.nodes.get('agent-provenance-list').children.length,21);
@@ -143,7 +143,7 @@ test('Observed host gauges render values and honest availability text',async()=>
       {metric_id:'disk',collection_status:'OBSERVED',value:19.6828439854},
       {metric_id:'network_latency',collection_status:'OBSERVED',value:3.5}],
     source:{instance:'ABEX',revision:'a'.repeat(40)},coaching:null,agents:[]}),
-    {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
+    {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
   await settle();
   assert.equal(f.nodes.get('metric-cpu').textContent,'0');
   assert.equal(f.nodes.get('metric-memory').textContent,'41.6');
@@ -160,7 +160,7 @@ test('Absent host metrics stay unknown; logout clears previously observed gauge 
   g.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date().toISOString(),freshness_seconds:60,
     audience:{client_id:'fixture-client'},metrics:[{metric_id:'cpu',collection_status:'OBSERVED',value:7}],
     source:{instance:'ABEX',revision:'a'.repeat(40)},coaching:null,agents:[]}),
-    {status:200,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));
+    {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
   await settle();
   assert.equal(g.nodes.get('metric-cpu').textContent,'7');
   g.session(null);

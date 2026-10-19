@@ -113,7 +113,7 @@ def test_persisted_legacy_jobs_migrate_semantically_and_retired_jobs_fail(tmp_pa
 
 
 def test_harness_v0_defaults_to_one_local_inference_job(monkeypatch):
-    monkeypatch.delenv("PRIME_QUEUE_CONCURRENCY", raising=False)
+    monkeypatch.delenv("ORQEVIA_QUEUE_CONCURRENCY", raising=False)
     assert QueuePolicy.from_env().global_concurrency == 1
 
 

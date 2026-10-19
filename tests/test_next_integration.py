@@ -9,10 +9,10 @@ from app import interface_contract, agent_dispatch_api
 
 
 def test_deterministic_native_contract_roundtrip(tmp_path, monkeypatch):
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner')
-    monkeypatch.setenv('PRIME_INTERFACE_CLIENTS_JSON',json.dumps({'fixture':{
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED','1')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner')
+    monkeypatch.setenv('ORQEVIA_INTERFACE_CLIENTS_JSON',json.dumps({'fixture':{
         'token_sha256':hashlib.sha256(b'fixture-client').hexdigest(),
         'expires_at':time.time()+300,
         'capabilities':['objective.submit','task.read','task.cancel','artifact.read']}}))
@@ -46,9 +46,9 @@ def test_deterministic_native_contract_roundtrip(tmp_path, monkeypatch):
 
 def test_invalid_deterministic_input_is_blocked_not_completed(tmp_path,monkeypatch):
     from app.objective_api import submit,get,ObjectiveRequest
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED','1')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner')
     result=submit(ObjectiveRequest(objective='Validate supplied JSON',context='{"a":1,"a":2}',deterministic_operation='json_validate'),'Bearer fixture-owner')
     status=get(result['id'],'Bearer fixture-owner')
     assert status['state']=='COMPLETED_WITH_FAILURES'
@@ -72,7 +72,7 @@ def test_external_surface_has_no_owner_or_legacy_routes():
 
 def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkeypatch):
     from app.engineering_loop import build_verify
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
     calls=[]
     def builder(objective,feedback):
         calls.append(feedback)

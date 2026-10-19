@@ -26,7 +26,7 @@ class ApprovalRequest(BaseModel):
 
 
 def require_token(authorization: str | None) -> None:
-    expected = os.getenv("PRIME_SPINE_TOKEN", "").strip()
+    expected = os.getenv("ORQEVIA_SPINE_TOKEN", "").strip()
     if not expected:
         raise HTTPException(status_code=503, detail="ORQEVIA Stable Spine authentication is not configured")
     supplied = ""

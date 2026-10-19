@@ -184,7 +184,7 @@ class ExposureIntelligence:
         digest = hashlib.sha256(canonical_bytes(metadata)).hexdigest()
         action_id = 'pxi:' + hashlib.sha256((self.tenant + ':' + digest).encode()).hexdigest()
         self.ledger.create(namespace=self.namespace, objective='PXI redacted exposure observation',
-            actor={'type': 'SYSTEM', 'id': 'PRIME_PXI'},
+            actor={'type': 'SYSTEM', 'id': 'ORQEVIA_PXI'},
             authority={'scope': 'exposure.metadata', 'source': metadata['authorization_ref']},
             inputs=[], action_id=action_id, idempotency_key=action_id + ':create')
         def apply(envelope):
@@ -247,7 +247,7 @@ class ExposureIntelligence:
     def commercial_report(self, *, entitlement=False):
         if entitlement is not True:
             raise PermissionError('PXI_SUBSCRIPTION_NOT_ENTITLED')
-        return {'tenant': self.tenant, 'service': 'PRIME_EXPOSURE_INTELLIGENCE',
+        return {'tenant': self.tenant, 'service': 'ORQEVIA_EXPOSURE_INTELLIGENCE',
                 'alerts': self.alerts(), 'metering': {'report_units': 1},
                 'billing': 'SANDBOX_INTERFACE_ONLY', 'charges_created': 0,
                 'commercial_readiness': 'NOT_PRODUCTION_QUALIFIED'}
@@ -268,7 +268,7 @@ class ExposureIntelligence:
                 if index == 100:
                     break
                 line = text.count('\n', 0, match.start()) + 1
-                results.append(dict(provider='PRIME_LOCAL_PATTERN',
+                results.append(dict(provider='ORQEVIA_LOCAL_PATTERN',
                     source_id=detector + ':' + str(line), entity_ref=entity,
                     category='secret_pattern', status='PATTERN_DETECTED', severity='HIGH',
                     source_url='https://github.com/' + repository, published_at=now,

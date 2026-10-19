@@ -38,7 +38,7 @@ class TemporaryOperator:
         monkeypatch.setattr(runtime_status, 'production_health',
             lambda: {'status': 'UNAVAILABLE', 'memory': {'status': 'UNKNOWN'},
                      'storage': {'status': 'UNKNOWN'}})
-        monkeypatch.delenv('PRIME_QUALIFIED_HOST_PROFILE_PATH', raising=False)
+        monkeypatch.delenv('ORQEVIA_QUALIFIED_HOST_PROFILE_PATH', raising=False)
         self.ledger = ActionLedger(self.root / 'action-records.jsonl')
         monkeypatch.setattr(dispatch, 'action_ledger', lambda: self.ledger)
 

@@ -124,7 +124,7 @@ def _validate(receipt: ExternalReceipt) -> None:
 
 
 def _db_path() -> Path:
-    root = Path(os.getenv("PRIME_DATA_DIR", "/data"))
+    root = Path(os.getenv("ORQEVIA_DATA_DIR", "/data"))
     root.mkdir(parents=True, exist_ok=True)
     return root / "external-work-candidate.db"
 

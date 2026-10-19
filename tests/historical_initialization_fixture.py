@@ -86,10 +86,10 @@ def historical_validation(tmp_path, mode):
             for name in ['execution.json', 'review.json']:
                 shutil.copyfile(ROOT / relative / name, target / relative / name)
     env = {name: value for name, value in os.environ.items()
-           if not name.startswith(('PRIME_', 'AZURE_', 'ACTIONS_', 'HF_', 'OPENAI_'))
+           if not name.startswith(('ORQEVIA_', 'AZURE_', 'ACTIONS_', 'HF_', 'OPENAI_'))
            and name not in {'PYTHONPATH', 'PYTEST_ADDOPTS'}}
-    env.update(PYTHONDONTWRITEBYTECODE='1', PRIME_DATA_DIR=str(tmp_path / 'fixture-data'),
-               PRIME_COMPUTE_QUEUE_DB=str(tmp_path / 'fixture-data/compute-queue.db'))
+    env.update(PYTHONDONTWRITEBYTECODE='1', ORQEVIA_DATA_DIR=str(tmp_path / 'fixture-data'),
+               ORQEVIA_COMPUTE_QUEUE_DB=str(tmp_path / 'fixture-data/compute-queue.db'))
     result = subprocess.run([sys.executable, '-B', '-c', CHILD, mode], cwd=target, env=env,
                             capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr

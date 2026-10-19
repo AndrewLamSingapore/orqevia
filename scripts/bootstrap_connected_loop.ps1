@@ -91,9 +91,9 @@ if (-not (Test-Path -LiteralPath $envPath)) {
     throw '.env is missing. Recover the authentic configuration first; this script will not create replacement state.'
 }
 
-$integrationToken = Get-DotEnvValue -EnvPath $envPath -Key 'PRIME_INTEGRATION_TOKEN'
+$integrationToken = Get-DotEnvValue -EnvPath $envPath -Key 'ORQEVIA_INTEGRATION_TOKEN'
 $portalToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_RESULT_TOKEN'
-$portalPrimeToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_PRIME_TOKEN'
+$portalPrimeToken = Get-DotEnvValue -EnvPath $envPath -Key 'PORTAL_ORQEVIA_TOKEN'
 
 if ($InitializeNewTrustEpoch) {
     $integrationToken = New-SecureToken
@@ -103,12 +103,12 @@ if ($InitializeNewTrustEpoch) {
     throw 'Authentic application credentials are missing. Recover them, or explicitly authorize -InitializeNewTrustEpoch as a new trust relationship.'
 }
 
-Set-DotEnvValue -EnvPath $envPath -Key 'PRIME_INTEGRATION_TOKEN' -Value $integrationToken
+Set-DotEnvValue -EnvPath $envPath -Key 'ORQEVIA_INTEGRATION_TOKEN' -Value $integrationToken
 Set-DotEnvValue -EnvPath $envPath -Key 'PORTAL_RESULT_URL' -Value $PortalResultUrl
 Set-DotEnvValue -EnvPath $envPath -Key 'PORTAL_RESULT_TOKEN' -Value $portalToken
-Set-DotEnvValue -EnvPath $envPath -Key 'PORTAL_PRIME_TOKEN' -Value $portalPrimeToken
+Set-DotEnvValue -EnvPath $envPath -Key 'PORTAL_ORQEVIA_TOKEN' -Value $portalPrimeToken
 Set-DotEnvValue -EnvPath $envPath -Key 'CLOUDFLARE_TUNNEL_TOKEN' -Value $CloudflareTunnelToken
-Set-DotEnvValue -EnvPath $envPath -Key 'PRIME_PUBLIC_URL' -Value $PrimePublicUrl.TrimEnd('/')
+Set-DotEnvValue -EnvPath $envPath -Key 'ORQEVIA_PUBLIC_URL' -Value $PrimePublicUrl.TrimEnd('/')
 
 Push-Location $projectRoot
 try {
@@ -129,8 +129,8 @@ else {
 }
 Write-Host ''
 Write-Host 'Next owner-controlled secret handoffs:'
-Write-Host '1. Configure The Portal with both PORTAL tokens, plus PRIME_BASE_URL=<PRIME_PUBLIC_URL> and PRIME_INTEGRATION_TOKEN.'
-Write-Host '2. Configure the VELYQUA server bridge with PRIME_BASE_URL=<PRIME_PUBLIC_URL>, PRIME_INTEGRATION_TOKEN and the exact Supabase owner user id.'
+Write-Host '1. Configure The Portal with both PORTAL tokens, plus ORQEVIA_BASE_URL=<ORQEVIA_PUBLIC_URL> and ORQEVIA_INTEGRATION_TOKEN.'
+Write-Host '2. Configure the VELYQUA server bridge with ORQEVIA_BASE_URL=<ORQEVIA_PUBLIC_URL>, ORQEVIA_INTEGRATION_TOKEN and the exact Supabase owner user id.'
 Write-Host '3. Set only EXPO_PUBLIC_VELYQUA_BRIDGE_URL=https://velyqua.vercel.app in the VELYQUA public build.'
 Write-Host '4. Keep jarvis.lamjarvis.com routed to the HTTPS Interface with origin CA verification and Owner Access JWT enforcement.'
 Write-Host '   The legacy integration-gateway is API-only and cannot serve the JARVIS PWA; it needs a separate reviewed route if retained.'

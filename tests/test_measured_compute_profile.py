@@ -12,8 +12,8 @@ def measured(tmp_path,monkeypatch):
                     'runtime_version':'fixture-ollama',
                     'models':{'gemma3:1b':{'digest':'a'*64}}}).encode()
     path=tmp_path/'profile.json';path.write_bytes(raw)
-    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE',str(path))
-    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('ORQEVIA_MEASURED_COMPUTE_PROFILE',str(path))
+    monkeypatch.setenv('ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
     cp.load_compute_profile.cache_clear()
     cp.runtime_compute_profile.cache_clear()
     def urlopen(url, timeout):
@@ -54,7 +54,7 @@ def test_hash_pinned_incomplete_requested_profile_fails_closed(measured,monkeypa
     del profile[missing]
     raw=json.dumps(profile).encode()
     measured.write_bytes(raw)
-    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
     cp.load_compute_profile.cache_clear()
     cp.runtime_compute_profile.cache_clear()
     assert cp.runtime_compute_profile() is None
@@ -82,7 +82,7 @@ def test_measured_profile_requires_pinned_runtime_and_model_bytes(measured, monk
     profile.update(mutation)
     raw = json.dumps(profile).encode()
     measured.write_bytes(raw)
-    monkeypatch.setenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256', hashlib.sha256(raw).hexdigest())
     cp.load_compute_profile.cache_clear()
     cp.runtime_compute_profile.cache_clear()
     with pytest.raises(RuntimeError, match='runtime identity'):

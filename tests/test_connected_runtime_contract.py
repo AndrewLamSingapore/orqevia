@@ -10,7 +10,7 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
 
         self.assertIn(
-            "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000",
+            "${ORQEVIA_BIND_ADDRESS:-127.0.0.1}:${ORQEVIA_PORT:-8000}:8000",
             compose,
         )
         self.assertIn('profiles: ["tunnel"]', compose)
@@ -21,7 +21,7 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
             compose,
         )
         self.assertIn(
-            "PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}",
+            "ORQEVIA_INTEGRATION_TOKEN: ${ORQEVIA_INTEGRATION_TOKEN:-}",
             compose,
         )
 
@@ -31,12 +31,12 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         self.assertIn("path /health", caddyfile)
         self.assertIn("path /api/integrations/*", caddyfile)
         self.assertIn(
-            'header Authorization "Bearer {$PRIME_INTEGRATION_TOKEN}"',
+            'header Authorization "Bearer {$ORQEVIA_INTEGRATION_TOKEN}"',
             caddyfile,
         )
         self.assertIn('respond "Unauthorized" 401', caddyfile)
         self.assertIn('respond "Not Found" 404', caddyfile)
-        self.assertEqual(caddyfile.count("reverse_proxy backend:8000"), 2)
+        self.assertEqual(caddyfile.count("reverse_proxy backend:8000"), 1)
 
     def test_bootstrap_preserves_recovered_secrets_and_requires_explicit_new_epoch(self) -> None:
         script = (
@@ -48,9 +48,9 @@ class ConnectedRuntimeContractTests(unittest.TestCase):
         self.assertIn("will not create replacement state", script)
         self.assertIn("this is not recovered historical state", script)
         self.assertIn("Existing non-empty application tokens were preserved.", script)
-        self.assertIn("PRIME_INTEGRATION_TOKEN", script)
+        self.assertIn("ORQEVIA_INTEGRATION_TOKEN", script)
         self.assertIn("PORTAL_RESULT_TOKEN", script)
-        self.assertIn("PORTAL_PRIME_TOKEN", script)
+        self.assertIn("PORTAL_ORQEVIA_TOKEN", script)
         self.assertIn("CLOUDFLARE_TUNNEL_TOKEN", script)
         self.assertIn(
             "docker compose --profile tunnel config --quiet",

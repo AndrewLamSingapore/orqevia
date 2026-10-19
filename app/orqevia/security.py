@@ -12,7 +12,7 @@ def install(app):
     slots=asyncio.Semaphore(2)
     @app.middleware('http')
     async def protect(request,call_next):
-        secret=os.getenv('PRIME_SPINE_TOKEN','').strip()
+        secret=os.getenv('ORQEVIA_SPINE_TOKEN','').strip()
         supplied=request.headers.getlist('authorization')
         if len(secret)<16:return JSONResponse({'detail':'Service authority unavailable'},status_code=503)
         if len(supplied)!=1 or not hmac.compare_digest(supplied[0],'Bearer '+secret):

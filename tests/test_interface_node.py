@@ -10,11 +10,11 @@ from app.artifact_factory import ArtifactFactory
 class InterfaceTests(AgentDispatchTests):
     def setUp(self):
         super().setUp()
-        os.environ['PRIME_INTERFACE_CLIENTS_JSON']=json.dumps({client:{'token_sha256':hashlib.sha256(token.encode()).hexdigest(),
+        os.environ['ORQEVIA_INTERFACE_CLIENTS_JSON']=json.dumps({client:{'token_sha256':hashlib.sha256(token.encode()).hexdigest(),
             'capabilities':['objective.submit','task.read','task.cancel','artifact.read']} for client,token in [('dell','test-dell'),('iphone','test-phone')]})
 
     def tearDown(self):
-        os.environ.pop('PRIME_INTERFACE_CLIENTS_JSON',None)
+        os.environ.pop('ORQEVIA_INTERFACE_CLIENTS_JSON',None)
         super().tearDown()
 
     def test_client_identity_is_not_owner_authority_and_reconnect_is_idempotent(self):
@@ -31,7 +31,7 @@ class InterfaceTests(AgentDispatchTests):
         assert changed.status_code==409
         assert self.client.get('/api/interface/v1/tasks/'+task,headers=dell).status_code==200
         assert self.client.get('/api/interface/v1/tasks/'+task,headers=phone).status_code==404
-        artifact=ArtifactFactory(Path(os.environ['PRIME_DATA_DIR'])/'artifacts').create(kind='json',content='{"verified":true}',
+        artifact=ArtifactFactory(Path(os.environ['ORQEVIA_DATA_DIR'])/'artifacts').create(kind='json',content='{"verified":true}',
             task_id=task,creator='a18',provenance='Independent fixture validation')
         delivered=self.client.get('/api/interface/v1/artifacts/'+artifact['artifact_id'],headers=dell)
         assert delivered.status_code==200

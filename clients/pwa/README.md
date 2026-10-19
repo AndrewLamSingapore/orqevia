@@ -10,7 +10,7 @@ Canonical mobile/voice client for v1. This is a static, dependency-free browser 
 
 Serve this directory at `/pwa/` on the existing LAN-scoped HTTPS Interface Node. Serve `.mjs` as JavaScript, the manifest as `application/manifest+json`, and the icons with their image MIME types. `/pwa/sw.js` controls only `/pwa/`. Static responses must contain no personalized session data.
 
-`PRIME_PWA_ORIGIN` remains the LAN HTTPS origin. To admit the public hostname on the same Interface Node, set `PRIME_PWA_ADDITIONAL_ORIGINS=https://jarvis.lamjarvis.com`. This setting accepts only that exact origin; an invalid value rejects PWA requests on both hosts. The tunnel must connect to the Interface Node over HTTPS and verify its CA using `/run/prime-tls/ca.crt`. The server does not trust forwarded host or scheme headers.
+`ORQEVIA_PWA_ORIGIN` remains the LAN HTTPS origin. To admit the public hostname on the same Interface Node, set `ORQEVIA_PWA_ADDITIONAL_ORIGINS=https://jarvis.lamjarvis.com`. This setting accepts only that exact origin; an invalid value rejects PWA requests on both hosts. The tunnel must connect to the Interface Node over HTTPS and verify its CA using `/run/orqevia-tls/ca.crt`. The server does not trust forwarded host or scheme headers.
 
 The paired backend supplies:
 
@@ -19,7 +19,7 @@ The paired backend supplies:
 - `POST /pwa/api/logout` revokes the HttpOnly Secure session.
 - `POST /pwa/api/owner-authority-check` is a side-effect-free server authorization proof: Owner receives the explicit capability; Member receives HTTP 403.
 - `POST /pwa/api/uploads` with raw bytes and URL-encoded `X-Filename`; TXT/Markdown/JSON only, maximum 1 MiB. Returns `{artifactId, sha256, bytes, reference}`.
-- Existing `/interface/v1` routes accept the session cookie; the server supplies client identity internally. Every POST carries `X-Jarvis-PWA: 1`; the browser supplies Origin for server validation.
+- Existing `/interface/v1` routes accept the session cookie; the server supplies client identity internally. Every POST carries `X-ORQEVIA-PWA: 1`; the browser supplies Origin for server validation.
 - Objective submissions carry `uploaded_artifact_ids`, at most four. The backend verifies ownership/integrity and appends the UTF-8 text as labelled untrusted evidence within its 80,000-character combined context limit. The UI does not claim arbitrary binary analysis.
 
 No browser bearer-token storage, provider API call, caller-selected authority, or frontend cloud credential exists. HttpOnly session cookies are not read by JavaScript. Enrollment codes are cleared immediately after submission and are not persisted.

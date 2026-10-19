@@ -16,7 +16,7 @@ Scientific support is never inferred from observation counts. Results state only
 
 Runtime secrets are configuration only:
 
-- PRIME_INTEGRATION_TOKEN authenticates VELYQUA events and administrative flush requests.
+- ORQEVIA_INTEGRATION_TOKEN authenticates VELYQUA events and administrative flush requests.
 - PORTAL_RESULT_URL is the exact Portal result endpoint.
 - PORTAL_RESULT_TOKEN authenticates PRIME results at The Portal.
 

@@ -23,8 +23,8 @@ RUNTIME = {'host_id': 'ABEX', 'version': 'test-only-v1',
 def temporary_import_environment(monkeypatch, tmp_path):
     # Inspection imports the actual Pydantic class, not a replacement contract.
     # Any import-time owning domain uses only this temporary test location.
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'compute-queue.db'))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'compute-queue.db'))
 
 
 def args():

@@ -65,7 +65,7 @@ def run(base: str = "http://127.0.0.1:8000") -> dict:
     if (readback.get("task_id") != task_id or readback.get("integrity") != "VALID"
             or readback.get("currentness") != "CURRENT"
             or readback.get("verification") != "UNVERIFIED"
-            or readback.get("source") != "PRIME_OBJECTIVE_STORE"
+            or readback.get("source") != "ORQEVIA_OBJECTIVE_STORE"
             or "independent_claim_verification" not in readback.get("proof", {}).get("unproven", [])):
         raise RuntimeError("Evidence scope or provenance did not match the canary contract")
     return {"observed_at": datetime.now(timezone.utc).isoformat(),

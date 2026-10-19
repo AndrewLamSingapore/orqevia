@@ -104,7 +104,7 @@ def test_explicit_order_survives_authenticated_request_and_actual_queue_storage(
     assert request.transport_dump()['response_schema_order'] == 'declared'
     fields = list(spec['request']['response_schema']['properties'])
     path = tmp_path / 'queue.db'
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(path))
     queue = JobQueue(path)
     job = queue.submit(agent='a04', prompt='source fixture only', model='gemma3:4b',
         response_format='strict_json', response_schema=request.response_schema,

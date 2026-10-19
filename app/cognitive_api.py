@@ -27,7 +27,7 @@ class MultiInvocationRequest(StrictRequest):
 class EvalRequest(StrictRequest): answer:str; evidence_terms:list[str]=Field(default_factory=list); required_terms:list[str]=Field(default_factory=list); executed_external_action:bool=False
 
 def require_token(authorization:str|None)->None:
-    expected=os.getenv("PRIME_SPINE_TOKEN","").strip(); supplied=authorization[7:].strip() if authorization and authorization.lower().startswith("bearer ") else ""
+    expected=os.getenv("ORQEVIA_SPINE_TOKEN","").strip(); supplied=authorization[7:].strip() if authorization and authorization.lower().startswith("bearer ") else ""
     if not expected: raise HTTPException(status_code=503,detail="Cognitive authentication is not configured")
     if not supplied or not hmac.compare_digest(supplied,expected): raise HTTPException(status_code=401,detail="Cognitive authorization required")
 
@@ -64,10 +64,10 @@ def multi_invoke(request:MultiInvocationRequest,authorization:str|None=Header(de
     require_token(authorization)
     # Explicit experimental opt-in. No frontend exposure, cloud routing or
     # production behavior change until normal admission and promotion gates.
-    if os.getenv("PRIME_MULTI_INVOCATION_ENABLED", "") != "1":
+    if os.getenv("ORQEVIA_MULTI_INVOCATION_ENABLED", "") != "1":
         raise HTTPException(status_code=503,detail="Multi-invocation candidate is disabled")
     try:
-        max_calls=min(64,max(5,int(os.getenv("PRIME_MULTI_INVOCATION_MAX_CALLS","8"))))
+        max_calls=min(64,max(5,int(os.getenv("ORQEVIA_MULTI_INVOCATION_MAX_CALLS","8"))))
         budget=InvocationBudget(max_calls=max_calls,max_parallel=1,max_elapsed_seconds=180)
         runtime=MultiInvocationRuntime(local_gateway_invoker(orchestrator.gateway))
         return {"ok":True,**runtime.run(objective=request.objective,depth=request.depth,

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 def test_internal_auth_suspension_and_body_bounds(monkeypatch,tmp_path):
     from app.orqevia.security import install
     monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','test-existing-authority-token')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','test-existing-authority-token')
     app=FastAPI()
     called=[]
     @app.post('/api/orqevia/intelligence/ingest/run')
@@ -115,7 +115,7 @@ def test_ui_health_uses_the_authenticated_companion_and_error_is_not_empty_map()
 
 def test_production_entry_requires_server_authentication(monkeypatch,tmp_path):
     monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','test-existing-authority-token')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','test-existing-authority-token')
     from app.orqevia.deployment import app
     client=TestClient(app)
     assert client.get('/api/orqevia/intelligence/health').status_code==401
@@ -124,8 +124,8 @@ def test_production_entry_requires_server_authentication(monkeypatch,tmp_path):
 def test_bridge_real_origin_checks_and_private_upstream_headers(monkeypatch):
     import httpx
     from app import orqevia_bridge as bridge
-    monkeypatch.setenv('PRIME_PWA_ORIGIN','https://abex.test')
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','test-existing-authority-token')
+    monkeypatch.setenv('ORQEVIA_PWA_ORIGIN','https://abex.test')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','test-existing-authority-token')
     monkeypatch.setattr(bridge.pwa_sessions,'require_session',lambda req:{'clientId':'pwa:fixture','role':'OWNER'})
     recorded=[]
     def upstream(request):
@@ -140,6 +140,6 @@ def test_bridge_real_origin_checks_and_private_upstream_headers(monkeypatch):
     client=TestClient(app,base_url='https://abex.test',cookies={bridge.pwa_sessions.COOKIE:'fixture'})
     path='/api/orqevia/intelligence/ingest/run'
     assert client.post(path).status_code==403
-    assert client.post(path,headers={'Origin':'https://evil.test','X-JARVIS-PWA':'1'}).status_code==403
-    assert client.post(path,headers={'Origin':'https://abex.test','X-JARVIS-PWA':'1'}).status_code==200
+    assert client.post(path,headers={'Origin':'https://evil.test','X-ORQEVIA-PWA':'1'}).status_code==403
+    assert client.post(path,headers={'Origin':'https://abex.test','X-ORQEVIA-PWA':'1'}).status_code==200
     assert len(recorded)==1

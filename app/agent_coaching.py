@@ -240,9 +240,9 @@ def main():
     stop = threading.Event()
     for sig in (signal.SIGTERM,signal.SIGINT):
         signal.signal(sig,lambda *_:stop.set())
-    root = Path(os.getenv('PRIME_DATA_DIR','/data'))
+    root = Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
     controller = CoachingController(root/'agent-coaching.db',queue,
-        source_revision=os.environ['PRIME_COACHING_SOURCE_REVISION'],model=SETTINGS.deep_model)
+        source_revision=os.environ['ORQEVIA_COACHING_SOURCE_REVISION'],model=SETTINGS.deep_model)
     while not stop.is_set():
         try:
             if (root/'coaching.pause').exists():

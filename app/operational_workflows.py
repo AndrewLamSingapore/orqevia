@@ -129,7 +129,7 @@ def execute_workflow(body: WorkflowRequest, *, parent_task_id=None):
                 'expected_total_matches':matched,'validation':'PASS' if passed else 'FAIL',
                 'arithmetic_verification':'PASS','scope':'Supplied rows only; invalid rows explicitly excluded from valid_rows_total',
                 'agents':actors,'model_calls':0}
-        factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+        factory=ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'artifacts')
         connector=ConnectorRegistry()
         connector.register(Sink('artifact-factory','artifact.create','R1','New task report artifact',True,'LOCAL_ONLY','artifact.create'),
                            lambda payload:factory.create(**payload))

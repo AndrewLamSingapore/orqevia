@@ -30,7 +30,7 @@ def main():
             if attempt==19:raise RuntimeError('Existing Docker Interface unavailable') from None
             time.sleep(15)
     env=dict(item.split('=',1) for item in json.loads(result.stdout)[0]['Config']['Env'])
-    token=env.get('PRIME_SPINE_TOKEN','');account=env.get('PRIME_PWA_OWNER_ACCOUNT_ID','')
+    token=env.get('ORQEVIA_SPINE_TOKEN','');account=env.get('ORQEVIA_PWA_OWNER_ACCOUNT_ID','')
     if len(token)<16 or not account:raise RuntimeError('Existing owner service authority unavailable')
     request=urllib.request.Request('http://127.0.0.1:8150/health',headers={'Authorization':'Bearer '+token,'X-ORQEVIA-Owner':hashlib.sha256(account.encode()).hexdigest()})
     try:

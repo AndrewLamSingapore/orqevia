@@ -16,7 +16,7 @@ if(typeof document!=='undefined'){
  function record(p,label,value){const d=node('details');d.append(node('summary',label),node('pre',JSON.stringify(value,null,2)));p.append(d);return d;}
  function source(p,label,url){const href=safeSource(url);if(!href)return;const a=node('a',label);a.href=href;a.target='_blank';a.rel='noopener noreferrer';p.append(a);}
  async function request(path,{body,signal,recovered=false}={}){
-  const r=await fetch(path,{method:body?'POST':'GET',body:body?JSON.stringify(body):undefined,credentials:'same-origin',cache:'no-store',redirect:'error',signal:signal||AbortSignal.timeout(12000),headers:{'Accept':'application/json','X-Jarvis-PWA':'1',...(body?{'Content-Type':'application/json'}:{})}});
+  const r=await fetch(path,{method:body?'POST':'GET',body:body?JSON.stringify(body):undefined,credentials:'same-origin',cache:'no-store',redirect:'error',signal:signal||AbortSignal.timeout(12000),headers:{'Accept':'application/json','X-ORQEVIA-PWA':'1',...(body?{'Content-Type':'application/json'}:{})}});
   if(r.status===401&&!recovered&&path!=='/pwa/api/session'){
    restoring??=request('/pwa/api/session',{signal:AbortSignal.timeout(12000)}).finally(()=>{restoring=null;});
    const restored=await restoring;if(restored.authenticated)return request(path,{body,signal,recovered:true});

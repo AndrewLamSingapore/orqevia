@@ -47,8 +47,8 @@ def _governance_answer(question: str)->dict[str,Any]:
             'provenance':'GOVERNANCE_MANIFEST_AND_RUNTIME', 'text':text}
 
 def _runtime()->dict[str,Any]:
-    source=os.getenv('PRIME_INTERFACE_RUNTIME_REVISION',os.getenv('PRIME_RUNTIME_REVISION','UNKNOWN')).strip().lower()
-    image=os.getenv('PRIME_RUNTIME_IMAGE_DIGEST','').strip() or 'UNAVAILABLE'
+    source=os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION',os.getenv('ORQEVIA_RUNTIME_REVISION','UNKNOWN')).strip().lower()
+    image=os.getenv('ORQEVIA_RUNTIME_IMAGE_DIGEST','').strip() or 'UNAVAILABLE'
     if not re.fullmatch(r'[0-9a-f]{40}',source):source='UNAVAILABLE'
     return {'source_revision':source,'image_digest':image}
 

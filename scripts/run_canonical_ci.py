@@ -5,9 +5,9 @@ from validate_canonical import ROOT,validate
 
 def main():
     validate()
-    data=Path(os.environ['PRIME_DATA_DIR']).resolve()
+    data=Path(os.environ['ORQEVIA_DATA_DIR']).resolve()
     data.mkdir(parents=True,exist_ok=True)
-    os.environ.setdefault('PRIME_COMPUTE_QUEUE_DB',str(data/'queue.db'))
+    os.environ.setdefault('ORQEVIA_COMPUTE_QUEUE_DB',str(data/'queue.db'))
     sys.dont_write_bytecode=True
     sys.path.insert(0,str(ROOT))
     import pytest

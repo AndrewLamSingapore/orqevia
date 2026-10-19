@@ -53,7 +53,7 @@ jobs:
           OLLAMA_IMAGE: ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532
           CADDY_IMAGE: caddy@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e
           CLOUDFLARED_IMAGE: cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4
-          PRIME_HF_TOKEN_FILE: /tmp/placeholder-not-a-token
+          ORQEVIA_HF_TOKEN_FILE: /tmp/placeholder-not-a-token
         run: |
           docker compose -f docker-compose.yml config --quiet
           docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet
@@ -66,20 +66,20 @@ jobs:
         with:
           persist-credentials: false
       - name: Build production image
-        run: docker build -t orqevia:acceptance --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+        run: docker build -t orqevia:acceptance --build-arg ORQEVIA_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Verify exact source and packaged certification reviewer
         run: |
           test "$(docker image inspect orqevia:acceptance --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$GITHUB_SHA"
-          docker run --rm --entrypoint python orqevia:acceptance -c "import os; from app import agent_cert_review_tool, agent_cert_role_review, agent_cert_transport; assert os.environ['PRIME_RUNTIME_REVISION'] == '$GITHUB_SHA'"
+          docker run --rm --entrypoint python orqevia:acceptance -c "import os; from app import agent_cert_review_tool, agent_cert_role_review, agent_cert_transport; assert os.environ['ORQEVIA_RUNTIME_REVISION'] == '$GITHUB_SHA'"
       - name: Create isolated acceptance network
         run: docker network create orqevia-acceptance
       - name: Verify current production entrypoint, artifact, and restart
         run: |
           docker volume create orqevia-current-data
           docker run -d --name orqevia-current --network orqevia-acceptance \
-            -v orqevia-current-data:/data -e PRIME_DATA_DIR=/data \
-            -e PRIME_REGISTRY_V1_ENABLED=1 \
-            -e PRIME_SPINE_TOKEN=acceptance-secret orqevia:acceptance
+            -v orqevia-current-data:/data -e ORQEVIA_DATA_DIR=/data \
+            -e ORQEVIA_REGISTRY_V1_ENABLED=1 \
+            -e ORQEVIA_SPINE_TOKEN=acceptance-secret orqevia:acceptance
           receipt=$(docker run --rm -i --network container:orqevia-current python:3.12-slim python - <<'PY'
           import hashlib, json, time, urllib.error, urllib.request
           base='http://127.0.0.1:8000'
@@ -117,9 +117,9 @@ jobs:
           test -n "$task_id" && test -n "$artifact_id"
           docker rm -f orqevia-current
           docker run -d --name orqevia-current --network orqevia-acceptance \
-            -v orqevia-current-data:/data -e PRIME_DATA_DIR=/data \
-            -e PRIME_REGISTRY_V1_ENABLED=1 \
-            -e PRIME_SPINE_TOKEN=acceptance-secret orqevia:acceptance
+            -v orqevia-current-data:/data -e ORQEVIA_DATA_DIR=/data \
+            -e ORQEVIA_REGISTRY_V1_ENABLED=1 \
+            -e ORQEVIA_SPINE_TOKEN=acceptance-secret orqevia:acceptance
           docker run --rm -i --network container:orqevia-current \
             -e TASK_ID="$task_id" -e ARTIFACT_ID="$artifact_id" python:3.12-slim python - <<'PY'
           import hashlib, json, os, time, urllib.request

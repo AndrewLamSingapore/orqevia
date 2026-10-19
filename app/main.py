@@ -20,10 +20,10 @@ OLLAMA=SETTINGS.ollama_base_url
 FAST_MODEL=SETTINGS.fast_model
 DEEP_MODEL=SETTINGS.deep_model
 EMBED_MODEL=SETTINGS.embedding_model
-MAX_UPLOAD=int(os.getenv("PRIME_MAX_UPLOAD_MB","25"))*1024*1024
-MAX_AGENT_STEPS=max(1,min(10,int(os.getenv("PRIME_MAX_AGENT_STEPS","7"))))
-CODE_TIMEOUT=max(2,min(15,int(os.getenv("PRIME_CODE_TIMEOUT_SECONDS","6"))))
-DATA=Path(os.getenv("PRIME_DATA_DIR","/data"));DATA.mkdir(parents=True,exist_ok=True)
+MAX_UPLOAD=int(os.getenv("ORQEVIA_MAX_UPLOAD_MB","25"))*1024*1024
+MAX_AGENT_STEPS=max(1,min(10,int(os.getenv("ORQEVIA_MAX_AGENT_STEPS","7"))))
+CODE_TIMEOUT=max(2,min(15,int(os.getenv("ORQEVIA_CODE_TIMEOUT_SECONDS","6"))))
+DATA=Path(os.getenv("ORQEVIA_DATA_DIR","/data"));DATA.mkdir(parents=True,exist_ok=True)
 DB=DATA/"prime.db"; DATASETS=DATA/"datasets"; CODE=DATA/"code_workspace"
 DATASETS.mkdir(exist_ok=True);CODE.mkdir(exist_ok=True)
 app=FastAPI(docs_url=None,redoc_url=None,telemetry=PRIVACY_FASTAPI_TELEMETRY)
@@ -181,11 +181,11 @@ def governance_counts():
  finally:c.close()
 
 
-PHASE2_MAX_TASKS=int(os.environ.get("PRIME_AUTONOMOUS_CYCLE_MAX_TASKS","8"))
-PHASE2_MAX_PROJECTS=int(os.environ.get("PRIME_AUTONOMOUS_CYCLE_MAX_PROJECTS","3"))
-PHASE2_DAILY_BUDGET=float(os.environ.get("PRIME_AUTONOMOUS_DAILY_BUDGET","24"))
-WATCHDOG_MAX_FAILURES=int(os.environ.get("PRIME_WATCHDOG_MAX_CONSECUTIVE_FAILURES","3"))
-WATCHDOG_MAX_CYCLES_HOURLY=int(os.environ.get("PRIME_WATCHDOG_MAX_CYCLES_PER_HOUR","4"))
+PHASE2_MAX_TASKS=int(os.environ.get("ORQEVIA_AUTONOMOUS_CYCLE_MAX_TASKS","8"))
+PHASE2_MAX_PROJECTS=int(os.environ.get("ORQEVIA_AUTONOMOUS_CYCLE_MAX_PROJECTS","3"))
+PHASE2_DAILY_BUDGET=float(os.environ.get("ORQEVIA_AUTONOMOUS_DAILY_BUDGET","24"))
+WATCHDOG_MAX_FAILURES=int(os.environ.get("ORQEVIA_WATCHDOG_MAX_CONSECUTIVE_FAILURES","3"))
+WATCHDOG_MAX_CYCLES_HOURLY=int(os.environ.get("ORQEVIA_WATCHDOG_MAX_CYCLES_PER_HOUR","4"))
 
 def watchdog_event(severity,event_type,subject=None,details=None):
  with WRITE_LOCK:
@@ -207,11 +207,11 @@ def phase2_counts():
   }
  finally:c.close()
 
-PHASE3_VERIFY_THRESHOLD=float(os.environ.get("PRIME_PHASE3_VERIFY_THRESHOLD","65"))
-PHASE3_MAX_REVISIONS=int(os.environ.get("PRIME_PHASE3_MAX_REVISIONS","1"))
-PHASE3_MAX_TASKS_PER_RUN=int(os.environ.get("PRIME_PHASE3_MAX_TASKS_PER_RUN","3"))
-ORCH_MAX_JOBS=max(1,min(5,int(os.environ.get("PRIME_ORCHESTRATION_MAX_JOBS","3"))))
-ORCH_MAX_ATTEMPTS=max(1,min(3,int(os.environ.get("PRIME_ORCHESTRATION_MAX_ATTEMPTS","2"))))
+PHASE3_VERIFY_THRESHOLD=float(os.environ.get("ORQEVIA_PHASE3_VERIFY_THRESHOLD","65"))
+PHASE3_MAX_REVISIONS=int(os.environ.get("ORQEVIA_PHASE3_MAX_REVISIONS","1"))
+PHASE3_MAX_TASKS_PER_RUN=int(os.environ.get("ORQEVIA_PHASE3_MAX_TASKS_PER_RUN","3"))
+ORCH_MAX_JOBS=max(1,min(5,int(os.environ.get("ORQEVIA_ORCHESTRATION_MAX_JOBS","3"))))
+ORCH_MAX_ATTEMPTS=max(1,min(3,int(os.environ.get("ORQEVIA_ORCHESTRATION_MAX_ATTEMPTS","2"))))
 
 def phase3_counts():
  c=connect()

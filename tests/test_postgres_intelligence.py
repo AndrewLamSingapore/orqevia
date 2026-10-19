@@ -129,7 +129,7 @@ def test_geojson_api_and_authenticated_service(monkeypatch,tmp_path,observation)
     from app.orqevia.security import install
     store,r=observation;store.upsert(r,{'test_fixture':True})
     monkeypatch.setattr(api,'OBSERVATIONS',store)
-    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path));monkeypatch.setenv('PRIME_SPINE_TOKEN','controlled-service-authentication')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path));monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','controlled-service-authentication')
     app=FastAPI();app.include_router(api.router);install(app);client=TestClient(app)
     path='/api/orqevia/intelligence/geo/features'
     assert client.get(path).status_code==401

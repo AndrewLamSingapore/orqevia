@@ -18,7 +18,7 @@ the actual serving certificate; its identity response is not a trust anchor.
 
 ## Provider configuration
 
-PRIME_PROVIDER_CATALOG names a local JSON catalog. The supplied unconfigured
+ORQEVIA_PROVIDER_CATALOG names a local JSON catalog. The supplied unconfigured
 catalog has zero models and authorizes zero cloud calls. Each enabled model needs
 id, tier (MINI or FLAGSHIP), location cloud, model, HTTPS endpoint, secret_ref,
 context_tokens, output_tokens, input_usd_million and output_usd_million. Optional

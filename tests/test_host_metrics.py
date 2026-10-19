@@ -23,14 +23,14 @@ def receipt(tmp_path, **overrides):
 
 
 def test_unconfigured_is_not_configured(monkeypatch):
-    monkeypatch.delenv('PRIME_HOST_METRICS_RECEIPT', raising=False)
+    monkeypatch.delenv('ORQEVIA_HOST_METRICS_RECEIPT', raising=False)
     result = host_metrics()
     assert result['configured'] is False
     assert all(value is None for value in result['values'].values())
 
 
 def test_valid_receipt_is_observed(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_HOST_METRICS_RECEIPT', str(receipt(tmp_path)))
+    monkeypatch.setenv('ORQEVIA_HOST_METRICS_RECEIPT', str(receipt(tmp_path)))
     result = host_metrics()
     assert result['configured'] is True
     assert result['values'] == {
@@ -40,7 +40,7 @@ def test_valid_receipt_is_observed(monkeypatch, tmp_path):
 
 
 def test_stale_receipt_is_unavailable(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_HOST_METRICS_RECEIPT',
+    monkeypatch.setenv('ORQEVIA_HOST_METRICS_RECEIPT',
                        str(receipt(tmp_path, captured_at=time.time() - MAX_AGE_SECONDS - 1)))
     result = host_metrics()
     assert result['configured'] is True
@@ -48,7 +48,7 @@ def test_stale_receipt_is_unavailable(monkeypatch, tmp_path):
 
 
 def test_out_of_range_receipt_is_unavailable(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_HOST_METRICS_RECEIPT',
+    monkeypatch.setenv('ORQEVIA_HOST_METRICS_RECEIPT',
                        str(receipt(tmp_path, cpu_percent=150.0, memory_percent=-1.0)))
     result = host_metrics()
     assert result['configured'] is True

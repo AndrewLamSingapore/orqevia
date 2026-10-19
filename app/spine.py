@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 from .generated.portfolio_contracts import validate_action_envelope
+from .path_migration import migrate_legacy_database
 
 POLICY_STATES = {"AUTO", "BOUNDED_AUTO", "GATED", "PROHIBITED"}
 VERIFY_STATES = {"PENDING", "VERIFIED", "FAILED", "NOT_OBSERVABLE", "OBSERVED"}
@@ -105,7 +106,8 @@ class SpineStore:
     """SQLite-backed personal store. Separate tables preserve store semantics."""
 
     def __init__(self, path: str | None = None):
-        self.path = path or os.getenv("PRIME_SPINE_DB") or "/tmp/prime-spine.db"
+        self.path = path or os.getenv("ORQEVIA_SPINE_DB") or "/tmp/orqevia-spine.db"
+        migrate_legacy_database(self.path, "prime-spine.db")
         parent = Path(self.path).parent
         parent.mkdir(parents=True, exist_ok=True)
         self._init()

@@ -34,7 +34,7 @@ def _observed_count(path: Path, query: str, parameters=()):
 
 def evidence_aggregates():
     """Safe aggregate evidence from the active direct-execution stores only."""
-    root=Path(os.getenv('PRIME_DATA_DIR','/data')).resolve()
+    root=Path(os.getenv('ORQEVIA_DATA_DIR','/data')).resolve()
     registry=load_agent_registry()
     objectives=_observed_count(root/'objectives.db','SELECT COUNT(*) FROM objectives')
     jobs=_observed_count(root/'compute-queue.db','SELECT COUNT(*) FROM compute_jobs')
@@ -89,7 +89,7 @@ def evidence_aggregates():
     except (OSError,ValueError,TypeError,json.JSONDecodeError):
         actions={'status':'UNAVAILABLE','count':None}
 
-    revision=os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','UNKNOWN').strip().lower()
+    revision=os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION','UNKNOWN').strip().lower()
     if revision!='UNKNOWN' and not re.fullmatch(r'[0-9a-f]{40}',revision):revision='UNKNOWN'
     return {
         'schema_version':'jarvis.evidence-summary.v1','runtime_revision':revision,
@@ -120,7 +120,7 @@ def client_policy(client_id):
         from .pwa_sessions import client_policy as pwa_policy
         return pwa_policy(client_id)
     try:
-        clients=json.loads(os.getenv('PRIME_INTERFACE_CLIENTS_JSON','{}'))
+        clients=json.loads(os.getenv('ORQEVIA_INTERFACE_CLIENTS_JSON','{}'))
         if not isinstance(clients,dict):raise ValueError()
         policy=clients.get(client_id or '',{})
         if not isinstance(policy,dict):raise ValueError()
@@ -162,7 +162,7 @@ def client_identity(client_id: str | None,authorization: str | None,capability: 
 def owner_transport():
     # This credential stays inside ORQEVIA; only bounded advisory methods below
     # may use it. No caller-supplied URL, action, tool, approval, or model allowed.
-    token=os.getenv('PRIME_SPINE_TOKEN','')
+    token=os.getenv('ORQEVIA_SPINE_TOKEN','')
     if not token:raise HTTPException(503,'Authority plane unavailable')
     return 'Bearer '+token
 
@@ -190,7 +190,7 @@ def health(x_client_id: str | None=Header(None),authorization: str | None=Header
 
 
 def db_connect():
-    root=Path(os.getenv('PRIME_DATA_DIR','/data'))
+    root=Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
     root.mkdir(parents=True,exist_ok=True)
     db=sqlite3.connect(root/'interface.db',timeout=15)
     db.execute('CREATE TABLE IF NOT EXISTS requests(client TEXT NOT NULL, key TEXT NOT NULL, digest TEXT NOT NULL, task TEXT, PRIMARY KEY(client,key))')
@@ -290,7 +290,7 @@ def cancel(task_id: str,x_client_id: str | None=Header(None),authorization: str 
 @router.get('/artifacts/{artifact_id}')
 def artifact(artifact_id: str,x_client_id: str | None=Header(None),authorization: str | None=Header(None)):
     client=client_identity(x_client_id,authorization,'artifact.read')
-    factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+    factory=ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'artifacts')
     try:metadata,raw=factory.retrieve(artifact_id)
     except (ValueError,KeyError,FileNotFoundError):raise HTTPException(404,'Artifact unavailable')
     own_task(metadata['task_id'],client)

@@ -18,6 +18,6 @@ def adapt_task(task: dict[str, Any], *, claims: list[dict[str, Any]], observatio
             "started_at":task["created_at"],"completed_at":task.get("completed_at"),
             "status":task["status"],"inputs":task.get("inputs",[]),"claims":claims,
             "observations":observations,"effects":effects,"artifacts":artifacts,
-            "verification":verification,"provenance":{"record_owner":"PRIME_TASK_SYSTEM",
+            "verification":verification,"provenance":{"record_owner":"ORQEVIA_TASK_SYSTEM",
             "runtime_identity":task.get("runtime_identity"),"model_content_authoritative":False},
             "relations":task.get("relations",[])}

@@ -17,8 +17,8 @@ def test_exact_status_intent_rejects_mixed_actions():
 
 
 def test_missing_profile_is_explicit(monkeypatch):
-    monkeypatch.delenv('PRIME_QUALIFIED_PROFILE_PATH',raising=False)
-    monkeypatch.delenv('PRIME_QUALIFIED_PROFILE_SHA256',raising=False)
+    monkeypatch.delenv('ORQEVIA_QUALIFIED_PROFILE_PATH',raising=False)
+    monkeypatch.delenv('ORQEVIA_QUALIFIED_PROFILE_SHA256',raising=False)
     value=qualified_profile()
     assert value['status']=='UNAVAILABLE' and value['execution_backends']=={}
 
@@ -28,8 +28,8 @@ def test_profile_hash_required_and_observations(tmp_path,monkeypatch):
     path=tmp_path/'profile.json'
     raw=json.dumps({'identifier':'abex.compute-profile.v1','execution_backends':{'CPU':'QUALIFIED bounded'},'normal_workers':1,'burst_workers':1}).encode()
     path.write_bytes(raw)
-    monkeypatch.setenv('PRIME_QUALIFIED_PROFILE_PATH',str(path))
-    monkeypatch.setenv('PRIME_QUALIFIED_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('ORQEVIA_QUALIFIED_PROFILE_PATH',str(path))
+    monkeypatch.setenv('ORQEVIA_QUALIFIED_PROFILE_SHA256',hashlib.sha256(raw).hexdigest())
     assert qualified_profile()['status']=='HASH_VERIFIED'
     path.write_bytes(raw+b' ')
     assert qualified_profile()['status']=='INTEGRITY_FAILURE'
@@ -46,8 +46,8 @@ def test_automatic_dispatch_preserves_parent_and_artifact(tmp_path,monkeypatch):
     from app import agent_dispatch_api as dispatch
     from app import runtime_status as status
     from app.artifact_factory import ArtifactFactory
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED','1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
     monkeypatch.setattr(dispatch,'authenticate_owner',lambda value:None)
     monkeypatch.setattr(status,'production_health',lambda:{'observation':'UNAVAILABLE','status':'UNKNOWN'})
     # No model/agent/operation selected by the owner; automatic status route wins.
@@ -63,7 +63,7 @@ def test_automatic_dispatch_preserves_parent_and_artifact(tmp_path,monkeypatch):
 
 
 def test_active_parent_count_is_not_historical_total(tmp_path,monkeypatch):
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'compute-queue.db'))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB',str(tmp_path/'compute-queue.db'))
     with sqlite3.connect(tmp_path/'objectives.db') as db:
         db.execute('CREATE TABLE objectives(id TEXT,state TEXT,steps_json TEXT)')
         db.executemany('INSERT INTO objectives VALUES(?,?,?)',[
@@ -86,8 +86,8 @@ def test_active_parent_count_is_not_historical_total(tmp_path,monkeypatch):
 def test_adopted_dell_objective_is_exact_and_deterministic(tmp_path,monkeypatch):
     from app import runtime_status as status
     from app import agent_dispatch_api as dispatch
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED','1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
     monkeypatch.setattr(dispatch,'authenticate_owner',lambda value:None)
     monkeypatch.setattr(status,'production_health',lambda:{'observation':'UNAVAILABLE','status':'UNKNOWN'})
     assert status.is_runtime_status(status.DELL_OBJECTIVE)

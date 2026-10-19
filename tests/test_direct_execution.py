@@ -15,13 +15,13 @@ from app.connector_sdk import ConnectorRegistry,Sink
 @pytest.fixture(autouse=True)
 def isolated(monkeypatch,tmp_path):
     close_ledgers()
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','1')
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','isolated-test-owner')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED','1')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','isolated-test-owner')
     monkeypatch.setenv('OLLAMA_BASE_URL','http://fixture')
-    for name in ('PRIME_MEASURED_COMPUTE_PROFILE',
-                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_MEASURED_COMPUTE_PROFILE',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256', 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
     yield
     close_ledgers()
@@ -174,7 +174,7 @@ def test_direct_router_has_no_approval_inputs():
 
 def test_interface_identity_not_action_approval(api,monkeypatch):
     client,_=api
-    monkeypatch.setenv('PRIME_INTERFACE_CLIENTS_JSON',json.dumps({'one':{'token_sha256':hashlib.sha256(b'client-one').hexdigest()},'two':{'token_sha256':hashlib.sha256(b'client-two').hexdigest()}}))
+    monkeypatch.setenv('ORQEVIA_INTERFACE_CLIENTS_JSON',json.dumps({'one':{'token_sha256':hashlib.sha256(b'client-one').hexdigest()},'two':{'token_sha256':hashlib.sha256(b'client-two').hexdigest()}}))
     headers={'X-Client-ID':'one','Authorization':'Bearer client-one'}
     submitted=client.post('/api/interface/v1/objectives',headers=headers,json={'objective':'Hello','idempotency_key':'once'})
     assert submitted.status_code==202,submitted.text

@@ -32,7 +32,7 @@ class Clock:
 
 @pytest.fixture(autouse=True)
 def isolated_owner(monkeypatch):
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'offline-owner-fixture')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'offline-owner-fixture')
 
 
 def binding_hash(binding):

@@ -14,7 +14,7 @@
     "interface": {
       "path": "docs/interface-contract.v1.json",
       "version": "1.0.0-candidate",
-      "sha256": "dade48bdffd924bc94433c4e974bb8682d21c3d6384cfe17bc4be1520bc20d23"
+      "sha256": "768c5f43f426fee0835a968e8b44738079dbaf50e7a6211ecf7599404068cf84"
     },
     "task": {
       "path": "contracts/task-v1.schema.json",

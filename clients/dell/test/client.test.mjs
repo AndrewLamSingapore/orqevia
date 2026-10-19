@@ -4,7 +4,7 @@ import { loadConfig, publicConfig, assertSafeSegment } from '../lib/config.mjs';
 import { InterfaceNode, sanitizeTask } from '../lib/upstream.mjs';
 import { createHash } from 'node:crypto';
 
-const PIN_BODY = { hostname: 'DESKTOP-BGD97NB', role: 'AUTHORITATIVE_PRIME', protocolVersion: '1', publicKey: 'test-key' };
+const PIN_BODY = { hostname: 'DESKTOP-BGD97NB', role: 'AUTHORITATIVE_ORQEVIA', protocolVersion: '1', publicKey: 'test-key' };
 const PIN = createHash('sha256').update(JSON.stringify(PIN_BODY)).digest('hex').toUpperCase();
 const goodEnv = {
   JARVIS_ABEX_BASE_URL: 'https://abex.invalid', JARVIS_ABEX_EXPECTED_HOST: 'DESKTOP-BGD97NB',

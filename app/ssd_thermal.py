@@ -51,8 +51,8 @@ def _absolute_path(name: str) -> Path:
 
 def policy() -> dict:
     """Return a pinned disk/limit contract; no unverified default of 70 C."""
-    path = _absolute_path('PRIME_SSD_THERMAL_POLICY')
-    expected = os.getenv('PRIME_SSD_THERMAL_POLICY_SHA256', '').lower()
+    path = _absolute_path('ORQEVIA_SSD_THERMAL_POLICY')
+    expected = os.getenv('ORQEVIA_SSD_THERMAL_POLICY_SHA256', '').lower()
     if len(expected) != 64 or any(c not in '0123456789abcdef' for c in expected):
         raise PermissionError('SSD thermal policy hash unavailable')
     try:
@@ -77,7 +77,7 @@ def policy() -> dict:
 
 
 def observation(thermal_policy: dict, *, now: float | None = None) -> dict:
-    path = _absolute_path('PRIME_SSD_THERMAL_RECEIPT')
+    path = _absolute_path('ORQEVIA_SSD_THERMAL_RECEIPT')
     try:
         sample = _unique_json(path.read_bytes())
     except (OSError, UnicodeError, ValueError) as exc:
@@ -130,7 +130,7 @@ def require_for_demand(demand_mib: int) -> None:
     reviewed collector, ACL and manufacturer limit are provisioned. Once
     enabled, a missing policy is never treated as permission to run heavy work.
     """
-    enforce = os.getenv('PRIME_SSD_THERMAL_ENFORCE', '')
+    enforce = os.getenv('ORQEVIA_SSD_THERMAL_ENFORCE', '')
     if not enforce:
         return
     if enforce != '1':

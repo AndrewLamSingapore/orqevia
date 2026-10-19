@@ -78,7 +78,7 @@ a timer or process restart alone cannot establish cleanup. The queue's separate
 Legacy running cloud-eligible jobs without dispatch-kind evidence are migrated
 conservatively as occupied, including NULL/local-looking provider identities.
 
-`PRIME_CLOUD_REQUEST_CAPACITY` provides an additional cloud upper bound, default
+`ORQEVIA_CLOUD_REQUEST_CAPACITY` provides an additional cloud upper bound, default
 one, clamped to one through four. It does not create extra workers or enlarge the
 existing measured global/local limit. Four is an implementation bound, not proof
 that four concurrent requests are qualified. No settings, catalog, mounts,

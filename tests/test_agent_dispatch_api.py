@@ -41,10 +41,10 @@ class AgentDispatchTests(HarnessApiTests):
 
     def setUp(self):
         super().setUp()
-        os.environ['PRIME_REGISTRY_V1_ENABLED']='1'
+        os.environ['ORQEVIA_REGISTRY_V1_ENABLED']='1'
 
     def tearDown(self):
-        os.environ.pop('PRIME_REGISTRY_V1_ENABLED',None)
+        os.environ.pop('ORQEVIA_REGISTRY_V1_ENABLED',None)
         super().tearDown()
 
     def test_baseline_probe_is_authenticated_bounded_and_non_certifying(self):
@@ -63,7 +63,7 @@ class AgentDispatchTests(HarnessApiTests):
             excessive=self.client.post('/api/agents/probe/baseline',headers=self.headers,
                                        json={**payload,'timeout_seconds':31})
             assert excessive.status_code==422
-            os.environ['PRIME_REGISTRY_V1_ENABLED']='0'
+            os.environ['ORQEVIA_REGISTRY_V1_ENABLED']='0'
             disabled=self.client.post('/api/agents/probe/baseline',headers=self.headers,json=payload)
             assert disabled.status_code==503
 
@@ -125,7 +125,7 @@ class AgentDispatchTests(HarnessApiTests):
         assert valid.status_code==202,valid.text
 
     def test_opt_in_context_pack_reaches_real_dispatch_as_data_only(self):
-        os.environ['PRIME_CONTEXT_PACKS_ENABLED']='1'
+        os.environ['ORQEVIA_CONTEXT_PACKS_ENABLED']='1'
         try:
             with patch.object(compute_queue_api.queue,'submit',wraps=compute_queue_api.queue.submit) as submit:
                 response=self.client.post('/api/agents/dispatch',headers=self.headers,json={
@@ -144,10 +144,10 @@ class AgentDispatchTests(HarnessApiTests):
             assert any('freshness is unknown' in item for item in pack['trusted_constraints'])
             assert pack['task_id']==response.json()['correlation_id']
         finally:
-            os.environ.pop('PRIME_CONTEXT_PACKS_ENABLED',None)
+            os.environ.pop('ORQEVIA_CONTEXT_PACKS_ENABLED',None)
 
     def test_opt_in_context_pack_rejects_oversize_without_enqueue(self):
-        os.environ['PRIME_CONTEXT_PACKS_ENABLED']='1'
+        os.environ['ORQEVIA_CONTEXT_PACKS_ENABLED']='1'
         try:
             with patch.object(compute_queue_api.queue,'submit',wraps=compute_queue_api.queue.submit) as submit:
                 response=self.client.post('/api/agents/dispatch',headers=self.headers,json={
@@ -156,7 +156,7 @@ class AgentDispatchTests(HarnessApiTests):
             assert response.status_code==413,response.text
             submit.assert_not_called()
         finally:
-            os.environ.pop('PRIME_CONTEXT_PACKS_ENABLED',None)
+            os.environ.pop('ORQEVIA_CONTEXT_PACKS_ENABLED',None)
 
     def test_oversize_prompt_is_rejected_before_queue_submission(self):
         settings=SimpleNamespace(context_tokens=384,max_output_tokens=128)
@@ -179,7 +179,7 @@ class AgentDispatchTests(HarnessApiTests):
         assert payload['prompt_bytes']<=payload['input_budget_bytes']<=4096
 
     def test_context_pack_expansion_obeys_mainline_prompt_budget(self):
-        os.environ['PRIME_CONTEXT_PACKS_ENABLED']='1'
+        os.environ['ORQEVIA_CONTEXT_PACKS_ENABLED']='1'
         try:
             settings=SimpleNamespace(context_tokens=512,max_output_tokens=128)
             with patch.object(agent_dispatch_api,'SETTINGS',settings):
@@ -190,4 +190,4 @@ class AgentDispatchTests(HarnessApiTests):
             assert response.status_code==413,response.text
             submit.assert_not_called()
         finally:
-            os.environ.pop('PRIME_CONTEXT_PACKS_ENABLED',None)
+            os.environ.pop('ORQEVIA_CONTEXT_PACKS_ENABLED',None)

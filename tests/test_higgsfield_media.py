@@ -628,7 +628,7 @@ def test_live_generation_receipt_is_digest_contract_and_store_bound(tmp_path):
 
 
 def test_media_routes_require_owner_auth(monkeypatch):
-    monkeypatch.setenv("PRIME_SPINE_TOKEN", "fixture-owner-token")
+    monkeypatch.setenv("ORQEVIA_SPINE_TOKEN", "fixture-owner-token")
     from app import media_api
 
     class FakeService:

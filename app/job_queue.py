@@ -62,18 +62,18 @@ class QueuePolicy:
             except ValueError: value = default
             return max(low, min(high, value))
         return cls(
-            global_concurrency=integer("PRIME_QUEUE_CONCURRENCY", 1, 1, 29),
-            per_agent_concurrency=integer("PRIME_AGENT_CONCURRENCY", 1, 1, 8),
-            background_concurrency=integer("PRIME_BACKGROUND_INFERENCE_LIMIT", 0, 0, 29),
-            local_ram_mb=integer("PRIME_LOCAL_RAM_MB", 32768, 1024, 1048576),
-            local_vram_mb=integer("PRIME_LOCAL_VRAM_MB", 0, 0, 1048576),
-            cloud_wait_seconds=integer("PRIME_CLOUD_WAIT_SECONDS", 300, 0, 86400),
-            starvation_interval_seconds=integer("PRIME_STARVATION_INTERVAL_SECONDS", 300, 1, 86400),
-            starvation_boost_per_interval=integer("PRIME_STARVATION_BOOST", 10, 1, 100),
-            starvation_boost_cap=integer("PRIME_STARVATION_BOOST_CAP", 100, 1, 1000),
-            max_job_cost_usd=decimal("PRIME_MAX_JOB_COST_USD", 2.0, 0, 10000),
-            daily_cost_ceiling_usd=decimal("PRIME_DAILY_COST_USD", 10.0, 0, 100000),
-            cloud_concurrency=integer("PRIME_CLOUD_REQUEST_CAPACITY", 1, 1, 4),
+            global_concurrency=integer("ORQEVIA_QUEUE_CONCURRENCY", 1, 1, 29),
+            per_agent_concurrency=integer("ORQEVIA_AGENT_CONCURRENCY", 1, 1, 8),
+            background_concurrency=integer("ORQEVIA_BACKGROUND_INFERENCE_LIMIT", 0, 0, 29),
+            local_ram_mb=integer("ORQEVIA_LOCAL_RAM_MB", 32768, 1024, 1048576),
+            local_vram_mb=integer("ORQEVIA_LOCAL_VRAM_MB", 0, 0, 1048576),
+            cloud_wait_seconds=integer("ORQEVIA_CLOUD_WAIT_SECONDS", 300, 0, 86400),
+            starvation_interval_seconds=integer("ORQEVIA_STARVATION_INTERVAL_SECONDS", 300, 1, 86400),
+            starvation_boost_per_interval=integer("ORQEVIA_STARVATION_BOOST", 10, 1, 100),
+            starvation_boost_cap=integer("ORQEVIA_STARVATION_BOOST_CAP", 100, 1, 1000),
+            max_job_cost_usd=decimal("ORQEVIA_MAX_JOB_COST_USD", 2.0, 0, 10000),
+            daily_cost_ceiling_usd=decimal("ORQEVIA_DAILY_COST_USD", 10.0, 0, 100000),
+            cloud_concurrency=integer("ORQEVIA_CLOUD_REQUEST_CAPACITY", 1, 1, 4),
         )
 
 

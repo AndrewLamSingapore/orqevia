@@ -21,13 +21,13 @@ RUNTIME = {'host_id': 'authority-test-domain', 'version': 'test-only-v1',
 
 @pytest.fixture
 def domain(tmp_path, monkeypatch):
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'compute-queue.db'))
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', SOURCE)
-    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', IMAGE)
-    monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', RUNTIME['host_id'])
-    monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_VERSION', RUNTIME['version'])
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'compute-queue.db'))
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', SOURCE)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_IMAGE_DIGEST', IMAGE)
+    monkeypatch.setenv('ORQEVIA_INTERFACE_HOST_ID', RUNTIME['host_id'])
+    monkeypatch.setenv('ORQEVIA_INTERFACE_RUNTIME_VERSION', RUNTIME['version'])
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
     from app import agent_registry, objective_api, agent_dispatch_api
     # Authentication integration is separately tested below; no real credential.
     monkeypatch.setattr(objective_api, 'authenticate_owner', lambda _: None)

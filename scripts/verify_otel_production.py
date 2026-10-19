@@ -35,9 +35,9 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="orqevia-otel-production-") as data:
         os.environ.update(
             {
-                "PRIME_DATA_DIR": data,
-                "PRIME_SPINE_TOKEN": "otel-production-fixture",
-                "PRIME_REGISTRY_V1_ENABLED": "0",
+                "ORQEVIA_DATA_DIR": data,
+                "ORQEVIA_SPINE_TOKEN": "otel-production-fixture",
+                "ORQEVIA_REGISTRY_V1_ENABLED": "0",
                 "ORQEVIA_OTEL_ENABLED": "1",
                 "ORQEVIA_OTEL_ENDPOINT": f"http://127.0.0.1:{server.server_port}",
                 "ORQEVIA_OTEL_SAMPLE_RATIO": "1",

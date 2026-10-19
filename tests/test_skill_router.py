@@ -78,8 +78,8 @@ def test_registry_digest_and_guidance_refresh_after_file_change(tmp_path):
 
 class SkillDispatchTests(HarnessApiTests):
     def test_opt_in_skill_pack_reaches_actual_advisory_enqueue(self):
-        os.environ["PRIME_REGISTRY_V1_ENABLED"] = "1"
-        os.environ["PRIME_SKILL_PACKS_ENABLED"] = "1"
+        os.environ["ORQEVIA_REGISTRY_V1_ENABLED"] = "1"
+        os.environ["ORQEVIA_SKILL_PACKS_ENABLED"] = "1"
         try:
             backend = (Backend("fixture-mini", "fixture:mini", Tier.MINI, "local"),)
             with patch("app.agent_dispatch_api.local_model_backends", return_value=backend), \
@@ -96,5 +96,5 @@ class SkillDispatchTests(HarnessApiTests):
             assert "core.evidence-boundary:" in prompt
             assert "A supplied observation." in prompt
         finally:
-            os.environ.pop("PRIME_REGISTRY_V1_ENABLED", None)
-            os.environ.pop("PRIME_SKILL_PACKS_ENABLED", None)
+            os.environ.pop("ORQEVIA_REGISTRY_V1_ENABLED", None)
+            os.environ.pop("ORQEVIA_SKILL_PACKS_ENABLED", None)
