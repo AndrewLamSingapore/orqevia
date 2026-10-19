@@ -36,6 +36,35 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA Starlette security remediation deployment - 19 October 2026
+
+### Claimed, not independently checked
+
+- PR **#400** passed all nine required GitHub checks and merged as
+  `86e26da41168f899ad04174135bc5a23765a46d9`.
+- The backend and interface run exact image
+  `orqevia:tooling-20261019-86e26da-exact`
+  (`sha256:376a96f6bd061e3e6375cb4d21ef7ffcf9714584f44ffeca8987c18bb6eeb95c`).
+  The loopback RAG service runs exact release
+  `86e26da41168f899ad04174135bc5a23765a46d9-exact`.
+- FastAPI `0.143.1`, Starlette `1.9.0`, and uvicorn `0.54.0` replace the
+  previously vulnerable Starlette `0.47.3`; GitHub now reports zero open
+  Dependabot alerts.
+- FastAPI native tracing, metrics, logs and operation spans are disabled on all
+  ORQEVIA applications because version 0.143 otherwise exported request query
+  strings. The allowlisted ORQEVIA telemetry middleware remains authoritative.
+- The full Python regression passes **6049 tests, 20 skipped, 3 deselected and
+  102 subtests** with no failures.
+- The deployed 12-check full-stack canary passes 12/12 with receipt SHA-256
+  `639C80DDD15B545B93F7838E3DE9DC823C4F42DA2C7895D6C6176BC86C9556DA`.
+- Sequential queue liveness passes 21/21 at the deployed revision with receipt
+  SHA-256 `C8C71F0E610E0C0E7BB21B7CD712D78E64A13300E6EB90C9BE1F5BCB9288C933`.
+- The live RAG service retains seven documents and passes retrieval plus cited
+  local-model generation. Chromium, Firefox and WebKit load the deployed TLS
+  PWA with no horizontal overflow.
+- Security rollback images and the pre-security `.env` are retained. See
+  `docs/tooling-20261019/DEPLOYMENT_VERIFICATION.md`.
+
 ## ORQEVIA governed local tooling deployment - 19 October 2026
 
 ### Claimed, not independently checked

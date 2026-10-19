@@ -216,6 +216,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    security_title = "## ORQEVIA Starlette security remediation deployment - 19 October 2026"
+    assert after.count(security_title) == 1
+    security_start = after.index(security_title)
+    security_end = after.index("\n## ", security_start + len(security_title)) + 1
+    security_update = after[security_start:security_end].encode("utf-8")
+    assert len(security_update) == 1629
+    assert hashlib.sha256(security_update).hexdigest() == "18794e6e2fada59285bee4b39492e963a2a34a140a57b905ce5256feab5171d0"
+    assert b"### Claimed, not independently checked" in security_update
+    assert b"### Verified" not in security_update
+    after = after[:security_start] + after[security_end:]
     # Admit the exact dated governed-tooling deployment record. Removing only
     # its pinned bytes preserves the historical proof below and rejects edits.
     deployment_title = "## ORQEVIA governed local tooling deployment - 19 October 2026"

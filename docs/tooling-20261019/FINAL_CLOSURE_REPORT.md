@@ -10,18 +10,20 @@
 | OpenTelemetry | **COMPLETE** | Optional SDK integration, loopback OTLP trace/metric export, production entrypoint, privacy sentinel, overhead, and missing-package fallback verified |
 
 **Deployment status: DEPLOYED on ABEX.** PR
-[#398](https://github.com/AndrewLamSingapore/orqevia/pull/398) passed all nine
+[#398](https://github.com/AndrewLamSingapore/orqevia/pull/398) established the
+tooling deployment; security PR
+[#400](https://github.com/AndrewLamSingapore/orqevia/pull/400) passed all nine
 required checks and merged as
-`0177241053c2dbfcdae8b287572c6e2fb3cdc923`. The backend, interface, and separate
-local RAG release are running that exact source. There are no unresolved
-blockers.
+`86e26da41168f899ad04174135bc5a23765a46d9`. The backend, interface, and separate
+local RAG release run the patched exact source. There are no unresolved
+blockers and GitHub reports zero open Dependabot alerts.
 
 ## Implemented source
 
 - Branch: `codex/tooling-assurance-20261019`
 - Main implementation: `dfd822b`
 - Protected-closure remediation: `18c6d2e`
-- Merge commit / deployed revision: `0177241`
+- Merge commit / deployed revision: `86e26da`
 - Canonical base at task start: `9da6020` (`origin/main`)
 
 Core files:
@@ -48,7 +50,7 @@ account, paid service, or external collector was introduced.
 ### Source and browser
 
 ```text
-Full Python: 6048 passed, 20 skipped, 3 deselected, 102 subtests passed
+Full Python: 6049 passed, 20 skipped, 3 deselected, 102 subtests passed
 Focused Observability/media: 17 passed
 Protected closure/initialization/Observability: 14 passed
 RAG/knowledge source suite: 35 passed, 1 skipped
@@ -100,11 +102,11 @@ Live RAG probe: 7 indexed documents; retrieval returned 2 hits; answer returned
 `CITED_MODEL_INTERPRETATION` using the installed local model with 2 citations.
 
 The live backend and interface run image
-`orqevia:tooling-20261019-0177241-exact`
-(`sha256:61c8625714cf0677ea1535e368150366b93ee0f2910d4221e4d5683df13259a9`)
-at source `0177241053c2dbfcdae8b287572c6e2fb3cdc923`. The separate loopback RAG
+`orqevia:tooling-20261019-86e26da-exact`
+(`sha256:376a96f6bd061e3e6375cb4d21ef7ffcf9714584f44ffeca8987c18bb6eeb95c`)
+at source `86e26da41168f899ad04174135bc5a23765a46d9`. The separate loopback RAG
 service runs exact release
-`0177241053c2dbfcdae8b287572c6e2fb3cdc923-exact`.
+`86e26da41168f899ad04174135bc5a23765a46d9-exact`.
 
 ## Security and cost assessment
 
@@ -118,6 +120,10 @@ service runs exact release
   questions, headers, credentials, and raw query strings.
 - Missing telemetry packages or collectors cannot become request-availability
   failures.
+- FastAPI native query-string telemetry is disabled on every ORQEVIA app; only
+  the allowlisted ORQEVIA middleware emits telemetry.
+- FastAPI `0.143.1`, uvicorn `0.54.0`, and patched Starlette `1.9.0` resolve
+  all six previously open Starlette advisories.
 - The protected verifier closure remains byte-identical to its reviewed
   revision.
 - LangSmith, Pinecone, ElevenLabs, and Higgsfield remain outside the current

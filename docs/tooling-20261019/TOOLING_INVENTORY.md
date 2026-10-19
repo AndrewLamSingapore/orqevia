@@ -23,6 +23,9 @@ claim.
 | Ruff | 0.17.1 | `C:\Users\Admin\.local\bin\ruff.exe` via `uv tool` | Installed and configured |
 | OpenTelemetry API/SDK | 1.45.1 | Main uv environment and local AI venv | Installed |
 | OTLP HTTP exporter | 1.45.1 | Main uv environment and local AI venv | Installed |
+| FastAPI | 0.143.1 | Backend lock and deployed image | Installed |
+| Starlette | 1.9.0 | Patched transitive web dependency | Installed |
+| uvicorn | 0.54.0 | Backend lock and deployed image | Installed |
 | Git | 2.55.0.windows.5 | `C:\Program Files\Git\cmd\git.exe` | Existing |
 | GitHub CLI | 2.102.0 | `C:\Program Files\GitHub CLI\gh.exe` | Existing, not authenticated |
 | Docker Engine/CLI | 29.8.2 | Docker Desktop | Existing |
@@ -53,8 +56,8 @@ claim.
 
 ## Python environments
 
-- The locked ORQEVIA development environment is Python 3.12.15 with 55 installed
-  packages from a 57-package `uv.lock` resolution.
+- The locked ORQEVIA development environment is Python 3.12.15 with 56 installed
+  packages from a 58-package `uv.lock` resolution.
 - The separate local AI environment remains Python 3.13.15 and is not merged into
   the backend environment. `uv pip check` reports all 91 installed packages
   compatible.

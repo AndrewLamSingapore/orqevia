@@ -147,14 +147,12 @@ Results:
 ## Final regression result
 
 ```text
-6048 passed, 20 skipped, 3 deselected, 102 subtests passed
+6049 passed, 20 skipped, 3 deselected, 102 subtests passed
 ```
 
-The full Python suite completed from commit `18c6d2e` in 326.73 seconds. The
-existing full-stack canary passed 12/12 and registered-agent queue liveness
-passed 21/21 on the live runtime. Live runtime source changes were not deployed
-in this pass; the live runtime receipt identifies revision
-`d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`.
+The full Python suite completed in 337.74 seconds. The security-remediation
+merge is `86e26da41168f899ad04174135bc5a23765a46d9`; the deployed full-stack
+canary passed 12/12 and registered-agent queue liveness passed 21/21.
 
 ## Files introduced or changed
 

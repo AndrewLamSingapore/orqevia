@@ -50,8 +50,8 @@ Observed result:
 ```text
 Using CPython 3.12.15
 Creating virtual environment at: .venv
-Resolved 57 packages
-Checked 55 packages
+Resolved 58 packages
+Checked 56 packages
 ```
 
 No application package was installed into site-packages; `uv` only created the
