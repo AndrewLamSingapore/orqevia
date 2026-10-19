@@ -216,6 +216,18 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit the exact dated governed-tooling deployment record. Removing only
+    # its pinned bytes preserves the historical proof below and rejects edits.
+    deployment_title = "## ORQEVIA governed local tooling deployment - 19 October 2026"
+    assert after.count(deployment_title) == 1
+    deployment_start = after.index(deployment_title)
+    deployment_end = after.index("\n## ", deployment_start + len(deployment_title)) + 1
+    deployment_update = after[deployment_start:deployment_end].encode("utf-8")
+    assert len(deployment_update) == 1455
+    assert hashlib.sha256(deployment_update).hexdigest() == "7fb3dae4445fae78b49f3416b6ad856f017504523d3bc3732eb1f93b1eb59dc5"
+    assert b"### Claimed, not independently checked" in deployment_update
+    assert b"### Verified" not in deployment_update
+    after = after[:deployment_start] + after[deployment_end:]
     # Admit only this dated full-sweep repair record; all prior bytes remain
     # pinned and no new claim may alter historical sections.
     repair_title = "## ORQEVIA full-sweep test isolation repair - 18 October 2026"

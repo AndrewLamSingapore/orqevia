@@ -137,8 +137,13 @@ This measurement is local, not a production load benchmark.
 
 ## Deployment boundary
 
-- The source and CI are ready to build a new backend image.
-- The running production backend image was not replaced in this pass.
+- The exact merged source is deployed in image
+  `orqevia:tooling-20261019-0177241-exact`
+  (`sha256:61c8625714cf0677ea1535e368150366b93ee0f2910d4221e4d5683df13259a9`).
+- The deployed image imports OpenTelemetry and reports OTel status `DISABLED`
+  under the active `ORQEVIA_OTEL_ENABLED=0` policy.
+- An in-image production-entrypoint probe emitted loopback traces and metrics
+  and excluded the private query sentinel.
 - No collector is permanently running.
 - When activated, the initial collector must remain loopback or an approved
   internal collector; arbitrary remote endpoints are rejected by code.
