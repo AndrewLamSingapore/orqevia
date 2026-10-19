@@ -39,14 +39,29 @@ attempt is retained as counterevidence, with stdout SHA-256
 `eb6f7518f88ac1cc5a100377dacb692d9c4ca91182ce642590b8b227f4d64179`.
 It is not admitted, retried as the same case, or counted as a pass.
 
+## Protected validation
+
+The fixed public-only validator ran once on protected `main` at
+`221a413a96329220b85538a941cbc39150a32826`: run `39236815850`, attempt 1,
+workflow `orqevia-fresh-initialization-validation-20261019.yml@refs/heads/main`.
+
+It returned 29/29 original oracles PASS with:
+
+- protected boundary `2026-10-19T10:21:09.966142+00:00`;
+- fixed expiry `2026-10-20T10:21:09.966142+00:00`;
+- proposed manifest SHA-256
+  `b99106df4d4e81a325e9cb05528a3086ef7a178e130301a549c740ca54763956`;
+- `signature=NOT_PERFORMED`, `l7_awarded=false`, `installed=false`.
+
+The exact proposed manifest is now the active
+`governance/agent-cert-reviewed-cases.json`. The prior active manifest is
+preserved byte-for-byte as
+`governance/agent-cert-reviewed-cases-expired-before-fresh29-20261019.json`.
+The complete protected-validation artifact is retained as
+`governance/fresh29-20261019-protected-validation.json`.
+
 ## Admission boundary
 
-This batch is still **UNSIGNED**. The next steps are:
-
-1. local oracle and digest validation (completed before publication);
-2. one protected public-only validation run;
-3. commit of the exact proposed manifest returned by that run;
-4. one protected Azure ES256 signing run.
-
-The fixed validator has not yet run at this checkpoint. No expiry, signature,
-installation or L7 claim exists before those protected steps complete.
+This batch is still **UNSIGNED**. The remaining step is one protected Azure
+ES256 signing run over the exact active manifest. No signature, installation or
+L7 claim exists at this checkpoint.
