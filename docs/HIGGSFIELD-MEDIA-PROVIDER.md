@@ -1,8 +1,8 @@
 # Higgsfield optional media provider
 
-Status: implemented as an optional, disabled-by-default provider boundary.
-It is not a replacement for ORQEVIA orchestration and is not exposed to the 21
-agents as a tool.
+Status: credential, non-billable estimate and catalog discovery are active on
+ABEX; billable generation remains unverified. The provider is not a replacement
+for ORQEVIA orchestration and is not exposed to the 21 agents as a tool.
 
 ## Decision
 
@@ -55,28 +55,100 @@ The inspected ACL grants access only to the Admin account, Administrators and
 SYSTEM. Do not print the access or refresh token and do not copy these credentials
 into ORQEVIA configuration.
 
+## Host-side catalog discovery
+
+The Windows CLI is not installed in the Linux backend and its OAuth credentials
+are never mounted into a container. A scheduled host task publishes a sanitized,
+versioned catalog snapshot:
+
+```text
+C:\ProgramData\ORQEVIA\inputs\higgsfield-catalog.json
+C:\ProgramData\ORQEVIA\inputs\higgsfield-catalog.json.sha256
+```
+
+The publisher runs every six hours while the owner is logged on:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy RemoteSigned `
+  -File C:\Users\Admin\Documents\ABEX\runtime\orqevia-epoch-20261016\scripts\Install-HiggsfieldCatalogTask.ps1
+```
+
+Scheduled discovery never invokes interactive authentication and never submits a
+generation. On failure it leaves the previous snapshot and digest untouched.
+The read-only input directory is mounted at `/run/orqevia-inputs`.
+
+The backend validates the snapshot digest, schema, size and age. The default
+maximum age is 24 hours. A stale or invalid snapshot makes catalog access fail
+closed while leaving REST credential status independent.
+
 ## Provider configuration
 
 The REST adapter uses a complete Higgsfield API key in the documented
-`key-id:key-secret` form:
-
-```powershell
-$env:ORQEVIA_HIGGSFIELD_ENABLED='1'
-$env:ORQEVIA_HIGGSFIELD_API_KEY_REF='env:ORQEVIA_HIGGSFIELD_API_KEY'
-$env:ORQEVIA_HIGGSFIELD_API_KEY='<set in an approved secret store>'
-$env:ORQEVIA_HIGGSFIELD_CLI='C:\Users\Admin\AppData\Roaming\npm\node_modules\@higgsfield\cli\vendor\hf.exe'
-```
-
-Alternatively, use two secret references:
+`key-id:key-secret` form. The local Docker secret file is:
 
 ```text
-ORQEVIA_HIGGSFIELD_API_KEY_ID_REF=env:ORQEVIA_HIGGSFIELD_API_KEY_ID
-ORQEVIA_HIGGSFIELD_API_KEY_SECRET_REF=env:ORQEVIA_HIGGSFIELD_API_KEY_SECRET
+C:\Users\Admin\Documents\ABEX\secrets\higgsfield_api_key.txt
 ```
 
-Never commit the key. Never place it in command-line arguments, prompts, logs,
-receipts, browser code or test output. The adapter resolves credentials only at
-the HTTP transport boundary.
+Create or replace it without echoing the key:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File C:\Users\Admin\Documents\ABEX\runtime\orqevia-epoch-20261016\scripts\Set-HiggsfieldSecret.ps1
+```
+
+Docker Compose mounts that file read-only as
+`/run/secrets/higgsfield_api_key`. The backend receives only:
+
+```text
+ORQEVIA_HIGGSFIELD_API_KEY_REF=file:HIGGSFIELD_API_KEY
+```
+
+The source file is excluded from Git because it is outside the repository.
+Do not copy the key into `.env`, Compose, command-line arguments, prompts,
+logs, receipts, browser code or test output. The adapter resolves the value
+only at the HTTP transport boundary.
+
+The provider remains disabled until explicitly validated:
+
+```text
+ORQEVIA_HIGGSFIELD_ENABLED=0
+```
+
+After local validation, enablement requires an explicit configuration change
+and backend recreation. Validation must not call a billable generation
+endpoint.
+
+## Credential validation and activation
+
+After inserting the API key, run the non-billable estimate validator:
+
+```powershell
+C:\Users\Admin\orqevia-ai\.venv\Scripts\python.exe -B `
+  C:\Users\Admin\Documents\ABEX\runtime\orqevia-epoch-20261016\scripts\Verify-HiggsfieldCredential.py
+```
+
+It writes:
+
+```text
+C:\ProgramData\ORQEVIA\inputs\higgsfield-provider-validation.json
+C:\ProgramData\ORQEVIA\inputs\higgsfield-provider-validation.json.sha256
+```
+
+The validator calls only the official `/estimate/{model_path}` endpoint. It does
+not submit a generation and records `billable_generation_submitted: false`.
+
+Only after that receipt reports `PASSED` may the owner change
+`ORQEVIA_HIGGSFIELD_ENABLED=1` and recreate the backend. Health keeps generation
+execution unverified until a separately authorized generation acceptance test.
+
+This activation completed on 2026-10-19 after the provider estimate returned
+HTTP success with a non-billable `$0.004` / `0.050`-credit estimate.
+
+The funded API dashboard currently shows a US$5.00 balance, US$0.00 spend,
+zero generation requests and the 20-concurrency onboarding item completed.
+The prepared one-job acceptance uses `higgsfield-ai/soul/v2/standard` at 720p,
+with a US$0.25 hard cap. It remains unsubmitted pending explicit Owner approval.
 
 The API base URL is fixed to `https://api.higgsfield.ai`; configuration cannot
 redirect it to an arbitrary origin.
