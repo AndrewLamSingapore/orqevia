@@ -14,6 +14,7 @@ from pypdf import PdfReader
 from docx import Document as DocxDocument
 from .orchestration import SPECIALISTS, choose_specialist, has_consequential_intent, build_task_brief, compact_context, supervisor_status, grounding_guard
 from .settings import SETTINGS
+from .observability import PRIVACY_FASTAPI_TELEMETRY
 
 OLLAMA=SETTINGS.ollama_base_url
 FAST_MODEL=SETTINGS.fast_model
@@ -25,7 +26,7 @@ CODE_TIMEOUT=max(2,min(15,int(os.getenv("PRIME_CODE_TIMEOUT_SECONDS","6"))))
 DATA=Path(os.getenv("PRIME_DATA_DIR","/data"));DATA.mkdir(parents=True,exist_ok=True)
 DB=DATA/"prime.db"; DATASETS=DATA/"datasets"; CODE=DATA/"code_workspace"
 DATASETS.mkdir(exist_ok=True);CODE.mkdir(exist_ok=True)
-app=FastAPI(docs_url=None,redoc_url=None)
+app=FastAPI(docs_url=None,redoc_url=None,telemetry=PRIVACY_FASTAPI_TELEMETRY)
 WRITE_LOCK=threading.RLock(); AUTOMATION_STOP=threading.Event(); AUTOMATION_THREAD=None
 
 AGENTS={

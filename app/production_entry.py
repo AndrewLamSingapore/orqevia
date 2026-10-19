@@ -21,7 +21,7 @@ from .agent_certification import AgentCertificationRegistry
 from .operational_workflows import router as operational_workflows
 from .pwa_sessions import owner_router as pwa_owner_router
 from .production_survival import build_router as build_survival_router
-from .observability import install_observability
+from .observability import PRIVACY_FASTAPI_TELEMETRY, install_observability
 
 
 def local_request(request: Request):
@@ -84,7 +84,7 @@ async def _lifespan(application):
         yield state
 
 
-app = FastAPI(title='ORQEVIA local control', lifespan=_lifespan,
+app = FastAPI(title='ORQEVIA local control', lifespan=_lifespan, telemetry=PRIVACY_FASTAPI_TELEMETRY,
               docs_url=None, redoc_url=None, openapi_url=None)
 
 _AZURE_CERT_PIN = Path(__file__).resolve().parent.parent / 'governance' / 'agent-cert-verifier-azure-pins.json'

@@ -65,6 +65,14 @@ _METER_PROVIDER = None
 _COUNTERS: dict[str, Any] = {}
 _HISTOGRAMS: dict[str, Any] = {}
 
+PRIVACY_FASTAPI_TELEMETRY = {
+    "tracing": False,
+    "metrics": False,
+    "logs": False,
+    "operation_spans": False,
+    "auto_configure": False,
+}
+
 
 class _NoopSpan:
     def set_attribute(self, *_args, **_kwargs) -> None:

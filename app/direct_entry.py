@@ -12,6 +12,7 @@ from .client_auth import authenticate_owner
 from .agent_registry import registered_agent_ids
 from .agent_cert_event_api import router as certification_events
 from .media_api import router as media
+from .observability import PRIVACY_FASTAPI_TELEMETRY
 
 
 @asynccontextmanager
@@ -23,7 +24,7 @@ async def lifespan(app):
         close_ledgers()
 
 
-app=FastAPI(title='ORQEVIA direct-execution candidate',lifespan=lifespan)
+app=FastAPI(title='ORQEVIA direct-execution candidate',lifespan=lifespan,telemetry=PRIVACY_FASTAPI_TELEMETRY)
 for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events,media):app.include_router(router)
 
 
