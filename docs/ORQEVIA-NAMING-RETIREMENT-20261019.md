@@ -33,9 +33,23 @@ changing their bytes. It does not accept legacy-only values.
 
 Dated evidence and pinned Golden fixtures retain their original names and bytes.
 
+## Signed candidate deployment
+
+The Owner approved deployment on 19 October 2026. The exact
+`orqevia:final-naming-candidate` image
+(`sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37`,
+source `767f9451d42c65eb905f2c3e5f816536c4e17982`) is deployed for backend and
+interface. Post-deploy checks passed for all nine expected containers, Owner
+authentication, gateway health and denial, 21/21 queue liveness, and Higgsfield
+readiness. Runtime attestation is bound to Golden gen7.
+
+The fresh signed closure was issued before deployment: 29/29 cases, independently
+verified against the pinned Azure public key.
+
 ## Remaining gate
 
-A new protected, signed certification closure must be issued before these seven
-files can be renamed and the one-way lookup removed. Changing the bytes first
-would invalidate the existing signed admission boundary, so that step is not
-part of this migration.
+The seven compatibility files remain byte-identical in this exact signed
+candidate. Final legacy-name retirement still requires a separate byte
+migration with fresh evidence and a subsequent closure; changing these files
+in place would invalidate the current runtime closure binding. The signed
+closure's fixed expiry is `2026-10-20T10:21:09.966142+00:00`.

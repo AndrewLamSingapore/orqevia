@@ -1,10 +1,10 @@
 [CmdletBinding()]
 param(
     [string]$BaseUri = 'https://192.168.1.23:8443/pwa',
-    [string]$ExpectedSource = '48648edd8d2640f12f8086b9910deec865519326',
-    [string]$ExpectedImageDigest = 'sha256:aca892c4f19a4426e960d273ee0e9524f7bfe7f08bb80b902e7cbc73b82d36f3',
-    [string]$ExpectedGeneration = 'orqevia-golden-gen4-20261016',
-    [string]$ExpectedReceiptDigest = 'sha256:cd0b58cfc289ca9443ed5a15ee62dc744bccadb9f9ec436889546b6b8e39d14a',
+    [string]$ExpectedSource = '767f9451d42c65eb905f2c3e5f816536c4e17982',
+    [string]$ExpectedImageDigest = 'sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37',
+    [string]$ExpectedGeneration = 'orqevia-golden-gen7-20261019',
+    [string]$ExpectedReceiptDigest = 'sha256:74064717221f5948d04ef62e5b0e1f0dee3d17580e3621b4dc7a86bd9bf1955b',
     [switch]$AllowUntrustedTransportCertificate
 )
 

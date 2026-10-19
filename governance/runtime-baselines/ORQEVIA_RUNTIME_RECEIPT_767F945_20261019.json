@@ -1,0 +1,95 @@
+{
+  "acceptance_scope": "CURRENT_IMAGE_SOURCE_BINDING_SIGNED_CLOSURE_PROVIDER_READINESS_AND_POST_DEPLOY_ACCEPTANCE",
+  "accepted_at_utc": "2026-10-19T10:38:49.521137+00:00",
+  "backend": {
+    "container_id": "4d893c484526a5e2902d5eee0e5bc16eabf1fa6e16de54bab181d14e3300af59",
+    "health": "healthy",
+    "image_id": "sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37",
+    "image_tag": "orqevia:final-naming-candidate",
+    "media_status": "READY",
+    "restart_policy": "always",
+    "revision": "767f9451d42c65eb905f2c3e5f816536c4e17982",
+    "source_files_match_running_container": true
+  },
+  "deployment": {
+    "caddyfile_sha256": "391ce37a48ddcc3e2c92cb1e54727c488ac4edb16a217232acfed6fb3efb6da0",
+    "compose_file_sha256": "dc3e6317cf10cf6d31634e7a0bdc2ad7e9bd4ec6f7a40aec5a79b9479f6547a5",
+    "environment_file": ".env.naming-20261019",
+    "expected_container_count": 9,
+    "observed_container_count": 9,
+    "profiles": [
+      "tunnel",
+      "clients"
+    ]
+  },
+  "higgsfield": {
+    "billable_generation_submitted_during_deployment": false,
+    "catalog_models": null,
+    "catalog_sha256": "9c67a4d081f17b33a9fb16a70c5ebbf81eac457e414ecc57dc7a052acc5f9cf8",
+    "catalog_status": "VALID_FRESH",
+    "catalog_workflows": null,
+    "enabled": true,
+    "evidence_sha256": "87d637329c1b0a3e0b3e0deabebc503e8d26c30f411b58bd95c5597249ea9f5d",
+    "generation_evidence_scope": "PRIOR_VERIFIED_EXECUTION_SAME_PROVIDER_CONTRACT",
+    "generation_execution_verified": true,
+    "generation_receipt_sha256": "37eb8e3597af1367a7af4304be64eca52fa276a47a13e0987c364a5e3d369ada",
+    "nonbillable_preflight_estimated_usd": "0.004",
+    "provider_contract_sha256": "dbc34624bb0850e3e8c13776d00a5f9526902c12213044c2890407eb7527a7d2",
+    "provider_status": "READY",
+    "rest_credentials": "VALID"
+  },
+  "interface": {
+    "container_id": "b541058706366abfa25d4e9f1ea021c21dc3be4dda3524b3e43ba98b87da4345",
+    "health": "healthy",
+    "image_id": "sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37",
+    "image_tag": "orqevia:final-naming-candidate",
+    "revision": "767f9451d42c65eb905f2c3e5f816536c4e17982"
+  },
+  "open_gates": [
+    "READ_ALOUD_PHYSICAL_ACCEPTANCE_PARKED"
+  ],
+  "schema_version": "orqevia.runtime-acceptance.v1",
+  "signed_closure": {
+    "artifact": "C:\\Users\\Admin\\Documents\\ABEX\\repos\\prime\\governance\\fresh29-20261019-signed-cases-39237401371.json",
+    "artifact_sha256": "192ced6249dd32218a0f89b1f70b3db22e4f32c776a9fab77265a51b968bfb50",
+    "expires_at": "2026-10-20T10:21:09.966142+00:00",
+    "l7_awarded": false,
+    "signed_case_count": 29,
+    "signing_run_id": 39237401371,
+    "state": "SIGNED_CASE_EVIDENCE",
+    "validation_run_id": 39236815850
+  },
+  "source": {
+    "branch": "main",
+    "commit": "767f9451d42c65eb905f2c3e5f816536c4e17982",
+    "repository": "AndrewLamSingapore/orqevia",
+    "tracked_worktree_clean": true,
+    "tree": "896ac57d805274d3b751aeaf6b50680ff30ff047"
+  },
+  "tests": {
+    "backend_health": {
+      "http_status": 200,
+      "ok": true
+    },
+    "gateway_health": {
+      "body": "ok",
+      "scope": "GATEWAY_ONLY",
+      "status": 200,
+      "unauth_status": 401
+    },
+    "owner_authentication": {
+      "authenticated": true,
+      "protocol": "orqevia.interface.v1",
+      "recovery": null,
+      "role": "OWNER"
+    },
+    "queue_liveness": {
+      "denominator": 21,
+      "failed": 0,
+      "passed": 21,
+      "receipt": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\liveness-history\\QUEUE-LIVENESS-20261019T103715Z.json",
+      "sha256": "3f43eb072e637c0592eefebb7ed156e8e2a6e7e2fec00be1edeb8e257989e97e"
+    }
+  },
+  "verdict": "IMAGE_BINDING_SIGNED_CLOSURE_PROVIDER_READINESS_AND_POST_DEPLOY_ACCEPTED_WITH_AUDIO_EXCLUSION"
+}
