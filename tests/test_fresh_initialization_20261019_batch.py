@@ -79,7 +79,6 @@ def test_protected_validation_dry_run_with_fake_guard():
 
 
 def test_previous_or_concurrent_batch_invocation_is_denied():
-    plan = json.loads((ROOT / v.PLAN).read_bytes())
     sha = v.VERIFIER
     env = {
         "GITHUB_REPOSITORY": v.REPOSITORY,
