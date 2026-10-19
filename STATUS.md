@@ -36,6 +36,32 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA governed local tooling deployment - 19 October 2026
+
+### Claimed, not independently checked
+
+- PR **#398** passed all nine required GitHub checks and merged canonical
+  source as `0177241053c2dbfcdae8b287572c6e2fb3cdc923`.
+- The backend and interface run exact image
+  `orqevia:tooling-20261019-0177241-exact`
+  (`sha256:61c8625714cf0677ea1535e368150366b93ee0f2910d4221e4d5683df13259a9`)
+  from that revision. The separate loopback RAG service runs exact release
+  `0177241053c2dbfcdae8b287572c6e2fb3cdc923-exact`.
+- Seven critical runtime/PWA source files and four RAG files match their merged
+  Git blobs byte-for-byte.
+- The deployed 12-check full-stack canary passed 12/12 with receipt SHA-256
+  `478C57D71820B35E1D6139DCCCD0CBC5B096765576D42B538E99F01DCCD37545`.
+- Sequential queue liveness passed 21/21 agents at the deployed revision with
+  receipt SHA-256
+  `5BCA4616C1B6604763E022B2988DB9C5E2EE248EFFF9CF1F0DF0F2A621ADF2E4`.
+- The live loopback RAG service retained seven indexed documents and returned
+  two retrieval hits plus a cited local-model answer with two citations.
+- The deployed TLS PWA loaded in Chromium, Firefox and WebKit; Chromium also
+  verified mobile fit and the Objective route. OpenTelemetry is installed in the
+  image but remains disabled by the active local policy.
+- Rollback images, the prior `.env`, and the prior RAG release pointer are
+  retained. See `docs/tooling-20261019/DEPLOYMENT_VERIFICATION.md`.
+
 ## ORQEVIA full-sweep test isolation repair - 18 October 2026
 
 ### Claimed, not independently checked

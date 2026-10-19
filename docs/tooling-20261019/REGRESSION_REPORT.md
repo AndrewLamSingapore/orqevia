@@ -6,12 +6,11 @@ This report separates source verification from live-runtime verification.
 
 - Branch: `codex/tooling-assurance-20261019`
 - Verified implementation commit: `18c6d2e`
-- Live runtime source revision reported by the liveness receipt:
-  `d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`
-- No live image or container was replaced during this tooling pass.
-
-Therefore, the source and local end-to-end results below do not claim that the
-new OpenTelemetry source is active in the live backend image.
+- Merge commit and deployed revision:
+  `0177241053c2dbfcdae8b287572c6e2fb3cdc923`
+- Previous live runtime source: `d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`
+- The backend and interface were replaced with an exact-byte image built from
+  merged `main`; the loopback RAG release was promoted separately.
 
 ## Baseline
 
@@ -97,13 +96,13 @@ Receipt:
 
 `C:\Users\Admin\Documents\ABEX\operations\permanent-readiness-20261017\LATEST-FULL-STACK-CANARY.json`
 
-Observed: `2026-10-19T01:43:49Z`
+Observed: `2026-10-19T02:51:12Z`
 
 ```text
 overall: PASS
 checks: 12
 failed: 0
-SHA-256: 52880114A3923CE7D43436860A47DE13EA5156F55305ED8692E6496A24DBB707
+SHA-256: 478C57D71820B35E1D6139DCCCD0CBC5B096765576D42B538E99F01DCCD37545
 ```
 
 The checks covered Docker engine, nine persistent ORQEVIA containers, backend
@@ -117,7 +116,7 @@ Receipt:
 
 `C:\Users\Admin\Documents\ABEX\operations\permanent-readiness-20261017\LATEST-QUEUE-LIVENESS.json`
 
-Observed: `2026-10-19T01:44:03Z`
+Observed: `2026-10-19T02:50:43Z`
 
 ```text
 agents: 21
@@ -126,7 +125,7 @@ failed: 0
 concurrency: 1
 provider: local Ollama
 publication: PUBLISHED
-SHA-256: A66E578F907B35B275F304F51E5933D310C2A4D1A3AE9B6BE9232470871FBAD6
+SHA-256: 5BCA4616C1B6604763E022B2988DB9C5E2EE248EFFF9CF1F0DF0F2A621ADF2E4
 ```
 
 This proves bounded queue execution for all 21 registered agents. It is not role
@@ -165,6 +164,5 @@ covered by the 35-test source suite above.
 
 **No verified source or live-runtime regression remains from this pass.**
 
-The implementation is complete at source, local test, CI configuration, and
-local end-to-end verification layers. Deployment of the changed source remains
-a separate promotion action and was not performed.
+The implementation is complete at source, CI, exact-image, live deployment, and
+post-deployment verification layers.

@@ -120,3 +120,10 @@ the repair.
 - CI artifact: `orqevia-browser-assurance`
 
 Generated browser evidence is excluded from Git by `.gitignore`.
+
+## Deployed live endpoint
+
+After promotion, Chromium, Firefox and WebKit loaded
+`https://192.168.1.23:8443/pwa/` with HTTP 200 and title `ORQEVIA`. Each
+reported a visible dashboard, manifest and no horizontal overflow. Chromium
+also verified the mobile viewport and the deployed `view=objective` route.

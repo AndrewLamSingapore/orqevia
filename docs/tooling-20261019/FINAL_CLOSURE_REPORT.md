@@ -9,13 +9,19 @@
 | Ruff code quality | **COMPLETE** | Ruff 0.17.1, baseline and changed-file gates, new-file format gate, compile PASS |
 | OpenTelemetry | **COMPLETE** | Optional SDK integration, loopback OTLP trace/metric export, production entrypoint, privacy sentinel, overhead, and missing-package fallback verified |
 
-There are no unresolved blockers for the implemented source/local scope.
+**Deployment status: DEPLOYED on ABEX.** PR
+[#398](https://github.com/AndrewLamSingapore/orqevia/pull/398) passed all nine
+required checks and merged as
+`0177241053c2dbfcdae8b287572c6e2fb3cdc923`. The backend, interface, and separate
+local RAG release are running that exact source. There are no unresolved
+blockers.
 
 ## Implemented source
 
 - Branch: `codex/tooling-assurance-20261019`
 - Main implementation: `dfd822b`
 - Protected-closure remediation: `18c6d2e`
+- Merge commit / deployed revision: `0177241`
 - Canonical base at task start: `9da6020` (`origin/main`)
 
 Core files:
@@ -93,9 +99,12 @@ Live agent liveness: 21/21 PASS.
 Live RAG probe: 7 indexed documents; retrieval returned 2 hits; answer returned
 `CITED_MODEL_INTERPRETATION` using the installed local model with 2 citations.
 
-The live runtime source remains
-`d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`. The tooling branch is source-ready
-but was not deployed or promoted to the running backend image.
+The live backend and interface run image
+`orqevia:tooling-20261019-0177241-exact`
+(`sha256:61c8625714cf0677ea1535e368150366b93ee0f2910d4221e4d5683df13259a9`)
+at source `0177241053c2dbfcdae8b287572c6e2fb3cdc923`. The separate loopback RAG
+service runs exact release
+`0177241053c2dbfcdae8b287572c6e2fb3cdc923-exact`.
 
 ## Security and cost assessment
 
@@ -159,21 +168,28 @@ execution.
 
 ## Rollback
 
-Source-only rollback is a new revert commit on the task branch. Do not reset or
-rewrite published history.
+Source rollback is a new revert commit. Do not reset or rewrite published
+history.
 
-Runtime rollback for a future OTel-enabled deployment:
+Deployment rollback artifacts:
 
-1. Set `ORQEVIA_OTEL_ENABLED=0`.
-2. Recreate the backend from the previously reviewed image.
-3. Preserve `/data`, action ledgers, media metadata, queue databases, and RAG
-   indexes.
-4. Re-run the full-stack canary and 21-agent liveness checks.
+- `.env` backup:
+  `C:\Users\Admin\Documents\ABEX\runtime\orqevia-epoch-20261016\.env.pre-tooling-20261019T024135Z`
+- Backend rollback image:
+  `orqevia:rollback-tooling-backend-20261019t024135z`
+  (`sha256:cc67afb45472fee0bb18599948a31be167a8b6babb6d844a716613a5c88c05cc`)
+- Interface rollback image:
+  `orqevia:rollback-tooling-interface-20261019t024135z`
+  (`sha256:f18f6adb89d2437b7d8745654824087e047910177e438994ba228c5386d6cd84`)
+- RAG pointer backup:
+  `C:\Users\Admin\Documents\ABEX\runtime\orqevia-local-knowledge\CURRENT.pre-tooling-20261019T0244Z.json`
+
+Restore the backup `.env`, recreate backend then interface with Compose, restore
+the RAG pointer, relaunch the local service, and rerun both live gates. Preserve
+`/data`, action ledgers, media metadata, queue databases, and RAG indexes.
 
 ## Remaining work outside this source closure
 
-- A future deployment/promotion must build the changed image and repeat the
-  live canary against that image.
 - Persistent telemetry destination, retention, and alerting remain disabled
   policy choices.
 - Physical iPhone/Safari install, microphone, and audible-output acceptance
