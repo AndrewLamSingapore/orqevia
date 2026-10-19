@@ -80,12 +80,20 @@ If you are an AI agent updating this file:
 - The obsolete `ABEX-ORQEVIA-CodexSandbox-HoldStopped` task was removed with
   Owner-approved UAC elevation. The Codex sandbox service and Copilot mDNS rule
   remain absent.
+- The previously expired fresh29 certification closure was replaced for the
+  exact naming candidate. Protected validation run `39236815850` passed 29/29
+  original oracles; protected signing run `39237401371` produced
+  `SIGNED_CASE_EVIDENCE` for 29 cases, and local verification accepted 29/29
+  signatures against the pinned public key. The fixed expiry is
+  `2026-10-20T10:21:09.966142+00:00`; `l7_awarded=false`, no installation or
+  deployment occurred.
 
 ### Known broken / open
 
-- Seven byte-pinned signed-closure files still require a new signed
-  certification closure before their legacy names and compatibility lookup can
-  be removed.
+- The seven compatibility files remain byte-identical in the newly signed
+  candidate. Final legacy-name retirement requires a separate code migration,
+  fresh evidence and a subsequent closure because changing those bytes would
+  invalidate the current runtime closure binding.
 - Startup tasks remain user-logon triggered; pre-logon operation is not
   established.
 

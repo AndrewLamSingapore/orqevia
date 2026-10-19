@@ -20,6 +20,7 @@ governance/agent-cert-reviewed-cases.json -text
 governance/agent-cert-reviewed-cases-expired-before-fresh29-20261016.json -text
 governance/agent-cert-reviewed-cases-expired-before-fresh29-20261019.json -text
 governance/fresh29-20261019-protected-validation.json -text
+governance/fresh29-20261019-signed-cases-39237401371.json -text
 governance/agent-cert-historical-admissions/*.json -text
 governance/agent-cert-case-evidence/a19-5b3dd3a-role-normal-20261007/** -text
 governance/agent-cert-case-evidence/a19-61335a9-artifact-produce-20261008/** -text

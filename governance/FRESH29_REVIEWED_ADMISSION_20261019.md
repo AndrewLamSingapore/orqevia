@@ -60,8 +60,33 @@ preserved byte-for-byte as
 The complete protected-validation artifact is retained as
 `governance/fresh29-20261019-protected-validation.json`.
 
-## Admission boundary
+## Protected signing
 
-This batch is still **UNSIGNED**. The remaining step is one protected Azure
-ES256 signing run over the exact active manifest. No signature, installation or
-L7 claim exists at this checkpoint.
+The independent OIDC signer ran once on protected `main` at
+`3e498389e7c2aed9bdd8a02ffdfa792902d1e7ab`: run `39237401371`, attempt 1.
+The artifact
+`prime-independent-signed-cases-3e498389e7c2aed9bdd8a02ffdfa792902d1e7ab-39237401371`
+contains 29 signed cases with `state=SIGNED_CASE_EVIDENCE` and
+`l7_awarded=false`.
+
+- artifact ZIP SHA-256
+  `375152b193abf394e03b777a0bd5ff50bc42b10fd6e6f1d4682a1e1ecec6acdd`;
+- signed-cases SHA-256
+  `192ced6249dd32218a0f89b1f70b3db22e4f32c776a9fab77265a51b968bfb50`;
+- local public-key re-verification: 29/29 signatures valid;
+- each signed row exactly matches the admitted record fields and evidence
+  digests, with the same fixed expiry.
+
+The exact artifact is retained as
+`governance/fresh29-20261019-signed-cases-39237401371.json`.
+
+## Boundary after signing
+
+This is **29 individual initialization cases**, still not an L7 award,
+installation, runtime activation or deployment. The fixed signatures expire at
+`2026-10-20T10:21:09.966142+00:00`.
+
+The seven compatibility files remain byte-identical in this exact signed
+candidate. A later change to any of those files invalidates that runtime closure
+binding, so final legacy-name retirement remains a separate code migration with
+its own fresh evidence and closure cycle.
