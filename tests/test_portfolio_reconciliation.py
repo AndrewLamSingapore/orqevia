@@ -216,6 +216,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    release_title = "## ORQEVIA release, role acceptance and naming migration - 19 October 2026"
+    assert after.count(release_title) == 1
+    release_start = after.index(release_title)
+    release_end = after.index("\n## ", release_start + len(release_title)) + 1
+    release_update = after[release_start:release_end].encode("utf-8")
+    assert len(release_update) == 2834
+    assert hashlib.sha256(release_update).hexdigest() == "5a816c664f4f5a2270c92b4807cf18fd091522aa29be68300ca266dd5b265d84"
+    assert b"### Claimed, not independently checked" in release_update
+    assert b"### Verified" not in release_update
+    after = after[:release_start] + after[release_end:]
     sweep_title = "## ORQEVIA ABEX sweep and CodeQL closure - 19 October 2026"
     assert after.count(sweep_title) == 1
     sweep_start = after.index(sweep_title)

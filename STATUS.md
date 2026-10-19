@@ -36,6 +36,56 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA release, role acceptance and naming migration - 19 October 2026
+
+### Claimed, not independently checked
+
+- PR **#405** passed all required checks and merged as
+  `f982e2a39ff569869e493b7743feebcd7bd48901`. It contains the Higgsfield
+  media integration, ONNX MiniLM embedding path, and gateway-only health
+  endpoint. The related remote branch was deleted after merge.
+- PR **#406** passed all required checks and merged as
+  `767f9451d42c65eb905f2c3e5f816536c4e17982`. It moves active environment,
+  runtime-path, database-name and Interface-protocol surfaces to ORQEVIA naming,
+  adds a non-destructive database migration, and removes the package-wide
+  two-way environment mirror. The related remote branch is closed.
+- The post-migration full pytest suite passes **6,069 tests, 20 skipped, 3
+  deselected and 102 subtests**, with no failures. The canonical suite passes
+  **5,177 tests, 4 skipped and 92 subtests**. PWA JavaScript suites, Ruff,
+  compile checks, canonical-state checks, secret-pattern scanning, Compose
+  validation and a disposable production image smoke test also pass.
+- The current live backend remains on
+  `orqevia:higgsfield-readygen-2ad1074`
+  (`sha256:f9add207ad55089f8c9d6a8e90f9f6f07e80b3deb0b982d4819dd2c727795f52`).
+  The naming-migration image was built and smoke-tested but not deployed.
+- Current-revision role acceptance completed **21 / 21 accepted** in
+  `FULL-ROLE-ACCEPTANCE-20261019T085334Z.json`, SHA-256
+  `5f4165a20372667834b959ceefdbcd3745ffcccb8c19a8eaec32791515125691`,
+  bound to backend source `2ad10741dabc58392a182fbe0b72caf1f35383de`.
+- Independent evidence review re-read 21 root jobs and six delegated child
+  jobs from the live queue. All provider/model bindings, result hashes,
+  execution bindings, role oracles, required tools, delegation receipts and
+  the durable action ledger passed with no errors.
+- Runtime attestation is `VERIFIED` against Golden generation
+  `orqevia-golden-gen6-20261019`, live source/image `2ad1074`, with no mismatch
+  reasons.
+- Only Lam may promote these acceptance results into a Verified section after
+  personally checking the cited evidence.
+- Seven signed-closure files remain byte-identical and continue to receive
+  their historical environment names through a one-way lookup bridge. Final
+  removal requires a new signed certification closure.
+
+### Known broken / open
+
+- Windows Time has a successful `sg.pool.ntp.org` observation and is within
+  roughly 0.06 seconds, but still reports `Leap Indicator: 3`. A forced resync
+  requires an approved UAC elevation.
+- The obsolete `ABEX-ORQEVIA-CodexSandbox-HoldStopped` task remains while its
+  Codex sandbox service and the Copilot mDNS rule are absent. Task removal also
+  requires UAC.
+- Startup tasks remain user-logon triggered; pre-logon operation is not
+  established.
+
 ## ORQEVIA ABEX sweep and CodeQL closure - 19 October 2026
 
 ### Claimed, not independently checked
