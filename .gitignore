@@ -14,6 +14,7 @@ models/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-tmp-*/
 .test-deps/
 .sync-test-deps/
 .venv/
@@ -24,6 +25,9 @@ venv/
 Thumbs.db
 
 node_modules/
+clients/pwa/browser-results/
+test-results/
+playwright-report/
 outputs/
 dist/
 *.zip

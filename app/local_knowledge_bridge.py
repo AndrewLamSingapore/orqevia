@@ -8,6 +8,7 @@ import httpx
 from fastapi import APIRouter,HTTPException,Request
 from fastapi.responses import Response
 from . import orqevia_bridge as existing
+from .observability import trace_headers
 
 router=APIRouter()
 PATHS={'health':{'GET'},'documents':{'GET'},'ingest':{'POST'},'retrieve':{'POST'},'answer':{'POST'},'reindex':{'POST'},
@@ -50,10 +51,11 @@ async def knowledge(request:Request,path:str):
                         if source.status_code!=200:raise HTTPException(503,'Observation context unavailable')
                         value['observations']=source.json().get('records',[])
                     body=json.dumps(value).encode()
-                async with client.stream(request.method,base+'/'+path,content=body,headers={
+                upstream_headers=trace_headers({
                     'Authorization':'Bearer '+token,'X-ORQEVIA-Owner':owner,
                     'X-Document-Name':request.headers.get('x-document-name','')[:1000],
-                    'Content-Type':'application/octet-stream' if path=='ingest' else 'application/json'}) as upstream:
+                    'Content-Type':'application/octet-stream' if path=='ingest' else 'application/json'})
+                async with client.stream(request.method,base+'/'+path,content=body,headers=upstream_headers) as upstream:
                     chunks=[];size=0
                     async for chunk in upstream.aiter_bytes():
                         size+=len(chunk)

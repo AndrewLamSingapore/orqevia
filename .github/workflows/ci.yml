@@ -25,6 +25,9 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
       - name: Install test dependencies on isolated CI runner
         run: python -m pip install -r requirements.txt -r requirements-sandbox.txt pytest
       - name: Validate STATUS authority and run offline deterministic security and integration tests
@@ -60,3 +63,80 @@ jobs:
           python scripts/build_source_release.py --output "$RUNNER_TEMP/prime-build-b"
           cmp "$RUNNER_TEMP/prime-build-a/SOURCE_MANIFEST.json" "$RUNNER_TEMP/prime-build-b/SOURCE_MANIFEST.json"
           git diff --exit-code
+
+  tooling-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install pinned uv distribution
+        run: python -m pip install --disable-pip-version-check uv==0.13.1
+      - name: Create clean locked Python environment
+        run: uv sync --frozen --python 3.12 --all-groups
+      - name: Verify locked tool versions
+        run: |
+          uv --version
+          uv run python --version
+          uv run ruff --version
+          uv run pytest --version
+      - name: Run canonical state gate in locked environment
+        env:
+          PRIME_DATA_DIR: ${{ runner.temp }}/orqevia-tooling-fixtures
+          PRIME_COMPUTE_QUEUE_DB: ${{ runner.temp }}/orqevia-tooling-fixtures/queue.db
+        run: uv run python scripts/run_canonical_ci.py
+      - name: Run observability and media-provider tests
+        run: >-
+          uv run pytest -q
+          tests/test_observability.py
+          tests/test_media_generation.py
+          tests/test_higgsfield_media.py
+      - name: Verify loopback OTLP export and privacy
+        run: |
+          uv run python scripts/verify_observability.py
+          uv run python scripts/verify_otel_production.py
+      - name: Ruff baseline
+        run: uv run ruff check .
+      - name: Ruff changed-file strict gate
+        env:
+          RUFF_BASE_REF: origin/main
+        run: uv run python scripts/check_ruff_changed.py
+      - name: Compile Python sources
+        run: uv run python -m compileall -q app scripts tests
+
+  browser-assurance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: clients/pwa
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@12.14.0 --activate
+      - name: Install locked browser test dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium Firefox and WebKit
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Run browser PWA and workflow assurance
+        run: pnpm test:browser
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: orqevia-browser-assurance
+          path: clients/pwa/browser-results
+          if-no-files-found: warn
+          retention-days: 14

@@ -21,6 +21,7 @@ from .agent_certification import AgentCertificationRegistry
 from .operational_workflows import router as operational_workflows
 from .pwa_sessions import owner_router as pwa_owner_router
 from .production_survival import build_router as build_survival_router
+from .observability import install_observability
 
 
 def local_request(request: Request):
@@ -234,3 +235,4 @@ app.include_router(operational_workflows)
 app.include_router(pwa_owner_router)
 app.include_router(build_survival_router(local_authorization))
 app.mount('/', direct_entry.app)
+OBSERVABILITY = install_observability(app)

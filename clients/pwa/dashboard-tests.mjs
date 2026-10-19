@@ -22,7 +22,9 @@ assert.ok(sw.includes("'/pwa/dashboard.mjs'"));assert.ok(!sw.includes("'/interfa
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.ok(html.includes('id="objective-form"'));assert.ok(html.includes('id="enrollment-form"'));assert.ok(html.includes('id="artifact-section"'));
 assert.ok(!html.includes('21/21 agents ready'));assert.ok(!/>\s*100%\s*</.test(html));
-console.log('Dashboard source, freshness, agent-readiness separation, duplicate-agent rejection, PWA identity and API cache boundary: 17 assertions PASS');
+const dashboardSource=readFileSync(new URL('./dashboard.mjs',import.meta.url),'utf8');
+assert.ok(dashboardSource.includes("known.add('objective')"));
+console.log('Dashboard source, objective routing, freshness, agent-readiness separation, duplicate-agent rejection, PWA identity and API cache boundary: 18 assertions PASS');
 
 assert.equal(telemetryFreshness({...report,agents:[]},time),'OBSERVED');
 assert.equal(telemetryFreshness({...report,agents:report.agents.slice(0,2)},time),'OBSERVED');

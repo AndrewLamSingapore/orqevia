@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Callable
 
 from .agent_registry import RegistryError, canonical_agent_id
+from .observability import record_counter, record_duration, span, traced
 
 
 TERMINAL = {"completed", "failed", "cancelled", "budget_blocked"}
@@ -414,6 +415,7 @@ class JobQueue:
         )
         return float(min(PRIORITIES["critical"] - 1, row["priority"] + boost))
 
+    @traced('queue.claim',{'component':'compute-queue','operation':'claim'})
     def claim(self, worker_id: str, providers: list[Provider], *, held_job_id: str | None = None) -> dict | None:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
@@ -468,6 +470,7 @@ class JobQueue:
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
         return None
 
+    @traced('queue.finish',{'component':'compute-queue','operation':'finish'})
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
                output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,
                model_load_ns: int = 0, inference_ns: int = 0,
@@ -554,15 +557,27 @@ class WorkerPool:
                 self.queue.wake.wait(.5)
                 continue
             provider=next(p for p in self.providers if p.name==job["provider"])
-            try:
-                self.queue.finish(job["id"],**self.execute(job,provider))
-            except Exception as exc:
-                if provider.kind=='cloud':
-                    # Unknown billing remains reserved; no blind replay of an
-                    # ambiguous external request, and no raw upstream error body.
-                    from .provider_runtime import ProviderFailure
-                    code=exc.code if isinstance(exc,ProviderFailure) else 'EXTERNAL_EXECUTION_FAILED'
-                    self.queue.finish(job['id'],error=code,retryable=False,
-                        actual_cost_usd=None,input_tokens=None,output_tokens=None)
-                else:
-                    self.queue.finish(job["id"],error='LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,PermissionError))
+            started=time.perf_counter()
+            outcome='ERROR'
+            with span('agent.job.execute',{'component':'compute-queue','provider':provider.name,
+                                          'job_type':job.get('task_class','auto')}) as current:
+                try:
+                    self.queue.finish(job["id"],**self.execute(job,provider))
+                    outcome='OK'
+                    current.set_attribute('status','OK')
+                except Exception as exc:
+                    current.set_attribute('status','ERROR')
+                    if provider.kind=='cloud':
+                        # Unknown billing remains reserved; no blind replay of an
+                        # ambiguous external request, and no raw upstream error body.
+                        from .provider_runtime import ProviderFailure
+                        code=exc.code if isinstance(exc,ProviderFailure) else 'EXTERNAL_EXECUTION_FAILED'
+                        self.queue.finish(job['id'],error=code,retryable=False,
+                            actual_cost_usd=None,input_tokens=None,output_tokens=None)
+                    else:
+                        self.queue.finish(job["id"],error='LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,PermissionError))
+                finally:
+                    attributes={'component':'compute-queue','provider':provider.name,
+                                'job_type':job.get('task_class','auto'),'status':outcome}
+                    record_counter('orqevia.agent.jobs',1,attributes)
+                    record_duration('orqevia.agent.job.duration',(time.perf_counter()-started)*1000,attributes)
