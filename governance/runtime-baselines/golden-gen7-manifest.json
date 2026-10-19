@@ -1,0 +1,76 @@
+{
+  "acceptance": {
+    "accepted_at_utc": "2026-10-19T10:38:49.521137+00:00",
+    "live_generation_evidence": "PRIOR_VERIFIED_EXECUTION_SAME_PROVIDER_CONTRACT",
+    "overall_provider_status": "READY",
+    "owner_authentication": "OWNER",
+    "provider_contract_sha256": "dbc34624bb0850e3e8c13776d00a5f9526902c12213044c2890407eb7527a7d2",
+    "queue_liveness": {
+      "failed": 0,
+      "passed": 21
+    },
+    "state": "VERIFIED_IMAGE_BINDING_AND_PROVIDER_READINESS"
+  },
+  "architecture_state": "CURRENT",
+  "audio": {
+    "owner_waiver": true,
+    "production_critical": false,
+    "read_aloud": "PARKED_PHYSICAL_FAIL_NOT_ACCEPTED"
+  },
+  "authority": {
+    "agent_delegation_grants_authority": false,
+    "identity_enforcement": "SERVER_SIDE",
+    "member_inherits_owner": false,
+    "model_content_grants_authority": false,
+    "production_authority": "ABEX"
+  },
+  "build": {
+    "image_id": "sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37",
+    "image_label_revision": "candidate-final-naming",
+    "image_tag": "orqevia:final-naming-candidate",
+    "role": "backend",
+    "source_revision": "767f9451d42c65eb905f2c3e5f816536c4e17982"
+  },
+  "generation": 7,
+  "golden_baseline_id": "orqevia-golden-gen7-20261019",
+  "interface": {
+    "endpoint": "https://192.168.1.23:8443/pwa/",
+    "exposure": "LAN_ONLY",
+    "protocol": "orqevia.interface.v1"
+  },
+  "interface_build": {
+    "image_id": "sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37",
+    "image_label_revision": "candidate-final-naming",
+    "image_tag": "orqevia:final-naming-candidate",
+    "role": "interface",
+    "source_revision": "767f9451d42c65eb905f2c3e5f816536c4e17982"
+  },
+  "qualification": {
+    "evidence": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\naming-candidate-deployment-20261019",
+    "independent_review": "SIGNED_CASES_VERIFIED_29_OF_29",
+    "scope": "IMAGE_IDENTITY_SIGNED_CLOSURE_PROVIDER_READINESS_AND_POST_DEPLOY_RUNTIME_ACCEPTANCE",
+    "unresolved_p0": 0,
+    "unresolved_p1": 0
+  },
+  "runtime_receipt": {
+    "path": "receipts/ORQEVIA_RUNTIME_RECEIPT_767F945_20261019.json",
+    "sha256": "74064717221f5948d04ef62e5b0e1f0dee3d17580e3621b4dc7a86bd9bf1955b"
+  },
+  "schema_version": "orqevia.golden-baseline.v1",
+  "scope": "SIGNED_NAMING_CANDIDATE_IMAGE_BINDING_AND_PROVIDER_READINESS",
+  "signed_closure": {
+    "artifact_sha256": "192ced6249dd32218a0f89b1f70b3db22e4f32c776a9fab77265a51b968bfb50",
+    "expires_at": "2026-10-20T10:21:09.966142+00:00",
+    "l7_awarded": false,
+    "state": "SIGNED_CASE_EVIDENCE"
+  },
+  "source": {
+    "accepted_commit": "767f9451d42c65eb905f2c3e5f816536c4e17982",
+    "repository": "AndrewLamSingapore/orqevia",
+    "tree": "896ac57d805274d3b751aeaf6b50680ff30ff047"
+  },
+  "supersedes": {
+    "golden_baseline_id": "orqevia-golden-gen6-20261019",
+    "reason": "Binds the deployed signed naming candidate and its post-deploy health, authentication and 21/21 queue-liveness evidence."
+  }
+}

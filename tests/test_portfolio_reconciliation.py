@@ -17,23 +17,33 @@ EXPECTED_IDS = {"prime", "velyqua", "the-portal", "sky-tablet", "game-platform",
 
 def test_supplementary_observation_does_not_renew_historical_manifest():
     manifest = json.loads((ROOT / "governance/operational-manifest.json").read_text(encoding="utf-8"))
-    original = json.loads(subprocess.check_output(
-        ["git", "show", "325c65323df03de1a1a7a12a50b76b3d20bf9bea:governance/operational-manifest.json"], cwd=ROOT))
+    original = json.loads(
+        subprocess.check_output(
+            ["git", "show", "325c65323df03de1a1a7a12a50b76b3d20bf9bea:governance/operational-manifest.json"], cwd=ROOT
+        )
+    )
     reference = manifest.pop("latest_observation")
     # Account only for the two authority-prose corrections. All dates, runtime
     # identities and original acceptance evidence must still equal the snapshot.
     corrections = (
-        ("supersession", "rule",
-         "This manifest alone selects current architecture and operational state. Generated mirrors and public-safe source summaries are subordinate. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
-         "This manifest is a dated component and observation reference; it cannot select current architecture or operational state. STATUS.md is the sole portfolio status record. Each product repository owns its source, configuration, contracts and domain records. Runtime claims require observed runtime identity and evidence. Generated mirrors retain the same dated scope. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history."),
-        ("truth_reconciliation", "authority_boundary",
-         "STATUS.md alone owns current status; this manifest records component and observation references. Dell may independently verify; ABEX remains the PRIME runtime authority.",
-         "STATUS.md records portfolio status claims and their evidence classification; this manifest records dated component and observation references. Each product owns its source, configuration, contracts and domain records in its repository. Runtime claims require observed runtime identity and evidence. Dell may independently verify; ABEX remains the PRIME runtime authority."),
+        (
+            "supersession",
+            "rule",
+            "This manifest alone selects current architecture and operational state. Generated mirrors and public-safe source summaries are subordinate. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
+            "This manifest is a dated component and observation reference; it cannot select current architecture or operational state. STATUS.md is the sole portfolio status record. Each product repository owns its source, configuration, contracts and domain records. Runtime claims require observed runtime identity and evidence. Generated mirrors retain the same dated scope. Historical identities cannot populate current runtime fields. Superseded material remains recoverable from Git history.",
+        ),
+        (
+            "truth_reconciliation",
+            "authority_boundary",
+            "STATUS.md alone owns current status; this manifest records component and observation references. Dell may independently verify; ABEX remains the PRIME runtime authority.",
+            "STATUS.md records portfolio status claims and their evidence classification; this manifest records dated component and observation references. Each product owns its source, configuration, contracts and domain records in its repository. Runtime claims require observed runtime identity and evidence. Dell may independently verify; ABEX remains the PRIME runtime authority.",
+        ),
     )
     for section, field, prior, corrected in corrections:
         assert original[section][field] == prior
         assert manifest[section][field] == corrected
         manifest[section][field] = prior
+
     # Account only for the dated /jarvis -> /orqevia entrypoint corrections
     # from the public-entrypoint reconciliation; every other field must still
     # equal the original snapshot byte-for-byte.
@@ -42,16 +52,23 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
         for key in path:
             node = node[key]
         return node
+
     pointer_corrections = (
-        (("public_experience", "entrypoint"),
-         "https://authority-engine-app.vercel.app/jarvis",
-         "https://authority-engine-app.vercel.app/orqevia"),
-        (("supersession", "current_public_entrypoint"),
-         "https://authority-engine-app.vercel.app/jarvis",
-         "https://authority-engine-app.vercel.app/orqevia"),
-        (("systems", "authority", "jarvis_status_url"),
-         "https://authority-engine-app.vercel.app/api/jarvis-status",
-         "https://authority-engine-app.vercel.app/api/orqevia-status"),
+        (
+            ("public_experience", "entrypoint"),
+            "https://authority-engine-app.vercel.app/jarvis",
+            "https://authority-engine-app.vercel.app/orqevia",
+        ),
+        (
+            ("supersession", "current_public_entrypoint"),
+            "https://authority-engine-app.vercel.app/jarvis",
+            "https://authority-engine-app.vercel.app/orqevia",
+        ),
+        (
+            ("systems", "authority", "jarvis_status_url"),
+            "https://authority-engine-app.vercel.app/api/jarvis-status",
+            "https://authority-engine-app.vercel.app/api/orqevia-status",
+        ),
     )
     for keys, prior, corrected in pointer_corrections:
         assert at(original, keys) == prior
@@ -63,22 +80,27 @@ def test_supplementary_observation_does_not_renew_historical_manifest():
     # Gen4 re-issue (owner order 2026-10-16): only the golden_architecture block
     # moves; assert each prior -> current pair explicitly, then restore the
     # snapshot values so every other pinned byte must still match exactly.
-    golden = manifest['golden_architecture']
-    original_golden = original['golden_architecture']
+    golden = manifest["golden_architecture"]
+    original_golden = original["golden_architecture"]
     golden_corrections = (
-        ('active_generation', 2, 4),
-        ('architecture_state', 'FROZEN', 'CURRENT'),
-        ('manifest', 'governance/golden-gen2-manifest.json', 'governance/golden-gen4-manifest.json'),
-        ('immutable_reference', 'jarvis-prime-golden-gen2-20260927', 'orqevia-golden-gen4-20261016'),
-        ('runtime_source_sha', 'b171253566e7c879283d2aacf699ae6c1ec8988e',
-         '48648edd8d2640f12f8086b9910deec865519326'),
-        ('runtime_image', 'prime:phase2-audio-diagnostic-b171253', 'orqevia:epoch-20261016-backend'),
-        ('accepted_scope', 'PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED',
-         'ORQEVIA_BRANDED_RUNTIME_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED'),
-        ('former_generation', 'jarvis-prime-golden-gen1-20260926', 'jarvis-prime-golden-gen2-20260927'),
-        ('architecture', 'docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md',
-         'docs/TOTAL-INTEGRATION-ARCHITECTURE.md'),
-        ('dell_post_promotion', 'PROMOTION_VERIFICATION_PASS', 'UNVERIFIED'),
+        ("active_generation", 2, 4),
+        ("architecture_state", "FROZEN", "CURRENT"),
+        ("manifest", "governance/golden-gen2-manifest.json", "governance/golden-gen4-manifest.json"),
+        ("immutable_reference", "jarvis-prime-golden-gen2-20260927", "orqevia-golden-gen4-20261016"),
+        ("runtime_source_sha", "b171253566e7c879283d2aacf699ae6c1ec8988e", "48648edd8d2640f12f8086b9910deec865519326"),
+        ("runtime_image", "prime:phase2-audio-diagnostic-b171253", "orqevia:epoch-20261016-backend"),
+        (
+            "accepted_scope",
+            "PHASE2_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
+            "ORQEVIA_BRANDED_RUNTIME_NON_AUDIO_ACCEPTED_READ_ALOUD_PARKED",
+        ),
+        ("former_generation", "jarvis-prime-golden-gen1-20260926", "jarvis-prime-golden-gen2-20260927"),
+        (
+            "architecture",
+            "docs/JARVIS-PRIME-PHASE2-UNIFIED-INTELLIGENCE-ARCHITECTURE.md",
+            "docs/TOTAL-INTEGRATION-ARCHITECTURE.md",
+        ),
+        ("dell_post_promotion", "PROMOTION_VERIFICATION_PASS", "UNVERIFIED"),
     )
     for field, prior, corrected in golden_corrections:
         assert original_golden[field] == prior
@@ -132,11 +154,17 @@ def test_candidate_closure_supplement_keeps_source_specific_totals_and_old_recor
     previous = observation["supersedes_latest_observation_only"]
     assert previous["historical_record_preserved"] is True
     old_raw = (ROOT / previous["record"]).read_bytes()
-    assert hashlib.sha256(old_raw).hexdigest() == previous["record_sha256"] == "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1"
+    assert (
+        hashlib.sha256(old_raw).hexdigest()
+        == previous["record_sha256"]
+        == "edf93502cbb88152e7bba1df26de627adc8f28dc56b2359378a2757681dd8ab1"
+    )
 
 
 def test_candidate_browser_and_ci_never_award_device_runtime_or_role_acceptance():
-    observation = json.loads((ROOT / "governance/observations/abex-candidate-closure-66a5d90-20261012.json").read_text(encoding="utf-8"))
+    observation = json.loads(
+        (ROOT / "governance/observations/abex-candidate-closure-66a5d90-20261012.json").read_text(encoding="utf-8")
+    )
     assert observation["classification"] == "CLAIMED_NOT_OWNER_VERIFIED"
     assert observation["upstream_ci"]["source_sha"] == observation["candidate_source_sha"]
     assert observation["upstream_ci"]["scope"] == "SOURCE_CHECKS_NOT_ROLE_OR_PRODUCTION_ACCEPTANCE"
@@ -170,9 +198,16 @@ def test_dated_evidence_does_not_become_current_status_authority():
 
 def test_product_records_have_evidence_and_unproven_commercial_limits():
     required = {
-        "target_customer", "proposition", "pricing_hypothesis_sgd", "internal_readiness",
-        "technical_evidence", "external_validation", "contradictions_and_missing_evidence",
-        "next_gate", "owner_action", "evidence_refs",
+        "target_customer",
+        "proposition",
+        "pricing_hypothesis_sgd",
+        "internal_readiness",
+        "technical_evidence",
+        "external_validation",
+        "contradictions_and_missing_evidence",
+        "next_gate",
+        "owner_action",
+        "evidence_refs",
     }
     for product in INDEX["products"]:
         assert required <= product.keys()
@@ -216,13 +251,28 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    deployment_title = "## ORQEVIA signed naming candidate deployment - 19 October 2026"
+    assert after.count(deployment_title) == 1
+    deployment_start = after.index(deployment_title)
+    deployment_end = after.index("\n## ", deployment_start + len(deployment_title)) + 1
+    deployment_update = after[deployment_start:deployment_end].encode("utf-8")
+    assert len(deployment_update) == 1819
+    assert (
+        hashlib.sha256(deployment_update).hexdigest()
+        == "cfcaeee90c03fa952d792ca793d14f77ec6e29916364a14a85a69fd2bf00edd1"
+    )
+    assert b"### Claimed, not independently checked" in deployment_update
+    assert b"### Verified" not in deployment_update
+    after = after[:deployment_start] + after[deployment_end:]
     release_title = "## ORQEVIA release, role acceptance and naming migration - 19 October 2026"
     assert after.count(release_title) == 1
     release_start = after.index(release_title)
     release_end = after.index("\n## ", release_start + len(release_title)) + 1
     release_update = after[release_start:release_end].encode("utf-8")
     assert len(release_update) == 3421
-    assert hashlib.sha256(release_update).hexdigest() == "c9d4027d222fcf97eb832d53a7b302490a6e856b7942fcbae08299e7c5d7fe6e"
+    assert (
+        hashlib.sha256(release_update).hexdigest() == "c9d4027d222fcf97eb832d53a7b302490a6e856b7942fcbae08299e7c5d7fe6e"
+    )
     assert b"### Verified (Owner-authorized, 19 October 2026)" in release_update
     after = after[:release_start] + after[release_end:]
     sweep_title = "## ORQEVIA ABEX sweep and CodeQL closure - 19 October 2026"
@@ -231,7 +281,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     sweep_end = after.index("\n## ", sweep_start + len(sweep_title)) + 1
     sweep_update = after[sweep_start:sweep_end].encode("utf-8")
     assert len(sweep_update) == 2132
-    assert hashlib.sha256(sweep_update).hexdigest() == "320b244e61bf04515e4ae9d18d9d16ba445917816cf9f5a5e49a4dc762db197b"
+    assert (
+        hashlib.sha256(sweep_update).hexdigest() == "320b244e61bf04515e4ae9d18d9d16ba445917816cf9f5a5e49a4dc762db197b"
+    )
     assert b"### Claimed, not independently checked" in sweep_update
     assert b"### Verified" not in sweep_update
     after = after[:sweep_start] + after[sweep_end:]
@@ -241,7 +293,10 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     security_end = after.index("\n## ", security_start + len(security_title)) + 1
     security_update = after[security_start:security_end].encode("utf-8")
     assert len(security_update) == 1629
-    assert hashlib.sha256(security_update).hexdigest() == "18794e6e2fada59285bee4b39492e963a2a34a140a57b905ce5256feab5171d0"
+    assert (
+        hashlib.sha256(security_update).hexdigest()
+        == "18794e6e2fada59285bee4b39492e963a2a34a140a57b905ce5256feab5171d0"
+    )
     assert b"### Claimed, not independently checked" in security_update
     assert b"### Verified" not in security_update
     after = after[:security_start] + after[security_end:]
@@ -253,7 +308,10 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     deployment_end = after.index("\n## ", deployment_start + len(deployment_title)) + 1
     deployment_update = after[deployment_start:deployment_end].encode("utf-8")
     assert len(deployment_update) == 1455
-    assert hashlib.sha256(deployment_update).hexdigest() == "7fb3dae4445fae78b49f3416b6ad856f017504523d3bc3732eb1f93b1eb59dc5"
+    assert (
+        hashlib.sha256(deployment_update).hexdigest()
+        == "7fb3dae4445fae78b49f3416b6ad856f017504523d3bc3732eb1f93b1eb59dc5"
+    )
     assert b"### Claimed, not independently checked" in deployment_update
     assert b"### Verified" not in deployment_update
     after = after[:deployment_start] + after[deployment_end:]
@@ -265,7 +323,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     repair_end = after.index("\n## ", repair_start + len(repair_title)) + 1
     repair_update = after[repair_start:repair_end].encode("utf-8")
     assert len(repair_update) == 1253
-    assert hashlib.sha256(repair_update).hexdigest() == "077c5fe7bd676d4e86ed9dc8b3da3a5575d9a3e6346410ec6f025fe18a7fe8b8"
+    assert (
+        hashlib.sha256(repair_update).hexdigest() == "077c5fe7bd676d4e86ed9dc8b3da3a5575d9a3e6346410ec6f025fe18a7fe8b8"
+    )
     after = after[:repair_start] + after[repair_end:]
     # Admit the dated 17 October health-audit/sweep section; all prior bytes stay pinned.
     audit_title = "## ORQEVIA repository health audit and GitHub sweep - 17 October 2026"
@@ -285,7 +345,10 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     readiness_end = after.index("\n## ", readiness_start + len(readiness_title)) + 1
     readiness_update = after[readiness_start:readiness_end].encode("utf-8")
     assert len(readiness_update) == 4614
-    assert hashlib.sha256(readiness_update).hexdigest() == "03bd39ea8a6a8c5229e2b1fe548cbde84209ac0b03ae281ebbc9f3104bcce3ac"
+    assert (
+        hashlib.sha256(readiness_update).hexdigest()
+        == "03bd39ea8a6a8c5229e2b1fe548cbde84209ac0b03ae281ebbc9f3104bcce3ac"
+    )
     after = after[:readiness_start] + after[readiness_end:]
     # Admit only this exact estate reconciliation section; all prior bytes stay pinned.
     estate_title = "## Estate reconciliation - no blockers, no sandboxes - 16 October 2026 (night)"
@@ -294,7 +357,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     estate_end = after.index("\n## ", estate_start + len(estate_title)) + 1
     estate_update = after[estate_start:estate_end].encode("utf-8")
     assert len(estate_update) == 2077
-    assert hashlib.sha256(estate_update).hexdigest() == "0cc13853177b7150d0a2c4c521946c90199afd257123d0eec3c6d36312d47e5b"
+    assert (
+        hashlib.sha256(estate_update).hexdigest() == "0cc13853177b7150d0a2c4c521946c90199afd257123d0eec3c6d36312d47e5b"
+    )
     after = after[:estate_start] + after[estate_end:]
     sweep_title = "## Dual-writer governance, sweep fixes and ABEX handoff - 16 October 2026"
     assert after.count(sweep_title) == 1
@@ -321,7 +386,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     entry_end = after.index("\n## ", entry_start + len(entry_title)) + 1
     entry_update = after[entry_start:entry_end].encode("utf-8")
     assert len(entry_update) == 2017
-    assert hashlib.sha256(entry_update).hexdigest() == "f6ecf71876abaf8434cfc02dbef7048dea29690e258d0e5b2cf2ef1b959b0dfc"
+    assert (
+        hashlib.sha256(entry_update).hexdigest() == "f6ecf71876abaf8434cfc02dbef7048dea29690e258d0e5b2cf2ef1b959b0dfc"
+    )
     after = after[:entry_start] + after[entry_end:]
     # Admit only this exact verifier re-pin resolution; all prior bytes stay pinned.
     repin_title = "## Verifier re-pin resolution — 16 October 2026"
@@ -330,7 +397,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     repin_end = after.index("\n## ", repin_start + len(repin_title)) + 1
     repin_update = after[repin_start:repin_end].encode("utf-8")
     assert len(repin_update) == 1237
-    assert hashlib.sha256(repin_update).hexdigest() == "cd958bf0143e5da81af6f436ec599c1c98ffc7be7951c58541d122371c92b80f"
+    assert (
+        hashlib.sha256(repin_update).hexdigest() == "cd958bf0143e5da81af6f436ec599c1c98ffc7be7951c58541d122371c92b80f"
+    )
     after = after[:repin_start] + after[repin_end:]
     # Admit only this exact access-reconciliation / protected-batch / command-shell
     # consolidation section; all prior bytes stay pinned.
@@ -340,16 +409,18 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     recon_end = after.index("\n## ", recon_start + len(recon_title)) + 1
     recon_update = after[recon_start:recon_end].encode("utf-8")
     assert len(recon_update) == 6213
-    assert hashlib.sha256(recon_update).hexdigest() == "f760fa392da1c7ca86e95cf1294740b270973fe5fcd540ebe3ace05393268b96"
+    assert (
+        hashlib.sha256(recon_update).hexdigest() == "f760fa392da1c7ca86e95cf1294740b270973fe5fcd540ebe3ace05393268b96"
+    )
     after = after[:recon_start] + after[recon_end:]
     # Admit this exact dated candidate report; all previous history remains pinned.
-    geo_title = '## Geospatial/vector candidate — 16 October 2026'
+    geo_title = "## Geospatial/vector candidate — 16 October 2026"
     assert after.count(geo_title) == 1
     geo_start = after.index(geo_title)
-    geo_end = after.index('\n## ', geo_start + len(geo_title)) + 1
-    geo_update = after[geo_start:geo_end].encode('utf-8')
+    geo_end = after.index("\n## ", geo_start + len(geo_title)) + 1
+    geo_update = after[geo_start:geo_end].encode("utf-8")
     assert len(geo_update) == 964
-    assert hashlib.sha256(geo_update).hexdigest() == 'e440b686ba8ca497429ff1eb1fef2769fc9d369043d552d995b311c97fed5e72'
+    assert hashlib.sha256(geo_update).hexdigest() == "e440b686ba8ca497429ff1eb1fef2769fc9d369043d552d995b311c97fed5e72"
     after = after[:geo_start] + after[geo_end:]
     # Admit only this exact signing-closure/identity/Singapore-origin section;
     # all prior bytes stay pinned.
@@ -359,7 +430,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     closing_end = after.index("\n## ", closing_start + len(closing_title)) + 1
     closing_update = after[closing_start:closing_end].encode("utf-8")
     assert len(closing_update) == 2921
-    assert hashlib.sha256(closing_update).hexdigest() == "ff170e7d4cdb49089932a2268acccffa35b021caf1d25b141e127415a564803b"
+    assert (
+        hashlib.sha256(closing_update).hexdigest() == "ff170e7d4cdb49089932a2268acccffa35b021caf1d25b141e127415a564803b"
+    )
     after = after[:closing_start] + after[closing_end:]
     # Admit only this exact installation-verification/brand-archive/readiness
     # section; all prior bytes stay pinned.
@@ -369,7 +442,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     install_end = after.index("\n## ", install_start + len(install_title)) + 1
     install_update = after[install_start:install_end].encode("utf-8")
     assert len(install_update) == 1920
-    assert hashlib.sha256(install_update).hexdigest() == "bf4b279e1ccfd6e1a23cc56e259ca593e9b39bbf38d3e73c6e6317f49124706e"
+    assert (
+        hashlib.sha256(install_update).hexdigest() == "bf4b279e1ccfd6e1a23cc56e259ca593e9b39bbf38d3e73c6e6317f49124706e"
+    )
     after = after[:install_start] + after[install_end:]
     # Admit only this exact ORQEVIA epoch supersession record; all prior bytes
     # stay pinned.
@@ -379,7 +454,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     epoch_end = after.index("\n## ", epoch_start + len(epoch_title)) + 1
     epoch_update = after[epoch_start:epoch_end].encode("utf-8")
     assert len(epoch_update) == 2452
-    assert hashlib.sha256(epoch_update).hexdigest() == "48a96cf60e632f1c522c99b5d58f2a2ab6c61cfb8d80038e59d86a30a2c06cf9"
+    assert (
+        hashlib.sha256(epoch_update).hexdigest() == "48a96cf60e632f1c522c99b5d58f2a2ab6c61cfb8d80038e59d86a30a2c06cf9"
+    )
     after = after[:epoch_start] + after[epoch_end:]
     # Admit only this exact open-access / unsandboxed / gen-4 record; all prior
     # bytes stay pinned.
@@ -400,9 +477,7 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.\n\n"
         "STATUS.md records current portfolio status claims and their evidence classification. Each product owns its source, configuration, contracts, and domain records in its repository.\n\n"
     )
-    prior_scope = (
-        "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
-    )
+    prior_scope = "STATUS.md records current portfolio status claims and their evidence classification. It does not own implementation, runtime configuration, domain data, or product contracts. Each product owns its source, configuration, contracts, and domain records in its repository. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT files remain dated evidence, not parallel current portfolio status records."
     assert after.startswith(title + interpretation)
     # Admit the current PR #314 dated additions without pinning their byte
     # lengths. The "How to use this file" section and every historical section
@@ -421,16 +496,21 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     handover_end = after.index("\n## ", handover_start + len(handover_title)) + 1
     handover_update = after[handover_start:handover_end].encode("utf-8")
     assert len(handover_update) == 1751
-    assert hashlib.sha256(handover_update).hexdigest() == "177ea1308e0a4ff0744de75ed40e5235c8d290be86c764e35fe0783c4f791171"
+    assert (
+        hashlib.sha256(handover_update).hexdigest()
+        == "177ea1308e0a4ff0744de75ed40e5235c8d290be86c764e35fe0783c4f791171"
+    )
     after = after[:handover_start] + after[handover_end:]
     # Admit only this exact public-profile observation; all prior bytes stay pinned.
-    profile_title = '## Public GitHub profile refresh - 13 October 2026'
+    profile_title = "## Public GitHub profile refresh - 13 October 2026"
     assert after.count(profile_title) == 1
     profile_start = after.index(profile_title)
     profile_end = after.index("\n## ", profile_start + len(profile_title)) + 1
     profile_update = after[profile_start:profile_end].encode("utf-8")
     assert len(profile_update) == 2458
-    assert hashlib.sha256(profile_update).hexdigest() == "46c0bf06fde829fb81f6927e7f9975abb2fd66ba1187be1c84dd49ca77278efd"
+    assert (
+        hashlib.sha256(profile_update).hexdigest() == "46c0bf06fde829fb81f6927e7f9975abb2fd66ba1187be1c84dd49ca77278efd"
+    )
     after = after[:profile_start] + after[profile_end:]
     # Admit only this exact incremental observation; every earlier byte stays pinned.
     incremental_title = "## Incremental crash analysis and communication-path follow-up - 13 October 2026"
@@ -439,7 +519,10 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     incremental_end = after.index("\n## ", incremental_start + len(incremental_title)) + 1
     incremental_update = after[incremental_start:incremental_end].encode("utf-8")
     assert len(incremental_update) == 4309
-    assert hashlib.sha256(incremental_update).hexdigest() == "626618b2ac3bcdc6bc38297b388e245fc8ff139585e76a413dfc79d2846cb610"
+    assert (
+        hashlib.sha256(incremental_update).hexdigest()
+        == "626618b2ac3bcdc6bc38297b388e245fc8ff139585e76a413dfc79d2846cb610"
+    )
     after = after[:incremental_start] + after[incremental_end:]
     # Admit only the exact dated telemetry/runtime follow-up; prior history is unchanged.
     runtime_title = "## Telemetry source and external runtime follow-up - 13 October 2026"
@@ -448,7 +531,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     runtime_end = after.index("\n## ", runtime_start + len(runtime_title)) + 1
     runtime_update = after[runtime_start:runtime_end].encode("utf-8")
     assert len(runtime_update) == 3056
-    assert hashlib.sha256(runtime_update).hexdigest() == "04064e8c6e0e0d26904669f6e872d1e529ce03f748dd1fdf365135c5617477ee"
+    assert (
+        hashlib.sha256(runtime_update).hexdigest() == "04064e8c6e0e0d26904669f6e872d1e529ce03f748dd1fdf365135c5617477ee"
+    )
     after = after[:runtime_start] + after[runtime_end:]
     # Admit only this exact dated sweep supplement; all prior bytes stay pinned.
     sweep_title = "## Portfolio bug sweep and STATUS reference reconciliation - 13 October 2026"
@@ -469,13 +554,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert hashlib.sha256(followup).hexdigest() == "e6814e6a7a9d5d8b1517ff4b3fca0c71a6c696621b2ed7b84a32e304691ceab9"
     after = after[:followup_start] + after[followup_end:]
     # Admit only this exact dated reconciliation; preserve every historical pin.
-    reconciliation_title = '## ABEX\u2013DELL end-to-end reconciliation \u2014 13 October 2026'
+    reconciliation_title = "## ABEX\u2013DELL end-to-end reconciliation \u2014 13 October 2026"
     assert after.count(reconciliation_title) == 1
     reconciliation_start = after.index(reconciliation_title)
     reconciliation_end = after.index("\n## ", reconciliation_start + len(reconciliation_title)) + 1
     reconciliation_update = after[reconciliation_start:reconciliation_end].encode("utf-8")
     assert len(reconciliation_update) == 6743
-    assert hashlib.sha256(reconciliation_update).hexdigest() == "87e5825e0263e0a8f96e37ad96dc7a652d3c6e48f90691bd9c8bae0afee77a47"
+    assert (
+        hashlib.sha256(reconciliation_update).hexdigest()
+        == "87e5825e0263e0a8f96e37ad96dc7a652d3c6e48f90691bd9c8bae0afee77a47"
+    )
     after = after[:reconciliation_start] + after[reconciliation_end:]
     # Admit exactly this new 12 October Dell verification record; every prior
     # section pin stays unchanged.
@@ -486,7 +574,10 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     candidate_end = after.index("## ABEX independent post-restart receipts — 12 October 2026", candidate_start)
     candidate_update = after[candidate_start:candidate_end].encode("utf-8")
     assert len(candidate_update) == 2498
-    assert hashlib.sha256(candidate_update).hexdigest() == "13467290dcac24592e4ab280d84bd94c403de21a85e99790d6fe85ab53921fb6"
+    assert (
+        hashlib.sha256(candidate_update).hexdigest()
+        == "13467290dcac24592e4ab280d84bd94c403de21a85e99790d6fe85ab53921fb6"
+    )
     after = after[:candidate_start] + after[candidate_end:]
     # Admit only this exact new dated receipt index; historical sections stay pinned.
     local_title = "## ABEX independent post-restart receipts — 12 October 2026"
@@ -495,7 +586,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     local_end = after.index("## Dell independent verification - 12 October 2026", local_start)
     local_update = after[local_start:local_end].encode("utf-8")
     assert len(local_update) == 2436
-    assert hashlib.sha256(local_update).hexdigest() == "a58bd9753a6ded69cb24051fa14a998a0d39afecfbaaf12746b1e4a8380af0a3"
+    assert (
+        hashlib.sha256(local_update).hexdigest() == "a58bd9753a6ded69cb24051fa14a998a0d39afecfbaaf12746b1e4a8380af0a3"
+    )
     after = after[:local_start] + after[local_end:]
     dell_title = "## Dell independent verification - 12 October 2026"
     assert after.count(dell_title) == 1
@@ -512,29 +605,41 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     rebrand_end = after.index("## Light-production observation", rebrand_start)
     rebrand_update = after[rebrand_start:rebrand_end].encode("utf-8")
     assert len(rebrand_update) == 1797
-    assert hashlib.sha256(rebrand_update).hexdigest() == "792352335d2121cb4f6905eb4ca2094fc0b8af6526d44d59f32a4c2930277491"
+    assert (
+        hashlib.sha256(rebrand_update).hexdigest() == "792352335d2121cb4f6905eb4ca2094fc0b8af6526d44d59f32a4c2930277491"
+    )
     after = after[:rebrand_start] + after[rebrand_end:]
-    after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation):]
+    after = title + "Last updated: 4 October 2026\n\n" + prior_scope + "\n\n" + after[len(title + interpretation) :]
     # Admit exactly the dated observation, failure and non-certifying evidence
     # repair. Neither the later service failure nor the earlier finite pass may
     # overwrite history or become an unbounded/current acceptance claim.
     observation_title = "## Light-production observation and dated HF evidence repair — 8 October 2026"
     assert after.count(observation_title) == 1
     observation_start = after.index(observation_title)
-    observation_end = after.index("## PR #210 source merge and copied-data rollback correction — 8 October 2026", observation_start)
+    observation_end = after.index(
+        "## PR #210 source merge and copied-data rollback correction — 8 October 2026", observation_start
+    )
     observation_update = after[observation_start:observation_end].encode("utf-8")
     assert len(observation_update) == 3517
-    assert hashlib.sha256(observation_update).hexdigest() == "b2bc0b19fc66d0ed61dd4696b941306936b2a33b12b265fc9d1e07d3f2e31e2e"
+    assert (
+        hashlib.sha256(observation_update).hexdigest()
+        == "b2bc0b19fc66d0ed61dd4696b941306936b2a33b12b265fc9d1e07d3f2e31e2e"
+    )
     after = after[:observation_start] + after[observation_end:]
     # Admit this exact new correction/merge observation without rewriting the
     # earlier failed observation or any of its byte-pinned historical evidence.
     correction_title = "## PR #210 source merge and copied-data rollback correction — 8 October 2026"
     assert after.count(correction_title) == 1
     correction_start = after.index(correction_title)
-    correction_end = after.index("## Authenticated certification feeds merged; further cases prepared — 8 October 2026", correction_start)
+    correction_end = after.index(
+        "## Authenticated certification feeds merged; further cases prepared — 8 October 2026", correction_start
+    )
     correction_update = after[correction_start:correction_end].encode("utf-8")
     assert len(correction_update) == 2692
-    assert hashlib.sha256(correction_update).hexdigest() == "449da24a577e56e43954e7e181bedbd2f0597dfb2040d2f1cbd56449f4842a7d"
+    assert (
+        hashlib.sha256(correction_update).hexdigest()
+        == "449da24a577e56e43954e7e181bedbd2f0597dfb2040d2f1cbd56449f4842a7d"
+    )
     after = after[:correction_start] + after[correction_end:]
     # Admit only the exact new 8 October source/rehearsal observation. It is
     # distinct from all byte-pinned historical additions below; no arbitrary
@@ -542,10 +647,14 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     current_title = "## Authenticated certification feeds merged; further cases prepared — 8 October 2026"
     assert after.count(current_title) == 1
     current_start = after.index(current_title)
-    current_end = after.index("## Actual independent A19 signing and identity-event adapter — 7 October 2026", current_start)
+    current_end = after.index(
+        "## Actual independent A19 signing and identity-event adapter — 7 October 2026", current_start
+    )
     current_update = after[current_start:current_end].encode("utf-8")
     assert len(current_update) == 3620
-    assert hashlib.sha256(current_update).hexdigest() == "c6df942a332489af2ea9abf5ac11f1f4b9bc9abbc213d236fe846887a8814944"
+    assert (
+        hashlib.sha256(current_update).hexdigest() == "c6df942a332489af2ea9abf5ac11f1f4b9bc9abbc213d236fe846887a8814944"
+    )
     after = after[:current_start] + after[current_end:]
     # Admit only this exact new, dated signing/candidate observation. Every
     # prior section and the original portfolio baseline remain byte-pinned.
@@ -555,7 +664,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     signing_end = after.index("## Scoped 5b deployment and unsigned A19 review — 7 October 2026", signing_start)
     signing_update = after[signing_start:signing_end].encode("utf-8")
     assert len(signing_update) == 2968
-    assert hashlib.sha256(signing_update).hexdigest() == "c9d8a4cc56fa50433b29a05160e0cfc6c74419d0cb7cd63ff0c43f0cd9ea1266"
+    assert (
+        hashlib.sha256(signing_update).hexdigest() == "c9d8a4cc56fa50433b29a05160e0cfc6c74419d0cb7cd63ff0c43f0cd9ea1266"
+    )
     after = after[:signing_start] + after[signing_end:]
     # Remove only this exact dated deployment/unsigned-review observation.
     # The frozen baseline and every earlier section pin stay unchanged; an
@@ -576,7 +687,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     runtime_end = after.index("## Agent certification execution repair — 7 October 2026", runtime_start)
     runtime_update = after[runtime_start:runtime_end].encode("utf-8")
     assert len(runtime_update) == 1715
-    assert hashlib.sha256(runtime_update).hexdigest() == "e981b56286dba42533f6024d677a58334e2e35f247dc0dde67fdaa70bfa54ec9"
+    assert (
+        hashlib.sha256(runtime_update).hexdigest() == "e981b56286dba42533f6024d677a58334e2e35f247dc0dde67fdaa70bfa54ec9"
+    )
     after = after[:runtime_start] + after[runtime_end:]
     # Remove only the exact new, non-certifying 7 October observation; retain
     # the independently pinned historical bytes and reject altered claims.
@@ -625,57 +738,87 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert hashlib.sha256(preserved).hexdigest() == baseline["sha256"]
 
 
-@pytest.mark.parametrize("original,replacement", [
-    ("QUALIFIED_FOR_OBSERVED_LIGHT_PRODUCTION", "PERMANENTLY_QUALIFIED_FOR_ALL_WORKLOADS"),
-    ("not a continuously current sensor or heavy-load thermal qualification.",
-     "a continuously current sensor and heavy-load thermal qualification."),
-    ("Accepted backend remains `5b3dd3a`.", "Accepted backend is now `8b673e5`."),
-    ("accepted PRIME exited with code 139 and Docker restarted it.",
-     "accepted PRIME never exited and Docker never restarted it."),
-    ("before any\n  stop, start, reader or copy operation.",
-     "after every\n  stop, start, reader and copy operation passed."),
-    ("without new inference,\n  fresh execution evidence, independent signature or certification.",
-     "with new inference,\n  fresh execution evidence, independent signature and certification."),
-    ("Full L7 remains **0/21**; no capability certification was awarded.",
-     "Full L7 is **21/21**; every capability certification was awarded."),
-], ids=["finite-not-permanent", "dated-not-heavy", "exact-accepted-runtime", "preserve-exit139",
-        "no-fenced-copy", "projection-not-execution", "no-l7-award"])
+@pytest.mark.parametrize(
+    "original,replacement",
+    [
+        ("QUALIFIED_FOR_OBSERVED_LIGHT_PRODUCTION", "PERMANENTLY_QUALIFIED_FOR_ALL_WORKLOADS"),
+        (
+            "not a continuously current sensor or heavy-load thermal qualification.",
+            "a continuously current sensor and heavy-load thermal qualification.",
+        ),
+        ("Accepted backend remains `5b3dd3a`.", "Accepted backend is now `8b673e5`."),
+        (
+            "accepted PRIME exited with code 139 and Docker restarted it.",
+            "accepted PRIME never exited and Docker never restarted it.",
+        ),
+        (
+            "before any\n  stop, start, reader or copy operation.",
+            "after every\n  stop, start, reader and copy operation passed.",
+        ),
+        (
+            "without new inference,\n  fresh execution evidence, independent signature or certification.",
+            "with new inference,\n  fresh execution evidence, independent signature and certification.",
+        ),
+        (
+            "Full L7 remains **0/21**; no capability certification was awarded.",
+            "Full L7 is **21/21**; every capability certification was awarded.",
+        ),
+    ],
+    ids=[
+        "finite-not-permanent",
+        "dated-not-heavy",
+        "exact-accepted-runtime",
+        "preserve-exit139",
+        "no-fenced-copy",
+        "projection-not-execution",
+        "no-l7-award",
+    ],
+)
 def test_light_observation_and_failure_reject_inflated_claims(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
     status = read_text(status_path, encoding="utf-8")
     assert status.count(original) == 1
     changed = status.replace(original, replacement, 1)
+
     def altered_read(path, *args, **kwargs):
         return changed if path == status_path else read_text(path, *args, **kwargs)
+
     monkeypatch.setattr(Path, "read_text", altered_read)
     with pytest.raises(AssertionError):
         test_status_insertion_preserves_all_existing_sections_and_history()
 
 
-@pytest.mark.parametrize("original,replacement", [
-    ("## Course study", "## Course study — unaccounted history edit"),
-    ("The offending driver remains UNIDENTIFIED.", "The offending driver is NTFS."),
-    ("Host reliability remains unresolved.", "Host reliability is certified."),
-    ("PR #302 is an unmerged source candidate, distinct from the observed runtime.",
-     "PR #302 is the installed and accepted runtime."),
-    ("No hardware cause is established.", "The hardware cause is established."),
-    ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
-    ("Fully L7 certified remains **0/21**.", "Fully L7 certified remains **1/21**."),
-    ("candidate has not changed Golden, Interface, Ollama", "candidate has deployed to Golden, Interface, Ollama"),
-    ("d2793c00169cc6fca540e9c26c57790d143935d6", "d2793c00169cc6fca540e9c26c57790d143935d0"),
-    ("bounded 69-second observation passed", "unbounded long-term soak passed"),
-    ("before any A26\n  review or signing", "after verified A26\n  review and signing"),
-    ("No signing was performed.", "Independent protected signing passed."),
-    ("69.078 seconds", "69.078 hours"),
-    ("0/21**.\n- Agent-reviewed evidence", "21/21**.\n- Agent-reviewed evidence"),
-    ("bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22824",
-     "bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22820"),
-    ("thirteen tamper-denial checks passed", "thirteen tamper-denial checks failed"),
-    ("its historical signature is not", "its historical signature is now"),
-    ("2026-10-07T11:52:32Z", "2026-10-08T11:52:32Z"),
-    ("No new cloud authority was added.", "New agent signing authority was added."),
-])
+@pytest.mark.parametrize(
+    "original,replacement",
+    [
+        ("## Course study", "## Course study — unaccounted history edit"),
+        ("The offending driver remains UNIDENTIFIED.", "The offending driver is NTFS."),
+        ("Host reliability remains unresolved.", "Host reliability is certified."),
+        (
+            "PR #302 is an unmerged source candidate, distinct from the observed runtime.",
+            "PR #302 is the installed and accepted runtime.",
+        ),
+        ("No hardware cause is established.", "The hardware cause is established."),
+        ("Executed focused regression: 284 passed", "Executed focused regression: 285 passed"),
+        ("Fully L7 certified remains **0/21**.", "Fully L7 certified remains **1/21**."),
+        ("candidate has not changed Golden, Interface, Ollama", "candidate has deployed to Golden, Interface, Ollama"),
+        ("d2793c00169cc6fca540e9c26c57790d143935d6", "d2793c00169cc6fca540e9c26c57790d143935d0"),
+        ("bounded 69-second observation passed", "unbounded long-term soak passed"),
+        ("before any A26\n  review or signing", "after verified A26\n  review and signing"),
+        ("No signing was performed.", "Independent protected signing passed."),
+        ("69.078 seconds", "69.078 hours"),
+        ("0/21**.\n- Agent-reviewed evidence", "21/21**.\n- Agent-reviewed evidence"),
+        (
+            "bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22824",
+            "bee1a7fc3253231dbde2a997aa3a4d02ac1bcf8457c4081941e8572cf1f22820",
+        ),
+        ("thirteen tamper-denial checks passed", "thirteen tamper-denial checks failed"),
+        ("its historical signature is not", "its historical signature is now"),
+        ("2026-10-07T11:52:32Z", "2026-10-08T11:52:32Z"),
+        ("No new cloud authority was added.", "New agent signing authority was added."),
+    ],
+)
 def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
@@ -687,32 +830,59 @@ def test_status_history_guard_rejects_unaccounted_edit(monkeypatch, original, re
     offset = 0
     for _ in range(expected_count):
         position = status.index(original, offset)
-        changed = status[:position] + replacement + status[position + len(original):]
+        changed = status[:position] + replacement + status[position + len(original) :]
+
         def altered_read(path, *args, **kwargs):
             return changed if path == status_path else read_text(path, *args, **kwargs)
+
         monkeypatch.setattr(Path, "read_text", altered_read)
         with pytest.raises(AssertionError):
             test_status_insertion_preserves_all_existing_sections_and_history()
         offset = position + len(original)
 
 
-@pytest.mark.parametrize("original,replacement", [
-    ("Full exact-head cloud tests for\n  this changed continuation remain separate from PR #209's completed CI.",
-     "Full exact-head cloud tests for\n  this changed continuation passed all checks using PR #209's completed CI."),
-    ("configuration matched the pinned archive; it has not been deployed.",
-     "configuration matched the pinned archive; it has been deployed."),
-    ("Source readiness is 98/2,146 paths, A19 42/74; these are not live case counts.",
-     "Live certification is 98/2,146 paths, A19 42/74; these are live case counts."),
-    ("receipts are preserved. Full L7 remains **0/21**;",
-     "receipts are preserved. Full L7 is certified **21/21**;"),
-    ("remain unwired. They are not counted as ready certification paths.",
-     "are fully wired. They are counted as ready certification paths."),
-    ("read failed closed on a relevant-code pin mismatch; restoration remains unproved.",
-     "read passed despite a relevant-code pin mismatch; restoration is proved."),
-    ("Windows PWA/image stages were skipped after that failure, not passed.",
-     "Windows PWA/image stages passed despite that failure, not skipped."),
-], ids=["new-cloud-pass", "new-deployment", "new-live-counts", "new-l7", "new-unwired-readiness",
-        "new-rollback-pass", "new-skipped-pass"])
+@pytest.mark.parametrize(
+    "original,replacement",
+    [
+        (
+            "Full exact-head cloud tests for\n  this changed continuation remain separate from PR #209's completed CI.",
+            "Full exact-head cloud tests for\n  this changed continuation passed all checks using PR #209's completed CI.",
+        ),
+        (
+            "configuration matched the pinned archive; it has not been deployed.",
+            "configuration matched the pinned archive; it has been deployed.",
+        ),
+        (
+            "Source readiness is 98/2,146 paths, A19 42/74; these are not live case counts.",
+            "Live certification is 98/2,146 paths, A19 42/74; these are live case counts.",
+        ),
+        (
+            "receipts are preserved. Full L7 remains **0/21**;",
+            "receipts are preserved. Full L7 is certified **21/21**;",
+        ),
+        (
+            "remain unwired. They are not counted as ready certification paths.",
+            "are fully wired. They are counted as ready certification paths.",
+        ),
+        (
+            "read failed closed on a relevant-code pin mismatch; restoration remains unproved.",
+            "read passed despite a relevant-code pin mismatch; restoration is proved.",
+        ),
+        (
+            "Windows PWA/image stages were skipped after that failure, not passed.",
+            "Windows PWA/image stages passed despite that failure, not skipped.",
+        ),
+    ],
+    ids=[
+        "new-cloud-pass",
+        "new-deployment",
+        "new-live-counts",
+        "new-l7",
+        "new-unwired-readiness",
+        "new-rollback-pass",
+        "new-skipped-pass",
+    ],
+)
 def test_current_case_observation_rejects_inflated_claims(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
@@ -721,32 +891,47 @@ def test_current_case_observation_rejects_inflated_claims(monkeypatch, original,
     # claim counts and their independent mutation tests stay unchanged.
     assert status.count(original) == 1
     changed = status.replace(original, replacement, 1)
+
     def altered_read(path, *args, **kwargs):
         return changed if path == status_path else read_text(path, *args, **kwargs)
+
     monkeypatch.setattr(Path, "read_text", altered_read)
     with pytest.raises(AssertionError):
         test_status_insertion_preserves_all_existing_sections_and_history()
 
 
-@pytest.mark.parametrize("original,replacement", [
-    ("944755427c177d9ef661b24fdb37ea3f35f7ca99", "944755427c177d9ef661b24fdb37ea3f35f7ca90"),
-    ("Agent L7 remains **0/21**.", "Agent L7 is complete **21/21**."),
-    ("Public verifier\n  fixtures are not live Azure signing", "Public verifier\n  fixtures are live Azure signing"),
-    ("prove a production cutover or preservation of arbitrary later production writes.",
-     "prove a production cutover and preservation of arbitrary later production writes."),
-    ("no production code or image was repaired.", "production code and image were repaired."),
-    ("No PR #209 or #210 production deployment is established", "PR #209 and #210 production deployment is established"),
-    ("Host stability remains unqualified.", "Host stability is qualified."),
-    ("this observation awards no certification", "this observation awards all certifications"),
-])
+@pytest.mark.parametrize(
+    "original,replacement",
+    [
+        ("944755427c177d9ef661b24fdb37ea3f35f7ca99", "944755427c177d9ef661b24fdb37ea3f35f7ca90"),
+        ("Agent L7 remains **0/21**.", "Agent L7 is complete **21/21**."),
+        (
+            "Public verifier\n  fixtures are not live Azure signing",
+            "Public verifier\n  fixtures are live Azure signing",
+        ),
+        (
+            "prove a production cutover or preservation of arbitrary later production writes.",
+            "prove a production cutover and preservation of arbitrary later production writes.",
+        ),
+        ("no production code or image was repaired.", "production code and image were repaired."),
+        (
+            "No PR #209 or #210 production deployment is established",
+            "PR #209 and #210 production deployment is established",
+        ),
+        ("Host stability remains unqualified.", "Host stability is qualified."),
+        ("this observation awards no certification", "this observation awards all certifications"),
+    ],
+)
 def test_current_rollback_correction_rejects_expanded_claims(monkeypatch, original, replacement):
     status_path = ROOT / "STATUS.md"
     read_text = Path.read_text
     status = read_text(status_path, encoding="utf-8")
     assert status.count(original) == 1
     changed = status.replace(original, replacement, 1)
+
     def altered_read(path, *args, **kwargs):
         return changed if path == status_path else read_text(path, *args, **kwargs)
+
     monkeypatch.setattr(Path, "read_text", altered_read)
     with pytest.raises(AssertionError):
         test_status_insertion_preserves_all_existing_sections_and_history()
@@ -759,7 +944,12 @@ def test_public_deployment_identity_is_not_physical_or_commercial_proof():
     assert all(p["production_alias"].startswith("https://") for p in public)
     assert "No functional browser/customer validation is implied" in INDEX["deployment_observation_note"]
     reconciliation = (PORTFOLIO / "PORTFOLIO_RECONCILIATION_20260927.md").read_text(encoding="utf-8")
-    for boundary in ("Design is not an executed failure test", "W3-01 stays PARKED", "PARKED / NOT ACCEPTED", "MODEL_CONTENT"):
+    for boundary in (
+        "Design is not an executed failure test",
+        "W3-01 stays PARKED",
+        "PARKED / NOT ACCEPTED",
+        "MODEL_CONTENT",
+    ):
         assert boundary in reconciliation
 
 

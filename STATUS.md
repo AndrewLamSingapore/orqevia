@@ -36,6 +36,41 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA signed naming candidate deployment - 19 October 2026
+
+### Claimed, not independently checked
+
+- The Owner-authorized naming candidate is deployed for backend and interface
+  from `orqevia:final-naming-candidate`
+  (`sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37`),
+  source `767f9451d42c65eb905f2c3e5f816536c4e17982`. No image was rebuilt.
+- All nine expected containers are running; backend and interface are healthy.
+  Backend `/health` returns `200 {"ok":true}` and the integration gateway returns
+  `200 ok` with `X-ORQEVIA-Health-Scope: GATEWAY_ONLY`; unauthenticated
+  integration access remains `401`.
+- Owner authentication returns an authenticated `OWNER` session on protocol
+  `orqevia.interface.v1` with no recovery state.
+- Sequential queue liveness passed **21/21, 0 failed**, bound to source
+  `767f945`.
+- Higgsfield is `READY`; REST credentials are valid, the catalog is
+  `VALID_FRESH`, and prior generation execution evidence remains bound to the
+  identical provider contract. The deployment preflight submitted no billable
+  generation.
+- Runtime attestation is `VERIFIED` under Golden
+  `orqevia-golden-gen7-20261019` for the deployed source and image; its
+  Ed25519 signature and receipt digest independently verify.
+- The previous backend and interface images, pre-deployment environment, and
+  pre-naming Compose file remain locally preserved for rollback.
+
+### Known broken / open
+
+- The signed closure expires at
+  `2026-10-20T10:21:09.966142+00:00`; any future redeployment or renewed
+  certification window requires fresh evidence.
+- The seven compatibility files remain byte-identical in the deployed candidate.
+  Final legacy-name retirement requires a separate migration and new closure.
+- Physical read-aloud acceptance remains parked and excluded.
+
 ## ORQEVIA release, role acceptance and naming migration - 19 October 2026
 
 ### Verified (Owner-authorized, 19 October 2026)

@@ -90,3 +90,12 @@ The seven compatibility files remain byte-identical in this exact signed
 candidate. A later change to any of those files invalidates that runtime closure
 binding, so final legacy-name retirement remains a separate code migration with
 its own fresh evidence and closure cycle.
+
+## Deployed
+
+The Owner approved deployment on 19 October 2026. Backend and interface now run
+the exact signed image; post-deploy acceptance recorded all nine expected
+containers, Owner authentication, gateway health and denial, 21/21 queue
+liveness, and Higgsfield readiness. Runtime attestation is `VERIFIED` under
+Golden `orqevia-golden-gen7-20261019` for source/image `767f945` /
+`sha256:67af1345…`.
