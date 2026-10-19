@@ -21,6 +21,8 @@ governance/agent-cert-reviewed-cases-expired-before-fresh29-20261016.json -text
 governance/agent-cert-historical-admissions/*.json -text
 governance/agent-cert-case-evidence/a19-5b3dd3a-role-normal-20261007/** -text
 governance/agent-cert-case-evidence/a19-61335a9-artifact-produce-20261008/** -text
+governance/agent-cert-case-evidence/fresh-*-20261019/** -text
+governance/agent-cert-initialization-proposed-fields-20261019.json -text
 
 # Preserve exact original29case execution/review evidence bytes.
 governance/agent-cert-case-evidence/*-613-init-20261010/** -text
