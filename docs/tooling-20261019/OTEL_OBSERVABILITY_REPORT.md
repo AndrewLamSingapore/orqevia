@@ -30,6 +30,8 @@ queue accounting or full-stack canary.
 - safe internal span helper;
 - W3C trace-context extraction and injection;
 - graceful no-op behavior when disabled;
+- graceful no-op behavior and an explicit `UNAVAILABLE` result when the
+  OpenTelemetry packages are absent;
 - exporter isolation from request success/failure.
 
 ## Instrumented boundaries
