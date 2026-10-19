@@ -36,6 +36,39 @@ If you are an AI agent updating this file:
 
 ---
 
+## ORQEVIA ABEX sweep and CodeQL closure - 19 October 2026
+
+### Claimed, not independently checked
+
+- Canonical `main` is `97a9f936e6d166a334ea4eb949f563d8f3c3a230`. The backend
+  and interface run exact image `orqevia:tooling-20261019-97a9f93-exact`
+  (`sha256:bc3d591841ddd8b6cc1835051fa8fbd8ad304807ef56d8d2b952a1fbcc3eaac1`);
+  the loopback RAG service runs release `97a9f936...-exact`.
+- The final Python regression passes **6052 tests, 20 skipped, 3 deselected
+  and 102 subtests**, with no failures.
+- The full-stack canary passes 12/12 and sequential agent liveness passes 21/21
+  on the deployed revision. The PWA loads in Chromium, Firefox and WebKit, and
+  RAG retrieval plus cited local-model generation remain operational.
+- CodeQL runtime findings for proxy URL construction, cookie reuse, regex
+  backtracking, exception disclosure and insecure temporary files were fixed.
+  Eleven false-positive/duplicate path and cookie findings were dismissed with
+  audit comments after verifying exact hex artifact IDs, contained paths,
+  reparse-point checks and canonical server-generated session tokens.
+- Dependabot, secret scanning and code scanning each report zero open alerts.
+- Microsoft Copilot was removed from this ABEX profile. Its package and process
+  are absent; one inbound mDNS firewall rule remains pending elevated removal.
+- The obsolete Codex Windows sandbox table was removed. The disabled sandbox
+  service and its hold task remain registered because removal requires an
+  elevated Windows token; neither is running.
+- The current-boot host has no system critical/error events, no device problems,
+  no pending reboot, a healthy NVMe disk, and 687.7 GB free. Geo Sync was
+  rerun successfully after its boot-time task miss.
+- Forty-three temporary fixture/build paths, one orphan container, two obsolete
+  image tags and 781.8 MB of Docker build cache were removed. All volumes,
+  databases, rollback images and active source worktrees were preserved.
+- Security, ownership, path-containment and protected-verifier guards were
+  deliberately retained because they protect data and executable integrity.
+
 ## ORQEVIA Starlette security remediation deployment - 19 October 2026
 
 ### Claimed, not independently checked

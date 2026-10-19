@@ -4,25 +4,25 @@
 
 **DEPLOYED AND VERIFIED ON ABEX.**
 
-PR #400 passed all nine required checks and merged the security remediation as:
+PRs #400, #402 and #403 remediated dependency, telemetry, SSRF, cookie, regex,
+error-disclosure and temporary-file findings. The final runtime revision is:
 
 ```text
-86e26da41168f899ad04174135bc5a23765a46d9
+97a9f936e6d166a334ea4eb949f563d8f3c3a230
 ```
 
-PR #398 (`0177241`) established the initial tooling deployment. PR #400
-supersedes its runtime image with patched web dependencies and the final
-privacy boundary.
+PR #398 (`0177241`) established the initial tooling deployment. PR #400 and
+the follow-up CodeQL fixes supersede its runtime image.
 
 ## Deployment identity
 
 | Component | Deployed identity |
 |---|---|
-| Backend | `orqevia:tooling-20261019-86e26da-exact` |
-| Interface | `orqevia:tooling-20261019-86e26da-exact` |
-| Image ID | `sha256:376a96f6bd061e3e6375cb4d21ef7ffcf9714584f44ffeca8987c18bb6eeb95c` |
-| OCI revision label | `86e26da41168f899ad04174135bc5a23765a46d9` |
-| Loopback RAG release | `86e26da41168f899ad04174135bc5a23765a46d9-exact` |
+| Backend | `orqevia:tooling-20261019-97a9f93-exact` |
+| Interface | `orqevia:tooling-20261019-97a9f93-exact` |
+| Image ID | `sha256:bc3d591841ddd8b6cc1835051fa8fbd8ad304807ef56d8d2b952a1fbcc3eaac1` |
+| OCI revision label | `97a9f936e6d166a334ea4eb949f563d8f3c3a230` |
+| Loopback RAG release | `97a9f936e6d166a334ea4eb949f563d8f3c3a230-exact` |
 | Compose project | `orqevia-epoch-20261016` |
 
 The exact image was built from a detached Git worktree with
@@ -45,14 +45,22 @@ The separate RAG release also matched the Git blobs for
 - FastAPI: `0.143.1`
 - Starlette: `1.9.0`
 - uvicorn: `0.54.0`
-- Full Python regression: **6049 passed, 20 skipped, 3 deselected,
+- Full Python regression: **6052 passed, 20 skipped, 3 deselected,
   102 subtests passed**
 - Open Dependabot alerts after merge: **0**
+- Open secret-scanning alerts: **0**
+- Open code-scanning alerts: **0**
 
 FastAPI 0.143 native tracing captured request query strings by default. Native
 tracing, metrics, logs, and operation spans are disabled on every ORQEVIA
 FastAPI application. The ORQEVIA allowlisted middleware is the sole telemetry
 source.
+
+Five CodeQL findings were corrected in source. Eleven remaining results were
+reviewed and dismissed as false positives with audit comments because artifact
+identifiers are exact 32-character lowercase hex values, protected paths reject
+symlinks/reparse points, and the cookie value is a revalidated 43-character
+server-generated token.
 
 ## GitHub checks
 
@@ -77,11 +85,11 @@ Receipt:
 `C:\Users\Admin\Documents\ABEX\operations\permanent-readiness-20261017\LATEST-FULL-STACK-CANARY.json`
 
 ```text
-observed: 2026-10-19T03:27:49Z
+observed: 2026-10-19T04:02:14Z
 overall: PASS
 checks: 12
 failed: 0
-SHA-256: 639C80DDD15B545B93F7838E3DE9DC823C4F42DA2C7895D6C6176BC86C9556DA
+SHA-256: BE539271B14BFE161489FAA2A5FC977EDF77E286DC9D19E416661A7D2FD0FE8A
 ```
 
 The canary covers all nine persistent ORQEVIA containers, backend health,
@@ -96,13 +104,13 @@ Receipt:
 `C:\Users\Admin\Documents\ABEX\operations\permanent-readiness-20261017\LATEST-QUEUE-LIVENESS.json`
 
 ```text
-observed: 2026-10-19T03:27:19Z
-source_revision: 86e26da41168f899ad04174135bc5a23765a46d9
+observed: 2026-10-19T04:01:33Z
+source_revision: 97a9f936e6d166a334ea4eb949f563d8f3c3a230
 agents: 21
 passed: 21
 failed: 0
 publication: PUBLISHED
-SHA-256: C8C71F0E610E0C0E7BB21B7CD712D78E64A13300E6EB90C9BE1F5BCB9288C933
+SHA-256: 074A8A1A96E0C86B99F315BBB327E644D522285D47EF67AD39720619EF0A3F46
 ```
 
 This establishes bounded queue liveness only; it is not role competence,
@@ -111,7 +119,7 @@ certification, L7, or production-readiness certification.
 ### RAG
 
 ```text
-source revision: 86e26da...-exact
+source revision: 97a9f93...-exact
 generation: MODEL_INSTALLED
 indexed documents: 7
 retrieval: RETRIEVED, 2 hits
@@ -143,12 +151,13 @@ telemetry account was added.
 
 The pre-deployment `.env` and exact container snapshots are retained:
 
-- `.env.pre-security-20261019T032427Z`
-- `orqevia:rollback-security-backend-20261019t032427z`
-- `orqevia:rollback-security-interface-20261019t032427z`
+- `.env.pre-codeql-20261019T035917Z`
+- `orqevia:rollback-codeql-backend-20261019t035917z`
+- `orqevia:rollback-codeql-interface-20261019t035917z`
+- `orqevia:tooling-20261019-86e26da-exact` as the previous release image
 - `orqevia:tooling-20261019-0177241-exact` as the previous exact release image
 - `CURRENT.pre-tooling-20261019T0244Z.json` as the pre-tooling RAG pointer
 
-The previous deployed product revision was `0177241`; the pre-tooling rollback
+The prior deployed product revision was `86e26da`; the pre-tooling rollback
 revision remains `d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`. Rollback does not
 require deleting volumes, databases, RAG indexes, or evidence.
