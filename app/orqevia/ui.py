@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from urllib.parse import urljoin
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -41,6 +40,7 @@ READ_ONLY_PATHS = {
     "api/agents",
     "api/control-surface/manifest",
 }
+READ_ONLY_URLS = {path: f"{UPSTREAM}/{path}" for path in READ_ONLY_PATHS}
 
 VIEWS = [
     "home",
@@ -149,7 +149,7 @@ async def proxy(path: str) -> JSONResponse:
     """Forward one allow-listed read-only GET request to PRIME."""
     if path not in READ_ONLY_PATHS:
         raise HTTPException(status_code=403, detail="read-only path not allowed")
-    url = urljoin(UPSTREAM + "/", path)
+    url = READ_ONLY_URLS[path]
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=False) as client:
             # Deliberately forward no Authorization/Cookie headers.

@@ -119,8 +119,11 @@ def _auto_admit(request):
     return raw,device_raw,{'clientId':client,'expiresAt':now+SESSION_SECONDS,'role':role,'ownerAccountId':account}
 
 def _cookies(response,session_token,device_token=None):
-    if session_token:response.set_cookie(COOKIE,session_token,max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
-    if device_token:response.set_cookie(DEVICE_COOKIE,device_token,max_age=DEVICE_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    def token(value):
+        if not isinstance(value,str) or re.fullmatch(r'[A-Za-z0-9_-]{43}',value) is None:raise HTTPException(503,'Session token unavailable')
+        return value
+    if session_token:response.set_cookie(COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    if device_token:response.set_cookie(DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
     return response
 
 def _issue_device(current):
