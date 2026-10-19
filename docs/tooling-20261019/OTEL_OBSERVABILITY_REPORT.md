@@ -128,9 +128,9 @@ uv run python scripts/verify_observability.py
 Observed over 120 requests:
 
 ```text
-baseline median:      3.3227 ms
-instrumented median:  3.5617 ms
-median overhead:      0.2390 ms
+baseline median:      3.1436 ms
+instrumented median:  3.7833 ms
+median overhead:      0.6397 ms
 ```
 
 This measurement is local, not a production load benchmark.
@@ -138,12 +138,15 @@ This measurement is local, not a production load benchmark.
 ## Deployment boundary
 
 - The exact merged source is deployed in image
-  `orqevia:tooling-20261019-0177241-exact`
-  (`sha256:61c8625714cf0677ea1535e368150366b93ee0f2910d4221e4d5683df13259a9`).
+  `orqevia:tooling-20261019-86e26da-exact`
+  (`sha256:376a96f6bd061e3e6375cb4d21ef7ffcf9714584f44ffeca8987c18bb6eeb95c`).
 - The deployed image imports OpenTelemetry and reports OTel status `DISABLED`
   under the active `ORQEVIA_OTEL_ENABLED=0` policy.
 - An in-image production-entrypoint probe emitted loopback traces and metrics
   and excluded the private query sentinel.
+- FastAPI's native tracing/metrics/logs are disabled on every ORQEVIA app so
+  its default `url.query` capture cannot bypass the ORQEVIA attribute
+  allowlist.
 - No collector is permanently running.
 - When activated, the initial collector must remain loopback or an approved
   internal collector; arbitrary remote endpoints are rejected by code.

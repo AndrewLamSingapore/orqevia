@@ -7,6 +7,8 @@ This report separates source verification from live-runtime verification.
 - Branch: `codex/tooling-assurance-20261019`
 - Verified implementation commit: `18c6d2e`
 - Merge commit and deployed revision:
+  `86e26da41168f899ad04174135bc5a23765a46d9`
+- Initial tooling deployment superseded by the security patch:
   `0177241053c2dbfcdae8b287572c6e2fb3cdc923`
 - Previous live runtime source: `d5cd59f537a93292aadb9c5d4f1350c8ea7836b9`
 - The backend and interface were replaced with an exact-byte image built from
@@ -70,7 +72,7 @@ Final full-suite command:
 Final result:
 
 ```text
-6048 passed, 20 skipped, 3 deselected, 5 warnings, 102 subtests passed
+6049 passed, 20 skipped, 3 deselected, 6 warnings, 102 subtests passed
 ```
 
 Duration: 326.73 seconds.
@@ -96,13 +98,13 @@ Receipt:
 
 `C:\Users\Admin\Documents\ABEX\operations\permanent-readiness-20261017\LATEST-FULL-STACK-CANARY.json`
 
-Observed: `2026-10-19T02:51:12Z`
+Observed: `2026-10-19T03:27:49Z`
 
 ```text
 overall: PASS
 checks: 12
 failed: 0
-SHA-256: 478C57D71820B35E1D6139DCCCD0CBC5B096765576D42B538E99F01DCCD37545
+SHA-256: 639C80DDD15B545B93F7838E3DE9DC823C4F42DA2C7895D6C6176BC86C9556DA
 ```
 
 The checks covered Docker engine, nine persistent ORQEVIA containers, backend
@@ -116,7 +118,7 @@ Receipt:
 
 `C:\Users\Admin\Documents\ABEX\operations\permanent-readiness-20261017\LATEST-QUEUE-LIVENESS.json`
 
-Observed: `2026-10-19T02:50:43Z`
+Observed: `2026-10-19T03:27:19Z`
 
 ```text
 agents: 21
@@ -125,7 +127,7 @@ failed: 0
 concurrency: 1
 provider: local Ollama
 publication: PUBLISHED
-SHA-256: 5BCA4616C1B6604763E022B2988DB9C5E2EE248EFFF9CF1F0DF0F2A621ADF2E4
+SHA-256: C8C71F0E610E0C0E7BB21B7CD712D78E64A13300E6EB90C9BE1F5BCB9288C933
 ```
 
 This proves bounded queue execution for all 21 registered agents. It is not role
@@ -152,7 +154,7 @@ covered by the 35-test source suite above.
 
 | Area | Baseline | Final |
 |---|---|---|
-| Full Python suite | 1 known failure plus earlier passing coverage | 0 failures; 6048 passed |
+| Full Python suite | 1 known failure plus earlier passing coverage | 0 failures; 6049 passed |
 | Protected verifier closure | Not yet revalidated | 47/47 files byte-identical |
 | Playwright | New suite not yet final | 15/15 passed |
 | JavaScript | New suite not yet final | 81/81 passed |
