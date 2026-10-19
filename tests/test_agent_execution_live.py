@@ -9,14 +9,14 @@ from app.agent_execution_live import observe_live_baseline
 
 
 def test_live_adapter_rejects_missing_owner_credential(monkeypatch):
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-owner')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-owner')
     with pytest.raises(HTTPException) as denied:
         observe_live_baseline('a19', 'responsibility.a19', authorization='')
     assert denied.value.status_code == 401
 
 
 def test_live_adapter_dispatches_authenticated_local_only_and_observes(monkeypatch):
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-owner')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-owner')
     from app import agent_dispatch_api, compute_queue_api
 
     job_id = str(uuid.uuid4())

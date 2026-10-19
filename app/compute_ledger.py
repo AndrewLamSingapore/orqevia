@@ -27,8 +27,8 @@ def _now() -> str:
 
 class ComputeLedger:
     def __init__(self, path: str | None = None):
-        data_dir = os.getenv("PRIME_DATA_DIR", "/data").strip() or "/data"
-        self.path = path or os.getenv("PRIME_COMPUTE_DB") or str(Path(data_dir) / "compute-ledger.db")
+        data_dir = os.getenv("ORQEVIA_DATA_DIR", "/data").strip() or "/data"
+        self.path = path or os.getenv("ORQEVIA_COMPUTE_DB") or str(Path(data_dir) / "compute-ledger.db")
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         with closing(sqlite3.connect(self.path)) as db, db:
             db.execute("""

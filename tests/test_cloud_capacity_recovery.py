@@ -33,7 +33,7 @@ def fixture(monkeypatch,tmp_path,*,tier='FLAGSHIP',rate='1',qualified=True,parti
     monkeypatch.setattr(cloud,'PROVIDER_CIRCUITS',ProviderCircuits())
     from app.job_queue import JobQueue,QueuePolicy,Provider
     root=tmp_path/'capacity-fixture';root.mkdir()
-    monkeypatch.setenv('PRIME_DATA_DIR',str(root))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(root))
     base={'enabled':True,'qualification_status':'QUALIFIED','location':'cloud','tier':'MINI','context_tokens':4096,
           'output_tokens':64,'input_usd_million':'1','output_usd_million':'1','endpoint':'https://fixture.invalid/chat'}
     entries=[dict(base,id='preferred',model='preferred-model',secret_ref='preferred',fallback_ids=['alternate']),

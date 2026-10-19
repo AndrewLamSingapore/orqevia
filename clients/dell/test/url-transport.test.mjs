@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import {loadConfig} from '../lib/config.mjs';
 import {InterfaceNode} from '../lib/upstream.mjs';
 
-const identity={hostname:'DESKTOP-BGD97NB',role:'AUTHORITATIVE_PRIME',protocolVersion:'1',publicKey:'fixture-public-key'};
+const identity={hostname:'DESKTOP-BGD97NB',role:'AUTHORITATIVE_ORQEVIA',protocolVersion:'1',publicKey:'fixture-public-key'};
 const pin=createHash('sha256').update(JSON.stringify(identity)).digest('hex');
 function config(base='https://abex.example:8443'){
  return loadConfig({JARVIS_ABEX_BASE_URL:base,JARVIS_ABEX_EXPECTED_HOST:identity.hostname,JARVIS_ABEX_IDENTITY_SHA256:pin,

@@ -22,8 +22,8 @@ AUTH = {'Authorization': 'Bearer public-test-fixture-owner'}
 @pytest.fixture
 def env(tmp_path, monkeypatch):
     from app import objective_api
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'public-test-fixture-owner')
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'public-test-fixture-owner')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
     monkeypatch.setattr(objective_api, 'runtime_snapshot', lambda: copy.deepcopy(RUNTIME))
     app = FastAPI()
     app.include_router(api.router)

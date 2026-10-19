@@ -181,7 +181,7 @@ def test_usage_route_requires_existing_auth_and_never_probes_providers(tmp_path,
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     from app import compute_queue_api as api
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner')
     monkeypatch.setattr(api,'DATA',tmp_path)
     app=FastAPI();app.include_router(api.router)
     with TestClient(app) as client:

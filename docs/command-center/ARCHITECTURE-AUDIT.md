@@ -14,7 +14,7 @@ Status vocabulary: Implemented / Tested / Verified / Deployed / Blocked.
 | Backend | Python FastAPI app in `app/` (entry `app.production_entry:app`): objective workflow, PWA sessions/pairing (`pwa_sessions.py`), interface node + telemetry (`interface_node.py`), agent dispatch/registry, compute queue, intelligence companion (USGS geo ingest, detection, RAG), governed knowledge (local document intelligence), evidence product, certification stack, coaching, spine/action-records. SQLite stores on the `prime-data` volume. |
 | Serving | Docker Compose project `prime-epoch-20260919`: `prime` backend (127.0.0.1:8000), `ollama` (127.0.0.1:11434), `interface` (TLS 192.168.1.23:8443, serves `/pwa/`, proxies `/api/orqevia/*`), `orqevia-coaching`. Interface image is built additively from this repo (`deploy/Dockerfile.interface-intelligence-abex` copies the PWA assets into `/app/app/pwa_static/`). |
 | God's Eye | Real geospatial views already exist: `app/orqevia/static/gods-eye/{index.html,gods-eye.js,gods-eye.css,map.html,map.js,map.css}` — the map renders stored USGS observations with freshness; the formal semantic projection is preserved separately and stays out of PWA privilege (per `docs/GODS-EYE-INTEGRATION-AUDIT-20261015.md`). |
-| Auth model | PWA pairing codes (OWNER/MEMBER), 90-day durable device sessions, per-account task/artifact ownership enforced server-side; protocol string `jarvis.interface.v1` is a load-bearing compatibility identifier (do not rename). |
+| Auth model | PWA pairing codes (OWNER/MEMBER), 90-day durable device sessions, per-account task/artifact ownership enforced server-side; protocol string `orqevia.interface.v1` is a load-bearing compatibility identifier (do not rename). |
 
 ## 2. Live API surface the Command Center can bind to (verified strings)
 
@@ -57,7 +57,7 @@ structural work — not a rewrite.
 
 - `STATUS.md` byte-pins + CI: no STATUS.md edits on this branch.
 - `sw.js` caching: asset list changes require a cache-version review (planned L2).
-- Load-bearing legacy identifiers (`PRIME_*`, container names, `jarvis.interface.v1`) remain.
+- Load-bearing legacy identifiers (`PRIME_*`, container names, `orqevia.interface.v1`) remain.
 - No fabricated claims: unauth surfaces render 401-conditional states; metrics render
   UNKNOWN until the host collector is provisioned (runbook step, already documented).
 - Node for PWA tests: not on PATH in the owner shell; the Codex runtime's bundled

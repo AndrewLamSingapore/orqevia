@@ -28,7 +28,7 @@ def activity_is_fresh(value, *, now, max_age_seconds):
 
 def queue_freshness_seconds():
     """Read the permanent queue-observation window, failing closed if malformed."""
-    raw = os.getenv('PRIME_READY_ACTIVITY_MAX_AGE_SECONDS', '3600').strip()
+    raw = os.getenv('ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS', '3600').strip()
     try:
         value = int(raw)
     except (TypeError, ValueError):
@@ -39,8 +39,8 @@ def queue_freshness_seconds():
 def model_runtime_readiness(timeout=2.0):
     """Probe the local model runtime and require every configured model."""
     required = []
-    for name in ('PRIME_FAST_MODEL', 'PRIME_DEEP_MODEL',
-                 'PRIME_EVALUATOR_MODEL', 'PRIME_EMBED_MODEL'):
+    for name in ('ORQEVIA_FAST_MODEL', 'ORQEVIA_DEEP_MODEL',
+                 'ORQEVIA_EVALUATOR_MODEL', 'ORQEVIA_EMBED_MODEL'):
         value = os.getenv(name, '').strip()
         if value and value not in required:
             required.append(value)
@@ -77,7 +77,7 @@ def model_runtime_readiness(timeout=2.0):
 
 
 def telemetry_store_counts():
-    root = Path(os.getenv('PRIME_DATA_DIR', '/data')).resolve()
+    root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data')).resolve()
 
     def query(path, statement):
         if not path.is_file():
@@ -109,7 +109,7 @@ def telemetry_store_counts():
 
 def agent_activity():
     """Collect bounded queue-backed activity without claiming process liveness."""
-    root = Path(os.getenv('PRIME_DATA_DIR', '/data')).resolve()
+    root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data')).resolve()
     path = root/'compute-queue.db'
     if not path.is_file():
         return None
@@ -135,11 +135,11 @@ def snapshot(client_id, role, *, model_runtime_probe=None):
     registry = load_agent_registry()
     stores = telemetry_store_counts()
     from .coaching_observation import coaching_snapshot
-    coaching = coaching_snapshot(Path(os.getenv('PRIME_DATA_DIR','/data')))
+    coaching = coaching_snapshot(Path(os.getenv('ORQEVIA_DATA_DIR','/data')))
     activity = agent_activity()
     model_runtime = model_runtime_probe or model_runtime_readiness()
-    instance = os.getenv('PRIME_INTERFACE_HOST_ID', 'UNKNOWN')
-    revision = os.getenv('PRIME_INTERFACE_RUNTIME_REVISION', 'UNKNOWN')
+    instance = os.getenv('ORQEVIA_INTERFACE_HOST_ID', 'UNKNOWN')
+    revision = os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION', 'UNKNOWN')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', instance):
         instance = 'UNKNOWN'
     if not re.fullmatch(r'[a-f0-9]{40}', revision):

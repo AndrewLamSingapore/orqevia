@@ -1,7 +1,7 @@
 """Public-safe JARVIS agent runtime metadata.
 
 Disabled by default. When ORQEVIA is deliberately exposed through a trusted public
-relay, PRIME_PUBLIC_AGENT_TRACE=1 enables a strictly sanitized read-only trace.
+relay, ORQEVIA_PUBLIC_AGENT_TRACE=1 enables a strictly sanitized read-only trace.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/public/jarvis", tags=["public-agent-runtime"])
 
 
 def _enabled() -> bool:
-    return os.getenv("PRIME_PUBLIC_AGENT_TRACE", "0").strip().lower() in {"1", "true", "yes", "on"}
+    return os.getenv("ORQEVIA_PUBLIC_AGENT_TRACE", "0").strip().lower() in {"1", "true", "yes", "on"}
 
 
 @router.get("/agent-trace")

@@ -25,12 +25,12 @@ RUNTIME = {'host_id': 'test-domain', 'version': 'test-only-v1',
 
 @pytest.fixture
 def domain(tmp_path, monkeypatch):
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'compute-queue.db'))
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', SOURCE)
-    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', IMAGE)
-    monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', RUNTIME['host_id'])
-    monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_VERSION', RUNTIME['version'])
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'compute-queue.db'))
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', SOURCE)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_IMAGE_DIGEST', IMAGE)
+    monkeypatch.setenv('ORQEVIA_INTERFACE_HOST_ID', RUNTIME['host_id'])
+    monkeypatch.setenv('ORQEVIA_INTERFACE_RUNTIME_VERSION', RUNTIME['version'])
     from app import agent_registry, objective_api
     # Authentication is outside this unwired substrate. Never call submit,
     # dispatch, queue/model, a service or an external endpoint in these tests.

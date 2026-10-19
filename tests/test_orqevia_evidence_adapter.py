@@ -1,7 +1,7 @@
 import pytest
 
 from app.evidence_product import validate_envelope
-from app.prime_evidence_adapter import adapt_task
+from app.orqevia_evidence_adapter import adapt_task
 
 
 def test_prime_adapter_preserves_canonical_metadata_without_model_override():

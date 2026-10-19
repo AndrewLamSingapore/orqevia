@@ -27,7 +27,7 @@ def _ledger():
 
 
 def _ledger_path():
-    return Path(os.getenv("PRIME_DATA_DIR", "/data")) / "evidence-lens.db"
+    return Path(os.getenv("ORQEVIA_DATA_DIR", "/data")) / "evidence-lens.db"
 
 
 def _snapshot(task: dict) -> dict:
@@ -56,8 +56,8 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
         raise HTTPException(404, "Evidence projection not found") from None
     integrity = ledger.verify_chain(record_id, namespace=NAMESPACE)
     observations = envelope.get("observations", [])
-    expected_actor = {"type": "SYSTEM", "id": "PRIME_OBJECTIVE_STORE"}
-    expected_authority = {"scope": "objective.result.projection", "source": "PRIME_OBJECTIVE_STORE"}
+    expected_actor = {"type": "SYSTEM", "id": "ORQEVIA_OBJECTIVE_STORE"}
+    expected_authority = {"scope": "objective.result.projection", "source": "ORQEVIA_OBJECTIVE_STORE"}
     expected_inputs = [{"task_id": task["id"], "revision": task["revision"]}]
     bound = (envelope.get("action_id") == record_id
              and envelope.get("actor") == expected_actor
@@ -65,7 +65,7 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
              and envelope.get("inputs") == expected_inputs
              and len(observations) == 1
              and observations[0].get("observation_id") == f"obs:{record_id}"
-             and observations[0].get("source") == "PRIME_OBJECTIVE_STORE")
+             and observations[0].get("source") == "ORQEVIA_OBJECTIVE_STORE")
     if integrity["verdict"] != "VALID" or not bound:
         return {"record_id": record_id, "integrity": "INVALID", "currentness": "UNKNOWN",
                 "verification": "UNVERIFIED"}
@@ -78,7 +78,7 @@ def _read(ledger: EvidenceLedger, task: dict) -> dict:
                 "time_freshness", "source_revision_binding", "runtime_image_binding"]
     return {"record_id": record_id, "task_id": task["id"], "revision": task["revision"],
             "integrity": "VALID", "currentness": "CURRENT" if observed == current else "STALE",
-            "verification": "UNVERIFIED", "source": "PRIME_OBJECTIVE_STORE",
+            "verification": "UNVERIFIED", "source": "ORQEVIA_OBJECTIVE_STORE",
             "result_state": observed["execution_state"], "observed": observed,
             "ledger_head": integrity["head"],
             "proof": {"producer": observations[0].get("source", "UNKNOWN"),
@@ -101,7 +101,7 @@ def materialize(task_id: str, authorization: str) -> dict:
     record_id = f"objective:{task_id}:r{task['revision']}"
     def bind(envelope):
         envelope["observations"].append({"observation_id": f"obs:{record_id}",
-            "source": "PRIME_OBJECTIVE_STORE", "value": _snapshot(task),
+            "source": "ORQEVIA_OBJECTIVE_STORE", "value": _snapshot(task),
             "observed_at": objective_api.utcnow(), "verification_ref": None})
         envelope["verification"] = {"state": "UNVERIFIED", "evidence": [f"obs:{record_id}"]}
         envelope["status"] = "FAILED" if task["state"] == "COMPLETED_WITH_FAILURES" else "COMPLETED"
@@ -109,8 +109,8 @@ def materialize(task_id: str, authorization: str) -> dict:
 
     try:
         ledger.create(namespace=NAMESPACE, objective=f"Objective result {task_id}",
-                      actor={"type": "SYSTEM", "id": "PRIME_OBJECTIVE_STORE"},
-                      authority={"scope": "objective.result.projection", "source": "PRIME_OBJECTIVE_STORE"},
+                      actor={"type": "SYSTEM", "id": "ORQEVIA_OBJECTIVE_STORE"},
+                      authority={"scope": "objective.result.projection", "source": "ORQEVIA_OBJECTIVE_STORE"},
                       inputs=[{"task_id": task_id, "revision": task["revision"]}],
                       action_id=record_id, idempotency_key=f"lens:create:{record_id}")
         ledger.mutate(record_id, namespace=NAMESPACE, event_type="OBJECTIVE_RESULT_OBSERVED",

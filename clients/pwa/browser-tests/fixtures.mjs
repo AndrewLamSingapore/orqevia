@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-export const PROTOCOL = "jarvis.interface.v1";
+export const PROTOCOL = "orqevia.interface.v1";
 export const TASK_ID = "task-browser-verification";
 export const EVENT_ID = "a".repeat(64);
 
@@ -50,8 +50,8 @@ export async function mockTaskApi(page, observations = {}) {
     const request = route.request();
     const url = new URL(request.url());
     const headers = {
-      "X-PRIME-Protocol": PROTOCOL,
-      "Access-Control-Expose-Headers": "X-PRIME-Protocol",
+      "X-ORQEVIA-Protocol": PROTOCOL,
+      "Access-Control-Expose-Headers": "X-ORQEVIA-Protocol",
       "Cache-Control": "no-store",
     };
     if (request.method() === "POST" && url.pathname === "/interface/v1/objectives") {

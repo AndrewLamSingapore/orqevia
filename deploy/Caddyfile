@@ -13,7 +13,7 @@
 
 	@authenticated_integrations {
 		path /api/integrations/*
-		header Authorization "Bearer {$PRIME_INTEGRATION_TOKEN}"
+		header Authorization "Bearer {$ORQEVIA_INTEGRATION_TOKEN}"
 	}
 	handle @authenticated_integrations {
 		reverse_proxy backend:8000

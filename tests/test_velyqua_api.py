@@ -3,8 +3,8 @@ import tempfile
 import unittest
 
 _TMP = tempfile.TemporaryDirectory()
-os.environ["PRIME_DATA_DIR"] = _TMP.name
-os.environ["PRIME_INTEGRATION_TOKEN"] = "test-integration-token"
+os.environ["ORQEVIA_DATA_DIR"] = _TMP.name
+os.environ["ORQEVIA_INTEGRATION_TOKEN"] = "test-integration-token"
 os.environ.pop("PORTAL_RESULT_URL", None)
 os.environ.pop("PORTAL_RESULT_TOKEN", None)
 

@@ -1,4 +1,4 @@
-export const PROTOCOL = 'jarvis.interface.v1';
+export const PROTOCOL = 'orqevia.interface.v1';
 export const terminal = state => ['COMPLETED','FAILED','CANCELLED','COMPLETED_WITH_FAILURES'].includes(state);
 export const safeID = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(value) && !['.','..'].includes(value);
 export class ClientError extends Error { constructor(code, status = 0) { super(code); this.code = code; this.status = status; } }
@@ -108,8 +108,8 @@ export class InterfaceAPI {
       const timer = setTimeout(() => { timedOut = true; controller.abort(); },timeout);
       try {
         if (signal?.aborted) throw new DOMException('Paused','AbortError');
-        const response = await this.fetcher(path,{method,body,headers:{'X-Jarvis-PWA':'1',...headers},credentials:'same-origin',cache:'no-store',redirect:'error',signal:controller.signal});
-        if (path.startsWith('/interface/') && response.headers.get('X-PRIME-Protocol') !== PROTOCOL) throw new ClientError('protocol');
+        const response = await this.fetcher(path,{method,body,headers:{'X-ORQEVIA-PWA':'1',...headers},credentials:'same-origin',cache:'no-store',redirect:'error',signal:controller.signal});
+        if (path.startsWith('/interface/') && response.headers.get('X-ORQEVIA-Protocol') !== PROTOCOL) throw new ClientError('protocol');
         if (!response.ok) throw new ClientError('http',response.status);
         const expected = mode === 'sse' ? 'text/event-stream' : mode === 'bytes' ? 'application/octet-stream' : 'application/json';
         if (response.headers.get('content-type')?.split(';')[0].trim() !== expected) throw new ClientError('protocol');

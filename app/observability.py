@@ -114,7 +114,7 @@ class ObservabilitySettings:
             service_name=os.getenv("ORQEVIA_OTEL_SERVICE_NAME", "orqevia").strip() or "orqevia",
             environment=os.getenv("ORQEVIA_OTEL_ENVIRONMENT", "abex-local").strip() or "abex-local",
             sample_ratio=max(0.0, min(1.0, sample_ratio)),
-            service_version=os.getenv("PRIME_RUNTIME_REVISION", "UNKNOWN").strip() or "UNKNOWN",
+            service_version=os.getenv("ORQEVIA_RUNTIME_REVISION", "UNKNOWN").strip() or "UNKNOWN",
         )
 
     def validated_endpoint(self) -> str:

@@ -58,7 +58,7 @@ def fixture_execution():
                      'registry_version': 'fixture', 'source_sha256': REGISTRY},
         'tasks': {'count': 1, 'active_count': 0},
         'qualified_compute': {'status': 'UNAVAILABLE'},
-        'protocol': {'interface_contract': 'jarvis.interface.v1',
+        'protocol': {'interface_contract': 'orqevia.interface.v1',
                      'report_schema': 'jarvis.runtime-status.v1',
                      'broader_governance_protocol_version': 'UNKNOWN'},
         'execution': {'model_calls': 0, 'input_tokens': 0, 'output_tokens': 0,

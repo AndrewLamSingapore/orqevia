@@ -1,6 +1,6 @@
 """Outbound publisher for sanitized JARVIS authority telemetry.
 
-The publisher is disabled unless PRIME_PUBLIC_TRACE_SECRET is configured. It
+The publisher is disabled unless ORQEVIA_PUBLIC_TRACE_SECRET is configured. It
 sends only public-safe authority and aggregate release-gate metadata to the
 trusted relay and authenticates each request with HMAC-SHA256. Prompts, model
 outputs, rationale, claim text, credentials and private endpoints never cross
@@ -38,12 +38,12 @@ class PublicTracePublisher:
         clock: Callable[[], float] = time.time,
     ) -> None:
         self.authority_runtime = authority_runtime
-        self.url = (url if url is not None else os.getenv("PRIME_PUBLIC_TRACE_RELAY_URL", DEFAULT_RELAY_URL)).strip()
-        self.secret = secret if secret is not None else os.getenv("PRIME_PUBLIC_TRACE_SECRET", "").strip()
+        self.url = (url if url is not None else os.getenv("ORQEVIA_PUBLIC_TRACE_RELAY_URL", DEFAULT_RELAY_URL)).strip()
+        self.secret = secret if secret is not None else os.getenv("ORQEVIA_PUBLIC_TRACE_SECRET", "").strip()
         self.publisher_id = (
-            publisher_id if publisher_id is not None else os.getenv("PRIME_PUBLIC_TRACE_PUBLISHER_ID", DEFAULT_PUBLISHER_ID)
+            publisher_id if publisher_id is not None else os.getenv("ORQEVIA_PUBLIC_TRACE_PUBLISHER_ID", DEFAULT_PUBLISHER_ID)
         ).strip()
-        raw_interval = interval_seconds if interval_seconds is not None else int(os.getenv("PRIME_PUBLIC_TRACE_INTERVAL_SECONDS", "15"))
+        raw_interval = interval_seconds if interval_seconds is not None else int(os.getenv("ORQEVIA_PUBLIC_TRACE_INTERVAL_SECONDS", "15"))
         self.interval_seconds = max(5, min(int(raw_interval), 300))
         self.opener = opener
         self.clock = clock

@@ -36,7 +36,7 @@ def _router_response(answer='Clara', *, include_usage=True):
 
 @pytest.fixture
 def governed(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'offline-owner-fixture')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'offline-owner-fixture')
     entry = {'id': 'hf-approved', 'provider_kind': 'huggingface', 'location': 'cloud',
         'enabled': True, 'qualification_status': 'QUALIFIED', 'tier': 'MINI',
         'model': 'fixture/span:provider', 'endpoint': HuggingFaceProvider.ENDPOINT,
@@ -277,9 +277,9 @@ def test_api_uses_server_authority_and_rejects_request_callbacks_and_contracts(g
     from fastapi.testclient import TestClient
     arguments, _, calls, credentials, _, _ = governed
     # A first import may create its queue: explicitly isolate that path too.
-    monkeypatch.setenv('PRIME_DATA_DIR', str(arguments['data']))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(arguments['data'] / 'import-queue.db'))
-    monkeypatch.delenv('PRIME_PROVIDER_CATALOG', raising=False)
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(arguments['data']))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(arguments['data'] / 'import-queue.db'))
+    monkeypatch.delenv('ORQEVIA_PROVIDER_CATALOG', raising=False)
     from app import compute_queue_api as api
     monkeypatch.setattr(api, 'queue', arguments['queue'])
     monkeypatch.setattr(api, 'DATA', arguments['data'])
@@ -323,9 +323,9 @@ def test_held_caps_count_for_other_admission_and_expire_only_if_undispatched(tmp
 
 
 def test_cloud_limit_is_bounded_independent_of_measured_global_policy(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_CLOUD_REQUEST_CAPACITY', '100')
+    monkeypatch.setenv('ORQEVIA_CLOUD_REQUEST_CAPACITY', '100')
     assert QueuePolicy.from_env().cloud_concurrency == 4
-    monkeypatch.setenv('PRIME_CLOUD_REQUEST_CAPACITY', 'invalid')
+    monkeypatch.setenv('ORQEVIA_CLOUD_REQUEST_CAPACITY', 'invalid')
     assert QueuePolicy.from_env().cloud_concurrency == 1
     q = JobQueue(tmp_path / 'bounded.db', QueuePolicy(global_concurrency=3, cloud_concurrency=1,
                                                      cloud_wait_seconds=0))
@@ -469,9 +469,9 @@ def _api_client(governed, monkeypatch):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     arguments = governed[0]
-    monkeypatch.setenv('PRIME_DATA_DIR', str(arguments['data']))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(arguments['data'] / 'api-import.db'))
-    monkeypatch.delenv('PRIME_PROVIDER_CATALOG', raising=False)
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(arguments['data']))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(arguments['data'] / 'api-import.db'))
+    monkeypatch.delenv('ORQEVIA_PROVIDER_CATALOG', raising=False)
     from app import compute_queue_api as api
     monkeypatch.setattr(api, 'queue', arguments['queue'])
     monkeypatch.setattr(api, 'DATA', arguments['data'])

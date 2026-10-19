@@ -40,7 +40,7 @@ def _now() -> str:
 
 
 def _require_token(authorization: str | None = Header(default=None)) -> None:
-    expected = os.environ.get("PRIME_INTEGRATION_TOKEN", "")
+    expected = os.environ.get("ORQEVIA_INTEGRATION_TOKEN", "")
     if not expected:
         raise HTTPException(status_code=503, detail="ORQEVIA integration authentication is not configured")
     scheme, _, supplied = (authorization or "").partition(" ")

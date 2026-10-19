@@ -27,11 +27,11 @@ def isolated_schema():
     ('{"measured":5,"available":false,"extra":1}', False),
 ])
 def test_schema_survives_queue_and_rejected_bytes_usage_remain(raw, accepted, monkeypatch, tmp_path):
-    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_MEASURED_COMPUTE_PROFILE',
-                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_LOCAL_ADMISSION_MODE', 'ORQEVIA_MEASURED_COMPUTE_PROFILE',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256', 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
     path = tmp_path / 'queue.db'
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(path))
     queue = JobQueue(path)
     job = queue.submit(agent='a17', prompt='Independent arbitrary observation contract',
                        response_format='strict_json', response_schema=isolated_schema(),

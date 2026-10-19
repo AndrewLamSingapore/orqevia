@@ -16,12 +16,12 @@ from app.artifact_factory import ArtifactFactory
 
 class WorkflowObjectiveIntegrationTests(unittest.TestCase):
     def setUp(self):
-        self.root=Path(os.environ['PRIME_DATA_DIR']).parent/('workflow-objective-'+uuid.uuid4().hex)
+        self.root=Path(os.environ['ORQEVIA_DATA_DIR']).parent/('workflow-objective-'+uuid.uuid4().hex)
         self.root.mkdir(parents=True)
         policy={client:{'token_sha256':hashlib.sha256(client.encode()).hexdigest(),'expires_at':time.time()+300,
             'capabilities':['objective.submit','task.read','artifact.read','task.cancel']} for client in ('dell','phone')}
-        self.env=patch.dict(os.environ,{'PRIME_DATA_DIR':str(self.root),'PRIME_SPINE_TOKEN':'workflow-owner-fixture',
-            'PRIME_INTERFACE_CLIENTS_JSON':json.dumps(policy)})
+        self.env=patch.dict(os.environ,{'ORQEVIA_DATA_DIR':str(self.root),'ORQEVIA_SPINE_TOKEN':'workflow-owner-fixture',
+            'ORQEVIA_INTERFACE_CLIENTS_JSON':json.dumps(policy)})
         self.env.start()
         app=FastAPI();app.include_router(interface_contract.router)
         self.client=TestClient(app,base_url='https://testserver')

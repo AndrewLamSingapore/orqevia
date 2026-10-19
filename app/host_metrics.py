@@ -36,11 +36,11 @@ def _unique_json(raw: bytes) -> dict:
 def host_metrics(*, now: float | None = None) -> dict:
     """Return {'configured': bool, 'values': {field: float|None}}.
 
-    'configured' is True when PRIME_HOST_METRICS_RECEIPT points at an absolute
+    'configured' is True when ORQEVIA_HOST_METRICS_RECEIPT points at an absolute
     path. 'values' then reflects a valid fresh receipt; each metric is a
     number or None. Missing optional metrics stay None and render UNAVAILABLE.
     """
-    path = os.getenv('PRIME_HOST_METRICS_RECEIPT', '')
+    path = os.getenv('ORQEVIA_HOST_METRICS_RECEIPT', '')
     values = {field: None for field in FIELDS}
     if not path or not Path(path).is_absolute():
         return {'configured': False, 'values': values}

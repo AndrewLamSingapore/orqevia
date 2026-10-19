@@ -15,7 +15,7 @@ from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from .observability import PRIVACY_FASTAPI_TELEMETRY
 
-app=FastAPI(title='JARVIS ABEX Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None,
+app=FastAPI(title='ORQEVIA Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None,
     telemetry=PRIVACY_FASTAPI_TELEMETRY)
 app.include_router(router)
 app.include_router(pwa_sessions.router)
@@ -24,11 +24,10 @@ from .product_handoff import router as product_handoff_router
 app.include_router(product_handoff_router)
 from .orqevia_bridge import router as intelligence_bridge_router
 app.include_router(intelligence_bridge_router)
-app.mount('/pwa', StaticFiles(directory=os.getenv('PRIME_PWA_STATIC_DIR',
+app.mount('/pwa', StaticFiles(directory=os.getenv('ORQEVIA_PWA_STATIC_DIR',
     str(Path(__file__).with_name('pwa_static'))), html=True, check_dir=False), name='pwa')
 
-PROTOCOL = 'jarvis.interface.v1'
-ORQEVIA_PROTOCOL = 'orqevia.interface.v1'
+PROTOCOL = 'orqevia.interface.v1'
 ERRORS = {
     401: ('AUTHENTICATION_REQUIRED', 'Client authentication required'),
     403: ('CLIENT_SCOPE_DENIED', 'Client scope expired or unavailable'),
@@ -47,8 +46,7 @@ def error_response(status: int):
     # Do not reflect exception text, request inputs or validation context: these
     # may contain prompts, bearer credentials, private paths or provider errors.
     return JSONResponse({'protocol': PROTOCOL, 'error': {'code': code, 'message': message,
-        'retryable': False}}, status_code=status, headers={'X-PRIME-Protocol': PROTOCOL,
-        'X-ORQEVIA-Protocol': ORQEVIA_PROTOCOL,
+        'retryable': False}}, status_code=status, headers={'X-ORQEVIA-Protocol': PROTOCOL,
         'Cache-Control': 'no-store'})
 
 
@@ -57,8 +55,7 @@ async def transport_and_protocol(request: Request, call_next):
     if request.url.scheme != 'https':
         return error_response(426)
     response = await call_next(request)
-    response.headers['X-PRIME-Protocol'] = PROTOCOL
-    response.headers['X-ORQEVIA-Protocol'] = ORQEVIA_PROTOCOL
+    response.headers['X-ORQEVIA-Protocol'] = PROTOCOL
     response.headers['Cache-Control'] = 'no-store'
     if request.url.path == '/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig' and response.status_code == 200:
         response.headers['Content-Type'] = 'application/x-apple-aspen-config'

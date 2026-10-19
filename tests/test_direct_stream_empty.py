@@ -13,11 +13,11 @@ from app.direct_stream import infer
     pytest.param('{"nested":' + '[' * 20000 + '0' + ']' * 20000 + '}',False, id='nested-recursion')])
 def test_strict_json_is_requested_and_invalid_outputs_are_not_completed(content,ok,monkeypatch,tmp_path):
     import json
-    for name in ('PRIME_LOCAL_ADMISSION_MODE','PRIME_BACKEND_MEMORY_RECEIPT',
-                 'PRIME_MEASURED_COMPUTE_PROFILE','PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
-                 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_LOCAL_ADMISSION_MODE','ORQEVIA_BACKEND_MEMORY_RECEIPT',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE','ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name,raising=False)
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
     requests=[]
     def reply(request):
         requests.append(json.loads(request.content))
@@ -40,11 +40,11 @@ def test_strict_json_is_requested_and_invalid_outputs_are_not_completed(content,
 @pytest.mark.parametrize('content,ok',[('',False),('verified fixture',True)])
 def test_completion_marker_requires_actual_text(content,ok,monkeypatch,tmp_path):
     import json
-    for name in ('PRIME_LOCAL_ADMISSION_MODE', 'PRIME_BACKEND_MEMORY_RECEIPT',
-                 'PRIME_MEASURED_COMPUTE_PROFILE', 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256',
-                 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_LOCAL_ADMISSION_MODE', 'ORQEVIA_BACKEND_MEMORY_RECEIPT',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE', 'ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256',
+                 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB',str(tmp_path/'queue.db'))
     def reply(request):
         assert 'format' not in json.loads(request.content)
         return httpx.Response(200,text=json.dumps({
@@ -61,10 +61,10 @@ def test_completion_marker_requires_actual_text(content,ok,monkeypatch,tmp_path)
 
 def test_direct_stream_allows_model_without_admission_gate(monkeypatch,tmp_path):
     import json
-    for name in ('PRIME_BACKEND_MEMORY_RECEIPT', 'PRIME_MEASURED_COMPUTE_PROFILE',
-                 'PRIME_MEASURED_COMPUTE_PROFILE_SHA256', 'PRIME_SSD_THERMAL_ENFORCE'):
+    for name in ('ORQEVIA_BACKEND_MEMORY_RECEIPT', 'ORQEVIA_MEASURED_COMPUTE_PROFILE',
+                 'ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256', 'ORQEVIA_SSD_THERMAL_ENFORCE'):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
     def reply(request):
         return httpx.Response(200, text=json.dumps({'done': True, 'message': {'content': 'ok'}}) + '\n')
     client = httpx.AsyncClient(transport=httpx.MockTransport(reply))

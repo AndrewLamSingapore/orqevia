@@ -19,16 +19,16 @@ from .settings import SETTINGS
 from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
-DATA = Path(os.getenv("PRIME_DATA_DIR", "/data"))
+DATA = Path(os.getenv("ORQEVIA_DATA_DIR", "/data"))
 def candidate_global_concurrency(environment: dict[str, str], profile: dict | None) -> int:
     """Allow at most three slots with explicit backend and measured-envelope support.
 
     The production default stays at one; unsupported or malformed overrides
     fail closed to one. Per-agent concurrency is separately fixed at one.
     """
-    if environment.get('PRIME_LOCAL_ADMISSION_MODE', 'golden_n1') != 'measured':
+    if environment.get('ORQEVIA_LOCAL_ADMISSION_MODE', 'golden_n1') != 'measured':
         return 1
-    requested = environment.get("PRIME_QUEUE_CONCURRENCY")
+    requested = environment.get("ORQEVIA_QUEUE_CONCURRENCY")
     if requested not in {"2", "3"}:
         return 1
     try:
@@ -51,7 +51,7 @@ POLICY = replace(POLICY, global_concurrency=_candidate_slots,
                  per_agent_concurrency=1,
                  background_concurrency=(_candidate_slots - 1 if _candidate_slots > 1 else 0))
 validate_configuration(SETTINGS,POLICY)
-queue = JobQueue(os.getenv("PRIME_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
+queue = JobQueue(os.getenv("ORQEVIA_COMPUTE_QUEUE_DB", str(DATA / "compute-queue.db")), POLICY)
 
 
 def _int(name: str, default: int) -> int:
@@ -60,7 +60,7 @@ def _int(name: str, default: int) -> int:
 
 
 def providers() -> list[Provider]:
-    local_ram,local_vram=_int("PRIME_LOCAL_RAM_MB",32768),_int("PRIME_LOCAL_VRAM_MB",0)
+    local_ram,local_vram=_int("ORQEVIA_LOCAL_RAM_MB",32768),_int("ORQEVIA_LOCAL_VRAM_MB",0)
     result=[]
     for role,model in (("fast",SETTINGS.fast_model),("deep",SETTINGS.deep_model),
                        ("evaluator",SETTINGS.evaluator_model),("embedding",SETTINGS.embedding_model)):
@@ -81,7 +81,7 @@ def providers() -> list[Provider]:
 def _validate_job_lease(job: dict) -> None:
     """Compatibility only; never called by the candidate executor."""
     from .action_harness import HarnessPolicy
-    guarded = registered_agent_ids() if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') == '1' else HarnessPolicy().pilot_agents
+    guarded = registered_agent_ids() if os.getenv('ORQEVIA_REGISTRY_V1_ENABLED','0') == '1' else HarnessPolicy().pilot_agents
     if job['agent'] not in guarded:
         return
     from .harness_api import _runtime

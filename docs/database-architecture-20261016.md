@@ -18,26 +18,26 @@ a second source of truth against the directive. The correct action is to
 
 ## What the repository actually persists
 
-The backend resolves `PRIME_DATA_DIR` (default `/data` inside the container)
+The backend resolves `ORQEVIA_DATA_DIR` (default `/data` inside the container)
 and keeps a set of purpose-scoped SQLite databases there. Connection hygiene in
 the core ledgers already sets WAL journaling, `busy_timeout`, and
 `foreign_keys=ON`; the queue concurrency is deliberately low
-(`PRIME_QUEUE_CONCURRENCY=1`), matching SQLite's single-writer model.
+(`ORQEVIA_QUEUE_CONCURRENCY=1`), matching SQLite's single-writer model.
 
 | Domain | Persistence |
 |---|---|
 | Objectives | `objectives.db` (SQLite) + `compute-ledger.db` for inference attempts |
 | Compute / job queue | `compute-queue.db` (SQLite, atomic leases) and `compute-ledger.db` |
 | Agents | `config/agent_registry.json` (canonical registry) + `agent-authority.db` and queue ledgers |
-| Users / sessions | `client_auth.py` compares the owner bearer token (`PRIME_SPINE_TOKEN`) in-process; PWA sessions in `pwa-sessions.db` (SQLite, HttpOnly scoped cookies) |
+| Users / sessions | `client_auth.py` compares the owner bearer token (`ORQEVIA_SPINE_TOKEN`) in-process; PWA sessions in `pwa-sessions.db` (SQLite, HttpOnly scoped cookies) |
 | God's Eye | `exposure_intelligence.py` over an `EvidenceLedger` (`synthetic-and-public-lens.db`), `event_detection.py` (atomic JSON rule/alert store), `geo_ingest.py` (SQLite event store) |
 | Intelligence | `geo_ingest.py` (SQLite), `rag_grounding.py` + `local_knowledge.py` (FAISS + files), `governed_knowledge.py` (SQLite) |
-| Evidence | `evidence_product.py` (append-only hash-chained SQLite ledger) and `evidence-lens.db`, with artifact bytes in `PRIME_DATA_DIR/artifacts` (SHA-256 addressed files) |
-| Memory / events | `jarvis-memory.db`, `portfolio-events.db` |
+| Evidence | `evidence_product.py` (append-only hash-chained SQLite ledger) and `evidence-lens.db`, with artifact bytes in `ORQEVIA_DATA_DIR/artifacts` (SHA-256 addressed files) |
+| Memory / events | `orqevia-memory.db`, `portfolio-events.db` |
 | Runtime gates | `action-harness.db`, `failsafe.db`, `agent-authority.db` (SQLite event ledgers) |
 
 Large documents and evidence files already stay out of the databases: artifacts
-are stored as files under `PRIME_DATA_DIR/artifacts` and addressed by content
+are stored as files under `ORQEVIA_DATA_DIR/artifacts` and addressed by content
 hash, which is the correct object-storage boundary for this deployment.
 
 ## PostgreSQL is not part of ORQEVIA

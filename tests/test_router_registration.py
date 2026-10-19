@@ -1,5 +1,5 @@
 import os, tempfile, unittest
-_TMP=tempfile.TemporaryDirectory(); os.environ["PRIME_DATA_DIR"]=_TMP.name
+_TMP=tempfile.TemporaryDirectory(); os.environ["ORQEVIA_DATA_DIR"]=_TMP.name
 from app.entry import app
 
 class RouterTests(unittest.TestCase):

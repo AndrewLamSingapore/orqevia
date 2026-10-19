@@ -22,8 +22,8 @@ def identity(configured, monkeypatch):
     from app import agent_registry, compute_queue_api, objective_api, runtime_status
     monkeypatch.setattr(runtime_status, 'production_health',
                         lambda: {'observation': 'UNAVAILABLE', 'status': 'UNKNOWN'})
-    monkeypatch.delenv('PRIME_QUALIFIED_PROFILE_PATH', raising=False)
-    monkeypatch.delenv('PRIME_QUALIFIED_PROFILE_SHA256', raising=False)
+    monkeypatch.delenv('ORQEVIA_QUALIFIED_PROFILE_PATH', raising=False)
+    monkeypatch.delenv('ORQEVIA_QUALIFIED_PROFILE_SHA256', raising=False)
     compute_queue_api.queue.policy = SimpleNamespace(global_concurrency=1)
     ledger = ActionLedger(configured.root / 'action-records.jsonl')
     monkeypatch.setattr(dispatch, 'action_ledger', lambda: ledger)

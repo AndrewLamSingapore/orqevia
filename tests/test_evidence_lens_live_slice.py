@@ -15,8 +15,8 @@ ORIGIN = 'http://127.0.0.1:8000'
 
 @pytest.fixture
 def client(monkeypatch,tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path))
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-token')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner-token')
     return TestClient(production_entry.app,base_url=ORIGIN,client=('127.0.0.1',43000))
 
 
@@ -42,7 +42,7 @@ def test_authenticated_materialize_read_deduplicate_and_no_model_text(client,tmp
     assert result['result_state']=='COMPLETED'
     assert result['observed']['runtime']['source_revision']=='UNKNOWN'
     assert result['observed']['claim_verification']=='VERIFIED'
-    assert result['proof']['producer']=='PRIME_OBJECTIVE_STORE'
+    assert result['proof']['producer']=='ORQEVIA_OBJECTIVE_STORE'
     assert result['proof']['captured_at']
     assert result['proof']['runtime']==result['observed']['runtime']
     assert 'independent_claim_verification' in result['proof']['unproven']
@@ -78,8 +78,8 @@ def test_tamper_and_source_drift_never_appear_current(client,tmp_path):
 
 
 def test_reported_runtime_identifiers_are_not_independent_binding(client,monkeypatch):
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION','a'*40)
-    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST','sha256:'+'b'*64)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION','a'*40)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_IMAGE_DIGEST','sha256:'+'b'*64)
     task_id=_objective(client)
     response=client.post(f'/control/api/evidence/from-objective/{task_id}',headers={'Origin':ORIGIN})
     assert response.status_code==201, response.text

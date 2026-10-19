@@ -39,7 +39,7 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
                 artifact_delivery.authoritative_envelope({'id':'task-a','revision':0,'execution_metadata':metadata})
 
     def test_two_task_artifacts_cannot_cross_bind(self):
-        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root}):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'ORQEVIA_DATA_DIR':root}):
             from app.artifact_factory import ArtifactFactory
             factory=ArtifactFactory(Path(root)/'artifacts')
             a=factory.create(kind='markdown',content='A',task_id='task-a',creator='a09',provenance='test')
@@ -86,7 +86,7 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
         self.assertEqual(self.metadata()['state'],'COMPLETED')
 
     def test_additive_timestamp_store_preserves_rollback_table_shape(self):
-        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root}):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'ORQEVIA_DATA_DIR':root}):
             db=objective_api.connect()
             self.assertEqual(len(db.execute('PRAGMA table_info(objectives)').fetchall()),4)
             self.assertEqual(len(db.execute('PRAGMA table_info(objective_turns)').fetchall()),6)
@@ -102,7 +102,7 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
         self.assertEqual(max(observed,default=None),completed)
 
     def test_dispatch_blocked_terminal_has_completion_time_and_explicit_no_start_reason(self):
-        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root,'PRIME_INTERFACE_HOST_ID':'ABEX'}), patch.object(objective_api,'authenticate_owner',lambda _:None):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'ORQEVIA_DATA_DIR':root,'ORQEVIA_INTERFACE_HOST_ID':'ABEX'}), patch.object(objective_api,'authenticate_owner',lambda _:None):
             db=objective_api.connect();created='2026-09-26T14:16:29+00:00';updated='2026-09-26T14:16:30+00:00'
             steps=[{'capability':'responsibility.a16','state':'blocked','reason':{'state':'UNAVAILABLE','reason':'No available backend satisfies tier and data residency'}}]
             db.execute('insert into objectives values(?,?,?,?)',('blocked-task','digest','submitted',json.dumps(steps)))
@@ -114,20 +114,20 @@ class AuthoritativeResultMetadataTests(unittest.TestCase):
             self.assertEqual(metadata['lifecycle']['completed_at_source'],'TERMINAL_STATE_OBSERVED_AT_OBJECTIVE_UPDATE')
 
     def test_runtime_identity_is_immutable_per_task_across_generation_change(self):
-        first={'PRIME_DATA_DIR':None,'PRIME_INTERFACE_HOST_ID':'ABEX','PRIME_RUNTIME_REVISION':'1'*40,
-               'PRIME_INTERFACE_RUNTIME_VERSION':'generation-one','PRIME_RUNTIME_IMAGE_DIGEST':'sha256:'+'a'*64}
-        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{**first,'PRIME_DATA_DIR':root},clear=False), patch.object(objective_api,'authenticate_owner',lambda _:None):
+        first={'ORQEVIA_DATA_DIR':None,'ORQEVIA_INTERFACE_HOST_ID':'ABEX','ORQEVIA_RUNTIME_REVISION':'1'*40,
+               'ORQEVIA_INTERFACE_RUNTIME_VERSION':'generation-one','ORQEVIA_RUNTIME_IMAGE_DIGEST':'sha256:'+'a'*64}
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{**first,'ORQEVIA_DATA_DIR':root},clear=False), patch.object(objective_api,'authenticate_owner',lambda _:None):
             db=objective_api.connect();created='2026-09-27T01:00:00+00:00'
             db.execute('insert into objectives values(?,?,?,?)',('bound-task','digest','submitted',json.dumps([{'capability':'system.architecture','dispatch':{'state':'COMPLETED','result':'ok'}}])))
             db.execute('insert into objective_metadata values(?,?,?,?)',('bound-task',0,created,created));objective_api.store_runtime(db,'bound-task',0);db.commit();db.close()
-            os.environ['PRIME_RUNTIME_REVISION']='2'*40;os.environ['PRIME_INTERFACE_RUNTIME_VERSION']='generation-two';os.environ['PRIME_RUNTIME_IMAGE_DIGEST']='sha256:'+'b'*64
+            os.environ['ORQEVIA_RUNTIME_REVISION']='2'*40;os.environ['ORQEVIA_INTERFACE_RUNTIME_VERSION']='generation-two';os.environ['ORQEVIA_RUNTIME_IMAGE_DIGEST']='sha256:'+'b'*64
             metadata=objective_api.get('bound-task',authorization='fixture')['execution_metadata']
             self.assertEqual(metadata['runtime']['source_revision'],'1'*40)
             self.assertEqual(metadata['runtime']['image_digest'],'sha256:'+'a'*64)
             self.assertEqual(metadata['provenance']['runtime'],'IMMUTABLE_OBJECTIVE_RUNTIME')
 
     def test_legacy_task_runtime_identity_abstains_instead_of_using_current_environment(self):
-        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'PRIME_DATA_DIR':root,'PRIME_RUNTIME_REVISION':'2'*40}), patch.object(objective_api,'authenticate_owner',lambda _:None):
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ,{'ORQEVIA_DATA_DIR':root,'ORQEVIA_RUNTIME_REVISION':'2'*40}), patch.object(objective_api,'authenticate_owner',lambda _:None):
             db=objective_api.connect();created='2026-09-27T01:00:00+00:00'
             db.execute('insert into objectives values(?,?,?,?)',('legacy-task','digest','submitted',json.dumps([{'capability':'system.architecture','dispatch':{'state':'COMPLETED','result':'ok'}}])))
             db.execute('insert into objective_metadata values(?,?,?,?)',('legacy-task',0,created,created));db.commit();db.close()

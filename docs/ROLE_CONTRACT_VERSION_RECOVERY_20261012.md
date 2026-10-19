@@ -38,8 +38,8 @@ answers are supplied to the runtime by this repair.
 Run local canonical quality in new fixture data, using the existing environment:
 
 ```powershell
-$env:PRIME_DATA_DIR = '<fresh isolated fixture directory>'
-$env:PRIME_COMPUTE_QUEUE_DB = "$env:PRIME_DATA_DIR/queue.db"
+$env:ORQEVIA_DATA_DIR = '<fresh isolated fixture directory>'
+$env:ORQEVIA_COMPUTE_QUEUE_DB = "$env:ORQEVIA_DATA_DIR/queue.db"
 python -B scripts/run_canonical_ci.py
 ```
 

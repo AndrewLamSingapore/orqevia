@@ -54,15 +54,15 @@ def bind_mock_inference_request(job, original):
 @pytest.fixture
 def configured(tmp_path, monkeypatch):
     global compute_queue_api, objective_api
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'fixture-queue.db'))
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', SOURCE)
-    monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', IMAGE)
-    monkeypatch.setenv('PRIME_INTERFACE_HOST_ID', 'ABEX')
-    monkeypatch.setenv('PRIME_INTERFACE_RUNTIME_VERSION', 'fixture-v1')
-    monkeypatch.delenv('PRIME_CONTEXT_PACKS_ENABLED', raising=False)
-    monkeypatch.delenv('PRIME_SKILL_PACKS_ENABLED', raising=False)
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'fixture-queue.db'))
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', SOURCE)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_IMAGE_DIGEST', IMAGE)
+    monkeypatch.setenv('ORQEVIA_INTERFACE_HOST_ID', 'ABEX')
+    monkeypatch.setenv('ORQEVIA_INTERFACE_RUNTIME_VERSION', 'fixture-v1')
+    monkeypatch.delenv('ORQEVIA_CONTEXT_PACKS_ENABLED', raising=False)
+    monkeypatch.delenv('ORQEVIA_SKILL_PACKS_ENABLED', raising=False)
     # Queue construction is an import side effect. Import only after this
     # fixture owns an explicit temporary data/queue path, never /data at
     # collection time on an unprivileged off-host runner.
@@ -227,8 +227,8 @@ def test_missing_correlation_cannot_reconstruct_an_original_dispatch(configured)
 @pytest.mark.parametrize('context_on,skills_on', [(True, False), (False, True), (True, True)])
 def test_existing_opt_in_context_and_skill_prefixes_are_reconstructed(configured, monkeypatch, context_on, skills_on):
     from app.skill_router import select_skill_pack
-    monkeypatch.setenv('PRIME_CONTEXT_PACKS_ENABLED', '1' if context_on else '0')
-    monkeypatch.setenv('PRIME_SKILL_PACKS_ENABLED', '1' if skills_on else '0')
+    monkeypatch.setenv('ORQEVIA_CONTEXT_PACKS_ENABLED', '1' if context_on else '0')
+    monkeypatch.setenv('ORQEVIA_SKILL_PACKS_ENABLED', '1' if skills_on else '0')
     original = dispatch.AgentRequest(**canonical_role_spec('a19', 'responsibility.a19')['request'])
     skills = select_skill_pack('a19', original.task_class, Tier.MINI) if skills_on else None
     configured.job['prompt'] = dispatch.packed_inference_prompt(original, Tier.MINI, 'a19', CORRELATION, skills)
@@ -364,7 +364,7 @@ def test_subject_change_during_oracle_cannot_create_stale_review(configured, mon
             change_database('INSERT INTO objective_turns VALUES(?,?,?,?,?,?)',
                 (OBJECTIVE, 1, 'during-review', '0' * 64, 'dispatching', '[]'))
         elif changed_domain == 'runtime':
-            monkeypatch.setenv('PRIME_RUNTIME_IMAGE_DIGEST', 'sha256:' + 'f' * 64)
+            monkeypatch.setenv('ORQEVIA_RUNTIME_IMAGE_DIGEST', 'sha256:' + 'f' * 64)
         elif changed_domain == 'queue_result':
             configured.job['result'] = 'a different result after review began'
         elif changed_domain == 'queue_prompt':

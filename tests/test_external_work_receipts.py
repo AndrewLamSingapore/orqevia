@@ -95,8 +95,8 @@ class ExternalWorkReceiptsTest(unittest.TestCase):
     def test_router_requires_owner_auth_and_is_not_mounted_automatically(self):
         app = FastAPI()
         app.include_router(router)
-        with patch.dict(os.environ, {"PRIME_DATA_DIR": self.temp.name,
-                                     "PRIME_SPINE_TOKEN": "local-test-token"}):
+        with patch.dict(os.environ, {"ORQEVIA_DATA_DIR": self.temp.name,
+                                     "ORQEVIA_SPINE_TOKEN": "local-test-token"}):
             with TestClient(app) as client:
                 data = self.receipt("RECEIVED").model_dump()
                 self.assertEqual(client.post("/api/external-work/receipts", json=data).status_code, 401)
@@ -164,8 +164,8 @@ class ExternalWorkReceiptsTest(unittest.TestCase):
 
     def test_http_canonical_audit_requires_existing_owner_gate(self):
         app = FastAPI(); app.include_router(router)
-        with patch.dict(os.environ, {"PRIME_DATA_DIR": self.temp.name,
-                                     "PRIME_SPINE_TOKEN": "local-test-token"}):
+        with patch.dict(os.environ, {"ORQEVIA_DATA_DIR": self.temp.name,
+                                     "ORQEVIA_SPINE_TOKEN": "local-test-token"}):
             with TestClient(app) as client:
                 owner = {"Authorization": "Bearer local-test-token"}
                 self.assertEqual(client.post("/api/external-work/receipts",

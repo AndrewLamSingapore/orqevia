@@ -10,7 +10,7 @@ from app import ssd_thermal
 
 
 def configured(tmp_path, monkeypatch):
-    monkeypatch.setenv('PRIME_LOCAL_ADMISSION_MODE', 'measured')
+    monkeypatch.setenv('ORQEVIA_LOCAL_ADMISSION_MODE', 'measured')
     policy = {
         'schema': ssd_thermal.POLICY_SCHEMA,
         'host': 'DESKTOP-27LKJ2V', 'device_id': '0',
@@ -22,11 +22,11 @@ def configured(tmp_path, monkeypatch):
     policy_path = tmp_path / 'policy.json'
     raw = json.dumps(policy).encode()
     policy_path.write_bytes(raw)
-    monkeypatch.setenv('PRIME_SSD_THERMAL_ENFORCE', '1')
-    monkeypatch.setenv('PRIME_SSD_THERMAL_POLICY', str(policy_path))
-    monkeypatch.setenv('PRIME_SSD_THERMAL_POLICY_SHA256', hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('ORQEVIA_SSD_THERMAL_ENFORCE', '1')
+    monkeypatch.setenv('ORQEVIA_SSD_THERMAL_POLICY', str(policy_path))
+    monkeypatch.setenv('ORQEVIA_SSD_THERMAL_POLICY_SHA256', hashlib.sha256(raw).hexdigest())
     receipt_path = tmp_path / 'reading.json'
-    monkeypatch.setenv('PRIME_SSD_THERMAL_RECEIPT', str(receipt_path))
+    monkeypatch.setenv('ORQEVIA_SSD_THERMAL_RECEIPT', str(receipt_path))
     return policy, receipt_path
 
 
@@ -72,11 +72,11 @@ def test_heavy_requires_fresh_exact_sensor_and_scope(tmp_path, monkeypatch):
 
 def test_light_bound_survives_missing_policy_but_heavy_fails_closed(tmp_path, monkeypatch):
     configured(tmp_path, monkeypatch)
-    monkeypatch.delenv('PRIME_SSD_THERMAL_POLICY')
+    monkeypatch.delenv('ORQEVIA_SSD_THERMAL_POLICY')
     ssd_thermal.require_for_demand(1024)
     with pytest.raises(PermissionError):
         ssd_thermal.require_for_demand(1025)
-    monkeypatch.setenv('PRIME_SSD_THERMAL_ENFORCE', 'yes')
+    monkeypatch.setenv('ORQEVIA_SSD_THERMAL_ENFORCE', 'yes')
     with pytest.raises(PermissionError):
         ssd_thermal.require_for_demand(1024)
 
@@ -95,7 +95,7 @@ def test_optional_profile_field_cannot_exempt_heavy_work(tmp_path, monkeypatch):
     policy['heavy_demand_mib'] = 1000000
     raw = json.dumps(policy).encode()
     (tmp_path / 'policy.json').write_bytes(raw)
-    monkeypatch.setenv('PRIME_SSD_THERMAL_POLICY_SHA256', hashlib.sha256(raw).hexdigest())
+    monkeypatch.setenv('ORQEVIA_SSD_THERMAL_POLICY_SHA256', hashlib.sha256(raw).hexdigest())
     with pytest.raises(PermissionError):
         ssd_thermal.require_for_demand(1025)
 

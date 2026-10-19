@@ -8,7 +8,7 @@ import uuid
 import zipfile
 
 SOURCE=Path(__file__).resolve().parents[1]
-PIN='3358598e7fa267a9412f4c6a50482e6dd12db305d2405d1a1eafa21251be4caf'
+PIN='4c69bb9c4dff9901afd0233bdc12abf6ba785814e5c7160877fe0cba7b0913c6'
 def sha(data):return hashlib.sha256(data).hexdigest()
 def canonical_source_bytes(path):
     # Git may materialize text files with CRLF on Windows even though the

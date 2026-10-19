@@ -62,7 +62,7 @@ remain a separate physical-device gate.
 - Session is established through the existing `/pwa/api/session` shape.
 - New Objective opens the actual composer.
 - Objective submission sends the expected JSON body.
-- `X-Jarvis-PWA: 1` and idempotency headers are present.
+- `X-ORQEVIA-PWA: 1` and idempotency headers are present.
 - No browser `Authorization` header or bearer credential is sent.
 - Terminal task result and task ID render in the active workspace.
 

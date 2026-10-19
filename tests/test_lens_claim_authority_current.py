@@ -14,7 +14,7 @@ def _step(text, fact=None, *, revision=0):
 
 @pytest.fixture
 def objectives(monkeypatch,tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path/'data'))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path/'data'))
     monkeypatch.setattr(objective_api,'authenticate_owner',lambda _:None)
     monkeypatch.setattr(objective_api,'dispatch_request',
                         lambda *args,**kwargs:pytest.fail('canonical lookup must not dispatch a model'))

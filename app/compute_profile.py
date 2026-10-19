@@ -6,9 +6,9 @@ from pathlib import Path
 
 @lru_cache(maxsize=1)
 def load_compute_profile():
-    filename=os.getenv('PRIME_MEASURED_COMPUTE_PROFILE','').strip()
+    filename=os.getenv('ORQEVIA_MEASURED_COMPUTE_PROFILE','').strip()
     if not filename:return None
-    expected=os.getenv('PRIME_MEASURED_COMPUTE_PROFILE_SHA256','').lower()
+    expected=os.getenv('ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256','').lower()
     raw=Path(filename).read_bytes()
     if not expected or hashlib.sha256(raw).hexdigest()!=expected:
         raise RuntimeError('Measured Compute Profile integrity mismatch')

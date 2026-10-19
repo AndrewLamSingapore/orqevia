@@ -8,10 +8,10 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def shell(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-owner-secret')
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-owner-secret')
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
     from app import production_entry as entry
     from app import compute_queue_api as compute
     from app.job_queue import JobQueue
@@ -31,7 +31,7 @@ def test_minimal_health_and_static_no_secrets(shell, monkeypatch):
         assert 'fixture-owner-secret' not in response.text
         assert response.headers['cache-control'] == 'no-store'
         assert response.headers['x-frame-options'] == 'DENY'
-    monkeypatch.delenv('PRIME_SPINE_TOKEN')
+    monkeypatch.delenv('ORQEVIA_SPINE_TOKEN')
     assert client.get('/health').status_code == 503
     assert client.get('/health').json() == {'ok': False}
     assert client.get('/control').status_code == 503
@@ -41,10 +41,10 @@ def test_capability_observatory_is_local_control_only_and_fails_closed(shell, mo
     _, client = shell
     path = '/control/api/agent-capabilities'
     headers = {'Authorization': 'Bearer fixture-owner-secret'}
-    monkeypatch.delenv('PRIME_RUNTIME_REVISION', raising=False)
-    monkeypatch.delenv('PRIME_INTERFACE_RUNTIME_REVISION', raising=False)
+    monkeypatch.delenv('ORQEVIA_RUNTIME_REVISION', raising=False)
+    monkeypatch.delenv('ORQEVIA_INTERFACE_RUNTIME_REVISION', raising=False)
     assert client.get(path, headers=headers).status_code == 503  # No exact runtime source binding.
-    monkeypatch.setenv('PRIME_RUNTIME_REVISION', 'a' * 40)
+    monkeypatch.setenv('ORQEVIA_RUNTIME_REVISION', 'a' * 40)
     agent_dir = tmp_path / 'agent-certification' / 'a17'
     agent_dir.mkdir(parents=True)
     (agent_dir / 'certification.json').write_text(json.dumps({
@@ -63,14 +63,14 @@ def test_capability_observatory_is_local_control_only_and_fails_closed(shell, mo
                and row['runtime_activation'] == 'UNVERIFIED'
                for row in body['agents'])
     assert client.get(path, headers={**headers, 'Host': 'evil.example'}).status_code == 403
-    monkeypatch.delenv('PRIME_SPINE_TOKEN')
+    monkeypatch.delenv('ORQEVIA_SPINE_TOKEN')
     assert client.get(path).status_code == 503
 
 
 def test_phone_pairing_only_local_same_origin(shell):
     entry, client = shell
     assert client.post('/control/api/pwa-pairing').status_code == 403
-    headers = {'Origin': 'http://127.0.0.1:8000', 'X-Jarvis-PWA': '1'}
+    headers = {'Origin': 'http://127.0.0.1:8000', 'X-ORQEVIA-PWA': '1'}
     result = client.post('/control/api/pwa-pairing', headers=headers)
     assert result.status_code == 200
     assert set(result.json()) == {'code', 'expiresAt', 'role'}
@@ -122,7 +122,7 @@ def test_remote_peer_cannot_use_spoofed_host_or_forwarding(shell):
 
 def test_exact_configured_docker_gateway_can_reach_loopback_owner_binding(shell, monkeypatch):
     entry, _ = shell
-    monkeypatch.setenv('PRIME_OWNER_TRUSTED_PEERS', '172.30.9.1')
+    monkeypatch.setenv('ORQEVIA_OWNER_TRUSTED_PEERS', '172.30.9.1')
     client = TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('172.30.9.1', 50000))
     assert client.get('/health').json() == {'ok': True}
     assert client.get('/control').status_code == 200
@@ -259,10 +259,10 @@ def test_allowlisted_network_reconciliation_executes_once(shell, monkeypatch):
     entry, client = shell
     from app import production_survival as survival
     target = 'https://fixture.invalid/immutable-evidence'
-    monkeypatch.setenv('PRIME_SURVIVAL_NETWORK_PROBE_URL', target)
-    monkeypatch.setenv('PRIME_SURVIVAL_CLOUD_PROBE_URL', target)
-    monkeypatch.setenv('PRIME_SURVIVAL_FETCH_ALLOWLIST', target)
-    monkeypatch.setenv('PRIME_SURVIVAL_AUTHORITY_REF', 'orqevia-epoch-20261016:owner')
+    monkeypatch.setenv('ORQEVIA_SURVIVAL_NETWORK_PROBE_URL', target)
+    monkeypatch.setenv('ORQEVIA_SURVIVAL_CLOUD_PROBE_URL', target)
+    monkeypatch.setenv('ORQEVIA_SURVIVAL_FETCH_ALLOWLIST', target)
+    monkeypatch.setenv('ORQEVIA_SURVIVAL_AUTHORITY_REF', 'orqevia-epoch-20261016:owner')
     monkeypatch.setattr(survival, '_probe', lambda url: True)
     calls = []
 

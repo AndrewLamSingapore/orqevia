@@ -49,9 +49,9 @@ class PrimeSettings:
 
     @classmethod
     def from_env(cls) -> "PrimeSettings":
-        fast = _env("PRIME_FAST_MODEL", "gemma3:1b")
-        deep = _env("PRIME_DEEP_MODEL", fast)
-        profile = _env("PRIME_COMPUTE_PROFILE", "balanced").lower()
+        fast = _env("ORQEVIA_FAST_MODEL", "gemma3:1b")
+        deep = _env("ORQEVIA_DEEP_MODEL", fast)
+        profile = _env("ORQEVIA_COMPUTE_PROFILE", "balanced").lower()
         if profile not in {"compat", "balanced", "max"}:
             profile = "balanced"
         worker_default = {"compat": 2, "balanced": 3, "max": 4}[profile]
@@ -61,13 +61,13 @@ class PrimeSettings:
             ollama_base_url=_env("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/"),
             fast_model=fast,
             deep_model=deep,
-            evaluator_model=_env("PRIME_EVALUATOR_MODEL", deep),
-            embedding_model=_env("PRIME_EMBED_MODEL", "embeddinggemma:300m-qat-q4_0"),
+            evaluator_model=_env("ORQEVIA_EVALUATOR_MODEL", deep),
+            embedding_model=_env("ORQEVIA_EMBED_MODEL", "embeddinggemma:300m-qat-q4_0"),
             compute_profile=profile,
-            multi_specialist_workers=_int_env("PRIME_MULTI_SPECIALIST_WORKERS", worker_default, 1, 6),
-            context_tokens=_int_env("PRIME_CONTEXT_TOKENS", context_default, 2048, 131072),
-            max_output_tokens=_int_env("PRIME_MAX_OUTPUT_TOKENS", output_default, 256, 32768),
-            keep_alive=_keep_alive_env("PRIME_MODEL_KEEP_ALIVE", "10m"),
+            multi_specialist_workers=_int_env("ORQEVIA_MULTI_SPECIALIST_WORKERS", worker_default, 1, 6),
+            context_tokens=_int_env("ORQEVIA_CONTEXT_TOKENS", context_default, 2048, 131072),
+            max_output_tokens=_int_env("ORQEVIA_MAX_OUTPUT_TOKENS", output_default, 256, 32768),
+            keep_alive=_keep_alive_env("ORQEVIA_MODEL_KEEP_ALIVE", "10m"),
         )
 
     @property

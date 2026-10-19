@@ -64,7 +64,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build disposable candidate image
-        run: docker build --tag orqevia:candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+        run: docker build --tag orqevia:candidate --build-arg ORQEVIA_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Verify packaged runtime and PWA without production data
         run: docker run --rm --entrypoint python orqevia:candidate -c "from pathlib import Path; import app.ready_work, app.skill_router, app.context_pack; assert Path('/app/app/pwa_static/index.html').is_file()"
       - name: Verify packaged Golden records are readable by the deterministic lookup
@@ -102,15 +102,15 @@ jobs:
             -subj '/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1' >/dev/null 2>&1
           cp "$RUNNER_TEMP/orqevia-ci-tls/server.crt" "$RUNNER_TEMP/orqevia-ci-tls/ca.crt"
           docker run -d --name orqevia-ci-tls --publish 127.0.0.1:18443:8443 \
-            --env PRIME_PWA_ORIGIN=https://127.0.0.1:18443 \
-            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/server.crt,target=/run/prime-tls/server.crt,readonly" \
-            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/server.key,target=/run/prime-tls/server.key,readonly" \
-            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/ca.crt,target=/run/prime-tls/ca.crt,readonly" \
+            --env ORQEVIA_PWA_ORIGIN=https://127.0.0.1:18443 \
+            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/server.crt,target=/run/orqevia-tls/server.crt,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/server.key,target=/run/orqevia-tls/server.key,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/orqevia-ci-tls/ca.crt,target=/run/orqevia-tls/ca.crt,readonly" \
             orqevia:candidate uvicorn app.interface_server:app --host 0.0.0.0 --port 8443 \
-              --no-proxy-headers --ssl-keyfile /run/prime-tls/server.key \
-              --ssl-certfile /run/prime-tls/server.crt
+              --no-proxy-headers --ssl-keyfile /run/orqevia-tls/server.key \
+              --ssl-certfile /run/orqevia-tls/server.crt
           trap 'docker rm -f orqevia-ci-tls >/dev/null 2>&1 || true' EXIT
-          docker exec orqevia-ci-tls sh -c 'test ! -e /run/prime-tls/ca.key'
+          docker exec orqevia-ci-tls sh -c 'test ! -e /run/orqevia-tls/ca.key'
           ready=false
           for attempt in {1..20}; do
             if curl -fsS --cacert "$RUNNER_TEMP/orqevia-ci-tls/ca.crt" \

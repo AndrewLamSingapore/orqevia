@@ -60,10 +60,10 @@ if (-not (Test-Path -LiteralPath $OrqeviaOperator)) {
 }
 
 Write-Step "Preparing local cognitive authentication"
-$token = Get-EnvValue "PRIME_SPINE_TOKEN"
+$token = Get-EnvValue "ORQEVIA_SPINE_TOKEN"
 if (-not $token) {
     $token = New-LocalToken
-    Set-EnvValue "PRIME_SPINE_TOKEN" $token
+    Set-EnvValue "ORQEVIA_SPINE_TOKEN" $token
     Write-Host "Generated a private local cognitive token. It was stored only in PRIME .env." -ForegroundColor Green
 } else {
     Write-Host "Existing private local cognitive token found." -ForegroundColor Green

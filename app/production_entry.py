@@ -28,7 +28,7 @@ def local_request(request: Request):
     try:
         peer = ipaddress.ip_address(request.client.host)
         configured_peers = {ipaddress.ip_address(value.strip()) for value in
-                            os.getenv('PRIME_OWNER_TRUSTED_PEERS', '').split(',') if value.strip()}
+                            os.getenv('ORQEVIA_OWNER_TRUSTED_PEERS', '').split(',') if value.strip()}
         hosts = request.headers.getlist('host')
         if not (peer.is_loopback or peer in configured_peers) or len(hosts) != 1:
             raise ValueError()
@@ -56,7 +56,7 @@ def local_request(request: Request):
 
 def local_authorization(request: Request):
     local_request(request)
-    token = os.getenv('PRIME_SPINE_TOKEN', '').strip()
+    token = os.getenv('ORQEVIA_SPINE_TOKEN', '').strip()
     if not token:
         raise HTTPException(503, 'Local access is not configured')
     return 'Bearer ' + token
@@ -92,10 +92,10 @@ _AZURE_CERT_PIN_SHA256 = '6cc238c7da9152519410a4cd731abd6e0e584d2cbd84c3c0863ca5
 
 
 def _certification_verifier(data_root: Path):
-    if os.getenv('PRIME_AGENT_CERT_AZURE_ES256_ENABLED') != '1':
+    if os.getenv('ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED') != '1':
         return None
-    override_path = os.getenv('PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE')
-    override_sha256 = os.getenv('PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256')
+    override_path = os.getenv('ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE')
+    override_sha256 = os.getenv('ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256')
     source_pin = override_path is None and override_sha256 is None
     if override_path is not None or override_sha256 is not None:
         if not override_path or not override_sha256:
@@ -126,7 +126,7 @@ async def private_control_headers(request, call_next):
 def health():
     # Liveness/configuration readiness only; inference availability stays on the
     # authenticated candidate APIs. Never return registry, ledger, or provider data.
-    ready = bool(os.getenv('PRIME_SPINE_TOKEN', '').strip())
+    ready = bool(os.getenv('ORQEVIA_SPINE_TOKEN', '').strip())
     return JSONResponse({'ok': ready}, status_code=200 if ready else 503)
 
 
@@ -187,7 +187,7 @@ def agent_capabilities(authorization=Depends(local_verifier_authorization)):
     source = objective_api.runtime_snapshot()['source_revision']
     if source == 'UNKNOWN':
         raise HTTPException(503, 'Runtime source revision is unverified')
-    data_root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+    data_root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data'))
     verifier = _certification_verifier(data_root)
     certification = AgentCertificationRegistry(
         data_root / 'agent-certification', source_revision=source,

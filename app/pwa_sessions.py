@@ -30,7 +30,7 @@ def clock():return time.time()
 
 def digest(value):return hashlib.sha256(value.encode()).hexdigest()
 def database():
-    root=Path(os.getenv('PRIME_DATA_DIR','/data'));root.mkdir(parents=True,exist_ok=True)
+    root=Path(os.getenv('ORQEVIA_DATA_DIR','/data'));root.mkdir(parents=True,exist_ok=True)
     db=sqlite3.connect(root/'pwa-sessions.db',timeout=15)
     db.execute('BEGIN IMMEDIATE')
     db.execute('CREATE TABLE IF NOT EXISTS pairing(code_hash TEXT PRIMARY KEY,expires REAL NOT NULL,used INTEGER NOT NULL DEFAULT 0)')
@@ -45,17 +45,17 @@ def database():
     db.commit();return db
 
 def internal_token(client):
-    key=os.getenv('PRIME_SPINE_TOKEN','')
+    key=os.getenv('ORQEVIA_SPINE_TOKEN','')
     if len(key)<16:raise HTTPException(503,'PWA authority unavailable')
-    return hmac.new(key.encode(),('jarvis-pwa-client-v1:'+client).encode(),hashlib.sha256).hexdigest()
+    return hmac.new(key.encode(),('orqevia-pwa-client-v1:'+client).encode(),hashlib.sha256).hexdigest()
 
 def client_policy(client):
     if not re.fullmatch(r'pwa:[a-f0-9]{32}',client or ''):return {}
     with database() as db:row=db.execute('SELECT expires,revoked,owner_account_id,role FROM sessions WHERE client_id=?',(client,)).fetchone()
     if not row or row[1] or row[0]<=time.time():return {}
     # Browser identity grants only the existing bounded server-owned client policy.
-    classification=os.getenv('PRIME_PWA_DATA_CLASSIFICATION','LOCAL_ONLY')
-    try:ceiling=float(os.getenv('PRIME_PWA_MAX_COST_USD','0'))
+    classification=os.getenv('ORQEVIA_PWA_DATA_CLASSIFICATION','LOCAL_ONLY')
+    try:ceiling=float(os.getenv('ORQEVIA_PWA_MAX_COST_USD','0'))
     except ValueError:raise HTTPException(503,'PWA policy unavailable') from None
     if classification not in {'LOCAL_ONLY','CLOUD_PERMITTED'} or not math.isfinite(ceiling) or not 0<=ceiling<=1:raise HTTPException(503,'PWA policy unavailable')
     if row[3] not in {'OWNER','MEMBER'}:raise HTTPException(503,'PWA role unavailable')
@@ -99,7 +99,7 @@ def access_mode():
     'open'    - the session endpoint admits this browser without any code.
     'pairing' - the historical pairing-code trust gate.
     Unknown values fail closed to 'pairing'."""
-    mode=os.getenv('PRIME_PWA_ACCESS_MODE','open').strip().lower()
+    mode=os.getenv('ORQEVIA_PWA_ACCESS_MODE','open').strip().lower()
     return mode if mode in {'open','pairing'} else 'pairing'
 
 def _auto_admit(request):
@@ -108,9 +108,9 @@ def _auto_admit(request):
     Reached only through the same origin-validated /pwa routes as every other
     session action. Role and owner binding stay bounded by configuration."""
     now=clock();raw=secrets.token_urlsafe(32);device_raw=secrets.token_urlsafe(32);client='pwa:'+uuid.uuid4().hex
-    role=os.getenv('PRIME_PWA_AUTO_ROLE','OWNER').strip().upper()
+    role=os.getenv('ORQEVIA_PWA_AUTO_ROLE','OWNER').strip().upper()
     if role not in {'OWNER','MEMBER'}:raise HTTPException(503,'PWA role unavailable')
-    account=os.getenv('PRIME_PWA_OWNER_ACCOUNT_ID') or None
+    account=os.getenv('ORQEVIA_PWA_OWNER_ACCOUNT_ID') or None
     if account is not None and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,63}',account):raise HTTPException(503,'Owner account unavailable')
     internal_token(client)
     with database() as db:
@@ -159,11 +159,11 @@ def safe_shell_navigation(request):
             and request.headers.get('sec-fetch-dest') in {'document','empty'})
 
 def pwa_origins():
-    primary=os.getenv('PRIME_PWA_ORIGIN','').rstrip('/')
+    primary=os.getenv('ORQEVIA_PWA_ORIGIN','').rstrip('/')
     try:parsed=urlsplit(primary)
     except ValueError:return ()
     if parsed.scheme!='https' or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:return ()
-    additional=os.getenv('PRIME_PWA_ADDITIONAL_ORIGINS','')
+    additional=os.getenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS','')
     # The public hostname is an explicit, single-origin opt-in, not a general host allowlist.
     if additional not in {'','https://jarvis.lamjarvis.com'}:return ()
     return (primary,additional) if additional else (primary,)
@@ -176,7 +176,7 @@ def origin_valid(request,write=False):
     if origin is not None and origin!=expected:return False
     site=request.headers.get('sec-fetch-site')
     if site in {'cross-site','same-site'} and not (not write and safe_shell_navigation(request)):return False
-    return not write or (origin==expected and request.headers.get('x-jarvis-pwa')=='1')
+    return not write or (origin==expected and request.headers.get('x-orqevia-pwa')=='1')
 
 async def bounded_body(request,limit):
     raw=bytearray()
@@ -190,11 +190,11 @@ async def pairing(request:Request):
     from .client_auth import authenticate_owner
     if not request.client or request.client.host not in {'127.0.0.1','::1'}:raise HTTPException(403,'Local owner interaction required')
     authenticate_owner(request.headers.get('authorization'))
-    expected=os.getenv('PRIME_PWA_OWNER_ORIGIN','http://127.0.0.1:8000').rstrip('/')
+    expected=os.getenv('ORQEVIA_PWA_OWNER_ORIGIN','http://127.0.0.1:8000').rstrip('/')
     parsed=urlsplit(expected)
     if parsed.hostname not in {'127.0.0.1','::1','localhost'} or parsed.scheme not in {'http','https'} or parsed.path or parsed.username:raise HTTPException(503,'Local owner origin unavailable')
-    if str(request.base_url).rstrip('/')!=expected or request.headers.get('origin')!=expected or request.headers.get('x-jarvis-pwa')!='1':raise HTTPException(403,'Origin rejected')
-    account=os.getenv('PRIME_PWA_OWNER_ACCOUNT_ID') or None
+    if str(request.base_url).rstrip('/')!=expected or request.headers.get('origin')!=expected or request.headers.get('x-orqevia-pwa')!='1':raise HTTPException(403,'Origin rejected')
+    account=os.getenv('ORQEVIA_PWA_OWNER_ACCOUNT_ID') or None
     if account is not None and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,63}',account):raise HTTPException(503,'Owner account unavailable')
     raw_body=await bounded_body(request,256)
     try:body=json.loads(raw_body) if raw_body else {}
@@ -246,7 +246,7 @@ def get_session(request:Request):
                 session_token=bounded_cookie;current['expiresAt']=expires
     recovery=None if current else ('DEVICE_REVOKED' if device_status=='REVOKED' else
         'DEVICE_EXPIRED' if device_status=='EXPIRED' else 'TRUST_REQUIRED')
-    response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),
+    response=JSONResponse({'protocol':'orqevia.interface.v1','authenticated':bool(current),
         'recovery':recovery,**(current or {})},headers={'Cache-Control':'no-store'})
     if clear_credentials:
         response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
@@ -312,7 +312,7 @@ async def upload(request:Request):
     raw=await bounded_body(request,1024*1024)
     try:text=raw.decode('utf-8')
     except UnicodeError:raise HTTPException(415,'UTF-8 required') from None
-    task='upload-'+uuid.uuid4().hex;factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+    task='upload-'+uuid.uuid4().hex;factory=ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'artifacts')
     try:meta=factory.create(kind='json' if suffix=='.json' else 'markdown',content=text,task_id=task,creator=current['clientId'],provenance='Client-provided untrusted upload')
     except ValueError:raise HTTPException(422,'Upload validation failed') from None
     with node.db_connect() as db:
@@ -338,10 +338,10 @@ class PWASessionMiddleware(BaseHTTPMiddleware):
                     raise HTTPException(403,'Origin rejected')
                 if request.method=='OPTIONS':raise HTTPException(405,'Method unavailable')
                 if cookie_client:
-                    if any(x in request.headers for x in ('authorization','x-client-id','x-jarvis-client-id')):raise HTTPException(400,'Caller identity headers forbidden')
+                    if any(x in request.headers for x in ('authorization','x-client-id','x-orqevia-client-id')):raise HTTPException(400,'Caller identity headers forbidden')
                     current=require_session(request);client=current['clientId']
                     headers=list(request.scope['headers'])
-                    headers.extend([(b'authorization',('Bearer '+internal_token(client)).encode()),(b'x-jarvis-client-id',client.encode())])
+                    headers.extend([(b'authorization',('Bearer '+internal_token(client)).encode()),(b'x-orqevia-client-id',client.encode())])
                     request.scope['headers']=headers
                     if request.method=='POST' and path=='/interface/v1/objectives':
                         body=json.loads(await bounded_body(request,128*1024))
@@ -350,7 +350,7 @@ class PWASessionMiddleware(BaseHTTPMiddleware):
                         if refs:
                             from .artifact_factory import ArtifactFactory
                             from . import interface_node as node
-                            factory=ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR','/data'))/'artifacts')
+                            factory=ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'artifacts')
                             context=body.get('context','')
                             if not isinstance(context,str):raise HTTPException(422,'Invalid context')
                             for ref in refs:

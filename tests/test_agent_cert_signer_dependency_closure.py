@@ -126,8 +126,8 @@ if mode == 'default-path-denied':
 else:
     exec(compile(check, '<fixed-workflow-import-check>', 'exec'))
     from app.compute_queue_api import queue
-    assert pathlib.Path(queue.db_path).resolve() == pathlib.Path(os.environ['PRIME_COMPUTE_QUEUE_DB']).resolve()
-    assert pathlib.Path(os.environ['PRIME_DATA_DIR']).resolve() in pathlib.Path(queue.db_path).resolve().parents
+    assert pathlib.Path(queue.db_path).resolve() == pathlib.Path(os.environ['ORQEVIA_COMPUTE_QUEUE_DB']).resolve()
+    assert pathlib.Path(os.environ['ORQEVIA_DATA_DIR']).resolve() in pathlib.Path(queue.db_path).resolve().parents
     assert threading.active_count() == 1
 print(json.dumps({'scope': 'INSTALLED_CLOSURE_ONLY_NOT_LINUX_CI', 'distributions': allowed}, sort_keys=True))
 '''
@@ -135,12 +135,12 @@ print(json.dumps({'scope': 'INSTALLED_CLOSURE_ONLY_NOT_LINUX_CI', 'distributions
 
 def probe(tmp_path, pins, check, mode='scratch'):
     environment = {name: value for name, value in os.environ.items()
-                   if not name.startswith(('PRIME_', 'ORQEVIA_', 'AZURE_', 'ACTIONS_', 'HF_', 'OPENAI_'))
+                   if not name.startswith(('ORQEVIA_', 'ORQEVIA_', 'AZURE_', 'ACTIONS_', 'HF_', 'OPENAI_'))
                    and name not in ('PYTHONPATH', 'PYTEST_ADDOPTS')}
     environment['PYTHONDONTWRITEBYTECODE'] = '1'
     if mode == 'scratch':
-        environment['PRIME_DATA_DIR'] = str(tmp_path / 'synthetic-runner-temp' / 'prime-verifier-domains')
-        environment['PRIME_COMPUTE_QUEUE_DB'] = str(Path(environment['PRIME_DATA_DIR']) / 'compute-queue.db')
+        environment['ORQEVIA_DATA_DIR'] = str(tmp_path / 'synthetic-runner-temp' / 'prime-verifier-domains')
+        environment['ORQEVIA_COMPUTE_QUEUE_DB'] = str(Path(environment['ORQEVIA_DATA_DIR']) / 'compute-queue.db')
     import json
     result = subprocess.run([sys.executable, '-B', '-c', PROBE,
         json.dumps([pins, check, mode])], cwd=ROOT, env=environment,
@@ -168,8 +168,8 @@ def test_workflow_uses_only_scratch_state_before_signing():
     assert declared_pins() == EXPECTED_PINS
     for name in (CHECK_NAME, 'Sign only fixed independently reviewed admitted cases'):
         body = step(name)
-        assert 'PRIME_DATA_DIR: ' + SCRATCH_DATA in body
-        assert 'PRIME_COMPUTE_QUEUE_DB: ' + SCRATCH_DATA + '/compute-queue.db' in body
+        assert 'ORQEVIA_DATA_DIR: ' + SCRATCH_DATA in body
+        assert 'ORQEVIA_COMPUTE_QUEUE_DB: ' + SCRATCH_DATA + '/compute-queue.db' in body
     source = WORKFLOW.read_text()
     assert source.index(CHECK_NAME) < source.index('Protected Azure sign, public verification, tamper rejection')
     assert 'requirements.txt' not in source and '[standard]' not in source

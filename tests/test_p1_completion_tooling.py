@@ -32,7 +32,7 @@ class P1CompletionToolingTests(unittest.TestCase):
         self.assertIn("docker cp", runner)
         self.assertIn("--allow-docker-internal", runner)
         self.assertIn("local-model-benchmark.json", runner)
-        self.assertIn('("PRIME_FAST_MODEL", "PRIME_DEEP_MODEL")', source)
+        self.assertIn('("ORQEVIA_FAST_MODEL", "ORQEVIA_DEEP_MODEL")', source)
         self.assertIn('"embed" not in model.lower()', source)
         self.assertIn('except (urllib.error.URLError, TimeoutError)', source)
 

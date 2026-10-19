@@ -23,7 +23,7 @@ def _trusted_authorization(request: Request) -> str:
     origin = request.headers.get("origin")
     if origin and urlsplit(origin).hostname not in LOCAL_HOSTS:
         raise HTTPException(status_code=403, detail="Cross-origin Control Surface access is denied")
-    token = os.getenv("PRIME_SPINE_TOKEN", "").strip()
+    token = os.getenv("ORQEVIA_SPINE_TOKEN", "").strip()
     if not token:
         raise HTTPException(status_code=503, detail="Trusted local access is not configured")
     return f"Bearer {token}"

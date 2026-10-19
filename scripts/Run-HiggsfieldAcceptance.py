@@ -61,7 +61,7 @@ def owner_headers() -> dict[str, str]:
         ).stdout
     )
     values = dict(item.split("=", 1) for item in environment)
-    return {"Authorization": "Bearer " + values["PRIME_SPINE_TOKEN"]}
+    return {"Authorization": "Bearer " + values["ORQEVIA_SPINE_TOKEN"]}
 
 
 def request(path: str, *, body: dict | None = None, headers: dict[str, str]):

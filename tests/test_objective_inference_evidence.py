@@ -13,8 +13,8 @@ from app.outcome_metrics import OutcomeMetrics
 
 @pytest.fixture
 def evidence(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_SPINE_TOKEN', 'fixture-inference-owner')
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-inference-owner')
     monkeypatch.setattr(compute_catalog, 'load_catalog', lambda: [
         {'id': 'hf-primary', 'model': 'organization/model:provider'},
         {'id': 'hf-alternate', 'model': 'organization/alternate:provider'},
@@ -67,7 +67,7 @@ def test_selected_route_is_distinct_bound_and_digestible(evidence):
 
 
 def test_absent_store_is_unknown_and_read_does_not_create(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
     job = {'id': str(uuid.uuid4()), 'agent': 'a01', 'status': 'running'}
     result = objective_api.inference_attempt_projection([job])
     assert result['status'] == 'UNAVAILABLE' and result['attempts'] == []

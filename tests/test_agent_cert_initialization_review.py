@@ -26,8 +26,8 @@ RUNTIME = {'host_id': 'ABEX', 'version': 'fixture-v1', 'source_revision': SOURCE
 
 @pytest.fixture(autouse=True)
 def isolated_imports(monkeypatch, tmp_path):
-    monkeypatch.setenv('PRIME_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
 
 
 def stamp(seconds):

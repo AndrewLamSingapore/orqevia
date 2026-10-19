@@ -35,7 +35,7 @@ and is not required for the current geospatial/RAG baseline.
 ## Run
 
 ```
-PRIME_BASE_URL=http://127.0.0.1:8000 uvicorn app.orqevia.ui:app --port 8100
+ORQEVIA_BASE_URL=http://127.0.0.1:8000 uvicorn app.orqevia.ui:app --port 8100
 ```
 
 Set `ORQEVIA_DATA_DIR` to an external writable directory (defaults to

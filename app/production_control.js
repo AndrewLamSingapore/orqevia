@@ -97,7 +97,7 @@ el('pair-phone').onclick=async()=>{
   clearTimeout(pairingTimer);
   el('pair-code').textContent='Preparing…';
   try {
-    const response=await fetch('/control/api/pwa-pairing',{method:'POST',headers:{'X-Jarvis-PWA':'1','Content-Type':'application/json'},body:JSON.stringify({role:el('pair-role').value})});
+    const response=await fetch('/control/api/pwa-pairing',{method:'POST',headers:{'X-ORQEVIA-PWA':'1','Content-Type':'application/json'},body:JSON.stringify({role:el('pair-role').value})});
     if(!response.ok) throw new Error('Unavailable');
     const value=await response.json();
     el('pair-code').textContent=value.role+' · '+value.code;

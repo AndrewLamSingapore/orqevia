@@ -5,15 +5,15 @@ from fastapi.responses import HTMLResponse
 from fastapi.testclient import TestClient
 
 ORIGIN='https://192.168.1.23:8443'
-HEADERS={'Origin':ORIGIN,'X-Jarvis-PWA':'1'}
+HEADERS={'Origin':ORIGIN,'X-ORQEVIA-PWA':'1'}
 
 @pytest.fixture
 def setup(monkeypatch,tmp_path):
     root=tmp_path/'pwa-open';root.mkdir()
-    monkeypatch.setenv('PRIME_DATA_DIR',str(root));monkeypatch.setenv('PRIME_PWA_ORIGIN',ORIGIN)
-    monkeypatch.delenv('PRIME_PWA_ADDITIONAL_ORIGINS',raising=False)
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-owner-credential-never-production')
-    monkeypatch.delenv('PRIME_PWA_ACCESS_MODE',raising=False)  # default must be open
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(root));monkeypatch.setenv('ORQEVIA_PWA_ORIGIN',ORIGIN)
+    monkeypatch.delenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',raising=False)
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner-credential-never-production')
+    monkeypatch.delenv('ORQEVIA_PWA_ACCESS_MODE',raising=False)  # default must be open
     from app import pwa_sessions as pwa
     app=FastAPI();app.include_router(pwa.router)
     @app.get('/pwa/',response_class=HTMLResponse)
@@ -26,7 +26,7 @@ def test_default_open_mode_admits_without_any_code(setup):
     root,pwa,app=setup
     with TestClient(app,base_url=ORIGIN) as client:
         state=client.get('/pwa/api/session').json()
-        assert state['protocol']=='jarvis.interface.v1'
+        assert state['protocol']=='orqevia.interface.v1'
         assert state['authenticated'] is True and state['role']=='OWNER' and state['recovery'] is None
         cookie=client.cookies.get(pwa.COOKIE);device=client.cookies.get(pwa.DEVICE_COOKIE)
         assert cookie and device
@@ -46,14 +46,14 @@ def test_open_mode_still_rejects_cross_origin_and_write_csrf(setup):
 
 def test_pairing_mode_can_still_be_selected(setup,monkeypatch):
     root,pwa,app=setup
-    monkeypatch.setenv('PRIME_PWA_ACCESS_MODE','pairing')
+    monkeypatch.setenv('ORQEVIA_PWA_ACCESS_MODE','pairing')
     with TestClient(app,base_url=ORIGIN) as client:
         state=client.get('/pwa/api/session').json()
         assert state['authenticated'] is False and state['recovery']=='TRUST_REQUIRED'
 
 def test_invalid_auto_role_fails_closed_to_gate(setup,monkeypatch):
     root,pwa,app=setup
-    monkeypatch.setenv('PRIME_PWA_AUTO_ROLE','SUPERUSER')
+    monkeypatch.setenv('ORQEVIA_PWA_AUTO_ROLE','SUPERUSER')
     with TestClient(app,base_url=ORIGIN) as client:
         state=client.get('/pwa/api/session').json()
         assert state['authenticated'] is False and state['recovery']=='TRUST_REQUIRED'

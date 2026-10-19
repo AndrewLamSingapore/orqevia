@@ -22,7 +22,7 @@ test("an objective is submitted through the existing session boundary and reache
     objective: "Verify the ORQEVIA browser workflow",
     uploaded_artifact_ids: [],
   });
-  expect(observations.submitHeaders["x-jarvis-pwa"]).toBe("1");
+  expect(observations.submitHeaders["x-orqevia-pwa"]).toBe("1");
   expect(observations.submitHeaders["idempotency-key"]).toMatch(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/);
   expect(observations.submitHeaders.authorization).toBeUndefined();
   expect(observations.submitHeaders.cookie).toBeUndefined();

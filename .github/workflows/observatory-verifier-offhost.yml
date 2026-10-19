@@ -37,10 +37,10 @@ jobs:
           OLLAMA_IMAGE: ollama/ollama:latest
           CADDY_IMAGE: caddy:latest
           CLOUDFLARED_IMAGE: cloudflare/cloudflared:latest
-          PRIME_AGENT_CERT_AZURE_ES256_PIN_HOST_FILE: ${{ runner.temp }}/observatory-verifier/public-pin.json
+          ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_HOST_FILE: ${{ runner.temp }}/observatory-verifier/public-pin.json
         shell: bash
         run: |
-          export PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256="$(cat "$RUNNER_TEMP/observatory-verifier/pin.sha256")"
+          export ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256="$(cat "$RUNNER_TEMP/observatory-verifier/pin.sha256")"
           docker compose -f docker-compose.yml -f deploy/observatory-verifier-pin.override.yml config --format json > "$RUNNER_TEMP/observatory-verifier/compose.json"
           python - <<'PY'
           import json
@@ -50,9 +50,9 @@ jobs:
 
           config = json.loads((Path(os.environ["RUNNER_TEMP"]) / "observatory-verifier" / "compose.json").read_text())
           prime = config["services"]["backend"]
-          assert prime["environment"]["PRIME_AGENT_CERT_AZURE_ES256_ENABLED"] == "1"
-          assert prime["environment"]["PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE"] == "/run/prime-cert-verifier-pin.json"
-          mounts = [item for item in prime["volumes"] if item["target"] == "/run/prime-cert-verifier-pin.json"]
+          assert prime["environment"]["ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED"] == "1"
+          assert prime["environment"]["ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE"] == "/run/orqevia-cert-verifier-pin.json"
+          mounts = [item for item in prime["volumes"] if item["target"] == "/run/orqevia-cert-verifier-pin.json"]
           assert len(mounts) == 1 and mounts[0]["read_only"] is True
           assert mounts[0].get("bind", {}).get("create_host_path") is not True
           override = yaml.safe_load(Path("deploy/observatory-verifier-pin.override.yml").read_text())
@@ -60,20 +60,20 @@ jobs:
           assert len(requested) == 1 and requested[0]["bind"]["create_host_path"] is False
           PY
       - name: Build disposable runtime image with only reviewed public pin
-        run: docker build --tag orqevia:observatory-verifier-candidate --build-arg PRIME_RUNTIME_REVISION="$GITHUB_SHA" .
+        run: docker build --tag orqevia:observatory-verifier-candidate --build-arg ORQEVIA_RUNTIME_REVISION="$GITHUB_SHA" .
       - name: Probe packaged authenticated route with synthetic signed record
         shell: bash
         run: |
           set -euo pipefail
           pin_sha256="$(cat "$RUNNER_TEMP/observatory-verifier/pin.sha256")"
           docker run -d --name orqevia-observatory-verifier-ci \
-            --env PRIME_DATA_DIR=/data \
-            --env PRIME_SPINE_TOKEN=fixture-owner-secret \
-            --env PRIME_AGENT_CERT_AZURE_ES256_ENABLED=1 \
-            --env PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE=/run/prime-cert-verifier-pin.json \
-            --env PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256="$pin_sha256" \
+            --env ORQEVIA_DATA_DIR=/data \
+            --env ORQEVIA_SPINE_TOKEN=fixture-owner-secret \
+            --env ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED=1 \
+            --env ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE=/run/orqevia-cert-verifier-pin.json \
+            --env ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256="$pin_sha256" \
             --mount "type=bind,source=$RUNNER_TEMP/observatory-verifier/data,target=/data" \
-            --mount "type=bind,source=$RUNNER_TEMP/observatory-verifier/public-pin.json,target=/run/prime-cert-verifier-pin.json,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/observatory-verifier/public-pin.json,target=/run/orqevia-cert-verifier-pin.json,readonly" \
             --mount "type=bind,source=$GITHUB_WORKSPACE/scripts/observatory_verifier_image_smoke.py,target=/run/observatory-smoke.py,readonly" \
             --entrypoint python orqevia:observatory-verifier-candidate \
             -m uvicorn app.production_entry:app --host 127.0.0.1 --port 8000 \

@@ -12,7 +12,7 @@ def now()->str:return datetime.now(timezone.utc).isoformat()
 
 class EventFabric:
     def __init__(self,path:str|None=None,memory:MemoryStore|None=None):
-        data=os.getenv("PRIME_DATA_DIR","/data").strip() or "/data";self.path=path or str(Path(data)/"portfolio-events.db");self.memory=memory or MemoryStore(str(Path(self.path).with_name("jarvis-memory.db")));Path(self.path).parent.mkdir(parents=True,exist_ok=True)
+        data=os.getenv("ORQEVIA_DATA_DIR","/data").strip() or "/data";self.path=path or str(Path(data)/"portfolio-events.db");self.memory=memory or MemoryStore(str(Path(self.path).with_name("orqevia-memory.db")));Path(self.path).parent.mkdir(parents=True,exist_ok=True)
         with self.connect() as db:
             db.executescript("""
         create table if not exists portfolio_events(event_id text primary key,schema_version text not null,event_type text not null,source text not null,occurred_at text not null,evidence_level text not null,correlation_id text not null,subject_id text,provenance_json text not null,payload_json text not null,received_at text not null);

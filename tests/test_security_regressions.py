@@ -4,7 +4,7 @@ import pytest
 
 
 def test_fact_parsing_preserves_semantics_without_recursive_regex(monkeypatch, tmp_path):
-    monkeypatch.setenv("PRIME_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
     from app.main import extract_fact, recall_key
 
     assert extract_fact("Remember my favorite city is Singapore.") == (

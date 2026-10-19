@@ -77,7 +77,7 @@ def _circuit(value, provider_id):
 
 def _read_lens(task_id, authorization):
     # An inspection of a missing store must not initialize application storage.
-    root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+    root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data'))
     if not (root / 'objectives.db').is_file() or not (root / 'evidence-lens.db').is_file():
         raise HTTPException(404, 'Objective evidence unavailable')
     from . import evidence_lens_api
@@ -88,7 +88,7 @@ def _lens(value, task_id, pairs, hf_ids, now):
     from .agent_registry import agent_record
     from .objective_api import _INFERENCE_CODES
     base = {'objective_id': task_id, 'verification': 'UNVERIFIED', 'time_freshness': 'UNKNOWN',
-            'source': 'PRIME_OBJECTIVE_STORE', 'independent_signature': 'UNVERIFIED'}
+            'source': 'ORQEVIA_OBJECTIVE_STORE', 'independent_signature': 'UNVERIFIED'}
     if (not isinstance(value, dict) or value.get('verification') != 'UNVERIFIED' or
             value.get('record_id') != f"objective:{task_id}:r{value.get('revision', 0)}"):
         raise ValueError()
@@ -100,9 +100,9 @@ def _lens(value, task_id, pairs, hf_ids, now):
     revision = value.get('revision')
     if (type(revision) is not int or not 0 <= revision <= 10**9 or value.get('task_id') != task_id or
             value.get('integrity') != 'VALID' or value.get('currentness') not in {'CURRENT', 'STALE'} or
-            value.get('source') != 'PRIME_OBJECTIVE_STORE' or not isinstance(observed, dict) or
+            value.get('source') != 'ORQEVIA_OBJECTIVE_STORE' or not isinstance(observed, dict) or
             observed.get('task_id') != task_id or observed.get('revision') != revision or
-            not isinstance(proof, dict) or proof.get('producer') != 'PRIME_OBJECTIVE_STORE' or
+            not isinstance(proof, dict) or proof.get('producer') != 'ORQEVIA_OBJECTIVE_STORE' or
             proof.get('currentness_basis') != 'OBJECTIVE_SNAPSHOT_EQUALITY' or
             proof.get('time_freshness') != 'UNKNOWN' or
             not {'independent_claim_verification', 'production_acceptance',
@@ -202,7 +202,7 @@ def inspect_hf(authorization, task_id=None):
         'verification': 'UNVERIFIED', 'providers': [],
         'provenance': {'registration': 'MODEL_CATALOG', 'readiness': 'LOCAL_CREDENTIAL_PREFLIGHT',
                        'circuit': 'PROCESS_LOCAL_PROVIDER_ADMISSION',
-                       'objective_evidence': 'PRIME_OBJECTIVE_STORE_AND_EVIDENCE_LENS'},
+                       'objective_evidence': 'ORQEVIA_OBJECTIVE_STORE_AND_EVIDENCE_LENS'},
         'freshness': {'inspection': 'CURRENT_READ', 'upstream_provider': 'UNKNOWN',
                       'objective_evidence': 'UNKNOWN_NO_ADOPTED_TIME_FRESHNESS_POLICY'}}
     pairs, hf_ids = set(), set()

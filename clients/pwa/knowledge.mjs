@@ -5,7 +5,7 @@ if(typeof document!=='undefined'){
  const make=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);return n;};
  function state(text,error=false){$('knowledge-state').textContent=text;$('knowledge-state').classList.toggle('error',error);}
  async function api(path,{body,raw,filename,timeout=30000}={}){
-  const headers={'Accept':'application/json','X-JARVIS-PWA':'1'};
+  const headers={'Accept':'application/json','X-ORQEVIA-PWA':'1'};
   if(filename)headers['X-Document-Name']=encodeURIComponent(filename);
   headers['Content-Type']=raw?'application/octet-stream':'application/json';
   const r=await fetch('/api/orqevia/knowledge/'+path,{method:body!==undefined||raw?'POST':'GET',body:raw|| (body!==undefined?JSON.stringify(body):undefined),headers,credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(timeout)});

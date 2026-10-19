@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 # The composed runtime initializes its SQLite paths at import time. CI runners
 # cannot write /data; keep this test isolated without changing production defaults.
 _IMPORT_DATA = tempfile.TemporaryDirectory()
-os.environ.setdefault("PRIME_DATA_DIR", _IMPORT_DATA.name)
+os.environ.setdefault("ORQEVIA_DATA_DIR", _IMPORT_DATA.name)
 
 from app import control_surface, spine_api
 app = FastAPI(); app.include_router(control_surface.router)
@@ -30,8 +30,8 @@ class P1ApiTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.original = spine_api.spine
         spine_api.spine = StableSpine(SpineStore(os.path.join(self.temp.name, "spine.db")))
-        self.old_token = os.environ.get("PRIME_SPINE_TOKEN")
-        os.environ["PRIME_SPINE_TOKEN"] = "p1-test-token"
+        self.old_token = os.environ.get("ORQEVIA_SPINE_TOKEN")
+        os.environ["ORQEVIA_SPINE_TOKEN"] = "p1-test-token"
         self.client = TestClient(app, base_url="http://127.0.0.1")
         spine_api.spine.evaluate(envelope(), {"source": "local_ai", "reasoning_route": ["local_ai", "confidence_gate"]})
 
@@ -39,9 +39,9 @@ class P1ApiTests(unittest.TestCase):
         self.client.close()
         spine_api.spine = self.original
         if self.old_token is None:
-            os.environ.pop("PRIME_SPINE_TOKEN", None)
+            os.environ.pop("ORQEVIA_SPINE_TOKEN", None)
         else:
-            os.environ["PRIME_SPINE_TOKEN"] = self.old_token
+            os.environ["ORQEVIA_SPINE_TOKEN"] = self.old_token
 
     def test_trusted_approval_card_modify_and_audit_trace(self):
         cards = self.client.get("/api/control-surface/trusted/approvals").json()["approvals"]

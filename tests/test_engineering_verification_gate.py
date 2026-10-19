@@ -17,7 +17,7 @@ def valid_receipt(path):
 
 
 def test_evidence_bound_verifier_receipt_is_accepted(tmp_path,monkeypatch):
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path/'data'))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path/'data'))
     outcome=build_verify(root=tmp_path/'run',objective='fixture',builder=lambda *_:'candidate',
         verifier=valid_receipt,max_attempts=1)
     assert outcome['state']=='VERIFIED_CANDIDATE'
@@ -35,7 +35,7 @@ def test_evidence_bound_verifier_receipt_is_accepted(tmp_path,monkeypatch):
      'candidate_sha256':None,'checks':[{'name':'x','status':'SKIPPED','evidence_ref':'claim'}]},
 ])
 def test_fabricated_or_incomplete_verifier_success_fails_closed(tmp_path,monkeypatch,mutation):
-    monkeypatch.setenv('PRIME_DATA_DIR',str(tmp_path/'data'))
+    monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path/'data'))
     def verifier(path):
         value=dict(mutation)
         if value.get('candidate_sha256') is None:

@@ -41,8 +41,8 @@ def _sign(private, row):
 @pytest.fixture
 def bridge(tmp_path, monkeypatch):
     data_root = tmp_path / "data"
-    monkeypatch.setenv("PRIME_DATA_DIR", str(data_root))
-    monkeypatch.setenv("PRIME_COMPUTE_QUEUE_DB", str(data_root / "queue.db"))
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(data_root))
+    monkeypatch.setenv("ORQEVIA_COMPUTE_QUEUE_DB", str(data_root / "queue.db"))
     from app import production_entry as entry
 
     subject = data_root / "agent-certification" / "a17"
@@ -77,20 +77,20 @@ def bridge(tmp_path, monkeypatch):
                             encoding="utf-8")
 
     write_record(_sign(private, row))
-    monkeypatch.setenv("PRIME_SPINE_TOKEN", "fixture-owner-secret")
-    monkeypatch.setenv("PRIME_RUNTIME_REVISION", SOURCE)
-    monkeypatch.delenv("PRIME_INTERFACE_RUNTIME_REVISION", raising=False)
-    monkeypatch.delenv("PRIME_AGENT_CERT_AZURE_ES256_ENABLED", raising=False)
-    monkeypatch.delenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE", raising=False)
-    monkeypatch.delenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256", raising=False)
+    monkeypatch.setenv("ORQEVIA_SPINE_TOKEN", "fixture-owner-secret")
+    monkeypatch.setenv("ORQEVIA_RUNTIME_REVISION", SOURCE)
+    monkeypatch.delenv("ORQEVIA_INTERFACE_RUNTIME_REVISION", raising=False)
+    monkeypatch.delenv("ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED", raising=False)
+    monkeypatch.delenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE", raising=False)
+    monkeypatch.delenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256", raising=False)
     client = TestClient(entry.app, base_url="http://127.0.0.1:8000",
                         client=("127.0.0.1", 43000))
     client.headers.update({"Authorization": "Bearer fixture-owner-secret"})
 
     def enable():
-        monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_ENABLED", "1")
-        monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE", str(pin_path))
-        monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256",
+        monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED", "1")
+        monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE", str(pin_path))
+        monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256",
                            hashlib.sha256(pin_path.read_bytes()).hexdigest())
 
     return {"client": client, "row": row, "private": private, "pin_path": pin_path,
@@ -127,7 +127,7 @@ def test_optional_public_pin_exposes_only_signed_case_and_no_runtime_claims(brid
     assert _pin(bridge["private"])["jwk"]["x"] not in response.text
     assert client.get(ROUTE, headers={"Authorization": ""}).status_code == 401
     assert client.get(ROUTE, headers={"Host": "evil.example"}).status_code == 403
-    bridge["monkeypatch"].delenv("PRIME_SPINE_TOKEN")
+    bridge["monkeypatch"].delenv("ORQEVIA_SPINE_TOKEN")
     assert client.get(ROUTE).status_code == 503
 
 
@@ -141,12 +141,12 @@ def test_missing_malformed_or_untrusted_pin_remains_unconfigured(bridge):
         pin_path.write_text(json.dumps(_pin(bridge["private"])), encoding="utf-8")
         bridge["enable"]()
         if mutation == "missing-digest":
-            monkeypatch.delenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256")
+            monkeypatch.delenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256")
         elif mutation == "wrong-digest":
-            monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256", "0" * 64)
+            monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256", "0" * 64)
         elif mutation == "malformed":
             pin_path.write_text('{"key_id":"duplicate","key_id":"other"}', encoding="utf-8")
-            monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256",
+            monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256",
                                hashlib.sha256(pin_path.read_bytes()).hexdigest())
         elif mutation in {"private-field", "wrong-curve"}:
             pin = _pin(bridge["private"])
@@ -155,15 +155,15 @@ def test_missing_malformed_or_untrusted_pin_remains_unconfigured(bridge):
             else:
                 pin["jwk"]["crv"] = "P-384"
             pin_path.write_text(json.dumps(pin), encoding="utf-8")
-            monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256",
+            monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256",
                                hashlib.sha256(pin_path.read_bytes()).hexdigest())
         elif mutation == "missing-file":
-            monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE", str(pin_path.parent / "absent.json"))
+            monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE", str(pin_path.parent / "absent.json"))
         else:
             pin_inside_data = bridge["subject"] / "pin.json"
             pin_inside_data.write_bytes(json.dumps(_pin(bridge["private"])).encode())
-            monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_FILE", str(pin_inside_data))
-            monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256",
+            monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE", str(pin_inside_data))
+            monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256",
                                hashlib.sha256(pin_inside_data.read_bytes()).hexdigest())
         body = client.get(ROUTE).json()
         assert body["independent_verifier"] == "UNCONFIGURED", mutation
@@ -190,9 +190,9 @@ def test_tamper_source_staleness_and_key_rotation_reject_case(bridge):
     assert _agent(missing)["runtime_activation"] == "UNVERIFIED"
     bridge["subject"].joinpath("result.txt").write_bytes(b"synthetic independently reviewed execution")
 
-    bridge["monkeypatch"].setenv("PRIME_RUNTIME_REVISION", "b" * 40)
+    bridge["monkeypatch"].setenv("ORQEVIA_RUNTIME_REVISION", "b" * 40)
     assert _cases(client.get(ROUTE).json()) == []
-    bridge["monkeypatch"].setenv("PRIME_RUNTIME_REVISION", SOURCE)
+    bridge["monkeypatch"].setenv("ORQEVIA_RUNTIME_REVISION", SOURCE)
 
     now = datetime.now(timezone.utc)
     stale = {**row, "certified_at": (now - timedelta(days=2)).isoformat(),
@@ -205,7 +205,7 @@ def test_tamper_source_staleness_and_key_rotation_reject_case(bridge):
     replacement = ec.generate_private_key(ec.SECP256R1())
     pin_path = bridge["pin_path"]
     pin_path.write_text(json.dumps(_pin(replacement)), encoding="utf-8")
-    bridge["monkeypatch"].setenv("PRIME_AGENT_CERT_AZURE_ES256_PIN_SHA256",
+    bridge["monkeypatch"].setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256",
                                hashlib.sha256(pin_path.read_bytes()).hexdigest())
     body = client.get(ROUTE).json()
     assert body["independent_verifier"] == "CONFIGURED"
@@ -214,7 +214,7 @@ def test_tamper_source_staleness_and_key_rotation_reject_case(bridge):
 
 def test_baked_public_pin_is_exact_and_source_controlled(bridge):
     monkeypatch = bridge["monkeypatch"]
-    monkeypatch.setenv("PRIME_AGENT_CERT_AZURE_ES256_ENABLED", "1")
+    monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED", "1")
     body = bridge["client"].get(ROUTE).json()
     assert body["independent_verifier"] == "CONFIGURED"
     assert _cases(body) == []  # Synthetic key is not the reviewed Azure key.

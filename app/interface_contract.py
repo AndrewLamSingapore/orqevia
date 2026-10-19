@@ -24,7 +24,7 @@ def authorize(request: Request, capability: str):
     if request.url.scheme != 'https':
         raise HTTPException(426, 'HTTPS required')
     client = request.headers.get('x-client-id')
-    dell_client = request.headers.get('x-jarvis-client-id')
+    dell_client = request.headers.get('x-orqevia-client-id')
     if client is not None and dell_client is not None and client != dell_client:
         raise HTTPException(400, 'Conflicting client identity headers')
     client = dell_client if dell_client is not None else client
@@ -44,32 +44,32 @@ def authorize(request: Request, capability: str):
 @router.get('/identity')
 def identity(request: Request):
     authorize(request, 'identity.read')
-    host_id = os.getenv('PRIME_INTERFACE_HOST_ID', '').strip()
+    host_id = os.getenv('ORQEVIA_INTERFACE_HOST_ID', '').strip()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}', host_id):
         raise HTTPException(503, 'Host identity is not configured')
-    pin = os.getenv('PRIME_INTERFACE_SPKI_SHA256', '')
+    pin = os.getenv('ORQEVIA_INTERFACE_SPKI_SHA256', '')
     if not re.fullmatch(r'[0-9a-fA-F]{64}', pin):
         raise HTTPException(503, 'Host certificate pin is not configured')
-    version = os.getenv('PRIME_INTERFACE_RUNTIME_VERSION', 'UNKNOWN')
+    version = os.getenv('ORQEVIA_INTERFACE_RUNTIME_VERSION', 'UNKNOWN')
     if not re.fullmatch(r'[A-Za-z0-9._+-]{1,96}', version):
         version = 'UNKNOWN'
-    candidate_status = os.getenv('PRIME_INTERFACE_CANDIDATE_STATUS', 'UNKNOWN')
+    candidate_status = os.getenv('ORQEVIA_INTERFACE_CANDIDATE_STATUS', 'UNKNOWN')
     if candidate_status not in {'UNKNOWN', 'ISOLATED_CANDIDATE', 'QUALIFICATION_RUNTIME', 'PRODUCTION'}:
         candidate_status = 'UNKNOWN'
-    revision = os.getenv('PRIME_INTERFACE_RUNTIME_REVISION', 'UNKNOWN').strip().lower()
+    revision = os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION', 'UNKNOWN').strip().lower()
     if revision != 'UNKNOWN' and not re.fullmatch(r'[0-9a-f]{40}', revision):
         revision = 'UNKNOWN'
-    result = {'contract': 'jarvis.interface.v1', 'host_id': host_id,
-            'role': 'AUTHORITATIVE_PRIME_HOST', 'client_role': 'THIN_CLIENT',
+    result = {'contract': 'orqevia.interface.v1', 'host_id': host_id,
+            'role': 'AUTHORITATIVE_ORQEVIA_HOST', 'client_role': 'THIN_CLIENT',
             'runtime_version': version, 'runtime_revision': revision,
             'candidate_status': candidate_status,
             'tls_spki_sha256': pin.lower(), 'transport': 'HTTPS',
             'pin_verification': 'Client must independently verify the TLS peer against its adopted pin'}
-    if request.headers.get('x-jarvis-client-id') is not None:
-        public_key = os.getenv('PRIME_INTERFACE_PUBLIC_KEY', '')
+    if request.headers.get('x-orqevia-client-id') is not None:
+        public_key = os.getenv('ORQEVIA_INTERFACE_PUBLIC_KEY', '')
         if not public_key or len(public_key) > 8192 or 'PRIVATE KEY' in public_key:
             raise HTTPException(503, 'Public identity key is not configured')
-        canonical = {'hostname': result['host_id'], 'role': 'AUTHORITATIVE_PRIME',
+        canonical = {'hostname': result['host_id'], 'role': 'AUTHORITATIVE_ORQEVIA',
                      'protocolVersion': '1', 'publicKey': public_key}
         result.update(canonical)
         result['identity_sha256'] = hashlib.sha256(json.dumps(canonical, ensure_ascii=False,
@@ -92,7 +92,7 @@ def telemetry(request: Request):
 
 
 def task_wire(value, request, task_id=None):
-    if request.headers.get('x-jarvis-client-id') is None:
+    if request.headers.get('x-orqevia-client-id') is None:
         return value
     result = dict(value)
     result['taskId'] = value.get('task_id', value.get('id', task_id or ''))
@@ -181,7 +181,7 @@ def events(task_id: str, request: Request):
     payload = task_wire(payload, request, task_id)
     raw = json.dumps(payload, sort_keys=True, separators=(',', ':'))
     cursor = hashlib.sha256(raw.encode()).hexdigest()
-    event_type = '' if request.headers.get('x-jarvis-client-id') is not None else 'event: task.status\n'
+    event_type = '' if request.headers.get('x-orqevia-client-id') is not None else 'event: task.status\n'
     frame = '' if request.headers.get('last-event-id') == cursor else f'id: {cursor}\n{event_type}data: {raw}\n\n'
     return StreamingResponse(iter([frame]), media_type='text/event-stream',
                              headers={'Cache-Control': 'no-store', 'X-Event-Mode': 'bounded-snapshot'})
@@ -200,7 +200,7 @@ def artifacts(task_id: str, request: Request, offset: int = 0, limit: int = 100)
     if status.get('state') in {'COMPLETED', 'COMPLETED_WITH_FAILURES'}:
         latest=node.create_task_artifact(task_id, node.owner_transport())
     else:latest=None
-    factory = ArtifactFactory(Path(os.getenv('PRIME_DATA_DIR', '/data')) / 'artifacts')
+    factory = ArtifactFactory(Path(os.getenv('ORQEVIA_DATA_DIR', '/data')) / 'artifacts')
     items = []
     # Only application-owned, integrity-verified metadata is published. No paths,
     # raw prompts, other-client artifacts or process-wide records are returned.
@@ -214,7 +214,7 @@ def artifacts(task_id: str, request: Request, offset: int = 0, limit: int = 100)
             if not publishable_task_artifact(metadata,raw):continue
             items.append({key: metadata[key] for key in ('artifact_id', 'task_id', 'type', 'sha256', 'bytes', 'validation_state')}
                 | {'runtime_revision':metadata.get('runtime_revision','UNKNOWN'),'provenance':'ARTIFACT_STORE'})
-    if request.headers.get('x-jarvis-client-id') is not None:
+    if request.headers.get('x-orqevia-client-id') is not None:
         items = [dict(item, artifactId=item['artifact_id'], taskId=item['task_id'],
                       status=item['validation_state']) for item in items]
     artifact_metadata=None if latest is None else {

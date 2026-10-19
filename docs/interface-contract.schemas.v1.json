@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "JARVIS Interface v1 wire schemas",
-  "protocol": "jarvis.interface.v1",
+  "protocol": "orqevia.interface.v1",
   "$defs": {
     "ObjectiveRequest": {
       "properties": {
@@ -52,14 +52,14 @@
       "type": "object",
       "properties": {
         "contract": {
-          "const": "jarvis.interface.v1"
+          "const": "orqevia.interface.v1"
         },
         "host_id": {
           "type": "string",
           "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
         },
         "role": {
-          "const": "AUTHORITATIVE_PRIME_HOST"
+          "const": "AUTHORITATIVE_ORQEVIA_HOST"
         },
         "client_role": {
           "const": "THIN_CLIENT"
@@ -271,7 +271,7 @@
       "type": "object",
       "properties": {
         "protocol": {
-          "const": "jarvis.interface.v1"
+          "const": "orqevia.interface.v1"
         },
         "error": {
           "type": "object",

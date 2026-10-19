@@ -18,7 +18,7 @@ _proof_lock=threading.Lock()
 def configuration(request, *, version=1):
     if request.url.scheme!='https' or not request.client or request.client.host!='192.168.1.17':raise HTTPException(404)
     try:
-        local=Path(os.environ['PRIME_DATA_DIR']).resolve().parent
+        local=Path(os.environ['ORQEVIA_DATA_DIR']).resolve().parent
         filename={1:'product-handoff.json',2:'product-handoff-v2.json'}[version]
         config=json.loads((local/filename).read_text())
         expiry=config['expires_at'];issued=config['issued_at']
@@ -72,7 +72,7 @@ async def proof(request:Request):
     if any(value[k] is not True for k in ('identity_pass','tls_pass','health_pass','reconnect_pass','idempotency_pass')):raise HTTPException(422)
     if not all(isinstance(value[k],str) and 1<=len(value[k])<=128 for k in ('task_id','artifact_id')):raise HTTPException(422)
     own_task(value['task_id'],client)
-    try:metadata,content=ArtifactFactory(Path(os.environ['PRIME_DATA_DIR'])/'artifacts').retrieve(value['artifact_id'])
+    try:metadata,content=ArtifactFactory(Path(os.environ['ORQEVIA_DATA_DIR'])/'artifacts').retrieve(value['artifact_id'])
     except (ValueError,KeyError,OSError):raise HTTPException(404) from None
     actual=hashlib.sha256(content).hexdigest()
     if metadata.get('task_id')!=value['task_id'] or any(value[k]!=actual for k in ('sha256','download_sha256','readback_sha256')):raise HTTPException(422)

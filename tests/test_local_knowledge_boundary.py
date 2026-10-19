@@ -37,7 +37,7 @@ def test_private_service_requires_existing_service_token_and_exact_owner(monkeyp
 
 def test_private_bridge_uses_server_owner_binding_and_does_not_forward_cookies(monkeypatch):
     from app import local_knowledge_bridge as bridge
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-existing-authority-token')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-existing-authority-token')
     monkeypatch.setattr(bridge.existing,'access',lambda req,mutation: 'pwa:fixture')
     monkeypatch.setattr(bridge.existing.pwa_sessions,'require_session',lambda req:{'ownerAccountId':'owner:fixture'})
     recorded=[]
@@ -60,18 +60,18 @@ def test_private_bridge_uses_server_owner_binding_and_does_not_forward_cookies(m
 def test_private_bridge_denies_member_and_anonymous_even_for_catalogue(monkeypatch):
     from app import local_knowledge_bridge as bridge
     from app import orqevia_bridge as existing
-    monkeypatch.setenv('PRIME_PWA_ORIGIN','https://abex.test')
+    monkeypatch.setenv('ORQEVIA_PWA_ORIGIN','https://abex.test')
     app=FastAPI();app.include_router(bridge.router)
     anon=TestClient(app,base_url='https://abex.test')
     assert anon.get('/api/orqevia/knowledge/documents').status_code==401
     monkeypatch.setattr(existing.pwa_sessions,'require_session',lambda req:{'clientId':'pwa:member','role':'MEMBER','ownerAccountId':'owner:fixture'})
     member=TestClient(app,base_url='https://abex.test',cookies={existing.pwa_sessions.COOKIE:'fixture'})
     assert member.get('/api/orqevia/knowledge/documents').status_code==403
-    assert member.post('/api/orqevia/knowledge/answer',json={'question':'private'},headers={'Origin':'https://abex.test','X-JARVIS-PWA':'1'}).status_code==403
+    assert member.post('/api/orqevia/knowledge/answer',json={'question':'private'},headers={'Origin':'https://abex.test','X-ORQEVIA-PWA':'1'}).status_code==403
 
 def test_private_bridge_rejects_caller_fabricated_geospatial_evidence(monkeypatch):
     from app import local_knowledge_bridge as bridge
-    monkeypatch.setenv('PRIME_SPINE_TOKEN','fixture-existing-authority-token')
+    monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-existing-authority-token')
     monkeypatch.setattr(bridge,'identity',lambda req:('fixture','f'*64))
     app=FastAPI();app.include_router(bridge.router)
     client=TestClient(app,base_url='https://abex.test')

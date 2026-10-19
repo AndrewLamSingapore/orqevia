@@ -41,9 +41,9 @@ class ContinuationTests(WorkflowObjectiveIntegrationTests):
         assert self.follow(task,idempotency_key='new').status_code==409
     def test_shared_owner_continuation(self):
         import os
-        policies=json.loads(os.environ['PRIME_INTERFACE_CLIENTS_JSON'])
+        policies=json.loads(os.environ['ORQEVIA_INTERFACE_CLIENTS_JSON'])
         for policy in policies.values():policy['owner_account_id']='owner-fixture'
-        with patch.dict(os.environ,{'PRIME_INTERFACE_CLIENTS_JSON':json.dumps(policies)}):
+        with patch.dict(os.environ,{'ORQEVIA_INTERFACE_CLIENTS_JSON':json.dumps(policies)}):
             task=self.start()
             assert self.follow(task,'phone').status_code==202
             assert self.client.get('/interface/v1/tasks/'+task,headers=self.headers()).json()['revision']==1

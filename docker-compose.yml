@@ -5,95 +5,95 @@ services:
     build:
       context: .
       args:
-        PRIME_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
-    image: ${PRIME_IMAGE:-orqevia:local}
+        ORQEVIA_RUNTIME_REVISION: ${ORQEVIA_RUNTIME_REVISION:-UNKNOWN}
+    image: ${ORQEVIA_IMAGE:-orqevia:local}
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "backend"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
     ports:
-      - "${PRIME_BIND_ADDRESS:-127.0.0.1}:${PRIME_PORT:-8000}:8000"
+      - "${ORQEVIA_BIND_ADDRESS:-127.0.0.1}:${ORQEVIA_PORT:-8000}:8000"
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
       # Queue admission compares this declaration with the measured profile.
       # Keep N=1 unless an isolated qualification authorizes a higher value.
       OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
-      PRIME_NODE_ID: ${PRIME_NODE_ID:-orqevia-node-01}
-      PRIME_NODE_ROLE: ${PRIME_NODE_ROLE:-control-compute}
-      PRIME_INTERFACE_HOST_ID: ${PRIME_INTERFACE_HOST_ID:-}
-      PRIME_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
-      PRIME_INTERFACE_RUNTIME_VERSION: ${PRIME_INTERFACE_RUNTIME_VERSION:-UNKNOWN}
-      PRIME_RUNTIME_IMAGE_DIGEST: ${PRIME_RUNTIME_IMAGE_DIGEST:-}
-      PRIME_OWNER_TRUSTED_PEERS: ${PRIME_OWNER_TRUSTED_PEERS:-}
-      PRIME_COMPUTE_PROFILE: ${PRIME_COMPUTE_PROFILE:-balanced}
-      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
-      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
-      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
-      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
-      PRIME_MULTI_SPECIALIST_WORKERS: ${PRIME_MULTI_SPECIALIST_WORKERS:-3}
-      PRIME_CONTEXT_TOKENS: ${PRIME_CONTEXT_TOKENS:-16384}
-      PRIME_MAX_OUTPUT_TOKENS: ${PRIME_MAX_OUTPUT_TOKENS:-4096}
-      PRIME_MODEL_KEEP_ALIVE: ${PRIME_MODEL_KEEP_ALIVE:-10m}
-      PRIME_DATA_DIR: /data
-      PRIME_SPINE_DB: /data/prime-spine.db
-      PRIME_MEMORY_DB: /data/jarvis-memory.db
-      PRIME_SPINE_TOKEN: ${PRIME_SPINE_TOKEN:-}
-      PRIME_AGENT_CERT_AZURE_ES256_ENABLED: ${PRIME_AGENT_CERT_AZURE_ES256_ENABLED:-0}
-      PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}
-      PRIME_REGISTRY_V1_ENABLED: ${PRIME_REGISTRY_V1_ENABLED:-1}
-      PRIME_CONTEXT_PACKS_ENABLED: ${PRIME_CONTEXT_PACKS_ENABLED:-0}
-      PRIME_SKILL_PACKS_ENABLED: ${PRIME_SKILL_PACKS_ENABLED:-0}
-      PRIME_SURVIVAL_NETWORK_PROBE_URL: ${PRIME_SURVIVAL_NETWORK_PROBE_URL:-}
-      PRIME_SURVIVAL_CLOUD_PROBE_URL: ${PRIME_SURVIVAL_CLOUD_PROBE_URL:-}
-      PRIME_SURVIVAL_FETCH_ALLOWLIST: ${PRIME_SURVIVAL_FETCH_ALLOWLIST:-}
-      PRIME_SURVIVAL_AUTHORITY_REF: ${PRIME_SURVIVAL_AUTHORITY_REF:-prime-epoch-20260919:owner}
-      PRIME_HARNESS_PILOT_ENABLED: ${PRIME_HARNESS_PILOT_ENABLED:-1}
-      PRIME_HARNESS_POLICY_VERSION: ${PRIME_HARNESS_POLICY_VERSION:-harness-v0}
-      PRIME_HARNESS_SIGNING_SECRET: ${PRIME_HARNESS_SIGNING_SECRET:-}
-      PRIME_HARNESS_DB: /data/action-harness.db
-      PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
+      ORQEVIA_NODE_ID: ${ORQEVIA_NODE_ID:-orqevia-node-01}
+      ORQEVIA_NODE_ROLE: ${ORQEVIA_NODE_ROLE:-control-compute}
+      ORQEVIA_INTERFACE_HOST_ID: ${ORQEVIA_INTERFACE_HOST_ID:-}
+      ORQEVIA_RUNTIME_REVISION: ${ORQEVIA_RUNTIME_REVISION:-UNKNOWN}
+      ORQEVIA_INTERFACE_RUNTIME_VERSION: ${ORQEVIA_INTERFACE_RUNTIME_VERSION:-UNKNOWN}
+      ORQEVIA_RUNTIME_IMAGE_DIGEST: ${ORQEVIA_RUNTIME_IMAGE_DIGEST:-}
+      ORQEVIA_OWNER_TRUSTED_PEERS: ${ORQEVIA_OWNER_TRUSTED_PEERS:-}
+      ORQEVIA_COMPUTE_PROFILE: ${ORQEVIA_COMPUTE_PROFILE:-balanced}
+      ORQEVIA_FAST_MODEL: ${ORQEVIA_FAST_MODEL:-gemma3:1b}
+      ORQEVIA_DEEP_MODEL: ${ORQEVIA_DEEP_MODEL:-gemma3:1b}
+      ORQEVIA_EVALUATOR_MODEL: ${ORQEVIA_EVALUATOR_MODEL:-}
+      ORQEVIA_EMBED_MODEL: ${ORQEVIA_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      ORQEVIA_MULTI_SPECIALIST_WORKERS: ${ORQEVIA_MULTI_SPECIALIST_WORKERS:-3}
+      ORQEVIA_CONTEXT_TOKENS: ${ORQEVIA_CONTEXT_TOKENS:-16384}
+      ORQEVIA_MAX_OUTPUT_TOKENS: ${ORQEVIA_MAX_OUTPUT_TOKENS:-4096}
+      ORQEVIA_MODEL_KEEP_ALIVE: ${ORQEVIA_MODEL_KEEP_ALIVE:-10m}
+      ORQEVIA_DATA_DIR: /data
+      ORQEVIA_SPINE_DB: /data/orqevia-spine.db
+      ORQEVIA_MEMORY_DB: /data/orqevia-memory.db
+      ORQEVIA_SPINE_TOKEN: ${ORQEVIA_SPINE_TOKEN:-}
+      ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED: ${ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED:-0}
+      ORQEVIA_PWA_OWNER_ACCOUNT_ID: ${ORQEVIA_PWA_OWNER_ACCOUNT_ID:-}
+      ORQEVIA_REGISTRY_V1_ENABLED: ${ORQEVIA_REGISTRY_V1_ENABLED:-1}
+      ORQEVIA_CONTEXT_PACKS_ENABLED: ${ORQEVIA_CONTEXT_PACKS_ENABLED:-0}
+      ORQEVIA_SKILL_PACKS_ENABLED: ${ORQEVIA_SKILL_PACKS_ENABLED:-0}
+      ORQEVIA_SURVIVAL_NETWORK_PROBE_URL: ${ORQEVIA_SURVIVAL_NETWORK_PROBE_URL:-}
+      ORQEVIA_SURVIVAL_CLOUD_PROBE_URL: ${ORQEVIA_SURVIVAL_CLOUD_PROBE_URL:-}
+      ORQEVIA_SURVIVAL_FETCH_ALLOWLIST: ${ORQEVIA_SURVIVAL_FETCH_ALLOWLIST:-}
+      ORQEVIA_SURVIVAL_AUTHORITY_REF: ${ORQEVIA_SURVIVAL_AUTHORITY_REF:-prime-epoch-20260919:owner}
+      ORQEVIA_HARNESS_PILOT_ENABLED: ${ORQEVIA_HARNESS_PILOT_ENABLED:-1}
+      ORQEVIA_HARNESS_POLICY_VERSION: ${ORQEVIA_HARNESS_POLICY_VERSION:-harness-v0}
+      ORQEVIA_HARNESS_SIGNING_SECRET: ${ORQEVIA_HARNESS_SIGNING_SECRET:-}
+      ORQEVIA_HARNESS_DB: /data/action-harness.db
+      ORQEVIA_INTEGRATION_TOKEN: ${ORQEVIA_INTEGRATION_TOKEN:-}
       PORTAL_BASE_URL: ${PORTAL_BASE_URL:-https://the-portal-ten.vercel.app}
       PORTAL_RESULT_URL: ${PORTAL_RESULT_URL:-}
       PORTAL_RESULT_TOKEN: ${PORTAL_RESULT_TOKEN:-}
       PORTFOLIO_RELAY_URL: ${PORTFOLIO_RELAY_URL:-}
       PORTFOLIO_RELAY_TOKEN: ${PORTFOLIO_RELAY_TOKEN:-}
       PORTFOLIO_RELAY_INTERVAL_SECONDS: ${PORTFOLIO_RELAY_INTERVAL_SECONDS:-15}
-      PRIME_PUBLIC_AGENT_TRACE: ${PRIME_PUBLIC_AGENT_TRACE:-0}
-      PRIME_PUBLIC_TRACE_RELAY_URL: ${PRIME_PUBLIC_TRACE_RELAY_URL:-https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/orqevia-trace-relay}
-      PRIME_PUBLIC_TRACE_PUBLISHER_ID: ${PRIME_PUBLIC_TRACE_PUBLISHER_ID:-}
-      PRIME_PUBLIC_TRACE_SECRET: ${PRIME_PUBLIC_TRACE_SECRET:-}
-      PRIME_PUBLIC_TRACE_INTERVAL_SECONDS: ${PRIME_PUBLIC_TRACE_INTERVAL_SECONDS:-15}
-      PRIME_FRONTIER_URL: ${PRIME_FRONTIER_URL:-}
-      PRIME_FRONTIER_API_KEY: ${PRIME_FRONTIER_API_KEY:-}
-      PRIME_FRONTIER_MODEL: ${PRIME_FRONTIER_MODEL:-}
-      PRIME_FRONTIER_MAX_INPUT_CHARS: ${PRIME_FRONTIER_MAX_INPUT_CHARS:-60000}
-      PRIME_PROVIDER_CATALOG: ${PRIME_PROVIDER_CATALOG:-/app/config/provider-catalog.active.json}
-      PRIME_QUEUE_CONCURRENCY: ${PRIME_QUEUE_CONCURRENCY:-1}
-      PRIME_LOCAL_ADMISSION_MODE: ${PRIME_LOCAL_ADMISSION_MODE:-golden_n1}
-      PRIME_BACKEND_MEMORY_RECEIPT: ${PRIME_BACKEND_MEMORY_RECEIPT:-}
-      PRIME_SSD_THERMAL_ENFORCE: ${PRIME_SSD_THERMAL_ENFORCE:-}
-      PRIME_SSD_THERMAL_POLICY: ${PRIME_SSD_THERMAL_POLICY:-}
-      PRIME_SSD_THERMAL_POLICY_SHA256: ${PRIME_SSD_THERMAL_POLICY_SHA256:-}
-      PRIME_SSD_THERMAL_RECEIPT: ${PRIME_SSD_THERMAL_RECEIPT:-}
+      ORQEVIA_PUBLIC_AGENT_TRACE: ${ORQEVIA_PUBLIC_AGENT_TRACE:-0}
+      ORQEVIA_PUBLIC_TRACE_RELAY_URL: ${ORQEVIA_PUBLIC_TRACE_RELAY_URL:-https://bksyjvppcwfgwoelnyvp.supabase.co/functions/v1/orqevia-trace-relay}
+      ORQEVIA_PUBLIC_TRACE_PUBLISHER_ID: ${ORQEVIA_PUBLIC_TRACE_PUBLISHER_ID:-}
+      ORQEVIA_PUBLIC_TRACE_SECRET: ${ORQEVIA_PUBLIC_TRACE_SECRET:-}
+      ORQEVIA_PUBLIC_TRACE_INTERVAL_SECONDS: ${ORQEVIA_PUBLIC_TRACE_INTERVAL_SECONDS:-15}
+      ORQEVIA_FRONTIER_URL: ${ORQEVIA_FRONTIER_URL:-}
+      ORQEVIA_FRONTIER_API_KEY: ${ORQEVIA_FRONTIER_API_KEY:-}
+      ORQEVIA_FRONTIER_MODEL: ${ORQEVIA_FRONTIER_MODEL:-}
+      ORQEVIA_FRONTIER_MAX_INPUT_CHARS: ${ORQEVIA_FRONTIER_MAX_INPUT_CHARS:-60000}
+      ORQEVIA_PROVIDER_CATALOG: ${ORQEVIA_PROVIDER_CATALOG:-/app/config/provider-catalog.active.json}
+      ORQEVIA_QUEUE_CONCURRENCY: ${ORQEVIA_QUEUE_CONCURRENCY:-1}
+      ORQEVIA_LOCAL_ADMISSION_MODE: ${ORQEVIA_LOCAL_ADMISSION_MODE:-golden_n1}
+      ORQEVIA_BACKEND_MEMORY_RECEIPT: ${ORQEVIA_BACKEND_MEMORY_RECEIPT:-}
+      ORQEVIA_SSD_THERMAL_ENFORCE: ${ORQEVIA_SSD_THERMAL_ENFORCE:-}
+      ORQEVIA_SSD_THERMAL_POLICY: ${ORQEVIA_SSD_THERMAL_POLICY:-}
+      ORQEVIA_SSD_THERMAL_POLICY_SHA256: ${ORQEVIA_SSD_THERMAL_POLICY_SHA256:-}
+      ORQEVIA_SSD_THERMAL_RECEIPT: ${ORQEVIA_SSD_THERMAL_RECEIPT:-}
       # Optional, SHA-256-pinned file inside the existing orqevia-data volume.
       # Empty values leave production's measured-profile gate disabled at N=1.
-      PRIME_MEASURED_COMPUTE_PROFILE: ${PRIME_MEASURED_COMPUTE_PROFILE:-}
-      PRIME_MEASURED_COMPUTE_PROFILE_SHA256: ${PRIME_MEASURED_COMPUTE_PROFILE_SHA256:-}
-      PRIME_AGENT_CONCURRENCY: ${PRIME_AGENT_CONCURRENCY:-1}
-      PRIME_READY_ACTIVITY_MAX_AGE_SECONDS: ${PRIME_READY_ACTIVITY_MAX_AGE_SECONDS:-3600}
-      PRIME_LOCAL_RAM_MB: ${PRIME_LOCAL_RAM_MB:-32768}
-      PRIME_LOCAL_VRAM_MB: ${PRIME_LOCAL_VRAM_MB:-0}
-      PRIME_CLOUD_WAIT_SECONDS: ${PRIME_CLOUD_WAIT_SECONDS:-300}
-      PRIME_MAX_JOB_COST_USD: ${PRIME_MAX_JOB_COST_USD:-2}
-      PRIME_DAILY_COST_USD: ${PRIME_DAILY_COST_USD:-10}
-      PRIME_CLOUD_GPU_URL: ${PRIME_CLOUD_GPU_URL:-}
-      PRIME_CLOUD_GPU_API_KEY: ${PRIME_CLOUD_GPU_API_KEY:-}
-      PRIME_CLOUD_GPU_MODEL: ${PRIME_CLOUD_GPU_MODEL:-}
-      PRIME_CLOUD_GPU_RAM_MB: ${PRIME_CLOUD_GPU_RAM_MB:-131072}
-      PRIME_CLOUD_GPU_VRAM_MB: ${PRIME_CLOUD_GPU_VRAM_MB:-81920}
-      PRIME_CLOUD_GPU_CONCURRENCY: ${PRIME_CLOUD_GPU_CONCURRENCY:-2}
-      PRIME_CLOUD_INPUT_USD_MTOK: ${PRIME_CLOUD_INPUT_USD_MTOK:-0}
-      PRIME_CLOUD_OUTPUT_USD_MTOK: ${PRIME_CLOUD_OUTPUT_USD_MTOK:-0}
+      ORQEVIA_MEASURED_COMPUTE_PROFILE: ${ORQEVIA_MEASURED_COMPUTE_PROFILE:-}
+      ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256: ${ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256:-}
+      ORQEVIA_AGENT_CONCURRENCY: ${ORQEVIA_AGENT_CONCURRENCY:-1}
+      ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS: ${ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS:-3600}
+      ORQEVIA_LOCAL_RAM_MB: ${ORQEVIA_LOCAL_RAM_MB:-32768}
+      ORQEVIA_LOCAL_VRAM_MB: ${ORQEVIA_LOCAL_VRAM_MB:-0}
+      ORQEVIA_CLOUD_WAIT_SECONDS: ${ORQEVIA_CLOUD_WAIT_SECONDS:-300}
+      ORQEVIA_MAX_JOB_COST_USD: ${ORQEVIA_MAX_JOB_COST_USD:-2}
+      ORQEVIA_DAILY_COST_USD: ${ORQEVIA_DAILY_COST_USD:-10}
+      ORQEVIA_CLOUD_GPU_URL: ${ORQEVIA_CLOUD_GPU_URL:-}
+      ORQEVIA_CLOUD_GPU_API_KEY: ${ORQEVIA_CLOUD_GPU_API_KEY:-}
+      ORQEVIA_CLOUD_GPU_MODEL: ${ORQEVIA_CLOUD_GPU_MODEL:-}
+      ORQEVIA_CLOUD_GPU_RAM_MB: ${ORQEVIA_CLOUD_GPU_RAM_MB:-131072}
+      ORQEVIA_CLOUD_GPU_VRAM_MB: ${ORQEVIA_CLOUD_GPU_VRAM_MB:-81920}
+      ORQEVIA_CLOUD_GPU_CONCURRENCY: ${ORQEVIA_CLOUD_GPU_CONCURRENCY:-2}
+      ORQEVIA_CLOUD_INPUT_USD_MTOK: ${ORQEVIA_CLOUD_INPUT_USD_MTOK:-0}
+      ORQEVIA_CLOUD_OUTPUT_USD_MTOK: ${ORQEVIA_CLOUD_OUTPUT_USD_MTOK:-0}
       ORQEVIA_HIGGSFIELD_ENABLED: ${ORQEVIA_HIGGSFIELD_ENABLED:-0}
       ORQEVIA_HIGGSFIELD_API_KEY_REF: ${ORQEVIA_HIGGSFIELD_API_KEY_REF:-file:HIGGSFIELD_API_KEY}
       ORQEVIA_HIGGSFIELD_API_KEY_ID_REF: ${ORQEVIA_HIGGSFIELD_API_KEY_ID_REF:-}
@@ -119,13 +119,13 @@ services:
     volumes:
       - orqevia-data:/data
       - type: bind
-        source: ${PRIME_PROVIDER_CATALOG_FILE:-./config/provider-catalog.active.json}
+        source: ${ORQEVIA_PROVIDER_CATALOG_FILE:-./config/provider-catalog.active.json}
         target: /app/config/provider-catalog.active.json
         read_only: true
         bind:
           create_host_path: false
       - type: bind
-        source: ${PRIME_HF_TOKEN_FILE:-./deploy/unconfigured-hf-token}
+        source: ${ORQEVIA_HF_TOKEN_FILE:-./deploy/unconfigured-hf-token}
         target: /run/secrets/hf_token
         read_only: true
         bind:
@@ -144,7 +144,7 @@ services:
       model-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "python", "-c", "import os, urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/health', headers={'Authorization': 'Bearer ' + os.environ['PRIME_SPINE_TOKEN']}); urllib.request.urlopen(request, timeout=5).read()"]
+      test: ["CMD", "python", "-c", "import os, urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/health', headers={'Authorization': 'Bearer ' + os.environ['ORQEVIA_SPINE_TOKEN']}); urllib.request.urlopen(request, timeout=5).read()"]
       interval: 30s
       timeout: 8s
       retries: 5
@@ -157,61 +157,61 @@ services:
 
   interface:
     profiles: ["clients"]
-    image: ${PRIME_INTERFACE_IMAGE:-${PRIME_IMAGE:-orqevia:local}}
+    image: ${ORQEVIA_INTERFACE_IMAGE:-${ORQEVIA_IMAGE:-orqevia:local}}
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "thin-client-interface"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
-    command: ["uvicorn", "app.interface_server:app", "--host", "0.0.0.0", "--port", "8443", "--no-proxy-headers", "--ssl-keyfile", "/run/prime-tls/server.key", "--ssl-certfile", "/run/prime-tls/server.crt"]
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
+    command: ["uvicorn", "app.interface_server:app", "--host", "0.0.0.0", "--port", "8443", "--no-proxy-headers", "--ssl-keyfile", "/run/orqevia-tls/server.key", "--ssl-certfile", "/run/orqevia-tls/server.crt"]
     ports:
-      - "${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}:${PRIME_INTERFACE_PORT:-8443}:8443"
+      - "${ORQEVIA_INTERFACE_BIND_ADDRESS:-127.0.0.1}:${ORQEVIA_INTERFACE_PORT:-8443}:8443"
     environment:
-      PRIME_DATA_DIR: /data
-      PRIME_SPINE_TOKEN: ${PRIME_SPINE_TOKEN:-}
-      PRIME_INTERFACE_HOST_ID: ${PRIME_INTERFACE_HOST_ID:-}
-      PRIME_INTERFACE_SPKI_SHA256: ${PRIME_INTERFACE_SPKI_SHA256:-}
-      PRIME_INTERFACE_PUBLIC_KEY: ${PRIME_INTERFACE_PUBLIC_KEY:-}
-      PRIME_INTERFACE_RUNTIME_VERSION: ${PRIME_INTERFACE_RUNTIME_VERSION:-UNKNOWN}
-      PRIME_INTERFACE_RUNTIME_REVISION: ${PRIME_RUNTIME_REVISION:-UNKNOWN}
-      PRIME_RUNTIME_IMAGE_DIGEST: ${PRIME_RUNTIME_IMAGE_DIGEST:-}
-      PRIME_INTERFACE_CANDIDATE_STATUS: ${PRIME_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}
-      PRIME_PWA_ORIGIN: ${PRIME_PWA_ORIGIN:-}
-      PRIME_PWA_ADDITIONAL_ORIGINS: ${PRIME_PWA_ADDITIONAL_ORIGINS:-}
-      PRIME_PWA_OWNER_ACCOUNT_ID: ${PRIME_PWA_OWNER_ACCOUNT_ID:-}
-      PRIME_PWA_DATA_CLASSIFICATION: ${PRIME_PWA_DATA_CLASSIFICATION:-LOCAL_ONLY}
-      PRIME_PWA_MAX_COST_USD: ${PRIME_PWA_MAX_COST_USD:-0}
-      PRIME_REGISTRY_V1_ENABLED: ${PRIME_REGISTRY_V1_ENABLED:-1}
-      PRIME_COMPUTE_PROFILE: ${PRIME_COMPUTE_PROFILE:-balanced}
-      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
-      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
-      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
-      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
-      PRIME_READY_ACTIVITY_MAX_AGE_SECONDS: ${PRIME_READY_ACTIVITY_MAX_AGE_SECONDS:-3600}
-      PRIME_HOST_METRICS_RECEIPT: /run/prime-host-metrics/host-metrics.json
+      ORQEVIA_DATA_DIR: /data
+      ORQEVIA_SPINE_TOKEN: ${ORQEVIA_SPINE_TOKEN:-}
+      ORQEVIA_INTERFACE_HOST_ID: ${ORQEVIA_INTERFACE_HOST_ID:-}
+      ORQEVIA_INTERFACE_SPKI_SHA256: ${ORQEVIA_INTERFACE_SPKI_SHA256:-}
+      ORQEVIA_INTERFACE_PUBLIC_KEY: ${ORQEVIA_INTERFACE_PUBLIC_KEY:-}
+      ORQEVIA_INTERFACE_RUNTIME_VERSION: ${ORQEVIA_INTERFACE_RUNTIME_VERSION:-UNKNOWN}
+      ORQEVIA_INTERFACE_RUNTIME_REVISION: ${ORQEVIA_RUNTIME_REVISION:-UNKNOWN}
+      ORQEVIA_RUNTIME_IMAGE_DIGEST: ${ORQEVIA_RUNTIME_IMAGE_DIGEST:-}
+      ORQEVIA_INTERFACE_CANDIDATE_STATUS: ${ORQEVIA_INTERFACE_CANDIDATE_STATUS:-UNKNOWN}
+      ORQEVIA_PWA_ORIGIN: ${ORQEVIA_PWA_ORIGIN:-}
+      ORQEVIA_PWA_ADDITIONAL_ORIGINS: ${ORQEVIA_PWA_ADDITIONAL_ORIGINS:-}
+      ORQEVIA_PWA_OWNER_ACCOUNT_ID: ${ORQEVIA_PWA_OWNER_ACCOUNT_ID:-}
+      ORQEVIA_PWA_DATA_CLASSIFICATION: ${ORQEVIA_PWA_DATA_CLASSIFICATION:-LOCAL_ONLY}
+      ORQEVIA_PWA_MAX_COST_USD: ${ORQEVIA_PWA_MAX_COST_USD:-0}
+      ORQEVIA_REGISTRY_V1_ENABLED: ${ORQEVIA_REGISTRY_V1_ENABLED:-1}
+      ORQEVIA_COMPUTE_PROFILE: ${ORQEVIA_COMPUTE_PROFILE:-balanced}
+      ORQEVIA_FAST_MODEL: ${ORQEVIA_FAST_MODEL:-gemma3:1b}
+      ORQEVIA_DEEP_MODEL: ${ORQEVIA_DEEP_MODEL:-gemma3:1b}
+      ORQEVIA_EVALUATOR_MODEL: ${ORQEVIA_EVALUATOR_MODEL:-}
+      ORQEVIA_EMBED_MODEL: ${ORQEVIA_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS: ${ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS:-3600}
+      ORQEVIA_HOST_METRICS_RECEIPT: /run/orqevia-host-metrics/host-metrics.json
     volumes:
       - orqevia-data:/data
       - type: bind
-        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.crt
-        target: /run/prime-tls/server.crt
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.crt
+        target: /run/orqevia-tls/server.crt
         read_only: true
         bind:
           create_host_path: false
       - type: bind
-        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.key
-        target: /run/prime-tls/server.key
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.key
+        target: /run/orqevia-tls/server.key
         read_only: true
         bind:
           create_host_path: false
       - type: bind
-        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
-        target: /run/prime-tls/ca.crt
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
+        target: /run/orqevia-tls/ca.crt
         read_only: true
         bind:
           create_host_path: false
-      - "${PRIME_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/ORQEVIA-ABEX-HTTPS.mobileconfig:ro"
+      - "${ORQEVIA_PWA_PROFILE_PATH:-./deploy/unconfigured.mobileconfig}:/app/app/pwa_static/ORQEVIA-ABEX-HTTPS.mobileconfig:ro"
       - type: bind
-        source: ${PRIME_HOST_METRICS_DIR:-./deploy/unconfigured-host-metrics}
-        target: /run/prime-host-metrics
+        source: ${ORQEVIA_HOST_METRICS_DIR:-./deploy/unconfigured-host-metrics}
+        target: /run/orqevia-host-metrics
         read_only: true
         bind:
           create_host_path: false
@@ -219,7 +219,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import ssl, urllib.request; context=ssl.create_default_context(cafile='/run/prime-tls/ca.crt'); urllib.request.urlopen('${PRIME_PWA_ORIGIN:-https://invalid}/pwa/', context=context, timeout=5).read()"]
+      test: ["CMD", "python", "-c", "import ssl, urllib.request; context=ssl.create_default_context(cafile='/run/orqevia-tls/ca.crt'); urllib.request.urlopen('${ORQEVIA_PWA_ORIGIN:-https://invalid}/pwa/', context=context, timeout=5).read()"]
       interval: 30s
       timeout: 8s
       retries: 5
@@ -235,7 +235,7 @@ services:
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "model-runtime"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
     environment:
       OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
       OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
@@ -263,22 +263,22 @@ services:
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "model-init"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
     environment:
       OLLAMA_HOST: http://ollama:11434
-      PRIME_FAST_MODEL: ${PRIME_FAST_MODEL:-gemma3:1b}
-      PRIME_DEEP_MODEL: ${PRIME_DEEP_MODEL:-gemma3:1b}
-      PRIME_EVALUATOR_MODEL: ${PRIME_EVALUATOR_MODEL:-}
-      PRIME_EMBED_MODEL: ${PRIME_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
+      ORQEVIA_FAST_MODEL: ${ORQEVIA_FAST_MODEL:-gemma3:1b}
+      ORQEVIA_DEEP_MODEL: ${ORQEVIA_DEEP_MODEL:-gemma3:1b}
+      ORQEVIA_EVALUATOR_MODEL: ${ORQEVIA_EVALUATOR_MODEL:-}
+      ORQEVIA_EMBED_MODEL: ${ORQEVIA_EMBED_MODEL:-embeddinggemma:300m-qat-q4_0}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         until ollama list >/dev/null 2>&1; do sleep 2; done
-        PRIME_EVALUATOR_MODEL="$${PRIME_EVALUATOR_MODEL:-$${PRIME_DEEP_MODEL}}"
-        ollama pull "$${PRIME_FAST_MODEL}"
-        if [ "$${PRIME_DEEP_MODEL}" != "$${PRIME_FAST_MODEL}" ]; then ollama pull "$${PRIME_DEEP_MODEL}"; fi
-        if [ "$${PRIME_EVALUATOR_MODEL}" != "$${PRIME_FAST_MODEL}" ] && [ "$${PRIME_EVALUATOR_MODEL}" != "$${PRIME_DEEP_MODEL}" ]; then ollama pull "$${PRIME_EVALUATOR_MODEL}"; fi
-        ollama pull "$${PRIME_EMBED_MODEL}"
+        ORQEVIA_EVALUATOR_MODEL="$${ORQEVIA_EVALUATOR_MODEL:-$${ORQEVIA_DEEP_MODEL}}"
+        ollama pull "$${ORQEVIA_FAST_MODEL}"
+        if [ "$${ORQEVIA_DEEP_MODEL}" != "$${ORQEVIA_FAST_MODEL}" ]; then ollama pull "$${ORQEVIA_DEEP_MODEL}"; fi
+        if [ "$${ORQEVIA_EVALUATOR_MODEL}" != "$${ORQEVIA_FAST_MODEL}" ] && [ "$${ORQEVIA_EVALUATOR_MODEL}" != "$${ORQEVIA_DEEP_MODEL}" ]; then ollama pull "$${ORQEVIA_EVALUATOR_MODEL}"; fi
+        ollama pull "$${ORQEVIA_EMBED_MODEL}"
     depends_on:
       ollama:
         condition: service_healthy
@@ -290,10 +290,10 @@ services:
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "integration-gateway"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
     environment:
-      PRIME_INTEGRATION_TOKEN: ${PRIME_INTEGRATION_TOKEN:-}
-    command: ["/bin/sh", "-c", "test -n \"$${PRIME_INTEGRATION_TOKEN}\" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
+      ORQEVIA_INTEGRATION_TOKEN: ${ORQEVIA_INTEGRATION_TOKEN:-}
+    command: ["/bin/sh", "-c", "test -n \"$${ORQEVIA_INTEGRATION_TOKEN}\" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
@@ -311,14 +311,14 @@ services:
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "tunnel"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     command: tunnel --no-autoupdate --loglevel info --metrics 0.0.0.0:2000 run
     volumes:
       - type: bind
-        source: ${PRIME_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
-        target: /run/prime-tls/ca.crt
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
+        target: /run/orqevia-tls/ca.crt
         read_only: true
         bind:
           create_host_path: false
@@ -335,10 +335,10 @@ services:
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "trust-bootstrap"
-      com.orqevia.node: "${PRIME_NODE_ID:-orqevia-node-01}"
+      com.orqevia.node: "${ORQEVIA_NODE_ID:-orqevia-node-01}"
     command: ["caddy", "file-server", "--listen", ":8081", "--root", "/bootstrap"]
     ports:
-      - "${PRIME_INTERFACE_BIND_ADDRESS:-127.0.0.1}:8081:8081"
+      - "${ORQEVIA_INTERFACE_BIND_ADDRESS:-127.0.0.1}:8081:8081"
     volumes:
       - type: bind
         source: C:\Users\Admin\Documents\ABEX\operations\dell-co-owner\bootstrap
@@ -352,7 +352,7 @@ services:
 volumes:
   orqevia-data:
     external: true
-    name: ${PRIME_DATA_VOLUME:-orqevia-data}
+    name: ${ORQEVIA_DATA_VOLUME:-orqevia-data}
   orqevia-ollama-data:
     external: true
     name: ${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}

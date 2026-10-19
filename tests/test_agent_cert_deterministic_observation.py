@@ -26,7 +26,7 @@ def fixture():
                      "registry_version": "1.0.0", "source_sha256": REGISTRY},
         "tasks": {"status": "UNAVAILABLE", "count": None, "active_count": None},
         "qualified_compute": {"status": "UNAVAILABLE", "execution_backends": {}},
-        "protocol": {"interface_contract": "jarvis.interface.v1"},
+        "protocol": {"interface_contract": "orqevia.interface.v1"},
         "execution": {"model_calls": 0, "input_tokens": 0, "output_tokens": 0,
                       "method": "DETERMINISTIC_READ_ONLY", "fresh_inference_performed": False},
     }

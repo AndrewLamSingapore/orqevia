@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
-RUN mkdir -p /run/prime-tls
+RUN mkdir -p /run/orqevia-tls
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
@@ -22,9 +22,9 @@ COPY clients/pwa/icons ./app/pwa_static/icons
 
 # Keep revision metadata after dependency installation so a new source commit
 # does not invalidate the expensive, reproducible requirements layer.
-ARG PRIME_RUNTIME_REVISION=UNKNOWN
-ENV PRIME_RUNTIME_REVISION=$PRIME_RUNTIME_REVISION
-LABEL org.opencontainers.image.revision=$PRIME_RUNTIME_REVISION
+ARG ORQEVIA_RUNTIME_REVISION=UNKNOWN
+ENV ORQEVIA_RUNTIME_REVISION=$ORQEVIA_RUNTIME_REVISION
+LABEL org.opencontainers.image.revision=$ORQEVIA_RUNTIME_REVISION
 
 EXPOSE 8000
 

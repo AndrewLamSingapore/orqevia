@@ -7,7 +7,7 @@ from .exposure_intelligence import ExposureIntelligence
 
 
 def exposure_view():
-    path = Path(os.getenv('PRIME_DATA_DIR', '/data')) / 'evidence-lens.db'
+    path = Path(os.getenv('ORQEVIA_DATA_DIR', '/data')) / 'evidence-lens.db'
     if not path.is_file():
         findings, alerts, semantic = [], [], {'verification': 'VERIFY_REQUIRED', 'relations': []}
     else:

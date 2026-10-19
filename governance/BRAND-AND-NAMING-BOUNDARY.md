@@ -45,6 +45,12 @@ records present this origin clearly.
 
 ## Deliberately staged (compatibility or signing-closure bound)
 
+> **19 October 2026 retirement update:** the active environment, runtime-path,
+> database-name and Interface-protocol surfaces now use ORQEVIA names. Seven
+> byte-pinned files in the signed certificate closure still require a one-way
+> lookup bridge until a new signed closure is issued. See
+> [ORQEVIA-NAMING-RETIREMENT-20261019.md](../docs/ORQEVIA-NAMING-RETIREMENT-20261019.md).
+
 Renaming these tonight would break a live wire contract or the protected
 signing closure that was just completed. Each has an exact unblock path; the
 Owner can order the migration round at any time.

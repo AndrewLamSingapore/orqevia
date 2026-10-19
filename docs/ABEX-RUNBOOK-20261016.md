@@ -36,7 +36,7 @@ Get-Content C:\ProgramData\ABEX\PrimeHostMetrics\receipt\host-metrics.json
 Then set in `.env` (or the deploy environment):
 
 ```text
-PRIME_HOST_METRICS_DIR=C:\ProgramData\ABEX\PrimeHostMetrics\receipt
+ORQEVIA_HOST_METRICS_DIR=C:\ProgramData\ABEX\PrimeHostMetrics\receipt
 ```
 
 and restart the interface service. `/interface/v1/telemetry` must then report
@@ -57,16 +57,16 @@ Get-FileHash -Algorithm SHA256 <profile.json>
 Set:
 
 ```text
-PRIME_LOCAL_ADMISSION_MODE=measured
-PRIME_MEASURED_COMPUTE_PROFILE=<absolute path>
-PRIME_MEASURED_COMPUTE_PROFILE_SHA256=<sha256>
-PRIME_QUEUE_CONCURRENCY=3
+ORQEVIA_LOCAL_ADMISSION_MODE=measured
+ORQEVIA_MEASURED_COMPUTE_PROFILE=<absolute path>
+ORQEVIA_MEASURED_COMPUTE_PROFILE_SHA256=<sha256>
+ORQEVIA_QUEUE_CONCURRENCY=3
 OLLAMA_NUM_PARALLEL=3
 ```
 
 Constraints enforced in code: 1..3 slots, only 2 or 3 accepted as candidates,
-`OLLAMA_NUM_PARALLEL >= PRIME_QUEUE_CONCURRENCY`, and
-`normal_concurrency >= PRIME_QUEUE_CONCURRENCY`. Start at 2, verify, then 3.
+`OLLAMA_NUM_PARALLEL >= ORQEVIA_QUEUE_CONCURRENCY`, and
+`normal_concurrency >= ORQEVIA_QUEUE_CONCURRENCY`. Start at 2, verify, then 3.
 
 ## 4. Deploy merged source and capture acceptance receipts
 

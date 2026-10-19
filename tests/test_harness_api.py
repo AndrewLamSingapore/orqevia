@@ -6,13 +6,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 _TMP = tempfile.TemporaryDirectory()
-os.environ["PRIME_DATA_DIR"] = _TMP.name
-os.environ["PRIME_SPINE_DB"] = os.path.join(_TMP.name, "spine.db")
-os.environ["PRIME_HARNESS_DB"] = os.path.join(_TMP.name, "harness.db")
-os.environ["PRIME_COMPUTE_QUEUE_DB"] = os.path.join(_TMP.name, "queue.db")
-os.environ["PRIME_SPINE_TOKEN"] = "test-owner-token"
-os.environ["PRIME_HARNESS_PILOT_ENABLED"] = "1"
-os.environ["PRIME_QUEUE_CONCURRENCY"] = "1"
+os.environ["ORQEVIA_DATA_DIR"] = _TMP.name
+os.environ["ORQEVIA_SPINE_DB"] = os.path.join(_TMP.name, "spine.db")
+os.environ["ORQEVIA_HARNESS_DB"] = os.path.join(_TMP.name, "harness.db")
+os.environ["ORQEVIA_COMPUTE_QUEUE_DB"] = os.path.join(_TMP.name, "queue.db")
+os.environ["ORQEVIA_SPINE_TOKEN"] = "test-owner-token"
+os.environ["ORQEVIA_HARNESS_PILOT_ENABLED"] = "1"
+os.environ["ORQEVIA_QUEUE_CONCURRENCY"] = "1"
 
 from app import (agent_dispatch_api, artifact_delivery, compute_queue_api,
                  harness_api, interface_node, objective_api,
@@ -29,7 +29,7 @@ from app.spine import SpineStore, StableSpine
 class HarnessApiTests(unittest.TestCase):
     def setUp(self):
         self.case = tempfile.TemporaryDirectory()
-        os.environ["PRIME_HARNESS_DB"] = os.path.join(self.case.name, "harness.db")
+        os.environ["ORQEVIA_HARNESS_DB"] = os.path.join(self.case.name, "harness.db")
         harness_api._runtime_cache = None
         harness_api._runtime_fingerprint = None
         spine_api.spine = StableSpine(SpineStore(os.path.join(self.case.name, "spine.db")))
@@ -89,14 +89,14 @@ class HarnessApiTests(unittest.TestCase):
 
     def test_owner_token_and_enabled_runtime_are_required(self):
         self.assertEqual(self.client.get("/api/harness/status").status_code, 401)
-        os.environ["PRIME_HARNESS_PILOT_ENABLED"] = "0"
+        os.environ["ORQEVIA_HARNESS_PILOT_ENABLED"] = "0"
         try:
             self.assertEqual(
                 self.client.get("/api/harness/status", headers=self.headers).status_code,
                 503,
             )
         finally:
-            os.environ["PRIME_HARNESS_PILOT_ENABLED"] = "1"
+            os.environ["ORQEVIA_HARNESS_PILOT_ENABLED"] = "1"
 
     def test_direct_queue_route_uses_current_direct_execution_policy(self):
         response = self.client.post(

@@ -127,12 +127,12 @@ function Get-VolumeForContainer([string]$ContainerId, [string]$Destination) {
 
 function Adopt-PersistentVolumes {
     $rows = Get-ContainerRows
-    if (-not (Get-EnvValue "PRIME_DATA_VOLUME")) {
+    if (-not (Get-EnvValue "ORQEVIA_DATA_VOLUME")) {
         # "prime" is kept in the adoption match only, to recover volumes from pre-rename stacks.
         $source = $rows | Where-Object { $_.Service -in @("backend", "prime") } | Select-Object -First 1
         if ($source) {
             $volume = Get-VolumeForContainer $source.Id "/data"
-            if ($volume) { Set-EnvValue "PRIME_DATA_VOLUME" $volume; Write-Step "Adopted the existing ORQEVIA data volume." }
+            if ($volume) { Set-EnvValue "ORQEVIA_DATA_VOLUME" $volume; Write-Step "Adopted the existing ORQEVIA data volume." }
         }
     }
     if (-not (Get-EnvValue "OLLAMA_DATA_VOLUME")) {
@@ -146,10 +146,10 @@ function Adopt-PersistentVolumes {
 }
 
 function Assert-PersistentVolumes {
-    $primeVolume = Get-EnvValue "PRIME_DATA_VOLUME"
+    $primeVolume = Get-EnvValue "ORQEVIA_DATA_VOLUME"
     $ollamaVolume = Get-EnvValue "OLLAMA_DATA_VOLUME"
     if (-not $primeVolume -or -not $ollamaVolume) {
-        throw "PRIME_DATA_VOLUME and OLLAMA_DATA_VOLUME must identify recovered, independently verified volumes. ORQEVIA will not invent recovery state."
+        throw "ORQEVIA_DATA_VOLUME and OLLAMA_DATA_VOLUME must identify recovered, independently verified volumes. ORQEVIA will not invent recovery state."
     }
     $required = @($primeVolume, $ollamaVolume)
     $existing = @(Invoke-Docker -Arguments @("volume", "ls", "--format", "{{.Name}}"))
@@ -231,7 +231,7 @@ function Test-PrimeContract([switch]$Quiet) {
     } catch { $failures.Add("manifest unavailable: $($_.Exception.Message)") }
     if ((Get-HttpStatus "$LocalBase/api/status") -ne 200) { $failures.Add("/api/status is not HTTP 200") }
 
-    $public = Get-EnvValue "PRIME_PUBLIC_URL"
+    $public = Get-EnvValue "ORQEVIA_PUBLIC_URL"
     if ($public) {
         $public = $public.TrimEnd("/")
         if ((Get-HttpStatus "$public/health") -ne 200) { $failures.Add("public /health is not HTTP 200") }
@@ -244,7 +244,7 @@ function Test-PrimeContract([switch]$Quiet) {
 }
 
 function Resolve-TunnelMode {
-    return $Tunnel.IsPresent -or ((Get-EnvValue "PRIME_INTEGRATION_TOKEN") -and (Get-EnvValue "CLOUDFLARE_TUNNEL_TOKEN"))
+    return $Tunnel.IsPresent -or ((Get-EnvValue "ORQEVIA_INTEGRATION_TOKEN") -and (Get-EnvValue "CLOUDFLARE_TUNNEL_TOKEN"))
 }
 
 function Start-OrqeviaStack([switch]$RepairOnly) {
@@ -257,13 +257,13 @@ function Start-OrqeviaStack([switch]$RepairOnly) {
     if ($RepairOnly) { return }
 
     $useTunnel = [bool](Resolve-TunnelMode)
-    $primeImage = Get-EnvValue "PRIME_IMAGE"
+    $primeImage = Get-EnvValue "ORQEVIA_IMAGE"
     if ($primeImage) {
         Write-Step "Pulling the exact ORQEVIA image."
         Invoke-Docker -Arguments (Get-ComposeArgs @("pull", "backend")) | Out-Null
         $up = @("up", "-d", "--remove-orphans", "--no-build")
     } else {
-        Write-Step "No PRIME_IMAGE is pinned; building the checked-out source."
+        Write-Step "No ORQEVIA_IMAGE is pinned; building the checked-out source."
         $up = @("up", "-d", "--remove-orphans", "--build")
     }
     Write-Step "Starting the canonical ORQEVIA project."
@@ -300,7 +300,7 @@ function Update-OrqeviaStack {
         throw "The image must be a commit-addressable AndrewLamSingapore/orqevia GHCR image."
     }
     Save-Checkpoint | Out-Null
-    Set-EnvValue "PRIME_IMAGE" $Image
+    Set-EnvValue "ORQEVIA_IMAGE" $Image
     Write-Step "Pinned the verified ORQEVIA image without changing secrets or volumes."
     Start-OrqeviaStack
 }
@@ -308,7 +308,7 @@ function Update-OrqeviaStack {
 function Test-SourceContract {
     if (-not (Test-Path $ComposeFile)) { throw "docker-compose.yml is missing." }
     $source = Get-Content $ComposeFile -Raw
-    foreach ($required in @('name: ${COMPOSE_PROJECT_NAME:-orqevia}', '${PRIME_BIND_ADDRESS:-127.0.0.1}', 'com.orqevia.managed', '${PRIME_DATA_VOLUME:-orqevia-data}', '${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}')) {
+    foreach ($required in @('name: ${COMPOSE_PROJECT_NAME:-orqevia}', '${ORQEVIA_BIND_ADDRESS:-127.0.0.1}', 'com.orqevia.managed', '${ORQEVIA_DATA_VOLUME:-orqevia-data}', '${OLLAMA_DATA_VOLUME:-orqevia-ollama-data}')) {
         if (-not $source.Contains($required)) { throw "Compose contract is missing: $required" }
     }
     Write-Host "PASS: ORQEVIA source operations contract." -ForegroundColor Green

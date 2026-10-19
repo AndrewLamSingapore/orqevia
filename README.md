@@ -25,7 +25,7 @@ defines entrypoints and external inputs.
 
 Validate with `python scripts/validate_canonical.py` and
 `python scripts/check_canonical_state.py`. Run `scripts/run_canonical_ci.py` with
-isolated PRIME_DATA_DIR and PRIME_COMPUTE_QUEUE_DB. PWA checks live in clients/pwa;
+isolated ORQEVIA_DATA_DIR and ORQEVIA_COMPUTE_QUEUE_DB. PWA checks live in clients/pwa;
 Dell packaging instructions are in clients/dell/PACKAGING.md. Dell synchronization
 and independent reconciliation tools remain under tools/ and docs/DELL_*.md.
 

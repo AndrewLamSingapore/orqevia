@@ -10,7 +10,7 @@ class SharedKnowledgeClient:
         self.base='http://127.0.0.1:8150/'
         p=subprocess.run(['C:/Program Files/Docker/Docker/resources/bin/docker.exe','inspect','prime-epoch-20260919-interface-1'],capture_output=True,text=True,timeout=20,check=True)
         env=dict(item.split('=',1) for item in json.loads(p.stdout)[0]['Config']['Env'])
-        token=env.get('PRIME_SPINE_TOKEN','');owner=env.get('PRIME_PWA_OWNER_ACCOUNT_ID','')
+        token=env.get('ORQEVIA_SPINE_TOKEN','');owner=env.get('ORQEVIA_PWA_OWNER_ACCOUNT_ID','')
         if len(token)<16 or not owner:raise RuntimeError('Existing local service authority unavailable')
         self._headers={'Authorization':'Bearer '+token,'X-ORQEVIA-Owner':hashlib.sha256(owner.encode()).hexdigest()}
     def call(self,action,value=None,*,file=None):

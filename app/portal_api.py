@@ -36,7 +36,7 @@ def _connect() -> sqlite3.Connection:
 def _require_integration_token(
     authorization: str | None = Header(default=None),
 ) -> None:
-    expected = os.environ.get("PRIME_INTEGRATION_TOKEN", "")
+    expected = os.environ.get("ORQEVIA_INTEGRATION_TOKEN", "")
     if not expected:
         raise HTTPException(
             status_code=503,

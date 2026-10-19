@@ -22,7 +22,7 @@ API_PATHS = {
 
 def access(request, *, mutation=False):
     if pwa_sessions.COOKIE in request.cookies:
-        if any(k in request.headers for k in ('authorization', 'x-client-id', 'x-jarvis-client-id')):
+        if any(k in request.headers for k in ('authorization', 'x-client-id', 'x-orqevia-client-id')):
             raise HTTPException(400, 'Ambiguous client identity')
         if not pwa_sessions.origin_valid(request, request.method not in {'GET','HEAD'}):
             raise HTTPException(403, 'Same-origin access required')
@@ -41,7 +41,7 @@ async def forward(request, path, *, mutation=False):
     parsed = urlsplit(base)
     if parsed.scheme != 'http' or parsed.netloc != 'intelligence:8100' or parsed.path or parsed.query or parsed.fragment:
         raise HTTPException(503, 'Intelligence service target unavailable')
-    token = os.getenv('PRIME_SPINE_TOKEN', '').strip()
+    token = os.getenv('ORQEVIA_SPINE_TOKEN', '').strip()
     if len(token) < 16:
         raise HTTPException(503, 'Intelligence service authority unavailable')
     try:

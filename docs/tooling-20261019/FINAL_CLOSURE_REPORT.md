@@ -170,7 +170,7 @@ uv run pytest -q `
   --basetemp C:\Users\Admin\Documents\ABEX\operations\tooling-20261019\pytest-full-final
 ```
 
-Use a `PRIME_DATA_DIR` outside the source repository for repeatable Windows
+Use a `ORQEVIA_DATA_DIR` outside the source repository for repeatable Windows
 execution.
 
 ## Rollback

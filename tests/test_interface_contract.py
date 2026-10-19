@@ -18,16 +18,16 @@ from app.artifact_factory import ArtifactFactory
 
 class ContractTests(unittest.TestCase):
     def setUp(self):
-        fixture = Path(os.environ['PRIME_DATA_DIR']).parent / ('interface-case-' + uuid.uuid4().hex)
+        fixture = Path(os.environ['ORQEVIA_DATA_DIR']).parent / ('interface-case-' + uuid.uuid4().hex)
         fixture.mkdir(parents=True)
         self.tmp = SimpleNamespace(name=str(fixture))
         self.policies = {name: {'token_sha256': hashlib.sha256(name.encode()).hexdigest(),
             'expires_at': time.time() + 300, 'capabilities': ['identity.read', 'objective.submit',
                 'task.read', 'task.cancel', 'artifact.read']} for name in ('dell', 'other')}
-        self.env = patch.dict(os.environ, {'PRIME_DATA_DIR': self.tmp.name,
-            'PRIME_SPINE_TOKEN': 'fixture-only', 'PRIME_INTERFACE_SPKI_SHA256': 'a' * 64,
-            'PRIME_INTERFACE_HOST_ID': 'ABEX-TEST',
-            'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)})
+        self.env = patch.dict(os.environ, {'ORQEVIA_DATA_DIR': self.tmp.name,
+            'ORQEVIA_SPINE_TOKEN': 'fixture-only', 'ORQEVIA_INTERFACE_SPKI_SHA256': 'a' * 64,
+            'ORQEVIA_INTERFACE_HOST_ID': 'ABEX-TEST',
+            'ORQEVIA_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)})
         self.env.start()
         app = FastAPI()
         app.include_router(contract.router)
@@ -57,7 +57,7 @@ class ContractTests(unittest.TestCase):
 
     def test_server_issued_owner_role_sets_interactive_priority(self):
         self.policies['dell']['role'] = 'OWNER'
-        with patch.dict(os.environ, {'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
             assert self.submit().status_code == 202
             assert self.dispatch.call_args.args[0].priority == 'critical'
             with patch.object(contract.node.objective_api, 'continue_objective',
@@ -70,30 +70,30 @@ class ContractTests(unittest.TestCase):
         assert contract.node.dispatch_priority({}) == 'normal'
 
     def test_identity_transport_pin_auth_scope(self):
-        assert self.client.get('/interface/v1/identity', headers=self.headers).json()['role'] == 'AUTHORITATIVE_PRIME_HOST'
+        assert self.client.get('/interface/v1/identity', headers=self.headers).json()['role'] == 'AUTHORITATIVE_ORQEVIA_HOST'
         assert self.client.get('http://testserver/interface/v1/identity', headers={**self.headers, 'X-Forwarded-Proto': 'https'}).status_code == 426
         assert self.client.get('/interface/v1/identity').status_code == 401
-        with patch.dict(os.environ, {'PRIME_INTERFACE_SPKI_SHA256': ''}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_SPKI_SHA256': ''}):
             assert self.client.get('/interface/v1/identity', headers=self.headers).status_code == 503
         self.policies['dell']['expires_at'] = time.time() - 1
-        with patch.dict(os.environ, {'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
             assert self.submit().status_code == 403
             assert self.client.get('/api/interface/v1/health', headers=self.headers).status_code == 403
         self.policies['dell']['expires_at'] = time.time() + 300
         self.policies['dell']['capabilities'] = ['identity.read']
-        with patch.dict(os.environ, {'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}):
             body = {'objective': 'fixture', 'idempotency_key': 'scoped'}
             for prefix in ('/interface/v1', '/api/interface/v1'):
                 assert self.client.post(prefix + '/objectives', headers=self.headers, json=body).status_code == 403
 
     def test_explicit_runtime_identity_has_honest_unknown_defaults(self):
-        with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'UNKNOWN', 'PRIME_INTERFACE_RUNTIME_REVISION': 'UNKNOWN', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'UNKNOWN'}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_RUNTIME_VERSION': 'UNKNOWN', 'ORQEVIA_INTERFACE_RUNTIME_REVISION': 'UNKNOWN', 'ORQEVIA_INTERFACE_CANDIDATE_STATUS': 'UNKNOWN'}):
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
             assert value['runtime_version']=='UNKNOWN' and value['runtime_revision']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
-        with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'prime-next.20260914', 'PRIME_INTERFACE_RUNTIME_REVISION': 'e88f6eb653c3e7c7628b31ad909143a2aebd05df', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'QUALIFICATION_RUNTIME'}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_RUNTIME_VERSION': 'prime-next.20260914', 'ORQEVIA_INTERFACE_RUNTIME_REVISION': 'e88f6eb653c3e7c7628b31ad909143a2aebd05df', 'ORQEVIA_INTERFACE_CANDIDATE_STATUS': 'QUALIFICATION_RUNTIME'}):
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
             assert value['runtime_version']=='prime-next.20260914' and value['runtime_revision']=='e88f6eb653c3e7c7628b31ad909143a2aebd05df' and value['candidate_status']=='QUALIFICATION_RUNTIME'
-        with patch.dict(os.environ, {'PRIME_INTERFACE_RUNTIME_VERSION': 'https://private.invalid/fixture', 'PRIME_INTERFACE_RUNTIME_REVISION': 'not-a-revision', 'PRIME_INTERFACE_CANDIDATE_STATUS': 'invented'}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_RUNTIME_VERSION': 'https://private.invalid/fixture', 'ORQEVIA_INTERFACE_RUNTIME_REVISION': 'not-a-revision', 'ORQEVIA_INTERFACE_CANDIDATE_STATUS': 'invented'}):
             value=self.client.get('/interface/v1/identity',headers=self.headers).json()
             assert value['runtime_version']=='UNKNOWN' and value['runtime_revision']=='UNKNOWN' and value['candidate_status']=='UNKNOWN'
 
@@ -113,8 +113,8 @@ class ContractTests(unittest.TestCase):
         (root/'action-records.jsonl').write_text('{"sequence":1,"private":"action"}\n',encoding='utf-8')
         revision='1'*40
         self.policies['dell']['capabilities'].append('health.read')
-        with patch.dict(os.environ,{'PRIME_INTERFACE_RUNTIME_REVISION':revision,
-                'PRIME_INTERFACE_CLIENTS_JSON':json.dumps(self.policies)}):
+        with patch.dict(os.environ,{'ORQEVIA_INTERFACE_RUNTIME_REVISION':revision,
+                'ORQEVIA_INTERFACE_CLIENTS_JSON':json.dumps(self.policies)}):
             response=self.client.get('/interface/v1/health',headers=self.headers)
         assert response.status_code==200
         value=response.json()
@@ -189,25 +189,25 @@ class ContractTests(unittest.TestCase):
         assert result.status_code == 200 and result.json()['artifacts'] == []
 
     def test_canonical_dell_identity_and_header_authentication(self):
-        headers = {'X-Jarvis-Client-ID': 'dell', 'Authorization': 'Bearer dell'}
-        with patch.dict(os.environ, {'PRIME_INTERFACE_PUBLIC_KEY': 'fixture-public-SPKI'}):
+        headers = {'X-ORQEVIA-Client-ID': 'dell', 'Authorization': 'Bearer dell'}
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_PUBLIC_KEY': 'fixture-public-SPKI'}):
             response = self.client.get('/interface/v1/identity', headers=headers)
             assert response.status_code == 200
             body = response.json()
             canonical = {key: body[key] for key in ('hostname', 'role', 'protocolVersion', 'publicKey')}
-            assert canonical == {'hostname': 'ABEX-TEST', 'role': 'AUTHORITATIVE_PRIME',
+            assert canonical == {'hostname': 'ABEX-TEST', 'role': 'AUTHORITATIVE_ORQEVIA',
                 'protocolVersion': '1', 'publicKey': 'fixture-public-SPKI'}
             assert body['identity_sha256'] == hashlib.sha256(json.dumps(canonical,
                 separators=(',', ':')).encode()).hexdigest().upper()
             assert self.client.get('/interface/v1/identity', headers={**headers, 'X-Client-ID': 'other'}).status_code == 400
             assert self.client.get('/interface/v1/identity', headers={**headers, 'Authorization': 'Bearer wrong'}).status_code == 401
-        with patch.dict(os.environ, {'PRIME_INTERFACE_PUBLIC_KEY': ''}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_PUBLIC_KEY': ''}):
             assert self.client.get('/interface/v1/identity', headers=headers).status_code == 503
-        with patch.dict(os.environ, {'PRIME_INTERFACE_HOST_ID': ''}):
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_HOST_ID': ''}):
             assert self.client.get('/interface/v1/identity', headers=headers).status_code == 503
 
     def test_canonical_dell_objective_task_events_and_artifact(self):
-        headers = {'X-Jarvis-Client-ID': 'dell', 'Authorization': 'Bearer dell', 'Idempotency-Key': 'dell-fixture-one'}
+        headers = {'X-ORQEVIA-Client-ID': 'dell', 'Authorization': 'Bearer dell', 'Idempotency-Key': 'dell-fixture-one'}
         response = self.client.post('/interface/v1/objectives', headers=headers, json={'objective': 'fixture supplied facts'})
         assert response.status_code == 202 and response.json()['taskId'] == 'task-fixture'
         assert self.client.post('/interface/v1/objectives', headers=headers,
@@ -228,10 +228,10 @@ class ContractTests(unittest.TestCase):
             assert self.client.get('/interface/v1/tasks/task-fixture', headers=headers).json()['state'] == 'FAILED'
 
     def test_canonical_health_retains_explicit_scope(self):
-        headers = {'X-Jarvis-Client-ID': 'dell', 'Authorization': 'Bearer dell'}
+        headers = {'X-ORQEVIA-Client-ID': 'dell', 'Authorization': 'Bearer dell'}
         assert self.client.get('/interface/v1/health', headers=headers).status_code == 403
         self.policies['dell']['capabilities'].append('health.read')
-        with patch.dict(os.environ, {'PRIME_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}), patch.object(contract.node, 'health', return_value={'state': 'READY'}) as health:
+        with patch.dict(os.environ, {'ORQEVIA_INTERFACE_CLIENTS_JSON': json.dumps(self.policies)}), patch.object(contract.node, 'health', return_value={'state': 'READY'}) as health:
             assert self.client.get('/interface/v1/health', headers=headers).json()['state'] == 'READY'
             health.assert_called_once_with('dell', 'Bearer dell')
 

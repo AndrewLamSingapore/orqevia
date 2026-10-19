@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
+from .path_migration import migrate_legacy_database
 
 MEMORY_POLICIES = {
     "working": {"persistence": "request", "retention": "request_lifetime", "authority": "runtime", "auto_promote": False},
@@ -36,8 +37,9 @@ def _tokens(text: str) -> set[str]:
 
 class MemoryStore:
     def __init__(self, path: str | None = None):
-        data_dir = os.getenv("PRIME_DATA_DIR", "/data").strip() or "/data"
-        self.path = path or os.getenv("PRIME_MEMORY_DB") or str(Path(data_dir) / "jarvis-memory.db")
+        data_dir = os.getenv("ORQEVIA_DATA_DIR", "/data").strip() or "/data"
+        self.path = path or os.getenv("ORQEVIA_MEMORY_DB") or str(Path(data_dir) / "orqevia-memory.db")
+        migrate_legacy_database(self.path, "jarvis-memory.db")
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._init()
 

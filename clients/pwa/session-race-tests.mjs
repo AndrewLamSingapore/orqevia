@@ -8,7 +8,7 @@ let serial=0;
 let activeFixture;
 afterEach(async()=>{
   navigator.onLine=false;document.hidden=true;activeFixture?.listeners.get('offline')?.();
-  for(const request of activeFixture?.requests||[]){request.resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'}}));}
+  for(const request of activeFixture?.requests||[]){request.resolve(new Response('{}',{status:401,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));}
   await settle();
 });
 
@@ -33,11 +33,11 @@ async function fixture(){
     .replace("'./voice.mjs'",JSON.stringify(voiceModule));
   await import('data:text/javascript;base64,'+Buffer.from(source+'\n// fixture '+(++serial)).toString('base64'));
   function response(index,value,status=200,mode='json'){
-    const headers={'content-type':mode==='sse'?'text/event-stream':'application/json','X-PRIME-Protocol':'jarvis.interface.v1'};
+    const headers={'content-type':mode==='sse'?'text/event-stream':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'};
     requests[index].resolve(new Response(mode==='sse'?value:JSON.stringify(value),{status,headers}));
   }
   async function authenticated(clientId='member-a'){
-    response(requests.length-1,{protocol:'jarvis.interface.v1',authenticated:true,clientId,role:'MEMBER',expiresAt:Date.now()/1000+3600});await settle();
+    response(requests.length-1,{protocol:'orqevia.interface.v1',authenticated:true,clientId,role:'MEMBER',expiresAt:Date.now()/1000+3600});await settle();
   }
   function validate(){documentListeners.get('visibilitychange')();}
   function periodic(){intervals.find(item=>item.ms===60000).fn();}
@@ -53,7 +53,7 @@ test('startup restoration and network failure never advertise lost device trust'
 });
 
 test('only a completed server trust rejection shows enrollment recovery',async()=>{
-  const f=await fixture();f.response(0,{protocol:'jarvis.interface.v1',authenticated:false,recovery:'DEVICE_EXPIRED'});await settle();
+  const f=await fixture();f.response(0,{protocol:'orqevia.interface.v1',authenticated:false,recovery:'DEVICE_EXPIRED'});await settle();
   assert.equal(document.documentElement.dataset.accessState,'untrusted');
 });
 
@@ -61,7 +61,7 @@ test('logout invalidates an earlier session response before the logout request c
   const f=await fixture();assert.equal(f.requests[0].url,'/pwa/api/session');
   const logout=f.nodes.get('logout-button').listeners.get('click')();
   assert.equal(f.requests[1].url,'/pwa/api/logout');
-  f.response(0,{protocol:'jarvis.interface.v1',authenticated:true,clientId:'old-member',role:'MEMBER',expiresAt:Date.now()/1000+3600});await settle();
+  f.response(0,{protocol:'orqevia.interface.v1',authenticated:true,clientId:'old-member',role:'MEMBER',expiresAt:Date.now()/1000+3600});await settle();
   assert.equal(f.nodes.get('connection-label').textContent,'Not connected');
   f.response(1,{});await logout;
   assert.equal(f.nodes.get('connection-label').textContent,'Not connected');

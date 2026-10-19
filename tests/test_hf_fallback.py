@@ -191,7 +191,7 @@ def test_fresh_catalog_changes_deny_prepared_fallback(monkeypatch, tmp_path, mut
     catalog_path = tmp_path/'providers.json'
     stored = json.loads(json.dumps({'models': [primary, alternate]}))
     catalog_path.write_text(json.dumps(stored))
-    monkeypatch.setenv('PRIME_PROVIDER_CATALOG', str(catalog_path))
+    monkeypatch.setenv('ORQEVIA_PROVIDER_CATALOG', str(catalog_path))
     monkeypatch.setattr(cloud, 'load_catalog', load_catalog)
     def change_file():
         fresh_primary, fresh_alternate = stored['models']
@@ -228,7 +228,7 @@ def test_unchanged_fresh_catalog_allows_bound_fallback(monkeypatch, tmp_path):
         monkeypatch, tmp_path, non_hf=True)
     catalog_path = tmp_path/'providers.json'
     catalog_path.write_text(json.dumps({'models': [primary, alternate]}))
-    monkeypatch.setenv('PRIME_PROVIDER_CATALOG', str(catalog_path))
+    monkeypatch.setenv('ORQEVIA_PROVIDER_CATALOG', str(catalog_path))
     monkeypatch.setattr(cloud, 'load_catalog', load_catalog)
     run()
     assert calls == ['hf-primary', 'alternate']

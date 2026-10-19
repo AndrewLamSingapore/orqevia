@@ -52,10 +52,10 @@ class ModelGateway:
         self.local_fast = self.settings.fast_model
         self.local_deep = self.settings.deep_model
         self.local_evaluator = self.settings.evaluator_model
-        self.frontier_url = os.getenv("PRIME_FRONTIER_URL", "").rstrip("/")
-        self.frontier_key = os.getenv("PRIME_FRONTIER_API_KEY", "")
-        self.frontier_model = os.getenv("PRIME_FRONTIER_MODEL", "")
-        self.frontier_max_input_chars = _bounded_int(os.getenv("PRIME_FRONTIER_MAX_INPUT_CHARS", "60000"), 60000, 1000, 200000)
+        self.frontier_url = os.getenv("ORQEVIA_FRONTIER_URL", "").rstrip("/")
+        self.frontier_key = os.getenv("ORQEVIA_FRONTIER_API_KEY", "")
+        self.frontier_model = os.getenv("ORQEVIA_FRONTIER_MODEL", "")
+        self.frontier_max_input_chars = _bounded_int(os.getenv("ORQEVIA_FRONTIER_MAX_INPUT_CHARS", "60000"), 60000, 1000, 200000)
 
     @property
     def frontier_available(self) -> bool:

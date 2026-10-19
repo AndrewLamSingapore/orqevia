@@ -10,12 +10,12 @@ class InterfaceServerTests(unittest.TestCase):
         from unittest.mock import AsyncMock
         static = next(r.app for r in interface_server.app.routes if getattr(r, 'path', '') == '/pwa')
         body=b'public-profile-fixture'
-        with patch.dict('os.environ', {'PRIME_PWA_ORIGIN':'https://testserver'}), patch.object(static, 'check_config', AsyncMock()), patch.object(static, 'get_response', AsyncMock(return_value=Response(body))), TestClient(interface_server.app, base_url='https://testserver') as client:
+        with patch.dict('os.environ', {'ORQEVIA_PWA_ORIGIN':'https://testserver'}), patch.object(static, 'check_config', AsyncMock()), patch.object(static, 'get_response', AsyncMock(return_value=Response(body))), TestClient(interface_server.app, base_url='https://testserver') as client:
             response=client.get('/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig')
             assert response.content==body
             assert response.headers['content-type']=='application/x-apple-aspen-config'
             assert response.headers['content-disposition']=='attachment; filename="ORQEVIA-ABEX-HTTPS.mobileconfig"'
-        with patch.dict('os.environ', {'PRIME_PWA_ORIGIN':'https://testserver'}), TestClient(interface_server.app, base_url='https://testserver') as client:
+        with patch.dict('os.environ', {'ORQEVIA_PWA_ORIGIN':'https://testserver'}), TestClient(interface_server.app, base_url='https://testserver') as client:
             missing=client.get('/pwa/ORQEVIA-ABEX-HTTPS.mobileconfig')
             assert missing.status_code==404
             assert 'content-disposition' not in missing.headers
@@ -25,7 +25,7 @@ class InterfaceServerTests(unittest.TestCase):
             response=client.get('/health')
             assert response.status_code==404
             assert response.json()['error']['code']=='NOT_FOUND'
-            assert response.headers['X-PRIME-Protocol']=='jarvis.interface.v1'
+            assert response.headers['X-ORQEVIA-Protocol']=='orqevia.interface.v1'
             assert client.get('/api/interface/v1/health').status_code==404
             assert client.get('/docs').status_code==404
 

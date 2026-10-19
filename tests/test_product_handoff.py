@@ -16,7 +16,7 @@ from app.artifact_factory import ArtifactFactory
 
 class ProductHandoffTests(unittest.TestCase):
     def setUp(self):
-        base=Path(os.environ['PRIME_DATA_DIR']).parent/('product-handoff-'+uuid.uuid4().hex)
+        base=Path(os.environ['ORQEVIA_DATA_DIR']).parent/('product-handoff-'+uuid.uuid4().hex)
         self.data=base/'runtime/data';self.data.mkdir(parents=True)
         self.root=base/'outputs/transfer';self.root.mkdir(parents=True)
         self.config=self.data.parent/'product-handoff.json'
@@ -25,7 +25,7 @@ class ProductHandoffTests(unittest.TestCase):
         (self.root/'JARVIS-DELL-PRODUCTION-RECONNECT.zip').write_bytes(b'public fixture bundle only')
         clients={name:{'token_sha256':hashlib.sha256(name.encode()).hexdigest(),'expires_at':time.time()+300,
                       'capabilities':['task.read']} for name in ('dell:DESKTOP-IPV4PH9','other')}
-        self.env=patch.dict(os.environ,{'PRIME_DATA_DIR':str(self.data),'PRIME_INTERFACE_CLIENTS_JSON':json.dumps(clients)})
+        self.env=patch.dict(os.environ,{'ORQEVIA_DATA_DIR':str(self.data),'ORQEVIA_INTERFACE_CLIENTS_JSON':json.dumps(clients)})
         self.env.start()
         app=FastAPI();app.include_router(product_handoff.router)
         self.app=app
@@ -60,7 +60,7 @@ class ProductHandoffTests(unittest.TestCase):
             with TestClient(self.app,base_url=scheme+'://abex.test',client=(host,12345)) as other:
                 assert other.get('/integration/production-client.zip',headers={'X-Forwarded-For':'192.168.1.17'}).status_code==404
         with patch.dict(os.environ):
-            os.environ.pop('PRIME_DATA_DIR')
+            os.environ.pop('ORQEVIA_DATA_DIR')
             assert self.client.get('/integration/production-client.zip').status_code==404
         self.policy['directory']=str(self.data)
         self.write_config()
