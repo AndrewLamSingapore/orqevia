@@ -235,12 +235,15 @@ def get_session(request:Request):
     if current and bound and not session_token and current['expiresAt']-clock()<SESSION_SECONDS/2:
         # Extend the same opaque credential. Normal active use must not rotate
         # cookies across tabs or require enrollment every eight hours.
-        expires=min(clock()+SESSION_SECONDS,bound['deviceExpiresAt'])
-        with database() as db:
-            changed=db.execute('UPDATE sessions SET expires=? WHERE session_hash=? AND revoked=0',
-                (expires,digest(request.cookies.get(COOKIE,'')))).rowcount
-        if changed:
-            session_token=request.cookies[COOKIE];current['expiresAt']=expires
+        bounded_cookie=request.cookies.get(COOKIE,'')
+        if not re.fullmatch(r'[A-Za-z0-9_-]{43}',bounded_cookie):current=None;clear_credentials=True
+        else:
+            expires=min(clock()+SESSION_SECONDS,bound['deviceExpiresAt'])
+            with database() as db:
+                changed=db.execute('UPDATE sessions SET expires=? WHERE session_hash=? AND revoked=0',
+                    (expires,digest(bounded_cookie))).rowcount
+            if changed:
+                session_token=bounded_cookie;current['expiresAt']=expires
     recovery=None if current else ('DEVICE_REVOKED' if device_status=='REVOKED' else
         'DEVICE_EXPIRED' if device_status=='EXPIRED' else 'TRUST_REQUIRED')
     response=JSONResponse({'protocol':'jarvis.interface.v1','authenticated':bool(current),
