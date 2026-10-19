@@ -70,7 +70,7 @@ ruff check .                         PASS
 scripts/check_ruff_changed.py        PASS
 ruff format --check <new Python>     PASS
 python -m compileall                 PASS
-full Python regression               6049 passed, 20 skipped, 3 deselected
+full Python regression               6052 passed, 20 skipped, 3 deselected
 ```
 
 The final full Python suite result is recorded in `REGRESSION_REPORT.md`.

@@ -138,8 +138,8 @@ This measurement is local, not a production load benchmark.
 ## Deployment boundary
 
 - The exact merged source is deployed in image
-  `orqevia:tooling-20261019-86e26da-exact`
-  (`sha256:376a96f6bd061e3e6375cb4d21ef7ffcf9714584f44ffeca8987c18bb6eeb95c`).
+  `orqevia:tooling-20261019-97a9f93-exact`
+  (`sha256:bc3d591841ddd8b6cc1835051fa8fbd8ad304807ef56d8d2b952a1fbcc3eaac1`).
 - The deployed image imports OpenTelemetry and reports OTel status `DISABLED`
   under the active `ORQEVIA_OTEL_ENABLED=0` policy.
 - An in-image production-entrypoint probe emitted loopback traces and metrics
