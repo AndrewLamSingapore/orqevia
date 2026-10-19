@@ -11,10 +11,12 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import hmac
+import inspect
 import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 from dataclasses import dataclass
 from decimal import Decimal
@@ -25,6 +27,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from . import media_generation as media_generation_contract
+from . import secret_refs as secret_refs_contract
 from .action_records import ActionRecord, action_ledger
 from .media_generation import (
     TERMINAL_STATUSES,
@@ -132,6 +136,9 @@ class HiggsfieldMediaSettings:
     validation_file: str = ""
     validation_sha256_file: str = ""
     validation_max_age_seconds: int = 86400
+    generation_file: str = ""
+    generation_sha256_file: str = ""
+    generation_max_age_seconds: int = 31536000
     database_path: str = "/data/media-jobs.db"
     max_cost_usd: Decimal = Decimal("0.25")
     max_jobs_per_day: int = 3
@@ -177,6 +184,11 @@ class HiggsfieldMediaSettings:
             validation_file=os.getenv("ORQEVIA_HIGGSFIELD_VALIDATION_FILE", "").strip(),
             validation_sha256_file=os.getenv("ORQEVIA_HIGGSFIELD_VALIDATION_SHA256_FILE", "").strip(),
             validation_max_age_seconds=integer("ORQEVIA_HIGGSFIELD_VALIDATION_MAX_AGE_SECONDS", 86400, 300, 604800),
+            generation_file=os.getenv("ORQEVIA_HIGGSFIELD_GENERATION_FILE", "").strip(),
+            generation_sha256_file=os.getenv("ORQEVIA_HIGGSFIELD_GENERATION_SHA256_FILE", "").strip(),
+            generation_max_age_seconds=integer(
+                "ORQEVIA_HIGGSFIELD_GENERATION_MAX_AGE_SECONDS", 31536000, 300, 31536000
+            ),
             database_path=os.getenv("ORQEVIA_MEDIA_DB", "/data/media-jobs.db").strip(),
             max_cost_usd=decimal_value(os.getenv("ORQEVIA_MEDIA_MAX_COST_USD", "0.25"), "max_cost_usd"),
             max_jobs_per_day=integer("ORQEVIA_MEDIA_MAX_JOBS_PER_DAY", 3, 1, 100),
@@ -923,6 +935,133 @@ class HiggsfieldValidationReceipt:
         }
 
 
+class HiggsfieldGenerationReceipt:
+    """A digest-verified acceptance receipt for one completed live generation."""
+
+    schema_version = "orqevia.higgsfield-generation-acceptance.v1"
+
+    def __init__(self, path: str, sha256_file: str, *, max_age_seconds: int = 31536000):
+        self.path = Path(path)
+        self.sha256_file = Path(sha256_file)
+        self.max_age_seconds = max_age_seconds
+        if not self.path.is_absolute() or not self.sha256_file.is_absolute():
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+
+    def _load(self) -> tuple[dict[str, Any], str]:
+        try:
+            raw = self.path.read_bytes()
+            digest_raw = self.sha256_file.read_bytes()
+        except OSError:
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True) from None
+        if not 1 <= len(raw) <= 128 * 1024:
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+        try:
+            expected = digest_raw.decode("ascii").strip().lower()
+            value = json.loads(raw)
+        except (UnicodeError, ValueError):
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True) from None
+        if re.fullmatch(r"[a-f0-9]{64}", expected) is None:
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+        actual = hashlib.sha256(raw).hexdigest()
+        if not hmac.compare_digest(actual, expected):
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+        outputs = value.get("outputs") if isinstance(value, dict) else None
+        if (
+            not isinstance(value, dict)
+            or value.get("schema_version") != self.schema_version
+            or value.get("provider") != "higgsfield"
+            or not isinstance(value.get("observed_at_utc"), str)
+            or not isinstance(value.get("request_id"), str)
+            or _UUID.fullmatch(value["request_id"]) is None
+            or not isinstance(value.get("task_id"), str)
+            or not value["task_id"]
+            or len(value["task_id"]) > 256
+            or not isinstance(value.get("model"), str)
+            or not value["model"]
+            or len(value["model"]) > 200
+            or not isinstance(value.get("idempotency_key"), str)
+            or re.fullmatch(r"[\x21-\x7e]{1,255}", value["idempotency_key"]) is None
+            or value.get("terminal_status") not in TERMINAL_STATUSES
+            or type(value.get("polls")) is not int
+            or value["polls"] < 0
+            or not isinstance(value.get("estimated_usd"), str)
+            or not isinstance(value.get("maximum_cost_usd"), str)
+            or re.fullmatch(r"[a-f0-9]{64}", str(value.get("credential_fingerprint_sha256", ""))) is None
+            or re.fullmatch(r"[a-f0-9]{64}", str(value.get("provider_contract_sha256", ""))) is None
+            or value.get("result_urls_exported") is not False
+            or not isinstance(outputs, list)
+            or not 1 <= len(outputs) <= 100
+        ):
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+        estimated = decimal_value(value["estimated_usd"], "estimated_usd")
+        maximum = decimal_value(value["maximum_cost_usd"], "maximum_cost_usd")
+        if maximum <= 0 or maximum > Decimal("0.25") or estimated > maximum:
+            raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+        cleaned_outputs = []
+        for output in outputs:
+            if (
+                not isinstance(output, dict)
+                or type(output.get("bytes")) is not int
+                or not 1 <= output["bytes"] <= 100 * 1024 * 1024
+                or re.fullmatch(r"[a-f0-9]{64}", str(output.get("sha256", ""))) is None
+                or not isinstance(output.get("host"), str)
+                or not output["host"]
+                or len(output["host"]) > 255
+            ):
+                raise MediaProviderError("GENERATION_EVIDENCE_UNAVAILABLE", pre_execution=True)
+            cleaned_outputs.append({
+                "bytes": output["bytes"],
+                "sha256": output["sha256"],
+                "host": output["host"],
+            })
+        value["outputs"] = cleaned_outputs
+        return value, actual
+
+    def health(self) -> dict[str, Any]:
+        if not self.path.is_file() or not self.sha256_file.is_file():
+            return {
+                "mode": "LIVE_GENERATION_ACCEPTANCE",
+                "status": "MISSING",
+                "configured": True,
+            }
+        try:
+            value, digest = self._load()
+            observed = datetime.fromisoformat(value["observed_at_utc"].replace("Z", "+00:00"))
+            if observed.tzinfo is None:
+                observed = observed.replace(tzinfo=timezone.utc)
+            age = max(0, int((datetime.now(timezone.utc) - observed).total_seconds()))
+        except (MediaProviderError, ValueError):
+            return {
+                "mode": "LIVE_GENERATION_ACCEPTANCE",
+                "status": "INVALID",
+                "configured": True,
+            }
+        completed = value["terminal_status"] == "completed" and value.get("error_code") is None
+        status = "STALE" if age > self.max_age_seconds else "VALID" if completed else "FAILED"
+        return {
+            "mode": "LIVE_GENERATION_ACCEPTANCE",
+            "status": status,
+            "configured": True,
+            "observed_at_utc": value["observed_at_utc"],
+            "age_seconds": age,
+            "max_age_seconds": self.max_age_seconds,
+            "sha256": digest,
+            "request_id": value["request_id"],
+            "task_id": value["task_id"],
+            "model": value["model"],
+            "idempotency_key": value["idempotency_key"],
+            "terminal_status": value["terminal_status"],
+            "polls": value["polls"],
+            "estimated_usd": value["estimated_usd"],
+            "maximum_cost_usd": value["maximum_cost_usd"],
+            "output_count": len(value["outputs"]),
+            "outputs": value["outputs"],
+            "credential_fingerprint_sha256": value["credential_fingerprint_sha256"],
+            "provider_contract_sha256": value["provider_contract_sha256"],
+            "entitlement_scope": value.get("entitlement_scope"),
+        }
+
+
 class HiggsfieldMediaService:
     def __init__(
         self,
@@ -931,12 +1070,14 @@ class HiggsfieldMediaService:
         provider: HiggsfieldApiProvider | None = None,
         discovery: HiggsfieldCliDiscovery | HiggsfieldCatalogSnapshot | None = None,
         validation: HiggsfieldValidationReceipt | None = None,
+        generation: HiggsfieldGenerationReceipt | None = None,
         store: MediaJobStore | None = None,
     ):
         self.settings = settings
         self.provider = provider or HiggsfieldApiProvider(settings)
         self.discovery = discovery
         self.validation = validation
+        self.generation = generation
         self.store = store or MediaJobStore(settings.database_path)
 
     def _audit(
@@ -1006,6 +1147,20 @@ class HiggsfieldMediaService:
             and validation_health.get("estimate_verified") is True
             and credential_matches
         )
+        generation_health = (
+            self.generation.health()
+            if isinstance(self.generation, HiggsfieldGenerationReceipt)
+            else {
+                "mode": "LIVE_GENERATION_ACCEPTANCE",
+                "status": "NOT_CONFIGURED",
+                "configured": False,
+            }
+        )
+        generation_valid = self._generation_evidence_valid(
+            generation_health,
+            validation_health,
+            current_fingerprint,
+        )
         if not self.settings.enabled:
             overall = "DISABLED"
         elif api_health.get("readiness") != "READY":
@@ -1014,8 +1169,12 @@ class HiggsfieldMediaService:
             overall = "AUTH_REQUIRED"
         elif catalog_health.get("status") != "VALID_FRESH":
             overall = "DEGRADED"
+        elif generation_valid:
+            overall = "READY"
         else:
             overall = "DEGRADED"
+        generation_public = dict(generation_health)
+        generation_public.pop("credential_fingerprint_sha256", None)
         return {
             "provider": self.provider_id(),
             "enabled": self.settings.enabled,
@@ -1028,19 +1187,66 @@ class HiggsfieldMediaService:
             else "AUTH_REQUIRED",
             "rest_credentials_valid": rest_valid,
             "credential_matches_validation": credential_matches,
-            "rest_execution_ready": False,
+            "rest_execution_ready": rest_valid and generation_valid,
             "cli_discovery_available": isinstance(self.discovery, HiggsfieldCliDiscovery),
             "catalog_snapshot_valid": catalog_health.get("status") in {"VALID_FRESH", "STALE"},
             "catalog_snapshot_fresh": catalog_health.get("status") == "VALID_FRESH",
-            "quota_entitlement_verified": False,
+            "quota_entitlement_verified": generation_valid
+            and generation_health.get("entitlement_scope") == "SELECTED_MODEL_EXECUTION",
+            "quota_entitlement_scope": "SELECTED_MODEL_EXECUTION"
+            if generation_valid
+            and generation_health.get("entitlement_scope") == "SELECTED_MODEL_EXECUTION"
+            else "NOT_VERIFIED",
             "api": api_health,
             "catalog": catalog_health,
             "validation": validation_public,
-            "generation_execution_verified": False,
+            "generation": generation_public,
+            "generation_execution_verified": generation_valid,
             "cli_discovery_configured": isinstance(self.discovery, HiggsfieldCliDiscovery),
             "catalog_discovery_configured": isinstance(self.discovery, HiggsfieldCatalogSnapshot),
             "execution_authority": "NONE_MEDIA_PROVIDER_ONLY",
         }
+
+    def _generation_evidence_valid(
+        self,
+        evidence: Mapping[str, Any],
+        validation_health: Mapping[str, Any],
+        current_fingerprint: str | None,
+    ) -> bool:
+        if not isinstance(self.generation, HiggsfieldGenerationReceipt):
+            return False
+        if evidence.get("status") != "VALID":
+            return False
+        if not current_fingerprint or not hmac.compare_digest(
+            current_fingerprint, validation_health.get("credential_fingerprint_sha256", "")
+        ):
+            return False
+        if not hmac.compare_digest(
+            current_fingerprint, evidence.get("credential_fingerprint_sha256", "")
+        ):
+            return False
+        if not hmac.compare_digest(
+            higgsfield_generation_contract_sha256(),
+            evidence.get("provider_contract_sha256", ""),
+        ):
+            return False
+        try:
+            row = self.store.get_by_idempotency(evidence["idempotency_key"], owner_id="owner")
+            if not row:
+                return False
+            outputs = json.loads(row.get("outputs_json") or "[]")
+            return (
+                row.get("provider_id") == "higgsfield"
+                and row.get("request_id") == evidence["request_id"]
+                and row.get("task_id") == evidence["task_id"]
+                and row.get("model_path") == evidence["model"]
+                and row.get("status") == "completed"
+                and str(row.get("estimated_usd")) == evidence["estimated_usd"]
+                and isinstance(outputs, list)
+                and len(outputs) == evidence["output_count"]
+            )
+        except (OSError, sqlite3.Error, TypeError, ValueError):
+            return False
 
     def provider_id(self) -> str:
         return "higgsfield"
@@ -1224,3 +1430,34 @@ class HiggsfieldMediaService:
             model_path=row["model_path"],
         )
         return job.as_public_dict()
+
+
+def higgsfield_generation_contract_sha256() -> str:
+    """Hash the source that governs credential use and paid job execution."""
+
+    digest = hashlib.sha256(b"orqevia.higgsfield-generation-contract.v1\0")
+    file_parts = (
+        ("media_generation", Path(media_generation_contract.__file__).read_bytes()),
+        ("secret_refs", Path(secret_refs_contract.__file__).read_bytes()),
+    )
+    method_parts = (
+        ("provider.credential", inspect.getsource(HiggsfieldApiProvider._credential)),
+        ("provider.client", inspect.getsource(HiggsfieldApiProvider._client)),
+        ("provider.headers", inspect.getsource(HiggsfieldApiProvider._headers)),
+        ("provider.response", inspect.getsource(HiggsfieldApiProvider._json_response)),
+        ("provider.estimate", inspect.getsource(HiggsfieldApiProvider.estimate)),
+        ("provider.submit", inspect.getsource(HiggsfieldApiProvider.submit)),
+        ("provider.status", inspect.getsource(HiggsfieldApiProvider.status)),
+        ("provider.cancel", inspect.getsource(HiggsfieldApiProvider.cancel)),
+        ("service.submit", inspect.getsource(HiggsfieldMediaService.submit)),
+        ("service.status", inspect.getsource(HiggsfieldMediaService.status)),
+        ("service.cancel", inspect.getsource(HiggsfieldMediaService.cancel)),
+    )
+    for name, value in (*file_parts, *method_parts):
+        raw = value if isinstance(value, bytes) else value.encode("utf-8")
+        raw = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        digest.update(name.encode("ascii"))
+        digest.update(b"\0")
+        digest.update(len(raw).to_bytes(8, "big"))
+        digest.update(raw)
+    return digest.hexdigest()

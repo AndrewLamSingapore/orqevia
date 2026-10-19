@@ -15,9 +15,11 @@ from app.higgsfield_media import (
     HiggsfieldApiProvider,
     HiggsfieldCatalogSnapshot,
     HiggsfieldCliDiscovery,
+    HiggsfieldGenerationReceipt,
     HiggsfieldMediaService,
     HiggsfieldMediaSettings,
     HiggsfieldValidationReceipt,
+    higgsfield_generation_contract_sha256,
 )
 from app.media_generation import MediaEstimate, MediaJob, MediaJobRequest, MediaJobStore, MediaProviderError
 
@@ -62,6 +64,15 @@ def submit_body():
         "status_url": STATUS_URL,
         "cancel_url": CANCEL_URL,
     }
+
+
+def write_signed_json(path, value):
+    raw = json.dumps(value, sort_keys=True).encode()
+    path.write_bytes(raw)
+    path.with_name(path.name + ".sha256").write_text(
+        hashlib.sha256(raw).hexdigest(),
+        encoding="ascii",
+    )
 
 
 def status_body(status="queued"):
@@ -466,6 +477,154 @@ def test_non_billable_validation_receipt_and_health_states(tmp_path):
 
     digest.write_text("0" * 64, encoding="ascii")
     assert validation.health()["status"] == "INVALID"
+
+
+def test_live_generation_receipt_is_digest_contract_and_store_bound(tmp_path):
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    request_id = "f315a087-24e9-4f6c-b58a-05f91b421cdf"
+    idempotency_key = "fixture-generation-acceptance"
+    output_hash = "c" * 64
+    contract_hash = higgsfield_generation_contract_sha256()
+
+    catalog_path = tmp_path / "catalog.json"
+    write_signed_json(catalog_path, {
+        "schema_version": "orqevia.higgsfield-catalog.v1",
+        "generated_at_utc": now,
+        "cli_version": "higgsfield 1.2.2",
+        "catalog": {
+            "status": "AUTHENTICATED",
+            "workspace": {
+                "id": "866bb96e-494f-47aa-87a2-9530b1da977b",
+                "name": "Private workspace",
+                "plan": "free",
+                "credits": 10,
+                "role": "owner",
+                "selected": True,
+            },
+            "account": {"plan": "free", "credits": 10},
+            "models": [],
+            "workflows": [],
+        },
+    })
+    validation_path = tmp_path / "validation.json"
+    write_signed_json(validation_path, {
+        "schema_version": "orqevia.higgsfield-provider-validation.v1",
+        "result": "PASSED",
+        "validated_at_utc": now,
+        "credential_format_verified": True,
+        "credential_fingerprint_sha256": "a" * 64,
+        "provider_authentication_verified": True,
+        "estimate_verified": True,
+        "quota_entitlement_verified": False,
+        "generation_execution_verified": False,
+        "billable_generation_submitted": False,
+        "network_probe_performed": True,
+        "model_path": "higgsfield-ai/soul/v2/standard",
+        "estimated_usd": "0.004",
+        "estimated_credits": "0.050",
+        "error_code": None,
+    })
+    generation_path = tmp_path / "generation.json"
+    generation_payload = {
+        "schema_version": "orqevia.higgsfield-generation-acceptance.v1",
+        "provider": "higgsfield",
+        "observed_at_utc": now,
+        "request_id": request_id,
+        "task_id": "higgsfield-acceptance-fixture",
+        "model": "higgsfield-ai/soul/v2/standard",
+        "idempotency_key": idempotency_key,
+        "terminal_status": "completed",
+        "polls": 5,
+        "error_code": None,
+        "estimated_usd": "0.004",
+        "maximum_cost_usd": "0.25",
+        "outputs": [{"bytes": 10, "sha256": output_hash, "host": "cdn.example.invalid"}],
+        "result_urls_exported": False,
+        "credential_fingerprint_sha256": "a" * 64,
+        "provider_contract_sha256": contract_hash,
+        "entitlement_scope": "SELECTED_MODEL_EXECUTION",
+    }
+    write_signed_json(generation_path, generation_payload)
+    generation = HiggsfieldGenerationReceipt(
+        str(generation_path),
+        str(generation_path.with_name(generation_path.name + ".sha256")),
+    )
+    assert generation.health()["status"] == "VALID"
+
+    class ReadyProvider:
+        def health(self):
+            return {"readiness": "READY", "enabled": True}
+
+        def credential_fingerprint(self):
+            return "a" * 64
+
+    class MatchingStore:
+        def get_by_idempotency(self, key, *, owner_id):
+            assert key == idempotency_key and owner_id == "owner"
+            return {
+                "provider_id": "higgsfield",
+                "request_id": request_id,
+                "task_id": "higgsfield-acceptance-fixture",
+                "model_path": "higgsfield-ai/soul/v2/standard",
+                "status": "completed",
+                "estimated_usd": "0.004",
+                "outputs_json": json.dumps([{"url": "https://cdn.example.invalid/output.png"}]),
+            }
+
+    service = HiggsfieldMediaService(
+        settings(database_path=":memory:"),
+        provider=ReadyProvider(),
+        discovery=HiggsfieldCatalogSnapshot(
+            str(catalog_path),
+            str(catalog_path.with_name(catalog_path.name + ".sha256")),
+        ),
+        validation=HiggsfieldValidationReceipt(
+            str(validation_path),
+            str(validation_path.with_name(validation_path.name + ".sha256")),
+        ),
+        generation=generation,
+        store=MatchingStore(),
+    )
+    health = service.health()
+    assert health["status"] == "READY"
+    assert health["rest_execution_ready"] is True
+    assert health["generation_execution_verified"] is True
+    assert health["quota_entitlement_verified"] is True
+    assert health["quota_entitlement_scope"] == "SELECTED_MODEL_EXECUTION"
+    assert health["generation"]["request_id"] == request_id
+    assert "credential_fingerprint_sha256" not in health["generation"]
+
+    generation_payload.update(credential_fingerprint_sha256="b" * 64)
+    write_signed_json(generation_path, generation_payload)
+    key_mismatch = service.health()
+    assert key_mismatch["status"] == "DEGRADED"
+    assert key_mismatch["generation_execution_verified"] is False
+
+    generation_payload.update(
+        credential_fingerprint_sha256="a" * 64,
+        provider_contract_sha256="b" * 64,
+    )
+    write_signed_json(generation_path, generation_payload)
+    contract_mismatch = service.health()
+    assert contract_mismatch["status"] == "DEGRADED"
+    assert contract_mismatch["rest_execution_ready"] is False
+
+    generation_payload.update(provider_contract_sha256=contract_hash)
+    generation_payload.update(terminal_status="failed", error_code="PROVIDER_GENERATION_FAILED")
+    write_signed_json(generation_path, generation_payload)
+    assert generation.health()["status"] == "FAILED"
+
+    generation_payload.update(terminal_status="completed", error_code=None)
+    write_signed_json(generation_path, generation_payload)
+    generation_path.with_name(generation_path.name + ".sha256").write_text(
+        "0" * 64,
+        encoding="ascii",
+    )
+    assert generation.health()["status"] == "INVALID"
+    failed_binding = service.health()
+    assert failed_binding["status"] == "DEGRADED"
+    assert failed_binding["rest_execution_ready"] is False
+    assert failed_binding["generation_execution_verified"] is False
 
 
 def test_media_routes_require_owner_auth(monkeypatch):

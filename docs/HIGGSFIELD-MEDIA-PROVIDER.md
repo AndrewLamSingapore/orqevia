@@ -1,8 +1,9 @@
 # Higgsfield optional media provider
 
-Status: credential, non-billable estimate and catalog discovery are active on
-ABEX; billable generation remains unverified. The provider is not a replacement
-for ORQEVIA orchestration and is not exposed to the 21 agents as a tool.
+Status: credential, non-billable estimate, catalog discovery and one explicitly
+approved Soul 2 generation are verified on ABEX. The provider is not a
+replacement for ORQEVIA orchestration and is not exposed to the 21 agents as a
+tool.
 
 ## Decision
 
@@ -145,10 +146,47 @@ execution unverified until a separately authorized generation acceptance test.
 This activation completed on 2026-10-19 after the provider estimate returned
 HTTP success with a non-billable `$0.004` / `0.050`-credit estimate.
 
-The funded API dashboard currently shows a US$5.00 balance, US$0.00 spend,
-zero generation requests and the 20-concurrency onboarding item completed.
-The prepared one-job acceptance uses `higgsfield-ai/soul/v2/standard` at 720p,
-with a US$0.25 hard cap. It remains unsubmitted pending explicit Owner approval.
+The funded API dashboard showed a US$5.00 balance, US$0.00 spend, zero
+generation requests and the 20-concurrency onboarding item completed before
+acceptance. The Owner then authorized one `higgsfield-ai/soul/v2/standard`
+720p request under a US$0.25 cap.
+
+## Live-generation acceptance
+
+The approved request completed after five bounded polls with exactly one
+output. The acceptance evidence is written under:
+
+```text
+C:\ProgramData\ORQEVIA\acceptance
+```
+
+`scripts/Publish-HiggsfieldGenerationAcceptance.py` verifies the source receipt
+digest and downloaded artifact bytes, then publishes a sanitized receipt into
+the existing read-only input mount:
+
+```text
+C:\ProgramData\ORQEVIA\inputs\higgsfield-generation-acceptance.json
+C:\ProgramData\ORQEVIA\inputs\higgsfield-generation-acceptance.json.sha256
+```
+
+The published receipt omits provider URLs and host artifact paths. It records
+the request ID, model, task, idempotency key, terminal state, poll count,
+estimated cost, output size and SHA-256, credential fingerprint, and a SHA-256
+of the credential and paid-execution contract.
+
+The backend reports generation execution verified only when all of these match:
+
+1. the receipt and companion digest are valid and fresh;
+2. the terminal state is `completed` with at least one output;
+3. the receipt credential fingerprint matches the mounted key;
+4. the provider execution contract hash matches the running source;
+5. the SQLite job matches the request ID, idempotency key, task, model, cost and
+   terminal state.
+
+Any missing, stale, corrupt or mismatched evidence falls back to
+`generation_execution_verified: false`. The broader account/model quota is not
+claimed; `quota_entitlement_scope` is explicitly limited to the selected
+acceptance model.
 
 The API base URL is fixed to `https://api.higgsfield.ai`; configuration cannot
 redirect it to an arbitrary origin.

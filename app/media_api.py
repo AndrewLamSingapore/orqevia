@@ -16,6 +16,7 @@ from .client_auth import authenticate_owner
 from .higgsfield_media import (
     HiggsfieldCatalogSnapshot,
     HiggsfieldCliDiscovery,
+    HiggsfieldGenerationReceipt,
     HiggsfieldMediaService,
     HiggsfieldMediaSettings,
     HiggsfieldValidationReceipt,
@@ -75,10 +76,18 @@ def _service() -> HiggsfieldMediaService:
                 settings.validation_sha256_file,
                 max_age_seconds=settings.validation_max_age_seconds,
             )
+        generation = None
+        if settings.generation_file and settings.generation_sha256_file:
+            generation = HiggsfieldGenerationReceipt(
+                settings.generation_file,
+                settings.generation_sha256_file,
+                max_age_seconds=settings.generation_max_age_seconds,
+            )
         _SERVICE = HiggsfieldMediaService(
             settings,
             discovery=discovery,
             validation=validation,
+            generation=generation,
         )
     return _SERVICE
 

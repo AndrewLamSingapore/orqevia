@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import random
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -32,6 +33,7 @@ PAYLOAD = {
     "enhance_prompt": False,
 }
 OUTPUT_ROOT = Path(r"C:\ProgramData\ORQEVIA\acceptance")
+PUBLISHER = Path(__file__).with_name("Publish-HiggsfieldGenerationAcceptance.py")
 
 
 def atomic_write(path: Path, raw: bytes) -> None:
@@ -198,12 +200,30 @@ def main() -> int:
     stem = OUTPUT_ROOT / f"higgsfield-acceptance-{job.get('request_id', 'unknown')}.json"
     atomic_write(stem, raw)
     atomic_write(stem.with_name(stem.name + ".sha256"), (hashlib.sha256(raw).hexdigest() + "\n").encode("ascii"))
+    published = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            str(PUBLISHER),
+            "--acceptance-receipt",
+            str(stem),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    if published.returncode != 0:
+        raise SystemExit("acceptance evidence publication failed")
+    publication = json.loads(published.stdout)
     plan.update({
         "terminal_status": job.get("status"),
         "polls": polls,
         "output_count": len(artifacts),
         "receipt": str(stem),
         "receipt_sha256": hashlib.sha256(raw).hexdigest(),
+        "published_receipt": publication["receipt"],
+        "published_receipt_sha256": publication["sha256"],
     })
     print(json.dumps(plan, sort_keys=True))
     return 0 if job.get("status") == "completed" and len(artifacts) == len(job.get("outputs") or []) else 2
