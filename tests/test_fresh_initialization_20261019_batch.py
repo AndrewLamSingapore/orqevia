@@ -20,24 +20,11 @@ def test_batch_plan_matches_pinned_digest_and_evidence():
         )
         for entry in plan["cases"]
     )
-    assert (
-        hashlib.sha256(json.dumps(tuples, separators=(",", ":")).encode()).hexdigest()
-        == v.BATCH
-    )
+    assert hashlib.sha256(json.dumps(tuples, separators=(",", ":")).encode()).hexdigest() == v.BATCH
     for entry in plan["cases"]:
-        directory = (
-            ROOT
-            / entry["evidence_directory"]
-            / entry["record_established_fields"]["agent_id"]
-        )
-        assert (
-            hashlib.sha256((directory / "execution.json").read_bytes()).hexdigest()
-            == entry["execution_sha256"]
-        )
-        assert (
-            hashlib.sha256((directory / "review.json").read_bytes()).hexdigest()
-            == entry["review_sha256"]
-        )
+        directory = ROOT / entry["evidence_directory"] / entry["record_established_fields"]["agent_id"]
+        assert hashlib.sha256((directory / "execution.json").read_bytes()).hexdigest() == entry["execution_sha256"]
+        assert hashlib.sha256((directory / "review.json").read_bytes()).hexdigest() == entry["review_sha256"]
         assert entry["execution_source_revision"] == v.SOURCE
         assert entry["reviewer_code_revision"] == v.SOURCE
         assert entry["verifier_code_revision"] == v.VERIFIER
@@ -52,9 +39,7 @@ def test_protected_validation_dry_run_with_fake_guard():
         "GITHUB_REF": "refs/heads/main",
         "GITHUB_REF_PROTECTED": "true",
         "GITHUB_EVENT_NAME": "workflow_dispatch",
-        "GITHUB_WORKFLOW_REF": (
-            v.REPOSITORY + "/.github/workflows/" + v.WORKFLOW + "@refs/heads/main"
-        ),
+        "GITHUB_WORKFLOW_REF": (v.REPOSITORY + "/.github/workflows/" + v.WORKFLOW + "@refs/heads/main"),
         "GITHUB_RUN_ATTEMPT": "1",
         "GITHUB_RUN_ID": "555",
         "GITHUB_SHA": sha,
@@ -101,9 +86,7 @@ def test_previous_or_concurrent_batch_invocation_is_denied():
         "GITHUB_REF": "refs/heads/main",
         "GITHUB_REF_PROTECTED": "true",
         "GITHUB_EVENT_NAME": "workflow_dispatch",
-        "GITHUB_WORKFLOW_REF": (
-            v.REPOSITORY + "/.github/workflows/" + v.WORKFLOW + "@refs/heads/main"
-        ),
+        "GITHUB_WORKFLOW_REF": (v.REPOSITORY + "/.github/workflows/" + v.WORKFLOW + "@refs/heads/main"),
         "GITHUB_RUN_ATTEMPT": "1",
         "GITHUB_RUN_ID": "555",
         "GITHUB_SHA": sha,

@@ -3,6 +3,7 @@
 One workflow invocation consumes this exact evidence batch, including failure.
 Subsequent runs/attempts are denied. Local audit never emits protected rows.
 """
+
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -14,7 +15,9 @@ from urllib import request
 from app.agent_registry import load_agent_registry
 from scripts.audit_initialization_package import probe_case, ROOT
 from scripts.sign_admitted_agent_cases import (
-    parse, unchanged_reviewer_code, unchanged_runtime_reviewer_code,
+    parse,
+    unchanged_reviewer_code,
+    unchanged_runtime_reviewer_code,
 )
 
 REPOSITORY = "AndrewLamSingapore/orqevia"
@@ -103,10 +106,7 @@ def guard(env, *, checkout_head, github_read):
         or current.get("repository", {}).get("full_name") != REPOSITORY
     ):
         raise ValueError("AUTHENTICATED_RUN_BINDING_DENIED")
-    runs = github_read(
-        "/actions/workflows/" + WORKFLOW
-        + "/runs?event=workflow_dispatch&per_page=100"
-    )
+    runs = github_read("/actions/workflows/" + WORKFLOW + "/runs?event=workflow_dispatch&per_page=100")
     if (
         type(runs) is not dict
         or type(runs.get("total_count")) is not int
@@ -126,12 +126,8 @@ def guard(env, *, checkout_head, github_read):
     }
 
 
-def protected_validation(
-    plan, *, env, checkout_head, github_read, clock=lambda: datetime.now(timezone.utc)
-):
-    provenance = guard(
-        env, checkout_head=checkout_head, github_read=github_read
-    )
+def protected_validation(plan, *, env, checkout_head, github_read, clock=lambda: datetime.now(timezone.utc)):
+    provenance = guard(env, checkout_head=checkout_head, github_read=github_read)
     pairs = sorted(
         (
             entry["record_established_fields"]["agent_id"],
@@ -221,8 +217,7 @@ def github_reader(token):
     def read(suffix):
         allowed = {
             "/actions/runs/" + os.environ["GITHUB_RUN_ID"],
-            "/actions/workflows/" + WORKFLOW
-            + "/runs?event=workflow_dispatch&per_page=100",
+            "/actions/workflows/" + WORKFLOW + "/runs?event=workflow_dispatch&per_page=100",
         }
         if suffix not in allowed or suffix in calls:
             raise ValueError("FIXED_SINGLE_READ_REQUIRED")
@@ -251,12 +246,16 @@ def main():
     out = ROOT / "fresh-initialization-validation-output"
     out.mkdir(exist_ok=False)
     try:
-        head = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            capture_output=True,
-            check=True,
-            timeout=5,
-        ).stdout.decode().strip()
+        head = (
+            subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                capture_output=True,
+                check=True,
+                timeout=5,
+            )
+            .stdout.decode()
+            .strip()
+        )
         token = os.environ.get("GH_READ_TOKEN")
         if not isinstance(token, str) or not token:
             raise ValueError("READONLY_WORKFLOW_TOKEN_REQUIRED")
@@ -283,9 +282,7 @@ def main():
                     }
                 )
             )
-        raise SystemExit(
-            "Fixed batch validation rejected; original failure preserved, no automatic retry"
-        ) from None
+        raise SystemExit("Fixed batch validation rejected; original failure preserved, no automatic retry") from None
 
 
 if __name__ == "__main__":
