@@ -18,7 +18,7 @@ def install_signed_closure_env_lookup() -> None:
 
     def bridged_getenv(key, default=None):
         if key.startswith("PRIME_") and key not in os.environ:
-            current = "ORQEVIA_" + key[len("PRIME_"):]
+            current = "ORQEVIA_" + key[len("PRIME_") :]
             if current in os.environ:
                 return os.environ[current]
         return original(key, default)
