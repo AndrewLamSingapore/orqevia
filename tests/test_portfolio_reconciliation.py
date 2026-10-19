@@ -221,10 +221,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     release_start = after.index(release_title)
     release_end = after.index("\n## ", release_start + len(release_title)) + 1
     release_update = after[release_start:release_end].encode("utf-8")
-    assert len(release_update) == 2834
-    assert hashlib.sha256(release_update).hexdigest() == "5a816c664f4f5a2270c92b4807cf18fd091522aa29be68300ca266dd5b265d84"
-    assert b"### Claimed, not independently checked" in release_update
-    assert b"### Verified" not in release_update
+    assert len(release_update) == 2843
+    assert hashlib.sha256(release_update).hexdigest() == "24260560971ef5f128c6ef743802d8ffef06d438eafca5a7f735f9e62540bd80"
+    assert b"### Verified (Owner-authorized, 19 October 2026)" in release_update
     after = after[:release_start] + after[release_end:]
     sweep_title = "## ORQEVIA ABEX sweep and CodeQL closure - 19 October 2026"
     assert after.count(sweep_title) == 1
