@@ -9,6 +9,7 @@ from app.project_workflows import (
     ScenarioParameters,
     calculate_financials,
     load_template,
+    _prior_context,
 )
 
 
@@ -71,6 +72,35 @@ def test_financial_calculation_is_reproducible():
     assert scenarios["S1"]["monthly_profit"] == 6200
     assert scenarios["S2"]["monthly_profit"] == 7440
     assert scenarios["S3"]["monthly_profit"] == 8736
+
+
+def test_review_context_is_compressed_and_release_gate_is_fast():
+    template = load_template()
+    roles = {item["agent_id"]: item["model_role"] for item in template["tasks"]}
+    assert roles["a26"] == "deep"
+    assert roles["a29"] == "fast"
+    tasks = [
+        {
+            "agent_id": f"a{index:02d}",
+            "phase": 1,
+            "status": "completed",
+            "result_sha256": f"hash-{index}",
+            "result": "# " + ("long analysis " * 200),
+        }
+        for index in range(1, 20)
+    ] + [
+        {
+            "agent_id": "a26",
+            "phase": 2,
+            "status": "completed",
+            "result_sha256": "review-hash",
+            "result": "PASS with one caveat " * 100,
+        }
+    ]
+    context = _prior_context(tasks, 3)
+    assert len(context) <= 6500
+    assert "review-hash" in context
+    assert "hash-1" not in context
 
 
 def test_workflow_store_is_idempotent(tmp_path):

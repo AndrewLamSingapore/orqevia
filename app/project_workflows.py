@@ -535,6 +535,34 @@ def _task_prompt(request: ProjectWorkflowRequest, financials: dict[str, Any], ta
     )
 
 
+def _compact_result(text: str, limit: int = 320) -> str:
+    normalized = re.sub(r"[#*`>|]+", " ", text or "")
+    normalized = " ".join(normalized.split())
+    return normalized[:limit]
+
+
+def _prior_context(tasks: list[dict[str, Any]], phase: int) -> str:
+    if phase <= 1:
+        return ""
+    if phase == 3:
+        selected = [item for item in tasks if int(item["phase"]) == 2 and item["status"] == "completed"]
+        count_summary = (
+            f"Phase 1 completed "
+            f"{sum(1 for item in tasks if int(item['phase']) == 1 and item['status'] == 'completed')}/19. "
+            f"Phase 2 completed {len(selected)}/1."
+        )
+    else:
+        selected = [item for item in tasks if int(item["phase"]) < phase and item["status"] == "completed"]
+        count_summary = f"Completed prior-phase tasks: {len(selected)}."
+    lines = [count_summary]
+    for item in selected:
+        lines.append(
+            f"- {item['agent_id']} status={item['status']} hash={item['result_sha256']} "
+            f"conclusion={_compact_result(item['result'] or '')}"
+        )
+    return "\n".join(lines)[:6500]
+
+
 _service_lock = threading.RLock()
 _service: "ProjectWorkflowService | None" = None
 _active: set[str] = set()
@@ -680,18 +708,9 @@ class ProjectWorkflowService:
         request = ProjectWorkflowRequest.model_validate(json.loads(run["inputs_json"]))
         financials = json.loads(run["financials_json"])
         prompt = _task_prompt(request, financials, task)
-        if task["phase"] > 1:
-            completed = [item for item in self.store.tasks(run_id) if item["status"] == "completed"]
-            summary = [
-                {
-                    "agent_id": item["agent_id"],
-                    "status": item["status"],
-                    "result_sha256": item["result_sha256"],
-                    "result_excerpt": (item["result"] or "")[:700],
-                }
-                for item in completed
-            ]
-            prompt += "\nPrior task evidence for review:\n" + canonical_json(summary)[:16000]
+        prior = _prior_context(self.store.tasks(run_id), int(task["phase"]))
+        if prior:
+            prompt += "\nPrior task evidence for review:\n" + prior
         return prompt
 
     def _submit(self, run_id: str, task: dict[str, Any], attempt: int) -> None:

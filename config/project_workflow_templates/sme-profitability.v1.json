@@ -21,6 +21,14 @@
     "marketing_increase_percent": 20,
     "revenue_lift_percent": 8
   },
+  "context_policy": {
+    "review_excerpt_chars_per_agent": 320,
+    "max_prior_context_chars": 6500,
+    "phase_three_sources": [
+      "phase:2"
+    ],
+    "review_context_compression": "Remove markdown structure, retain concise conclusions, hashes and status."
+  },
   "phases": [
     {
       "phase": 1,
@@ -248,7 +256,7 @@
       "agent_id": "a29",
       "responsibility": "Release readiness decision",
       "prompt": "Act as release gate. Decide whether the workflow outputs are ready for delivery based only on phase-one results, the quality review and the deterministic checks. Return PASS, PARTIAL or FAIL and list blockers.",
-      "model_role": "deep",
+      "model_role": "fast",
       "max_attempts": 2,
       "timeout_seconds": 600
     }
