@@ -270,7 +270,7 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert len(workflow_update) == 2556
     assert (
         hashlib.sha256(workflow_update).hexdigest()
-        == "69b9afee637b5ed687da1a6e27361cca9951f03cc57d76d92f2aa3368241cb1d"
+        == "608fdbc9a322f580d99ce2ec3e9a13b2e64ed9dbb00d0368fd4f5a4c78270fe0"
     )
     assert b"### Claimed, not independently checked" in workflow_update
     assert b"### Verified" not in workflow_update

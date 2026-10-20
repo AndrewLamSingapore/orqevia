@@ -80,7 +80,7 @@ If you are an AI agent updating this file:
 - The full regression at source `cb01d50` passed 6,084 tests, with 20 skipped,
   3 deselected and 102 subtests passed. The release branch adds context
   compression and evidence-integrity updates on top of `66829d3`; its full
-  regression passed 6,085 tests, with 20 skipped, 3 deselected and 102 subtests
+  regression passed 6,088 tests, with 20 skipped, 3 deselected and 102 subtests
   passed.
 - The separate fresh procurement cohort returned 42/42 valid structured
   reviews, 37 PASS / 5 FAIL, 21/21 substantive agent executions, 29/30
