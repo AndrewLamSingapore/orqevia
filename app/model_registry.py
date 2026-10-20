@@ -7,7 +7,6 @@ assigned to an agent. Every state transition is append-only evidence.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
