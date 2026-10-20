@@ -262,6 +262,19 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert b"### Claimed, not independently checked" in sweep_update
     assert b"### Verified" not in sweep_update
     after = after[:sweep_start] + after[sweep_end:]
+    workflow_title = "## ORQEVIA durable workflow deployment - 20 October 2026"
+    assert after.count(workflow_title) == 1
+    workflow_start = after.index(workflow_title)
+    workflow_end = after.index("\n## ", workflow_start + len(workflow_title)) + 1
+    workflow_update = after[workflow_start:workflow_end].encode("utf-8")
+    assert len(workflow_update) == 2556
+    assert (
+        hashlib.sha256(workflow_update).hexdigest()
+        == "69b9afee637b5ed687da1a6e27361cca9951f03cc57d76d92f2aa3368241cb1d"
+    )
+    assert b"### Claimed, not independently checked" in workflow_update
+    assert b"### Verified" not in workflow_update
+    after = after[:workflow_start] + after[workflow_end:]
     deployment_title = "## ORQEVIA signed naming candidate deployment - 19 October 2026"
     assert after.count(deployment_title) == 1
     deployment_start = after.index(deployment_title)

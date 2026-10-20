@@ -51,6 +51,52 @@ If you are an AI agent updating this file:
 - Isolated browser qualification was unavailable because the Chromium archive download failed. Connected-browser preview checks and deployment receipts must be recorded separately before asserting visual or live acceptance.
 - ORQEVIA host deployment and new Higgsfield generation require access to the existing owner-authenticated ABEX media/deployment operations. Source access alone does not supply host execution access.
 
+## ORQEVIA durable workflow deployment - 20 October 2026
+
+### Claimed, not independently checked
+
+- Backend and interface are deployed from
+  `orqevia:orq002-workflow-20261020`
+  (`sha256:d2de24102ba34642deb726b88b3d1e1cee18a1767fb1d4b0333e282de1177ebe`)
+  at source `cb01d50c123fe2e5b56895a73ab22c037cf5b96d`. The release branch also
+  contains later commit `66829d3`, which passed all nine PR #414 checks but is
+  not present in the live image.
+- The live public PWA URL is
+  `https://jarvis.lamjarvis.com/pwa/projects.html`. An unauthenticated request
+  is redirected by Cloudflare Access to its sign-in page; access to the
+  ORQEVIA page requires a valid Access session.
+- Registered dispatch completed job
+  `f40af4e1-325b-4e34-a882-007ae7cd67cf` through `a01 -> a02` with a non-empty
+  result. The workflow template `sme-profitability.v1` resolves to 21 tasks.
+- One authenticated PWA request completed run
+  `e6578320-8f3c-46d7-94e5-cbb6687742d2`: 21/21 agents, 21/21 handoffs, zero
+  failed tasks, 6/6 artifacts, successful mid-run and post-completion restart
+  checks, 39.55 minutes, 31,211 input tokens and 5,451 output tokens at zero
+  local monetary cost.
+- All 21 agent notebook APIs passed create, read, private-access denial,
+  keyword and semantic search, update and version-history checks. Post-restart
+  retrieval was 21/21; SQLite backup integrity was `ok`; 21 notebooks and 63
+  records restored from the verified backup.
+- The full regression at source `cb01d50` passed 6,084 tests, with 20 skipped,
+  3 deselected and 102 subtests passed. The release branch adds context
+  compression and evidence-integrity updates on top of `66829d3`; its full
+  regression passed 6,085 tests, with 20 skipped, 3 deselected and 102 subtests
+  passed.
+- The separate fresh procurement cohort returned 42/42 valid structured
+  reviews, 37 PASS / 5 FAIL, 21/21 substantive agent executions, 29/30
+  acceptance checks and **98.33/100 PARTIAL**. The original cohort remains
+  unchanged at **97.33/100 PARTIAL**.
+- The public Edge Owner journey is not verified end-to-end. Direct navigation
+  in the existing authenticated profile returned `net::ERR_BLOCKED_BY_CLIENT`,
+  before the ORQEVIA page loaded. The workflow was exercised through the
+  authenticated LAN PWA API and browser session, including hybrid notebook
+  search and an artifact download; public interaction remains open.
+
+Evidence:
+`C:\Users\Admin\Documents\ABEX\operations\orq001-workflow-deployment-20261020`
+and
+`C:\Users\Admin\Documents\ABEX\operations\orq002-pwa-benchmark-20261020`.
+
 ## ORQEVIA signed naming candidate deployment - 19 October 2026
 
 ### Claimed, not independently checked
