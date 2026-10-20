@@ -76,4 +76,14 @@ def test_conditioning_is_optional_and_cannot_override_task(tmp_path):
     prompt = condition_prompt(base, "a02", profiles)
     assert prompt.startswith("OPTIONAL BEHAVIORAL CONDITIONING")
     assert "SUBORDINATE TO SYSTEM, SECURITY, PERMISSIONS, EVIDENCE AND TASK" in prompt
+    assert "Upstream MBTI-in-Thoughts priming" in prompt
+    assert "strategic mindset and high intellectual capacity" in prompt
+    assert "Upstream profile excerpt bounded for context budget." in prompt
+    assert "End upstream priming" in prompt
     assert prompt.endswith(base)
+    profiles.set(
+        "a02",
+        BehaviorProfile(enabled=False, decision_style="analytical", mbti_tag="INTJ"),
+        updated_by="owner",
+    )
+    assert condition_prompt(base, "a02", profiles) == base

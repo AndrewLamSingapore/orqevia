@@ -124,6 +124,15 @@ class AgentDispatchTests(HarnessApiTests):
             'capability':'responsibility.a02','objective':'Classify as yes or no.','task_class':'classification'})
         assert valid.status_code==202,valid.text
 
+    def test_direct_dispatch_applies_optional_conditioning_to_final_prompt(self):
+        request=AgentRequest(capability='responsibility.a02',
+            objective='Plan a launch with owners and evidence gates.',
+            context='Supplied evidence only.',task_class='planning')
+        with patch('app.agent_conditioning.condition_prompt',return_value='CONDITIONED\n') as condition:
+            prompt=agent_dispatch_api.packed_inference_prompt(request,Tier.MINI,'a02','task')
+        assert prompt=='CONDITIONED\n'
+        condition.assert_called_once()
+
     def test_opt_in_context_pack_reaches_real_dispatch_as_data_only(self):
         os.environ['ORQEVIA_CONTEXT_PACKS_ENABLED']='1'
         try:

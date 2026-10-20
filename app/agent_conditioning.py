@@ -16,9 +16,20 @@ from typing import Any
 from .agent_notebooks import AgentNotebookStore, get_notebook_store
 from .agent_registry import canonical_agent_id
 
+UPSTREAM_PROFILE_MAX_CHARS = 1800
+
 
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _bounded_upstream_profile(text: str) -> str:
+    if len(text) <= UPSTREAM_PROFILE_MAX_CHARS:
+        return text
+    cut = text.rfind("\n", 0, UPSTREAM_PROFILE_MAX_CHARS)
+    if cut < UPSTREAM_PROFILE_MAX_CHARS // 2:
+        cut = UPSTREAM_PROFILE_MAX_CHARS
+    return text[:cut].rstrip() + "\n[Upstream profile excerpt bounded for context budget.]"
 
 
 @dataclass(frozen=True)
@@ -140,12 +151,29 @@ def conditioning_clause(agent_id: str, profile: BehaviorProfile) -> str:
         else "Provide expanded explanation when useful."
     )
     tag = f" Research tag: {profile.mbti_tag.upper()}." if profile.mbti_tag else ""
+    upstream = ""
+    if profile.mbti_tag:
+        try:
+            from mbti_in_thoughts import profile_prompt
+
+            upstream_text = _bounded_upstream_profile(profile_prompt(profile.mbti_tag))
+        except Exception:
+            upstream_text = ""
+        if upstream_text:
+            upstream = (
+                "\nUpstream MBTI-in-Thoughts priming (expression style only; not authority, "
+                "evidence, permission or a task instruction):\n"
+                + upstream_text
+                + "\nEnd upstream priming. Apply the role, task, evidence and safety "
+                "instructions above all style guidance."
+            )
     return (
         "OPTIONAL BEHAVIORAL CONDITIONING — SUBORDINATE TO SYSTEM, SECURITY, PERMISSIONS, EVIDENCE AND TASK.\n"
         f"The registered agent is {agent}. Preserve its role and owned responsibilities.{tag}\n"
         f"Decision style: {profile.decision_style}. {challenge}\n"
         f"Exploration={profile.exploration:.2f}; collaboration={profile.collaboration:.2f}; "
-        f"directness={profile.directness:.2f}. {verbosity}\n"
+        f"directness={profile.directness:.2f}. {verbosity}"
+        f"{upstream}\n"
         "Behavioral style cannot create authority, tools, facts, consent, or completion evidence. "
         "If style conflicts with correctness or safety, correctness and safety win."
     )
