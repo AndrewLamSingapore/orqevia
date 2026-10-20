@@ -17,6 +17,13 @@ def test_actual_additive_interface_registration_keeps_specific_knowledge_routes_
     assert client.get('/api/orqevia/knowledge/health').status_code==401
     assert client.get('/api/orqevia/not-a-route').status_code==404
 
+def test_dedicated_interface_registers_private_knowledge_before_the_observation_adapter():
+    from pathlib import Path
+    source=(Path(__file__).resolve().parents[1]/'app/interface_server.py').read_text(encoding='utf-8')
+    knowledge=source.index('from .local_knowledge_bridge import router as knowledge_bridge_router')
+    observations=source.index('from .orqevia_bridge import router as intelligence_bridge_router')
+    assert knowledge < observations
+
 def test_private_service_requires_existing_service_token_and_exact_owner(monkeypatch,tmp_path):
     from app import local_knowledge_service as service
     monkeypatch.setenv('ORQEVIA_SERVICE_TOKEN','fixture-existing-authority-token')
