@@ -1,8 +1,0 @@
-{
-  "at_utc": "2026-10-15T08:35:46.733222+00:00",
-  "status": "PASS",
-  "exit_code": 0,
-  "suite": "fixed local document/index regression tests",
-  "output_tail": "......                                                                   [100%]\n6 passed in 1.83s\n\n",
-  "classification": "ISOLATED_FIXTURES_NOT_PRODUCTION_CORPUS_OR_MODEL_ACCEPTANCE"
-}
