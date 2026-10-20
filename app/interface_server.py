@@ -24,6 +24,8 @@ from .product_handoff import router as product_handoff_router
 app.include_router(product_handoff_router)
 from .orqevia_bridge import router as intelligence_bridge_router
 app.include_router(intelligence_bridge_router)
+from .workflow_bridge import router as workflow_bridge_router
+app.include_router(workflow_bridge_router)
 app.mount('/pwa', StaticFiles(directory=os.getenv('ORQEVIA_PWA_STATIC_DIR',
     str(Path(__file__).with_name('pwa_static'))), html=True, check_dir=False), name='pwa')
 
