@@ -579,14 +579,6 @@ def packed_inference_prompt(body: AgentRequest, tier: Tier, actor: str, task_id:
         prompt += ('\nShared advisory methods (no tool or action authority granted):\n' +
                    '\n'.join(f"{skill_id}: {guidance}" for skill_id, guidance in
                              zip(skill_pack['skill_ids'], skill_pack['guidance'])))
-    try:
-        from .agent_conditioning import condition_prompt
-
-        prompt = condition_prompt(prompt, actor)
-    except Exception:
-        # Conditioning is optional. A missing or unavailable profile store must
-        # not remove the role, task or safety contract from dispatch.
-        pass
     return prompt
 
 

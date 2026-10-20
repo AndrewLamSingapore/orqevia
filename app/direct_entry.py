@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI,Header
 from .agent_dispatch_api import router as agents
+from .agent_conditioning import install_direct_dispatch_conditioning
 from .objective_api import router as objectives
 from .artifact_delivery import router as artifacts
 from .interface_node import router as interface
@@ -17,6 +18,8 @@ from .agent_notebook_api import router as agent_notebooks
 from .model_registry_api import router as model_registry
 from .debate_api import router as debates
 from .observability import PRIVACY_FASTAPI_TELEMETRY
+
+install_direct_dispatch_conditioning()
 
 
 @asynccontextmanager

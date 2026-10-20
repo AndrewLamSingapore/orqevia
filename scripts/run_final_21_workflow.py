@@ -13,7 +13,8 @@ from pathlib import Path
 
 BASE = "http://127.0.0.1:8000"
 TOKEN = os.environ["ORQEVIA_SPINE_TOKEN"].strip()
-OUTPUT = Path("/data/final-21-20261020")
+OUTPUT = Path(os.getenv("ORQEVIA_FINAL_21_OUTPUT", "/data/final-21-20261020"))
+RUN_LABEL = os.getenv("ORQEVIA_FINAL_21_LABEL", "20261020-v1").strip()
 TERMINAL = {"COMPLETED", "FAILED", "CANCELLED", "BLOCKED"}
 
 
@@ -49,8 +50,8 @@ def main() -> int:
     OUTPUT.mkdir(parents=True, exist_ok=True)
     payload = {
         "template_id": "sme-profitability.v1",
-        "project_key": "ORQ-MIT-21-20261020",
-        "title": "ORQEVIA final runtime 21-task workflow",
+        "project_key": f"ORQ-MIT-21-{RUN_LABEL}",
+        "title": f"ORQEVIA final runtime 21-task workflow {RUN_LABEL}",
         "currency": "SGD",
         "inputs": {
             "salaries": 18000,
@@ -66,7 +67,7 @@ def main() -> int:
             "marketing_increase_percent": 20,
             "inventory_reduction_percent": 10,
         },
-        "idempotency_key": "orqevia-final-21-20261020-v1",
+        "idempotency_key": f"orqevia-final-21-{RUN_LABEL}",
     }
     (OUTPUT / "request.json").write_text(
         json.dumps(payload, indent=2) + "\n", encoding="utf-8"
