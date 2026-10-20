@@ -22,6 +22,9 @@ main{padding-top:14px;min-width:0}.dashboard-card{background:linear-gradient(120
 .coaching-marks{font-family:ui-monospace,monospace;color:#9fd4f5;font-size:14px;white-space:nowrap}
 .coaching-role small{color:#8fa8bd}
 
+.desktop-navigation a.nav-project-link{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 14px;border-radius:10px;color:#c7d9e8;text-decoration:none;font:inherit}
+.desktop-navigation a.nav-project-link:hover,.desktop-navigation a.nav-project-link:focus-visible{background:rgba(101,215,255,.1);color:#fff}
+.project-workspace-link{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 14px;text-decoration:none}
 /* Readable information density and reflow at narrow widths or increased zoom. */
 body{font-size:16px}
 input,textarea,select{font-size:1rem}

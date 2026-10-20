@@ -524,6 +524,35 @@ class JobQueue:
                 self._event(c,row["id"],"lease_expired",{"next_status":status})
         return len(rows) + len(held)
 
+    def requeue_orphaned_local(self, job_ids: list[str], *, reason: str = "worker process restarted") -> int:
+        """Requeue named local jobs whose worker process was restarted.
+
+        This is called only with jobs owned by a durable workflow during startup
+        recovery. Cloud jobs are never replayed because remote side effects cannot
+        be proven absent.
+        """
+        ids = [str(job_id) for job_id in job_ids if job_id]
+        if not ids:
+            return 0
+        placeholders = ",".join("?" for _ in ids)
+        with self.lock, self.connect() as c:
+            rows = c.execute(
+                f"""SELECT id FROM compute_jobs
+                WHERE id IN ({placeholders}) AND status='running'
+                  AND allow_cloud=0 AND cloud_inflight=0""",
+                tuple(ids),
+            ).fetchall()
+            for row in rows:
+                c.execute(
+                    """UPDATE compute_jobs SET status='queued',provider=NULL,lease_until=NULL,
+                    error=?,updated_at=?,completed_at=NULL WHERE id=? AND status='running'
+                    AND allow_cloud=0 AND cloud_inflight=0""",
+                    (reason[:200], utcnow(), row["id"]),
+                )
+                self._event(c, row["id"], "orphaned_worker_requeued", {"reason": reason[:200]})
+        self.wake.set()
+        return len(rows)
+
     def metrics(self) -> dict:
         with self.connect() as c:
             statuses={r[0]:r[1] for r in c.execute("SELECT status,COUNT(*) FROM compute_jobs GROUP BY status")}

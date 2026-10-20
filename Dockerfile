@@ -18,6 +18,7 @@ COPY governance/golden-gen4-manifest.json ./governance/
 COPY governance/agent-cert-verifier-azure-pins.json ./governance/agent-cert-verifier-azure-pins.json
 COPY clients/pwa/index.html clients/pwa/recovery.js clients/pwa/release.mjs clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/storage.mjs clients/pwa/style.css clients/pwa/sw.js clients/pwa/voice.mjs clients/pwa/manifest.webmanifest ./app/pwa_static/
 COPY clients/pwa/dashboard.mjs clients/pwa/dashboard.css ./app/pwa_static/
+COPY clients/pwa/projects.html clients/pwa/projects.css clients/pwa/projects.mjs ./app/pwa_static/
 COPY clients/pwa/icons ./app/pwa_static/icons
 
 # Keep revision metadata after dependency installation so a new source commit
