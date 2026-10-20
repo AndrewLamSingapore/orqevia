@@ -13,7 +13,7 @@ import urllib.request
 from urllib.parse import unquote
 from fastapi import FastAPI,HTTPException,Request
 from fastapi.responses import JSONResponse
-from .local_knowledge import KnowledgeEngine,MAX_UPLOAD
+from .local_knowledge import GENERATION_MODEL,KnowledgeEngine,MAX_UPLOAD
 from . import workspace_capabilities
 from .observability import PRIVACY_FASTAPI_TELEMETRY, install_observability
 
@@ -82,8 +82,8 @@ def health():
     try:
         opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
         with opener.open('http://127.0.0.1:11434/api/tags',timeout=3) as r:models=json.load(r).get('models',[])
-        model=next((m for m in models if m.get('name')=='qwen2.5:7b'),None)
-        state['generation']={'status':'MODEL_INSTALLED' if model else 'MODEL_UNAVAILABLE','model':'qwen2.5:7b','digest':model.get('digest') if model else None}
+        model=next((m for m in models if m.get('name')==GENERATION_MODEL),None)
+        state['generation']={'status':'MODEL_INSTALLED' if model else 'MODEL_UNAVAILABLE','model':GENERATION_MODEL,'digest':model.get('digest') if model else None}
     except (OSError,ValueError):state['generation']={'status':'UNAVAILABLE'}
     state['initialization_error']=ENGINE.last_error
     state['source_revision']=os.getenv('ORQEVIA_LOCAL_RELEASE','UNVERIFIED')

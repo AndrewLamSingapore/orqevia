@@ -53,6 +53,7 @@ def main():
     child_env.update({
         'ORQEVIA_SERVICE_TOKEN':token,'ORQEVIA_OWNER_ACCOUNT':account,
         'ORQEVIA_LOCAL_AI_ROOT':config['data_root'],'HF_HUB_OFFLINE':'1',
+        'ORQEVIA_LOCAL_GENERATION_MODEL':'gemma3:4b',
         'ORQEVIA_LOCAL_RELEASE':config['release'],
         'TRANSFORMERS_OFFLINE':'1','HF_HUB_DISABLE_TELEMETRY':'1',
         'PYTHONUTF8':'1','OMP_NUM_THREADS':'2','TOKENIZERS_PARALLELISM':'false',

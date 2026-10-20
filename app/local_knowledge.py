@@ -19,7 +19,7 @@ from .observability import trace_headers, traced
 from datetime import datetime, timezone
 
 EMBEDDING_MODEL='sentence-transformers/all-MiniLM-L6-v2'
-GENERATION_MODEL='qwen2.5:7b'
+GENERATION_MODEL=os.getenv('ORQEVIA_LOCAL_GENERATION_MODEL','gemma3:4b').strip() or 'gemma3:4b'
 MAX_UPLOAD=8*1024*1024
 MAX_CHUNKS=20000
 

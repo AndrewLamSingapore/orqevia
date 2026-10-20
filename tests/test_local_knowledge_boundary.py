@@ -5,6 +5,10 @@ from fastapi.testclient import TestClient
 import httpx
 import pytest
 
+def test_local_generation_defaults_to_fast_non_slow_model():
+    from app.local_knowledge import GENERATION_MODEL
+    assert GENERATION_MODEL=='gemma3:4b'
+
 def test_actual_additive_interface_registration_keeps_specific_knowledge_routes_first():
     import runpy
     from pathlib import Path

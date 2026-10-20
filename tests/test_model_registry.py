@@ -11,7 +11,7 @@ def version(number="1.0.0", *, context=8192, output=2048):
         model_id="local.deep",
         version=number,
         provider="ollama",
-        model_name="qwen2.5:14b",
+        model_name="fixture:4b",
         location="local",
         context_tokens=context,
         output_tokens=output,

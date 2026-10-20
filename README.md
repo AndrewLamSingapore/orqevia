@@ -1,48 +1,108 @@
+<p align="center">
+  <img src="clients/pwa/icons/orqevia-official-v1-192.png" width="112" alt="ORQEVIA logo" />
+</p>
+
 # ORQEVIA · 奥启维亚
 
-**One workspace for ideas, evidence and useful execution.**
+### Governed AI operations, evidence-gated decisions and explainable execution
 
-[Explore the public walkthrough](https://authority-engine-app.vercel.app/orqevia) · [Discuss a use case](https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration)
+[Public walkthrough](https://authority-engine-app.vercel.app/orqevia) ·
+[Architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) ·
+[Current status](STATUS.md) ·
+[Contact](https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration)
 
-ORQEVIA brings planning, tools and traceable results into an authenticated workspace. The public walkthrough explains its purpose; private work remains access-controlled.
+![MIT license](https://img.shields.io/badge/license-MIT-2E8B57?style=flat-square)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square)
+![PWA](https://img.shields.io/badge/interface-installable_PWA-0A7E8C?style=flat-square)
+![Evidence first](https://img.shields.io/badge/design-evidence_first-1F5A73?style=flat-square)
 
-Read [STATUS.md](STATUS.md) for current portfolio status claims, then the
-[machine-readable operational reference](https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json) and
-[the shared channel contract](governance/CHANNEL_CONTRACT.md).
+ORQEVIA is a governed operations-intelligence workspace. It separates what was
+observed, what a model recommends and what the system was authorized to do.
+The result is a working environment for bounded analysis, traceable execution,
+durable memory and operational evidence.
 
-Each product owns its source, configuration, contracts, and domain records in its
-repository. STATUS.md records portfolio status and evidence classification only.
-The operational reference records architecture, component revisions and dated
-observations; it cannot establish current runtime status.
+The public walkthrough is open. The owner workspace is protected by Cloudflare
+Access, TLS and server-side session authorization.
 
-Golden Generation 4 is a historical non-audio baseline, recorded in
-`governance/golden-gen4-manifest.json`. Read the latest dated STATUS.md entry
-and its runtime receipts before identifying the deployed generation. Pre-gen4
-baselines were removed on 2026-10-16 per Owner order and remain recoverable
-from Git history. The living architecture reference is
-`docs/TOTAL-INTEGRATION-ARCHITECTURE.md`. Architecture v1 remains the
-implementation foundation: ABEX PRIME, authenticated
-Dell/mobile/voice clients, 21 agents, deterministic/local/cloud routing and direct
-observed execution with narrow consequential controls. Runtime acceptance is
-recorded separately and must not be inferred from this README or passing CI.
+## What makes it different
 
-`system.manifest.json` binds PRIME product components. `deploy/product-runtime-v1.json`
-defines entrypoints and external inputs.
+- **Evidence is a first-class output.** Task results, runtime identity,
+  artifacts, permissions and deployment state are recorded separately.
+- **Execution is bounded.** Role, security, evidence and task instructions
+  remain above model output; sensitive actions fail closed.
+- **Operations stay explainable.** Deterministic calculations, model
+  contributions and cited reference data are presented distinctly.
+- **The workspace is durable.** Decision memory, notebooks, task history and
+  artifacts survive restarts through persistent storage.
+- **The interface is practical.** Desktop and installable PWA surfaces retain
+  explicit loading, offline, failure, recovery and access states.
 
-Validate with `python scripts/validate_canonical.py` and
-`python scripts/check_canonical_state.py`. Run `scripts/run_canonical_ci.py` with
-isolated ORQEVIA_DATA_DIR and ORQEVIA_COMPUTE_QUEUE_DB. PWA checks live in clients/pwa;
-Dell packaging instructions are in clients/dell/PACKAGING.md. Dell synchronization
-and independent reconciliation tools remain under tools/ and docs/DELL_*.md.
+## Core capabilities
 
-Credentials, production data and provider qualification remain external. Retain
-the sealed ABEX baseline. Historical source and migration evidence remain in Git.
+| Area | What it provides |
+| --- | --- |
+| Orchestration | Task decomposition, bounded handoffs, retries and terminal outcomes |
+| Evidence | Execution receipts, artifact hashes, provenance and runtime binding |
+| Memory | Durable decisions, searchable agent notebooks and scoped project/organization records |
+| Intelligence | Operations telemetry, geospatial observations, source-grounded retrieval and cited evidence |
+| Governance | Owner/member boundaries, model lifecycle, debate resolution and security controls |
+| Interfaces | Authenticated PWA, mobile-safe layouts and service-backed operational views |
 
+## System map
 
-## Public experience and connected projects
+```text
+Owner / trusted device
+        |
+   TLS + Access + session authorization
+        |
+   ORQEVIA PWA / interface
+        |
+   objective and workflow orchestration
+        |
+   bounded agent roles + evidence ledger + durable memory
+        |
+   local models / compatible cloud providers / approved tools
+        |
+   results, receipts, artifacts and rollback state
+```
 
-[Explore ORQEVIA](https://authority-engine-app.vercel.app/orqevia) presents curated decision examples and the public agent registry. [Discuss a use case with Andrew](https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration).
+## Public ecosystem
 
-The public contract is `governance/public-experience.json`. Authority Engine, The Portal, Living Worlds, Sky Tablet and VELYQUA link to that experience. Navigation and enquiry context do not grant private runtime access or merge product databases.
+- [Authority Engine](https://authority-engine-app.vercel.app/) — public
+  operations-intelligence portfolio and evidence hub.
+- [VELYQUA](https://velyqua.vercel.app/) — software-first living-water
+  intelligence.
+- [The Portal](https://the-portal-ten.vercel.app/) — discovery and
+  knowledge-graph experiment.
+- [Living Worlds](https://game-platform-wine-nine.vercel.app/) — governed,
+  persistent world simulation.
+- [The Sky Tablet](https://sky-tablet.vercel.app/) — Mesopotamian astronomy and
+  cuneiform experience.
 
-STATUS.md records current portfolio status claims. The operational manifest and its generated resume checkpoint are machine references, not second status records. Historical deployment identities belong in explicitly historical evidence fields and cannot occupy current PRIME runtime fields.
+## Trust and evidence
+
+`STATUS.md` records dated portfolio claims and evidence classification. The
+[operational manifest](https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json) and
+[channel contract](governance/CHANNEL_CONTRACT.md) are machine-readable
+architecture references; neither substitutes for an observed runtime receipt.
+Historical, synthetic and live evidence remain explicitly separated.
+
+Credentials, production data and provider entitlements stay external to source
+control. Deployment, rollback and access controls are intentionally preserved.
+The standing [fast-model policy](docs/FAST-MODEL-POLICY.md) prohibits slow local
+models and keeps reasoning at maximum.
+
+## Local verification
+
+```powershell
+python scripts/validate_canonical.py
+python scripts/check_canonical_state.py
+python scripts/run_canonical_ci.py
+```
+
+Use an isolated `ORQEVIA_DATA_DIR` and `ORQEVIA_COMPUTE_QUEUE_DB`. PWA checks are
+documented in [clients/pwa/README.md](clients/pwa/README.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).

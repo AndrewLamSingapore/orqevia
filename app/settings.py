@@ -50,7 +50,7 @@ class PrimeSettings:
     @classmethod
     def from_env(cls) -> "PrimeSettings":
         fast = _env("ORQEVIA_FAST_MODEL", "gemma3:1b")
-        deep = _env("ORQEVIA_DEEP_MODEL", fast)
+        deep = _env("ORQEVIA_DEEP_MODEL", "gemma3:4b")
         profile = _env("ORQEVIA_COMPUTE_PROFILE", "balanced").lower()
         if profile not in {"compat", "balanced", "max"}:
             profile = "balanced"
