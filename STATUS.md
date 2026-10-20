@@ -38,6 +38,15 @@ If you are an AI agent updating this file:
 
 ## Fast-model and God's Eye final deployment — 20 October 2026
 
+### Active operating order
+
+**FASTEST MODEL FIRST — THEN PROCEED.** Find, benchmark, select, rebuild, and
+accept the fastest capable default model before resuming any other work. The
+model gate remains open until the exact image passes 21/21 role acceptance
+without reintroducing a slow model.
+
+Every other non-security item is **PARKED** until this gate closes.
+
 ### Claimed, not independently checked
 
 - PR #425 merged into `main` as
@@ -70,15 +79,20 @@ If you are an AI agent updating this file:
 
 ### Known broken / open
 
-- The fast-model role sweep accepted **12/21** roles. Qwen3 4B exceeded the
+- **ACTIVE FIRST GATE — fastest default model:** the role sweep accepted
+  **12/21** roles with `gemma3:4b`. Qwen3 4B exceeded the
   120-second limit and Phi-4 Mini failed the strategy oracle; both candidates
   were removed. The prior 21/21 role result used a slower model and is not
   acceptance of the current fast-model policy.
-- The machine-level God's Eye route passes, but physical iPhone confirmation
-  and the complete authenticated public Owner journey remain user/device
-  acceptance items.
-- Encrypted off-device backup synchronization and isolated restore remain
-  pending.
+- **PARKED:** physical iPhone confirmation and the complete authenticated
+  public Owner journey.
+- **PARKED:** encrypted off-device backup synchronization and isolated
+  restore.
+- **PARKED:** pre-logon startup qualification.
+- **PARKED:** Higgsfield authentication and new media generation.
+- **PARKED:** coaching cohort completion.
+- **PARKED:** every other open feature, integration, maintenance and cleanup
+  item.
 
 Evidence:
 `operations/orqevia-iphone-gods-eye-20261020/README.md`,
