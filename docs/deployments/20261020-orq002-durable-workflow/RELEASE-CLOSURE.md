@@ -6,7 +6,7 @@
 - PR: #414
 - CI-verified source: `66829d3fcd675b9985790fea199b2d7189503683`
 - CI result: 9/9 checks successful
-- Local full regression: **6,085 passed, 20 skipped, 3 deselected,
+- Local full regression: **6,088 passed, 20 skipped, 3 deselected,
   102 subtests passed**
 - PWA unit tests: **81 passed, 0 failed**
 
