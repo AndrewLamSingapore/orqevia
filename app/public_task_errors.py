@@ -5,16 +5,33 @@ fields are projected; successful model result content is left untouched.
 """
 from copy import deepcopy
 import json
+import re
 from .tier_router import SECRET
+
+
+# Only fixed, non-sensitive classifications are suitable for owner-facing records.
+_SAFE_DISPATCH_REASONS = frozenset({
+    'AUTHENTICATION', 'CAPACITY', 'CREDENTIAL_UNAVAILABLE',
+    'DATA_LOCALITY', 'MODEL_PROVIDER_UNPINNED', 'PROVIDER_UNAVAILABLE',
+    'PROVIDER_TIMEOUT', 'RATE_LIMIT', 'TASK_TIMEOUT',
+    'NO_AUTHORIZED_ROUTE', 'PROVIDER_CIRCUIT_OPEN',
+    'EMPTY_OR_INCOMPLETE_RESPONSE', 'STEP_DISPATCH_FAILED',
+})
+
+
+def _public_failure_code(value, fallback):
+    if not isinstance(value, str) or not re.fullmatch(r'[A-Z][A-Z0-9_]{2,63}', value):
+        return fallback
+    return value if value in _SAFE_DISPATCH_REASONS else fallback
 
 
 def public_task(task):
     value=deepcopy(task)
     for step in value.get('steps',[]):
         if not isinstance(step,dict):continue
-        if step.get('reason'):step['reason']='STEP_DISPATCH_FAILED'
+        if step.get('reason'):step['reason']=_public_failure_code(step['reason'], 'STEP_DISPATCH_FAILED')
         for candidate in (step.get('job'),step.get('dispatch',{}).get('job') if isinstance(step.get('dispatch'),dict) else None):
-            if isinstance(candidate,dict) and candidate.get('error'):candidate['error']='EXECUTION_FAILED'
+            if isinstance(candidate,dict) and candidate.get('error'):candidate['error']=_public_failure_code(candidate['error'], 'EXECUTION_FAILED')
     return value
 
 

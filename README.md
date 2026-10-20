@@ -1,5 +1,11 @@
 # ORQEVIA · 奥启维亚
 
+**One workspace for ideas, evidence and useful execution.**
+
+[Explore the public walkthrough](https://authority-engine-app.vercel.app/orqevia) · [Discuss a use case](https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration)
+
+ORQEVIA brings planning, tools and traceable results into an authenticated workspace. The public walkthrough explains its purpose; private work remains access-controlled.
+
 Read [STATUS.md](STATUS.md) for current portfolio status claims, then the
 [machine-readable operational reference](https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json) and
 [the shared channel contract](governance/CHANNEL_CONTRACT.md).
@@ -9,9 +15,9 @@ repository. STATUS.md records portfolio status and evidence classification only.
 The operational reference records architecture, component revisions and dated
 observations; it cannot establish current runtime status.
 
-Golden Generation 4 is the current accepted non-audio baseline, binding the
-ORQEVIA epoch runtime per role in `governance/golden-gen4-manifest.json`; the
-deterministic architecture lookup serves from the same record. Pre-gen4
+Golden Generation 4 is a historical non-audio baseline, recorded in
+`governance/golden-gen4-manifest.json`. Read the latest dated STATUS.md entry
+and its runtime receipts before identifying the deployed generation. Pre-gen4
 baselines were removed on 2026-10-16 per Owner order and remain recoverable
 from Git history. The living architecture reference is
 `docs/TOTAL-INTEGRATION-ARCHITECTURE.md`. Architecture v1 remains the

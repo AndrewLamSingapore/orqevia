@@ -36,6 +36,21 @@ If you are an AI agent updating this file:
 
 ---
 
+## Portfolio public-audience sweep — 20 October 2026
+
+### Claimed, not independently checked
+
+- A scoped source candidate audits all seven owning repositories, raises authored small interface labels, improves responsive controls and public entry points, and integrates reviewed compatible PR content. Relevant product branches use `codex/public-audience-sweep-20261020`.
+- Game Platform cancels stale cinematic timers on scene changes and backgrounding, with three regression tests. VELYQUA limits its service worker to public same-origin shell assets and keeps unrelated caches, with four behavioral regression tests.
+- Local checks: Authority Engine 47 tests, lint and production build; VELYQUA 87 Vitest tests plus contract checks, typecheck and web export; Portal verification pipeline; Sky Tablet 22 tests and build; Game Platform existing suite plus the new lifecycle tests; profile portfolio-contract conformance; ORQEVIA 81 PWA tests and 38 focused backend/media tests. These are scoped local results, not the full ORQEVIA backend suite or deployed-runtime acceptance.
+- Source integration includes ORQEVIA PR #413's safe dispatch diagnostics. New media briefs are explicitly NOT_SUBMITTED. No new billable Higgsfield job or private host deployment was performed from this environment.
+
+### Known broken / open
+
+- VELYQUA PR #93 proposes React Native 0.88.0 while installed Expo 57.0.23 explicitly expects 0.86.3. Preserve the compatible runtime pending a coordinated Expo/native migration and device verification.
+- Isolated browser qualification was unavailable because the Chromium archive download failed. Connected-browser preview checks and deployment receipts must be recorded separately before asserting visual or live acceptance.
+- ORQEVIA host deployment and new Higgsfield generation require access to the existing owner-authenticated ABEX media/deployment operations. Source access alone does not supply host execution access.
+
 ## ORQEVIA signed naming candidate deployment - 19 October 2026
 
 ### Claimed, not independently checked

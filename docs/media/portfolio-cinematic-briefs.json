@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "status": "BRIEFS_ONLY_NOT_GENERATED",
+  "provider": "Higgsfield via the existing ORQEVIA owner-authenticated media service",
+  "authorization_scope": "User requested portfolio media improvements; retain deployment cost/concurrency caps and obtain an estimate before each submission. Do not copy host credentials into products.",
+  "delivery": {
+    "video": "Silent 16:9 short clip, user-initiated playback, preload=none, local poster and text description, reduced-motion fallback. Copy completed outputs to each owning product before publishing; provider URLs are not permanent storage.",
+    "profile": "Static image, text composed separately at readable sizes; GitHub controls README typography."
+  },
+  "briefs": [
+    {
+      "repository": "authority-engine",
+      "concept": "Operational evidence in motion",
+      "prompt": "A restrained editorial film of a real-world-inspired container yard at first light, cranes and organized lanes, one slow forward camera move, warm white and deep navy palette. No company logos, invented dashboards, statistics, text or identifiable people.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    },
+    {
+      "repository": "AndrewLamSingapore",
+      "concept": "Experience into insight",
+      "prompt": "An abstract editorial image of shipping routes becoming clean lines on a dark navy background, subtle teal and warm gold accents, generous clear space on the left for separately typeset profile information. No text, badges, claims, logos or faces.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    },
+    {
+      "repository": "velyqua",
+      "concept": "Notice the smallest change",
+      "prompt": "A planted freshwater aquarium, soft morning light through clear water, delicate plant movement, natural fish behavior, one calm camera move, deep teal palette. No diagnostic overlays, implied live telemetry, equipment actuation, text or product promises.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    },
+    {
+      "repository": "the-portal",
+      "concept": "A question opens a world",
+      "prompt": "An atmospheric archive of original sculptural objects and floating papers, a narrow pool of warm light opens onto a larger room, slow controlled camera move, ink-black and parchment palette. No readable writing, copyrighted artworks, logos or interface.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    },
+    {
+      "repository": "orqevia",
+      "concept": "Ideas become traceable work",
+      "prompt": "Abstract luminous threads connecting a small set of distinct nodes into one clear path, deep navy with cyan accents, deliberate and calm movement. No fabricated agent activity, live telemetry, certifications, text or logos.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    },
+    {
+      "repository": "game-platform",
+      "concept": "The Ashen Gate remembers",
+      "prompt": "An original dark-fantasy gateway above a misty valley, amber lantern light on rain-dark stone, a distant silhouette approaches as embers drift, one coherent slow camera move. No dialogue, captions, interface, copyrighted characters or graphic violence.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    },
+    {
+      "repository": "sky-tablet",
+      "concept": "Clay to cosmos",
+      "prompt": "Close study of an imagined clay tablet under warm lamplight, transition in visual emphasis toward a stylized ancient night sky, restrained camera movement. Artistic interpretation, no readable invented inscriptions or claims of archaeological reconstruction.",
+      "model_path": null,
+      "model_selection": "Resolve from the current authenticated Higgsfield model catalog and official schema; do not guess model IDs.",
+      "generation_status": "NOT_SUBMITTED"
+    }
+  ]
+}
