@@ -64,14 +64,14 @@ a { color: var(--info); }
 .brand-mark { width: 46px; height: 46px; border-radius: 10px; box-shadow: var(--shadow); flex: none; }
 .brand-text h1 { margin: 0; font-size: 1.15rem; letter-spacing: 0.02em; }
 .brand-text .cn { color: var(--accent-2); font-weight: 500; }
-.subtitle { margin: 0; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.18em; }
+.subtitle { margin: 0; color: var(--muted); font-size: .875rem; text-transform: uppercase; letter-spacing: 0.18em; }
 
 .topbar-right { display: flex; gap: 8px; align-items: center; }
 
 .pill {
   padding: 5px 10px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: .875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   border: 1px solid var(--line);
@@ -150,7 +150,7 @@ h3 { margin: 0 0 10px; font-size: 1rem; color: var(--accent-2); }
   padding: 14px;
 }
 .metric .value { font-size: 1.7rem; font-weight: 700; color: var(--accent-2); }
-.metric .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.metric .label { color: var(--muted); font-size: .875rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
 .control-row { display: flex; flex-wrap: wrap; gap: 10px; }
 
@@ -178,7 +178,7 @@ h3 { margin: 0 0 10px; font-size: 1rem; color: var(--accent-2); }
 .activity, .list, .checklist { list-style: none; padding: 0; margin: 0; }
 .activity li, .list li { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .activity li:last-child, .list li:last-child { border-bottom: 0; }
-.activity .time { color: var(--muted); font-size: 0.78rem; margin-right: 8px; }
+.activity .time { color: var(--muted); font-size: .875rem; margin-right: 8px; }
 
 .stack { display: flex; flex-direction: column; gap: 10px; }
 input[type="text"], textarea {
@@ -193,7 +193,7 @@ input[type="text"], textarea {
 input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .kv { margin: 0; }
-.kv dt { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.kv dt { color: var(--muted); font-size: .875rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .kv dd { margin: 0 0 10px; }
 
 .switch { display: flex; gap: 10px; align-items: center; padding: 8px 0; cursor: pointer; }
@@ -205,7 +205,7 @@ input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); out
 }
 .agent-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
 .agent-card .agent-name { font-weight: 700; color: var(--accent-2); }
-.agent-card .agent-purpose { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+.agent-card .agent-purpose { color: var(--muted); font-size: .875rem; margin-top: 4px; }
 
 .gods-eye-frame {
   width: 100%;
@@ -227,7 +227,7 @@ input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); out
   gap: 12px;
   flex-wrap: wrap;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: .875rem;
 }
 
 /* iPhone / narrow responsive layout */
