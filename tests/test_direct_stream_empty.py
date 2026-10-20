@@ -70,7 +70,7 @@ def test_direct_stream_allows_model_without_admission_gate(monkeypatch,tmp_path)
     client = httpx.AsyncClient(transport=httpx.MockTransport(reply))
     with patch('app.direct_stream.httpx.AsyncClient', return_value=client):
         result = asyncio.run(infer({'timeout_seconds':5,'prompt':'fixture','ram_mb':1024},
-                                   SimpleNamespace(model='qwen3:14b'),
+                                   SimpleNamespace(model='fixture:14b'),
                                    settings=SimpleNamespace(ollama_base_url='http://fixture',keep_alive=0,
                                                             context_tokens=128,max_output_tokens=8),
                                    capacity=lambda _:None,options=lambda:{}))

@@ -79,7 +79,7 @@ def test_gateway_allows_deep_model_without_a_measured_profile(monkeypatch,tmp_pa
     monkeypatch.setenv('ORQEVIA_LOCAL_ADMISSION_MODE', 'golden_n1')
     monkeypatch.setenv('ORQEVIA_COMPUTE_QUEUE_DB', str(tmp_path / 'queue.db'))
     gateway = ModelGateway(ledger=ComputeLedger(str(tmp_path / 'ledger.db')),
-                           settings=settings(fast_model='gemma3:1b', deep_model='qwen3:14b'))
+                           settings=settings(fast_model='gemma3:1b', deep_model='fixture:14b'))
     gateway._post = lambda *_args: {'response': 'deep answer', 'done': True}
     assert gateway.local(prompt='fixture', deep=True).text == 'deep answer'
 

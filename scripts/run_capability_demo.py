@@ -56,7 +56,7 @@ def main() -> int:
             "model_id": "pilot.deep",
             "version": "1.0.0",
             "provider": "ollama",
-            "model_name": "qwen2.5:14b-instruct-q4_K_M",
+            "model_name": "gemma3:4b",
             "location": "local",
             "context_tokens": 8192,
             "output_tokens": 2048,
