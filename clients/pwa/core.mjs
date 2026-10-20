@@ -16,6 +16,26 @@ export function errorMessage(error) {
   if (error?.code === 'timeout' || error instanceof TypeError) return 'Connection interrupted. Retry the same objective or refresh your task when online.';
   return 'ORQEVIA could not complete this request. Try again when the connection is available.';
 }
+export function boundedAbortSignal(timeout, parent) {
+  if (!Number.isFinite(timeout) || timeout <= 0) throw new ClientError('input');
+  const controller = new AbortController();
+  let timedOut = false;
+  const abort = () => controller.abort(parent?.reason);
+  if (parent?.aborted) abort();
+  else parent?.addEventListener?.('abort', abort, {once: true});
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeout);
+  return {
+    signal: controller.signal,
+    timedOut: () => timedOut,
+    dispose() {
+      clearTimeout(timer);
+      parent?.removeEventListener?.('abort', abort);
+    },
+  };
+}
 export function sessionActive(session, nowSeconds = Date.now() / 1000) {
   return Boolean(session?.authenticated && session.protocol === PROTOCOL && Number.isFinite(session.expiresAt) && session.expiresAt > nowSeconds && Number.isFinite(session.verifiedAt) && nowSeconds-session.verifiedAt <= 90);
 }

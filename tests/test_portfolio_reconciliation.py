@@ -275,6 +275,16 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     assert b"### Claimed, not independently checked" in workflow_update
     assert b"### Verified" not in workflow_update
     after = after[:workflow_start] + after[workflow_end:]
+    iphone_title = "## ORQEVIA iPhone God's Eye recovery - candidate 20 October 2026"
+    assert after.count(iphone_title) == 1
+    iphone_start = after.index(iphone_title)
+    iphone_end = after.index("\n## ", iphone_start + len(iphone_title)) + 1
+    iphone_update = after[iphone_start:iphone_end].encode("utf-8")
+    assert len(iphone_update) == 1667
+    assert hashlib.sha256(iphone_update).hexdigest() == "181b52694e635e1cea4fcd501334dadfbbd367ec4072da550323f93b2ed99eac"
+    assert b"### Claimed, not independently checked" in iphone_update
+    assert b"### Verified" not in iphone_update
+    after = after[:iphone_start] + after[iphone_end:]
     deployment_title = "## ORQEVIA signed naming candidate deployment - 19 October 2026"
     assert after.count(deployment_title) == 1
     deployment_start = after.index(deployment_title)

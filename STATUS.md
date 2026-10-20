@@ -51,6 +51,36 @@ If you are an AI agent updating this file:
 - Isolated browser qualification was unavailable because the Chromium archive download failed. Connected-browser preview checks and deployment receipts must be recorded separately before asserting visual or live acceptance.
 - ORQEVIA host deployment and new Higgsfield generation require access to the existing owner-authenticated ABEX media/deployment operations. Source access alone does not supply host execution access.
 
+## ORQEVIA iPhone God's Eye recovery - candidate 20 October 2026
+
+### Claimed, not independently checked
+
+- Candidate branch `fix/iphone-gods-eye-trust-20261020` removes an undefined
+  telemetry-readiness call, adds a portable request deadline that does not
+  depend on newer Safari timeout helpers, and avoids recreating the full
+  God's Eye WebGL map every 30 seconds.
+- Compact screens now load observation records first and expose the interactive
+  map behind an explicit `Show interactive map` control. A failed map asset is
+  bounded and leaves the evidence workspace usable.
+- Both God's Eye entry points now target `/pwa/?view=gods-eye`; the legacy
+  `/orqevia/` route redirects there. The image-extension builder no longer adds
+  a second stale link when the source shell already contains the canonical one.
+- Live inspection of image `orqevia:release-c469708-final-20261020` found that
+  `/pwa/intelligence.mjs`, `/pwa/command-map.mjs` and the MapLibre vendor module
+  returned `404`. The runtime Dockerfile omitted those referenced assets. The
+  candidate now copies the complete God's Eye module, styles, readiness data and
+  vendor set into `/app/pwa_static`.
+- Focused validation passed 10 backend tests, 82 PWA unit tests, and the
+  18-case Chromium/Firefox/WebKit browser suite. The WebKit compact workflow
+  proves loading and map-failure fallback at an iPhone-sized viewport; it is not
+  physical-device acceptance.
+
+### Known broken / open
+
+- Physical iPhone interaction and the authenticated public Owner journey have
+  not been performed. Production remains on the prior image until this
+  candidate is committed, checked, rebuilt and verified.
+
 ## ORQEVIA durable workflow deployment - 20 October 2026
 
 ### Claimed, not independently checked

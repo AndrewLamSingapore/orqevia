@@ -72,7 +72,7 @@ async def intelligence_api(request: Request,path: str):
 @router.get('/orqevia/{path:path}')
 async def intelligence_ui(request: Request,path: str):
     if not path:
-        return RedirectResponse('/pwa/?view=intelligence',status_code=307)
+        return RedirectResponse('/pwa/?view=gods-eye',status_code=307)
     if any(part in {'..','.'} for part in path.split('/')) or '\\' in path or ':' in path:
         raise HTTPException(404,'Unavailable asset')
     if path and not path.endswith(('.html','.js','.mjs','.css','.png','.webmanifest')):
