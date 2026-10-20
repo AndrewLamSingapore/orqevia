@@ -154,6 +154,19 @@ def directory(
     return _store().list_notebooks(principal)
 
 
+@router.post("/index")
+def index_pending(
+    authorization: str | None = Header(default=None),
+    actor: str | None = Header(default=None, alias="X-ORQEVIA-Actor"),
+    role: str | None = Header(default=None, alias="X-ORQEVIA-Role"),
+    admin: str | None = Header(default=None, alias="X-ORQEVIA-Notebook-Admin"),
+):
+    principal = _principal(authorization, actor, role, admin)
+    if principal.role != "OWNER":
+        raise HTTPException(403, "owner authority required")
+    return _store().index_pending(limit=256)
+
+
 @router.post("/search")
 def search(
     body: SearchRequest,
