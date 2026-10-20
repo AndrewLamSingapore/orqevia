@@ -58,8 +58,10 @@ If you are an AI agent updating this file:
 - Backend and interface are deployed from
   `orqevia:release-d4e2479-20261020`
   (`sha256:632d3db51fbd810c49fd09f105c0ede0653bc8f8ba6c44f1ccd7dae76bfa110d`)
-  at source `d4e2479bd16f77e669af10df1409cce989ae661c`. Main has all seven
-  post-merge checks green. Release PRs #414, #416 and #417 are merged.
+  at source `d4e2479bd16f77e669af10df1409cce989ae661c`. Final main
+  `4fb0fc6eec83d3ff8dbeb8458a61b23815cf16b9` has all seven post-merge checks
+  green and is published as tag `orqevia-release-20261020`. Release PRs #414,
+  #416, #417 and #419 are merged.
 - The immediate rollback image is `orqevia:orq002-workflow-20261020`
   (`sha256:d2de24102ba34642deb726b88b3d1e1cee18a1767fb1d4b0333e282de1177ebe`)
   at source `cb01d50`. A live rollback drill restored that image, verified both

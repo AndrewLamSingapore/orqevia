@@ -267,10 +267,10 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     workflow_start = after.index(workflow_title)
     workflow_end = after.index("\n## ", workflow_start + len(workflow_title)) + 1
     workflow_update = after[workflow_start:workflow_end].encode("utf-8")
-    assert len(workflow_update) == 3848
+    assert len(workflow_update) == 3958
     assert (
         hashlib.sha256(workflow_update).hexdigest()
-        == "34a7d03e339de694487694d632d288282207a6cb751cd97c1bebffe6dc1ec787"
+        == "7e9864f3ed1557f3880af693610314ad02f31e653b6d7d04157908754dcdd41d"
     )
     assert b"### Claimed, not independently checked" in workflow_update
     assert b"### Verified" not in workflow_update

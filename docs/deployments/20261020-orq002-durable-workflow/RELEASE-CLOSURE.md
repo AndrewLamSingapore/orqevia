@@ -7,7 +7,9 @@
 - CI-verified source: `66829d3fcd675b9985790fea199b2d7189503683`
 - CI result: 9/9 checks successful
 - Evidence PRs #416 and #417 are merged.
-- Current main: `d4e2479bd16f77e669af10df1409cce989ae661c`
+- Final main: `4fb0fc6eec83d3ff8dbeb8458a61b23815cf16b9`
+- Evidence PR #419 merged the final deployment sweep.
+- Published release: `orqevia-release-20261020`
 - Post-merge CI: 7/7 successful
 - Local full regression: **6,088 passed, 20 skipped, 3 deselected,
   102 subtests passed**
