@@ -251,6 +251,20 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only the exact final fast-model/God's Eye deployment record.
+    final_title = "## Fast-model and God's Eye final deployment \u2014 20 October 2026"
+    assert after.count(final_title) == 1
+    final_start = after.index(final_title)
+    final_end = after.index("\n## ", final_start + len(final_title)) + 1
+    final_update = after[final_start:final_end].encode("utf-8")
+    assert len(final_update) == 2381
+    assert (
+        hashlib.sha256(final_update).hexdigest()
+        == "30f93a065b920fd64d0669cdc65e32ffd0a8c04b228f8da19273d77059ee59fc"
+    )
+    assert b"### Claimed, not independently checked" in final_update
+    assert b"### Verified" not in final_update
+    after = after[:final_start] + after[final_end:]
     # Admit only this exact source-only sweep record; preserve all frozen history.
     sweep_title = "## Portfolio public-audience sweep — 20 October 2026"
     assert after.count(sweep_title) == 1
