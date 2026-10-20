@@ -7,6 +7,25 @@ if ($args.Count -ne 0) { throw 'Collector accepts no caller arguments' }
 $Root = 'C:\ProgramData\ABEX\PrimeHostMetrics'
 $OutputDirectory = Join-Path $Root 'receipt'
 $OutputPath = Join-Path $OutputDirectory 'host-metrics.json'
+Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+
+public static class OrqeviaAtomicFile
+{
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool MoveFileEx(string existingFile, string newFile, int flags);
+
+    public static void Replace(string source, string target)
+    {
+        const int ReplaceExisting = 0x1;
+        const int WriteThrough = 0x8;
+        if (!MoveFileEx(source, target, ReplaceExisting | WriteThrough))
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+}
+'@
 foreach ($path in @($Root, $OutputDirectory)) {
     if (-not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Pre-provisioned directory required: $path"
@@ -54,13 +73,10 @@ $temporary = Join-Path $OutputDirectory ([System.IO.Path]::GetRandomFileName())
 try {
     [System.IO.File]::WriteAllText($temporary, $json, [System.Text.UTF8Encoding]::new($false))
     if ([System.IO.File]::Exists($OutputPath)) {
-        # Copy-overwrite instead of File.Replace: Replace fails on this
-        # bridged/NTFS path shape ("The path is not of a legal form") and the
-        # per-minute refresh silently stalled (observed on ABEX, 2026-10-16).
-        # A torn read is treated as a missing receipt by the reader, which is
-        # the documented fail-safe behaviour.
-        [System.IO.File]::Copy($temporary, $OutputPath, $true)
-        [System.IO.File]::Delete($temporary)
+        # Replace the directory entry in one filesystem operation. File.Replace
+        # is unsupported on this bridged/NTFS path shape, while a copy exposes a
+        # transient partial JSON receipt to the canary reader.
+        [OrqeviaAtomicFile]::Replace($temporary, $OutputPath)
     } else {
         [System.IO.File]::Move($temporary, $OutputPath)
     }
