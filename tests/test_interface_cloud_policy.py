@@ -2,6 +2,7 @@
 import hashlib
 import json
 import time
+from dataclasses import replace
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -9,9 +10,14 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def interface(monkeypatch, tmp_path):
-    from app import interface_contract as contract, compute_queue_api as compute
+    from app import agent_dispatch_api, interface_contract as contract, compute_queue_api as compute
     from app.action_records import close_ledgers
     from app.job_queue import JobQueue, QueuePolicy
+    # This policy fixture isolates cloud routing. Collapse the local deep tier so
+    # the only MINI backend is the server-authorized cloud fixture.
+    local_only = replace(agent_dispatch_api.SETTINGS, fast_model='gemma3:1b', deep_model='gemma3:1b')
+    local_backends = agent_dispatch_api.local_model_backends
+    monkeypatch.setattr(agent_dispatch_api, 'local_model_backends', lambda: local_backends(local_only))
     monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
     monkeypatch.setenv('ORQEVIA_SPINE_TOKEN', 'fixture-owner')
     monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '1')
