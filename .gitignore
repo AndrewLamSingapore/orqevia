@@ -15,6 +15,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .pytest-tmp-*/
+.artifacts/
 .test-deps/
 .sync-test-deps/
 .venv/

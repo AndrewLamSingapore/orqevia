@@ -82,7 +82,7 @@ Owner / trusted device
 ## Trust and evidence
 
 `STATUS.md` records dated portfolio claims and evidence classification. The
-[operational manifest](governance/operational-manifest.json) and
+[operational manifest](https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json) and
 [channel contract](governance/CHANNEL_CONTRACT.md) are machine-readable
 architecture references; neither substitutes for an observed runtime receipt.
 Historical, synthetic and live evidence remain explicitly separated.
