@@ -80,6 +80,19 @@ class SearchRequest(BaseModel):
     limit: int = Field(default=10, ge=1, le=50)
 
 
+class ProjectCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    project_id: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+    name: str = Field(min_length=1, max_length=200)
+
+
+class ProjectGrant(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    agent_id: str = Field(min_length=1, max_length=80)
+    permission: Literal["read", "write"]
+    expires_at: str | None = Field(default=None, max_length=100)
+
+
 class BehaviorUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -186,6 +199,74 @@ def search(
             sections=body.sections,
             limit=body.limit,
         )
+    except (NotebookPermissionDenied, NotebookNotFound) as exc:
+        raise HTTPException(403 if isinstance(exc, NotebookPermissionDenied) else 404, str(exc)) from None
+
+
+@router.post("/projects", status_code=201)
+def create_project(
+    body: ProjectCreate,
+    authorization: str | None = Header(default=None),
+    actor: str | None = Header(default=None, alias="X-ORQEVIA-Actor"),
+    role: str | None = Header(default=None, alias="X-ORQEVIA-Role"),
+    admin: str | None = Header(default=None, alias="X-ORQEVIA-Notebook-Admin"),
+):
+    principal = _principal(authorization, actor, role, admin)
+    try:
+        return _store().project_create(principal, body.project_id, body.name)
+    except (NotebookPermissionDenied, ValueError) as exc:
+        raise HTTPException(403 if isinstance(exc, NotebookPermissionDenied) else 422, str(exc)) from None
+
+
+@router.get("/projects")
+def list_projects(
+    authorization: str | None = Header(default=None),
+    actor: str | None = Header(default=None, alias="X-ORQEVIA-Actor"),
+    role: str | None = Header(default=None, alias="X-ORQEVIA-Role"),
+    admin: str | None = Header(default=None, alias="X-ORQEVIA-Notebook-Admin"),
+):
+    principal = _principal(authorization, actor, role, admin)
+    try:
+        return _store().project_list(principal)
+    except NotebookPermissionDenied as exc:
+        raise HTTPException(403, str(exc)) from None
+
+
+@router.post("/projects/{project_id}/members", status_code=201)
+def grant_project_member(
+    project_id: str,
+    body: ProjectGrant,
+    authorization: str | None = Header(default=None),
+    actor: str | None = Header(default=None, alias="X-ORQEVIA-Actor"),
+    role: str | None = Header(default=None, alias="X-ORQEVIA-Role"),
+    admin: str | None = Header(default=None, alias="X-ORQEVIA-Notebook-Admin"),
+):
+    principal = _principal(authorization, actor, role, admin)
+    try:
+        return _store().project_grant(
+            principal,
+            project_id,
+            body.agent_id,
+            body.permission,
+            expires_at=body.expires_at,
+        )
+    except (NotebookPermissionDenied, NotebookNotFound) as exc:
+        raise HTTPException(403 if isinstance(exc, NotebookPermissionDenied) else 404, str(exc)) from None
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+
+
+@router.get("/projects/{project_id}/members")
+def project_members(
+    project_id: str,
+    authorization: str | None = Header(default=None),
+    actor: str | None = Header(default=None, alias="X-ORQEVIA-Actor"),
+    role: str | None = Header(default=None, alias="X-ORQEVIA-Role"),
+    admin: str | None = Header(default=None, alias="X-ORQEVIA-Notebook-Admin"),
+):
+    principal = _principal(authorization, actor, role, admin)
+    try:
+        return _store().project_members(principal, project_id)
     except (NotebookPermissionDenied, NotebookNotFound) as exc:
         raise HTTPException(403 if isinstance(exc, NotebookPermissionDenied) else 404, str(exc)) from None
 
