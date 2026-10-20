@@ -56,11 +56,16 @@ If you are an AI agent updating this file:
 ### Claimed, not independently checked
 
 - Backend and interface are deployed from
-  `orqevia:orq002-workflow-20261020`
+  `orqevia:release-d4e2479-20261020`
+  (`sha256:632d3db51fbd810c49fd09f105c0ede0653bc8f8ba6c44f1ccd7dae76bfa110d`)
+  at source `d4e2479bd16f77e669af10df1409cce989ae661c`. Main has all seven
+  post-merge checks green. Release PRs #414, #416 and #417 are merged.
+- The immediate rollback image is `orqevia:orq002-workflow-20261020`
   (`sha256:d2de24102ba34642deb726b88b3d1e1cee18a1767fb1d4b0333e282de1177ebe`)
-  at source `cb01d50c123fe2e5b56895a73ab22c037cf5b96d`. The release branch also
-  contains later commit `66829d3`, which passed all nine PR #414 checks but is
-  not present in the live image.
+  at source `cb01d50`. A live rollback drill restored that image, verified both
+  services healthy and all persisted workflow, queue and notebook records, then
+  returned to the final release. The older naming-candidate image remains a
+  secondary rollback.
 - The live public PWA URL is
   `https://jarvis.lamjarvis.com/pwa/projects.html`. An unauthenticated request
   is redirected by Cloudflare Access to its sign-in page; access to the
@@ -86,16 +91,30 @@ If you are an AI agent updating this file:
   reviews, 37 PASS / 5 FAIL, 21/21 substantive agent executions, 29/30
   acceptance checks and **98.33/100 PARTIAL**. The original cohort remains
   unchanged at **97.33/100 PARTIAL**.
+- The scheduled full-stack canary passes 16/16 checks, including deployment
+  identity, all persistent containers, backend health, Cloudflare tunnel and
+  Access routing, fresh host telemetry, 21-agent liveness, queue state and cost,
+  workflow/notebook persistence, rollback-image readiness and supervision.
+- The sweep closed one stale 21-agent coaching model mismatch: the coaching
+  controller still requested retired `gemma3:4b` while the live queue advertised
+  `gemma3:1b` and `qwen2.5:14b`. It now uses the configured deep model, with the
+  old container retained for rollback. Two unroutable queued certification jobs
+  were cancelled and their audit records retained.
 - The public Edge Owner journey is not verified end-to-end. Direct navigation
   in the existing authenticated profile returned `net::ERR_BLOCKED_BY_CLIENT`,
   before the ORQEVIA page loaded. The workflow was exercised through the
   authenticated LAN PWA API and browser session, including hybrid notebook
-  search and an artifact download; public interaction remains open.
+  search and an artifact download. The public login page currently returns 200
+  and the origin serves the PWA with the public Host header, but post-login
+  browser interaction remains open after a transient 503 reported during the
+  rollout.
 
 Evidence:
 `C:\Users\Admin\Documents\ABEX\operations\orq001-workflow-deployment-20261020`
 and
-`C:\Users\Admin\Documents\ABEX\operations\orq002-pwa-benchmark-20261020`.
+`C:\Users\Admin\Documents\ABEX\operations\orq002-pwa-benchmark-20261020`
+and
+`C:\Users\Admin\Documents\ABEX\operations\orqevia-release-d4e2479-20261020`.
 
 ## ORQEVIA signed naming candidate deployment - 19 October 2026
 
