@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI,Header
 from .agent_dispatch_api import router as agents
+from .agent_conditioning import install_direct_dispatch_conditioning
 from .objective_api import router as objectives
 from .artifact_delivery import router as artifacts
 from .interface_node import router as interface
@@ -14,7 +15,11 @@ from .agent_cert_event_api import router as certification_events
 from .media_api import router as media
 from .project_workflows import get_project_workflow_service, router as project_workflows
 from .agent_notebook_api import router as agent_notebooks
+from .model_registry_api import router as model_registry
+from .debate_api import router as debates
 from .observability import PRIVACY_FASTAPI_TELEMETRY
+
+install_direct_dispatch_conditioning()
 
 
 @asynccontextmanager
@@ -28,7 +33,7 @@ async def lifespan(app):
 
 
 app=FastAPI(title='ORQEVIA direct-execution candidate',lifespan=lifespan,telemetry=PRIVACY_FASTAPI_TELEMETRY)
-for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events,media,project_workflows,agent_notebooks):app.include_router(router)
+for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events,media,project_workflows,agent_notebooks,model_registry,debates):app.include_router(router)
 
 
 @app.get('/health')

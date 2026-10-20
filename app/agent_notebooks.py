@@ -1454,6 +1454,40 @@ class AgentNotebookStore:
                 "expires_at": expires_at,
             }
 
+    def project_list(self, principal: NotebookPrincipal) -> dict[str, Any]:
+        if principal.role != "OWNER":
+            raise NotebookPermissionDenied("owner authority required")
+        with self.connect() as db:
+            rows = db.execute(
+                """SELECT p.project_id,p.name,p.created_by,p.created_at,p.archived_at,
+                COUNT(m.agent_id) AS member_count
+                FROM notebook_projects p
+                LEFT JOIN notebook_project_members m ON m.project_id=p.project_id
+                GROUP BY p.project_id ORDER BY p.created_at DESC"""
+            ).fetchall()
+        return {"projects": [dict(row) for row in rows]}
+
+    def project_members(
+        self,
+        principal: NotebookPrincipal,
+        project_id: str,
+    ) -> dict[str, Any]:
+        if principal.role != "OWNER":
+            raise NotebookPermissionDenied("owner authority required")
+        with self.connect() as db:
+            project = db.execute(
+                "SELECT project_id,name,created_by,created_at,archived_at FROM notebook_projects WHERE project_id=?",
+                (project_id,),
+            ).fetchone()
+            if not project:
+                raise NotebookNotFound("project not found")
+            members = db.execute(
+                """SELECT project_id,agent_id,permission,granted_by,granted_at,expires_at
+                FROM notebook_project_members WHERE project_id=? ORDER BY agent_id""",
+                (project_id,),
+            ).fetchall()
+        return {"project": dict(project), "members": [dict(row) for row in members]}
+
     def export_notebook(
         self, principal: NotebookPrincipal, agent_id: str, *, request_id: str | None = None
     ) -> dict[str, Any]:

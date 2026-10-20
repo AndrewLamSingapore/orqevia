@@ -17,6 +17,8 @@ os.environ["ORQEVIA_QUEUE_CONCURRENCY"] = "1"
 from app import (agent_dispatch_api, artifact_delivery, compute_queue_api,
                  harness_api, interface_node, objective_api,
                  spine_api)
+from app.agent_conditioning import install_direct_dispatch_conditioning
+install_direct_dispatch_conditioning()
 app = FastAPI()
 for router in (harness_api.router, agent_dispatch_api.router, objective_api.router,
                artifact_delivery.router,

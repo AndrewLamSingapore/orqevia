@@ -374,7 +374,7 @@ def test_cli_discovery_fails_safely_for_missing_expired_and_invalid_auth(tmp_pat
 def test_host_catalog_snapshot_is_digest_verified_and_read_only(tmp_path):
     snapshot = {
         "schema_version": "orqevia.higgsfield-catalog.v1",
-        "generated_at_utc": "2026-10-19T06:00:00+00:00",
+        "generated_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "cli_version": "higgsfield 1.2.2",
         "catalog": {
             "status": "AUTHENTICATED",
@@ -403,6 +403,17 @@ def test_host_catalog_snapshot_is_digest_verified_and_read_only(tmp_path):
     assert result["source"] == "WINDOWS_CLI_SNAPSHOT"
     assert result["model_count"] == 1 and result["workflow_count"] == 1
     assert "email" not in json.dumps(result).lower()
+    expired_raw = json.dumps(
+        {
+            **snapshot,
+            "generated_at_utc": (
+                datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=2)
+            ).isoformat(),
+        },
+        sort_keys=True,
+    ).encode()
+    catalog.write_bytes(expired_raw)
+    digest.write_text(hashlib.sha256(expired_raw).hexdigest() + "\n", encoding="ascii")
     stale = HiggsfieldCatalogSnapshot(str(catalog), str(digest), max_age_seconds=1)
     assert stale.health()["status"] == "STALE"
     with pytest.raises(MediaProviderError, match="CATALOG_STALE"):

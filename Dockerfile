@@ -9,7 +9,15 @@ RUN mkdir -p /run/orqevia-tls
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install the reviewed upstream MBTI-in-Thoughts runtime wheel. Its research
+# dependency declarations are removed because that pinned Torch/LangChain
+# environment conflicts with ORQEVIA's production dependency closure.
+COPY vendor/MBTI-in-Thoughts-1.0.0/mbti_in_thoughts-1.0.0-1orqevia-py3-none-any.whl /tmp/
+RUN pip install --no-cache-dir --no-deps /tmp/mbti_in_thoughts-1.0.0-1orqevia-py3-none-any.whl \
+    && rm /tmp/mbti_in_thoughts-1.0.0-1orqevia-py3-none-any.whl
+
 COPY app ./app
+COPY mbti_in_thoughts ./mbti_in_thoughts
 COPY config ./config
 # The deterministic architecture lookup reads the current golden record at /app/governance.
 # Keep the image scope narrow; other governance files are not runtime inputs.
