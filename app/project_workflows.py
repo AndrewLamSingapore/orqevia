@@ -590,6 +590,16 @@ class ProjectWorkflowService:
                     "SELECT run_id FROM project_runs WHERE state IN ('QUEUED','RUNNING','RETRYING') ORDER BY created_at"
                 ).fetchall()
             ]
+            job_ids = [
+                row["queue_job_id"]
+                for run_id in ids
+                for row in db.execute(
+                    "SELECT queue_job_id FROM project_tasks WHERE run_id=? AND status IN ('submitted','running') AND queue_job_id IS NOT NULL",
+                    (run_id,),
+                ).fetchall()
+            ]
+        if job_ids:
+            _live_queue().requeue_orphaned_local(job_ids, reason="project workflow backend restarted")
         for run_id in ids:
             self.start(run_id)
         return ids
@@ -1028,7 +1038,7 @@ class ProjectWorkflowService:
             "run_id": run_id,
             "title": run["title"],
             "scenario_parameters": request.scenarios.model_dump(),
-            "status": "AWAITING_RESTART_VERIFICATION" if not failed else "PARTIAL",
+            "status": "CALCULATED" if not failed else "PARTIAL",
         }
         results_path = run_dir / f"{run['project_key']}-results.json"
         results_path.write_text(json.dumps(results_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1275,6 +1285,13 @@ post-restart retrieval match and is recorded in `{run['project_key']}-verificati
             }
         )
         memory_path.write_text(json.dumps(memory_test, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        execution = json.loads(execution_path.read_text(encoding="utf-8"))
+        execution["final_verification"] = {
+            "verdict": "PASS" if passed else "PARTIAL",
+            "verified_at": utcnow(),
+            "checks": checks,
+        }
+        execution_path.write_text(json.dumps(execution, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         verification = f"""# {run['project_key']} — Independent Verification
 
 **Verdict:** **{'PASS' if passed else 'PARTIAL'}**
@@ -1288,7 +1305,7 @@ The saved content matched the pre-restart record: **{'PASS' if memory_match else
 """
         verification_path.write_text(verification, encoding="utf-8")
         with self.store.transaction() as db:
-            for path in (memory_path, verification_path):
+            for path in (memory_path, verification_path, execution_path):
                 db.execute(
                     """INSERT INTO project_artifacts(run_id,name,media_type,sha256,bytes,created_at)
                     VALUES(?,?,?,?,?,?)

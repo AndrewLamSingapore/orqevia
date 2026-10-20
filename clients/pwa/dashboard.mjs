@@ -189,4 +189,12 @@ if (typeof document !== 'undefined') {
     link.textContent='Projects & Notebooks';
     navigation.append(link);
   }
+  const grid=document.querySelector('.function-grid');
+  if(grid&&!grid.querySelector('.project-workspace-link')){
+    const link=document.createElement('a');
+    link.className='project-workspace-link';
+    link.href='/pwa/projects.html';
+    link.textContent='Projects & Notebooks';
+    grid.append(link);
+  }
 }
