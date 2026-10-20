@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact source-only sweep record; preserve all frozen history.
+    sweep_title = "## Portfolio public-audience sweep — 20 October 2026"
+    assert after.count(sweep_title) == 1
+    sweep_start = after.index(sweep_title)
+    sweep_end = after.index("\n## ", sweep_start + len(sweep_title)) + 1
+    sweep_update = after[sweep_start:sweep_end].encode("utf-8")
+    assert len(sweep_update) == 1950
+    assert hashlib.sha256(sweep_update).hexdigest() == "3aef3535a51ab6345eeea978799597bc9575f929f9971e1cea5db4c0f99fb9e3"
+    assert b"### Claimed, not independently checked" in sweep_update
+    assert b"### Verified" not in sweep_update
+    after = after[:sweep_start] + after[sweep_end:]
     deployment_title = "## ORQEVIA signed naming candidate deployment - 19 October 2026"
     assert after.count(deployment_title) == 1
     deployment_start = after.index(deployment_title)
