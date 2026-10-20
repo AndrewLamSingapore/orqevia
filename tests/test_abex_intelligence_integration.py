@@ -74,13 +74,18 @@ def test_bridge_does_not_forward_unallowlisted_routes(monkeypatch):
     app=FastAPI();app.include_router(bridge.router);client=TestClient(app,base_url='https://abex.test')
     assert client.get('/api/orqevia/private-records').status_code==404
     assert client.post('/api/orqevia/intelligence/sources').status_code==405
+    redirect=client.get('/orqevia/',follow_redirects=False)
+    assert redirect.status_code==307
+    assert redirect.headers['location']=='/pwa/?view=gods-eye'
 
 def test_active_gods_eye_is_map_and_extension_preserves_existing_runtime():
     root=Path(__file__).resolve().parents[1]
     html=(root/'app/orqevia/static/index.html').read_text(encoding='utf-8')
     assert 'src="/orqevia/gods-eye/map.html"' in html
     extension=(root/'deploy/extend-abex-interface.py').read_text()
-    assert 'text+' in extension and "text.replace(needle,needle+" in extension
+    assert "intelligence-link" in extension
+    assert 'href="/pwa/?view=gods-eye"' in extension
+    assert "text.replace(needle, needle + link, 1)" in extension
     docker=(root/'deploy/Dockerfile.interface-intelligence-abex').read_text()
     assert 'COPY app /app/app' not in docker
 
@@ -112,6 +117,14 @@ def test_ui_health_uses_the_authenticated_companion_and_error_is_not_empty_map()
     assert 'fetch("/api/orqevia/proxy/"' not in js
     mapjs=(root/'clients/pwa/command-map.mjs').read_text(encoding='utf-8')
     assert 'if (!res.ok) throw' in mapjs
+
+def test_runtime_image_copies_every_gods_eye_asset():
+    root=Path(__file__).resolve().parents[1]
+    dockerfile=(root/'Dockerfile').read_text(encoding='utf-8')
+    required=('intelligence.mjs','intelligence.css','command-center.css','knowledge.mjs',
+        'knowledge.css','workspace-tools.mjs','command-map.mjs','command-map.css',
+        'agent-readiness.json','clients/pwa/vendor')
+    assert all(asset in dockerfile for asset in required)
 
 def test_production_entry_requires_server_authentication(monkeypatch,tmp_path):
     monkeypatch.setenv('ORQEVIA_DATA_DIR',str(tmp_path))

@@ -36,7 +36,7 @@ Session validation rejects superseded responses. Task, history, upload and
 artifact rendering carry the originating client and session generation, so an
 account change cannot render an earlier account's late response. Ordinary
 same-client refresh preserves its owned result. The functional candidate uses
-shell `orqevia-shell-v28` while preserving `/pwa/`, the manifest and icon identity,
+shell `orqevia-shell-v30` while preserving `/pwa/`, the manifest and icon identity,
 cookie names and existing client-scoped IndexedDB references. A shell update is
 source readiness until an installed browser/PWA update is observed.
 
@@ -74,7 +74,7 @@ Focused candidate continuation tests: `node clients/pwa/followup-tests.mjs` — 
 
 `clients/pwa` pins Node 22 in `.nvmrc`, pnpm 12.14.0 in `package.json`,
 Playwright 1.63.0 in the lockfile, and the service-worker shell as
-`orqevia-shell-v28`.
+`orqevia-shell-v30`.
 
 ```powershell
 corepack pnpm install --frozen-lockfile
