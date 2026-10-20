@@ -13,9 +13,12 @@ import hashlib
 import json
 import os
 import re
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.agent_conditioning import BehaviorProfile, BehaviorProfileStore
 from app.agent_dispatch_api import AgentRequest, dispatch_request, input_budget_bytes, packed_inference_prompt
@@ -258,6 +261,11 @@ def evaluate(task: dict, text: str, prompt: str) -> dict:
             "advisory",
             "recommendation",
             "assumption",
+            "assumes",
+            "uncertain",
+            "not quantified",
+            "untrusted",
+            "cross-verif",
             "cannot",
             "has not been",
         )
