@@ -12,9 +12,7 @@ from pathlib import Path
 
 BASE = "http://127.0.0.1:8000"
 TOKEN = os.environ["ORQEVIA_SPINE_TOKEN"].strip()
-ADMIN = hmac.new(
-    TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256
-).hexdigest()
+ADMIN = hmac.new(TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256).hexdigest()
 OUTPUT = Path("/data/capability-demo-20261020.json")
 
 

@@ -41,9 +41,17 @@ class Position:
             raise ValueError("position agent is not registered") from None
         if not isinstance(self.proposition, str) or not self.proposition.strip():
             raise ValueError("position proposition is required")
-        if isinstance(self.confidence, bool) or not isinstance(self.confidence, (int, float)) or not 0 <= self.confidence <= 1:
+        if (
+            isinstance(self.confidence, bool)
+            or not isinstance(self.confidence, (int, float))
+            or not 0 <= self.confidence <= 1
+        ):
             raise ValueError("position confidence must be between zero and one")
-        for name, values in (("evidence_refs", self.evidence_refs), ("assumptions", self.assumptions), ("objections", self.objections)):
+        for name, values in (
+            ("evidence_refs", self.evidence_refs),
+            ("assumptions", self.assumptions),
+            ("objections", self.objections),
+        ):
             if not isinstance(values, tuple) or any(not isinstance(item, str) or not item.strip() for item in values):
                 raise ValueError(f"{name} must contain non-empty strings")
 
@@ -77,7 +85,11 @@ def resolve_debate(
         raise ValueError("judge agent is not registered") from None
     if judge in {position.agent_id for position in positions}:
         raise ValueError("judge must be independent of the positions")
-    if isinstance(consensus_threshold, bool) or not isinstance(consensus_threshold, (int, float)) or not 0.5 <= consensus_threshold <= 1:
+    if (
+        isinstance(consensus_threshold, bool)
+        or not isinstance(consensus_threshold, (int, float))
+        or not 0.5 <= consensus_threshold <= 1
+    ):
         raise ValueError("consensus threshold must be between 0.5 and 1")
 
     groups: dict[str, list[Position]] = {}
@@ -87,21 +99,9 @@ def resolve_debate(
     winner_key, winner_positions = ranked[0]
     tie = len(ranked) > 1 and len(ranked[1][1]) == len(winner_positions)
     consensus_share = len(winner_positions) / len(positions)
-    objections = sorted(
-        {
-            objection
-            for position in positions
-            for objection in position.objections
-        }
-    )
-    missing_evidence = sorted(
-        position.agent_id for position in positions if not position.evidence_refs
-    )
-    minority = [
-        position
-        for position in positions
-        if _normalize(position.proposition) != winner_key
-    ]
+    objections = sorted({objection for position in positions for objection in position.objections})
+    missing_evidence = sorted(position.agent_id for position in positions if not position.evidence_refs)
+    minority = [position for position in positions if _normalize(position.proposition) != winner_key]
     reasons: list[str] = []
     if tie:
         reasons.append("no_unique_majority")

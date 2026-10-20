@@ -54,10 +54,7 @@ def main() -> int:
     rollback = [job for job in data["jobs"] if job.get("mode") == "rollback"]
     baseline_style = pilot.style_mean(baseline)
     conditioned_style = pilot.style_mean(conditioned)
-    style_delta = {
-        name: round(conditioned_style[name] - baseline_style[name], 4)
-        for name in pilot.STYLE_TERMS
-    }
+    style_delta = {name: round(conditioned_style[name] - baseline_style[name], 4) for name in pilot.STYLE_TERMS}
     baseline_accuracy = pilot.mean([job["rubric_score"] for job in baseline if "rubric_score" in job])
     conditioned_accuracy = pilot.mean([job["rubric_score"] for job in conditioned if "rubric_score" in job])
     baseline_words = pilot.mean([job["word_count"] for job in baseline if "word_count" in job])
@@ -162,7 +159,11 @@ def main() -> int:
             f"{job.get('input_tokens')}/{job.get('output_tokens')} | {job.get('safety_pass')} |"
         )
     (OUTPUT / "pilot-report.md").write_text("\n".join(report) + "\n", encoding="utf-8")
-    print(json.dumps({"verdict": verdict, "comparison": data["comparison"], "rollback_job": retry.get("job_id")}, indent=2))
+    print(
+        json.dumps(
+            {"verdict": verdict, "comparison": data["comparison"], "rollback_job": retry.get("job_id")}, indent=2
+        )
+    )
     return 0
 
 

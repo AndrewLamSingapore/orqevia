@@ -100,8 +100,7 @@ def load_profiles() -> Mapping[str, str]:
     observed = hashlib.sha256(raw).hexdigest()
     if observed != PROFILE_DATA_SHA256:
         raise RuntimeError(
-            f"MBTI-in-Thoughts profile data hash mismatch: expected "
-            f"{PROFILE_DATA_SHA256}, observed {observed}"
+            f"MBTI-in-Thoughts profile data hash mismatch: expected {PROFILE_DATA_SHA256}, observed {observed}"
         )
     parsed = json.loads(raw.decode("utf-8"))
     if not isinstance(parsed, dict) or not all(

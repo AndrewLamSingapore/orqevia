@@ -69,18 +69,14 @@ def main() -> int:
         },
         "idempotency_key": f"orqevia-final-21-{RUN_LABEL}",
     }
-    (OUTPUT / "request.json").write_text(
-        json.dumps(payload, indent=2) + "\n", encoding="utf-8"
-    )
+    (OUTPUT / "request.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     run = api("/api/project-workflows", payload)
     run_id = run["run_id"]
     started = time.monotonic()
     last_phase = None
     while True:
         run = api("/api/project-workflows/" + urllib.parse.quote(run_id))
-        (OUTPUT / "latest-status.json").write_text(
-            json.dumps(run, indent=2) + "\n", encoding="utf-8"
-        )
+        (OUTPUT / "latest-status.json").write_text(json.dumps(run, indent=2) + "\n", encoding="utf-8")
         phase = run.get("current_phase")
         if phase != last_phase:
             print(
@@ -102,17 +98,12 @@ def main() -> int:
         if time.monotonic() - started > 7200:
             raise TimeoutError(run_id)
         time.sleep(10)
-    (OUTPUT / "workflow-results.json").write_text(
-        json.dumps(run, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    (OUTPUT / "workflow-results.json").write_text(json.dumps(run, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     artifact_receipts = []
     for item in run.get("artifacts", []):
         name = item["name"]
         raw = api_bytes(
-            "/api/project-workflows/"
-            + urllib.parse.quote(run_id)
-            + "/artifacts/"
-            + urllib.parse.quote(name)
+            "/api/project-workflows/" + urllib.parse.quote(run_id) + "/artifacts/" + urllib.parse.quote(name)
         )
         path = OUTPUT / name
         path.write_bytes(raw)
@@ -121,8 +112,7 @@ def main() -> int:
                 "name": name,
                 "bytes": len(raw),
                 "sha256": hashlib.sha256(raw).hexdigest(),
-                "matches_workflow_manifest": hashlib.sha256(raw).hexdigest()
-                == item.get("sha256"),
+                "matches_workflow_manifest": hashlib.sha256(raw).hexdigest() == item.get("sha256"),
             }
         )
     summary = {
@@ -132,13 +122,9 @@ def main() -> int:
         "task_summary": run.get("summary"),
         "artifact_receipts": artifact_receipts,
         "evidence": str(OUTPUT / "workflow-results.json"),
-        "evidence_sha256": hashlib.sha256(
-            (OUTPUT / "workflow-results.json").read_bytes()
-        ).hexdigest(),
+        "evidence_sha256": hashlib.sha256((OUTPUT / "workflow-results.json").read_bytes()).hexdigest(),
     }
-    (OUTPUT / "summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    (OUTPUT / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0 if run.get("state") == "COMPLETED" else 1
 

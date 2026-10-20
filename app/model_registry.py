@@ -470,9 +470,7 @@ class ModelRegistryStore:
         with self.connect() as db:
             states = {
                 row["state"]: row["n"]
-                for row in db.execute(
-                    "SELECT state,COUNT(*) AS n FROM model_versions GROUP BY state"
-                ).fetchall()
+                for row in db.execute("SELECT state,COUNT(*) AS n FROM model_versions GROUP BY state").fetchall()
             }
             assignments = db.execute("SELECT COUNT(*) FROM model_assignments").fetchone()[0]
             events = db.execute("SELECT COUNT(*) FROM model_events").fetchone()[0]
