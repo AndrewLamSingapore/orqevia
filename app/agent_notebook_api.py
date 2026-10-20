@@ -1,4 +1,5 @@
 """Authenticated per-agent notebook and behavioral-profile API."""
+
 from __future__ import annotations
 
 import hashlib
@@ -373,4 +374,3 @@ def set_conditioning(
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
     return BehaviorProfileStore().set(agent_id, profile, updated_by=principal.actor_id)
-

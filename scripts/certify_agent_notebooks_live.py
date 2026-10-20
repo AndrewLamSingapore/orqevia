@@ -1,10 +1,10 @@
 """Certify the live notebook API for every registered agent."""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import os
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -19,6 +19,7 @@ TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or os.getenv("PRIME_SPINE_TOKEN") or "
 
 def hashlib_hmac() -> str:
     import hmac
+
     return hmac.new(TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256).hexdigest()
 
 
@@ -98,9 +99,8 @@ def main() -> None:
                 role="AGENT",
                 body={"query": marker, "agent_id": agent_id, "limit": 5},
             )
-            checks["keyword_search"] = (
-                status_keyword == 200
-                and any(item["memory_id"] == memory_id for item in keyword.get("results", []))
+            checks["keyword_search"] = status_keyword == 200 and any(
+                item["memory_id"] == memory_id for item in keyword.get("results", [])
             )
             status_semantic, semantic = request(
                 "/api/agent-notebooks/search",
@@ -112,7 +112,10 @@ def main() -> None:
             checks["semantic_search"] = (
                 status_semantic == 200
                 and semantic.get("retrieval", {}).get("mode") == "hybrid"
-                and any(item["memory_id"] == memory_id and item.get("semantic_score", 0) > 0 for item in semantic.get("results", []))
+                and any(
+                    item["memory_id"] == memory_id and item.get("semantic_score", 0) > 0
+                    for item in semantic.get("results", [])
+                )
             )
             status_update, updated = request(
                 f"/api/agent-notebooks/{agent_id}/records/{memory_id}",
@@ -134,9 +137,7 @@ def main() -> None:
                 actor=agent_id,
                 role="AGENT",
             )
-            checks["version_history"] = (
-                status_history == 200 and len(history.get("versions", [])) >= 2
-            )
+            checks["version_history"] = status_history == 200 and len(history.get("versions", [])) >= 2
             record = {
                 "agent_id": agent_id,
                 "marker": marker,

@@ -1,4 +1,5 @@
 """Verify live notebook records and backup integrity after a process restart."""
+
 from __future__ import annotations
 
 import hashlib
@@ -13,9 +14,10 @@ from app.agent_notebooks import AgentNotebookStore
 
 BASE = os.getenv("ORQEVIA_LOCAL_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or os.getenv("PRIME_SPINE_TOKEN") or "").strip()
-ADMIN = os.getenv("ORQEVIA_NOTEBOOK_ADMIN_TOKEN", "").strip() or hmac.new(
-    TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256
-).hexdigest()
+ADMIN = (
+    os.getenv("ORQEVIA_NOTEBOOK_ADMIN_TOKEN", "").strip()
+    or hmac.new(TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256).hexdigest()
+)
 OUT = Path(os.getenv("ORQEVIA_NOTEBOOK_CERT_OUT", "/data/notebook-certification"))
 
 
@@ -40,9 +42,7 @@ def main() -> None:
     passed = 0
     for item in report["results"]:
         try:
-            record = request(
-                f"/api/agent-notebooks/{item['agent_id']}/records/{item['memory_id']}"
-            )
+            record = request(f"/api/agent-notebooks/{item['agent_id']}/records/{item['memory_id']}")
             ok = item["marker"] in json.dumps(record.get("content", {}), sort_keys=True)
         except Exception:
             ok = False
@@ -72,11 +72,7 @@ def main() -> None:
         "restored_records": records,
         "status": "PASS" if passed == 21 and integrity == "ok" and notebooks == 21 else "FAIL",
     }
-    report["status"] = (
-        "PASS"
-        if report["agents_passed"] == 21 and report["restart"]["status"] == "PASS"
-        else "FAIL"
-    )
+    report["status"] = "PASS" if report["agents_passed"] == 21 and report["restart"]["status"] == "PASS" else "FAIL"
     path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": report["status"], "restart": report["restart"]}, sort_keys=True))
     if report["status"] != "PASS":

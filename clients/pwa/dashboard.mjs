@@ -180,7 +180,7 @@ if(typeof document!=='undefined') {
   window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));
 }
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && typeof document.querySelector === 'function' && typeof document.createElement === 'function') {
   const navigation=document.querySelector('.desktop-navigation');
   if(navigation&&!navigation.querySelector('.nav-project-link')){
     const link=document.createElement('a');

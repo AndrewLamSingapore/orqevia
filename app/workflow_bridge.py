@@ -1,4 +1,5 @@
 """Owner-scoped PWA bridge for durable project workflows and agent notebooks."""
+
 from __future__ import annotations
 
 import asyncio
@@ -119,4 +120,3 @@ async def notebooks(request: Request, path: str):
         mutation=mutation,
         notebook=True,
     )
-

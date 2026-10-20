@@ -1,10 +1,10 @@
 """Independently validate ORQ-001 after a backend process restart."""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import os
-import re
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -128,7 +128,6 @@ def main() -> None:
     state_path = OUTPUT / "orq-001-run-state.json"
     if not state_path.is_file():
         raise RuntimeError("ORQ-001 run state is missing")
-    state = json.loads(state_path.read_text(encoding="utf-8"))
     memory_test_path = OUTPUT / "ORQ-001-memory-test.json"
     memory_test = json.loads(memory_test_path.read_text(encoding="utf-8"))
     execution_path = OUTPUT / "ORQ-001-execution-log.json"
@@ -137,9 +136,7 @@ def main() -> None:
     matrix = json.loads((OUTPUT / "ORQ-001-agent-matrix.json").read_text(encoding="utf-8"))
 
     memory_key = memory_test["memory_key"]
-    post_restart = request(
-        "/control/api/survival/memory/semantic/" + urllib.parse.quote(memory_key)
-    )
+    post_restart = request("/control/api/survival/memory/semantic/" + urllib.parse.quote(memory_key))
     expected = memory_test["expected_record"]
     actual_record = post_restart.get("value", {}).get("record", {})
     memory_match = all(actual_record.get(key) == value for key, value in expected.items())
@@ -226,8 +223,7 @@ def main() -> None:
     registered_ids = sorted(agent["agent_id"] for agent in registry["agents"])
     matrix_ids = sorted(item["agent_id"] for item in matrix["agents"])
     all_completed = all(
-        item["execution"]["status"] == "completed" and item["execution"]["nonempty"]
-        for item in matrix["agents"]
+        item["execution"]["status"] == "completed" and item["execution"]["nonempty"] for item in matrix["agents"]
     )
     jobs = execution_log.get("jobs", [])
     job_ids = [item.get("job_id") for item in jobs]
@@ -304,9 +300,7 @@ def main() -> None:
     existing_files = [
         name
         for name in REQUIRED_FILES
-        if name != "ORQ-001-verification.md"
-        and (OUTPUT / name).is_file()
-        and (OUTPUT / name).stat().st_size > 0
+        if name != "ORQ-001-verification.md" and (OUTPUT / name).is_file() and (OUTPUT / name).stat().st_size > 0
     ]
     critical = [
         ("21_registered_agents_discovered", len(registered_ids) == 21 and matrix_ids == registered_ids),
@@ -319,9 +313,7 @@ def main() -> None:
         ("memory_after_backend_restart", memory_match),
         (
             "execution_log_integrity",
-            len(jobs) == 21
-            and len(set(job_ids)) == 21
-            and all(item.get("status") == "completed" for item in jobs),
+            len(jobs) == 21 and len(set(job_ids)) == 21 and all(item.get("status") == "completed" for item in jobs),
         ),
         ("required_deliverables", len(existing_files) == 5),
         ("report_has_actionable_recommendation", report_ok),
@@ -337,9 +329,7 @@ def main() -> None:
         "financial_checks": financial_checks,
         "schema_errors": schema_errors,
         "memory_match": memory_match,
-        "artifact_hashes": {
-            name: sha256_file(OUTPUT / name) for name in REQUIRED_FILES if (OUTPUT / name).is_file()
-        },
+        "artifact_hashes": {name: sha256_file(OUTPUT / name) for name in REQUIRED_FILES if (OUTPUT / name).is_file()},
     }
     execution_log.setdefault("events", []).append(
         {
@@ -372,10 +362,7 @@ def main() -> None:
     financial_rows = [
         "| Financial check | Result | Evidence |",
         "|---|---|---|",
-        *[
-            f"| {item['check']} | {item['status']} | {item['evidence']} |"
-            for item in financial_checks
-        ],
+        *[f"| {item['check']} | {item['status']} | {item['evidence']} |" for item in financial_checks],
     ]
     hashes = status["artifact_hashes"]
     verification_md = f"""# ORQ-001 — Independent Verification
@@ -398,14 +385,14 @@ Baseline: SGD 45,000.00 total expenses; SGD 5,000.00 monthly profit; 10.00% net 
 
 - Memory key: `{memory_key}`
 - Saved decision: {json.dumps(expected, sort_keys=True)}
-- Backend restart observed: {memory_test['restart_test'].get('backend_container_started_before')} → {memory_test['restart_test'].get('backend_container_started_after')}
-- Post-restart match: **{'PASS' if memory_match else 'FAIL'}**
+- Backend restart observed: {memory_test["restart_test"].get("backend_container_started_before")} → {memory_test["restart_test"].get("backend_container_started_after")}
+- Post-restart match: **{"PASS" if memory_match else "FAIL"}**
 
 ## Execution evidence
 
 - Registered agents discovered: {len(registered_ids)}/21
-- Completed non-empty agent jobs: {matrix.get('agents_completed')}/21
-- Allowed traceable handoffs: {sum(1 for item in handoffs if item.get('allowed'))}/21
+- Completed non-empty agent jobs: {matrix.get("agents_completed")}/21
+- Allowed traceable handoffs: {sum(1 for item in handoffs if item.get("allowed"))}/21
 - Queue jobs recorded: {len(jobs)}
 - Unique job identifiers: {len(set(job_ids))}
 
@@ -446,4 +433,3 @@ The business and figures are hypothetical. No external supplier, tax, accounting
 
 if __name__ == "__main__":
     main()
-

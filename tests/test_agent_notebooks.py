@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from app.agent_conditioning import BehaviorProfile, BehaviorProfileStore, condition_prompt
@@ -79,4 +77,3 @@ def test_conditioning_is_optional_and_cannot_override_task(tmp_path):
     assert prompt.startswith("OPTIONAL BEHAVIORAL CONDITIONING")
     assert "SUBORDINATE TO SYSTEM, SECURITY, PERMISSIONS, EVIDENCE AND TASK" in prompt
     assert prompt.endswith(base)
-

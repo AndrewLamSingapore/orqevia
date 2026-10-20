@@ -5,15 +5,15 @@ task instructions, evidence requirements, permissions and security policy retain
 strict priority. MBTI or other psychological labels are optional research tags,
 not evidence of capability or authority.
 """
+
 from __future__ import annotations
 
-import os
 import sqlite3
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Any, Mapping
+from typing import Any
 
-from .agent_notebooks import AgentNotebookStore, NotebookPrincipal, get_notebook_store
+from .agent_notebooks import AgentNotebookStore, get_notebook_store
 from .agent_registry import canonical_agent_id
 
 
@@ -43,8 +43,7 @@ class BehaviorProfile:
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
                 raise ValueError(f"{name} must be between zero and one")
         if self.mbti_tag and (
-            len(self.mbti_tag) != 4
-            or any(letter not in "EISNTFJP" for letter in self.mbti_tag.upper())
+            len(self.mbti_tag) != 4 or any(letter not in "EISNTFJP" for letter in self.mbti_tag.upper())
         ):
             raise ValueError("mbti_tag must be four valid letters or null")
 
@@ -89,6 +88,7 @@ class BehaviorProfileStore:
         if not row:
             return BehaviorProfile()
         import json
+
         return BehaviorProfile(**json.loads(row["profile_json"]))
 
     def set(self, agent_id: str, profile: BehaviorProfile, *, updated_by: str) -> dict[str, Any]:
@@ -96,6 +96,7 @@ class BehaviorProfileStore:
         if canonical == "prime":
             raise ValueError("orchestrator conditioning is not supported")
         import json
+
         with self.connect() as db:
             prior = db.execute(
                 "SELECT version FROM notebook_conditioning_profiles WHERE agent_id=?",
@@ -154,4 +155,3 @@ def condition_prompt(prompt: str, agent_id: str, store: BehaviorProfileStore | N
     profile = (store or BehaviorProfileStore()).get(agent_id)
     clause = conditioning_clause(agent_id, profile)
     return prompt if not clause else clause + "\n\n" + prompt
-

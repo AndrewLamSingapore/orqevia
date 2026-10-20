@@ -4,6 +4,7 @@ The notebook is an evidence and continuity store, not a hidden reasoning log.
 Private records are isolated by agent identity, project records require explicit
 membership, and organization records require an owner-authorized write.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -82,7 +83,10 @@ TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9_-]{2,}")
 SENSITIVE_PATTERNS = (
     (re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{8,}"), r"\1[REDACTED]"),
     (re.compile(r"(?i)((?:api[_-]?key|token|password|secret)\s*[:=]\s*)[^\s,;]{8,}"), r"\1[REDACTED]"),
-    (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.S), "[REDACTED PRIVATE KEY]"),
+    (
+        re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.S),
+        "[REDACTED PRIVATE KEY]",
+    ),
 )
 
 
@@ -392,9 +396,7 @@ class AgentNotebookStore:
             now = utcnow()
             for agent in agents:
                 agent_id = agent["agent_id"]
-                existing = db.execute(
-                    "SELECT 1 FROM agent_notebooks WHERE agent_id=?", (agent_id,)
-                ).fetchone()
+                existing = db.execute("SELECT 1 FROM agent_notebooks WHERE agent_id=?", (agent_id,)).fetchone()
                 db.execute(
                     """INSERT INTO agent_notebooks(agent_id,registry_version,created_at,updated_at,enabled)
                     VALUES(?,?,?,?,1)
@@ -441,22 +443,25 @@ class AgentNotebookStore:
                         embed=False,
                     )
                     identity_seeded += 1
-        return {"agents_registered": len(agents), "notebooks_created": created, "identity_records_seeded": identity_seeded}
+        return {
+            "agents_registered": len(agents),
+            "notebooks_created": created,
+            "identity_records_seeded": identity_seeded,
+        }
 
     def _require_notebook(self, db: sqlite3.Connection, agent_id: str) -> str:
         try:
             canonical = canonical_agent_id(agent_id)
         except RegistryError as exc:
             raise NotebookNotFound("agent notebook does not exist") from exc
-        if canonical == "prime" or not db.execute(
-            "SELECT 1 FROM agent_notebooks WHERE agent_id=? AND enabled=1", (canonical,)
-        ).fetchone():
+        if (
+            canonical == "prime"
+            or not db.execute("SELECT 1 FROM agent_notebooks WHERE agent_id=? AND enabled=1", (canonical,)).fetchone()
+        ):
             raise NotebookNotFound("agent notebook does not exist")
         return canonical
 
-    def _project_permission(
-        self, db: sqlite3.Connection, project_id: str, principal: NotebookPrincipal
-    ) -> str | None:
+    def _project_permission(self, db: sqlite3.Connection, project_id: str, principal: NotebookPrincipal) -> str | None:
         if principal.role == "OWNER":
             return "write"
         row = db.execute(
@@ -470,9 +475,7 @@ class AgentNotebookStore:
             return None
         return row["permission"]
 
-    def _can_read(
-        self, db: sqlite3.Connection, row: sqlite3.Row, principal: NotebookPrincipal
-    ) -> tuple[bool, str]:
+    def _can_read(self, db: sqlite3.Connection, row: sqlite3.Row, principal: NotebookPrincipal) -> tuple[bool, str]:
         if principal.role == "OWNER":
             return True, "owner access"
         if row["scope"] == "private":
@@ -480,9 +483,7 @@ class AgentNotebookStore:
             return allowed, "private owner access" if allowed else "private notebook isolation"
         if row["scope"] == "project":
             allowed = (
-                self._project_permission(db, row["project_id"], principal) is not None
-                if row["project_id"]
-                else False
+                self._project_permission(db, row["project_id"], principal) is not None if row["project_id"] else False
             )
             return allowed, "project membership" if allowed else "project membership required"
         allowed = row["scope"] == "organization" and row["verification_status"] not in {
@@ -530,7 +531,9 @@ class AgentNotebookStore:
     def _embedding_identity(self) -> str:
         return os.getenv("ORQEVIA_EMBED_MODEL", "embeddinggemma:300m-qat-q4_0").strip()
 
-    def _embed_record(self, content: Mapping[str, Any], section: str, record_type: str) -> tuple[str | None, str | None, str]:
+    def _embed_record(
+        self, content: Mapping[str, Any], section: str, record_type: str
+    ) -> tuple[str | None, str | None, str]:
         text = f"{section} {record_type} {canonical_json(content)}"
         try:
             vector = self._embedder(text)
@@ -678,9 +681,7 @@ class AgentNotebookStore:
         if prior and prior["content_hash"] != digest and not supersedes_id:
             conflict_status = "unresolved"
         if embed:
-            embedding_json, embedding_model, embedding_status = self._embed_record(
-                content, section, record_type
-            )
+            embedding_json, embedding_model, embedding_status = self._embed_record(content, section, record_type)
         else:
             embedding_json, embedding_model, embedding_status = None, None, "pending"
         now = utcnow()
@@ -882,9 +883,7 @@ class AgentNotebookStore:
         self, principal: NotebookPrincipal, memory_id: str, *, request_id: str | None = None
     ) -> dict[str, Any]:
         with self._transaction() as db:
-            return self._public_record(
-                self._read_authorized(db, memory_id, principal, request_id=request_id)
-            )
+            return self._public_record(self._read_authorized(db, memory_id, principal, request_id=request_id))
 
     def list_records(
         self,
@@ -941,14 +940,19 @@ class AgentNotebookStore:
     def list_notebooks(self, principal: NotebookPrincipal) -> dict[str, Any]:
         with self._transaction() as db:
             if principal.role == "OWNER":
-                ids = [row["agent_id"] for row in db.execute(
-                    "SELECT agent_id FROM agent_notebooks ORDER BY agent_id"
-                ).fetchall()]
+                ids = [
+                    row["agent_id"]
+                    for row in db.execute("SELECT agent_id FROM agent_notebooks ORDER BY agent_id").fetchall()
+                ]
             else:
-                ids = [principal.agent_id] if db.execute(
-                    "SELECT 1 FROM agent_notebooks WHERE agent_id=? AND enabled=1",
-                    (principal.agent_id,),
-                ).fetchone() else []
+                ids = (
+                    [principal.agent_id]
+                    if db.execute(
+                        "SELECT 1 FROM agent_notebooks WHERE agent_id=? AND enabled=1",
+                        (principal.agent_id,),
+                    ).fetchone()
+                    else []
+                )
             agents = []
             for agent_id in ids:
                 record = next(a for a in load_agent_registry()["agents"] if a["agent_id"] == agent_id)
@@ -1020,9 +1024,7 @@ class AgentNotebookStore:
                 ),
             )
             evidence = (
-                list(evidence_refs)
-                if evidence_refs is not None
-                else json.loads(row["evidence_refs_json"] or "[]")
+                list(evidence_refs) if evidence_refs is not None else json.loads(row["evidence_refs_json"] or "[]")
             )
             new_version = row["version"] + 1
             digest = hashlib.sha256(content_text.encode("utf-8")).hexdigest()
@@ -1548,9 +1550,7 @@ class AgentNotebookStore:
         )
         return manifest
 
-    def health(
-        self, principal: NotebookPrincipal, *, request_id: str | None = None
-    ) -> dict[str, Any]:
+    def health(self, principal: NotebookPrincipal, *, request_id: str | None = None) -> dict[str, Any]:
         registry_ids = sorted(registered_agent_ids(include_orchestrator=False))
         with self._transaction() as db:
             rows = db.execute("SELECT agent_id,last_write_at,last_read_at FROM agent_notebooks").fetchall()
@@ -1560,9 +1560,7 @@ class AgentNotebookStore:
             pending = db.execute(
                 "SELECT COUNT(*) FROM agent_memory_records WHERE embedding_status LIKE 'pending%' AND deleted_at IS NULL"
             ).fetchone()[0]
-            total = db.execute(
-                "SELECT COUNT(*) FROM agent_memory_records WHERE deleted_at IS NULL"
-            ).fetchone()[0]
+            total = db.execute("SELECT COUNT(*) FROM agent_memory_records WHERE deleted_at IS NULL").fetchone()[0]
             audit_count = db.execute("SELECT COUNT(*) FROM agent_memory_audit").fetchone()[0]
             status_by_agent = {row["agent_id"]: dict(row) for row in rows}
             self._audit(
@@ -1654,4 +1652,3 @@ def prompt_context(
             for item in result["results"]
         ],
     }
-

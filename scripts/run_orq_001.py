@@ -4,6 +4,7 @@ This script runs inside the ORQEVIA backend container. It does not fabricate
 agent output: every contribution below is requested as a governed queue job and
 recorded with its job ID, timestamps, model, provider, token usage and hash.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -105,9 +106,7 @@ def financial_model() -> dict[str, Any]:
     scenario_revenue = revenue * Decimal("1.08")
     variable_inventory_rate = inventory / revenue
     inventory_after_growth = scenario_revenue * variable_inventory_rate
-    s2_expenses = (
-        rent + salaries + inventory_after_growth + utilities + marketing_spend + other
-    )
+    s2_expenses = rent + salaries + inventory_after_growth + utilities + marketing_spend + other
     s2_profit = scenario_revenue - s2_expenses
 
     s3_inventory = inventory_after_growth * Decimal("0.90")
@@ -159,7 +158,12 @@ def financial_model() -> dict[str, Any]:
                 "Rent, salaries, utilities and other expenses remain unchanged.",
                 "No one-off creative, platform or discount cost is included.",
             ],
-            "risks": ["Marketing response below forecast", "Cash concentration in one channel", "Rising acquisition cost", "Inventory mismatch"],
+            "risks": [
+                "Marketing response below forecast",
+                "Cash concentration in one channel",
+                "Rising acquisition cost",
+                "Inventory mismatch",
+            ],
         },
         {
             "scenario_id": "S3",
@@ -264,7 +268,14 @@ def financial_model() -> dict[str, Any]:
                 "case": "Revenue lift limited to 4%",
                 "monthly_profit": money(
                     Decimal("52000")
-                    - (rent + salaries + Decimal("52000") * variable_inventory_rate + utilities + marketing_spend + other)
+                    - (
+                        rent
+                        + salaries
+                        + Decimal("52000") * variable_inventory_rate
+                        + utilities
+                        + marketing_spend
+                        + other
+                    )
                 ),
                 "note": "A weaker response still produces modest profit improvement.",
             },
@@ -508,9 +519,9 @@ def build_report(financials: dict[str, Any], matrix: dict[str, Any], log: dict[s
 
 ## Executive summary
 
-The hypothetical business earns **SGD {baseline['monthly_profit']:,.2f}** monthly on **SGD {baseline['revenue']:,.2f}** revenue after **SGD {baseline['total_expenses']:,.2f}** of expenses, for a **{baseline['net_margin_percent']:.2f}%** net margin.
+The hypothetical business earns **SGD {baseline["monthly_profit"]:,.2f}** monthly on **SGD {baseline["revenue"]:,.2f}** revenue after **SGD {baseline["total_expenses"]:,.2f}** of expenses, for a **{baseline["net_margin_percent"]:.2f}%** net margin.
 
-The strongest modelled option is **S3**, a staged combination of a 10% inventory-cost reduction and a measured 20% marketing increase intended to produce an 8% revenue lift. It produces modelled monthly profit of **SGD {scenarios[2]['monthly_profit']:,.2f}** and a **{scenarios[2]['net_margin_percent']:.2f}%** net margin, but it carries execution and forecast risk and should not be launched as an uncontrolled change.
+The strongest modelled option is **S3**, a staged combination of a 10% inventory-cost reduction and a measured 20% marketing increase intended to produce an 8% revenue lift. It produces modelled monthly profit of **SGD {scenarios[2]["monthly_profit"]:,.2f}** and a **{scenarios[2]["net_margin_percent"]:.2f}%** net margin, but it carries execution and forecast risk and should not be launched as an uncontrolled change.
 
 ## Hypothetical assumptions
 
@@ -524,16 +535,16 @@ The strongest modelled option is **S3**, a staged combination of a 10% inventory
 
 | Line | SGD/month |
 |---|---:|
-| Revenue | {baseline['revenue']:,.2f} |
-| Rent | {baseline['expense_lines']['rent']:,.2f} |
-| Salaries | {baseline['expense_lines']['salaries']:,.2f} |
-| Inventory | {baseline['expense_lines']['inventory']:,.2f} |
-| Utilities | {baseline['expense_lines']['utilities']:,.2f} |
-| Marketing | {baseline['expense_lines']['marketing']:,.2f} |
-| Other expenses | {baseline['expense_lines']['other_expenses']:,.2f} |
-| **Total expenses** | **{baseline['total_expenses']:,.2f}** |
-| **Profit** | **{baseline['monthly_profit']:,.2f}** |
-| **Net margin** | **{baseline['net_margin_percent']:.2f}%** |
+| Revenue | {baseline["revenue"]:,.2f} |
+| Rent | {baseline["expense_lines"]["rent"]:,.2f} |
+| Salaries | {baseline["expense_lines"]["salaries"]:,.2f} |
+| Inventory | {baseline["expense_lines"]["inventory"]:,.2f} |
+| Utilities | {baseline["expense_lines"]["utilities"]:,.2f} |
+| Marketing | {baseline["expense_lines"]["marketing"]:,.2f} |
+| Other expenses | {baseline["expense_lines"]["other_expenses"]:,.2f} |
+| **Total expenses** | **{baseline["total_expenses"]:,.2f}** |
+| **Profit** | **{baseline["monthly_profit"]:,.2f}** |
+| **Net margin** | **{baseline["net_margin_percent"]:.2f}%** |
 
 Arithmetic: total expenses = 8,000 + 18,000 + 12,000 + 2,000 + 3,000 + 2,000 = **SGD 45,000**. Profit = 50,000 − 45,000 = **SGD 5,000**. Net margin = 5,000 ÷ 50,000 = **10.00%**.
 
@@ -619,9 +630,7 @@ def main() -> None:
         "registry": {
             "registry_id": registry["registry_id"],
             "registry_version": registry["registry_version"],
-            "snapshot_sha256": sha256_text(
-                json.dumps(registry, sort_keys=True, separators=(",", ":"))
-            ),
+            "snapshot_sha256": sha256_text(json.dumps(registry, sort_keys=True, separators=(",", ":"))),
             "agents_discovered": [agent["agent_id"] for agent in agents],
         },
         "availability": {
@@ -712,7 +721,9 @@ def main() -> None:
             )
             atomic_json(STATE_PATH, {"phase": "jobs_submitted", "log": log, "financials": financials})
         except Exception as exc:
-            log["errors"].append({"agent_id": agent_id, "phase": "submit", "error": type(exc).__name__, "message": str(exc)[:500]})
+            log["errors"].append(
+                {"agent_id": agent_id, "phase": "submit", "error": type(exc).__name__, "message": str(exc)[:500]}
+            )
 
     for agent_id, job_id in pending.items():
         job = wait_job(job_id)
@@ -727,7 +738,7 @@ def main() -> None:
             )
             retry_prompt = (
                 "ORQ-001 hypothetical Singapore SME. Answer briefly and factually. "
-                f"Your role is {agent_id} — {next(a for a in agents if a['agent_id']==agent_id)['name']}. "
+                f"Your role is {agent_id} — {next(a for a in agents if a['agent_id'] == agent_id)['name']}. "
                 f"Task: {TASKS[agent_id]['task']} "
                 "Use only the supplied assumptions. Return Contribution and Evidence/caveat headings."
             )
@@ -735,7 +746,9 @@ def main() -> None:
                 retry = submit_job(agent_id, retry_prompt, attempt=2, deep=False)
                 job = wait_job(retry["id"])
             except Exception as exc:
-                log["errors"].append({"agent_id": agent_id, "phase": "retry", "error": type(exc).__name__, "message": str(exc)[:500]})
+                log["errors"].append(
+                    {"agent_id": agent_id, "phase": "retry", "error": type(exc).__name__, "message": str(exc)[:500]}
+                )
             prompts[agent_id] = retry_prompt
         results[agent_id] = job
         authority.stage(
@@ -775,7 +788,9 @@ def main() -> None:
         )
         atomic_json(STATE_PATH, {"phase": "jobs_running", "log": log, "financials": financials})
 
-    completed_count = sum(1 for job in results.values() if job.get("status") == "completed" and (job.get("result") or "").strip())
+    completed_count = sum(
+        1 for job in results.values() if job.get("status") == "completed" and (job.get("result") or "").strip()
+    )
     review_summary = {
         "financials": financials,
         "completed_agents": completed_count,
@@ -951,4 +966,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

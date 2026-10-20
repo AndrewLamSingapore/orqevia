@@ -1,4 +1,3 @@
-import json
 from decimal import Decimal
 
 from app import project_workflows
@@ -30,6 +29,7 @@ class CompletedQueue:
 
     def submit(self, **kwargs):
         import uuid
+
         job_id = str(uuid.uuid4())
         job = {
             "id": job_id,
@@ -137,4 +137,3 @@ def test_workflow_rejects_unknown_template():
     except ValueError:
         return
     raise AssertionError("unknown workflow template must be rejected")
-
