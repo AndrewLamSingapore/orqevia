@@ -6,28 +6,36 @@
 - PR: #414
 - CI-verified source: `66829d3fcd675b9985790fea199b2d7189503683`
 - CI result: 9/9 checks successful
+- Evidence PRs #416 and #417 are merged.
+- Current main: `d4e2479bd16f77e669af10df1409cce989ae661c`
+- Post-merge CI: 7/7 successful
 - Local full regression: **6,088 passed, 20 skipped, 3 deselected,
   102 subtests passed**
 - PWA unit tests: **81 passed, 0 failed**
 
-The live image predates the final hardening commit. Production identity must
-not be inferred from the release branch head.
+The merged main source is now the live deployment identity.
 
 ## Live deployment
 
-- Source: `cb01d50c123fe2e5b56895a73ab22c037cf5b96d`
-- Image: `orqevia:orq002-workflow-20261020`
+- Source: `d4e2479bd16f77e669af10df1409cce989ae661c`
+- Image: `orqevia:release-d4e2479-20261020`
 - Image digest:
-  `sha256:d2de24102ba34642deb726b88b3d1e1cee18a1767fb1d4b0333e282de1177ebe`
+  `sha256:632d3db51fbd810c49fd09f105c0ede0653bc8f8ba6c44f1ccd7dae76bfa110d`
 - Backend and interface: healthy
-- Rollback image: `orqevia:final-naming-candidate`
+- Rollback image: `orqevia:orq002-workflow-20261020`
 - Rollback digest:
-  `sha256:67af1345345ab8b89b2195507c3ed8343ac1998de79ec81f8494dcaf49346f37`
+  `sha256:d2de24102ba34642deb726b88b3d1e1cee18a1767fb1d4b0333e282de1177ebe`
+- Secondary rollback: `orqevia:final-naming-candidate`
 - Public PWA: `https://jarvis.lamjarvis.com/pwa/projects.html`
 - LAN PWA: `https://192.168.1.23:8443/pwa/projects.html`
 
-Registered dispatch returned HTTP 202 and completed job
-`f40af4e1-325b-4e34-a882-007ae7cd67cf` through `a01 -> a02`.
+The post-deployment registry dispatch returned HTTP 202 and completed job
+`73445356-a783-4382-962f-f9b5e2a6f565` through `a01` with a non-empty result.
+A fresh 21/21 lightweight queue cohort also completed without failure.
+
+The rollback drill restored source `cb01d50`, verified both services healthy,
+preserved the completed workflow, 21 agent notebooks, 6 artifacts and queue
+history, and then restored the final release.
 
 ## PWA workflow benchmark
 
@@ -64,7 +72,9 @@ therefore remains open.
 The public endpoint is protected by Cloudflare Access. An unauthenticated
 request redirects to the Access sign-in page. Automated Edge navigation in the
 existing Owner profile returned `net::ERR_BLOCKED_BY_CLIENT` before the
-ORQEVIA page loaded.
+ORQEVIA page loaded. A transient 503 was reported during the cutover; current
+checks show the Access login page returning 200 and the origin returning 200
+with the public Host header. Post-login browser acceptance is still unclaimed.
 
 The authenticated LAN equivalent passed the Projects page, Owner session,
 hybrid notebook search, and artifact download. Public Owner interaction remains
@@ -74,6 +84,7 @@ an open acceptance item; no browser or authentication boundary was disabled.
 
 - `C:\Users\Admin\Documents\ABEX\operations\orq001-workflow-deployment-20261020`
 - `C:\Users\Admin\Documents\ABEX\operations\orq002-pwa-benchmark-20261020`
+- `C:\Users\Admin\Documents\ABEX\operations\orqevia-release-d4e2479-20261020`
 - `C:\Users\Admin\Documents\ABEX\assessments\ORQ-002-Procurement-20261020`
 - `C:\Users\Admin\Documents\ABEX\assessments\ORQ-002-Procurement-20261020-Fresh14B`
 - `C:\Users\Admin\Documents\ABEX\operations\orq002-fresh14b-independent-verification.json`
