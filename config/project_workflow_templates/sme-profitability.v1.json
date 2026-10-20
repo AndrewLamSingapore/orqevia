@@ -1,0 +1,269 @@
+{
+  "schema_version": "orqevia.project-workflow-template.v1",
+  "name": "SME Profitability Analysis",
+  "template_id": "sme-profitability.v1",
+  "description": "A bounded, all-agent business analysis with deterministic financial calculation, advisory contributions, explicit review, durable artifacts and a saved decision.",
+  "inputs_schema": {
+    "required": [
+      "revenue",
+      "rent",
+      "salaries",
+      "inventory",
+      "utilities",
+      "marketing",
+      "other_expenses"
+    ],
+    "currency": "SGD",
+    "period": "month"
+  },
+  "scenario_defaults": {
+    "inventory_reduction_percent": 10,
+    "marketing_increase_percent": 20,
+    "revenue_lift_percent": 8
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Independent analysis",
+      "task_ids": [
+        "agent.a01",
+        "agent.a02",
+        "agent.a04",
+        "agent.a05",
+        "agent.a06",
+        "agent.a07",
+        "agent.a09",
+        "agent.a10",
+        "agent.a12",
+        "agent.a13",
+        "agent.a14",
+        "agent.a15",
+        "agent.a16",
+        "agent.a17",
+        "agent.a18",
+        "agent.a19",
+        "agent.a20",
+        "agent.a21",
+        "agent.a28"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Independent quality review",
+      "task_ids": [
+        "agent.a26"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Release decision",
+      "task_ids": [
+        "agent.a29"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "agent.a01",
+      "agent_id": "a01",
+      "responsibility": "Strategy leadership and priority setting",
+      "prompt": "Evaluate the three supplied scenarios. Recommend the strongest path, explain why, and give two measurable stage gates. Do not invent external market data.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a02",
+      "agent_id": "a02",
+      "responsibility": "Project plan, dependencies and milestones",
+      "prompt": "Create a six-week implementation sequence for the recommended path. State dependencies, owners from the registered-agent list, and measurable acceptance gates.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a04",
+      "agent_id": "a04",
+      "responsibility": "Structured scenario comparison",
+      "prompt": "Compare the three scenarios on monthly profit, margin and downside risk. State which is strongest and whether explicit disagreement or escalation is required.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a05",
+      "agent_id": "a05",
+      "responsibility": "Capacity and portfolio prioritization",
+      "prompt": "Assess whether the business can execute the combined scenario within existing capacity. Identify one capacity constraint and one sequencing safeguard.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a06",
+      "agent_id": "a06",
+      "responsibility": "Research assumptions and evidence direction",
+      "prompt": "Define the evidence needed before converting these hypothetical scenarios into real business commitments. Keep the hypothetical label explicit.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a07",
+      "agent_id": "a07",
+      "responsibility": "Evidence attribution",
+      "prompt": "Audit the supplied figures conceptually. State which values are provided assumptions, which are derived, and what evidence is missing for real-world use.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a09",
+      "agent_id": "a09",
+      "responsibility": "Knowledge organization",
+      "prompt": "Propose a concise report structure covering baseline, scenarios, recommendation, risks, verification and evidence.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a10",
+      "agent_id": "a10",
+      "responsibility": "Data completeness and data dictionary",
+      "prompt": "Check whether the supplied monthly data is sufficient for the baseline. List required units and the most important missing real-world field.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a12",
+      "agent_id": "a12",
+      "responsibility": "Independent financial calculation",
+      "prompt": "Calculate total monthly expenses, monthly profit and net margin from the supplied revenue and expense lines. Show arithmetic and compare with the deterministic baseline.",
+      "model_role": "deep",
+      "max_attempts": 2,
+      "timeout_seconds": 600
+    },
+    {
+      "task_id": "agent.a13",
+      "agent_id": "a13",
+      "responsibility": "Forecast sensitivity",
+      "prompt": "Assess the revenue-lift and inventory-saving assumptions. Provide one downside case and explain how it affects the recommendation.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a14",
+      "agent_id": "a14",
+      "responsibility": "Data quality and arithmetic verification",
+      "prompt": "Check units, arithmetic, percentage denominators and rounding. Return PASS or FAIL for the baseline and each scenario with reasons.",
+      "model_role": "deep",
+      "max_attempts": 2,
+      "timeout_seconds": 600
+    },
+    {
+      "task_id": "agent.a15",
+      "agent_id": "a15",
+      "responsibility": "Technical execution ownership",
+      "prompt": "Define operational controls for a staged inventory and marketing programme, including monitoring cadence, stop conditions and evidence to retain.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a16",
+      "agent_id": "a16",
+      "responsibility": "Architecture and durable evidence design",
+      "prompt": "Design the minimum durable artifact and evidence structure for this workflow. Explain how inputs, agent jobs, handoffs, outputs and the saved decision remain auditable.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a17",
+      "agent_id": "a17",
+      "responsibility": "Machine-readable implementation",
+      "prompt": "Specify essential fields and invariants for a machine-readable results file that lets a reviewer reproduce totals and compare scenarios.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a18",
+      "agent_id": "a18",
+      "responsibility": "Test and verification plan",
+      "prompt": "Write exact acceptance tests for baseline arithmetic, scenario reproducibility, JSON consistency, all-agent evidence and persisted memory.",
+      "model_role": "deep",
+      "max_attempts": 2,
+      "timeout_seconds": 600
+    },
+    {
+      "task_id": "agent.a19",
+      "agent_id": "a19",
+      "responsibility": "Reliability and restart recovery",
+      "prompt": "Define a safe test proving a saved project decision survives backend restart, including evidence before and after restart and failure handling.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a20",
+      "agent_id": "a20",
+      "responsibility": "Commercial and economic judgment",
+      "prompt": "Give the commercial judgment on the recommended scenario versus the alternatives. Identify the most important cash or operating constraint and the preferred implementation order.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a21",
+      "agent_id": "a21",
+      "responsibility": "Cost, value and ROI",
+      "prompt": "Rank the scenarios by incremental monthly and annual profit. State the key assumption behind each ranking and one downside risk.",
+      "model_role": "deep",
+      "max_attempts": 2,
+      "timeout_seconds": 600
+    },
+    {
+      "task_id": "agent.a28",
+      "agent_id": "a28",
+      "responsibility": "Risk identification",
+      "prompt": "Produce the top five risks of the recommended scenario with one mitigation and one measurable warning indicator for each.",
+      "model_role": "fast",
+      "max_attempts": 2,
+      "timeout_seconds": 180
+    },
+    {
+      "task_id": "agent.a26",
+      "agent_id": "a26",
+      "responsibility": "Independent quality review",
+      "prompt": "Independently review the completed phase-one analyses and deterministic calculations. Identify unsupported claims, conflicting advice and material omission. Return PASS, PARTIAL or FAIL with findings.",
+      "model_role": "deep",
+      "max_attempts": 2,
+      "timeout_seconds": 600
+    },
+    {
+      "task_id": "agent.a29",
+      "agent_id": "a29",
+      "responsibility": "Release readiness decision",
+      "prompt": "Act as release gate. Decide whether the workflow outputs are ready for delivery based only on phase-one results, the quality review and the deterministic checks. Return PASS, PARTIAL or FAIL and list blockers.",
+      "model_role": "deep",
+      "max_attempts": 2,
+      "timeout_seconds": 600
+    }
+  ],
+  "acceptance": {
+    "all_agents_completed": true,
+    "baseline_profit_required": 5000,
+    "baseline_margin_percent_required": 10,
+    "required_artifacts": [
+      "report.md",
+      "results.json",
+      "agent-matrix.json",
+      "execution-log.json",
+      "memory-test.json",
+      "verification.md"
+    ]
+  }
+}

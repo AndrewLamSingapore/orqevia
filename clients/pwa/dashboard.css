@@ -21,3 +21,6 @@ main{padding-top:14px;min-width:0}.dashboard-card{background:linear-gradient(120
 .coaching-role-head strong{font-weight:600}
 .coaching-marks{font-family:ui-monospace,monospace;color:#9fd4f5;font-size:11px;white-space:nowrap}
 .coaching-role small{color:#8fa8bd}
+
+.desktop-navigation a.nav-project-link{display:flex;align-items:center;gap:10px;min-height:42px;padding:10px 14px;border-radius:10px;color:#c7d9e8;text-decoration:none;font:inherit}
+.desktop-navigation a.nav-project-link:hover,.desktop-navigation a.nav-project-link:focus-visible{background:rgba(101,215,255,.1);color:#fff}

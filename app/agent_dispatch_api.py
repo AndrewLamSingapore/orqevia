@@ -23,15 +23,6 @@ router = APIRouter(prefix='/api/agents', tags=['registry-v1'])
 deterministic_ops = DeterministicOps(source_version='next-v1')
 _baseline_probe_slot = threading.BoundedSemaphore(1)
 
-
-def registry_v1_enabled() -> bool:
-    """Read the current flag first and retain a one-way legacy compatibility fallback."""
-    value = os.getenv('ORQEVIA_REGISTRY_V1_ENABLED')
-    if value is None:
-        value = os.getenv('PRIME_REGISTRY_V1_ENABLED', '0')
-    return value == '1'
-
-
 ORQEVIA_IDENTITY_CONTRACT = IDENTITY_CONTRACT
 # Keep the import name compatible for existing internal callers.
 JARVIS_IDENTITY_CONTRACT = ORQEVIA_IDENTITY_CONTRACT
@@ -493,7 +484,7 @@ class BaselineProbeRequest(BaseModel):
 def baseline_probe(body: BaselineProbeRequest, authorization: str | None = Header(default=None)):
     """One authenticated, local-only execution observation; never certification."""
     authenticate_owner(authorization)
-    if not registry_v1_enabled():
+    if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
         raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     if not _baseline_probe_slot.acquire(blocking=False):
         raise HTTPException(429,'Baseline probe already running')
@@ -606,7 +597,7 @@ def dispatch(body: AgentRequest, authorization: str | None = Header(default=None
 
 def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_task_id=None):
     authenticate_owner(authorization)
-    if not registry_v1_enabled():
+    if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
         raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     started = time.perf_counter()
     from .runtime_status import is_runtime_status,build_report,validate_report

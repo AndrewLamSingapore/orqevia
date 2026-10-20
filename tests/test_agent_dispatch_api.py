@@ -7,16 +7,6 @@ from app.agent_registry import registered_agent_ids
 from app import compute_queue_api
 from app.agent_dispatch_api import AgentRequest, inference_prompt, local_model_backends, _baseline_probe_slot
 from app import agent_dispatch_api
-
-
-def test_registry_gate_reads_current_flag_with_legacy_fallback(monkeypatch):
-    monkeypatch.delenv("ORQEVIA_REGISTRY_V1_ENABLED", raising=False)
-    monkeypatch.delenv("PRIME_REGISTRY_V1_ENABLED", raising=False)
-    assert agent_dispatch_api.registry_v1_enabled() is False
-    monkeypatch.setenv("PRIME_REGISTRY_V1_ENABLED", "1")
-    assert agent_dispatch_api.registry_v1_enabled() is True
-    monkeypatch.setenv("ORQEVIA_REGISTRY_V1_ENABLED", "0")
-    assert agent_dispatch_api.registry_v1_enabled() is False
 from app.tier_router import Tier
 from app.settings import PrimeSettings
 

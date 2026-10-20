@@ -179,3 +179,14 @@ if(typeof document!=='undefined') {
   clock();setInterval(clock,1000);setInterval(()=>void poll(),30000);setInterval(()=>{if(latest)render();},5000);void poll();
   window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));
 }
+
+if (typeof document !== 'undefined') {
+  const navigation=document.querySelector('.desktop-navigation');
+  if(navigation&&!navigation.querySelector('.nav-project-link')){
+    const link=document.createElement('a');
+    link.className='nav-project-link';
+    link.href='/pwa/projects.html';
+    link.textContent='Projects & Notebooks';
+    navigation.append(link);
+  }
+}
