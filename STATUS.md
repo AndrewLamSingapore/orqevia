@@ -36,6 +36,57 @@ If you are an AI agent updating this file:
 
 ---
 
+## Fast-model and God's Eye final deployment — 20 October 2026
+
+### Claimed, not independently checked
+
+- PR #425 merged into `main` as
+  `40129767c501c1879b6deac6bb5bcd5f5d8abf6c`. All required merged-main
+  GitHub checks passed.
+- The merged source was built as
+  `orqevia:release-4012976-fast-final-20261020`
+  (`sha256:3e466a2d6787abc3ce306dbbe8025ccb10c24ef4e5773db82243b8053b789ef3`).
+  Backend and interface are healthy, and all nine persistent runtime
+  containers are running.
+- The exact image completed workflow
+  `a4890c47-4d5f-4077-9768-9c9860806301`: 21/21 tasks, zero failures,
+  21 handoffs, six matching artifacts, and durable-memory verification after a
+  real backend restart.
+- The exact image passed queue liveness 21/21, the full-stack canary 16/16,
+  and live model-registry rollback, debate/judge, project/organization
+  notebook read, non-member denial, and read-only write denial checks.
+- God's Eye startup assets return HTTP 200. `/orqevia/` redirects to
+  `/pwa/?view=gods-eye`, and the public Cloudflare Access redirect preserves
+  that return path.
+- `gemma3:1b` is the fast model; `gemma3:4b` is the deep/evaluator and local
+  knowledge model. No Qwen 7B/14B model remains installed or active. Codex
+  uses the authenticated ChatGPT provider with reasoning effort `max`.
+- Thirteen SQLite databases passed `PRAGMA quick_check`; their backups are
+  retained under
+  `operations/orqevia-iphone-gods-eye-20261020/database-backups-20261020T1156Z/`.
+- Seven repositories are public, clean and aligned to `main`; the public
+  profile metadata and README are current. GitHub reports zero open pull
+  requests and zero open issues.
+
+### Known broken / open
+
+- The fast-model role sweep accepted **12/21** roles. Qwen3 4B exceeded the
+  120-second limit and Phi-4 Mini failed the strategy oracle; both candidates
+  were removed. The prior 21/21 role result used a slower model and is not
+  acceptance of the current fast-model policy.
+- The machine-level God's Eye route passes, but physical iPhone confirmation
+  and the complete authenticated public Owner journey remain user/device
+  acceptance items.
+- Encrypted off-device backup synchronization and isolated restore remain
+  pending.
+
+Evidence:
+`operations/orqevia-iphone-gods-eye-20261020/README.md`,
+`SHUTDOWN-READY.md`, `SHUTDOWN-RECEIPT.json`, and
+`final-21-4012976-a4890c47/RECEIPT.json`.
+
+---
+
 ## Portfolio public-audience sweep — 20 October 2026
 
 ### Claimed, not independently checked
