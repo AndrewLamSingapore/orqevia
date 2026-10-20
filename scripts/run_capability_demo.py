@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import urllib.request
 from pathlib import Path
 
@@ -13,7 +14,11 @@ from pathlib import Path
 BASE = "http://127.0.0.1:8000"
 TOKEN = os.environ["ORQEVIA_SPINE_TOKEN"].strip()
 ADMIN = hmac.new(TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256).hexdigest()
-OUTPUT = Path("/data/capability-demo-20261020.json")
+REVISION = os.environ.get("ORQEVIA_RUNTIME_REVISION", "local").strip().lower()
+SOURCE_TAG = re.sub(r"[^a-z0-9]", "", REVISION)[:12] or "local"
+MODEL_ID = f"pilot.deep.{SOURCE_TAG}"
+PROJECT_ID = f"CAPABILITY-PROJECT-{SOURCE_TAG.upper()}"
+OUTPUT = Path(f"/data/capability-demo-{SOURCE_TAG}.json")
 
 
 def request(method: str, path: str, body: dict | None = None, *, role: str = "OWNER", actor: str = "owner"):
@@ -53,7 +58,7 @@ def main() -> int:
         "POST",
         "/api/model-registry/models",
         {
-            "model_id": "pilot.deep",
+            "model_id": MODEL_ID,
             "version": "1.0.0",
             "provider": "ollama",
             "model_name": "gemma3:4b",
@@ -63,13 +68,13 @@ def main() -> int:
             "capabilities": ["text_generation"],
             "artifact_sha256": artifact,
             "source_url": "https://example.invalid/pilot.deep",
-            "metadata": {"purpose": "capability demo"},
+            "metadata": {"purpose": "capability demo", "runtime_revision": REVISION},
         },
     )
     results["registered"] = registered
     _, evaluated = request(
         "POST",
-        "/api/model-registry/models/pilot.deep/1.0.0/evaluate",
+        f"/api/model-registry/models/{MODEL_ID}/1.0.0/evaluate",
         {
             "status": "PASS",
             "evidence_ref": "demo://model-evaluation",
@@ -79,7 +84,7 @@ def main() -> int:
     results["evaluated"] = evaluated
     _, approved = request(
         "POST",
-        "/api/model-registry/models/pilot.deep/1.0.0/approve",
+        f"/api/model-registry/models/{MODEL_ID}/1.0.0/approve",
         {
             "reason": "demo review complete",
             "compatibility": {
@@ -93,14 +98,14 @@ def main() -> int:
     results["approved"] = approved
     _, activated = request(
         "POST",
-        "/api/model-registry/models/pilot.deep/1.0.0/activate",
+        f"/api/model-registry/models/{MODEL_ID}/1.0.0/activate",
         {"reason": "demo activation"},
     )
     results["activated"] = activated
     _, assigned = request(
         "POST",
         "/api/model-registry/assignments/a02",
-        {"model_id": "pilot.deep", "version": "1.0.0"},
+        {"model_id": MODEL_ID, "version": "1.0.0"},
     )
     results["assigned"] = assigned
 
@@ -155,7 +160,7 @@ def main() -> int:
     )
     results["debate_escalated"] = escalated
 
-    project_id = "CAPABILITY-PROJECT-20261020"
+    project_id = PROJECT_ID
     _, project = request(
         "POST",
         "/api/agent-notebooks/projects",
@@ -210,6 +215,8 @@ def main() -> int:
                 "escalation": results["debate_escalated"].get("decision"),
                 "project_record": results["project_record"].get("scope"),
                 "organization_record": results["organization_record"].get("scope"),
+                "runtime_revision": REVISION,
+                "model_id": MODEL_ID,
                 "output": str(OUTPUT),
             },
             indent=2,
