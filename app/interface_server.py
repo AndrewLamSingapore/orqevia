@@ -22,6 +22,8 @@ app.include_router(pwa_sessions.router)
 app.add_middleware(pwa_sessions.PWASessionMiddleware)
 from .product_handoff import router as product_handoff_router
 app.include_router(product_handoff_router)
+from .local_knowledge_bridge import router as knowledge_bridge_router
+app.include_router(knowledge_bridge_router)
 from .orqevia_bridge import router as intelligence_bridge_router
 app.include_router(intelligence_bridge_router)
 from .workflow_bridge import router as workflow_bridge_router
