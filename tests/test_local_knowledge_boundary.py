@@ -68,6 +68,19 @@ def test_private_bridge_uses_server_owner_binding_and_does_not_forward_cookies(m
     monkeypatch.setenv('ORQEVIA_LOCAL_INTELLIGENCE_URL','http://evil.invalid')
     assert client.get('/api/orqevia/knowledge/documents').status_code==503
 
+def test_open_access_owner_matches_configured_private_service_identity(monkeypatch):
+    from types import SimpleNamespace
+    from app import local_knowledge_bridge as bridge
+    monkeypatch.setenv('ORQEVIA_OPEN_ACCESS','1')
+    monkeypatch.setenv('ORQEVIA_PWA_OWNER_ACCOUNT_ID','owner:fixture')
+    monkeypatch.setattr(bridge.existing,'access',lambda req,mutation: bridge.open_access.OPEN_OWNER_ID)
+    monkeypatch.setattr(bridge.existing,'client_policy',lambda actor:{
+        'role':'OWNER','owner_account_id':bridge.open_access.OPEN_ACCOUNT_ID})
+    request=SimpleNamespace(cookies={})
+    actor,owner=bridge.identity(request)
+    assert actor==bridge.open_access.OPEN_OWNER_ID
+    assert owner==hashlib.sha256(b'owner:fixture').hexdigest()
+
 def test_private_bridge_denies_member_and_anonymous_even_for_catalogue(monkeypatch):
     from app import local_knowledge_bridge as bridge
     from app import orqevia_bridge as existing
