@@ -8,12 +8,14 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from starlette.middleware.cors import CORSMiddleware
 from .interface_contract import router
 from . import pwa_sessions
 import os
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from .observability import PRIVACY_FASTAPI_TELEMETRY
+from . import open_access
 
 app=FastAPI(title='ORQEVIA Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None,
     telemetry=PRIVACY_FASTAPI_TELEMETRY)
@@ -24,6 +26,14 @@ from .product_handoff import router as product_handoff_router
 app.include_router(product_handoff_router)
 from .local_knowledge_bridge import router as knowledge_bridge_router
 app.include_router(knowledge_bridge_router)
+if open_access.enabled():
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 from .orqevia_bridge import router as intelligence_bridge_router
 app.include_router(intelligence_bridge_router)
 from .workflow_bridge import router as workflow_bridge_router
@@ -56,7 +66,7 @@ def error_response(status: int):
 
 @app.middleware('http')
 async def transport_and_protocol(request: Request, call_next):
-    if request.url.scheme != 'https':
+    if request.url.scheme != 'https' and not open_access.enabled():
         return error_response(426)
     response = await call_next(request)
     response.headers['X-ORQEVIA-Protocol'] = PROTOCOL

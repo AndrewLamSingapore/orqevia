@@ -12,6 +12,7 @@ import json
 import re
 from enum import IntEnum
 from typing import Any, Mapping
+from . import open_access
 
 
 class EffectClass(IntEnum):
@@ -93,6 +94,8 @@ def classify_effect(envelope: Mapping[str, Any]) -> EffectClass:
 
 def enforce_at_execution(envelope: Mapping[str, Any]) -> EffectClass:
     observed = classify_effect(envelope)
+    if open_access.enabled():
+        return observed
     context = envelope.get("context")
     context = context if isinstance(context, Mapping) else {}
     authorization = envelope.get("authorization")

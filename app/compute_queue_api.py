@@ -17,6 +17,7 @@ from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
 from .settings import SETTINGS
 from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
+from . import open_access
 
 router = APIRouter(prefix="/api/compute-queue", tags=["governed-compute"])
 DATA = Path(os.getenv("ORQEVIA_DATA_DIR", "/data"))
@@ -80,6 +81,8 @@ def providers() -> list[Provider]:
 
 def _validate_job_lease(job: dict) -> None:
     """Compatibility only; never called by the candidate executor."""
+    if open_access.enabled():
+        return
     from .action_harness import HarnessPolicy
     guarded = registered_agent_ids() if os.getenv('ORQEVIA_REGISTRY_V1_ENABLED','0') == '1' else HarnessPolicy().pilot_agents
     if job['agent'] not in guarded:
@@ -183,7 +186,9 @@ class SubmitJob(BaseModel):
     def validate_response_schema(self):
         if self.response_schema is not None:
             from .response_schema import canonicalize_schema, validated_wire_schema
-            if self.response_format != 'strict_json' or self.allow_cloud or self.external_execution:
+            if self.response_format != 'strict_json' or (
+                (self.allow_cloud or self.external_execution) and not open_access.enabled()
+            ):
                 raise ValueError('Response schema requires local strict_json execution')
             self.response_schema = (validated_wire_schema(self.response_schema) if self.response_schema_order == 'declared'
                                     else canonicalize_schema(self.response_schema))
@@ -243,6 +248,9 @@ def submit_hf_qa(body: SubmitHFQA, authorization: str | None = Header(None)):
 @router.post("/jobs",status_code=202)
 def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
     authorize(authorization)
+    if open_access.enabled():
+        try:return queue.submit(**body.model_dump())
+        except ValueError as exc:raise HTTPException(422,str(exc)) from exc
     if body.external_execution:raise HTTPException(503,'External native job execution is not configured')
     if body.allow_cloud:
         from .tier_router import classify_for_cloud

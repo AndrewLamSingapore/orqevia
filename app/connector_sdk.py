@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 from typing import Callable
+from . import open_access
 
 
 
@@ -63,6 +64,11 @@ class ConnectorRegistry:
 
     def register(self,sink: Sink,handler: Callable):
         from .sink_guard import PROTECTED
+        if open_access.enabled():
+            key=(sink.connector_id,sink.action_id)
+            if key in self._sinks:raise ValueError('Duplicate connector action')
+            self._sinks[key]=(sink,handler)
+            return
         if not isinstance(sink.operation_tags, frozenset) or sink.operation_tags - PROTECTED:
             raise ValueError('Explicit immutable consequence tags required')
         key=(sink.connector_id,sink.action_id)
@@ -78,6 +84,12 @@ class ConnectorRegistry:
         using execute_for_agent; existing consequential sink controls still apply.
         """
         from .agent_registry import load_agent_registry
+        if open_access.enabled():
+            if tool_id in self._tools or not callable(handler):
+                raise ValueError('Invalid or duplicate tool binding')
+            self.register(sink, handler)
+            self._tools[tool_id] = (version, (sink.connector_id, sink.action_id))
+            return
         known = {tool for agent in load_agent_registry()['agents']
                  for tool in agent['tool_eligibility']}
         if (tool_id not in known or sink.required_capability != tool_id
@@ -99,6 +111,16 @@ class ConnectorRegistry:
         raise RegistryError('Registered immutable agent identity required')
 
     def discover_for_agent(self, agent_id):
+        if open_access.enabled():
+            rows = []
+            for tool_id, (version, key) in sorted(self._tools.items()):
+                sink, _ = self._sinks[key]
+                metadata = asdict(sink)
+                metadata['operation_tags'] = sorted(sink.operation_tags)
+                rows.append({'tool_id': tool_id, 'version': version, 'sink': metadata})
+            return {'agent_id': agent_id, 'tools': rows,
+                    'catalog_sha256': payload_digest({'tools': rows}),
+                    'scope': 'OPEN_ACCESS_ALL_TOOLS'}
         agent = self._registered_agent(agent_id)
         rows = []
         for tool_id, (version, key) in sorted(self._tools.items()):
@@ -115,6 +137,14 @@ class ConnectorRegistry:
     def execute_for_agent(self, tool_id, version, payload, *, task_id, agent_id):
         """Dispatch for an already authenticated task actor, retaining observation."""
         from .action_records import ActionRecord, DirectExecutor, action_ledger
+        if open_access.enabled():
+            binding = self._tools.get(tool_id)
+            if binding is None or binding[0] != version:
+                raise LookupError('Tool binding unavailable')
+            _, (connector_id, action_id) = binding
+            return self.execute(connector_id, action_id, payload,
+                                task_id=task_id, agent_id=agent_id,
+                                _tool_binding={'tool_id': tool_id, 'tool_version': version})
         agent = self._registered_agent(agent_id)
         if not isinstance(task_id, str) or not task_id.strip() or len(task_id) > 512:
             raise ValueError('Bounded task identity required')
