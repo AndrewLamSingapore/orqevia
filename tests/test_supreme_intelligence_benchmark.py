@@ -26,8 +26,8 @@ def test_builtin_tasks_cover_required_supreme_dimensions_without_storing_answers
     [
         ("structured_output", '{"decision":"BLOCKED","reason":"one check failed"}', True),
         ("structured_output", "not json", False),
-        ("chinese", "我是 JARVIS，很高兴为你服务。", True),
-        ("chinese", "I am JARVIS.", False),
+        ("chinese", "我是 ORQEVIA，很高兴为你服务。", True),
+        ("chinese", "I am ORQEVIA.", False),
         ("verification", "The claim is incorrect; the correct product is 102.", True),
     ],
 )
@@ -54,3 +54,16 @@ def test_report_contract_names_truthful_resource_scope():
     assert "tokens_per_second" in source
     assert "error_type" in source
     assert '"error": str(error)' not in source
+
+
+def test_active_benchmark_uses_current_product_identity():
+    tasks = MODULE.validate_tasks(MODULE.DEFAULT_TASKS)
+    for task in tasks:
+        assert 'JARVIS' not in task['prompt']
+        assert 'PRIME' not in task['prompt']
+    identity_tasks = [task for task in tasks if task['category'] in {'chinese', 'english'}]
+    assert len(identity_tasks) == 2
+    for task in identity_tasks:
+        assert 'ORQEVIA' in task['prompt']
+        assert 'orqevia' in task['must_include']
+        assert MODULE.score_answer(task, 'I am JARVIS. ?? JARVIS?')[0] is False

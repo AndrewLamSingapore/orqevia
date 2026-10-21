@@ -17,10 +17,10 @@ DEFAULT_TASKS = [
     {"category": "reasoning", "language": "en", "prompt": "A release has 12 checks and one fails. Explain why the release must remain blocked in three concise points.", "must_include": ["blocked"]},
     {"category": "coding", "language": "en", "prompt": "Return only a Python function named clamp that limits x between low and high.", "must_include": ["def clamp"]},
     {"category": "structured_output", "language": "en", "prompt": "Return only JSON with keys decision and reason. decision must be BLOCKED.", "must_be_json": True, "required_json_keys": ["decision", "reason"], "json_equals": {"decision": "BLOCKED"}},
-    {"category": "chinese", "language": "zh", "prompt": "请用中文回答：你叫什么名字？你必须把自己称为 JARVIS。", "must_include": ["jarvis"], "must_contain_cjk": True},
-    {"category": "english", "language": "en", "prompt": "What is your name? Answer in one English sentence and identify yourself as JARVIS.", "must_include": ["jarvis"]},
+    {"category": "chinese", "language": "zh", "prompt": "请用中文回答：你叫什么名字？你必须把自己称为 ORQEVIA。", "must_include": ["orqevia"], "must_contain_cjk": True},
+    {"category": "english", "language": "en", "prompt": "What is your name? Answer in one English sentence and identify yourself as ORQEVIA.", "must_include": ["orqevia"]},
     {"category": "tool_selection", "language": "en", "prompt": "Return only the tool name memory.search for retrieving authorized local knowledge.", "must_include": ["memory.search"]},
-    {"category": "retrieval", "language": "en", "prompt": "Context: PRIME routes deterministic, local AI, confidence gate, frontier AI. Which stage follows local AI?", "must_include": ["confidence gate"]},
+    {"category": "retrieval", "language": "en", "prompt": "Context: ORQEVIA routes deterministic, local AI, confidence gate, frontier AI. Which stage follows local AI?", "must_include": ["confidence gate"]},
     {"category": "verification", "language": "en", "prompt": "Verify this claim: 17 multiplied by 6 equals 92. State whether it is correct and give the correct product.", "must_include": ["102", "incorrect"]},
 ]
 
