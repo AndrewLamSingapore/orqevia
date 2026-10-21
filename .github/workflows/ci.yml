@@ -37,6 +37,9 @@ jobs:
           python scripts/check_canonical_state.py
           python scripts/run_canonical_ci.py
       - name: Release provenance recovery and explicit access-mode regressions
+        env:
+          ORQEVIA_DATA_DIR: ${{ runner.temp }}/orqevia-release-fixtures
+          ORQEVIA_COMPUTE_QUEUE_DB: ${{ runner.temp }}/orqevia-release-fixtures/queue.db
         run: >-
           python -B -m pytest -q
           tests/test_release_provenance_20261021.py
