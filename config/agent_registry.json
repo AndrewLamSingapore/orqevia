@@ -3277,7 +3277,7 @@
       "name": "Strategy Lead",
       "public_description": "Owns strategic reasoning and coordinates strategy work.",
       "reports_to": "prime",
-      "status": "planned"
+      "status": "registered"
     },
     {
       "agent_id": "a06",
@@ -3287,7 +3287,7 @@
       "name": "Research Lead",
       "public_description": "Directs research and determines what evidence is required.",
       "reports_to": "prime",
-      "status": "planned"
+      "status": "registered"
     },
     {
       "agent_id": "a10",
@@ -3297,7 +3297,7 @@
       "name": "Data Lead",
       "public_description": "Coordinates data work and analytical outputs, including database, caching, batch/stream and normalization tradeoffs.",
       "reports_to": "prime",
-      "status": "planned"
+      "status": "registered"
     },
     {
       "agent_id": "a15",
@@ -3307,7 +3307,7 @@
       "name": "Engineering Lead",
       "public_description": "Owns technical execution and coordinates engineering agents.",
       "reports_to": "prime",
-      "status": "planned"
+      "status": "registered"
     },
     {
       "agent_id": "a20",
@@ -3317,7 +3317,7 @@
       "name": "Economic Lead",
       "public_description": "Oversees economic analysis and commercial outcomes.",
       "reports_to": "prime",
-      "status": "planned"
+      "status": "registered"
     },
     {
       "agent_id": "a26",
@@ -3327,7 +3327,7 @@
       "name": "Quality Lead",
       "public_description": "Leads quality governance, standards and assurance.",
       "reports_to": "prime",
-      "status": "planned"
+      "status": "registered"
     }
   ],
   "numbering_policy": "Exactly21 logical agents; retain historical immutable IDs without renumbering. PRIME is an unnumbered orchestrator and aliases are not agents.",
