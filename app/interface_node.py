@@ -18,6 +18,7 @@ from .action_records import action_ledger
 from .artifact_factory import ArtifactFactory
 from .artifact_delivery import create_task_artifact
 from .agent_registry import load_agent_registry, registered_agent_ids
+from . import open_access
 
 router=APIRouter(prefix='/api/interface/v1',tags=['interface-node'])
 
@@ -116,6 +117,8 @@ def evidence_aggregates():
 
 def client_policy(client_id):
     """Only server configuration sets disclosure and per-dispatch spend limits."""
+    if open_access.enabled():
+        return open_access.owner_policy()
     if isinstance(client_id,str) and client_id.startswith('pwa:'):
         from .pwa_sessions import client_policy as pwa_policy
         return pwa_policy(client_id)
@@ -140,6 +143,8 @@ def dispatch_priority(policy):
 
 
 def client_identity(client_id: str | None,authorization: str | None,capability: str) -> str:
+    if open_access.enabled():
+        return open_access.owner_identity(client_id)
     policy=client_policy(client_id)
     supplied=authorization[7:] if authorization and authorization.startswith('Bearer ') else ''
     digest=hashlib.sha256(supplied.encode()).hexdigest()

@@ -16,6 +16,7 @@ import uuid
 from fastapi import APIRouter,HTTPException,Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from . import open_access
 
 COOKIE='__Host-JARVIS-PWA'
 DEVICE_COOKIE='__Host-JARVIS-Device'
@@ -99,6 +100,8 @@ def access_mode():
     'open'    - the session endpoint admits this browser without any code.
     'pairing' - the historical pairing-code trust gate.
     Unknown values fail closed to 'pairing'."""
+    if open_access.enabled():
+        return 'open'
     mode=os.getenv('ORQEVIA_PWA_ACCESS_MODE','open').strip().lower()
     return mode if mode in {'open','pairing'} else 'pairing'
 
@@ -122,8 +125,10 @@ def _cookies(response,session_token,device_token=None):
     def token(value):
         if not isinstance(value,str) or re.fullmatch(r'[A-Za-z0-9_-]{43}',value) is None:raise HTTPException(503,'Session token unavailable')
         return value
-    if session_token:response.set_cookie(COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
-    if device_token:response.set_cookie(DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=True,samesite='strict',path='/')
+    secure=not open_access.enabled()
+    same_site='strict' if secure else 'lax'
+    if session_token:response.set_cookie(COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
+    if device_token:response.set_cookie(DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     return response
 
 def _issue_device(current):
@@ -145,6 +150,13 @@ def _refresh_session(bound):
 
 def require_session(request):
     value=session(request)
+    if not value and open_access.enabled():
+        return {
+            'clientId': open_access.OPEN_OWNER_ID,
+            'expiresAt': float('inf'),
+            'role': 'OWNER',
+            'ownerAccountId': open_access.OPEN_ACCOUNT_ID,
+        }
     if not value:raise HTTPException(401,'Session unavailable')
     return value
 
@@ -170,6 +182,8 @@ def pwa_origins():
 
 
 def origin_valid(request,write=False):
+    if open_access.enabled():
+        return True
     expected=str(request.base_url).rstrip('/')
     if request.url.scheme!='https' or expected not in pwa_origins():return False
     origin=request.headers.get('origin')
@@ -249,8 +263,10 @@ def get_session(request:Request):
     response=JSONResponse({'protocol':'orqevia.interface.v1','authenticated':bool(current),
         'recovery':recovery,**(current or {})},headers={'Cache-Control':'no-store'})
     if clear_credentials:
-        response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
-        response.delete_cookie(DEVICE_COOKIE,path='/',secure=True,httponly=True,samesite='strict')
+        secure=not open_access.enabled()
+        same_site='strict' if secure else 'lax'
+        response.delete_cookie(COOKIE,path='/',secure=secure,httponly=True,samesite=same_site)
+        response.delete_cookie(DEVICE_COOKIE,path='/',secure=secure,httponly=True,samesite=same_site)
         return response
     return _cookies(response,session_token,device_token) if session_token or device_token else response
 
@@ -289,8 +305,10 @@ def logout(request:Request):
     with database() as db:
         db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
         db.execute('UPDATE devices SET revoked=1 WHERE device_hash=?',(digest(device_raw),))
-    response=JSONResponse({'authenticated':False});response.delete_cookie(COOKIE,path='/',secure=True,httponly=True,samesite='strict')
-    response.delete_cookie(DEVICE_COOKIE,path='/',secure=True,httponly=True,samesite='strict')
+    secure=not open_access.enabled()
+    same_site='strict' if secure else 'lax'
+    response=JSONResponse({'authenticated':False});response.delete_cookie(COOKIE,path='/',secure=secure,httponly=True,samesite=same_site)
+    response.delete_cookie(DEVICE_COOKIE,path='/',secure=secure,httponly=True,samesite=same_site)
     return response
 
 @router.post('/owner-authority-check')
@@ -366,6 +384,13 @@ class PWASessionMiddleware(BaseHTTPMiddleware):
             response.headers['Cache-Control']='no-store'
             response.headers['Referrer-Policy']='no-referrer'
             response.headers['X-Content-Type-Options']='nosniff'
-            response.headers['Content-Security-Policy']="default-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+            response.headers['Content-Security-Policy']=(
+                "default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; "
+                "connect-src *; worker-src * blob:; object-src *; "
+                "base-uri *; frame-ancestors *"
+                if open_access.enabled() else
+                "default-src 'self'; connect-src 'self'; worker-src 'self'; "
+                "object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+            )
             return response
         return await call_next(request)

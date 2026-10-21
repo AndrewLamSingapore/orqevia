@@ -98,6 +98,30 @@ function Get-ContainerRows([switch]$All) {
     })
 }
 
+function Get-SafeContainerInventory {
+    param([string[]]$ContainerIds)
+    foreach ($containerId in $ContainerIds) {
+        # Never request Config, Env, Args, Cmd, health output or expanded Compose.
+        # Even a private checkpoint must not become a second credential store.
+        $summary = @(Invoke-Docker -Arguments @("inspect", "--format", "{{.Id}}|{{.Name}}|{{.Image}}|{{.State.Status}}", $containerId))
+        if ($summary.Count -ne 1) { throw "Container identity inventory is unavailable." }
+        $identity = $summary[0] -split '\|', 4
+        if ($identity.Count -ne 4) { throw "Invalid container identity inventory." }
+        $mountRows = @(Invoke-Docker -Arguments @("inspect", "--format", "{{range .Mounts}}{{.Type}}|{{.Name}}|{{.Destination}}|{{.RW}}{{println}}{{end}}", $containerId))
+        $mounts = @(
+            foreach ($line in $mountRows) {
+                if (-not $line.Trim()) { continue }
+                $mount = $line -split '\|', 4
+                if ($mount.Count -ne 4 -or $mount[0] -notin @("volume", "bind", "tmpfs") -or $mount[3] -notin @("true", "false")) {
+                    throw "Invalid container mount inventory."
+                }
+                [pscustomobject]@{ Type=$mount[0]; Name=$mount[1]; Destination=$mount[2]; ReadWrite=($mount[3] -eq "true") }
+            }
+        )
+        [pscustomobject]@{ Id=$identity[0]; Name=$identity[1].TrimStart('/'); ImageId=$identity[2]; Status=$identity[3]; Mounts=$mounts }
+    }
+}
+
 function Save-Checkpoint {
     if ($script:Checkpoint) { return $script:Checkpoint }
     $base = Join-Path ([Environment]::GetFolderPath("LocalApplicationData")) "ORQEVIA\checkpoints"
@@ -105,24 +129,26 @@ function Save-Checkpoint {
     $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMdd_HHmmssZ")
     $script:Checkpoint = Join-Path $base $stamp
     New-Item -ItemType Directory -Force -Path $script:Checkpoint | Out-Null
-    (Invoke-Docker -Arguments @("ps", "-a", "--no-trunc") -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "containers.txt")
+    $rows = @(Get-ContainerRows -All)
+    ConvertTo-Json -InputObject $rows -Depth 4 | Set-Content (Join-Path $script:Checkpoint "containers.json")
     (Invoke-Docker -Arguments @("volume", "ls") -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "volumes.txt")
     (Invoke-Docker -Arguments @("network", "ls") -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "networks.txt")
-    $ids = @(Get-ContainerRows -All | ForEach-Object { $_.Id })
+    $ids = @($rows | ForEach-Object { $_.Id })
     if ($ids.Count -gt 0) {
-        (Invoke-Docker -Arguments (@("inspect") + $ids) -AllowFailure) | Set-Content (Join-Path $script:Checkpoint "containers.inspect.json")
+        $safe = @(Get-SafeContainerInventory -ContainerIds $ids)
+        ConvertTo-Json -InputObject $safe -Depth 6 | Set-Content (Join-Path $script:Checkpoint "containers.sanitized.json")
     }
     Write-Step "Recovery inventory saved to $script:Checkpoint"
     return $script:Checkpoint
 }
 
 function Get-VolumeForContainer([string]$ContainerId, [string]$Destination) {
-    $json = (Invoke-Docker -Arguments @("inspect", $ContainerId) -AllowFailure) -join [Environment]::NewLine
-    if (-not $json.Trim()) { return "" }
-    $details = @($json | ConvertFrom-Json)
-    $mount = $details[0].Mounts | Where-Object { $_.Destination -eq $Destination } | Select-Object -First 1
-    if (-not $mount) { return "" }
-    return "$($mount.Name)".Trim()
+    $rows = @(Invoke-Docker -Arguments @("inspect", "--format", "{{range .Mounts}}{{.Name}}|{{.Destination}}{{println}}{{end}}", $ContainerId) -AllowFailure)
+    foreach ($line in $rows) {
+        $mount = $line -split '\|', 2
+        if ($mount.Count -eq 2 -and $mount[1] -eq $Destination) { return $mount[0].Trim() }
+    }
+    return ""
 }
 
 function Adopt-PersistentVolumes {

@@ -8,6 +8,7 @@ from fastapi.responses import Response, RedirectResponse
 from . import pwa_sessions
 from .interface_contract import authorize
 from .interface_node import client_policy
+from . import open_access
 
 router = APIRouter()
 API_PATHS = {
@@ -21,6 +22,8 @@ API_PATHS = {
 }
 
 def access(request, *, mutation=False):
+    if open_access.enabled() and pwa_sessions.COOKIE not in request.cookies:
+        return open_access.OPEN_OWNER_ID
     if pwa_sessions.COOKIE in request.cookies:
         if any(k in request.headers for k in ('authorization', 'x-client-id', 'x-orqevia-client-id')):
             raise HTTPException(400, 'Ambiguous client identity')

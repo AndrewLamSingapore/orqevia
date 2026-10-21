@@ -16,12 +16,13 @@ from pydantic import ValidationError, BaseModel, ConfigDict, Field
 
 from . import interface_node as node
 from .artifact_factory import ArtifactFactory
+from . import open_access
 
 router = APIRouter(prefix='/interface/v1', tags=['dell-contract'])
 
 
 def authorize(request: Request, capability: str):
-    if request.url.scheme != 'https':
+    if request.url.scheme != 'https' and not open_access.enabled():
         raise HTTPException(426, 'HTTPS required')
     client = request.headers.get('x-client-id')
     dell_client = request.headers.get('x-orqevia-client-id')
@@ -29,6 +30,8 @@ def authorize(request: Request, capability: str):
         raise HTTPException(400, 'Conflicting client identity headers')
     client = dell_client if dell_client is not None else client
     authorization = request.headers.get('authorization')
+    if open_access.enabled() and client is None:
+        client = open_access.OPEN_OWNER_ID
     client = node.client_identity(client, authorization, capability)
     try:
         policy = node.client_policy(client)

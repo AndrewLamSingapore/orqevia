@@ -22,6 +22,9 @@ jobs:
       - name: Install source test dependencies
         run: python -m pip install -r requirements.txt pytest
       - name: Run the complete source suite
+        env:
+          ORQEVIA_DATA_DIR: ${{ runner.temp }}/orqevia-source-fixtures
+          ORQEVIA_COMPUTE_QUEUE_DB: ${{ runner.temp }}/orqevia-source-fixtures/queue.db
         run: python -m pytest -q
       - name: Verify canonical generated contract copies
         run: python scripts/verify_portfolio_contracts.py

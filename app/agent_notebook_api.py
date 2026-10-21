@@ -21,6 +21,7 @@ from .agent_notebooks import (
     get_notebook_store,
 )
 from .agent_registry import RegistryError, canonical_agent_id
+from . import open_access
 
 
 class RecordWrite(BaseModel):
@@ -121,6 +122,8 @@ def _admin_key() -> str:
 
 
 def _principal(authorization: str | None, actor: str | None, role: str | None, admin: str | None) -> NotebookPrincipal:
+    if open_access.enabled():
+        return NotebookPrincipal(actor or "owner", "OWNER")
     expected = os.getenv("ORQEVIA_SPINE_TOKEN", "").strip()
     supplied = authorization[7:].strip() if authorization and authorization.lower().startswith("bearer ") else ""
     if not expected:
