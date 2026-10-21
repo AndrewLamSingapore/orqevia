@@ -15,6 +15,12 @@ def test_registry_has_exactly_21_agents_and_one_root():
     assert data["orchestrator"]["id"] == "prime"
 
 
+def test_lead_projection_status_matches_canonical_agents():
+    data = load_agent_registry()
+    agents = {agent["agent_id"]: agent for agent in data["agents"]}
+    assert all(lead["status"] == agents[lead["agent_id"]]["status"] for lead in data["leads"])
+
+
 def test_delegation_is_direct_and_bounded():
     assert may_delegate("prime", "a01") is True
     assert may_delegate("prime", "a02") is False
@@ -76,12 +82,13 @@ def test_mutated_authority_and_hierarchy_fail_closed(tmp_path, monkeypatch):
     import pytest
     import app.agent_registry as registry
     original = json.loads(registry.REGISTRY_PATH.read_text())
-    for mutation in ['duplicate', 'cycle', 'delegation', 'approval']:
+    for mutation in ['duplicate', 'cycle', 'delegation', 'approval', 'lead_status']:
         data = json.loads(json.dumps(original))
         if mutation == 'duplicate': data['agents'][1]['agent_id'] = 'a01'
         if mutation == 'cycle': data['agents'][1]['reports_to'] = 'a02'
         if mutation == 'delegation': data['agents'][1]['can_delegate'] = True
         if mutation == 'approval': next(a for a in data['agents'] if a['agent_id'] == 'a17')['human_approval'] = 'not_required'
+        if mutation == 'lead_status': data['leads'][0]['status'] = 'planned'
         path = tmp_path / 'registry.json'
         path.write_text(json.dumps(data))
         with monkeypatch.context() as patch:
