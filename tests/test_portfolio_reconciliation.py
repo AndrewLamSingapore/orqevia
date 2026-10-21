@@ -778,6 +778,18 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
         "**This file replaces and supersedes every previous SSOT document — technical, course-study, and job-search alike.** Any older SSOT file (on ABEX, in a repo, or elsewhere) is now historical only. Do not treat any prior SSOT document as current once this file exists. Archive or delete the old ones once this file is confirmed good — do not maintain both in parallel.",
         1,
     )
+    # Admit only the exact 21 October role-reacceptance addition. The inserted
+    # block is byte-pinned independently and removed before the frozen
+    # 27 September baseline comparison; arbitrary current text still fails.
+    exact_role_title = "## Exact-image role reacceptance - 21 October 2026"
+    assert after.count(exact_role_title) == 1
+    exact_role_start = after.index(exact_role_title)
+    exact_role_update = after[exact_role_start:exact_role_start + 2133].encode("utf-8")
+    assert (
+        hashlib.sha256(exact_role_update).hexdigest()
+        == "d1cf4fef7869b402f47640f9b62f94fad96c3008c158c1c0f2049670f7336341"
+    )
+    after = after[:exact_role_start] + after[exact_role_start + 2133:]
     start = after.index("## Portfolio current observation — 27 September 2026")
     end = after.index("## PRIME / VELYQUA / ABEX", start)
     preserved = (after[:start] + after[end:]).encode("utf-8")
