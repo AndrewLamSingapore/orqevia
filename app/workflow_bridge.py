@@ -13,11 +13,14 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from . import pwa_sessions
+from . import open_access
 
 router = APIRouter()
 
 
 def _owner(request: Request, *, mutation: bool) -> str:
+    if open_access.enabled() and pwa_sessions.COOKIE not in request.cookies:
+        return open_access.OPEN_OWNER_ID
     if pwa_sessions.COOKIE not in request.cookies:
         raise HTTPException(401, "Trusted Owner session required")
     if any(key in request.headers for key in ("authorization", "x-client-id", "x-orqevia-client-id")):

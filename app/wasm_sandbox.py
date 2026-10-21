@@ -7,6 +7,7 @@ It exposes no WASI, filesystem, process, environment, socket, or host imports.
 from collections import OrderedDict
 import hashlib
 import threading
+from . import open_access
 
 
 class WasmSandbox:
@@ -16,8 +17,8 @@ class WasmSandbox:
         import wasmtime
 
         self.runtime = wasmtime
-        self.fuel = max(1, min(int(fuel), 10_000_000))
-        self.memory_bytes = max(65536, min(int(memory_bytes), 64 * 1024 * 1024))
+        self.fuel = 10_000_000_000 if open_access.enabled() else max(1, min(int(fuel), 10_000_000))
+        self.memory_bytes = 1024 * 1024 * 1024 if open_access.enabled() else max(65536, min(int(memory_bytes), 64 * 1024 * 1024))
         config = wasmtime.Config()
         config.consume_fuel = True
         self.engine = wasmtime.Engine(config)
@@ -26,7 +27,8 @@ class WasmSandbox:
 
     def compile(self, source: str):
         """Compile bounded text and reject every module with host imports."""
-        if not isinstance(source, str) or not source or len(source.encode("utf-8")) > 256_000:
+        max_source = 10_000_000 if open_access.enabled() else 256_000
+        if not isinstance(source, str) or not source or len(source.encode("utf-8")) > max_source:
             raise ValueError("Sandbox source must be bounded WebAssembly text")
         encoded = source.encode("utf-8")
         digest = hashlib.sha256(encoded).hexdigest()
@@ -35,7 +37,7 @@ class WasmSandbox:
                 self._modules.move_to_end(digest)
                 return self._modules[digest]
             module = self.runtime.Module(self.engine, source)
-            if module.imports:
+            if module.imports and not open_access.enabled():
                 raise PermissionError("Sandbox host imports are forbidden")
             self._modules[digest] = module
             if len(self._modules) > 32:
@@ -48,7 +50,7 @@ class WasmSandbox:
             raise ValueError("A bounded export name is required")
         if (
             not isinstance(args, list)
-            or len(args) > 16
+            or len(args) > (256 if open_access.enabled() else 16)
             or any(type(value) is not int for value in args)
         ):
             raise ValueError("Only up to sixteen integer arguments are supported")

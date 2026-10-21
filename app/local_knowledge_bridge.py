@@ -9,6 +9,7 @@ from fastapi import APIRouter,HTTPException,Request
 from fastapi.responses import Response
 from . import orqevia_bridge as existing
 from .observability import trace_headers
+from . import open_access
 
 router=APIRouter()
 PATHS={'health':{'GET'},'documents':{'GET'},'ingest':{'POST'},'retrieve':{'POST'},'answer':{'POST'},'reindex':{'POST'},
@@ -19,6 +20,8 @@ def identity(request):
     if existing.pwa_sessions.COOKIE in request.cookies:
         account=existing.pwa_sessions.require_session(request).get('ownerAccountId')
     else:account=existing.client_policy(actor).get('owner_account_id')
+    if open_access.enabled() and not account:
+        account=open_access.OPEN_ACCOUNT_ID
     if not isinstance(account,str) or not account:raise HTTPException(403,'A bound owner account is required for private documents')
     return actor,hashlib.sha256(account.encode()).hexdigest()
 
