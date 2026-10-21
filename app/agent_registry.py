@@ -49,11 +49,15 @@ def load_agent_registry() -> dict[str, Any]:
     data = json.loads(raw)
     if data.get("schema_version") != "2.0" or data.get('registry_version') != '1.0.0':
         raise RegistryError("unsupported registry schema")
-    aliases = {lead["id"]: lead["agent_id"] for lead in data.get("leads", [])}
+    leads = data.get("leads", [])
+    aliases = {lead["id"]: lead["agent_id"] for lead in leads}
     if len(aliases) != 6 or len(set(aliases.values())) != 6:
         raise RegistryError("six unique lead aliases required")
     domains = {lead["agent_id"]: lead["domain"] for lead in data["leads"]}
     agents = data.get("agents", [])
+    agent_statuses = {agent.get("agent_id"): agent.get("status") for agent in agents}
+    if any(lead.get("status") != agent_statuses.get(lead.get("agent_id")) for lead in leads):
+        raise RegistryError("lead projection status must match its canonical agent")
     for agent in agents:
         agent["id"] = agent["agent_id"]
         agent["reports_to"] = aliases.get(agent["reports_to"], agent["reports_to"])
