@@ -319,6 +319,7 @@ def dispatch_ready_capabilities(capabilities, run, *, priority='normal'):
 
 
 def select_capabilities(objective: str) -> list[str]:
+    """Pick one default reasoning owner; callers may explicitly request more."""
     text=objective.lower()
     scored=[]
     for domain,children in DOMAIN_CHILDREN.items():
@@ -327,16 +328,9 @@ def select_capabilities(objective: str) -> list[str]:
             if score:
                 scored.append((score,domain,actor))
     scored.sort(key=lambda row:(-row[0],row[1],row[2]))
-    selected=[]
-    owners=set()
-    for _,_,actor in scored:
-        owner=canonical_agent_id(actor)
-        if owner not in owners:
-            owners.add(owner)
-            selected.append('responsibility.'+actor)
-        if len(selected)==3:
-            break
-    return selected or ['responsibility.a02']
+    if not scored:
+        return ['responsibility.a02']
+    return ['responsibility.'+canonical_agent_id(scored[0][2])]
 
 
 def connect(*, read_only=False):

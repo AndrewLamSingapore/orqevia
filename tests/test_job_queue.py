@@ -66,6 +66,16 @@ def test_rejected_strict_output_is_preserved_without_replay(tmp_path):
     assert failed['attempts']==1 and failed['input_tokens']==2 and failed['output_tokens']==3
     assert q.claim('worker',[LOCAL]) is None
 
+
+def test_running_job_exposes_bounded_partial_result(tmp_path):
+    q=queue(tmp_path)
+    job=q.submit(agent='a02',prompt='stream fixture')
+    q.claim('worker',[LOCAL])
+    assert q.update_progress(job['id'],'partial answer') is True
+    assert q.get(job['id'])['result']=='partial answer'
+    assert q.finish(job['id'],result='complete answer')['result']=='complete answer'
+    assert q.update_progress(job['id'],'late mutation') is False
+
 def test_cloud_is_direct_and_only_fallback(tmp_path):
     q=queue(tmp_path)
     job=q.submit(agent="analyst",prompt="large",model="large",vram_mb=8000,allow_cloud=True,

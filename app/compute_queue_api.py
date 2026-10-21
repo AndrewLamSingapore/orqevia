@@ -128,7 +128,8 @@ def _execute(job: dict, provider: Provider) -> dict:
     try:
         answer=DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
             settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
-            cancelled=lambda:queue.get(job['id'])['status']=='cancelled')))
+            cancelled=lambda:queue.get(job['id'])['status']=='cancelled',
+            progress=lambda text:queue.update_progress(job['id'],text))))
         failure='STRICT_JSON_CONTRACT_FAILED' if answer.get('error')=='STRICT_JSON_CONTRACT_FAILED' else None
         return answer
     finally:

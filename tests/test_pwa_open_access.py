@@ -35,6 +35,19 @@ def test_default_open_mode_admits_without_any_code(setup):
             assert row and row[1]==0 and row[2]=='OWNER'
         assert client.get('/pwa/api/session').json()['authenticated'] is True
 
+def test_open_access_publishes_telemetry_audience_alias(setup,monkeypatch):
+    root,pwa,app=setup
+    monkeypatch.setenv('ORQEVIA_OPEN_ACCESS','1')
+    with TestClient(app,base_url=ORIGIN) as client:
+        state=client.get('/pwa/api/session').json()
+        assert state['authenticated'] is True
+        assert state['clientId'].startswith('pwa:')
+        assert state['interfaceClientId']==open_access_id()
+
+def open_access_id():
+    from app.open_access import OPEN_OWNER_ID
+    return OPEN_OWNER_ID
+
 def test_open_mode_still_rejects_cross_origin_and_write_csrf(setup):
     root,pwa,app=setup
     with TestClient(app,base_url=ORIGIN) as client:

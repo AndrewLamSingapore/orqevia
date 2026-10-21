@@ -56,7 +56,10 @@ def user_facing_contract(objective: str) -> str:
     else:
         language=('Use the language of the objective for the entire response unless the user explicitly requests '
                   'another language.')
-    return ORQEVIA_IDENTITY_CONTRACT+'\nUser-facing response requirement: '+language
+    return (ORQEVIA_IDENTITY_CONTRACT+'\nUser-facing response requirement: '+language+
+            '\nLead with the answer. Do not repeat the request or explain internal routing; '
+            'use only as much detail as the objective requires. Default to at most 250 words '
+            'unless the objective explicitly requests a longer or more detailed response.')
 
 
 def local_model_backends(settings=SETTINGS) -> tuple[Backend, ...]:

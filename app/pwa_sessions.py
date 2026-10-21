@@ -260,8 +260,14 @@ def get_session(request:Request):
                 session_token=bounded_cookie;current['expiresAt']=expires
     recovery=None if current else ('DEVICE_REVOKED' if device_status=='REVOKED' else
         'DEVICE_EXPIRED' if device_status=='EXPIRED' else 'TRUST_REQUIRED')
-    response=JSONResponse({'protocol':'orqevia.interface.v1','authenticated':bool(current),
-        'recovery':recovery,**(current or {})},headers={'Cache-Control':'no-store'})
+    payload={'protocol':'orqevia.interface.v1','authenticated':bool(current),
+        'recovery':recovery,**(current or {})}
+    if current:
+        # Telemetry uses the open-access owner identity when the browser does
+        # not send a separate thin-client credential.
+        payload['interfaceClientId']=(open_access.OPEN_OWNER_ID
+            if open_access.enabled() else current['clientId'])
+    response=JSONResponse(payload,headers={'Cache-Control':'no-store'})
     if clear_credentials:
         secure=not open_access.enabled()
         same_site='strict' if secure else 'lax'
