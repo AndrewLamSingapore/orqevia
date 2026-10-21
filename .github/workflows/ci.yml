@@ -36,11 +36,12 @@ jobs:
           export ORQEVIA_COMPUTE_QUEUE_DB="$ORQEVIA_DATA_DIR/queue.db"
           python scripts/check_canonical_state.py
           python scripts/run_canonical_ci.py
-      - name: Release provenance and standalone recovery regressions
+      - name: Release provenance recovery and explicit access-mode regressions
         run: >-
           python -B -m pytest -q
           tests/test_release_provenance_20261021.py
           tests/test_sovereign_isolation_20261021.py
+          tests/test_open_access_mode.py
       - name: Parse opt-in HF Compose secret mount without credential
         env:
           OLLAMA_IMAGE: ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532

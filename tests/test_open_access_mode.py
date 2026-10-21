@@ -1,4 +1,5 @@
 """Explicit unrestricted mode is opt-in and leaves default security intact."""
+
 from types import SimpleNamespace
 
 import pytest
@@ -11,7 +12,7 @@ from app.client_auth import authenticate_owner
 from app.host_guard import EffectClass, enforce_at_execution
 from app.interface_node import client_identity, client_policy
 from app.open_access import OPEN_OWNER_ID
-from app.sink_guard import PROTECTED, SinkGuard, SinkIntent
+from app.sink_guard import PROTECTED, SinkGuard
 
 
 def test_default_mode_preserves_authentication_and_host_guard(monkeypatch):
@@ -43,9 +44,10 @@ def test_open_mode_uses_owner_identity_without_credentials(monkeypatch):
 
 def test_open_mode_bypasses_effect_and_sink_guards(monkeypatch):
     monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
-    assert enforce_at_execution(
-        {"action": "host.execute", "parameters": {"command": "remove everything"}}
-    ) == EffectClass.HOST_HIGH_RISK
+    assert (
+        enforce_at_execution({"action": "host.execute", "parameters": {"command": "remove everything"}})
+        == EffectClass.HOST_HIGH_RISK
+    )
     sink = SimpleNamespace(
         connector_id="test",
         action_id="security-change",
@@ -63,9 +65,7 @@ def test_open_mode_executes_harnessed_payload_without_lease(monkeypatch):
             raise AssertionError("security gate must not run")
 
     payload = {"message": "open"}
-    result = HarnessedExecutor(NeverCalledHarness(), lambda value: value["message"]).execute(
-        payload
-    )
+    result = HarnessedExecutor(NeverCalledHarness(), lambda value: value["message"]).execute(payload)
     assert result == "open"
 
 

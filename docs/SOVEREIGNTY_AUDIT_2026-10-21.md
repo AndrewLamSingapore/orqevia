@@ -36,9 +36,12 @@ dated history, and the audit helper did not cause a restart or deployment.
 A further selected-field read observed both healthy, with OCI revision
 `727562063a81d4e99ef4a5675d73d4a0447c4d78`. Local git shows this is a separate
 20-file runtime change adding explicit unrestricted `ORQEVIA_OPEN_ACCESS` mode.
-**The tests below exercised source9703/default controls, not that new deployed
-mode.** Root must reconcile this newer source before applying the old-base
-candidate; this audit does not authorize replacing it with the earlier baseline.
+The original tests below exercised source9703/default controls. Source integration
+has since preserved7275620 through merge `c75323b3588471c387df020a727025b51b8f55bd`,
+combining the nine-file release/audit commit `b74c01b` without removing the
+deployed runtime changes. The integrated candidate was retested in separate
+default and explicit open-mode fixture processes, as recorded below. It has not
+replaced the live image or established its actual active access configuration.
 
 Task evidence is under
 `C:\Users\Admin\Documents\ABEX\operations\sovereign-five-20261021-091215`.
@@ -90,7 +93,11 @@ uv pip check --python .venv/Scripts/python.exe
 | Fresh independently installed dependency closure | PASS | Frozen uv sync: 56 packages; uv pip check compatible. This checks installation consistency, not CVE absence. |
 | New standalone isolation/recovery test | PASS | `orqevia-independent-pytest.xml`, one test in 11.63s. |
 | Final release/isolation/runtime/workflow identity selection | PASS | `orqevia-release-verified-pytest.xml` and `orqevia-release-verified.log`: 38 passed in 16.15s, including the generated sanitized isolation receipt. |
+| Integrated release/recovery plus benchmark identity | PASS | `orqevia-integrated-focused-pytest.xml` and log: 47 passed in 16.10s after preserving7275620. |
+| Integrated default-security suites | PASS | `orqevia-integrated-default-pytest.xml` and log: 115 passed in 22.04s, ORQEVIA_OPEN_ACCESS absent. |
+| Explicit unrestricted-mode fixtures | PASS | `orqevia-integrated-open-pytest.xml` and log: six passed in 2.80s; actions mocked and data isolated, live mode unchanged. |
 | New harness strict lint | PASS | `ruff check --select E9,F` on both new regression files. |
+| Integrated repository changed-file gate | PASS | scripts/check_ruff_changed.py: 24 changed Python files, four new files strictly linted/formatted. Formatting of the two preserved open-access files and removal of an unused test import do not change runtime behavior. |
 | Existing image identity and health | PASS | Initial selected-field health observation above; later safe helper validated the new image/mount inventory. Root owns exact rollout/source reconciliation. |
 | Candidate container build and exact-source live rollout | NOT TESTED | Root coordinates merged-source image/CI/deployment receipts. No update/publish/restart command was executed by this audit. |
 | Real local model diagnostic | FAIL | Root's `orqevia-local-model-benchmark.json`: gemma3:4b passed 7/8 prompts, strict JSON failed, median 8.286s. This small diagnostic is not 21-role acceptance. |
@@ -99,7 +106,7 @@ uv pip check --python .venv/Scripts/python.exe
 | Encrypted off-device restore and prelogon recovery | NOT TESTED | Nine local scratch DB restores do not establish these operational gates. |
 
 The baseline suite uses an explicit list in scripts/run_canonical_ci.py. The new
-files therefore have an explicit CI quality step in .github/workflows/ci.yml.
+files and explicit open-mode suite therefore have a CI quality step in .github/workflows/ci.yml.
 The checkpoint fixture uses installed pwsh/Windows PowerShell and clearly skips
 if neither exists. It never sources the operator's top-level start/update switch.
 
@@ -179,7 +186,8 @@ browser offline behavior, total data backup or independent commercial readiness.
    mutations. Uvicorn does not trust proxy headers. Sensitive capability checks
    require explicit owner credentials. This lane did not disable a control.
    The subsequently observed7275620 source adds explicit unrestricted-mode
-   bypasses; default-denial fixtures are not evidence of those deployed controls.
+   bypasses. Integrated default and open fixtures were run separately; neither
+   is evidence that default-denial controls apply to a deployed open-mode instance.
    Its active mode and live permission posture must be recorded by the
    coordinated operational verification, in the context of the Owner's request.
 5. **Access-mode boundary requiring operational validation.**
@@ -228,7 +236,8 @@ release/security behavior, not a CPU/GPU performance speedup.
 
 The user has authorized deployment of validated work. Root coordination owns
 the combined commit, required CI/merge, immutable image publication and live
-rollout. This lane leaves source changes uncommitted for that combined release.
+rollout. The lane committed the original nine files as b74c01b, preserved7275620
+through merge c75323b, and prepares a reviewed PR rather than changing live state.
 See the task evidence `orqevia-release-plan.md` for exact observed live identities,
 additive staging and rollback precautions. No default operator start/update was
 invoked: it can affect the whole stack and remove orphans. Preserve existing data,

@@ -4,6 +4,7 @@ This module is intentionally narrow and reversible. When
 ``ORQEVIA_OPEN_ACCESS=1``, the application treats callers as the local owner,
 accepts HTTP and cross-origin traffic, and bypasses fail-closed action guards.
 """
+
 from __future__ import annotations
 
 import os

@@ -1,4 +1,5 @@
 """Focused release identity and executable secret-free checkpoint regression."""
+
 import json
 import os
 from pathlib import Path
@@ -25,7 +26,7 @@ def test_publish_image_uses_canonical_namespace_and_exact_revision():
 def test_checkpoint_and_volume_lookup_never_request_credentials(tmp_path):
     # Parse trusted function definitions only. Never dot-source the operator's
     # top-level start/update switch, never call Docker, never read .env.
-    program = r'''
+    program = r"""
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 $source=Join-Path (Get-Location) 'scripts/orqevia.ps1'
@@ -84,12 +85,19 @@ foreach($file in $files){
 }
 if(($script:messages -join ' ') -match 'fixture-credential-must-not-be-requested'){throw 'Checkpoint log leaked credentials'}
 Write-Output $json
-'''
+"""
     powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
     if powershell is None:
         pytest.skip("Executable checkpoint fixture requires PowerShell")
     environment = dict(os.environ, ORQEVIA_CHECKPOINT_FIXTURE=str(tmp_path))
-    result = subprocess.run([powershell, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", program], cwd=ROOT, env=environment, capture_output=True, text=True, timeout=20)
+    result = subprocess.run(
+        [powershell, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", program],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
     assert result.returncode == 0, result.stderr
     inventory = json.loads(result.stdout)
     assert set(inventory[0]) == {"Id", "Name", "ImageId", "Status", "Mounts"}
