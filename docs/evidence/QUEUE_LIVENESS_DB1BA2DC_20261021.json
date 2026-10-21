@@ -1,0 +1,247 @@
+{
+  "schema_version": "orqevia.queue-liveness.v1",
+  "observed_at_utc": "2026-10-21T04:10:35.599421+00:00",
+  "source_revision": "db1ba2dc132fab10ebc10dbf87186d72d3b95511",
+  "scope": "SEQUENTIAL_LIGHTWEIGHT_QUEUE_LIVENESS_NOT_ROLE_ACCEPTANCE",
+  "concurrency": 1,
+  "agents": [
+    {
+      "agent": "a01",
+      "job_id": "bd97497d-e035-4c27-8d48-3eba2b5cc6cf",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:07:24.392033+00:00",
+      "completed_at": "2026-10-21T04:07:24.630741+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a02",
+      "job_id": "247a00ea-7321-4a98-bcd6-da7e1cc650bc",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:07:45.781642+00:00",
+      "completed_at": "2026-10-21T04:07:46.006685+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a04",
+      "job_id": "66e759b2-1ae9-4837-9417-32f0b65beb55",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:08:10.775458+00:00",
+      "completed_at": "2026-10-21T04:08:11.012251+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a05",
+      "job_id": "366dd92f-d6d1-4b3f-a20a-cadcd98a8e7f",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:08:36.889869+00:00",
+      "completed_at": "2026-10-21T04:08:37.157269+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a06",
+      "job_id": "7c0641fb-307a-4b00-a149-b448d06e8c12",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:08:53.811975+00:00",
+      "completed_at": "2026-10-21T04:08:54.038924+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a07",
+      "job_id": "7d7714b5-ee4d-4e05-b642-c9c50dda71f5",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:09:12.207741+00:00",
+      "completed_at": "2026-10-21T04:09:12.471454+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a09",
+      "job_id": "40d38ce7-63a3-4393-ab57-87bb631b4b41",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:09:29.124951+00:00",
+      "completed_at": "2026-10-21T04:09:29.360311+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a10",
+      "job_id": "492a8cb6-d290-4f0e-b49f-124f06081dca",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:09:40.339616+00:00",
+      "completed_at": "2026-10-21T04:09:40.566243+00:00",
+      "result_sha256": "b59aa61bc9d935a7b927d275b3f595db1c6d8a55aa7ed807918197258193b206",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a12",
+      "job_id": "aa31a5ac-f021-4260-bd8c-bf6891bc5e72",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:09:53.853220+00:00",
+      "completed_at": "2026-10-21T04:09:54.156723+00:00",
+      "result_sha256": "1db677e0b2d3f9fdf3efc0b6ef57af082dbb95dd6ad40471a8aaa09c50dd7f7a",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a13",
+      "job_id": "e96f060f-ed03-4e92-af39-d8ae8d1a0e52",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:09.175897+00:00",
+      "completed_at": "2026-10-21T04:10:09.948123+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a14",
+      "job_id": "5d40d0d8-15fa-47cc-b916-9f4999d47f2f",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:24.244936+00:00",
+      "completed_at": "2026-10-21T04:10:24.519698+00:00",
+      "result_sha256": "1db677e0b2d3f9fdf3efc0b6ef57af082dbb95dd6ad40471a8aaa09c50dd7f7a",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a15",
+      "job_id": "57d56671-db67-4080-9e00-532d775e9660",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:25.275595+00:00",
+      "completed_at": "2026-10-21T04:10:25.501902+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a16",
+      "job_id": "e4a40839-17e5-4ea0-8f53-51fa66db8679",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:26.310857+00:00",
+      "completed_at": "2026-10-21T04:10:26.565622+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a17",
+      "job_id": "02ef9ed1-5bf9-40a0-809e-262abc126dad",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:27.348095+00:00",
+      "completed_at": "2026-10-21T04:10:27.577039+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a18",
+      "job_id": "4f50b628-23a6-49d5-9fea-2d1dec9f229c",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:28.380000+00:00",
+      "completed_at": "2026-10-21T04:10:28.612265+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a19",
+      "job_id": "a27f2d75-af32-4570-8031-219e4f8da970",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:29.412795+00:00",
+      "completed_at": "2026-10-21T04:10:29.643817+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a20",
+      "job_id": "51aa5095-0ee8-4780-9d82-298fcc8a2514",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:30.448478+00:00",
+      "completed_at": "2026-10-21T04:10:30.702814+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a21",
+      "job_id": "f3bb3a27-2cdb-47aa-83b1-bdf026c9ef0b",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:31.522889+00:00",
+      "completed_at": "2026-10-21T04:10:31.805068+00:00",
+      "result_sha256": "1db677e0b2d3f9fdf3efc0b6ef57af082dbb95dd6ad40471a8aaa09c50dd7f7a",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a26",
+      "job_id": "e4a2776d-c28a-4895-9bc9-4962da46c2aa",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:32.539868+00:00",
+      "completed_at": "2026-10-21T04:10:32.996969+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a28",
+      "job_id": "969aca94-c6f9-4b5c-b21a-49f81e70401c",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:33.569928+00:00",
+      "completed_at": "2026-10-21T04:10:33.800775+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    },
+    {
+      "agent": "a29",
+      "job_id": "bf38f681-0722-46e1-a7ba-c9f748d07baf",
+      "status": "completed",
+      "provider": "ollama-fast",
+      "model": "gemma3:1b",
+      "started_at": "2026-10-21T04:10:34.597990+00:00",
+      "completed_at": "2026-10-21T04:10:34.887500+00:00",
+      "result_sha256": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+      "liveness_pass": true
+    }
+  ],
+  "passed": 21,
+  "failed": 0,
+  "readiness_publication": {
+    "status": "PUBLISHED",
+    "errors": [],
+    "note": "Readiness evidence publication completed or failed independently of queue liveness."
+  }
+}

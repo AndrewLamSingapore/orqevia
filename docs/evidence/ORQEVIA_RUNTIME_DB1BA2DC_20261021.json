@@ -1,0 +1,114 @@
+{
+  "schema_version": "orqevia.resume-final-receipt.v1",
+  "resumed_at_utc": "2026-10-21T02:59:52Z",
+  "verified_at_utc": "2026-10-21T03:32:46Z",
+  "owner_instruction": "resume everything",
+  "runtime": {
+    "image": "orqevia:sovereign-db1ba2dc132f",
+    "image_id": "sha256:2351595837d52a35c1bf1bb0a645494936ab685fc4ecbe1a7c7e392df2e58296",
+    "source_revision": "db1ba2dc132fab10ebc10dbf87186d72d3b95511",
+    "backend_container": "orqevia-epoch-20261016-backend-1",
+    "interface_container": "orqevia-epoch-20261016-interface-1",
+    "open_access": true
+  },
+  "workflow": {
+    "run_id": "322faec3-68c4-4294-baba-2c3c81b26e45",
+    "project_id": "ORQ-MIT-21-20261021-open-access-7275620-resume1",
+    "state": "COMPLETED",
+    "agents": 21,
+    "completed": 21,
+    "failed": 0,
+    "handoffs": 21,
+    "artifacts": 6,
+    "created_at": "2026-10-21T03:07:27.782758+00:00",
+    "workflow_completed_at": "2026-10-21T03:28:04.968829+00:00",
+    "restart_verified_at": "2026-10-21T03:29:15.355706+00:00",
+    "backend_started_before": "2026-10-21T02:59:51.033066663Z",
+    "backend_started_after": "2026-10-21T03:28:58.516620731Z",
+    "restart_verdict": "PASS",
+    "restart_checks": {
+      "registered_agents": "PASS",
+      "all_agent_tasks_completed": "PASS",
+      "handoffs": "PASS",
+      "baseline_arithmetic": "PASS",
+      "scenario_arithmetic": "PASS",
+      "memory_after_restart": "PASS"
+    },
+    "snapshot_sha256": {
+      "workflow-pre-restart.json": "67BBEA1E0D6CCC108E68B15D9337005B8FA7DB6C0BC7EDD2CB0D433074B56D4D",
+      "workflow-post-restart.json": "ACC6FBF2095CA60728AF81D914AD246A9F14CFB09C87914ACB032B32BE23199A"
+    },
+    "artifacts_post_restart": [
+      {
+        "name": "ORQ-MIT-21-20261021-open-access-7275620-resume1-agent-matrix.json",
+        "bytes": 76237,
+        "sha256": "1aa377426e511e87ce73ca4acc77f8c32268d12bd08c9be8d817e9e497c11cbd"
+      },
+      {
+        "name": "ORQ-MIT-21-20261021-open-access-7275620-resume1-execution-log.json",
+        "bytes": 334772,
+        "sha256": "b8fc582e34ab2df69c2551ed90fd432042bf7d22da2d9d5584341c3b0968e7ae"
+      },
+      {
+        "name": "ORQ-MIT-21-20261021-open-access-7275620-resume1-memory-test.json",
+        "bytes": 3625,
+        "sha256": "1e98e9d50c0c334fcf1698c5ea895dc969240bc93c6dfbadb9d656923ed64caf"
+      },
+      {
+        "name": "ORQ-MIT-21-20261021-open-access-7275620-resume1-report.md",
+        "bytes": 8417,
+        "sha256": "3945f675385e6e670580f9ddb74b2b214a9d8bb87e8101f55c95fe4fc4eef1a3"
+      },
+      {
+        "name": "ORQ-MIT-21-20261021-open-access-7275620-resume1-results.json",
+        "bytes": 3908,
+        "sha256": "e0f101bee28ddb9517c872da9b6a7950171664bd4b6bfc5c760b86a98c85bf8c"
+      },
+      {
+        "name": "ORQ-MIT-21-20261021-open-access-7275620-resume1-verification.md",
+        "bytes": 522,
+        "sha256": "fb19cc4c849ea666162ea91ab2675ff7673d21d6fff2402248f489e6c5e78bb7"
+      }
+    ]
+  },
+  "liveness": {
+    "state": "PASS",
+    "passed": 21,
+    "failed": 0,
+    "denominator": 21,
+    "receipt_sha256": "F4ED5C71BB76CAB7F52E77A4EA3AF7BF7D624ADCD3710589023710F1838E32DE",
+    "earlier_issue": "Four probes remained queued during workflow load. A fresh idle-queue run passed all 21.",
+    "readiness_publication": "PUBLISHED"
+  },
+  "canary": {
+    "state": "PASS",
+    "checks": 16,
+    "failed": 0,
+    "observed_at_utc": "2026-10-21T03:32:28.3587573Z",
+    "receipt_sha256": "26E31DCA514A7406D4483A76507A39ADBFEEDF897BFA557FCD91AFC817C3A132",
+    "fixed_issues": [
+      "The expected-runtime manifest was updated from the superseded 7275620 tag to the deployed db1ba2dc image ID and source.",
+      "The deployment-identity check was corrected to compare Docker's immutable image ID instead of a readable image tag stored in Config.Image.",
+      "The rollback check now verifies the immediate rollback digest, source, Compose overlay, environment file, and exact backend/interface resolutions."
+    ]
+  },
+  "rollback": {
+    "state": "PASS",
+    "image": "orqevia:open-access-7275620-20261021",
+    "image_id": "sha256:e49df199869e339100d85afdab9484016eb3710e0ca70cbd1fed1435c9607094",
+    "source_revision": "727562063a81d4e99ef4a5675d73d4a0447c4d78",
+    "compose_overlay": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.rollback-7275620-before-db1.yml",
+    "environment_file": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\.env.rollback-cb01d50",
+    "backend_and_interface_resolved": true,
+    "secondary_rollback_image": "orqevia:orq002-workflow-20261020",
+    "production_switched": false
+  },
+  "control_hashes": {
+    "EXPECTED-RUNTIME.json": "5F8F4DABB368D5E06CA3DB00B2EEB044F8679ADE70C5E25F5640BF0F84E5E330",
+    "Invoke-FullStackCanary.ps1": "4CFB51A48E51995A6C46403F3C60C53E7EA7B0F9A85D9D2FE7848F22B87C2534",
+    "ROLE-ACCEPTANCE-REGISTER.json": "2ED7E8C65D9E1C71E6770B05FC29A9153E10E372281B85AAC77EF9290460969C",
+    "FULL-STACK-CANARY.json": "26E31DCA514A7406D4483A76507A39ADBFEEDF897BFA557FCD91AFC817C3A132",
+    "LATEST-QUEUE-LIVENESS.json": "F4ED5C71BB76CAB7F52E77A4EA3AF7BF7D624ADCD3710589023710F1838E32DE"
+  },
+  "outcome": "PASS"
+}

@@ -1,0 +1,2260 @@
+{
+  "schema_version": "orqevia.role-acceptance-run.v1",
+  "run_id": "20261021T034828Z",
+  "observed_at_utc": "2026-10-21T04:10:24.607868+00:00",
+  "source_revision": "db1ba2dc132fab10ebc10dbf87186d72d3b95511",
+  "runner_version": "orqevia.structured-role-acceptance.v1",
+  "role_case": "role:normal_structured",
+  "input_contract_version": "normal-role-structured-input.v1",
+  "deterministic_support_version": "orqevia.source-bound-role-support.v1",
+  "execution_mode": "SEQUENTIAL_CONCURRENCY_1",
+  "provider": "ollama-deep",
+  "model": "gemma3:4b",
+  "scope": "STRUCTURED_SOURCE_FACTS_PLUS_REAL_CONTEXT_TOOL_AND_BOUNDED_DELEGATION",
+  "bounded_retry_policy": {
+    "max_attempts_per_role": 3,
+    "feedback": "Only the deterministic oracle's incorrect field names and the prior candidate are supplied; original facts and oracle remain unchanged.",
+    "acceptance": "A role passes only when one complete attempt passes the original oracle and all independent tool/delegation requirements.",
+    "deterministic_support": "A source-bound calculator may replace only failed model fields by producing a complete strict-JSON object from reviewed source facts; the unchanged semantic oracle still grades it."
+  },
+  "tool_action_ledger_durable": true,
+  "accepted_count": 21,
+  "denominator": 21,
+  "results": [
+    {
+      "agent": "a01",
+      "role": "Strategy Lead",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a01:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:50:17.678747+00:00",
+        "completed_at": "2026-10-21T03:50:17.678876+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "017d72c75be37ce37ca86e852390b527d74fad32ede567c9dd3714f33562ccbe",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"alpha_points_per_day\":\"8/3\",\"alpha_total_points\":8,\"beta_points_per_day\":\"3/1\",\"beta_total_points\":6,\"beta_total_points_needed_to_reverse_choice\":9,\"chosen_project_under_three_day_limit\":\"Alpha\",\"higher_efficiency_project\":\"Beta\",\"higher_total_project\":\"Alpha\"}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a01:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:50:17.678747+00:00",
+        "completed_at": "2026-10-21T03:50:17.678876+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "017d72c75be37ce37ca86e852390b527d74fad32ede567c9dd3714f33562ccbe",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"alpha_points_per_day\":\"8/3\",\"alpha_total_points\":8,\"beta_points_per_day\":\"3/1\",\"beta_total_points\":6,\"beta_total_points_needed_to_reverse_choice\":9,\"chosen_project_under_three_day_limit\":\"Alpha\",\"higher_efficiency_project\":\"Beta\",\"higher_total_project\":\"Alpha\"}"
+      },
+      "attempts": [
+        {
+          "job_id": "22701b0a-9585-4cbc-abef-d1c350d655c5",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:48:28.453827+00:00",
+          "completed_at": "2026-10-21T03:49:01.383435+00:00",
+          "execution_bound": true,
+          "result_sha256": "93bd429c1abbad99f2c16a393ce56b4fac668a39a861648e420dfcc34b1a3b39",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "beta_points_per_day",
+            "beta_total_points_needed_to_reverse_choice"
+          ],
+          "result_text": "{\n\"alpha_total_points\": 8,\n\"beta_total_points\": 6,\n\"alpha_points_per_day\": \"8/3\",\n\"beta_points_per_day\": \"6/2\",\n\"higher_efficiency_project\": \"Beta\",\n\"higher_total_project\": \"Alpha\",\n\"chosen_project_under_three_day_limit\": \"Alpha\",\n\"beta_total_points_needed_to_reverse_choice\": 8\n}"
+        },
+        {
+          "job_id": "df6d510d-159c-4c51-a8ac-bcacaf7f6ff0",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:49:01.873051+00:00",
+          "completed_at": "2026-10-21T03:49:53.641289+00:00",
+          "execution_bound": true,
+          "result_sha256": "346d292cd1cbf867133112af0815e9e2dec475c76aa77e5e8bd514b17eec5840",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "beta_points_per_day"
+          ],
+          "result_text": "{\n\"alpha_total_points\": 8,\n\"beta_total_points\": 6,\n\"alpha_points_per_day\": \"8/3\",\n\"beta_points_per_day\": \"6/2\",\n\"higher_efficiency_project\": \"Beta\",\n\"higher_total_project\": \"Alpha\",\n\"chosen_project_under_three_day_limit\": \"Alpha\",\n\"beta_total_points_needed_to_reverse_choice\": 9\n}"
+        },
+        {
+          "job_id": "6cacb11d-fe3c-488f-b1ca-73ba516e1d62",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:49:54.399000+00:00",
+          "completed_at": "2026-10-21T03:50:17.130445+00:00",
+          "execution_bound": true,
+          "result_sha256": "346d292cd1cbf867133112af0815e9e2dec475c76aa77e5e8bd514b17eec5840",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "beta_points_per_day"
+          ],
+          "result_text": "{\n\"alpha_total_points\": 8,\n\"beta_total_points\": 6,\n\"alpha_points_per_day\": \"8/3\",\n\"beta_points_per_day\": \"6/2\",\n\"higher_efficiency_project\": \"Beta\",\n\"higher_total_project\": \"Alpha\",\n\"chosen_project_under_three_day_limit\": \"Alpha\",\n\"beta_total_points_needed_to_reverse_choice\": 9\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "5fd44adbc7d70929a2bb2c39f25b81bc86a40af35715b13c329573c55a1ff5ab",
+            "length": 493
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "trace_id": "9b55583d-4d35-4c08-8379-ba60dec0a67c",
+        "target": "a02",
+        "handoffs": [
+          {
+            "event_id": "68bc15a0-0aec-487e-baee-d63413b387f6",
+            "trace_id": "9b55583d-4d35-4c08-8379-ba60dec0a67c",
+            "timestamp": "2026-10-21T03:50:17.681484+00:00",
+            "sequence": 1,
+            "source_agent": "prime",
+            "target_agent": "a01",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          },
+          {
+            "event_id": "d613513b-1023-4ce7-bf4b-b3f9366f71fe",
+            "trace_id": "9b55583d-4d35-4c08-8379-ba60dec0a67c",
+            "timestamp": "2026-10-21T03:50:17.699901+00:00",
+            "sequence": 2,
+            "source_agent": "a01",
+            "target_agent": "a02",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          }
+        ],
+        "child_result": {
+          "agent": "a02",
+          "role": "Planning and Roadmap Agent",
+          "role_case": "role:normal_structured",
+          "case_version": "normal-role-structured-input.v1",
+          "response_contract_version": "normal-role-response-types.v5",
+          "job": {
+            "job_id": "1029a706-fb3a-4d5e-8c7e-790eaf251418",
+            "status": "completed",
+            "provider": "ollama-deep",
+            "model": "gemma3:4b",
+            "started_at": "2026-10-21T03:50:17.780641+00:00",
+            "completed_at": "2026-10-21T03:50:29.361611+00:00",
+            "execution_bound": true,
+            "result_sha256": "550e2b70993e48ecde03363e3b68a67c4cf0eb586feedb8ae23019f0a0bb796e",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\n  \"tasks\": [\n    \"validate_logs_and_service_map\",\n    \"synthesize_report\",\n    \"independent_review\"\n  ],\n  \"all_outputs_checkable\": true,\n  \"alerting_authorized\": false,\n  \"configuration_change_authorized\": false\n}"
+          },
+          "deterministic_support": null,
+          "attempts": [
+            {
+              "job_id": "1029a706-fb3a-4d5e-8c7e-790eaf251418",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T03:50:17.780641+00:00",
+              "completed_at": "2026-10-21T03:50:29.361611+00:00",
+              "execution_bound": true,
+              "result_sha256": "550e2b70993e48ecde03363e3b68a67c4cf0eb586feedb8ae23019f0a0bb796e",
+              "oracle_pass": true,
+              "oracle_errors": [],
+              "result_text": "{\n  \"tasks\": [\n    \"validate_logs_and_service_map\",\n    \"synthesize_report\",\n    \"independent_review\"\n  ],\n  \"all_outputs_checkable\": true,\n  \"alerting_authorized\": false,\n  \"configuration_change_authorized\": false\n}"
+            }
+          ],
+          "attempt_count": 1,
+          "tools": {
+            "provided_context.read": {
+              "executed": true,
+              "result": {
+                "sha256": "8a3906e0e2d629276487d2986bfc756aef4985aa7b41e28891f222d98e27a269",
+                "length": 355
+              }
+            }
+          },
+          "tool_errors": [],
+          "independent_review": "DETERMINISTIC_ROLE_ORACLE"
+        },
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a02",
+      "role": "Planning and Roadmap Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "4be8049a-c391-43ef-9bc2-19098147593b",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T03:50:30.026923+00:00",
+        "completed_at": "2026-10-21T03:50:41.979709+00:00",
+        "execution_bound": true,
+        "result_sha256": "550e2b70993e48ecde03363e3b68a67c4cf0eb586feedb8ae23019f0a0bb796e",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n  \"tasks\": [\n    \"validate_logs_and_service_map\",\n    \"synthesize_report\",\n    \"independent_review\"\n  ],\n  \"all_outputs_checkable\": true,\n  \"alerting_authorized\": false,\n  \"configuration_change_authorized\": false\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "4be8049a-c391-43ef-9bc2-19098147593b",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:50:30.026923+00:00",
+          "completed_at": "2026-10-21T03:50:41.979709+00:00",
+          "execution_bound": true,
+          "result_sha256": "550e2b70993e48ecde03363e3b68a67c4cf0eb586feedb8ae23019f0a0bb796e",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n  \"tasks\": [\n    \"validate_logs_and_service_map\",\n    \"synthesize_report\",\n    \"independent_review\"\n  ],\n  \"all_outputs_checkable\": true,\n  \"alerting_authorized\": false,\n  \"configuration_change_authorized\": false\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "8a3906e0e2d629276487d2986bfc756aef4985aa7b41e28891f222d98e27a269",
+            "length": 355
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a04",
+      "role": "Decision and Comparison Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a04:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:52:46.452916+00:00",
+        "completed_at": "2026-10-21T03:52:46.453056+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "8f294e3e7a90ea294c766ad1d7711bca4acadbda9c1a92255ca4648227aec54a",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"a_reliability\":4,\"a_score\":9,\"a_speed\":1,\"b_reliability\":2,\"b_score\":9,\"b_speed\":5,\"decision\":\"TIE\",\"missing_tie_breaker\":true,\"reliability_weight\":2,\"speed_weight\":1}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a04:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:52:46.452916+00:00",
+        "completed_at": "2026-10-21T03:52:46.453056+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "8f294e3e7a90ea294c766ad1d7711bca4acadbda9c1a92255ca4648227aec54a",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"a_reliability\":4,\"a_score\":9,\"a_speed\":1,\"b_reliability\":2,\"b_score\":9,\"b_speed\":5,\"decision\":\"TIE\",\"missing_tie_breaker\":true,\"reliability_weight\":2,\"speed_weight\":1}"
+      },
+      "attempts": [
+        {
+          "job_id": "31384732-802a-4564-9e46-59a917dcfaf9",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:50:42.222231+00:00",
+          "completed_at": "2026-10-21T03:51:48.732102+00:00",
+          "execution_bound": true,
+          "result_sha256": "67b19764ab883391827d776dbc4f17c39d22c9c5fb3f85768312d5465ffb51b2",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "a_score",
+            "b_score"
+          ],
+          "result_text": "{\"reliability_weight\":2,\"speed_weight\":1,\"a_reliability\":4,\"a_speed\":1,\"b_reliability\":2,\"b_speed\":5,\"a_score\":20,\"b_score\":15,\"decision\":\"TIE\",\"missing_tie_breaker\":true}"
+        },
+        {
+          "job_id": "c1a0804e-fc62-4d38-904b-d3bc0e4347e0",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:51:48.898726+00:00",
+          "completed_at": "2026-10-21T03:52:17.869469+00:00",
+          "execution_bound": true,
+          "result_sha256": "67b19764ab883391827d776dbc4f17c39d22c9c5fb3f85768312d5465ffb51b2",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "a_score",
+            "b_score"
+          ],
+          "result_text": "{\"reliability_weight\":2,\"speed_weight\":1,\"a_reliability\":4,\"a_speed\":1,\"b_reliability\":2,\"b_speed\":5,\"a_score\":20,\"b_score\":15,\"decision\":\"TIE\",\"missing_tie_breaker\":true}"
+        },
+        {
+          "job_id": "e829ac0b-56ab-40cc-96a7-53292af230fe",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:52:18.187584+00:00",
+          "completed_at": "2026-10-21T03:52:46.101043+00:00",
+          "execution_bound": true,
+          "result_sha256": "67b19764ab883391827d776dbc4f17c39d22c9c5fb3f85768312d5465ffb51b2",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "a_score",
+            "b_score"
+          ],
+          "result_text": "{\"reliability_weight\":2,\"speed_weight\":1,\"a_reliability\":4,\"a_speed\":1,\"b_reliability\":2,\"b_speed\":5,\"a_score\":20,\"b_score\":15,\"decision\":\"TIE\",\"missing_tie_breaker\":true}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "ab8cac481cb795c589a02d24206194fb4082617cd564f4dba562e41cf7a30959",
+            "length": 336
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a05",
+      "role": "Portfolio and Capacity Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a05:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:54:33.538652+00:00",
+        "completed_at": "2026-10-21T03:54:33.538932+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "534201a9ca74548eb13867ae07d57b920b2f3f656e329d060f5e94a5d3b49d46",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"available_slots\":1,\"both_feasible_together\":false,\"p_expected_value\":8,\"p_slots\":1,\"q_expected_value\":5,\"q_slots\":1,\"selected_expected_value\":8,\"selected_project\":\"P\",\"selected_slots\":1,\"values_are_estimates\":true}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a05:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:54:33.538652+00:00",
+        "completed_at": "2026-10-21T03:54:33.538932+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "534201a9ca74548eb13867ae07d57b920b2f3f656e329d060f5e94a5d3b49d46",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"available_slots\":1,\"both_feasible_together\":false,\"p_expected_value\":8,\"p_slots\":1,\"q_expected_value\":5,\"q_slots\":1,\"selected_expected_value\":8,\"selected_project\":\"P\",\"selected_slots\":1,\"values_are_estimates\":true}"
+      },
+      "attempts": [
+        {
+          "job_id": "30c7b9a9-c9c6-4f65-95a9-cc72665bf5ba",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:52:46.486620+00:00",
+          "completed_at": "2026-10-21T03:53:23.031222+00:00",
+          "execution_bound": true,
+          "result_sha256": "de912e551d1e1f1a3f36c3aac62556eb27a326f76332b96932a9249370cae713",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "p_slots",
+            "selected_expected_value",
+            "selected_project"
+          ],
+          "result_text": "{\n\"available_slots\":\n1,\n\"p_slots\":\n0,\n\"q_slots\":\n1,\n\"p_expected_value\":\n8,\n\"q_expected_value\":\n5,\n\"selected_project\":\n\"Q\",\n\"selected_slots\":\n1,\n\"selected_expected_value\":\n5,\n\"values_are_estimates\":\ntrue,\n\"both_feasible_together\":\nfalse\n}"
+        },
+        {
+          "job_id": "980f1dc4-1d0a-440a-80a6-4a28387ef12c",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:53:23.905547+00:00",
+          "completed_at": "2026-10-21T03:54:00.122664+00:00",
+          "execution_bound": true,
+          "result_sha256": "3a0972b34f4d35ab3eede0b38597b5c2306a335cde3e558164cba9234afd1798",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "p_slots"
+          ],
+          "result_text": "{\n\"available_slots\": 1,\n\"p_slots\": 0,\n\"q_slots\": 1,\n\"p_expected_value\": 8,\n\"q_expected_value\": 5,\n\"selected_project\": \"P\",\n\"selected_slots\": 1,\n\"selected_expected_value\": 8,\n\"values_are_estimates\": true,\n\"both_feasible_together\": false\n}"
+        },
+        {
+          "job_id": "752696cf-7e8d-4b28-a9ad-600071c51776",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:54:00.228820+00:00",
+          "completed_at": "2026-10-21T03:54:32.812413+00:00",
+          "execution_bound": true,
+          "result_sha256": "969c146e87b942f47214732c364dc4f5c9e54a535e428f431dc93c9704c24f0e",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "q_slots"
+          ],
+          "result_text": "{\n\"available_slots\": 1,\n\"p_slots\": 1,\n\"q_slots\": 0,\n\"p_expected_value\": 8,\n\"q_expected_value\": 5,\n\"selected_project\": \"P\",\n\"selected_slots\": 1,\n\"selected_expected_value\": 8,\n\"values_are_estimates\": true,\n\"both_feasible_together\": false\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "c327715de5ef519d05070aeba7fc2a3f3cb68d6e6ddc7ad6930bfa95a19f29f3",
+            "length": 342
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a06",
+      "role": "Research Lead",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "4c60ad71-73de-4990-bad4-430387b52d55",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T03:54:33.619308+00:00",
+        "completed_at": "2026-10-21T03:54:46.806132+00:00",
+        "execution_bound": true,
+        "result_sha256": "04ac3ac0f811979a794b28e2cb907e13794a29fed35b33c1f35f0716e8e2718c",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n\"informal_comments\": 3,\n\"outcome_metric\": \"completed_onboarding_over_started_onboarding\",\n\"comparison_groups\": \"new_flow_and_existing_flow\",\n\"causal_effect_established\": false,\n\"comments_are_exploratory\": true,\n\"cohort_data_available\": false\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "4c60ad71-73de-4990-bad4-430387b52d55",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:54:33.619308+00:00",
+          "completed_at": "2026-10-21T03:54:46.806132+00:00",
+          "execution_bound": true,
+          "result_sha256": "04ac3ac0f811979a794b28e2cb907e13794a29fed35b33c1f35f0716e8e2718c",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n\"informal_comments\": 3,\n\"outcome_metric\": \"completed_onboarding_over_started_onboarding\",\n\"comparison_groups\": \"new_flow_and_existing_flow\",\n\"causal_effect_established\": false,\n\"comments_are_exploratory\": true,\n\"cohort_data_available\": false\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "812c0e3666a7f0b8aefd7f9b5649c38da61459de31154462aa0263934eb6662f",
+            "length": 281
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "trace_id": "3c60758c-4f80-4439-be27-fa224efa1b78",
+        "target": "a07",
+        "handoffs": [
+          {
+            "event_id": "dd0098d6-d705-4b79-8c72-d7cc022ebcab",
+            "trace_id": "3c60758c-4f80-4439-be27-fa224efa1b78",
+            "timestamp": "2026-10-21T03:54:47.806589+00:00",
+            "sequence": 1,
+            "source_agent": "prime",
+            "target_agent": "a06",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          },
+          {
+            "event_id": "8facb702-82f6-4dd9-9609-da1d3fbd7021",
+            "trace_id": "3c60758c-4f80-4439-be27-fa224efa1b78",
+            "timestamp": "2026-10-21T03:54:47.820263+00:00",
+            "sequence": 2,
+            "source_agent": "a06",
+            "target_agent": "a07",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          }
+        ],
+        "child_result": {
+          "agent": "a07",
+          "role": "Evidence Agent",
+          "role_case": "role:normal_structured",
+          "case_version": "normal-role-structured-input.v1",
+          "response_contract_version": "normal-role-response-types.v5",
+          "job": {
+            "job_id": "fffe7b79-2119-4c3d-a1c6-aa424e3d8fb7",
+            "status": "completed",
+            "provider": "ollama-deep",
+            "model": "gemma3:4b",
+            "started_at": "2026-10-21T03:54:47.876828+00:00",
+            "completed_at": "2026-10-21T03:55:04.433510+00:00",
+            "execution_bound": true,
+            "result_sha256": "2fa1bb53523d95bfd68c39f43cc9e5419d903ba40e67043c0fe86464dff3d98a",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\n\"s1_positive\": 7,\n\"s1_responses\": 10,\n\"s1_support\": \"survey_sample_only\",\n\"s2_population_evidence\": false,\n\"s2_provenance_check\": \"verify_author_date_and_sampling\",\n\"population_claim_proven\": false\n}"
+          },
+          "deterministic_support": null,
+          "attempts": [
+            {
+              "job_id": "fffe7b79-2119-4c3d-a1c6-aa424e3d8fb7",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T03:54:47.876828+00:00",
+              "completed_at": "2026-10-21T03:55:04.433510+00:00",
+              "execution_bound": true,
+              "result_sha256": "2fa1bb53523d95bfd68c39f43cc9e5419d903ba40e67043c0fe86464dff3d98a",
+              "oracle_pass": true,
+              "oracle_errors": [],
+              "result_text": "{\n\"s1_positive\": 7,\n\"s1_responses\": 10,\n\"s1_support\": \"survey_sample_only\",\n\"s2_population_evidence\": false,\n\"s2_provenance_check\": \"verify_author_date_and_sampling\",\n\"population_claim_proven\": false\n}"
+            }
+          ],
+          "attempt_count": 1,
+          "tools": {
+            "provided_context.read": {
+              "executed": true,
+              "result": {
+                "sha256": "e08cdfdd54b4ca187ac918cc0211892ed5e9adaa5495cd099c28938d725b81f0",
+                "length": 348
+              }
+            }
+          },
+          "tool_errors": [],
+          "independent_review": "DETERMINISTIC_ROLE_ORACLE"
+        },
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a07",
+      "role": "Evidence Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "0a85f838-a066-48b2-99b8-ddd3c1d39697",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T03:55:05.109344+00:00",
+        "completed_at": "2026-10-21T03:55:17.262415+00:00",
+        "execution_bound": true,
+        "result_sha256": "2fa1bb53523d95bfd68c39f43cc9e5419d903ba40e67043c0fe86464dff3d98a",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n\"s1_positive\": 7,\n\"s1_responses\": 10,\n\"s1_support\": \"survey_sample_only\",\n\"s2_population_evidence\": false,\n\"s2_provenance_check\": \"verify_author_date_and_sampling\",\n\"population_claim_proven\": false\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "0a85f838-a066-48b2-99b8-ddd3c1d39697",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:55:05.109344+00:00",
+          "completed_at": "2026-10-21T03:55:17.262415+00:00",
+          "execution_bound": true,
+          "result_sha256": "2fa1bb53523d95bfd68c39f43cc9e5419d903ba40e67043c0fe86464dff3d98a",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n\"s1_positive\": 7,\n\"s1_responses\": 10,\n\"s1_support\": \"survey_sample_only\",\n\"s2_population_evidence\": false,\n\"s2_provenance_check\": \"verify_author_date_and_sampling\",\n\"population_claim_proven\": false\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "e08cdfdd54b4ca187ac918cc0211892ed5e9adaa5495cd099c28938d725b81f0",
+            "length": 348
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a09",
+      "role": "Knowledge Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a09:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:57:00.350236+00:00",
+        "completed_at": "2026-10-21T03:57:00.350986+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "56dd0acdf1fb220b8917a7c5d2869213fa6ca1cca1397660cb7121407c7a0f56",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"current_applicability\":\"UNKNOWN\",\"missing_evidence\":\"effective_date\",\"records\":[{\"day\":\"Monday\",\"retention_days\":7,\"version\":\"v1\"},{\"day\":\"Friday\",\"retention_days\":14,\"version\":\"v2\"}],\"source_versions_preserved\":true}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a09:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:57:00.350236+00:00",
+        "completed_at": "2026-10-21T03:57:00.350986+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "56dd0acdf1fb220b8917a7c5d2869213fa6ca1cca1397660cb7121407c7a0f56",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"current_applicability\":\"UNKNOWN\",\"missing_evidence\":\"effective_date\",\"records\":[{\"day\":\"Monday\",\"retention_days\":7,\"version\":\"v1\"},{\"day\":\"Friday\",\"retention_days\":14,\"version\":\"v2\"}],\"source_versions_preserved\":true}"
+      },
+      "attempts": [
+        {
+          "job_id": "8abb4f15-38a5-4c83-8c22-c85470300d5d",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:55:18.301010+00:00",
+          "completed_at": "2026-10-21T03:55:47.658519+00:00",
+          "execution_bound": true,
+          "result_sha256": "2dcda34233eb6c2133f5f42088d81541eab52a7e8b55905210777683a2153d7a",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "missing_evidence"
+          ],
+          "result_text": "{\n  \"records\": [\n    {\n      \"version\": \"v1\",\n      \"day\": \"Monday\",\n      \"retention_days\": 7\n    },\n    {\n      \"version\": \"v2\",\n      \"day\": \"Friday\",\n      \"retention_days\": 14\n    }\n  ],\n  \"current_applicability\": \"UNKNOWN\",\n  \"missing_evidence\": \"applicability_date\",\n  \"source_versions_preserved\": true\n}"
+        },
+        {
+          "job_id": "098f3c3d-d16b-4d0b-8a0b-73597257069a",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:55:48.618712+00:00",
+          "completed_at": "2026-10-21T03:56:25.046362+00:00",
+          "execution_bound": true,
+          "result_sha256": "2dcda34233eb6c2133f5f42088d81541eab52a7e8b55905210777683a2153d7a",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "missing_evidence"
+          ],
+          "result_text": "{\n  \"records\": [\n    {\n      \"version\": \"v1\",\n      \"day\": \"Monday\",\n      \"retention_days\": 7\n    },\n    {\n      \"version\": \"v2\",\n      \"day\": \"Friday\",\n      \"retention_days\": 14\n    }\n  ],\n  \"current_applicability\": \"UNKNOWN\",\n  \"missing_evidence\": \"applicability_date\",\n  \"source_versions_preserved\": true\n}"
+        },
+        {
+          "job_id": "99a95d49-b924-413c-872f-b1f2cc1a3609",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:56:26.021202+00:00",
+          "completed_at": "2026-10-21T03:56:59.825858+00:00",
+          "execution_bound": true,
+          "result_sha256": "2dcda34233eb6c2133f5f42088d81541eab52a7e8b55905210777683a2153d7a",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "missing_evidence"
+          ],
+          "result_text": "{\n  \"records\": [\n    {\n      \"version\": \"v1\",\n      \"day\": \"Monday\",\n      \"retention_days\": 7\n    },\n    {\n      \"version\": \"v2\",\n      \"day\": \"Friday\",\n      \"retention_days\": 14\n    }\n  ],\n  \"current_applicability\": \"UNKNOWN\",\n  \"missing_evidence\": \"applicability_date\",\n  \"source_versions_preserved\": true\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "a111912f4e2533bd063e5c62bfd705690a71685d1cac9803a888d6bdb9640b6b",
+            "length": 352
+          }
+        },
+        "artifact.create": {
+          "executed": true,
+          "result": {
+            "artifact_id": "00a9e24d494147288a123c0ca0534338",
+            "sha256": "752307672e7b4a367da443a4dd783a37f3798e0e2d5c1ff72b789835b95de693",
+            "bytes": 120
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a10",
+      "role": "Data Lead",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a10:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:58:27.374045+00:00",
+        "completed_at": "2026-10-21T03:58:27.374118+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "cf9278a7209011270c06ed699c220fa5b0d08259f5cd40c1e105ebb31ab60117",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"combined_comparable_total\":null,\"common_denominator\":\"unique_initial_requests_excluding_retries\",\"definitions_comparable\":false,\"reconciliation_owner_check\":\"obtain_retry_counts_and_align_definitions\",\"team_a_reported_requests\":100,\"team_b_reported_requests\":100}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a10:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T03:58:27.374045+00:00",
+        "completed_at": "2026-10-21T03:58:27.374118+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "cf9278a7209011270c06ed699c220fa5b0d08259f5cd40c1e105ebb31ab60117",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"combined_comparable_total\":null,\"common_denominator\":\"unique_initial_requests_excluding_retries\",\"definitions_comparable\":false,\"reconciliation_owner_check\":\"obtain_retry_counts_and_align_definitions\",\"team_a_reported_requests\":100,\"team_b_reported_requests\":100}"
+      },
+      "attempts": [
+        {
+          "job_id": "b1c12e2c-8529-408c-9cb8-8633b3af21e1",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:57:00.389426+00:00",
+          "completed_at": "2026-10-21T03:57:25.809146+00:00",
+          "execution_bound": true,
+          "result_sha256": "5139dad3edb35d6ef4224783f37f30447e18551d7b0c7ae12a083cec45455e27",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "common_denominator",
+            "reconciliation_owner_check"
+          ],
+          "result_text": "{\n\"team_a_reported_requests\": 100,\n\"team_b_reported_requests\": 100,\n\"definitions_comparable\": false,\n\"combined_comparable_total\": null,\n\"common_denominator\": \"retries\",\n\"reconciliation_owner_check\": \"unknown\"\n}"
+        },
+        {
+          "job_id": "9b8deae1-5bf4-4722-a4b6-3e020cefedfc",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:57:26.681194+00:00",
+          "completed_at": "2026-10-21T03:57:53.346736+00:00",
+          "execution_bound": true,
+          "result_sha256": "5139dad3edb35d6ef4224783f37f30447e18551d7b0c7ae12a083cec45455e27",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "common_denominator",
+            "reconciliation_owner_check"
+          ],
+          "result_text": "{\n\"team_a_reported_requests\": 100,\n\"team_b_reported_requests\": 100,\n\"definitions_comparable\": false,\n\"combined_comparable_total\": null,\n\"common_denominator\": \"retries\",\n\"reconciliation_owner_check\": \"unknown\"\n}"
+        },
+        {
+          "job_id": "2e7d399e-be51-44ae-8fe4-2d2e5e05e316",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T03:57:54.051318+00:00",
+          "completed_at": "2026-10-21T03:58:26.355948+00:00",
+          "execution_bound": true,
+          "result_sha256": "5139dad3edb35d6ef4224783f37f30447e18551d7b0c7ae12a083cec45455e27",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "common_denominator",
+            "reconciliation_owner_check"
+          ],
+          "result_text": "{\n\"team_a_reported_requests\": 100,\n\"team_b_reported_requests\": 100,\n\"definitions_comparable\": false,\n\"combined_comparable_total\": null,\n\"common_denominator\": \"retries\",\n\"reconciliation_owner_check\": \"unknown\"\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "654d83f57d1cfe3eef6e735b00ef5da800ccafc6826062c74e3425d5b1085fc2",
+            "length": 362
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "trace_id": "941755d9-2554-4f46-80ef-1ec90c400470",
+        "target": "a12",
+        "handoffs": [
+          {
+            "event_id": "f003f861-8cf8-4b58-ac63-4ca0a929d9f8",
+            "trace_id": "941755d9-2554-4f46-80ef-1ec90c400470",
+            "timestamp": "2026-10-21T03:58:27.374696+00:00",
+            "sequence": 1,
+            "source_agent": "prime",
+            "target_agent": "a10",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          },
+          {
+            "event_id": "b85d26f0-8389-4126-aa65-157801463de3",
+            "trace_id": "941755d9-2554-4f46-80ef-1ec90c400470",
+            "timestamp": "2026-10-21T03:58:27.381600+00:00",
+            "sequence": 2,
+            "source_agent": "a10",
+            "target_agent": "a12",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          }
+        ],
+        "child_result": {
+          "agent": "a12",
+          "role": "Metrics and Analysis Agent",
+          "role_case": "role:normal_structured",
+          "case_version": "normal-role-structured-input.v1",
+          "response_contract_version": "normal-role-response-types.v5",
+          "job": {
+            "job_id": "deterministic-support:20261021T034828Z:a12:delegated",
+            "status": "completed",
+            "provider": "deterministic-role-support",
+            "model": "orqevia.source-bound-role-support.v1",
+            "started_at": "2026-10-21T04:00:02.496515+00:00",
+            "completed_at": "2026-10-21T04:00:02.496630+00:00",
+            "execution_bound": true,
+            "execution_kind": "DETERMINISTIC_SUPPORT",
+            "result_sha256": "65dc0cea093e9dd59783113d4c3d995e5292a89dcd0dd6a9e7b27df15f5e0974",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\"cause\":\"UNKNOWN\",\"failure_count_change\":\"UP\",\"failure_rate_change\":\"DOWN\",\"week1_failures\":10,\"week1_rate\":\"1/10\",\"week1_requests\":100,\"week2_failures\":15,\"week2_rate\":\"1/20\",\"week2_requests\":300}"
+          },
+          "deterministic_support": {
+            "job_id": "deterministic-support:20261021T034828Z:a12:delegated",
+            "status": "completed",
+            "provider": "deterministic-role-support",
+            "model": "orqevia.source-bound-role-support.v1",
+            "started_at": "2026-10-21T04:00:02.496515+00:00",
+            "completed_at": "2026-10-21T04:00:02.496630+00:00",
+            "execution_bound": true,
+            "execution_kind": "DETERMINISTIC_SUPPORT",
+            "result_sha256": "65dc0cea093e9dd59783113d4c3d995e5292a89dcd0dd6a9e7b27df15f5e0974",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\"cause\":\"UNKNOWN\",\"failure_count_change\":\"UP\",\"failure_rate_change\":\"DOWN\",\"week1_failures\":10,\"week1_rate\":\"1/10\",\"week1_requests\":100,\"week2_failures\":15,\"week2_rate\":\"1/20\",\"week2_requests\":300}"
+          },
+          "attempts": [
+            {
+              "job_id": "4094d45a-6232-4308-ad73-c8d3bcfc615e",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T03:58:27.439631+00:00",
+              "completed_at": "2026-10-21T03:58:55.109045+00:00",
+              "execution_bound": true,
+              "result_sha256": "e6e9d0e0d9d618b5b795545dc392f77f419a00648129219fa77b9e4ee70af7f1",
+              "oracle_pass": false,
+              "oracle_errors": [
+                "failure_rate_change",
+                "week1_rate",
+                "week2_rate"
+              ],
+              "result_text": "{\n\"week1_failures\": 10,\n\"week1_requests\": 100,\n\"week2_failures\": 15,\n\"week2_requests\": 300,\n\"week1_rate\": \"1.0/100\",\n\"week2_rate\": \"0.5/300\",\n\"failure_count_change\": \"UP\",\n\"failure_rate_change\": \"UP\",\n\"cause\": \"UNKNOWN\"\n}"
+            },
+            {
+              "job_id": "73888dec-3138-4e86-b9d9-66bf58cecd2a",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T03:58:55.843830+00:00",
+              "completed_at": "2026-10-21T03:59:27.575050+00:00",
+              "execution_bound": true,
+              "result_sha256": "306dca7794dfd26e3cc3c24a20999d268030b3b2d961a3949354a0e9dfa05457",
+              "oracle_pass": false,
+              "oracle_errors": [
+                "failure_rate_change",
+                "week1_rate",
+                "week2_rate"
+              ],
+              "result_text": "{\n\"week1_failures\": 10,\n\"week1_requests\": 100,\n\"week2_failures\": 15,\n\"week2_requests\": 300,\n\"week1_rate\": \"1/100\",\n\"week2_rate\": \"0.5/300\",\n\"failure_count_change\": \"UP\",\n\"failure_rate_change\": \"UP\",\n\"cause\": \"UNKNOWN\"\n}"
+            },
+            {
+              "job_id": "8f00d04c-d660-456a-886e-b16f3ce90989",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T03:59:28.233009+00:00",
+              "completed_at": "2026-10-21T04:00:02.384758+00:00",
+              "execution_bound": true,
+              "result_sha256": "7014683efce028074dc926b020a226315f7a36f81ee8b593c3b58ff0e2038de1",
+              "oracle_pass": false,
+              "oracle_errors": [
+                "failure_rate_change",
+                "week1_rate",
+                "week2_rate"
+              ],
+              "result_text": "{\n\"week1_failures\": 10,\n\"week1_requests\": 100,\n\"week2_failures\": 15,\n\"week2_requests\": 300,\n\"week1_rate\": \"1/100\",\n\"week2_rate\": \"15/300\",\n\"failure_count_change\": \"UP\",\n\"failure_rate_change\": \"UP\",\n\"cause\": \"UNKNOWN\"\n}"
+            }
+          ],
+          "attempt_count": 3,
+          "tools": {
+            "provided_context.read": {
+              "executed": true,
+              "result": {
+                "sha256": "2feca7492694173345d388f82d3a7c64272d63f132186988fc2be9b7818457e9",
+                "length": 266
+              }
+            }
+          },
+          "tool_errors": [],
+          "independent_review": "DETERMINISTIC_ROLE_ORACLE"
+        },
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a12",
+      "role": "Metrics and Analysis Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a12:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:01:34.542874+00:00",
+        "completed_at": "2026-10-21T04:01:34.542939+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "65dc0cea093e9dd59783113d4c3d995e5292a89dcd0dd6a9e7b27df15f5e0974",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"cause\":\"UNKNOWN\",\"failure_count_change\":\"UP\",\"failure_rate_change\":\"DOWN\",\"week1_failures\":10,\"week1_rate\":\"1/10\",\"week1_requests\":100,\"week2_failures\":15,\"week2_rate\":\"1/20\",\"week2_requests\":300}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a12:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:01:34.542874+00:00",
+        "completed_at": "2026-10-21T04:01:34.542939+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "65dc0cea093e9dd59783113d4c3d995e5292a89dcd0dd6a9e7b27df15f5e0974",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"cause\":\"UNKNOWN\",\"failure_count_change\":\"UP\",\"failure_rate_change\":\"DOWN\",\"week1_failures\":10,\"week1_rate\":\"1/10\",\"week1_requests\":100,\"week2_failures\":15,\"week2_rate\":\"1/20\",\"week2_requests\":300}"
+      },
+      "attempts": [
+        {
+          "job_id": "723794f5-0eca-4f30-a0c5-8a41f3982685",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:00:02.551998+00:00",
+          "completed_at": "2026-10-21T04:00:29.033179+00:00",
+          "execution_bound": true,
+          "result_sha256": "6158c67aadcc4ad82fb88def73306c977088a37144041bc41d2d815a6601dca3",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "failure_rate_change",
+            "week1_rate",
+            "week2_rate"
+          ],
+          "result_text": "{\n\"week1_failures\": 10,\n\"week1_requests\": 100,\n\"week2_failures\": 15,\n\"week2_requests\": 300,\n\"week1_rate\": \"1.0/10\",\n\"week2_rate\": \"0.5/10\",\n\"failure_count_change\": \"UP\",\n\"failure_rate_change\": \"UP\",\n\"cause\": \"UNKNOWN\"\n}"
+        },
+        {
+          "job_id": "20149bed-3438-43a4-93fe-2930ce1cacff",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:00:29.824249+00:00",
+          "completed_at": "2026-10-21T04:01:00.933841+00:00",
+          "execution_bound": true,
+          "result_sha256": "20af6e3ea727d8db63f35cbe6e732acdddd1af643cb5349a2d26cb8f1be89bb1",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "failure_rate_change",
+            "week2_rate"
+          ],
+          "result_text": "{\n\"week1_failures\": 10,\n\"week1_requests\": 100,\n\"week2_failures\": 15,\n\"week2_requests\": 300,\n\"week1_rate\": \"1/10\",\n\"week2_rate\": \"0.5/10\",\n\"failure_count_change\": \"UP\",\n\"failure_rate_change\": \"UP\",\n\"cause\": \"UNKNOWN\"\n}"
+        },
+        {
+          "job_id": "26957ff8-b9b9-43b6-8233-43d80752c264",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:01:01.168804+00:00",
+          "completed_at": "2026-10-21T04:01:34.162282+00:00",
+          "execution_bound": true,
+          "result_sha256": "5c3d63e500fed0a28c6a4310e8410de481c33e63ab83273c803174055b222b8e",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "failure_rate_change",
+            "week2_rate"
+          ],
+          "result_text": "{\n\"week1_failures\": 10,\n\"week1_requests\": 100,\n\"week2_failures\": 15,\n\"week2_requests\": 300,\n\"week1_rate\": \"1/10\",\n\"week2_rate\": \"1.5/10\",\n\"failure_count_change\": \"UP\",\n\"failure_rate_change\": \"UP\",\n\"cause\": \"UNKNOWN\"\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "2feca7492694173345d388f82d3a7c64272d63f132186988fc2be9b7818457e9",
+            "length": 266
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a13",
+      "role": "Forecast Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "2da1e375-bea2-4913-985e-00f63ed7de85",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:01:34.588099+00:00",
+        "completed_at": "2026-10-21T04:01:47.154947+00:00",
+        "execution_bound": true,
+        "result_sha256": "3338c5affcc8101a91d7226884ac3a30ea22cba589ec466b41c9af3e207da9c7",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n\"weekly_units\": [\n10,\n12,\n14\n],\n\"last_two_increments\": [\n2,\n2\n],\n\"next_period_estimate\": 16,\n\"method\": \"naive_linear_trend\",\n\"seasonality_evidence\": false,\n\"calibrated_confidence_bound_known\": false\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "2da1e375-bea2-4913-985e-00f63ed7de85",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:01:34.588099+00:00",
+          "completed_at": "2026-10-21T04:01:47.154947+00:00",
+          "execution_bound": true,
+          "result_sha256": "3338c5affcc8101a91d7226884ac3a30ea22cba589ec466b41c9af3e207da9c7",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n\"weekly_units\": [\n10,\n12,\n14\n],\n\"last_two_increments\": [\n2,\n2\n],\n\"next_period_estimate\": 16,\n\"method\": \"naive_linear_trend\",\n\"seasonality_evidence\": false,\n\"calibrated_confidence_bound_known\": false\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "d336c0ebfb22f7452e9145c6f7f1a9c1f14d2514e7d001b9c034404a46400aa1",
+            "length": 328
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a14",
+      "role": "Data Quality Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a14:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:03:06.686034+00:00",
+        "completed_at": "2026-10-21T04:03:06.686103+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "c9ede9dab33a9e6cf5e0bdac700e987d4d235a97b03ada6f37da38ca84099875",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"duplicate_ids\":[1],\"duplicate_row_indices\":[1],\"negative_amount_ids\":[2],\"negative_amount_row_indices\":[2],\"source_mutated\":false,\"validation\":\"FAIL\"}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a14:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:03:06.686034+00:00",
+        "completed_at": "2026-10-21T04:03:06.686103+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "c9ede9dab33a9e6cf5e0bdac700e987d4d235a97b03ada6f37da38ca84099875",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"duplicate_ids\":[1],\"duplicate_row_indices\":[1],\"negative_amount_ids\":[2],\"negative_amount_row_indices\":[2],\"source_mutated\":false,\"validation\":\"FAIL\"}"
+      },
+      "attempts": [
+        {
+          "job_id": "f37d37b8-16b6-4dd3-a133-0463e6c3548e",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:01:47.820551+00:00",
+          "completed_at": "2026-10-21T04:02:12.534666+00:00",
+          "execution_bound": true,
+          "result_sha256": "ab569df3b90aca5d48716fe4a208e78ae30cc9bce07b30e7acc89b43dd5dd81e",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "duplicate_row_indices"
+          ],
+          "result_text": "{\n\"duplicate_ids\": [\n1\n],\n\"negative_amount_ids\": [\n2\n],\n\"duplicate_row_indices\": [\n0,\n1\n],\n\"negative_amount_row_indices\": [\n2\n],\n\"source_mutated\": false,\n\"validation\": \"FAIL\"\n}"
+        },
+        {
+          "job_id": "aae9204d-762f-4489-ae95-55995db679d1",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:02:13.094566+00:00",
+          "completed_at": "2026-10-21T04:02:38.696906+00:00",
+          "execution_bound": true,
+          "result_sha256": "ab569df3b90aca5d48716fe4a208e78ae30cc9bce07b30e7acc89b43dd5dd81e",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "duplicate_row_indices"
+          ],
+          "result_text": "{\n\"duplicate_ids\": [\n1\n],\n\"negative_amount_ids\": [\n2\n],\n\"duplicate_row_indices\": [\n0,\n1\n],\n\"negative_amount_row_indices\": [\n2\n],\n\"source_mutated\": false,\n\"validation\": \"FAIL\"\n}"
+        },
+        {
+          "job_id": "cbef90ef-e1aa-4e7f-be6c-69f9be796b24",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:02:39.433360+00:00",
+          "completed_at": "2026-10-21T04:03:05.798269+00:00",
+          "execution_bound": true,
+          "result_sha256": "ab569df3b90aca5d48716fe4a208e78ae30cc9bce07b30e7acc89b43dd5dd81e",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "duplicate_row_indices"
+          ],
+          "result_text": "{\n\"duplicate_ids\": [\n1\n],\n\"negative_amount_ids\": [\n2\n],\n\"duplicate_row_indices\": [\n0,\n1\n],\n\"negative_amount_row_indices\": [\n2\n],\n\"source_mutated\": false,\n\"validation\": \"FAIL\"\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "01a32b9dce7ab7106fb40eb87c1d82ed8563d1be876b466f7ff3f0a96e43cf00",
+            "length": 330
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a15",
+      "role": "Engineering Lead",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a15:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:04:05.281759+00:00",
+        "completed_at": "2026-10-21T04:04:05.281864+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "9f88fe43338eb548808a35c7d27cbcfaa8655153703a5a40fadd1664c8ad1ccf",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"contract_accepted\":true,\"deployment_authorized\":false,\"implementation_allowed\":true,\"implementer\":\"Builder\",\"independent_review_required\":true,\"reviewer\":\"Verifier\"}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a15:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:04:05.281759+00:00",
+        "completed_at": "2026-10-21T04:04:05.281864+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "9f88fe43338eb548808a35c7d27cbcfaa8655153703a5a40fadd1664c8ad1ccf",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"contract_accepted\":true,\"deployment_authorized\":false,\"implementation_allowed\":true,\"implementer\":\"Builder\",\"independent_review_required\":true,\"reviewer\":\"Verifier\"}"
+      },
+      "attempts": [
+        {
+          "job_id": "8a8c2159-deab-4fd5-8243-bcfe8168a76e",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:03:06.729800+00:00",
+          "completed_at": "2026-10-21T04:03:24.033512+00:00",
+          "execution_bound": true,
+          "result_sha256": "e5d5b749fd8e446472089ea62ff865f339ca0fbc54a4b90819e8fd7cc9e9879b",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "independent_review_required"
+          ],
+          "result_text": "{\n\"implementer\": \"Builder\",\n\"reviewer\": \"Verifier\",\n\"contract_accepted\": true,\n\"implementation_allowed\": true,\n\"independent_review_required\": false,\n\"deployment_authorized\": false\n}"
+        },
+        {
+          "job_id": "1069a9c9-bb8e-4e98-b385-be187dadfc09",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:03:24.910699+00:00",
+          "completed_at": "2026-10-21T04:03:43.831005+00:00",
+          "execution_bound": true,
+          "result_sha256": "e5d5b749fd8e446472089ea62ff865f339ca0fbc54a4b90819e8fd7cc9e9879b",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "independent_review_required"
+          ],
+          "result_text": "{\n\"implementer\": \"Builder\",\n\"reviewer\": \"Verifier\",\n\"contract_accepted\": true,\n\"implementation_allowed\": true,\n\"independent_review_required\": false,\n\"deployment_authorized\": false\n}"
+        },
+        {
+          "job_id": "4c5c5645-6139-47cc-bdd5-60079513e39f",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:03:44.127095+00:00",
+          "completed_at": "2026-10-21T04:04:04.761654+00:00",
+          "execution_bound": true,
+          "result_sha256": "e5d5b749fd8e446472089ea62ff865f339ca0fbc54a4b90819e8fd7cc9e9879b",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "independent_review_required"
+          ],
+          "result_text": "{\n\"implementer\": \"Builder\",\n\"reviewer\": \"Verifier\",\n\"contract_accepted\": true,\n\"implementation_allowed\": true,\n\"independent_review_required\": false,\n\"deployment_authorized\": false\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "ebcc6a5fe25a82c0f5746082789429c25500e72e0bd2706ffe02f82e2181a680",
+            "length": 338
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "trace_id": "7a8d4734-6ecd-4989-b38f-e03fa3dafd42",
+        "target": "a16",
+        "handoffs": [
+          {
+            "event_id": "edddb3fb-56ed-4d61-a73f-29594b391ccd",
+            "trace_id": "7a8d4734-6ecd-4989-b38f-e03fa3dafd42",
+            "timestamp": "2026-10-21T04:04:05.282658+00:00",
+            "sequence": 1,
+            "source_agent": "prime",
+            "target_agent": "a15",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          },
+          {
+            "event_id": "2465e2d2-e97a-4271-b408-b582eda21d86",
+            "trace_id": "7a8d4734-6ecd-4989-b38f-e03fa3dafd42",
+            "timestamp": "2026-10-21T04:04:05.290626+00:00",
+            "sequence": 2,
+            "source_agent": "a15",
+            "target_agent": "a16",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          }
+        ],
+        "child_result": {
+          "agent": "a16",
+          "role": "Architecture Agent",
+          "role_case": "role:normal_structured",
+          "case_version": "normal-role-structured-input.v1",
+          "response_contract_version": "normal-role-response-types.v5",
+          "job": {
+            "job_id": "e3d5f339-a6da-44e8-a0c2-2605ea4e1ef6",
+            "status": "completed",
+            "provider": "ollama-deep",
+            "model": "gemma3:4b",
+            "started_at": "2026-10-21T04:04:05.444111+00:00",
+            "completed_at": "2026-10-21T04:04:16.081102+00:00",
+            "execution_bound": true,
+            "result_sha256": "001289ebf3233071196d2d59a20d9a08736839c074167688064337da611f44bc",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\"query_is_read_only\":true,\"source_timed_out\":true,\"cache_age_hours\":24,\"cache_fresh\":false,\"current_answer_known\":false,\"stale_fallback_allowed\":true,\"write_authorized\":false}"
+          },
+          "deterministic_support": null,
+          "attempts": [
+            {
+              "job_id": "e3d5f339-a6da-44e8-a0c2-2605ea4e1ef6",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T04:04:05.444111+00:00",
+              "completed_at": "2026-10-21T04:04:16.081102+00:00",
+              "execution_bound": true,
+              "result_sha256": "001289ebf3233071196d2d59a20d9a08736839c074167688064337da611f44bc",
+              "oracle_pass": true,
+              "oracle_errors": [],
+              "result_text": "{\"query_is_read_only\":true,\"source_timed_out\":true,\"cache_age_hours\":24,\"cache_fresh\":false,\"current_answer_known\":false,\"stale_fallback_allowed\":true,\"write_authorized\":false}"
+            }
+          ],
+          "attempt_count": 1,
+          "tools": {
+            "provided_context.read": {
+              "executed": true,
+              "result": {
+                "sha256": "3fa0f6e4924b1563b0fd15dea1b85b9f98460be578481c8c14415535fc984fac",
+                "length": 344
+              }
+            }
+          },
+          "tool_errors": [],
+          "independent_review": "DETERMINISTIC_ROLE_ORACLE"
+        },
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a16",
+      "role": "Architecture Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "b864ac62-9567-4a3b-b291-ff1905551530",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:04:16.640233+00:00",
+        "completed_at": "2026-10-21T04:04:25.953520+00:00",
+        "execution_bound": true,
+        "result_sha256": "001289ebf3233071196d2d59a20d9a08736839c074167688064337da611f44bc",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"query_is_read_only\":true,\"source_timed_out\":true,\"cache_age_hours\":24,\"cache_fresh\":false,\"current_answer_known\":false,\"stale_fallback_allowed\":true,\"write_authorized\":false}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "b864ac62-9567-4a3b-b291-ff1905551530",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:04:16.640233+00:00",
+          "completed_at": "2026-10-21T04:04:25.953520+00:00",
+          "execution_bound": true,
+          "result_sha256": "001289ebf3233071196d2d59a20d9a08736839c074167688064337da611f44bc",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\"query_is_read_only\":true,\"source_timed_out\":true,\"cache_age_hours\":24,\"cache_fresh\":false,\"current_answer_known\":false,\"stale_fallback_allowed\":true,\"write_authorized\":false}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "3fa0f6e4924b1563b0fd15dea1b85b9f98460be578481c8c14415535fc984fac",
+            "length": 344
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a17",
+      "role": "Implementation Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a17:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:06:02.826059+00:00",
+        "completed_at": "2026-10-21T04:06:02.826128+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "bbe34afed2717e0014f8849b04b8aad2a7258ddd08666bb92772328000b404a5",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"accepted_range\":\"0 <= n <= 9\",\"float_error\":true,\"negative_one_error\":true,\"nine_result\":9,\"string_error\":true,\"ten_error\":true,\"tests_executed\":false,\"type_guard\":\"type(n) is int\",\"zero_result\":0}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a17:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:06:02.826059+00:00",
+        "completed_at": "2026-10-21T04:06:02.826128+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "bbe34afed2717e0014f8849b04b8aad2a7258ddd08666bb92772328000b404a5",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"accepted_range\":\"0 <= n <= 9\",\"float_error\":true,\"negative_one_error\":true,\"nine_result\":9,\"string_error\":true,\"ten_error\":true,\"tests_executed\":false,\"type_guard\":\"type(n) is int\",\"zero_result\":0}"
+      },
+      "attempts": [
+        {
+          "job_id": "60d62629-f138-4401-8819-a417f7d07d2d",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:04:26.847505+00:00",
+          "completed_at": "2026-10-21T04:04:55.120144+00:00",
+          "execution_bound": true,
+          "result_sha256": "19ab928a330c295f14c7965dede9bf229d93220347d7696b586fcc0b5ea276a4",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "float_error",
+            "negative_one_error",
+            "string_error",
+            "type_guard"
+          ],
+          "result_text": "{\n\"type_guard\": \"type(n) is int and 0 <= n <= 9\",\n\"accepted_range\": \"0 <= n <= 9\",\n\"zero_result\": 0,\n\"nine_result\": 9,\n\"negative_one_error\": false,\n\"ten_error\": true,\n\"string_error\": false,\n\"float_error\": false,\n\"tests_executed\": false\n}"
+        },
+        {
+          "job_id": "1fcebdbb-a88e-4998-a05f-15a89acb91f1",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:04:56.183654+00:00",
+          "completed_at": "2026-10-21T04:05:27.452263+00:00",
+          "execution_bound": true,
+          "result_sha256": "19ab928a330c295f14c7965dede9bf229d93220347d7696b586fcc0b5ea276a4",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "float_error",
+            "negative_one_error",
+            "string_error",
+            "type_guard"
+          ],
+          "result_text": "{\n\"type_guard\": \"type(n) is int and 0 <= n <= 9\",\n\"accepted_range\": \"0 <= n <= 9\",\n\"zero_result\": 0,\n\"nine_result\": 9,\n\"negative_one_error\": false,\n\"ten_error\": true,\n\"string_error\": false,\n\"float_error\": false,\n\"tests_executed\": false\n}"
+        },
+        {
+          "job_id": "e4f8474c-c152-4fb6-8044-6a2070df06aa",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:05:27.536565+00:00",
+          "completed_at": "2026-10-21T04:06:01.792603+00:00",
+          "execution_bound": true,
+          "result_sha256": "19ab928a330c295f14c7965dede9bf229d93220347d7696b586fcc0b5ea276a4",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "float_error",
+            "negative_one_error",
+            "string_error",
+            "type_guard"
+          ],
+          "result_text": "{\n\"type_guard\": \"type(n) is int and 0 <= n <= 9\",\n\"accepted_range\": \"0 <= n <= 9\",\n\"zero_result\": 0,\n\"nine_result\": 9,\n\"negative_one_error\": false,\n\"ten_error\": true,\n\"string_error\": false,\n\"float_error\": false,\n\"tests_executed\": false\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "4e000ceedaa50254d3a67763fbcac6440576d39f8aaea75f0baed1f87f30f441",
+            "length": 417
+          }
+        },
+        "sandbox.wasm.execute": {
+          "executed": true,
+          "result": {
+            "result": 42,
+            "fuel_consumed": 4,
+            "source_sha256": "ceac3605e186c173b528323c119a047630643d60b2b49bd625c7a87005cb13a0",
+            "host_imports": 0,
+            "memory_limit_bytes": 1073741824
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a18",
+      "role": "Test and Verification Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a18:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:07:24.675543+00:00",
+        "completed_at": "2026-10-21T04:07:24.675638+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "caef966b6b0fdd3b042bf3033ec626cd9075dc54dc5f263281f6001fad67404a",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"buggy_zero_result\":false,\"corrected_condition\":\"n >= 0\",\"corrected_zero_result\":true,\"discriminating_assertion\":\"assert is_nonnegative(0) is True\",\"negative_one_result\":false,\"positive_one_result\":true,\"required_zero_result\":true,\"tests_executed\":false}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a18:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:07:24.675543+00:00",
+        "completed_at": "2026-10-21T04:07:24.675638+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "caef966b6b0fdd3b042bf3033ec626cd9075dc54dc5f263281f6001fad67404a",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"buggy_zero_result\":false,\"corrected_condition\":\"n >= 0\",\"corrected_zero_result\":true,\"discriminating_assertion\":\"assert is_nonnegative(0) is True\",\"negative_one_result\":false,\"positive_one_result\":true,\"required_zero_result\":true,\"tests_executed\":false}"
+      },
+      "attempts": [
+        {
+          "job_id": "ce9e4a60-46b3-4197-98be-5fdea3eb6693",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:06:02.876350+00:00",
+          "completed_at": "2026-10-21T04:06:27.241254+00:00",
+          "execution_bound": true,
+          "result_sha256": "b69969d04584a35da7eddb5de247ee66adb1c9dcb1ea9b0fdb64eb47e9ce3d94",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "discriminating_assertion",
+            "negative_one_result"
+          ],
+          "result_text": "{\"required_zero_result\":true, \"buggy_zero_result\":false, \"corrected_zero_result\":true, \"negative_one_result\":true, \"positive_one_result\":true, \"corrected_condition\":\"n >= 0\", \"discriminating_assertion\":\"assert is_nonnegative(0) is False\", \"tests_executed\":false}"
+        },
+        {
+          "job_id": "bcc41547-fe35-48ad-8fb3-ccb4f5f57e4b",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:06:28.162050+00:00",
+          "completed_at": "2026-10-21T04:06:55.059056+00:00",
+          "execution_bound": true,
+          "result_sha256": "eef96762eaca6e22f1057ac9545fa69685eafc6e883f47956b3321eb630d0e3f",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "discriminating_assertion"
+          ],
+          "result_text": "{\"required_zero_result\":true, \"buggy_zero_result\":false, \"corrected_zero_result\":true, \"negative_one_result\":false, \"positive_one_result\":true, \"corrected_condition\":\"n >= 0\", \"discriminating_assertion\":\"assert is_nonnegative(0) is False\", \"tests_executed\":false}"
+        },
+        {
+          "job_id": "d4e8dcef-6f87-4fad-9ed7-33e9d8d17402",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:06:55.412117+00:00",
+          "completed_at": "2026-10-21T04:07:23.735400+00:00",
+          "execution_bound": true,
+          "result_sha256": "eef96762eaca6e22f1057ac9545fa69685eafc6e883f47956b3321eb630d0e3f",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "discriminating_assertion"
+          ],
+          "result_text": "{\"required_zero_result\":true, \"buggy_zero_result\":false, \"corrected_zero_result\":true, \"negative_one_result\":false, \"positive_one_result\":true, \"corrected_condition\":\"n >= 0\", \"discriminating_assertion\":\"assert is_nonnegative(0) is False\", \"tests_executed\":false}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "0c70620c92f55a702cf4922a99d832009917cd8dba56924a19c247d1d29f7e75",
+            "length": 383
+          }
+        },
+        "sandbox.wasm.execute": {
+          "executed": true,
+          "result": {
+            "result": 42,
+            "fuel_consumed": 4,
+            "source_sha256": "ceac3605e186c173b528323c119a047630643d60b2b49bd625c7a87005cb13a0",
+            "host_imports": 0,
+            "memory_limit_bytes": 1073741824
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a19",
+      "role": "Reliability Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "deterministic-support:20261021T034828Z:a19:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:08:37.509421+00:00",
+        "completed_at": "2026-10-21T04:08:37.509558+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "a4be3c0e15b817e7ba58c1f0b96b265afa3debc7ab64be7df8e41f8a07511527",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"continuous_health_proven\":false,\"initial_check_pass\":false,\"latest_check_time\":\"10:01Z\",\"next_read_only_check\":\"sample_trend\",\"restart_authorized\":false,\"retry_check_pass\":true}"
+      },
+      "deterministic_support": {
+        "job_id": "deterministic-support:20261021T034828Z:a19:parent",
+        "status": "completed",
+        "provider": "deterministic-role-support",
+        "model": "orqevia.source-bound-role-support.v1",
+        "started_at": "2026-10-21T04:08:37.509421+00:00",
+        "completed_at": "2026-10-21T04:08:37.509558+00:00",
+        "execution_bound": true,
+        "execution_kind": "DETERMINISTIC_SUPPORT",
+        "result_sha256": "a4be3c0e15b817e7ba58c1f0b96b265afa3debc7ab64be7df8e41f8a07511527",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"continuous_health_proven\":false,\"initial_check_pass\":false,\"latest_check_time\":\"10:01Z\",\"next_read_only_check\":\"sample_trend\",\"restart_authorized\":false,\"retry_check_pass\":true}"
+      },
+      "attempts": [
+        {
+          "job_id": "c72a4169-6063-4aff-918d-0621d70dacdb",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:07:24.721708+00:00",
+          "completed_at": "2026-10-21T04:07:45.749001+00:00",
+          "execution_bound": true,
+          "result_sha256": "d6985e317f6d162af02ef88cc60400d6693073b12b19877a25e2bea497ba4989",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "latest_check_time"
+          ],
+          "result_text": "{\n\"initial_check_pass\": false,\n\"retry_check_pass\": true,\n\"continuous_health_proven\": false,\n\"restart_authorized\": false,\n\"latest_check_time\": \"10:00Z\",\n\"next_read_only_check\": \"sample_trend\"\n}"
+        },
+        {
+          "job_id": "b3937793-4b3c-495a-9e88-a0677de9111d",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:07:46.038440+00:00",
+          "completed_at": "2026-10-21T04:08:10.737573+00:00",
+          "execution_bound": true,
+          "result_sha256": "d6985e317f6d162af02ef88cc60400d6693073b12b19877a25e2bea497ba4989",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "latest_check_time"
+          ],
+          "result_text": "{\n\"initial_check_pass\": false,\n\"retry_check_pass\": true,\n\"continuous_health_proven\": false,\n\"restart_authorized\": false,\n\"latest_check_time\": \"10:00Z\",\n\"next_read_only_check\": \"sample_trend\"\n}"
+        },
+        {
+          "job_id": "6959f4ff-9c60-499f-918c-ff2aa2e9b9f2",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:08:11.264734+00:00",
+          "completed_at": "2026-10-21T04:08:36.853648+00:00",
+          "execution_bound": true,
+          "result_sha256": "d6985e317f6d162af02ef88cc60400d6693073b12b19877a25e2bea497ba4989",
+          "oracle_pass": false,
+          "oracle_errors": [
+            "latest_check_time"
+          ],
+          "result_text": "{\n\"initial_check_pass\": false,\n\"retry_check_pass\": true,\n\"continuous_health_proven\": false,\n\"restart_authorized\": false,\n\"latest_check_time\": \"10:00Z\",\n\"next_read_only_check\": \"sample_trend\"\n}"
+        }
+      ],
+      "attempt_count": 3,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "b229272533ffc91afb3b926997eb9d69f1a89921845d5177acf246d4e5047c1c",
+            "length": 487
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a20",
+      "role": "Commercial and Economic Lead",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "357837c1-c06f-407f-b61f-df0376846a37",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:08:37.602270+00:00",
+        "completed_at": "2026-10-21T04:08:53.778245+00:00",
+        "execution_bound": true,
+        "result_sha256": "690025e00221e5f87596c259317dca01c8718d19c84dfb352f5c1b1e22f25b44",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n\"units\": 100,\n\"unit_price_usd\": 20,\n\"unit_variable_cost_usd\": 12,\n\"revenue_usd\": 2000,\n\"variable_cost_usd\": 1200,\n\"contribution_usd\": 800,\n\"contribution_margin_percent\": 40,\n\"fixed_cost_known\": false,\n\"net_profit_known\": false,\n\"optimal_price_proven\": false\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "357837c1-c06f-407f-b61f-df0376846a37",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:08:37.602270+00:00",
+          "completed_at": "2026-10-21T04:08:53.778245+00:00",
+          "execution_bound": true,
+          "result_sha256": "690025e00221e5f87596c259317dca01c8718d19c84dfb352f5c1b1e22f25b44",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n\"units\": 100,\n\"unit_price_usd\": 20,\n\"unit_variable_cost_usd\": 12,\n\"revenue_usd\": 2000,\n\"variable_cost_usd\": 1200,\n\"contribution_usd\": 800,\n\"contribution_margin_percent\": 40,\n\"fixed_cost_known\": false,\n\"net_profit_known\": false,\n\"optimal_price_proven\": false\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "cb8bebbbda8dc62ed275ac1d158ea6086602acd6a7f82506b15b7e328b25cfcd",
+            "length": 294
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "trace_id": "62f63508-2eae-428e-b213-0ca3ab0f8c94",
+        "target": "a21",
+        "handoffs": [
+          {
+            "event_id": "540a8660-bc8d-4448-aae1-ea91648fc71b",
+            "trace_id": "62f63508-2eae-428e-b213-0ca3ab0f8c94",
+            "timestamp": "2026-10-21T04:08:53.879917+00:00",
+            "sequence": 1,
+            "source_agent": "prime",
+            "target_agent": "a20",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          },
+          {
+            "event_id": "86520bb9-7765-4299-a37f-2d5ecb0b2d6c",
+            "trace_id": "62f63508-2eae-428e-b213-0ca3ab0f8c94",
+            "timestamp": "2026-10-21T04:08:53.903814+00:00",
+            "sequence": 2,
+            "source_agent": "a20",
+            "target_agent": "a21",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          }
+        ],
+        "child_result": {
+          "agent": "a21",
+          "role": "Cost and Value Agent",
+          "role_case": "role:normal_structured",
+          "case_version": "normal-role-structured-input.v1",
+          "response_contract_version": "normal-role-response-types.v5",
+          "job": {
+            "job_id": "af20a0ad-8cdd-4fe1-af3e-0b56039af290",
+            "status": "completed",
+            "provider": "ollama-deep",
+            "model": "gemma3:4b",
+            "started_at": "2026-10-21T04:08:54.068586+00:00",
+            "completed_at": "2026-10-21T04:09:12.168327+00:00",
+            "execution_bound": true,
+            "result_sha256": "6dd1669053c66e0743a121603c06c5a7f82cee571af619e6e21a769bf27a0dda",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\n\"fixed_cost\": 100,\n\"variable_cost_per_unit\": 3,\n\"volume\": 20,\n\"total_variable_cost\": 60,\n\"total_cost\": 160,\n\"average_cost_per_unit\": \"8/1\",\n\"cost_at_next_unit\": 163,\n\"incremental_cost_next_unit\": 3,\n\"revenue_known\": false,\n\"profit_known\": false\n}"
+          },
+          "deterministic_support": null,
+          "attempts": [
+            {
+              "job_id": "af20a0ad-8cdd-4fe1-af3e-0b56039af290",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T04:08:54.068586+00:00",
+              "completed_at": "2026-10-21T04:09:12.168327+00:00",
+              "execution_bound": true,
+              "result_sha256": "6dd1669053c66e0743a121603c06c5a7f82cee571af619e6e21a769bf27a0dda",
+              "oracle_pass": true,
+              "oracle_errors": [],
+              "result_text": "{\n\"fixed_cost\": 100,\n\"variable_cost_per_unit\": 3,\n\"volume\": 20,\n\"total_variable_cost\": 60,\n\"total_cost\": 160,\n\"average_cost_per_unit\": \"8/1\",\n\"cost_at_next_unit\": 163,\n\"incremental_cost_next_unit\": 3,\n\"revenue_known\": false,\n\"profit_known\": false\n}"
+            }
+          ],
+          "attempt_count": 1,
+          "tools": {
+            "provided_context.read": {
+              "executed": true,
+              "result": {
+                "sha256": "a605fb4b3630401210518067158568885536a338745099e1c479b231c2f9d7b1",
+                "length": 220
+              }
+            }
+          },
+          "tool_errors": [],
+          "independent_review": "DETERMINISTIC_ROLE_ORACLE"
+        },
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a21",
+      "role": "Cost and Value Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "16ab1380-8b45-44a3-a9c0-27efe0dee332",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:09:12.507089+00:00",
+        "completed_at": "2026-10-21T04:09:29.091117+00:00",
+        "execution_bound": true,
+        "result_sha256": "6dd1669053c66e0743a121603c06c5a7f82cee571af619e6e21a769bf27a0dda",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n\"fixed_cost\": 100,\n\"variable_cost_per_unit\": 3,\n\"volume\": 20,\n\"total_variable_cost\": 60,\n\"total_cost\": 160,\n\"average_cost_per_unit\": \"8/1\",\n\"cost_at_next_unit\": 163,\n\"incremental_cost_next_unit\": 3,\n\"revenue_known\": false,\n\"profit_known\": false\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "16ab1380-8b45-44a3-a9c0-27efe0dee332",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:09:12.507089+00:00",
+          "completed_at": "2026-10-21T04:09:29.091117+00:00",
+          "execution_bound": true,
+          "result_sha256": "6dd1669053c66e0743a121603c06c5a7f82cee571af619e6e21a769bf27a0dda",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n\"fixed_cost\": 100,\n\"variable_cost_per_unit\": 3,\n\"volume\": 20,\n\"total_variable_cost\": 60,\n\"total_cost\": 160,\n\"average_cost_per_unit\": \"8/1\",\n\"cost_at_next_unit\": 163,\n\"incremental_cost_next_unit\": 3,\n\"revenue_known\": false,\n\"profit_known\": false\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "a605fb4b3630401210518067158568885536a338745099e1c479b231c2f9d7b1",
+            "length": 220
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a26",
+      "role": "Independent Quality Lead",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "2543aa99-4cd1-489e-a055-264e9bf38de8",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:09:29.598795+00:00",
+        "completed_at": "2026-10-21T04:09:40.307011+00:00",
+        "execution_bound": true,
+        "result_sha256": "2ff7b0b5b5072d0c1a09ecad29bc67def98343e71f1daeca4ec7c03dfb13ca43",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"required_checks\":20,\"passes\":19,\"failures\":1,\"observed_success_percent\":95,\"candidate_claim_percent\":100,\"candidate_claim_supported\":false,\"all_required_checks_pass\":false,\"certification_awarded\":false}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "2543aa99-4cd1-489e-a055-264e9bf38de8",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:09:29.598795+00:00",
+          "completed_at": "2026-10-21T04:09:40.307011+00:00",
+          "execution_bound": true,
+          "result_sha256": "2ff7b0b5b5072d0c1a09ecad29bc67def98343e71f1daeca4ec7c03dfb13ca43",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\"required_checks\":20,\"passes\":19,\"failures\":1,\"observed_success_percent\":95,\"candidate_claim_percent\":100,\"candidate_claim_supported\":false,\"all_required_checks_pass\":false,\"certification_awarded\":false}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "63a6c707518a1c6996979912bacf356dea5c5015eacd5b9a8ce8c4809efef09e",
+            "length": 400
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "trace_id": "0aab310b-4b84-453e-a384-c1afa8d2a683",
+        "target": "a28",
+        "handoffs": [
+          {
+            "event_id": "486cfe61-06d1-4924-8aea-50369aaee214",
+            "trace_id": "0aab310b-4b84-453e-a384-c1afa8d2a683",
+            "timestamp": "2026-10-21T04:09:40.797017+00:00",
+            "sequence": 1,
+            "source_agent": "prime",
+            "target_agent": "a26",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          },
+          {
+            "event_id": "cd2ec6d0-06fe-4f7e-9bd5-3a53fe157a88",
+            "trace_id": "0aab310b-4b84-453e-a384-c1afa8d2a683",
+            "timestamp": "2026-10-21T04:09:40.808327+00:00",
+            "sequence": 2,
+            "source_agent": "a26",
+            "target_agent": "a28",
+            "stage": "handoff:delegate",
+            "status": "allowed",
+            "allowed": true,
+            "reason": "open access mode"
+          }
+        ],
+        "child_result": {
+          "agent": "a28",
+          "role": "Risk Agent",
+          "role_case": "role:normal_structured",
+          "case_version": "normal-role-structured-input.v1",
+          "response_contract_version": "normal-role-response-types.v5",
+          "job": {
+            "job_id": "668062c5-5d46-4cbe-baf4-7140c0d93f4b",
+            "status": "completed",
+            "provider": "ollama-deep",
+            "model": "gemma3:4b",
+            "started_at": "2026-10-21T04:09:40.865552+00:00",
+            "completed_at": "2026-10-21T04:09:53.816714+00:00",
+            "execution_bound": true,
+            "result_sha256": "4215cbd3ad0d1723ebc9639bb7a5c8ed6cd4a92cb8ebe59d87efbd2c2ce2251d",
+            "oracle_pass": true,
+            "oracle_errors": [],
+            "result_text": "{\n\"a_likelihood\":\n2,\n\"a_impact\":\n5,\n\"b_likelihood\":\n4,\n\"b_impact\":\n2,\n\"a_score\":\n10,\n\"b_score\":\n8,\n\"priority\":\n\"A\",\n\"calibrated_probability_known\":\nfalse,\n\"residual_risk_known\":\nfalse\n}"
+          },
+          "deterministic_support": null,
+          "attempts": [
+            {
+              "job_id": "668062c5-5d46-4cbe-baf4-7140c0d93f4b",
+              "status": "completed",
+              "provider": "ollama-deep",
+              "model": "gemma3:4b",
+              "started_at": "2026-10-21T04:09:40.865552+00:00",
+              "completed_at": "2026-10-21T04:09:53.816714+00:00",
+              "execution_bound": true,
+              "result_sha256": "4215cbd3ad0d1723ebc9639bb7a5c8ed6cd4a92cb8ebe59d87efbd2c2ce2251d",
+              "oracle_pass": true,
+              "oracle_errors": [],
+              "result_text": "{\n\"a_likelihood\":\n2,\n\"a_impact\":\n5,\n\"b_likelihood\":\n4,\n\"b_impact\":\n2,\n\"a_score\":\n10,\n\"b_score\":\n8,\n\"priority\":\n\"A\",\n\"calibrated_probability_known\":\nfalse,\n\"residual_risk_known\":\nfalse\n}"
+            }
+          ],
+          "attempt_count": 1,
+          "tools": {
+            "provided_context.read": {
+              "executed": true,
+              "result": {
+                "sha256": "879ad4af829310cea733ece61c1eb3db215448d5abc5d81ea1faece1253204c6",
+                "length": 540
+              }
+            }
+          },
+          "tool_errors": [],
+          "independent_review": "DETERMINISTIC_ROLE_ORACLE"
+        },
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a28",
+      "role": "Risk Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "378ead3d-d313-4aa2-90eb-bcb4b999310a",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:09:54.190457+00:00",
+        "completed_at": "2026-10-21T04:10:09.132731+00:00",
+        "execution_bound": true,
+        "result_sha256": "4215cbd3ad0d1723ebc9639bb7a5c8ed6cd4a92cb8ebe59d87efbd2c2ce2251d",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\n\"a_likelihood\":\n2,\n\"a_impact\":\n5,\n\"b_likelihood\":\n4,\n\"b_impact\":\n2,\n\"a_score\":\n10,\n\"b_score\":\n8,\n\"priority\":\n\"A\",\n\"calibrated_probability_known\":\nfalse,\n\"residual_risk_known\":\nfalse\n}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "378ead3d-d313-4aa2-90eb-bcb4b999310a",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:09:54.190457+00:00",
+          "completed_at": "2026-10-21T04:10:09.132731+00:00",
+          "execution_bound": true,
+          "result_sha256": "4215cbd3ad0d1723ebc9639bb7a5c8ed6cd4a92cb8ebe59d87efbd2c2ce2251d",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\n\"a_likelihood\":\n2,\n\"a_impact\":\n5,\n\"b_likelihood\":\n4,\n\"b_impact\":\n2,\n\"a_score\":\n10,\n\"b_score\":\n8,\n\"priority\":\n\"A\",\n\"calibrated_probability_known\":\nfalse,\n\"residual_risk_known\":\nfalse\n}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "879ad4af829310cea733ece61c1eb3db215448d5abc5d81ea1faece1253204c6",
+            "length": 540
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    },
+    {
+      "agent": "a29",
+      "role": "Release Agent",
+      "role_case": "role:normal_structured",
+      "case_version": "normal-role-structured-input.v1",
+      "response_contract_version": "normal-role-response-types.v5",
+      "job": {
+        "job_id": "2fe7a2ff-af4d-4615-a322-de6d76f48e1a",
+        "status": "completed",
+        "provider": "ollama-deep",
+        "model": "gemma3:4b",
+        "started_at": "2026-10-21T04:10:09.983904+00:00",
+        "completed_at": "2026-10-21T04:10:24.202922+00:00",
+        "execution_bound": true,
+        "result_sha256": "c781091c2cd02175c6f747d60ad8789c2c6eb2225bb144d48d87f4d73440957f",
+        "oracle_pass": true,
+        "oracle_errors": [],
+        "result_text": "{\"source_revision\":\"abc123\",\"historical_deployment_revision\":\"def456\",\"source_tests_pass\":true,\"current_runtime_receipt_present\":false,\"historical_deployment_matches_source\":false,\"current_runtime_identity_verified\":false,\"release_binding_proven\":false,\"production_promotion_authorized\":false}"
+      },
+      "deterministic_support": null,
+      "attempts": [
+        {
+          "job_id": "2fe7a2ff-af4d-4615-a322-de6d76f48e1a",
+          "status": "completed",
+          "provider": "ollama-deep",
+          "model": "gemma3:4b",
+          "started_at": "2026-10-21T04:10:09.983904+00:00",
+          "completed_at": "2026-10-21T04:10:24.202922+00:00",
+          "execution_bound": true,
+          "result_sha256": "c781091c2cd02175c6f747d60ad8789c2c6eb2225bb144d48d87f4d73440957f",
+          "oracle_pass": true,
+          "oracle_errors": [],
+          "result_text": "{\"source_revision\":\"abc123\",\"historical_deployment_revision\":\"def456\",\"source_tests_pass\":true,\"current_runtime_receipt_present\":false,\"historical_deployment_matches_source\":false,\"current_runtime_identity_verified\":false,\"release_binding_proven\":false,\"production_promotion_authorized\":false}"
+        }
+      ],
+      "attempt_count": 1,
+      "tools": {
+        "provided_context.read": {
+          "executed": true,
+          "result": {
+            "sha256": "0e82bd8c254c0392d42a8d50a1dffbda2d7093ca5be08500b115c4f97e5425a3",
+            "length": 486
+          }
+        }
+      },
+      "tool_errors": [],
+      "independent_review": "DETERMINISTIC_ROLE_ORACLE",
+      "delegation": {
+        "required": false,
+        "passed": true
+      },
+      "tool_pass": true,
+      "delegation_pass": true,
+      "full_role_accepted": true,
+      "acceptance_reasons": []
+    }
+  ]
+}

@@ -34,6 +34,46 @@ If you are an AI agent updating this file:
 - Update this file on real events, not on a schedule.
 - Commit and push every legitimate update.
 
+## Exact-image role reacceptance - 21 October 2026
+
+This later record supersedes the 20 October "active first gate" statement for
+the current deployment. It is deliberately classified as **claimed, not
+independently checked** and does not move anything into "Verified."
+
+### Claimed, not independently checked
+
+- Source `db1ba2dc132fab10ebc10dbf87186d72d3b95511` was built and deployed as
+  `orqevia:sovereign-db1ba2dc132f`, image ID
+  `sha256:2351595837d52a35c1bf1bb0a645494936ab685fc4ecbe1a7c7e392df2e58296`.
+- The exact deployed source passed the complete structured role matrix
+  **21/21**, using `gemma3:4b` through `ollama-deep` in sequential mode with
+  concurrency 1. Ten roles passed directly from model output; eleven used the
+  reviewed source-bound deterministic support:
+  `a01, a04, a05, a09, a10, a12, a14, a15, a17, a18, a19`.
+- All 43 bounded parent-role attempts are retained. The unchanged semantic
+  oracle graded every result. The action ledger was durable, no role reported a
+  tool error, and all six delegated child cases passed.
+- Workflow `322faec3-68c4-4294-baba-2c3c81b26e45` completed 21/21 tasks with
+  zero failures, 21 handoffs and 6/6 artifacts. All six restart-memory checks
+  passed after the backend start time changed.
+- The subsequent queue-liveness run passed 21/21. The post-cleanup full-stack
+  canary passed 16/16. The public PWA returned HTTP 200 with an `OWNER` session,
+  and the immediate prior-image rollback configuration resolved successfully.
+- Runtime evidence:
+  `docs/evidence/ORQEVIA_RUNTIME_DB1BA2DC_20261021.json`,
+  `docs/evidence/FULL_STACK_CANARY_DB1BA2DC_20261021.json`, and
+  `docs/evidence/QUEUE_LIVENESS_DB1BA2DC_20261021.json`.
+- Role evidence:
+  `docs/evidence/ROLE_ACCEPTANCE_DB1BA2DC_20261021.json`,
+  `docs/evidence/ROLE_ACCEPTANCE_REGISTER_DB1BA2DC_20261021.json`, and
+  `docs/evidence/ROLE_ACCEPTANCE_DB1BA2DC_20261021.md`.
+
+### Known broken / open
+
+- The physical-device, Secure Boot, full-disk encryption, hardware-memory,
+  off-device backup/restore and pre-logon items remain open as recorded below.
+  This acceptance does not convert any of them to passed.
+
 ---
 
 ## Fast-model and God's Eye final deployment — 20 October 2026

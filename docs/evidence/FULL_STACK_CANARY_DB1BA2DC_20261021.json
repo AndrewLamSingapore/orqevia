@@ -1,0 +1,270 @@
+﻿{
+    "schema_version":  "orqevia.full-stack-canary.v1",
+    "observed_at_utc":  "2026-10-21T03:43:50.8669700Z",
+    "host":  "DESKTOP-27LKJ2V",
+    "overall":  "PASS",
+    "check_count":  16,
+    "failed_count":  0,
+    "checks":  [
+                   {
+                       "name":  "docker-engine",
+                       "status":  "PASS",
+                       "details":  [
+                                       "29.8.2",
+                                       {
+                                           "server":  "29.8.2"
+                                       }
+                                   ],
+                       "observed_at":  "2026-10-21T03:43:41.3664011Z"
+                   },
+                   {
+                       "name":  "persistent-containers",
+                       "status":  "PASS",
+                       "details":  [
+                                       {
+                                           "name":  "orqevia-epoch-20261016-backend-1",
+                                           "state":  "running",
+                                           "health":  "healthy",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-epoch-20261016-interface-1",
+                                           "state":  "running",
+                                           "health":  "healthy",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-epoch-20261016-ollama-1",
+                                           "state":  "running",
+                                           "health":  "healthy",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-coaching-coaching-1",
+                                           "state":  "running",
+                                           "health":  "healthy",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-intelligence-1",
+                                           "state":  "running",
+                                           "health":  "healthy",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-epoch-20261016-integration-gateway-1",
+                                           "state":  "running",
+                                           "health":  "NO_HEALTHCHECK",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-epoch-20261016-cloudflared-1",
+                                           "state":  "running",
+                                           "health":  "NO_HEALTHCHECK",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-epoch-20261016-trust-bootstrap-1",
+                                           "state":  "running",
+                                           "health":  "NO_HEALTHCHECK",
+                                           "restart":  "always"
+                                       },
+                                       {
+                                           "name":  "orqevia-geospatial-dev-database-1",
+                                           "state":  "running",
+                                           "health":  "healthy",
+                                           "restart":  "always"
+                                       }
+                                   ],
+                       "observed_at":  "2026-10-21T03:43:41.9199545Z"
+                   },
+                   {
+                       "name":  "backend-health",
+                       "status":  "PASS",
+                       "details":  {
+                                       "ok":  true
+                                   },
+                       "observed_at":  "2026-10-21T03:43:42.2694227Z"
+                   },
+                   {
+                       "name":  "cloud-inference-configuration",
+                       "status":  "PASS",
+                       "details":  {
+                                       "provider_id":  "hf-gemma-nano",
+                                       "circuit":  "CLOSED",
+                                       "readiness":  "READY"
+                                   },
+                       "observed_at":  "2026-10-21T03:43:42.6064961Z"
+                   },
+                   {
+                       "name":  "interface-local",
+                       "status":  "PASS",
+                       "details":  {
+                                       "path":  "/pwa/",
+                                       "http_status":  200,
+                                       "transport":  "HTTP"
+                                   },
+                       "observed_at":  "2026-10-21T03:43:42.6389275Z"
+                   },
+                   {
+                       "name":  "cloudflare-tunnel",
+                       "status":  "PASS",
+                       "details":  {
+                                       "registered_connection_lines":  4,
+                                       "tunnel_id":  "3da07a44-fd63-4511-89a4-06c1b133b5dd"
+                                   },
+                       "observed_at":  "2026-10-21T03:43:42.7698726Z"
+                   },
+                   {
+                       "name":  "cloudflare-open-access",
+                       "status":  "PASS",
+                       "details":  {
+                                       "http_status":  200,
+                                       "access":  "OPEN",
+                                       "role":  "OWNER"
+                                   },
+                       "observed_at":  "2026-10-21T03:43:43.3083967Z"
+                   },
+                   {
+                       "name":  "host-telemetry-freshness",
+                       "status":  "PASS",
+                       "details":  {
+                                       "age_seconds":  38.4,
+                                       "schema":  "orqevia.host-metrics.v1",
+                                       "boot_id":  "2026-10-21T00:18:12.5005570Z"
+                                   },
+                       "observed_at":  "2026-10-21T03:43:43.5013745Z"
+                   },
+                   {
+                       "name":  "model-runtime",
+                       "status":  "PASS",
+                       "details":  {
+                                       "required_models_present":  true
+                                   },
+                       "observed_at":  "2026-10-21T03:43:43.6223324Z"
+                   },
+                   {
+                       "name":  "fabrics-and-ai-scaffold-imports",
+                       "status":  "PASS",
+                       "details":  {
+                                       "agent_count":  21,
+                                       "module_count":  14
+                                   },
+                       "observed_at":  "2026-10-21T03:43:45.7270010Z"
+                   },
+                   {
+                       "name":  "agent-liveness-receipt",
+                       "status":  "PASS",
+                       "details":  {
+                                       "passed":  21,
+                                       "age_seconds":  760.7
+                                   },
+                       "observed_at":  "2026-10-21T03:43:45.7372110Z"
+                   },
+                   {
+                       "name":  "deployment-identity",
+                       "status":  "PASS",
+                       "details":  [
+                                       {
+                                           "name":  "orqevia-epoch-20261016-backend-1",
+                                           "image":  "sha256:2351595837d52a35c1bf1bb0a645494936ab685fc4ecbe1a7c7e392df2e58296",
+                                           "expected_image":  "orqevia:sovereign-db1ba2dc132f",
+                                           "image_id":  "sha256:2351595837d52a35c1bf1bb0a645494936ab685fc4ecbe1a7c7e392df2e58296",
+                                           "source":  "db1ba2dc132fab10ebc10dbf87186d72d3b95511",
+                                           "health":  "healthy"
+                                       },
+                                       {
+                                           "name":  "orqevia-epoch-20261016-interface-1",
+                                           "image":  "sha256:2351595837d52a35c1bf1bb0a645494936ab685fc4ecbe1a7c7e392df2e58296",
+                                           "expected_image":  "orqevia:sovereign-db1ba2dc132f",
+                                           "image_id":  "sha256:2351595837d52a35c1bf1bb0a645494936ab685fc4ecbe1a7c7e392df2e58296",
+                                           "source":  "db1ba2dc132fab10ebc10dbf87186d72d3b95511",
+                                           "health":  "healthy"
+                                       }
+                                   ],
+                       "observed_at":  "2026-10-21T03:43:45.9066282Z"
+                   },
+                   {
+                       "name":  "queue-runtime-and-cost",
+                       "status":  "PASS",
+                       "details":  {
+                                       "active_count":  0,
+                                       "daily_actual_cost_usd":  0.0,
+                                       "statuses":  {
+                                                        "cancelled":  81,
+                                                        "completed":  3368,
+                                                        "failed":  102
+                                                    }
+                                   },
+                       "observed_at":  "2026-10-21T03:43:46.1013210Z"
+                   },
+                   {
+                       "name":  "workflow-and-notebook-persistence",
+                       "status":  "PASS",
+                       "details":  {
+                                       "agents":  21,
+                                       "artifacts":  36,
+                                       "audit_events":  571,
+                                       "fts":  true,
+                                       "records":  203,
+                                       "run_id":  "322faec3-68c4-4294-baba-2c3c81b26e45",
+                                       "run_state":  "COMPLETED",
+                                       "versions":  224
+                                   },
+                       "observed_at":  "2026-10-21T03:43:46.3087271Z"
+                   },
+                   {
+                       "name":  "rollback-readiness",
+                       "status":  "PASS",
+                       "details":  {
+                                       "compose_overlay":  "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.rollback-7275620-before-db1.yml",
+                                       "compose_resolved_images":  2,
+                                       "environment_file":  "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\.env.rollback-cb01d50",
+                                       "source_revision":  "727562063a81d4e99ef4a5675d73d4a0447c4d78",
+                                       "image":  "orqevia:open-access-7275620-20261021",
+                                       "secondary_rollback_image":  "orqevia:orq002-workflow-20261020",
+                                       "image_id":  "sha256:e49df199869e339100d85afdab9484016eb3710e0ca70cbd1fed1435c9607094"
+                                   },
+                       "observed_at":  "2026-10-21T03:43:46.6605327Z"
+                   },
+                   {
+                       "name":  "permanent-supervision-tasks",
+                       "status":  "PASS",
+                       "details":  [
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Coaching-Supervisor",
+                                           "state":  "Running"
+                                       },
+                                       {
+                                           "name":  "ORQEVIA Pathway Auto-Start",
+                                           "state":  "Ready"
+                                       },
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Inference-KeepAlive",
+                                           "state":  "Ready"
+                                       },
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Agent-Liveness",
+                                           "state":  "Ready"
+                                       },
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Coaching-Collector",
+                                           "state":  "Running"
+                                       },
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Coaching-Watchdog",
+                                           "state":  "Ready"
+                                       },
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Runtime-Watchdog",
+                                           "state":  "Ready"
+                                       },
+                                       {
+                                           "name":  "ABEX-ORQEVIA-Full-Stack-Canary",
+                                           "state":  "Ready"
+                                       }
+                                   ],
+                       "observed_at":  "2026-10-21T03:43:50.8649559Z"
+                   }
+               ]
+}
