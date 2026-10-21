@@ -29,6 +29,12 @@ class InterfaceServerTests(unittest.TestCase):
             assert client.get('/api/interface/v1/health').status_code==404
             assert client.get('/docs').status_code==404
 
+    def test_root_redirects_to_canonical_pwa_without_following(self):
+        with TestClient(interface_server.app, base_url='https://testserver') as client:
+            response=client.get('/', follow_redirects=False)
+            assert response.status_code==307
+            assert response.headers['location']=='/pwa/'
+
     def test_http_is_rejected_before_request_body_validation(self):
         with TestClient(interface_server.app) as client:
             response=client.post('/interface/v1/objectives',headers={'X-Forwarded-Proto':'https'},json={})
