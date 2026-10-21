@@ -9,7 +9,7 @@
     "registry": {
       "path": "config/agent_registry.json",
       "version": "1.0.0",
-      "sha256": "dbeb03afaeceaf47e59645958b383e579597f10441a723f0d22375fbc5c208d6"
+      "sha256": "5c41c170f3e9e993ccccfa1e095fed5e7a054d8904f8e0f410cafad9a3015833"
     },
     "interface": {
       "path": "docs/interface-contract.v1.json",
