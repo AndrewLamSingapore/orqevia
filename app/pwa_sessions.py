@@ -23,7 +23,7 @@ DEVICE_COOKIE='__Host-JARVIS-Device'
 SCOPES=['identity.read','health.read','objective.submit','task.read','task.cancel','artifact.read']
 OWNER_SCOPES=[*SCOPES,'authority.owner.verify']
 SESSION_SECONDS=8*3600
-DEVICE_SECONDS=90*24*3600
+DEVICE_SECONDS=365*24*3600
 router=APIRouter(prefix='/pwa/api',tags=['pwa-session'])
 owner_router=APIRouter(prefix='/pwa/owner',tags=['local-pairing'])
 
