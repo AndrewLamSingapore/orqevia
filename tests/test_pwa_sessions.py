@@ -121,9 +121,13 @@ def test_public_origin_rejects_host_origin_csrf_proxy_and_identity_spoofs(setup,
 
 
 @pytest.mark.parametrize('invalid',[
-    'http://jarvis.lamjarvis.com','https://jarvis.lamjarvis.com/',
-    'https://jarvis.lamjarvis.com:443','https://jarvis.lamjarvis.com.evil.invalid','https://*.lamjarvis.com',
-    'https://jarvis.lamjarvis.com,https://evil.invalid',' https://jarvis.lamjarvis.com',
+    'http://jarvis.lamjarvis.com',
+    'https://jarvis.lamjarvis.com/path',
+    'https://jarvis.lamjarvis.com?q=1',
+    'https://user:pass@jarvis.lamjarvis.com',
+    'https://*.lamjarvis.com',
+    'https://jarvis.lamjarvis.com,https://evil.invalid,https://',
+    'https://jarvis.lamjarvis.com ,',
 ])
 def test_invalid_additional_origin_configuration_fails_closed(setup,monkeypatch,invalid):
     root,pwa,app,node=setup
@@ -131,6 +135,17 @@ def test_invalid_additional_origin_configuration_fails_closed(setup,monkeypatch,
     with TestClient(app,base_url=ORIGIN) as lan,TestClient(app,base_url=PUBLIC_ORIGIN) as public:
         assert lan.get('/pwa/').status_code==403
         assert public.get('/pwa/').status_code==403
+
+
+def test_config_driven_additional_origins_admit_configured_hosts(setup,monkeypatch):
+    root,pwa,app,node=setup
+    configured='https://jarvis.lamjarvis.com,https://orqevia.lamjarvis.com'
+    monkeypatch.setenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',configured)
+    assert pwa.pwa_origins()==(ORIGIN,'https://jarvis.lamjarvis.com','https://orqevia.lamjarvis.com')
+    with TestClient(app,base_url='https://orqevia.lamjarvis.com') as remote:
+        assert remote.get('/pwa/').status_code==200
+        state=remote.get('/pwa/api/session').json()
+        assert state['protocol']=='orqevia.interface.v1'
 
 
 def test_cross_site_top_level_navigation_can_load_only_the_unauthenticated_shell(setup):

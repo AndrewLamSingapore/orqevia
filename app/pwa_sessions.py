@@ -171,14 +171,39 @@ def safe_shell_navigation(request):
             and request.headers.get('sec-fetch-dest') in {'document','empty'})
 
 def pwa_origins():
-    primary=os.getenv('ORQEVIA_PWA_ORIGIN','').rstrip('/')
-    try:parsed=urlsplit(primary)
-    except ValueError:return ()
-    if parsed.scheme!='https' or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:return ()
-    additional=os.getenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS','')
-    # The public hostname is an explicit, single-origin opt-in, not a general host allowlist.
-    if additional not in {'','https://jarvis.lamjarvis.com'}:return ()
-    return (primary,additional) if additional else (primary,)
+    """Explicit https-only origin allowlist (config-driven, fail closed).
+
+    ORQEVIA_PWA_ORIGIN is the primary origin.
+    ORQEVIA_PWA_ADDITIONAL_ORIGINS is an optional comma-separated list of
+    additional bare https origins (for example the Cloudflare hostnames).
+    Every entry must be https with a host and no path, query, fragment or
+    userinfo. Malformed configuration yields an empty allowlist.
+    """
+    primary = os.getenv('ORQEVIA_PWA_ORIGIN', '').rstrip('/')
+    try:
+        parsed = urlsplit(primary)
+    except ValueError:
+        return ()
+    if (parsed.scheme != 'https' or not parsed.netloc or parsed.path
+            or parsed.query or parsed.fragment or parsed.username):
+        return ()
+    origins = [primary]
+    raw_additional = os.getenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS', '')
+    if raw_additional.strip():
+        for entry in raw_additional.split(','):
+            candidate = entry.strip().rstrip('/')
+            if not candidate:
+                return ()
+            try:
+                parsed = urlsplit(candidate)
+            except ValueError:
+                return ()
+            if (parsed.scheme != 'https' or not parsed.netloc or '*' in parsed.netloc or parsed.path
+                    or parsed.query or parsed.fragment or parsed.username):
+                return ()
+            if candidate not in origins:
+                origins.append(candidate)
+    return tuple(origins)
 
 
 def origin_valid(request,write=False):
