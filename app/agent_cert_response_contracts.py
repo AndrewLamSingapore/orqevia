@@ -37,7 +37,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 
-CONTRACT_VERSION = "normal-role-response-types.v5"
+CONTRACT_VERSION = "normal-role-response-types.v6"
 REGISTERED_ROLE_IDS = (
     "a01", "a02", "a04", "a05", "a06", "a07", "a09", "a10", "a12", "a13",
     "a14", "a15", "a16", "a17", "a18", "a19", "a20", "a21", "a26", "a28", "a29",
@@ -119,7 +119,13 @@ _CONTRACTS = {
             "source, without confusing total and per-day units. Compare the "
             "two reduced per-day ratios by cross multiplication; never infer "
             "efficiency from total points or project order. Return Alpha, Beta, "
-            "or TIE with the source's capitalization in all project-name fields."
+            "or TIE with the source's capitalization in all project-name fields. "
+            "Reduce every per-day ratio to lowest terms by dividing numerator "
+            "and denominator by their greatest common divisor, then write it as "
+            "numerator/denominator. A whole-number ratio keeps denominator 1, "
+            "and is never written as a bare integer, a decimal, or an unreduced "
+            "numerator/denominator pair. For example, a whole-number ratio "
+            "of 4/2 is simplified to 2/1."
         ),
     },
     "a02": {
@@ -134,7 +140,10 @@ _CONTRACTS = {
             "in the objective, not an array of task-detail objects. The three "
             "other fields belong at the root, alongside tasks. Determine "
             "checkability and authority from the actual stated objective and "
-            "source; a useful proposal does not create execution permission."
+            "source; a useful proposal does not create execution permission. "
+            "Preserve the objective's dependency order exactly: "
+            "validate_logs_and_service_map first, then synthesize_report, then "
+            "independent_review."
         ),
     },
     "a04": {
