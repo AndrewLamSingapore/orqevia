@@ -41,7 +41,7 @@ def fixtures():
         f"TEST 1.3 103.8 {now:%Y %m %d %H %M} MM 1.2 MM 0.4 MM MM MM 1000 MM 25 26\n"
     ).encode()
     news = (
-        "<rss><channel><item><title>Explicit synthetic headline</title><link>https://news.un.org/en/story/fixture</link>"
+        "<rss><channel><item><title>Explicit synthetic headline</title><link>https://www.consilium.europa.eu/en/press/press-releases/fixture</link>"
         f"<pubDate>{now:%a, %d %b %Y %H:%M:%S GMT}</pubDate></item></channel></rss>"
     ).encode()
     return {"aviation": aviation, "maritime": maritime, "geopolitical": news}
@@ -62,7 +62,8 @@ def test_source_parsers_validate_provenance_and_preserve_missing_measurements():
     records, _ = observations.parse_maritime(raw["maritime"])
     assert records[0]["wave_height_m"] == 0.4 and records[0]["sea_temperature_c"] == 26
     records, _ = observations.parse_news(raw["geopolitical"])
-    assert records[0]["source_url"].startswith("https://news.un.org/")
+    assert records[0]["source_url"].startswith("https://www.consilium.europa.eu/")
+    assert "European Union" in records[0]["attribution"]
     for body in (
         b"<!DOCTYPE x><rss/>",
         b"<rss><channel><item><link>https://private.invalid/</link></item></channel></rss>",

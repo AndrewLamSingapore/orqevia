@@ -37,10 +37,10 @@ CATALOG = {
         "scope": "MARINE_WEATHER_NOT_VESSEL_AIS",
     },
     "geopolitical": {
-        "provider": "UN News",
-        "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
-        "coverage": "UN international-news headlines. Published reporting, not independently adjudicated geopolitical facts.",
-        "scope": "INTERNATIONAL_NEWS_REFERENCE",
+        "provider": "Council of the European Union",
+        "url": "https://www.consilium.europa.eu/en/rss/pressreleases.ashx",
+        "coverage": "Council of the EU press-release headlines: EU policy reporting and attributed institutional positions, not independently adjudicated global facts.",
+        "scope": "EU_COUNCIL_PRESS_RELEASES",
     },
 }
 _refresh_lock = asyncio.Lock()
@@ -154,7 +154,7 @@ def parse_news(raw):
 
     for item in tree.findall("./channel/item")[:30]:
         link = item.findtext("link", "")
-        if urlsplit(link).scheme != "https" or urlsplit(link).hostname != "news.un.org":
+        if urlsplit(link).scheme != "https" or urlsplit(link).hostname != "www.consilium.europa.eu":
             raise ValueError("Unexpected news source link")
         stamp = parsedate_to_datetime(item.findtext("pubDate", ""))
         if stamp is None or stamp.tzinfo is None:
@@ -162,9 +162,13 @@ def parse_news(raw):
         published = stamp.astimezone(timezone.utc).isoformat()
         if _stamp(published) > time.time() + 300:
             raise ValueError("Future publication timestamp")
-        records.append(
-            {"title": item.findtext("title", "")[:300], "source_url": link[:1000], "published_at": published}
-        )
+        title = item.findtext("title", "")
+        if not title.strip() or len(title) > 1000 or len(link) > 2000:
+            raise ValueError("Invalid press-release title or link")
+        records.append({
+            "title": title, "source_url": link, "published_at": published,
+            "attribution": f"Council of the European Union. © European Union, {stamp.year}. Original headline.",
+        })
     if not tree.tag.endswith("rss") or not records:
         raise ValueError("Unrecognized or empty news schema")
     return records, max(r["published_at"] for r in records)
