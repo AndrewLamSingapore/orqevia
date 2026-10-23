@@ -142,7 +142,7 @@ def main():
     names.extend(['response_schema', 'role_structured_execution',
                   'agent_cert_structured_roles','agent_cert_structured_input_roles'])
     names.extend(['local_knowledge_boundary','workspace_capabilities','local_diagnostic_installation'])
-    names.extend(['pwa_open_access', 'lan_tls_repair'])
+    names.extend(['pwa_open_access', 'lan_tls_repair', 'intelligence_read_capacity'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

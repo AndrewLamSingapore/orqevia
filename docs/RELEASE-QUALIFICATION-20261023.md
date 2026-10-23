@@ -82,6 +82,21 @@ segments. Short classification, extraction and structured-output work may use
 1B; broader work retains 4B and its explicit quality limitations. N>1 remains
 unqualified. No model download or silent role/configuration change was made.
 
+A later runtime observation found an independently changed deep selection of
+`gemma3:12b`. It was preserved and measured separately: 8/8 bounded contracts,
+median wall time 9.198 seconds, minimum host RAM available 5,412 MiB, CPU-only.
+These short tasks do not establish general coding quality or maximum context.
+Native chat then reproduced a live configuration fault: at context 8192 it
+returned READY in 0.222 seconds; at the configured 16384 it timed out. The
+measured-context overlay restores 8192 without changing model roles, output
+limits or queue concurrency. Original failed jobs and receipts remain retained.
+
+Live navigation also exposed HTTP 429 on ordinary concurrent Intelligence reads.
+Its existing two-slot bound is retained; GET requests may queue for two seconds
+instead of being rejected after 50 ms. Mutation timing, authentication, body
+bounds and audit requirements remain unchanged. A real six-request ASGI burst
+regression verifies all reads succeed while peak execution stays at two.
+
 Full receipts, original failures, screenshots and hashes are retained locally in
 `operations/release-qualification-20261023` and the dated architecture assessment.
 Application publication, CI, deployment identity and live acceptance are recorded
