@@ -93,7 +93,10 @@ async def proxy(path: str, request: Request):
     if request.method == "POST":
         body = validate_body(body)
         try:
-            await asyncio.wait_for(_slot.acquire(), timeout=0.1)
+            # Short startup/readiness inference can overlap a newly admitted
+            # objective. Bound the wait without starting a second inference or
+            # making a normal service restart immediately fail the objective.
+            await asyncio.wait_for(_slot.acquire(), timeout=5)
         except TimeoutError:
             raise HTTPException(429, "Staging inference is already active") from None
     client = httpx.AsyncClient(trust_env=False, follow_redirects=False, timeout=httpx.Timeout(150, connect=3))

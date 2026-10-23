@@ -115,6 +115,7 @@ def prepare():
         "ORQEVIA_MODEL_KEEP_ALIVE": "2m",
         "ORQEVIA_PUBLIC_AGENT_TRACE": "0",
         "ORQEVIA_OBSERVATION_POLLING": "1",
+        "ORQEVIA_COLLECTIVE_ENABLED": "1",
         "ORQEVIA_HIGGSFIELD_ENABLED": "0",
     }
     interface_env = {
@@ -371,6 +372,7 @@ def refresh():
     services["knowledge"]["environment"]["ORQEVIA_LOCAL_GENERATION_URL"] = "http://ollama:11434"
     services["backend"]["networks"] = ["default", "frontend"]
     services["backend"]["environment"]["ORQEVIA_OBSERVATION_POLLING"] = "1"
+    services["backend"]["environment"]["ORQEVIA_COLLECTIVE_ENABLED"] = "1"
     nli = Path.home() / "orqevia-ai/models/nli-deberta-v3-base-standard-6c749ce3"
     if (nli / "model-manifest.json").is_file():
         services["knowledge"]["mem_limit"] = "3g"

@@ -40,6 +40,8 @@ from .workflow_bridge import router as workflow_bridge_router
 app.include_router(workflow_bridge_router)
 from .sovereign_plane_bridge import router as sovereign_plane_router
 app.include_router(sovereign_plane_router)
+from .collective_bridge import router as collective_board_router
+app.include_router(collective_board_router)
 from .public_site import router as public_router, PUBLIC, SHARED
 app.include_router(public_router)
 app.mount('/public-assets', StaticFiles(directory=str(PUBLIC / 'assets'), check_dir=False), name='public-assets')

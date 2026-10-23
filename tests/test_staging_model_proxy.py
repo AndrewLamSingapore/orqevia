@@ -1,5 +1,6 @@
 """Security fixtures for sharing local inference without administrative authority."""
 
+import asyncio
 import json
 from unittest.mock import patch
 
@@ -69,3 +70,36 @@ def test_staging_sanitizes_upstream_failure(upstream_status):
         with TestClient(proxy.app) as client:
             response = client.get("/api/tags")
     assert response.status_code == 503 and "credentials" not in response.text
+
+
+def test_brief_inference_overlap_waits_without_running_parallel_requests(monkeypatch):
+    actual_client = httpx.AsyncClient
+
+    async def scenario():
+        monkeypatch.setattr(proxy, "_slot", asyncio.Semaphore(1))
+        active, maximum = 0, 0
+
+        async def upstream(request):
+            nonlocal active, maximum
+            active += 1
+            maximum = max(maximum, active)
+            try:
+                await asyncio.sleep(0.2)
+                return httpx.Response(200, content=b'{"done":true}\n')
+            finally:
+                active -= 1
+
+        async with actual_client(transport=httpx.ASGITransport(app=proxy.app), base_url="http://stage") as client:
+            with patch.object(
+                proxy.httpx,
+                "AsyncClient",
+                side_effect=lambda **kw: actual_client(transport=httpx.MockTransport(upstream), **kw),
+            ):
+                body = {"model": "gemma3:12b", "prompt": "fixture"}
+                responses = await asyncio.gather(
+                    client.post("/api/chat", json=body), client.post("/api/chat", json=body)
+                )
+        assert [r.status_code for r in responses] == [200, 200]
+        assert maximum == 1
+
+    asyncio.run(scenario())

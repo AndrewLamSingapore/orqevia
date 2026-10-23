@@ -15,6 +15,18 @@ classification and 8/8 synthetic `gemma3:12b` contracts. These are scoped
 observations, not blanket agent competence, physical iPhone or L7 certification.
 See [the candidate design and qualification record](docs/ORQEVIA2-20261023.md).
 
+The Owner expanded the candidate to a local, governed collective Operations
+Board: source-mirrored lookup, attributed queue contributions, tracked questions,
+evidence puzzles and owned gap workflows. Isolated mechanism and security tests
+pass; this new feature still requires its own real-service staging and production
+acceptance. The preceding modernization passed 27 live staging journey checks.
+The supplied 21-role case workflow passed 21/21 with independent checking,
+bounded retries and calculation support; model-only first attempts were 17/21.
+This is a bounded workflow result, not full-role or L7 certification. Production
+activation is explicitly authorized after verification. Physical iPhone testing
+and the two UN 404 sources are parked by the Owner. Runtime and fixture evidence
+remain distinct; no Owner-only Verified record is changed.
+
 ## Live single-node release acceptance — 23 October 2026
 
 ### Claimed, not independently checked

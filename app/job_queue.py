@@ -574,8 +574,10 @@ class JobQueue:
 
 
 class WorkerPool:
-    def __init__(self, queue: JobQueue, providers: list[Provider], execute: Callable[[dict,Provider],dict]):
+    def __init__(self, queue: JobQueue, providers: list[Provider], execute: Callable[[dict,Provider],dict],
+                 on_complete: Callable[[str], None] | None = None):
         self.queue,self.providers,self.execute=queue,providers,execute
+        self.on_complete=on_complete
         self.stop_event=threading.Event(); self.threads:list[threading.Thread]=[]
 
     def start(self) -> None:
@@ -621,3 +623,16 @@ class WorkerPool:
                                 'job_type':job.get('task_class','auto'),'status':outcome}
                     record_counter('orqevia.agent.jobs',1,attributes)
                     record_duration('orqevia.agent.job.duration',(time.perf_counter()-started)*1000,attributes)
+            # The optional knowledge adapter runs only after the authoritative
+            # terminal transaction. Its outage cannot change execution status.
+            if self.on_complete is not None:
+                try:
+                    if self.queue.get(job['id'])['status'] == 'completed':
+                        self.on_complete(job['id'])
+                except Exception:
+                    record_counter('orqevia.collective.publication_failures',1,{'component':'collective-board'})
+                    try:
+                        with self.queue.lock,self.queue.connect() as connection:
+                            self.queue._event(connection,job['id'],'collective_publication_unavailable',{'retry':'bounded_reconciliation'})
+                    except Exception:
+                        pass
