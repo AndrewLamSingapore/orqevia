@@ -40,7 +40,7 @@ SECRET_PATTERNS = (
 )
 IDENTIFIER = re.compile(r"^[A-Za-z0-9_.:-]{1,160}$")
 SAFE_ADAPTERS = frozenset({"reindex_notebooks"})
-OBSERVATION_ADAPTERS = frozenset({"queue_inference", "fabric_probe"})
+OBSERVATION_ADAPTERS = frozenset({"queue_inference", "fabric_probe", "owner_mlp_reference"})
 GAP_NEXT = {
     "DETECTED": {"TRIAGED"},
     "TRIAGED": {"ASSIGNED"},

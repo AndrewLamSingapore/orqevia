@@ -195,3 +195,23 @@ def test_gateway_sanitizes_untrusted_error_body(environment):
         response = client.get("/interface/v1/collective/status", headers={"Cookie": pwa_sessions.COOKIE + "=" + COOKIE})
         client.close()
     assert response.status_code == 422 and "SECRET_UNTRUSTED_INPUT" not in response.text
+
+
+def test_mlp_owner_inference_evidence_scope_input_and_trace_binding(environment):
+    _, client = environment
+    url = '/api/collective/v1/fabrics/mlp/infer'
+    body = {'rows':[{'x':.5}],'trace_id':'fixture-numeric-inference'}
+    assert client.post(url,json=body).status_code==401
+    assert client.post(url,headers={**headers(),'X-ORQEVIA-Owner':'wrong'},json=body).status_code==403
+    response = client.post(url,headers=headers(),json=body)
+    assert response.status_code==200
+    result=response.json()['data']
+    assert result['grants_agent_authority'] is False and result['evidence_id']
+    evidence=client.get('/api/collective/v1/lookup',headers=headers(),params={'kind':'evidence','id':result['evidence_id']}).json()['data']
+    assert evidence['data']['content']['artifact_hash']==result['artifact_hash']
+    assert 'rows' not in evidence['data']['content']
+    assert client.post(url,headers=headers(),json=body).json()['data']['evidence_id']==result['evidence_id']
+    assert client.post(url,headers=headers(),json={**body,'rows':[{'x':1.5}]}).status_code==409
+    assert client.post(url,headers=headers(),json={**body,'rows':[{'x':9.0}]}).status_code==422
+    assert client.post(url,headers=headers(),json={**body,'role':'SYSTEM'}).status_code==422
+    assert client.get('/api/collective/v1/fabrics/mlp',headers=headers()).status_code==200

@@ -147,6 +147,7 @@ def main():
     names.append('staging_model_proxy')
     names.extend(['observation_integrations', 'semantic_entailment'])
     names.extend(['collective_intelligence', 'collective_runtime', 'collective_repair', 'collective_api'])
+    names.append('fabric_adapters')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

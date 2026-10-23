@@ -249,3 +249,42 @@ async def repair_notebook_index(request: Request):
         return _response(request, await asyncio.to_thread(repair_notebook_index, principal, **body.model_dump()))
     except (CollectiveError, OSError, sqlite3.Error, RuntimeError) as error:
         _failure(error)
+
+
+class MLPInferenceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    rows: list[dict[str, float]] = Field(min_length=1, max_length=32)
+    trace_id: str = Field(min_length=8, max_length=96, pattern=r"^[A-Za-z0-9_.:-]+$")
+
+
+@router.get("/fabrics/mlp")
+def mlp_status(request: Request):
+    _principal(request)
+    from .fabric_adapters import mlp_observation
+
+    try:
+        return _response(request, mlp_observation())
+    except (ValueError, OSError, RuntimeError):
+        raise HTTPException(503, "Reviewed MLP reference unavailable") from None
+
+
+@router.post("/fabrics/mlp/infer")
+async def mlp_inference(request: Request):
+    principal = _principal(request)
+    body = await _body(request, MLPInferenceRequest)
+    from .fabric_adapters import mlp_infer
+    from .collective_runtime import _execution, get_store
+    from .collective_intelligence import digest
+
+    try:
+        result = await asyncio.to_thread(mlp_infer, body.rows, body.trace_id)
+        evidence = _execution(get_store(),adapter="owner_mlp_reference",scope={"model_id":result["model_id"]},
+            execution_id="mlp:"+body.trace_id,source="authenticated-owner-reference-inference",
+            content={"model_id":result["model_id"],"artifact_hash":result["artifact_hash"],
+                     "input_sha256":digest(body.rows),"output_sha256":digest(result["output"]),
+                     "owner_actor":principal.actor_id,"qualification_scope":"SYNTHETIC_QUADRATIC_REFERENCE_ONLY"})
+        return _response(request,{**result,"evidence_id":evidence["id"]})
+    except ValueError:
+        raise HTTPException(422, "Invalid bounded reference input or artifact") from None
+    except (CollectiveError, OSError, sqlite3.Error, RuntimeError) as error:
+        _failure(error)
