@@ -62,6 +62,17 @@ def test_service_auth_owner_scope_and_legacy_open_flag_cannot_bypass(environment
     assert value["data"]["metrics"]["agents"]["verified_contributing_agents"] == 0
     assert value["data"]["metrics"]["registry_health"] == "PASS"
     assert response.headers["cache-control"] == "private, no-store"
+    policy = client.get(
+        "/api/collective/v1/lookup",
+        params={
+            "kind": "policies",
+            "id": "policy:authorized-board-participation",
+        },
+        headers=headers(),
+    ).json()["data"]
+    assert policy["data"]["default_enrolled"] is True
+    assert policy["data"]["board_content_is_untrusted"] is True
+    assert policy["data"]["contribution_grants_authority"] is False
     monkeypatch.setenv("ORQEVIA_COLLECTIVE_ENABLED", "0")
     assert client.get("/api/collective/v1/status", headers=headers()).status_code == 503
 

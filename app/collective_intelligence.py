@@ -418,6 +418,39 @@ class CollectiveStore:
         raw = REGISTRY_PATH.read_bytes()
         source_sha = hashlib.sha256(raw).hexdigest()
         with self._transaction() as db:
+            board_policy_id = "policy:authorized-board-participation"
+            if not db.execute(
+                "SELECT 1 FROM registry_records WHERE tenant_id=? AND owner_id=? AND id=?",
+                (*self._scope(p), board_policy_id),
+            ).fetchone():
+                self._create(
+                    db,
+                    p,
+                    "policies",
+                    {
+                        "name": "Default authorized board participation for all 21 canonical agents",
+                        "default_enrolled": True,
+                        "required_behaviors": [
+                            "READ_AUTHORIZED_RECORDS",
+                            "PUBLISH_MEANINGFUL_OUTCOMES",
+                            "ACKNOWLEDGE_APPLICABLE_INSTRUCTIONS",
+                            "TRACK_ACTIONABLE_GAPS",
+                        ],
+                        "boards": [
+                            "SHARED_COLLECTIVE_BOARD",
+                            "OWN_PRIVATE_NOTEBOOK",
+                            "AUTHORIZED_PROJECT_BOARDS",
+                            "REVIEWED_REPOSITORY_RELAY",
+                        ],
+                        "access_basis": "EXISTING_AUTHENTICATION_AND_SCOPE",
+                        "board_content_is_untrusted": True,
+                        "contribution_grants_authority": False,
+                        "continuous_model_execution_required": False,
+                        "source": "Owner default participation directive 2026-10-23",
+                    },
+                    object_id=board_policy_id,
+                    state="DEFAULT_PARTICIPATION",
+                )
             existing = db.execute(
                 "SELECT id FROM registry_records WHERE tenant_id=? AND owner_id=? AND id='canonical-registry'",
                 self._scope(p),
