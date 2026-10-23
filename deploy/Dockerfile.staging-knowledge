@@ -1,7 +1,8 @@
-ARG BASE_IMAGE=orqevia:osip-candidate-20261023
+ARG BASE_IMAGE=orqevia:baseline-98b2537-20261023
 FROM ${BASE_IMAGE}
 # Same existing knowledge implementation, with its optional pinned CPU encoder.
 # No generative-model download, Torch installation or production package change.
 RUN pip install --no-cache-dir onnxruntime==1.31.0 faiss-cpu==1.15.1 transformers==5.20.1
+COPY app ./app
 ENV USE_TORCH=0 USE_TF=0 TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1
 CMD ["python", "-B", "-m", "uvicorn", "app.local_knowledge_service:app", "--host", "0.0.0.0", "--port", "8150", "--no-proxy-headers"]

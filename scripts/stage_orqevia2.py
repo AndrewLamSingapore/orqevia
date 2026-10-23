@@ -7,6 +7,7 @@ outside Git. The generated Compose file must not be published or printed.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import ipaddress
 import json
@@ -123,6 +124,9 @@ def prepare():
         "ORQEVIA_BACKEND_BASE_URL": "http://backend:8000",
         "ORQEVIA_INTERFACE_HOST_ID": "ABEX-OSIP-ISOLATED-STAGE",
         "ORQEVIA_INTERFACE_SPKI_SHA256": pin,
+        "ORQEVIA_INTERFACE_PUBLIC_KEY": base64.b64encode(
+            leaf.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+        ).decode(),
         "ORQEVIA_INTERFACE_RUNTIME_VERSION": "2.0-candidate",
     }
 
@@ -317,6 +321,13 @@ def refresh():
         )
     services["interface"]["networks"] = ["default", "frontend"]
     services["interface"]["ports"] = ["192.168.1.23:9443:8443"]
+    production_env = dict(
+        entry.split("=", 1) for entry in inspect("orqevia-epoch-20261016-interface-1")["Config"]["Env"]
+    )
+    public_key = production_env.get("ORQEVIA_INTERFACE_PUBLIC_KEY", "")
+    if not public_key or "PRIVATE" in public_key:
+        raise SystemExit("Verified public host identity is unavailable")
+    services["interface"]["environment"]["ORQEVIA_INTERFACE_PUBLIC_KEY"] = public_key
     services["ollama"] = {
         "image": "orqevia:osip-candidate-20261023",
         "command": [

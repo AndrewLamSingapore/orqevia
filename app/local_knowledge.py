@@ -100,6 +100,13 @@ class KnowledgeEngine:
         import faiss
         faiss.omp_set_num_threads(2)
         index_path,records_path,docs_path=self._files()
+        # A genuinely new private store has no observations yet. Represent that
+        # state in memory; never seed synthetic documents or replace a partial
+        # or damaged preserved index. The first authorized ingest commits it.
+        if (not (self.store/'CURRENT.json').exists() and not index_path.exists()
+                and not records_path.exists() and not self.documents.exists()):
+            dimension=self._embed(['ORQEVIA embedding dimension check']).shape[1]
+            return faiss.IndexFlatIP(dimension),[],[]
         index=faiss.read_index(str(index_path))
         records=json.loads(records_path.read_text(encoding='utf-8-sig'))
         if not isinstance(records,list) or index.ntotal!=len(records) or not 0<len(records)<=MAX_CHUNKS:
@@ -247,6 +254,7 @@ class KnowledgeEngine:
         import faiss
         with self.lock:
             index,records,documents=self._load()
+            if not records:return {'status':'EMPTY','chunks':0,'previous_generations_preserved':True}
             vectors=self._embed([r['text'] for r in records])
             if vectors.shape[1]!=index.d:raise ValueError('Embedding dimension mismatch')
             updated=faiss.IndexFlatIP(index.d);updated.add(vectors)
