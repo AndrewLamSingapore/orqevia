@@ -95,14 +95,15 @@ def device_state(request):
 def device(request):return device_state(request)[1]
 
 def access_mode():
-    """Owner directive 2026-10-16: default to one-tap, code-free access.
+    """Require established device trust unless open admission is explicit.
 
     'open'    - the session endpoint admits this browser without any code.
-    'pairing' - the historical pairing-code trust gate.
-    Unknown values fail closed to 'pairing'."""
+    'pairing' - the pairing-code trust gate for an untrusted browser.
+    Missing or unknown values fail closed to 'pairing'. Trusted devices keep
+    their existing silent session refresh without requiring another code."""
     if open_access.enabled():
         return 'open'
-    mode=os.getenv('ORQEVIA_PWA_ACCESS_MODE','open').strip().lower()
+    mode=os.getenv('ORQEVIA_PWA_ACCESS_MODE','pairing').strip().lower()
     return mode if mode in {'open','pairing'} else 'pairing'
 
 def _auto_admit(request):

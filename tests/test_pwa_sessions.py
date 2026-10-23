@@ -15,7 +15,7 @@ HEADERS={'Origin':ORIGIN,'X-ORQEVIA-PWA':'1'}
 def setup(monkeypatch,tmp_path):
     root=tmp_path/'pwa-fixture';root.mkdir()
     monkeypatch.setenv('ORQEVIA_DATA_DIR',str(root));monkeypatch.setenv('ORQEVIA_PWA_ORIGIN',ORIGIN)
-    monkeypatch.setenv('ORQEVIA_PWA_ACCESS_MODE','pairing')  # gate machinery covered here; open default in test_pwa_open_access.py
+    monkeypatch.setenv('ORQEVIA_PWA_ACCESS_MODE','pairing')  # Explicit open admission is covered in test_pwa_open_access.py.
     monkeypatch.delenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS',raising=False)
     monkeypatch.setenv('ORQEVIA_SPINE_TOKEN','fixture-owner-credential-never-production')
     from app import pwa_sessions as pwa,interface_contract,interface_node
@@ -299,10 +299,13 @@ def test_existing_unlinked_session_not_broadened_by_environment(setup,monkeypatc
         monkeypatch.setenv('ORQEVIA_PWA_OWNER_ACCOUNT_ID','owner:fixture')
         assert 'owner_account_id' not in pwa.client_policy(response.json()['clientId'])
 
-def test_durable_device_refresh_preserves_identity_role_and_running_task(setup):
+@pytest.mark.parametrize('explicit_mode',[True,False])
+def test_durable_device_refresh_preserves_identity_role_and_running_task(setup,monkeypatch,explicit_mode):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:
         enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];device_cookie=client.cookies.get(pwa.DEVICE_COOKIE)
+        if not explicit_mode:
+            monkeypatch.delenv('ORQEVIA_PWA_ACCESS_MODE',raising=False)
         with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
         refreshed=client.get('/pwa/api/session')
         assert refreshed.status_code==200 and refreshed.json()['authenticated'] is True
