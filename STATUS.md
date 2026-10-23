@@ -1,5 +1,20 @@
 # STATUS.md — Portfolio status record
 
+## ORQEVIA 2.0 candidate — 23 October 2026
+
+### Claimed, not independently checked
+
+An isolated candidate adds six public product pages, shared dark/light design
+tokens, responsive workspace navigation and a bounded OSIP adapter over the
+existing registry, model catalog, objective queue and Stable Spine approval
+store. Production remains on application `98b2537` / image `026ff681` while
+the combined candidate is staged. No Owner-only Verified section is changed.
+Fresh host receipts record strict TLS, the authenticated objective-to-evidence
+journey, 21/21 sequential agent-route queue jobs, one bounded Hugging Face
+classification and 8/8 synthetic `gemma3:12b` contracts. These are scoped
+observations, not blanket agent competence, physical iPhone or L7 certification.
+See [the candidate design and qualification record](docs/ORQEVIA2-20261023.md).
+
 ## Live single-node release acceptance — 23 October 2026
 
 ### Claimed, not independently checked

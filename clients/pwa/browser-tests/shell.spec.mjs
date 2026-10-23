@@ -28,7 +28,8 @@ test("mobile shell has safe in-flow controls and no horizontal overflow", async 
   await expect(page.locator(".desktop-navigation")).toBeHidden();
   await expectNoHorizontalOverflow(page);
 
-  await page.locator('.mobile-navigation [data-view="agents"]').click();
+  await page.locator('#mobile-more-open').click();
+  await page.locator('#mobile-more-dialog [data-view="agents"]').click();
   await expect(page.locator("#capability-view")).toBeVisible();
   await expect(page.locator("#capability-title")).toHaveText("Agents");
   await expectNoHorizontalOverflow(page);

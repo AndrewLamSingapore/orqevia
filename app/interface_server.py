@@ -6,7 +6,7 @@ surface does not start a second pool or create a new Registry/queue authority.
 """
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from .interface_contract import router
@@ -38,14 +38,16 @@ from .orqevia_bridge import router as intelligence_bridge_router
 app.include_router(intelligence_bridge_router)
 from .workflow_bridge import router as workflow_bridge_router
 app.include_router(workflow_bridge_router)
+from .sovereign_plane_bridge import router as sovereign_plane_router
+app.include_router(sovereign_plane_router)
+from .public_site import router as public_router, PUBLIC, SHARED
+app.include_router(public_router)
+app.mount('/public-assets', StaticFiles(directory=str(PUBLIC / 'assets'), check_dir=False), name='public-assets')
+app.mount('/design', StaticFiles(directory=str(SHARED), check_dir=False), name='shared-design')
+app.mount('/pwa/design', StaticFiles(directory=str(SHARED), check_dir=False), name='pwa-shared-design')
+_clients_pwa = Path(__file__).resolve().parent.parent / 'clients' / 'pwa'
 app.mount('/pwa', StaticFiles(directory=os.getenv('ORQEVIA_PWA_STATIC_DIR',
-    str(Path(__file__).with_name('pwa_static'))), html=True, check_dir=False), name='pwa')
-
-
-@app.get('/', include_in_schema=False)
-async def root_redirect():
-    """Send legacy and previously installed clients to the canonical PWA."""
-    return RedirectResponse('/pwa/', status_code=307)
+    str(_clients_pwa if _clients_pwa.is_dir() else Path(__file__).with_name('pwa_static'))), html=True, check_dir=False), name='pwa')
 
 PROTOCOL = 'orqevia.interface.v1'
 ERRORS = {
