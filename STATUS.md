@@ -4,42 +4,54 @@
 
 ### Claimed, not independently checked
 
-The Owner-approved local production release now runs application source
-`92adf4f05b595a67d2700bc44e134d7d2d2cd78c`, immutable image `c597d2505cd5`.
-It delivers six public product pages, shared dark/light styling, responsive
-desktop/mobile navigation, OSIP and an authenticated collective Operations Board
-through the existing queue, canonical identities, notebooks and Stable Spine.
+The Owner-approved local production release runs application source
+`5ba217ad9035d760c3ea35176c9d46b423da3076`, immutable image `b1aa1e2b77c0`.
+Six public product pages, shared dark/light styling, responsive desktop/mobile
+navigation, OSIP and the authenticated collective Operations Board use the
+existing execution queue, canonical identities, notebooks and Stable Spine.
 No Owner-only Verified section is changed.
 
-Observed acceptance at that application revision: 5,289 canonical tests and
-92 subtests passed, with four Windows skips; all required CI checks passed.
-Actual staging passed 27 modernization checks, 20 Operations Board browser
-checks, 21/21 contribution/questioning/gap-participation cases and all ten
-collective demonstrations. Those demonstrations include source-checked
-correction, a two-agent puzzle, genuine private-index repair with independent
-verification, restricted-action denial, retained contradiction and recovery.
-Declared test fixtures remain distinguished from operational facts.
+The three previously configured-only adapters now have observed live contracts.
+The event adapter verifies actual execution metadata and all four persisted
+projectors. The MLP adapter executes one pinned, reviewed synthetic numerical
+reference; it grants no domain qualification or agent execution permission.
+The HF adapter verifies actual provider/model/agent/usage/cost against the
+task-bound execution ledger. Readiness polling never initiates paid inference;
+HF observation becomes unavailable after 24 hours without fresh execution.
+All seven discovered fabric contracts were observed in production.
 
-Production passed 26 actual journey checks and 15 Operations Board checks,
-including real model output, grounded retrieval, read-only observability,
-authorization denials and evidence. All 21 agents have real attributed
-contributions. All 21 questioning/gap paths were tested in staging; one was
-also demonstrated in production. Staging records were not copied into production.
-The durable desktop entry passed actual Edge refresh, expiry and restart checks.
-Database snapshots, prior images, failed attempts and rollback records remain
-preserved. Model residency is bounded; telemetry follows backend recreation.
+Fresh production acceptance:26/26 authenticated journey checks,16/16 fabric
+API/evidence checks and14/14 fabric desktop/WebKit browser checks. Fresh
+staging:27/27 journeys,16 fabric checks before/after backend restart and13 fabric
+browser checks. The backend/config component passed5,304 canonical tests and
+92 subtests, with4 Windows-specific skips. PWA unit tests passed 88/88 and the
+Chromium/Firefox/WebKit suite passed 18/18. All 9 CI checks passed at `529c961`,
+which differs from the running source only in the browser cache-version test.
+The semantic form retry race found during staging was repaired and retested.
 
-Scope remains explicit: four of seven discovered fabric adapters have observed
-live contracts; the other three remain configured-only in the registry. One
-public feed is intermittent and retains explicit degraded state. The supplied
-role workflow passed 21/21 with independent checking and calculation support;
-model-only scores were 17/21 first attempt and 19/21 after bounded corrections.
-The calculator belongs to the qualification harness. This is not general agent
-competence, L7 certification, formal proof or autonomous production learning.
-Approval decisions are wired; generic automatic execution continuation is partial.
-Physical iPhone and the two UN 404 sources are parked by the Owner. Physical
-cold-PC boot and external authenticated access remain separately unverified.
-See [the release evidence and scope](docs/ORQEVIA2-20261023.md).
+All 21 canonical agents retain actual execution-attributed contributions in the
+registry and authorized private notebooks. All 21 contribution/question/gap
+pathways and all 10 collective demonstrations passed earlier isolated staging.
+One production question and gap-participation pathway were exercised. Staging
+fixtures were not copied into production or counted as operational facts.
+The 11:02 UTC production snapshot reports41 assigned/verified-closed index gaps,
+zero blocked registry gaps and intact audit integrity; bounded queued indexing
+continues. Counts do not establish absence of every possible defect.
+
+Desktop one-tap strict-TLS access, trusted refresh and preserved browser identity
+are activated. Eleven persistent production containers retain restart policies;
+stage is stopped. Revision-bound images/configuration, SQLite snapshots, failed
+attempts and rollback instructions are preserved; current data is not restored
+or deleted by application rollback. Mandatory AWS dependency/cost remains zero.
+
+The supplied 21-role workflow passed 21/21 with independent checking and bounded
+calculation support; model-only results were 17/21 first attempt and 19/21 after
+correction. This is not general competence, L7, formal proof or runtime learning.
+Generic automatic approval continuation is partial. Physical iPhone and two UN 404
+sources are Owner-parked. Cold-PC boot and external authenticated ingress remain
+separately unverified. Existing dependency alerts are outside these test claims.
+See [current system state](docs/ORQEVIA-SYSTEM-STATE-20261023.md) and
+[fabric contracts](docs/FABRIC-INTEGRATION.md).
 
 ## Live single-node release acceptance — 23 October 2026
 

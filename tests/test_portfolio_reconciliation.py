@@ -256,8 +256,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     osip_start = after.index("## ORQEVIA 2.0 candidate \u2014 23 October 2026")
     osip_end = after.index("## Live single-node release acceptance", osip_start)
     osip_update = after[osip_start:osip_end].encode("utf-8")
-    assert len(osip_update) == 2576
-    assert hashlib.sha256(osip_update).hexdigest() == "b6958f13fb366507562b14f59d12337307b097ef45600a35e5879bf4a3b5271f"
+    assert len(osip_update) == 3362
+    assert hashlib.sha256(osip_update).hexdigest() == "9d109632b868202dc41dc69761790b2e2ab8d002eeb30b1bca8d197fe8e26886"
     assert b"### Verified" not in osip_update
     after = after[:osip_start] + after[osip_end:]
     # Admit only the exact dated audit/release observations. All earlier bytes
