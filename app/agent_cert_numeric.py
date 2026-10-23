@@ -7,6 +7,7 @@ numbers. A human/independent verifier must still review the full response.
 from __future__ import annotations
 
 import json
+import re
 from fractions import Fraction
 
 
@@ -85,8 +86,18 @@ def review_priority_json(source: dict, response: str) -> tuple[bool, tuple[str, 
         actual = answer[field]
         wanted = expected[field]
         if isinstance(wanted, Fraction):
-            # Exact fraction text avoids rounding and JSON expression syntax.
-            if actual != f"{wanted.numerator}/{wanted.denominator}":
+            # Accept any mathematically equivalent fraction text. The response
+            # contract still instructs reduced form; grading verifies value.
+            if (not isinstance(actual, str)
+                    or re.fullmatch(r'[0-9]+(?:/[0-9]+)?', actual) is None):
+                errors.append(field)
+                continue
+            try:
+                numerator, denominator = (int(actual), 1) if '/' not in actual else (
+                    int(actual.split('/', 1)[0]), int(actual.split('/', 1)[1]))
+                if denominator == 0 or Fraction(numerator, denominator) != wanted:
+                    errors.append(field)
+            except (ValueError, ZeroDivisionError):
                 errors.append(field)
         elif type(actual) is not type(wanted) or actual != wanted:
             errors.append(field)

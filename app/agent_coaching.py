@@ -35,9 +35,12 @@ def timestamp(epoch):
 def request_for(agent, phase, seed):
     if phase == 'practice':
         return practice_request(agent,seed)
-    from .agent_cert_role_review import canonical_role_spec
-    # Preserve the exact original objective/context and its established oracle.
-    return canonical_role_spec(agent,'responsibility.'+agent)['request']
+    from .agent_cert_role_review import canonical_case_spec
+    # Baseline and acceptance use the explicit role:normal_structured case:
+    # the v5 answer-free response contract (clarification plus strict JSON
+    # schema) rides on the same independent semantic oracle. The legacy
+    # request bytes remain intact for historical replay via role:normal.
+    return canonical_case_spec(agent,'responsibility.'+agent,'role:normal_structured')['request']
 
 def effective_prompt(agent, phase, seed, feedback=()):
     request = request_for(agent,phase,seed)
