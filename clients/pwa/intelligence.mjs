@@ -48,7 +48,7 @@ if(typeof document!=='undefined'){
   reset.addEventListener('click',()=>{geoFilter=null;void refresh();});
 
   const p=panel("God's Eye · Geospatial observations"), rows=Array.isArray(result.records)?result.records:[];
-  const collected=rows.map(r=>Date.parse(r.ingested_at)).filter(Number.isFinite).sort((a,b)=>b-a)[0];p.append(node('p',`${rows.length} stored observations · collected ${Number.isFinite(collected)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(collected))+' SGT':'time unknown'} · public USGS data; not global live coverage.${Number.isFinite(collected)&&Date.now()-collected>86400000?' Press Sync USGS now to refresh the collection.':''}`));drawMap(p,rows);
+  const collected=rows.map(r=>Date.parse(r.ingested_at)).filter(Number.isFinite).sort((a,b)=>b-a)[0];p.append(node('p',`${rows.length} stored observations · collected ${Number.isFinite(collected)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(collected))+' SGT':'time unknown'} · public USGS data; not global live coverage.${Number.isFinite(collected)&&Date.now()-collected>86400000?(active==='gods-eye'?' Authorized collection controls are in Intelligence.':' Press Sync USGS now to refresh the collection.'):''}`));drawMap(p,rows);
   if(!rows.length)p.append(node('p','No observations stored. Refresh after an authorized ingestion run.'));
   for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${agoLabel(r.observed_at)}`,r);source(d,'Original provider evidence',r.source_url);}
  }
