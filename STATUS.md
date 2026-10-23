@@ -1,5 +1,38 @@
 # STATUS.md — Portfolio status record
 
+## Live single-node release acceptance — 23 October 2026
+
+### Claimed, not independently checked
+
+- Backend/interface application source `98b2537`, image
+  `sha256:026ff681d12785aa9afd0b55787103d9b028abffe3e5428a96f57f7f38947481`,
+  is deployed and healthy. All 205 Python files matched that source after
+  explicit checkout newline normalization. Nine GitHub checks passed on that
+  source, including 5,202 canonical tests with one skip and browser assurance.
+- Authenticated live PWA task `99aa2f5b-2848-4fa0-ad8f-49a7f8369e22`
+  completed on ABEX in about 1.03 seconds from creation through completion.
+  Owner enrollment, trusted refresh, fourteen navigation sections, rendered
+  Intelligence/God's Eye observations, Build candidate generation, the actual
+  Test action, persisted result, SHA-256 verified download and logout passed.
+  Anonymous/invalid backend credentials returned 401; authorized reads returned
+  200. Strict TLS 1.2/1.3 and wrong-hostname rejection passed.
+- The earlier approved HF gateway call remains recorded as one completed
+  request with computed cost $0.00000155. No additional paid inference was used.
+- The independently selected 12B model passed 8/8 bounded local checks at N=1;
+  the node now uses the measured 8K context. The Intelligence read burst repair
+  retains two slots and supplied its existing server authority from backend
+  memory. Its Singapore service handlers, data, ports and existing environment
+  were retained; the prior container remains available for rollback.
+- A separate bare-marker diagnostic returned an empty model reply and failed
+  closed. Small-model benchmark formatting failures, unconfigured providers,
+  advisory Hyper-Inference doubles and maximum-context/concurrency limits are
+  retained as explicit limitations. Disposable test-folder deletion was
+  rejected by automatic tool policy; no production data was deleted.
+
+Detailed receipts and the final acceptance matrix are retained locally in
+`operations/release-qualification-20261023`. This is operational evidence, not
+owner-only Verified status or independent agent certification.
+
 ## Monolith release qualification — 23 October 2026
 
 ### Claimed, not independently checked

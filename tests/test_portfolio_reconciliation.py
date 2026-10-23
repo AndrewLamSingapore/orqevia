@@ -253,12 +253,12 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
     # Admit only the exact dated audit/release observations. All earlier bytes
     # and owner-only Verified records remain checked by the frozen proof below.
-    audit_start = after.index("## Monolith release qualification — 23 October 2026")
+    audit_start = after.index("## Live single-node release acceptance — 23 October 2026")
     audit_end = after.index("Interpretation updated:", audit_start)
     audit_update = after[audit_start:audit_end].encode("utf-8")
-    assert len(audit_update) == 3540
-    assert hashlib.sha256(audit_update).hexdigest() == "692df3cb46ac09e1d654bc0aa206d7657f86141b23b077e5689dd54d83c55653"
-    assert audit_update.count(b"### Claimed, not independently checked") == 2
+    assert len(audit_update) == 5651
+    assert hashlib.sha256(audit_update).hexdigest() == "2ef87211a0d3df7f8e20baacd114cb0eb7e8424d7f5c5530cbe45a0c44e3694a"
+    assert audit_update.count(b"### Claimed, not independently checked") == 3
     assert b"### Verified" not in audit_update
     after = after[:audit_start] + after[audit_end:]
     # Admit only the exact final fast-model/God's Eye deployment record.

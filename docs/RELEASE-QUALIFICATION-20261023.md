@@ -1,5 +1,21 @@
 # ORQEVIA monolith release qualification — 23 October 2026
 
+## Live acceptance update
+
+At application source `98b2537`, the authenticated browser journey passed on the
+release image: task `99aa2f5b-2848-4fa0-ad8f-49a7f8369e22`, created
+2026-10-23T02:50:20.168519Z and completed 2026-10-23T02:50:21.196604Z. Fourteen
+navigation sections, fully rendered Intelligence/God's Eye observations,
+candidate generation, the real Test action, trusted refresh, result persistence,
+verified download and sign-out all passed. No mocked API or TLS bypass was used.
+Nine GitHub checks passed, including 5,202 canonical tests (one skipped), 92
+subtests, and browser assurance. Documentation-only follow-ups do not change the
+deployed application identity or imply an additional deployment.
+
+The separate raw queue marker probe failed with an empty model response. Its
+failure remains recorded alongside successful PWA and cloud proofs. No model
+quality or inference-route result has been changed merely to make a report pass.
+
 ORQEVIA remains a monolith on one Windows/Docker node. The model adapters,
 queue, objectives, execution records and result delivery are internal modules.
 Ollama, the existing database, telemetry and ingress containers support that node.
