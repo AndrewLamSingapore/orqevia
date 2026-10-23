@@ -26,6 +26,11 @@ def test_exact_priority_facts_and_valid_structured_answer():
     assert review_priority_json(SOURCE, json.dumps(CORRECT)) == (True, ())
 
 
+def test_accepts_value_equivalent_fraction_text():
+    equivalent = {**CORRECT, "beta_points_per_day": "6/2"}
+    assert review_priority_json(SOURCE, json.dumps(equivalent)) == (True, ())
+
+
 def test_held_out_values_are_computed_not_reused_from_fixture():
     held_out = {**SOURCE, "alpha_total_points": 7, "beta_total_points": 8}
     facts = priority_facts(held_out)
