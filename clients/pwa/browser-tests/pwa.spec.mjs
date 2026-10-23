@@ -35,7 +35,7 @@ test("manifest, service worker and offline shell are installable primitives", as
   expect(manifest.icons.some((icon) => icon.purpose === "maskable")).toBe(true);
 
   const cacheNames = await page.evaluate(() => caches.keys());
-  expect(cacheNames).toContain("orqevia-shell-v30");
+  expect(cacheNames).toContain("orqevia-shell-v32");
 
   if (browserName === "webkit") {
     test.info().annotations.push({
