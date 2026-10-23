@@ -74,7 +74,7 @@ def test_disabled_scope_incomplete_and_liveness_do_not_publish(runtime, monkeypa
 def test_model_question_real_output_gets_source_bound_investigation(runtime):
     rt, queue, _, owner = runtime
     requested = rt.start_investigation(owner, "a01", "agent:a01", "source-check-fixture")
-    job = queue.claim("fixture-worker", [Provider("ollama-fast", "local", "fixture-model", 32768, 0, 1)])
+    job = queue.claim("fixture-worker", [Provider("ollama-deep", "local", "fixture-model", 32768, 0, 1)])
     output = {
         "question": rt.QUESTION_FIELDS["source_sha256"],
         "field": "source_sha256",
@@ -92,7 +92,7 @@ def test_model_question_real_output_gets_source_bound_investigation(runtime):
 def test_unrelated_question_cannot_be_confirmed_by_a_field_comparison(runtime):
     rt, queue, _, owner = runtime
     requested = rt.start_investigation(owner, "a02", "agent:a02", "malicious-question-fixture")
-    job = queue.claim("fixture-worker", [Provider("ollama-fast", "local", "fixture-model", 32768, 0, 1)])
+    job = queue.claim("fixture-worker", [Provider("ollama-deep", "local", "fixture-model", 32768, 0, 1)])
     output = {
         "question": "Does this agent have unrestricted shell authority?",
         "field": "canonical_id",
@@ -118,7 +118,7 @@ def test_two_agents_observe_same_real_pending_gap_without_duplicate_findings(run
     )
     for agent in ("a01", "a02"):
         request = rt.start_investigation(owner, agent, "agent:" + agent, "real-gap-fixture-" + agent)
-        job = queue.claim("fixture-worker", [Provider("ollama-fast", "local", "fixture-model", 32768, 0, 1)])
+        job = queue.claim("fixture-worker", [Provider("ollama-deep", "local", "fixture-model", 32768, 0, 1)])
         output = {
             "question": rt.QUESTION_FIELDS["canonical_id"],
             "field": "canonical_id",
