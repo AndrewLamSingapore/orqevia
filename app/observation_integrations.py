@@ -84,7 +84,12 @@ def parse_aviation(raw):
     for row in rows:
         if not isinstance(row, list) or len(row) < 14:
             raise ValueError("Invalid state vector")
-        if not isinstance(row[0], str) or not re.fullmatch(r"[a-f0-9]{6}", row[0]) or type(row[4]) is not int or not 1 <= row[4] <= time.time() + 300:
+        if (
+            not isinstance(row[0], str)
+            or not re.fullmatch(r"[a-f0-9]{6}", row[0])
+            or type(row[4]) is not int
+            or not 1 <= row[4] <= time.time() + 300
+        ):
             raise ValueError("Invalid aircraft identity or contact time")
         lat, lon = _number(row[6]), _number(row[5])
         if lat is None or lon is None:
@@ -172,13 +177,17 @@ def parse_news(raw):
         title = item.findtext("title", "")
         if not title.strip() or len(title) > 1000 or len(link) > 2000:
             raise ValueError("Invalid press-release title or link")
-        records.append({
-            "title": title, "source_url": link, "provider_timestamp": published,
-            "timestamp_kind": timestamp_kind,
-            "published_at": published if timestamp_kind == "PUBLICATION" else None,
-            "provider_updated_at": published if timestamp_kind == "PROVIDER_UPDATE" else None,
-            "attribution": f"Council of the European Union. © European Union, {stamp.year}. Original headline.",
-        })
+        records.append(
+            {
+                "title": title,
+                "source_url": link,
+                "provider_timestamp": published,
+                "timestamp_kind": timestamp_kind,
+                "published_at": published if timestamp_kind == "PUBLICATION" else None,
+                "provider_updated_at": published if timestamp_kind == "PROVIDER_UPDATE" else None,
+                "attribution": f"Council of the European Union. © European Union, {stamp.year}. Original headline.",
+            }
+        )
     if not tree.tag.endswith("rss") or not records:
         raise ValueError("Unrecognized or empty news schema")
     return records, max(r["provider_timestamp"] for r in records)
@@ -193,7 +202,11 @@ def _read(name):
         if path.stat().st_size > MAX_BYTES:
             raise ValueError()
         value = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(value, dict) or value.get("provider_id") != name or value.get("source_url") != CATALOG[name]["url"]:
+        if (
+            not isinstance(value, dict)
+            or value.get("provider_id") != name
+            or value.get("source_url") != CATALOG[name]["url"]
+        ):
             raise ValueError()
         return value
     except (OSError, ValueError, TypeError):

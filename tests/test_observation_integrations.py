@@ -111,12 +111,19 @@ def test_recent_collection_does_not_make_old_provider_data_fresh(tmp_path, monke
     monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
     root = tmp_path / "osip-observations"
     root.mkdir()
-    (root / "aviation.json").write_text(json.dumps({
-        "provider_id": "aviation", "source_url": observations.CATALOG["aviation"]["url"],
-        "last_attempt_ok": True, "collected_at": datetime.now(timezone.utc).isoformat(),
-        "provider_observed_at": (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(),
-        "records": [{"icao24": "abc123"}],
-    }), encoding="utf-8")
+    (root / "aviation.json").write_text(
+        json.dumps(
+            {
+                "provider_id": "aviation",
+                "source_url": observations.CATALOG["aviation"]["url"],
+                "last_attempt_ok": True,
+                "collected_at": datetime.now(timezone.utc).isoformat(),
+                "provider_observed_at": (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(),
+                "records": [{"icao24": "abc123"}],
+            }
+        ),
+        encoding="utf-8",
+    )
     entry = observations.snapshot()["providers"][0]
     assert entry["status"] == "STALE"
     assert entry["source_freshness"] == "OLD_OR_UNAVAILABLE"
@@ -126,10 +133,12 @@ def test_recent_collection_does_not_make_old_provider_data_fresh(tmp_path, monke
 
 def test_council_update_timestamp_is_not_reported_as_a_publication_time():
     stamp = datetime.now(timezone.utc).isoformat()
-    raw = (f'<rss xmlns:atom="http://www.w3.org/2005/Atom"><channel><item>'
-           f'<title>Explicit synthetic Council headline</title>'
-           f'<link>https://www.consilium.europa.eu/en/press/press-releases/fixture</link>'
-           f'<atom:updated>{stamp}</atom:updated></item></channel></rss>').encode()
+    raw = (
+        f'<rss xmlns:atom="http://www.w3.org/2005/Atom"><channel><item>'
+        f"<title>Explicit synthetic Council headline</title>"
+        f"<link>https://www.consilium.europa.eu/en/press/press-releases/fixture</link>"
+        f"<atom:updated>{stamp}</atom:updated></item></channel></rss>"
+    ).encode()
     records, observed = observations.parse_news(raw)
     assert records[0]["published_at"] is None
     assert records[0]["timestamp_kind"] == "PROVIDER_UPDATE"

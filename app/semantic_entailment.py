@@ -81,7 +81,9 @@ class EntailmentEngine:
 
             ort.disable_telemetry_events()
             try:
-                tokenizer = AutoTokenizer.from_pretrained(str(directory), local_files_only=True, trust_remote_code=False)
+                tokenizer = AutoTokenizer.from_pretrained(
+                    str(directory), local_files_only=True, trust_remote_code=False
+                )
                 options = ort.SessionOptions()
                 options.intra_op_num_threads = 2
                 options.inter_op_num_threads = 1
