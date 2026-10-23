@@ -714,30 +714,52 @@ def _probe_fabrics(store: CollectiveStore) -> dict:
             observations.append({"id": identifier, "state": state, "integration_verified": state == "OBSERVED"})
     from .fabric_adapters import event_observation, hf_observation, mlp_observation
     from .compute_catalog import load_catalog
-    adapters = [("portfolio-event-fabric", "app/event_fabric.py", event_observation),
-                ("mlp-fabric", "app/mlp_fabric.py", mlp_observation)]
+
+    adapters = [
+        ("portfolio-event-fabric", "app/event_fabric.py", event_observation),
+        ("mlp-fabric", "app/mlp_fabric.py", mlp_observation),
+    ]
     for entry in load_catalog():
         if entry.get("provider_kind") == "huggingface":
             adapters.append((str(entry["id"]), "app/cloud_execution.py", lambda entry=entry: hf_observation(entry)))
     for identifier, source, observe in adapters:
-        source_sha = digest({"implementation": hashlib.sha256((ROOT/source).read_bytes()).hexdigest(),
-                             "adapter": hashlib.sha256((ROOT/"app/fabric_adapters.py").read_bytes()).hexdigest()})
+        source_sha = digest(
+            {
+                "implementation": hashlib.sha256((ROOT / source).read_bytes()).hexdigest(),
+                "adapter": hashlib.sha256((ROOT / "app/fabric_adapters.py").read_bytes()).hexdigest(),
+            }
+        )
         try:
             body = observe()
             state = "OBSERVED"
         except (ValueError, RuntimeError, OSError, sqlite3.Error, KeyError, TypeError):
-            body = {"state":"UNAVAILABLE", "health_scope":"CONTRACT_NOT_VERIFIED", "probe_spends_money":False}
+            body = {"state": "UNAVAILABLE", "health_scope": "CONTRACT_NOT_VERIFIED", "probe_spends_money": False}
             state = "UNAVAILABLE"
         # Including the observation digest makes recovery within a minute safe,
         # without returning a cached success when the actual contract fails.
-        key = digest({"id":identifier,"period":period,"body":body,"source":source_sha})
+        key = digest({"id": identifier, "period": period, "body": body, "source": source_sha})
         if state == "OBSERVED":
-            evidence = _execution(store,adapter="fabric_probe",scope={"fabric_id":identifier},
-                execution_id="fabric-v2:"+key,source="fixed-real-fabric-contract",content=body)
+            evidence = _execution(
+                store,
+                adapter="fabric_probe",
+                scope={"fabric_id": identifier},
+                execution_id="fabric-v2:" + key,
+                source="fixed-real-fabric-contract",
+                content=body,
+            )
         else:
-            evidence = _command(store,p,"evidence.record",{
-                "content":body,"source":"fixed-real-fabric-contract","kind":"OBSERVATION",
-                "environment":os.getenv("ORQEVIA_NODE_ID","local")},"fabric-v2-unavailable:"+key)
+            evidence = _command(
+                store,
+                p,
+                "evidence.record",
+                {
+                    "content": body,
+                    "source": "fixed-real-fabric-contract",
+                    "kind": "OBSERVATION",
+                    "environment": os.getenv("ORQEVIA_NODE_ID", "local"),
+                },
+                "fabric-v2-unavailable:" + key,
+            )
         _command(
             store,
             p,
@@ -745,8 +767,13 @@ def _probe_fabrics(store: CollectiveStore) -> dict:
             {
                 "kind": "fabrics",
                 "canonical_id": identifier,
-                "definition": {"source":source,"boundary":"INDEPENDENT_EXECUTION","response":body,
-                               "health_scope":body["health_scope"],"checked_period":period},
+                "definition": {
+                    "source": source,
+                    "boundary": "INDEPENDENT_EXECUTION",
+                    "response": body,
+                    "health_scope": body["health_scope"],
+                    "checked_period": period,
+                },
                 "source_sha256": source_sha,
                 "evidence_ids": [evidence["id"]],
                 "health": state,
@@ -754,7 +781,7 @@ def _probe_fabrics(store: CollectiveStore) -> dict:
             },
             "fabric-v2-observe:" + key,
         )
-        observations.append({"id":identifier,"state":state,"integration_verified":state == "OBSERVED"})
+        observations.append({"id": identifier, "state": state, "integration_verified": state == "OBSERVED"})
     return {
         "items": observations,
         "scope": "Discovered actual configured adapters; no claim all possible fabrics have been enumerated",

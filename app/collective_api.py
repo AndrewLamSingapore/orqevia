@@ -257,6 +257,22 @@ class MLPInferenceRequest(BaseModel):
     trace_id: str = Field(min_length=8, max_length=96, pattern=r"^[A-Za-z0-9_.:-]+$")
 
 
+@router.get("/fabrics/events")
+def event_records(request: Request):
+    _principal(request)
+    from .runtime import events
+
+    try:
+        records = [
+            item
+            for item in events.recent(200)
+            if item["event_type"] == "compute.execution.completed" and item["source"] == "prime"
+        ]
+        return _response(request, {"events": records[:100], "scope": "EXECUTION_METADATA_ONLY_NO_AUTHORITY_GRANT"})
+    except (OSError, sqlite3.Error, RuntimeError) as error:
+        _failure(error)
+
+
 @router.get("/fabrics/mlp")
 def mlp_status(request: Request):
     _principal(request)
@@ -278,12 +294,22 @@ async def mlp_inference(request: Request):
 
     try:
         result = await asyncio.to_thread(mlp_infer, body.rows, body.trace_id)
-        evidence = _execution(get_store(),adapter="owner_mlp_reference",scope={"model_id":result["model_id"]},
-            execution_id="mlp:"+body.trace_id,source="authenticated-owner-reference-inference",
-            content={"model_id":result["model_id"],"artifact_hash":result["artifact_hash"],
-                     "input_sha256":digest(body.rows),"output_sha256":digest(result["output"]),
-                     "owner_actor":principal.actor_id,"qualification_scope":"SYNTHETIC_QUADRATIC_REFERENCE_ONLY"})
-        return _response(request,{**result,"evidence_id":evidence["id"]})
+        evidence = _execution(
+            get_store(),
+            adapter="owner_mlp_reference",
+            scope={"model_id": result["model_id"]},
+            execution_id="mlp:" + body.trace_id,
+            source="authenticated-owner-reference-inference",
+            content={
+                "model_id": result["model_id"],
+                "artifact_hash": result["artifact_hash"],
+                "input_sha256": digest(body.rows),
+                "output_sha256": digest(result["output"]),
+                "owner_actor": principal.actor_id,
+                "qualification_scope": "SYNTHETIC_QUADRATIC_REFERENCE_ONLY",
+            },
+        )
+        return _response(request, {**result, "evidence_id": evidence["id"]})
     except ValueError:
         raise HTTPException(422, "Invalid bounded reference input or artifact") from None
     except (CollectiveError, OSError, sqlite3.Error, RuntimeError) as error:

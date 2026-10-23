@@ -28,6 +28,7 @@ PATHS = {
     "repairs/notebook-index": {"POST"},
     "fabrics/mlp": {"GET"},
     "fabrics/mlp/infer": {"POST"},
+    "fabrics/events": {"GET"},
 }
 
 
