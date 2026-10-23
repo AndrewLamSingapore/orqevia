@@ -7,7 +7,6 @@ outside Git. The generated Compose file must not be published or printed.
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import hashlib
 import ipaddress
 import json
@@ -32,13 +31,11 @@ def inspect(name):
 
 def prepare():
     from cryptography import x509
-    from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import ec
-    from cryptography.x509.oid import NameOID
+    from cryptography.hazmat.primitives import serialization
 
     PRIVATE.mkdir(parents=True, exist_ok=True)
     # Native Windows ACLs protect all descendants before any secret is written.
-    acl_script = "$p=$env:ORQEVIA_STAGE_PRIVATE;$acl=New-Object Security.AccessControl.DirectorySecurity;$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User;$acl.SetOwner($sid);$acl.SetAccessRuleProtection($true,$false);foreach($s in @($sid.Value,'S-1-5-18')){$r=New-Object Security.AccessControl.FileSystemAccessRule($s,'FullControl','ContainerInherit,ObjectInherit','None','Allow');$acl.AddAccessRule($r)};Set-Acl -LiteralPath $p -AclObject $acl"
+    acl_script = "$ErrorActionPreference='Stop';$p=$env:ORQEVIA_STAGE_PRIVATE;$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value;& icacls.exe $p '/grant:r' ('*'+$sid+':(OI)(CI)(F)') '*S-1-5-18:(OI)(CI)(F)' | Out-Null;if($LASTEXITCODE -ne 0){throw 'Stage ACL grant failed'};& icacls.exe $p '/inheritance:r' | Out-Null;if($LASTEXITCODE -ne 0){throw 'Stage ACL inheritance restriction failed'}"
     run(
         "powershell.exe",
         "-NoProfile",
@@ -50,53 +47,19 @@ def prepare():
     destination = PRIVATE / "compose.json"
     if destination.exists():
         raise SystemExit("Prepared stage already exists. Reuse its identity and data.")
-    now = dt.datetime.now(dt.timezone.utc)
-    ca_key = ec.generate_private_key(ec.SECP256R1())
-    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "ORQEVIA isolated staging 20261023")])
-    ca = (
-        x509.CertificateBuilder()
-        .subject_name(ca_name)
-        .issuer_name(ca_name)
-        .public_key(ca_key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - dt.timedelta(minutes=5))
-        .not_valid_after(now + dt.timedelta(days=14))
-        .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
-        .add_extension(x509.KeyUsage(False, False, False, False, False, True, True, False, False), critical=True)
-        .add_extension(x509.SubjectKeyIdentifier.from_public_key(ca_key.public_key()), critical=False)
-        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
-        .sign(ca_key, hashes.SHA256())
-    )
-    key = ec.generate_private_key(ec.SECP256R1())
-    leaf = (
-        x509.CertificateBuilder()
-        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")]))
-        .issuer_name(ca_name)
-        .public_key(key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - dt.timedelta(minutes=5))
-        .not_valid_after(now + dt.timedelta(days=7))
-        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-        .add_extension(
-            x509.SubjectAlternativeName([x509.DNSName("localhost"), x509.IPAddress(ipaddress.ip_address("127.0.0.1"))]),
-            critical=False,
-        )
-        .add_extension(x509.KeyUsage(True, False, False, False, False, False, False, False, False), critical=True)
-        .add_extension(x509.ExtendedKeyUsage([x509.oid.ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
-        .add_extension(x509.SubjectKeyIdentifier.from_public_key(key.public_key()), critical=False)
-        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
-        .sign(ca_key, hashes.SHA256())
-    )
-    (PRIVATE / "ca.crt").write_bytes(ca.public_bytes(serialization.Encoding.PEM))
-    (PRIVATE / "server.crt").write_bytes(
-        leaf.public_bytes(serialization.Encoding.PEM) + ca.public_bytes(serialization.Encoding.PEM)
-    )
-    (PRIVATE / "server.key").write_bytes(
-        key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
-    )
-    # The CA signing key is deliberately not persisted; this stage cannot issue more certificates.
+    tls_sources = {
+        m["Destination"]: m["Source"]
+        for m in inspect("orqevia-epoch-20261016-interface-1")["Mounts"]
+        if m["Destination"].startswith("/run/orqevia-tls/")
+    }
+    (PRIVATE / "ca.crt").write_bytes(Path(tls_sources["/run/orqevia-tls/ca.crt"]).read_bytes())
+    leaf = x509.load_pem_x509_certificate(Path(tls_sources["/run/orqevia-tls/server.crt"]).read_bytes())
+    if ipaddress.ip_address("192.168.1.23") not in leaf.extensions.get_extension_for_class(
+        x509.SubjectAlternativeName
+    ).value.get_values_for_type(x509.IPAddress):
+        raise SystemExit("Existing trusted LAN certificate does not cover the verified stage address")
     pin = hashlib.sha256(
-        key.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+        leaf.public_key().public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
     ).hexdigest()
     revision = subprocess.check_output(["git", "-C", str(SOURCE), "rev-parse", "HEAD"], text=True).strip()
     backend = inspect("orqevia-epoch-20261016-backend-1")
@@ -114,6 +77,10 @@ def prepare():
     owner = "orqevia2-isolated-acceptance-owner"
     common = {
         "ORQEVIA_SPINE_TOKEN": secret,
+        "ORQEVIA_REGISTRY_V1_ENABLED": "1",
+        "PRIME_REGISTRY_V1_ENABLED": "1",
+        "ORQEVIA_NODE_ID": "ABEX-OSIP-ISOLATED-STAGE",
+        "ORQEVIA_NODE_ROLE": "AUTHORITATIVE",
         "ORQEVIA_PWA_OWNER_ACCOUNT_ID": owner,
         "ORQEVIA_OPEN_ACCESS": "0",
         "ORQEVIA_PWA_ACCESS_MODE": "pairing",
@@ -141,7 +108,7 @@ def prepare():
         "ORQEVIA_LOCAL_VRAM_MB": "0",
         "ORQEVIA_CONTEXT_TOKENS": "8192",
         "ORQEVIA_MAX_OUTPUT_TOKENS": "512",
-        "ORQEVIA_PWA_ORIGIN": "https://localhost:9443",
+        "ORQEVIA_PWA_ORIGIN": "https://192.168.1.23:9443",
         "ORQEVIA_HARNESS_SIGNING_SECRET": secrets.token_urlsafe(40),
         "ORQEVIA_HARNESS_DB": "/data/action-harness.db",
         "ORQEVIA_MODEL_KEEP_ALIVE": "2m",
@@ -150,7 +117,7 @@ def prepare():
     }
     interface_env = {
         **common,
-        "ORQEVIA_PWA_ORIGIN": "https://localhost:9443",
+        "ORQEVIA_PWA_ORIGIN": "https://192.168.1.23:9443",
         "ORQEVIA_PWA_DATA_CLASSIFICATION": "LOCAL_ONLY",
         "ORQEVIA_PWA_MAX_COST_USD": "0",
         "ORQEVIA_BACKEND_BASE_URL": "http://backend:8000",
@@ -202,24 +169,31 @@ def prepare():
             "environment": interface_env,
             "volumes": [
                 data,
-                bind(PRIVATE / "server.key", "/tls/server.key"),
-                bind(PRIVATE / "server.crt", "/tls/server.crt"),
+                bind(Path(tls_sources["/run/orqevia-tls/server.key"]), "/tls/server.key"),
+                bind(Path(tls_sources["/run/orqevia-tls/server.crt"]), "/tls/server.crt"),
             ],
-            "ports": ["127.0.0.1:9443:8443"],
+            "ports": ["192.168.1.23:9443:8443"],
             "mem_limit": "768m",
+            "networks": ["default", "frontend"],
         },
         "ollama": {
-            "image": inspect("orqevia-epoch-20261016-ollama-1")["Image"],
-            "environment": {
-                "OLLAMA_HOST": "0.0.0.0:11434",
-                "OLLAMA_NUM_PARALLEL": "1",
-                "OLLAMA_MAX_LOADED_MODELS": "1",
-                "OLLAMA_CONTEXT_LENGTH": "8192",
-                "OLLAMA_KEEP_ALIVE": "2m",
-            },
-            "volumes": [{"type": "volume", "source": "models", "target": "/root/.ollama", "read_only": True}],
-            "mem_limit": "8g",
-            "networks": {"default": {"aliases": ["host.docker.internal"]}},
+            "image": image,
+            "command": [
+                "python",
+                "-B",
+                "-m",
+                "uvicorn",
+                "scripts.staging_model_proxy:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "11434",
+                "--no-access-log",
+                "--no-proxy-headers",
+            ],
+            "volumes": [bind(SOURCE / "scripts/staging_model_proxy.py", "/app/scripts/staging_model_proxy.py")],
+            "mem_limit": "256m",
+            "networks": {"default": {"aliases": ["host.docker.internal"]}, "shared_inference": {}},
         },
         "intelligence": {
             "image": inspect("orqevia-intelligence-1")["Image"],
@@ -246,6 +220,7 @@ def prepare():
                 "ORQEVIA_OWNER_ACCOUNT": owner,
                 "ORQEVIA_LOCAL_AI_ROOT": "/data/knowledge",
                 "ORQEVIA_LOCAL_RELEASE": revision,
+                "ORQEVIA_LOCAL_GENERATION_MODEL": "gemma3:12b",
                 "ORQEVIA_MINILM_BACKEND": "onnx",
                 "ORQEVIA_MINILM_ONNX_DIR": "/model",
                 "ORQEVIA_MINILM_ONNX_SHA256": model_digest,
@@ -267,9 +242,12 @@ def prepare():
         "services": services,
         "volumes": {
             "data": {"name": PROJECT + "-data"},
-            "models": {"external": True, "name": "orqevia-epoch-20261016-ollama"},
         },
-        "networks": {"default": {"internal": True}},
+        "networks": {
+            "default": {"internal": True},
+            "frontend": {},
+            "shared_inference": {"external": True, "name": "orqevia-epoch-20261016_default"},
+        },
     }
     destination.write_text(json.dumps(compose, indent=2) + "\n", encoding="utf-8")
     (PRIVATE / "stage-identity.json").write_text(
@@ -277,7 +255,7 @@ def prepare():
             {
                 "project": PROJECT,
                 "source_revision": revision,
-                "origin": "https://localhost:9443",
+                "origin": "https://192.168.1.23:9443",
                 "baseline_image": BASELINE,
                 "private_configuration": str(destination),
                 "ca_sha256": hashlib.sha256((PRIVATE / "ca.crt").read_bytes()).hexdigest(),
@@ -287,20 +265,12 @@ def prepare():
         )
         + "\n"
     )
-    run(
-        "powershell.exe",
-        "-NoProfile",
-        "-Command",
-        "Import-Certificate -FilePath $env:ORQEVIA_STAGE_CA -CertStoreLocation Cert:\CurrentUser\Root | Out-Null",
-        env={**os.environ, "ORQEVIA_STAGE_CA": str(PRIVATE / "ca.crt")},
-        capture_output=True,
-    )
     print(
         json.dumps(
             {
                 "prepared": True,
                 "project": PROJECT,
-                "origin": "https://localhost:9443",
+                "origin": "https://192.168.1.23:9443",
                 "source_revision": revision,
                 "production_configuration_changed": False,
                 "cloud_providers_enabled": False,
@@ -309,12 +279,110 @@ def prepare():
     )
 
 
+def refresh():
+    """Upgrade this stage's wiring while retaining its credentials and database."""
+    target = PRIVATE / "compose.json"
+    compose = json.loads(target.read_text(encoding="utf-8"))
+    if compose.get("name") != PROJECT or set(compose["services"]) != {
+        "backend",
+        "interface",
+        "ollama",
+        "knowledge",
+        "intelligence",
+    }:
+        raise SystemExit("Unexpected stage configuration; no changes made")
+    for name in compose["services"]:
+        if inspect(PROJECT + "-" + name + "-1")["State"]["Running"]:
+            raise SystemExit("Stop only this stage before refreshing its configuration")
+    revision = subprocess.check_output(["git", "-C", str(SOURCE), "rev-parse", "HEAD"], text=True).strip()
+    services = compose["services"]
+    for service in services.values():
+        env = service.get("environment", {})
+        for key in (
+            "ORQEVIA_RUNTIME_REVISION",
+            "PRIME_RUNTIME_REVISION",
+            "ORQEVIA_INTERFACE_RUNTIME_REVISION",
+            "ORQEVIA_LOCAL_RELEASE",
+        ):
+            if key in env:
+                env[key] = revision
+    for name in ("backend", "interface"):
+        services[name]["environment"].update(
+            {
+                "ORQEVIA_REGISTRY_V1_ENABLED": "1",
+                "PRIME_REGISTRY_V1_ENABLED": "1",
+                "ORQEVIA_NODE_ID": "ABEX-OSIP-ISOLATED-STAGE",
+                "ORQEVIA_NODE_ROLE": "AUTHORITATIVE",
+            }
+        )
+    services["interface"]["networks"] = ["default", "frontend"]
+    services["interface"]["ports"] = ["192.168.1.23:9443:8443"]
+    services["ollama"] = {
+        "image": "orqevia:osip-candidate-20261023",
+        "command": [
+            "python",
+            "-B",
+            "-m",
+            "uvicorn",
+            "scripts.staging_model_proxy:app",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "11434",
+            "--no-access-log",
+            "--no-proxy-headers",
+        ],
+        "volumes": [
+            {
+                "type": "bind",
+                "source": str(SOURCE / "scripts/staging_model_proxy.py"),
+                "target": "/app/scripts/staging_model_proxy.py",
+                "read_only": True,
+            }
+        ],
+        "mem_limit": "256m",
+        "restart": "no",
+        "networks": {"default": {"aliases": ["host.docker.internal"]}, "shared_inference": {}},
+        "logging": {"driver": "json-file", "options": {"max-size": "5m", "max-file": "2"}},
+    }
+    services["knowledge"]["environment"]["ORQEVIA_LOCAL_GENERATION_MODEL"] = "gemma3:12b"
+    compose["volumes"].pop("models", None)
+    compose["networks"] = {
+        "default": {"internal": True},
+        "frontend": {},
+        "shared_inference": {"external": True, "name": "orqevia-epoch-20261016_default"},
+    }
+    backup = PRIVATE / ("compose.before-shared-inference-" + revision[:7] + ".json")
+    if backup.exists():
+        raise SystemExit("Refresh backup exists; inspect it before retrying")
+    backup.write_bytes(target.read_bytes())
+    target.write_text(json.dumps(compose, indent=2) + "\n", encoding="utf-8")
+    identity_path = PRIVATE / "stage-identity.json"
+    identity = json.loads(identity_path.read_text())
+    identity.update(source_revision=revision, inference="EXISTING_LOCAL_MODEL_RUNTIME", production_data_mounted=False)
+    identity_path.write_text(json.dumps(identity, indent=2) + "\n")
+    print(
+        json.dumps(
+            {
+                "refreshed": True,
+                "project": PROJECT,
+                "source_revision": revision,
+                "shared_inference": True,
+                "production_database_mounted": False,
+                "stage_credentials_rotated": False,
+            }
+        )
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["prepare", "build", "up", "stop", "status"])
+    parser.add_argument("action", choices=["prepare", "refresh", "build", "up", "stop", "status"])
     args = parser.parse_args()
     if args.action == "prepare":
         return prepare()
+    if args.action == "refresh":
+        return refresh()
     if args.action == "build":
         run("docker", "tag", BASELINE, "orqevia:baseline-98b2537-20261023")
         revision = subprocess.check_output(["git", "-C", str(SOURCE), "rev-parse", "HEAD"], text=True).strip()

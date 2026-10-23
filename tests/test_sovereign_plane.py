@@ -117,30 +117,36 @@ def test_approval_decision_reuses_existing_store_and_is_idempotent(environment):
     store = SpineStore(str(root / "spine.db"))
     envelope = {
         "idempotency_key": "fixture-approval",
+        "tenant_id": "personal",
         "correlation_id": "fixture-correlation",
         "action": "public.publish",
     }
     store.queue_approval(envelope, {"state": "GATED"})
     response = client.get("/api/osip/v1/approvals", headers=headers())
     assert response.status_code == 200 and response.json()["approvals"][0]["status"] == "PENDING"
+    digest = response.json()["approvals"][0]["envelope_sha256"]
     for path in ("/api/osip/v1/status", "/api/osip/v1/approvals"):
         assert client.get(path).status_code == 401
     response = client.post(
         "/api/osip/v1/approvals/fixture-approval",
         headers=headers(),
-        json={"decision": "approve", "note": "Reviewed synthetic action only"},
+        json={"decision": "approve", "note": "Reviewed synthetic action only", "envelope_sha256": digest},
     )
     assert response.status_code == 200 and response.json()["decision_recorded"] is True
     assert response.json()["execution_performed"] is False
     second = client.post(
-        "/api/osip/v1/approvals/fixture-approval", headers=headers(), json={"decision": "reject", "note": "Replay"}
+        "/api/osip/v1/approvals/fixture-approval",
+        headers=headers(),
+        json={"decision": "reject", "note": "Replay", "envelope_sha256": digest},
     )
     assert second.json()["decision_recorded"] is False and second.json()["status"] == "APPROVED"
     with sqlite3.connect(root / "spine.db") as db:
         assert db.execute("SELECT count(*) FROM event_bus").fetchone()[0] == 1
     assert (
         client.post(
-            "/api/osip/v1/approvals/missing", headers=headers(), json={"decision": "approve", "note": "Test"}
+            "/api/osip/v1/approvals/missing",
+            headers=headers(),
+            json={"decision": "approve", "note": "Test", "envelope_sha256": "0" * 64},
         ).status_code
         == 404
     )
@@ -151,11 +157,43 @@ def test_unavailable_approvals_do_not_create_an_empty_authority(environment):
     assert client.get("/api/osip/v1/approvals", headers=headers()).status_code == 503
     assert (
         client.post(
-            "/api/osip/v1/approvals/x", headers=headers(), json={"decision": "approve", "note": "test"}
+            "/api/osip/v1/approvals/x",
+            headers=headers(),
+            json={"decision": "approve", "note": "test", "envelope_sha256": "0" * 64},
         ).status_code
         == 503
     )
     assert not (root / "spine.db").exists()
+
+
+def test_approval_context_redacts_secrets_binds_review_and_isolates_tenants(environment):
+    root, client = environment
+    store = SpineStore(str(root / "spine.db"))
+    envelope = {
+        "tenant_id": "personal",
+        "idempotency_key": "review-personal",
+        "correlation_id": "fixture",
+        "action": "public.publish",
+        "parameters": {"target": "stage", "api_key": "private-value"},
+        "context": {"title": "Review the actual stage action", "reversibility": "reversible"},
+    }
+    store.queue_approval(envelope, {"state": "GATED"})
+    store.queue_approval(
+        {**envelope, "tenant_id": "another-tenant", "idempotency_key": "other-private-action"}, {"state": "GATED"}
+    )
+    response = client.get("/api/osip/v1/approvals", headers=headers())
+    rows = response.json()["approvals"]
+    assert len(rows) == 1 and rows[0]["review"]["parameters"]["target"] == "stage"
+    assert "private-value" not in response.text and "other-private-action" not in response.text
+    assert rows[0]["reviewable"] is True
+    body = {"decision": "approve", "note": "Reviewed fixture", "envelope_sha256": "0" * 64}
+    assert client.post("/api/osip/v1/approvals/review-personal", headers=headers(), json=body).status_code == 409
+    assert client.post("/api/osip/v1/approvals/other-private-action", headers=headers(), json=body).status_code == 404
+    body["envelope_sha256"] = rows[0]["envelope_sha256"]
+    assert (
+        client.post("/api/osip/v1/approvals/review-personal", headers=headers(), json=body).json()["decision_recorded"]
+        is True
+    )
 
 
 def create_session(role="OWNER", account="test-owner"):

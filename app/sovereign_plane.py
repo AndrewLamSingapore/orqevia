@@ -7,6 +7,8 @@ Observation opens existing stores read-only and never initializes absent stores.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -22,6 +24,7 @@ from .client_auth import authenticate_owner
 from .compute_catalog import load_catalog, task_tier
 from .interface_telemetry import agent_activity, model_runtime_readiness
 from .objective_api import select_capabilities
+from .settings import PrimeSettings
 
 router = APIRouter(prefix="/api/osip/v1", tags=["sovereign-intelligence-plane"])
 PROTOCOL = "orqevia.osip.v1"
@@ -58,6 +61,7 @@ class Plan(Contract):
 class ApprovalDecision(Contract):
     decision: Literal["approve", "reject"]
     note: str = Field(min_length=1, max_length=1000)
+    envelope_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
 def _authorize(authorization: str | None):
@@ -111,6 +115,25 @@ def snapshot() -> dict:
         catalog_status = "OBSERVED" if models else "UNAVAILABLE"
     except (OSError, ValueError, KeyError, TypeError):
         models, catalog_status = [], "UNAVAILABLE"
+    settings = PrimeSettings.from_env()
+    for role, model in (
+        ("fast", settings.fast_model),
+        ("deep", settings.deep_model),
+        ("evaluator", settings.evaluator_model),
+        ("embedding", settings.embedding_model),
+    ):
+        models.append(
+            {
+                "id": "local-role-" + role,
+                "model": model,
+                "location": "local",
+                "enabled": True,
+                "role": role,
+                "tier": "MINI" if role in {"deep", "evaluator"} else "NANO" if role == "fast" else None,
+                "qualification_status": "CONFIGURED_ROLE_ONLY",
+            }
+        )
+    catalog_status = "OBSERVED" if models else catalog_status
     agents = []
     for agent in registry["agents"]:
         record = activity.get(agent["id"]) if activity is not None else None
@@ -204,18 +227,79 @@ def plan(body: PlanRequest, request: Request, authorization: str | None = Header
     )
 
 
-def approval_rows(limit: int = 50) -> list[dict]:
+def _review_value(value, depth=0):
+    if depth > 5:
+        return "[Depth omitted; consult originating action]"
+    if isinstance(value, dict):
+        return {
+            str(key)[:100]: "[REDACTED]"
+            if re.search(r"secret|password|api.?key|authorization|cookie|credential|private.?key|token", str(key), re.I)
+            else _review_value(child, depth + 1)
+            for key, child in list(value.items())[:30]
+        }
+    if isinstance(value, list):
+        return [_review_value(child, depth + 1) for child in value[:30]]
+    if isinstance(value, str):
+        from .agent_notebooks import _redact
+
+        return _redact(value[:1500])[0]
+    return value
+
+
+def _review_complete(value, depth=0):
+    if depth > 5:
+        return False
+    if isinstance(value, dict):
+        return len(value) <= 30 and all(len(str(k)) <= 100 and _review_complete(v, depth + 1) for k, v in value.items())
+    if isinstance(value, list):
+        return len(value) <= 30 and all(_review_complete(v, depth + 1) for v in value)
+    return not isinstance(value, str) or len(value) <= 1500
+
+
+def approval_rows(limit: int = 50, *, key: str | None = None) -> list[dict]:
     try:
         db = _read_db(_spine_path())
         try:
-            rows = db.execute(
-                "SELECT idempotency_key,correlation_id,action_type,status,created_at,decided_at FROM approvals ORDER BY created_at DESC LIMIT ?",
-                (limit,),
-            ).fetchall()
+            query = "SELECT idempotency_key,correlation_id,action_type,status,created_at,decided_at,CASE WHEN length(envelope_json)<=48000 THEN envelope_json ELSE NULL END AS envelope_json FROM approvals"
+            query += " WHERE idempotency_key=?" if key else ""
+            rows = db.execute(query + " ORDER BY created_at DESC LIMIT ?", (key, limit) if key else (limit,)).fetchall()
         finally:
             db.close()
-        return [dict(row) for row in rows]
-    except (OSError, sqlite3.Error):
+        output = []
+        for row in rows:
+            item = dict(row)
+            raw = item.pop("envelope_json")
+            if not isinstance(raw, str):
+                continue
+            envelope = json.loads(raw)
+            if not isinstance(envelope, dict) or envelope.get("tenant_id") != "personal":
+                continue
+            context = envelope.get("context", {})
+            if not isinstance(context, dict):
+                context = {}
+            review_source = {
+                "title": context.get("title", item["action_type"]),
+                "actor": envelope.get("actor_id"),
+                "risk": context.get("risk", "Not supplied"),
+                "parameters": envelope.get("parameters", {}),
+                "expected_effect": context.get("expected_effect"),
+                "reversibility": context.get("reversibility", "Not supplied"),
+                "evidence": context.get("evidence", []),
+            }
+            review = _review_value(review_source)
+            reviewable = _review_complete(review_source) and len(json.dumps(review)) <= 6000
+            output.append(
+                {
+                    **item,
+                    "review": review
+                    if reviewable
+                    else {"title": "Action too large for safe review; use its originating interface"},
+                    "reviewable": reviewable,
+                    "envelope_sha256": hashlib.sha256(raw.encode()).hexdigest(),
+                }
+            )
+        return output
+    except (OSError, sqlite3.Error, ValueError, TypeError):
         raise HTTPException(503, "Existing approval service is unavailable") from None
 
 
@@ -240,7 +324,13 @@ def decide(key: str, body: ApprovalDecision, request: Request, authorization: st
         raise HTTPException(422, "A valid approval reference and decision note are required")
     # Verify the existing store before constructing the original writer. Observation
     # never creates a new approval authority or an empty replacement database.
-    approval_rows(1)
+    existing = approval_rows(1, key=key)
+    if not existing:
+        raise HTTPException(404, "Approval not found in this owner scope")
+    if existing[0]["envelope_sha256"] != body.envelope_sha256:
+        raise HTTPException(409, "The original action changed; reload and review it again")
+    if body.decision == "approve" and not existing[0]["reviewable"]:
+        raise HTTPException(409, "Use the originating interface to review this action")
     from .spine import SpineStore
 
     store = SpineStore(str(_spine_path()))
@@ -251,7 +341,12 @@ def decide(key: str, body: ApprovalDecision, request: Request, authorization: st
         store.emit(
             {"correlation_id": row["correlation_id"], "idempotency_key": key},
             "approval." + body.decision,
-            {"status": row["status"], "note": body.note, "source": PROTOCOL},
+            {
+                "status": row["status"],
+                "note": body.note,
+                "source": PROTOCOL,
+                "reviewed_envelope_sha256": body.envelope_sha256,
+            },
         )
     return {
         "protocol": PROTOCOL,

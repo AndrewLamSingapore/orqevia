@@ -45,12 +45,13 @@ function drawApprovals(value,generation){
   if(!value.approvals?.length)section.append(make('p','The approval service returned no records.'));
   for(const record of value.approvals||[]){
     const row=make('article',undefined,'oq-approval');row.append(make('h3',record.action_type),make('small',`Status: ${record.status}`),make('small',`Correlation: ${record.correlation_id}`),make('small',`Reference: ${record.idempotency_key}`));
-    if(record.status==='PENDING'){
+    if(record.review){const details=make('pre',JSON.stringify(record.review,null,2));row.append(details,make('small',`Original action SHA-256: ${record.envelope_sha256}`));}
+    if(record.status==='PENDING'&&record.reviewable){
       const note=make('textarea');note.maxLength=1000;note.placeholder='Record the reason for your decision';note.setAttribute('aria-label',`Decision note for ${record.idempotency_key}`);row.append(note);const actions=make('div',undefined,'oq-approval-actions');
       for(const [decision,label] of [['approve','Approve action'],['reject','Reject action']]){const button=make('button',label);button.type='button';button.addEventListener('click',async()=>{
         if(!note.value.trim()){note.focus();state('approval-state','A decision note is required.',true);return;}
         actions.querySelectorAll('button').forEach(b=>b.disabled=true);
-        try{const result=await api('approvals/'+encodeURIComponent(record.idempotency_key),{body:{decision,note:note.value.trim()},signal:AbortSignal.timeout(12000)});if(generation!==epoch||active!=='approvals')return;await load();state('approval-state',`${result.status}. ${result.disclosure}`);}
+        try{const result=await api('approvals/'+encodeURIComponent(record.idempotency_key),{body:{decision,note:note.value.trim(),envelope_sha256:record.envelope_sha256},signal:AbortSignal.timeout(12000)});if(generation!==epoch||active!=='approvals')return;await load();state('approval-state',`${result.status}. ${result.disclosure}`);}
         catch(error){if(generation===epoch)state('approval-state',error.message,true);}
         finally{actions.querySelectorAll('button').forEach(b=>b.disabled=false);}
       });actions.append(button);}row.append(actions);
