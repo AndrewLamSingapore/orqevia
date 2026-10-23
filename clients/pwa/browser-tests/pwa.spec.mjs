@@ -47,7 +47,7 @@ test("manifest, service worker and offline shell are installable primitives", as
   await context.setOffline(true);
   if (browserName === "firefox") {
     const cachedShell = await page.evaluate(async () => {
-      const cache = await caches.open("orqevia-shell-v30");
+      const cache = await caches.open("orqevia-shell-v32");
       const response = await cache.match("/pwa/");
       if (!response) return null;
       const text = await response.text();
