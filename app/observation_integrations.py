@@ -156,7 +156,14 @@ def parse_news(raw):
         link = item.findtext("link", "")
         if urlsplit(link).scheme != "https" or urlsplit(link).hostname != "www.consilium.europa.eu":
             raise ValueError("Unexpected news source link")
-        stamp = parsedate_to_datetime(item.findtext("pubDate", ""))
+        publication = item.findtext("pubDate")
+        if publication:
+            stamp = parsedate_to_datetime(publication)
+            timestamp_kind = "PUBLICATION"
+        else:
+            updated = item.findtext("{http://www.w3.org/2005/Atom}updated", "")
+            stamp = datetime.fromisoformat(updated.replace("Z", "+00:00"))
+            timestamp_kind = "PROVIDER_UPDATE"
         if stamp is None or stamp.tzinfo is None:
             raise ValueError("A timezone-qualified news publication timestamp is required")
         published = stamp.astimezone(timezone.utc).isoformat()
@@ -166,12 +173,15 @@ def parse_news(raw):
         if not title.strip() or len(title) > 1000 or len(link) > 2000:
             raise ValueError("Invalid press-release title or link")
         records.append({
-            "title": title, "source_url": link, "published_at": published,
+            "title": title, "source_url": link, "provider_timestamp": published,
+            "timestamp_kind": timestamp_kind,
+            "published_at": published if timestamp_kind == "PUBLICATION" else None,
+            "provider_updated_at": published if timestamp_kind == "PROVIDER_UPDATE" else None,
             "attribution": f"Council of the European Union. © European Union, {stamp.year}. Original headline.",
         })
     if not tree.tag.endswith("rss") or not records:
         raise ValueError("Unrecognized or empty news schema")
-    return records, max(r["published_at"] for r in records)
+    return records, max(r["provider_timestamp"] for r in records)
 
 
 PARSERS = {"aviation": parse_aviation, "maritime": parse_maritime, "geopolitical": parse_news}
@@ -331,10 +341,24 @@ async def refresh():
     return {"status": "COLLECTION_FINISHED", **snapshot()}
 
 
+def next_poll_delay():
+    delays = [float(INTERVAL)]
+    for name in CATALOG:
+        try:
+            elapsed = time.time() - _stamp(_read(name).get("attempted_at"))
+            delays.append(max(1.0, INTERVAL - elapsed))
+        except (ValueError, TypeError):
+            pass
+    return min(delays)
+
+
 async def poll():
     while True:
+        delay = float(INTERVAL)
         try:
-            await refresh()
+            result = await refresh()
+            if result["status"] != "EVIDENCE_STORAGE_BUDGET_REACHED":
+                delay = next_poll_delay()
         except (OSError, ValueError):
             pass  # A failing optional collector does not block core execution.
-        await asyncio.sleep(INTERVAL)
+        await asyncio.sleep(delay)

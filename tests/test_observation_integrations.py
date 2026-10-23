@@ -122,3 +122,23 @@ def test_recent_collection_does_not_make_old_provider_data_fresh(tmp_path, monke
     assert entry["source_freshness"] == "OLD_OR_UNAVAILABLE"
     assert entry["collection_age_seconds"] < 10
     assert entry["records"] == [{"icao24": "abc123"}]
+
+
+def test_council_update_timestamp_is_not_reported_as_a_publication_time():
+    stamp = datetime.now(timezone.utc).isoformat()
+    raw = (f'<rss xmlns:atom="http://www.w3.org/2005/Atom"><channel><item>'
+           f'<title>Explicit synthetic Council headline</title>'
+           f'<link>https://www.consilium.europa.eu/en/press/press-releases/fixture</link>'
+           f'<atom:updated>{stamp}</atom:updated></item></channel></rss>').encode()
+    records, observed = observations.parse_news(raw)
+    assert records[0]["published_at"] is None
+    assert records[0]["timestamp_kind"] == "PROVIDER_UPDATE"
+    assert records[0]["provider_updated_at"] == observed == stamp
+
+
+def test_restart_near_collection_deadline_waits_only_until_the_next_due_poll(monkeypatch):
+    current = datetime.now(timezone.utc).timestamp()
+    attempted = datetime.fromtimestamp(current - observations.INTERVAL + 5, timezone.utc).isoformat()
+    monkeypatch.setattr(observations.time, "time", lambda: current)
+    monkeypatch.setattr(observations, "_read", lambda name: {"attempted_at": attempted})
+    assert observations.next_poll_delay() == pytest.approx(5)
