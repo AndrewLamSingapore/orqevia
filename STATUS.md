@@ -4,28 +4,42 @@
 
 ### Claimed, not independently checked
 
-An isolated candidate adds six public product pages, shared dark/light design
-tokens, responsive workspace navigation and a bounded OSIP adapter over the
-existing registry, model catalog, objective queue and Stable Spine approval
-store. Production remains on application `98b2537` / image `026ff681` while
-the combined candidate is staged. No Owner-only Verified section is changed.
-Fresh host receipts record strict TLS, the authenticated objective-to-evidence
-journey, 21/21 sequential agent-route queue jobs, one bounded Hugging Face
-classification and 8/8 synthetic `gemma3:12b` contracts. These are scoped
-observations, not blanket agent competence, physical iPhone or L7 certification.
-See [the candidate design and qualification record](docs/ORQEVIA2-20261023.md).
+The Owner-approved local production release now runs application source
+`92adf4f05b595a67d2700bc44e134d7d2d2cd78c`, immutable image `c597d2505cd5`.
+It delivers six public product pages, shared dark/light styling, responsive
+desktop/mobile navigation, OSIP and an authenticated collective Operations Board
+through the existing queue, canonical identities, notebooks and Stable Spine.
+No Owner-only Verified section is changed.
 
-The Owner expanded the candidate to a local, governed collective Operations
-Board: source-mirrored lookup, attributed queue contributions, tracked questions,
-evidence puzzles and owned gap workflows. Isolated mechanism and security tests
-pass; this new feature still requires its own real-service staging and production
-acceptance. The preceding modernization passed 27 live staging journey checks.
-The supplied 21-role case workflow passed 21/21 with independent checking,
-bounded retries and calculation support; model-only first attempts were 17/21.
-This is a bounded workflow result, not full-role or L7 certification. Production
-activation is explicitly authorized after verification. Physical iPhone testing
-and the two UN 404 sources are parked by the Owner. Runtime and fixture evidence
-remain distinct; no Owner-only Verified record is changed.
+Observed acceptance at that application revision: 5,289 canonical tests and
+92 subtests passed, with four Windows skips; all required CI checks passed.
+Actual staging passed 27 modernization checks, 20 Operations Board browser
+checks, 21/21 contribution/questioning/gap-participation cases and all ten
+collective demonstrations. Those demonstrations include source-checked
+correction, a two-agent puzzle, genuine private-index repair with independent
+verification, restricted-action denial, retained contradiction and recovery.
+Declared test fixtures remain distinguished from operational facts.
+
+Production passed 26 actual journey checks and 15 Operations Board checks,
+including real model output, grounded retrieval, read-only observability,
+authorization denials and evidence. All 21 agents have real attributed
+contributions. All 21 questioning/gap paths were tested in staging; one was
+also demonstrated in production. Staging records were not copied into production.
+The durable desktop entry passed actual Edge refresh, expiry and restart checks.
+Database snapshots, prior images, failed attempts and rollback records remain
+preserved. Model residency is bounded; telemetry follows backend recreation.
+
+Scope remains explicit: four of seven discovered fabric adapters have observed
+live contracts; the other three remain configured-only in the registry. One
+public feed is intermittent and retains explicit degraded state. The supplied
+role workflow passed 21/21 with independent checking and calculation support;
+model-only scores were 17/21 first attempt and 19/21 after bounded corrections.
+The calculator belongs to the qualification harness. This is not general agent
+competence, L7 certification, formal proof or autonomous production learning.
+Approval decisions are wired; generic automatic execution continuation is partial.
+Physical iPhone and the two UN 404 sources are parked by the Owner. Physical
+cold-PC boot and external authenticated access remain separately unverified.
+See [the release evidence and scope](docs/ORQEVIA2-20261023.md).
 
 ## Live single-node release acceptance — 23 October 2026
 
