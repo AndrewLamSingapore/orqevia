@@ -57,8 +57,10 @@ def test_strict_handshake_and_wrong_hostname(tmp_path):
         key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
     )
     client = ssl.create_default_context(cafile=str(tmp_path / "ca.crt"))
+    client.minimum_version = ssl.TLSVersion.TLSv1_2
     client.verify_flags |= ssl.VERIFY_X509_STRICT
     server = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    server.minimum_version = ssl.TLSVersion.TLSv1_2
     server.load_cert_chain(tmp_path / "server.crt", tmp_path / "server.key")
     listener = socket.socket()
     listener.bind(("127.0.0.1", 0))

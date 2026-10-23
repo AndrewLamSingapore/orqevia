@@ -72,6 +72,16 @@ observes the Linux VM rather than all Windows pressure. No new memory admission
 profile is activated by this release; short-prompt results cannot qualify the
 maximum configured context, general reasoning quality or higher concurrency.
 
+The measured eight-prompt run scored 6/8 for each installed generation model.
+Both failed exact bare-tool-name and bare-Python formatting contracts; these are
+retained failures, not evidence of general coding or tool-use qualification.
+Native schema-constrained JSON passed for both; the embedding route returned
+768 dimensions. Median wall latency was 5.659 seconds for 1B and 6.146 seconds
+for 4B, with at least 5,565 MiB host RAM available across the two benchmark
+segments. Short classification, extraction and structured-output work may use
+1B; broader work retains 4B and its explicit quality limitations. N>1 remains
+unqualified. No model download or silent role/configuration change was made.
+
 Full receipts, original failures, screenshots and hashes are retained locally in
 `operations/release-qualification-20261023` and the dated architecture assessment.
 Application publication, CI, deployment identity and live acceptance are recorded
