@@ -13,7 +13,8 @@ from . import open_access
 
 router=APIRouter()
 PATHS={'health':{'GET'},'documents':{'GET'},'ingest':{'POST'},'retrieve':{'POST'},'answer':{'POST'},'reindex':{'POST'},
-    'workspace':{'GET'},'ideas':{'GET','POST'},'scaffold':{'POST'},'validate':{'POST'}}
+    'workspace':{'GET'},'ideas':{'GET','POST'},'scaffold':{'POST'},'validate':{'POST'},
+    'semantic/health':{'GET'},'semantic/assess':{'POST'}}
 
 def identity(request):
     actor=existing.access(request,mutation=True)

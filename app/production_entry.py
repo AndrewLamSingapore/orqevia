@@ -241,5 +241,9 @@ def artifact(artifact_id: str, authorization=Depends(local_authorization)):
 app.include_router(operational_workflows)
 app.include_router(pwa_owner_router)
 app.include_router(build_survival_router(local_authorization))
+from .sovereign_plane import router as sovereign_plane_router
+app.include_router(sovereign_plane_router)
+from .collective_api import router as collective_board_router
+app.include_router(collective_board_router)
 app.mount('/', direct_entry.app)
 OBSERVABILITY = install_observability(app)

@@ -143,7 +143,13 @@ def _execute(job: dict, provider: Provider) -> dict:
             success=answer is not None and failure is None,failure_kind=failure)
 
 
-pool=WorkerPool(queue,providers(),_execute)
+def _publish_completed_job(job_id: str) -> None:
+    if os.getenv('ORQEVIA_COLLECTIVE_ENABLED') == '1':
+        from .collective_runtime import publish_job
+        publish_job(job_id)
+
+
+pool=WorkerPool(queue,providers(),_execute,on_complete=_publish_completed_job)
 
 
 def authorize(authorization: str | None) -> None:

@@ -26,6 +26,9 @@ function targetFor(requestUrl) {
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/interface/")) {
     return null;
   }
+  if (url.pathname === '/pwa/design/tokens.css' || url.pathname === '/pwa/design/theme.mjs') {
+    return resolve(ROOT, '../shared', url.pathname.slice('/pwa/design/'.length));
+  }
   if (!url.pathname.startsWith("/pwa/")) return null;
   const relative = decodeURIComponent(url.pathname.slice(5)) || "index.html";
   const normalized = normalize(relative);

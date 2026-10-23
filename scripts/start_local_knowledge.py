@@ -38,6 +38,14 @@ def main():
             if response.status==200:return
     except OSError:pass
     child_env=os.environ.copy()
+    generation_model=config.get('generation_model','gemma3:4b')
+    if not isinstance(generation_model,str) or not generation_model.strip() or len(generation_model)>128:
+        raise RuntimeError('Invalid local generation model configuration')
+    nli_model_dir=config.get('nli_model_dir')
+    if nli_model_dir is not None:
+        if not isinstance(nli_model_dir,str) or not Path(nli_model_dir).is_dir():
+            raise RuntimeError('Configured offline entailment artifacts are unavailable')
+        child_env['ORQEVIA_NLI_MODEL_DIR']=str(Path(nli_model_dir).resolve())
     minilm_onnx=config.get('minilm_onnx')
     if minilm_onnx is not None:
         if not isinstance(minilm_onnx,dict):
@@ -53,7 +61,7 @@ def main():
     child_env.update({
         'ORQEVIA_SERVICE_TOKEN':token,'ORQEVIA_OWNER_ACCOUNT':account,
         'ORQEVIA_LOCAL_AI_ROOT':config['data_root'],'HF_HUB_OFFLINE':'1',
-        'ORQEVIA_LOCAL_GENERATION_MODEL':'gemma3:4b',
+        'ORQEVIA_LOCAL_GENERATION_MODEL':generation_model,
         'ORQEVIA_LOCAL_RELEASE':config['release'],
         'TRANSFORMERS_OFFLINE':'1','HF_HUB_DISABLE_TELEMETRY':'1',
         'PYTHONUTF8':'1','OMP_NUM_THREADS':'2','TOKENIZERS_PARALLELISM':'false',

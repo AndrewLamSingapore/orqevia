@@ -33,6 +33,9 @@ COPY clients/pwa/knowledge.mjs clients/pwa/knowledge.css clients/pwa/workspace-t
 COPY clients/pwa/command-map.mjs clients/pwa/command-map.css clients/pwa/agent-readiness.json ./app/pwa_static/
 COPY clients/pwa/vendor ./app/pwa_static/vendor
 COPY clients/pwa/icons ./app/pwa_static/icons
+COPY clients/public ./app/public_static
+COPY clients/shared ./app/shared_static
+COPY clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/operations.mjs ./app/pwa_static/
 
 # Keep revision metadata after dependency installation so a new source commit
 # does not invalidate the expensive, reproducible requirements layer.

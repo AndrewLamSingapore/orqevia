@@ -251,6 +251,15 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact dated OSIP candidate addition. All prior history
+    # and Owner-only Verified sections retain their existing byte checks.
+    osip_start = after.index("## ORQEVIA 2.0 candidate \u2014 23 October 2026")
+    osip_end = after.index("## Live single-node release acceptance", osip_start)
+    osip_update = after[osip_start:osip_end].encode("utf-8")
+    assert len(osip_update) == 3362
+    assert hashlib.sha256(osip_update).hexdigest() == "9d109632b868202dc41dc69761790b2e2ab8d002eeb30b1bca8d197fe8e26886"
+    assert b"### Verified" not in osip_update
+    after = after[:osip_start] + after[osip_end:]
     # Admit only the exact dated audit/release observations. All earlier bytes
     # and owner-only Verified records remain checked by the frozen proof below.
     audit_start = after.index("## Live single-node release acceptance — 23 October 2026")

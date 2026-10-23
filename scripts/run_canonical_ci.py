@@ -143,6 +143,11 @@ def main():
                   'agent_cert_structured_roles','agent_cert_structured_input_roles'])
     names.extend(['local_knowledge_boundary','workspace_capabilities','local_diagnostic_installation'])
     names.extend(['pwa_open_access', 'lan_tls_repair', 'intelligence_read_capacity'])
+    names.append('sovereign_plane')
+    names.append('staging_model_proxy')
+    names.extend(['observation_integrations', 'semantic_entailment'])
+    names.extend(['collective_intelligence', 'collective_runtime', 'collective_repair', 'collective_api'])
+    names.append('fabric_adapters')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

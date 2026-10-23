@@ -2,13 +2,12 @@
 
 Real cached HF embedding and Qwen generation have separate runtime receipts.
 """
-import hashlib
 import json
 from pathlib import Path
 import pytest
 faiss=pytest.importorskip('faiss')
 import numpy as np
-from app.local_knowledge import KnowledgeEngine,atomic_json,sha
+from app.local_knowledge import KnowledgeEngine,sha
 
 class Encoder:
     def encode(self,texts,**kwargs):
@@ -31,6 +30,29 @@ def test_preserved_index_retrieval_and_grounded_generation(engine):
     generated=engine.answer('alpha access')
     assert generated['model_invoked'] and generated['citations_valid']
     assert generated['status']=='CITED_MODEL_INTERPRETATION'
+
+
+def test_fresh_private_store_reads_empty_and_first_ingest_persists(tmp_path):
+    fresh=KnowledgeEngine(tmp_path,encoder=Encoder())
+    assert fresh.list_documents()=={'documents':[]}
+    assert fresh.health()['index']['chunks']==0
+    assert fresh.retrieve('alpha')['status']=='NO_EVIDENCE'
+    assert fresh.reindex()['status']=='EMPTY'
+    assert not list(tmp_path.iterdir()), 'Empty observations must not initialize persistent data'
+    result=fresh.ingest('alpha.txt',b'Alpha is the sole first document in this isolated fixture.')
+    assert result['status']=='INDEXED'
+    reopened=KnowledgeEngine(tmp_path,encoder=Encoder())
+    assert len(reopened.list_documents()['documents'])==1
+    assert reopened.retrieve('alpha')['results'][0]['document_id']==result['document_id']
+
+
+def test_partial_index_is_not_silently_replaced_with_empty_store(tmp_path):
+    (tmp_path/'rag_index_v2').mkdir()
+    (tmp_path/'rag_index_v2'/'chunks.json').write_text('[]')
+    fresh=KnowledgeEngine(tmp_path,encoder=Encoder())
+    with pytest.raises((RuntimeError,OSError)):
+        fresh.list_documents()
+    assert not (tmp_path/'rag_index_v2'/'CURRENT.json').exists()
 
 def test_ingest_duplicate_restart_and_source_isolation(engine):
     result=engine.ingest('beta.txt',b'Beta reference records a completely different subject.')
