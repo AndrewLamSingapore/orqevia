@@ -1,0 +1,29 @@
+# Existing single-node telemetry, sharing the monolith's network namespace.
+# Compose must restart this dependent when it replaces the backend container.
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector@sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda
+    user: "0"
+    network_mode: service:backend
+    depends_on:
+      backend:
+        condition: service_healthy
+        restart: true
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./deploy/otel-collector.config.yaml:/etc/otel/config.yaml:ro
+      - orqevia-otel-data:/otel
+    labels:
+      com.orqevia.managed: "true"
+      com.orqevia.role: "otel-collector"
+    restart: always
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  orqevia-otel-data:
+    name: orqevia-otel-data

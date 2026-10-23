@@ -1,5 +1,33 @@
 # STATUS.md — Portfolio status record
 
+## Monolith release qualification — 23 October 2026
+
+### Claimed, not independently checked
+
+- Consolidated release work preserves deployed `651b303` through `dd8fc6b`,
+  adds the tested pairing-default fix, strict LAN certificate repair tooling,
+  and the PWA logout-state regression fix. Publication and image promotion
+  remain separate events until their receipts are recorded.
+- Live approved cloud classification completed through the gateway as job
+  `a005f792-81c7-402c-be75-3e61992d30fe`: one attempt, 27 input / 2 output
+  tokens, computed cost $0.00000155, within the explicit $0.01 cap.
+- Live authenticated PWA task `72da5ba0-c24d-4d2e-9a1c-4c70848d2d0f`
+  completed local inference, persisted its result and returned a SHA-256
+  verified Markdown download. Its sign-out exposed stale UI access state;
+  the source fix and regression passed, with release-image acceptance pending.
+- Strict Python 3.13 and Chromium accepted the repaired LAN certificate.
+  Existing private keys and SPKI pins were preserved. The stopped collector
+  recovered; a subsequent Docker engine stall required a Docker-only restart.
+  Existing containers and durable volumes recovered; stall cause is unproven.
+- 81 release boundary tests, 392 inference-fabric tests and 14 focused PWA
+  race/cache tests passed. These suites overlap prior audit coverage and do
+  not imply all fabric providers are live. Hyper-Inference proxies remain
+  explicitly advisory test doubles. Hardware qualification remains bounded
+  to measured CPU inference at concurrency one.
+
+See [release qualification](docs/RELEASE-QUALIFICATION-20261023.md) for scope,
+review, evidence identifiers, deployment boundaries and known limitations.
+
 ## Phase 2–5 source and environment audit — 23 October 2026
 
 ### Claimed, not independently checked

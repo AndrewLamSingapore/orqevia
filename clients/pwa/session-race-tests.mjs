@@ -74,6 +74,17 @@ test('an earlier authorization failure cannot erase a newer validated session',a
   assert.match(f.nodes.get('session-detail').textContent,/new-member/);
 });
 
+test('successful logout of a trusted device immediately restores enrollment state',async()=>{
+  const f=await fixture();await f.authenticated('signed-out-member');
+  assert.equal(document.documentElement.dataset.accessState,'trusted');
+  const logout=f.nodes.get('logout-button').listeners.get('click')();
+  assert.equal(f.requests[1].url,'/pwa/api/logout');
+  f.response(1,{});await logout;
+  assert.equal(document.documentElement.dataset.accessState,'untrusted');
+  assert.equal(f.nodes.get('connection-label').textContent,'Not connected');
+  assert.equal(f.nodes.get('submit-button').disabled,true);
+});
+
 test('late account-A local history is not rendered or opened under account B',async()=>{
   const f=await fixture();let release;
   f.store.load=client=>client==='member-a'?new Promise(resolve=>{release=resolve;}):Promise.resolve({pending:null,history:[]});

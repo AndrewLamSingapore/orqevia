@@ -1,0 +1,33 @@
+# Local OTLP receiver: no host port is published by its Compose overlay.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    limit_mib: 128
+    spike_limit_mib: 24
+    check_interval: 5s
+  batch:
+    timeout: 5s
+    send_batch_size: 64
+exporters:
+  debug:
+    verbosity: basic
+  file:
+    path: /otel/otel-telemetry.json
+    rotation:
+      max_megabytes: 64
+      max_backups: 5
+      max_days: 30
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug, file]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug, file]
