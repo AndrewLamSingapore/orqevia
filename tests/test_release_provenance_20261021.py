@@ -13,6 +13,13 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_image_includes_stale_shell_recovery_assets():
+    source = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    copies = [line for line in source.splitlines() if line.startswith("COPY ") and "./app/pwa_static/" in line]
+    for asset in ("reset.html", "reset.mjs"):
+        assert any("clients/pwa/" + asset in line.split()[1:-1] for line in copies)
+
+
 def test_publish_image_uses_canonical_namespace_and_exact_revision():
     workflow = yaml.safe_load((ROOT / ".github/workflows/publish-image.yml").read_text(encoding="utf-8"))
     steps = workflow["jobs"]["publish"]["steps"]
