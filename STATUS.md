@@ -1,5 +1,35 @@
 # STATUS.md — Portfolio status record
 
+## Phase 2–5 source and environment audit — 23 October 2026
+
+### Claimed, not independently checked
+
+- The running backend and interface identify source `dd8fc6b` and image
+  `sha256:a5a2fb90cf31ddcc3c8404669c58509edddf73a2674253382a7d385b070503ff`.
+  GitHub `main` remains `77cd1ad`; publication and deployment are separate.
+- Existing isolated checks on `dd8fc6b`: 240 inference/routing passed with one
+  skip, 72 security passed, and 133 orchestration passed. The Windows security
+  run also emitted a temporary SQLite-file cleanup error at interpreter exit.
+- A synthetic local-only gateway request completed as job
+  `ae3da511-d998-42eb-9449-14f9f2188eef`, using `ollama-fast` / `gemma3:1b`,
+  one attempt, cloud disabled and recorded cost zero. Cloud provider readiness
+  is configured; current external health remains UNMEASURED. No audit cloud
+  inference call was made.
+- The PWA previously granted anonymous OWNER admission if its access-mode
+  variable was missing. The running interface explicitly selects pairing and
+  rejects anonymous access. Local candidate `00903bb` changes the missing-mode
+  default to pairing, retains explicit open opt-in and preserves trusted-device
+  refresh. Its 55 focused Python checks, 85 PWA checks, Ruff and whitespace
+  checks passed. This candidate has not been pushed, merged or deployed.
+- Python 3.12 verified local TLS and observed TRUST_REQUIRED / HTTP 401 for
+  anonymous private access. Python 3.13 strict TLS verification rejected the
+  local certificate for a missing Authority Key Identifier; certificate
+  remediation remains separate from this code candidate.
+
+Evidence: local assessment `assessments/github-architecture-competitive-sweep-20261023`
+under the ABEX workspace. No infrastructure, access policy, cloud budget or
+production source was changed by this audit.
+
 Interpretation updated: 6 October 2026. Dated observations below retain their original dates.
 
 STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.
