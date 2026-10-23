@@ -9,7 +9,10 @@ async function fixture({empty=false,fail=false}={}){
  globalThis.document={hidden:false,documentElement:{dataset:{}},getElementById(id){if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);},createElement:element};
  globalThis.location={href:'https://abex.test/pwa/?view=intelligence'};
  Object.defineProperty(globalThis,'navigator',{value:{onLine:true},configurable:true});
- globalThis.window={addEventListener(n,f){listeners.set(n,f);},dispatchEvent(e){listeners.get(e.type)?.(e);}};
+ // Match browser EventTarget semantics: a component listener must not replace
+ // the shell's existing offline, session or navigation listener.
+ const observers=new Map();
+ globalThis.window={addEventListener(n,f){if(!observers.has(n))observers.set(n,new Set());observers.get(n).add(f);listeners.set(n,e=>{for(const handler of [...observers.get(n)])handler(e);});},removeEventListener(n,f){observers.get(n)?.delete(f);},dispatchEvent(e){listeners.get(e.type)?.(e);}};
  globalThis.setInterval=f=>{intervals.push(f);};
  globalThis.fetch=async(path,options)=>{requests.push({path,options});const payload=path.endsWith('session')?{authenticated:true}:path.includes('/geo/events')?{records:empty?[]:[{event_id:'usgs-real-shaped-fixture',magnitude:5,place:'Fixture only',location:{lat:1,lon:2},source_url:'https://earthquake.usgs.gov/example',ingested_at:new Date().toISOString()}]}:path.includes('rag/retrieve')?{status:'GROUNDED',results:[{source:'https://earthquake.usgs.gov/example'}]}:path.includes('telemetry')?{observed_at:new Date().toISOString(),freshness_seconds:60,agents:[],metrics:[]}:path.endsWith('/alerts')?{alerts:[]}:path.endsWith('/health')?{ok:true}:{};return new Response(JSON.stringify(payload),{status:fail&&path.endsWith('/health')?503:200,headers:{'content-type':'application/json'}});};
  await import(new URL('./intelligence.mjs?test='+(++serial),import.meta.url));
@@ -36,6 +39,11 @@ test('source synchronization is owner-only and sends an authorized mutation requ
  await f.nodes.get('intelligence-ingest').listeners.get('click')();assert.ok(!f.requests.some(r=>r.path.endsWith('/ingest/run')));
  f.session({clientId:'fixture',role:'OWNER'});await settle();assert.equal(f.nodes.get('intelligence-ingest').hidden,false);
  await f.nodes.get('intelligence-ingest').listeners.get('click')();assert.ok(f.requests.some(r=>r.path.endsWith('/ingest/run')&&r.options.method==='POST'));
+ const prior=f.requests.filter(r=>r.path.endsWith('/ingest/run')).length;
+ f.listeners.get('orqevia-view')({detail:{name:'gods-eye'}});await settle();await settle();
+ assert.equal(f.nodes.get('intelligence-ingest').hidden,true);
+ await f.nodes.get('intelligence-ingest').listeners.get('click')();
+ assert.equal(f.requests.filter(r=>r.path.endsWith('/ingest/run')).length,prior);
 });
 
 test('geographic filters validate coordinates and request the real radius API',async()=>{

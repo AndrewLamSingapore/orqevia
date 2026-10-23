@@ -23,7 +23,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    ignoreHTTPSErrors: true,
+    ignoreHTTPSErrors: false,
   },
   webServer: {
     command: "node browser-test-server.mjs",

@@ -3,7 +3,7 @@ FROM ${BASE_IMAGE}
 WORKDIR /app
 COPY app ./app
 COPY config ./config
-COPY clients/pwa/index.html clients/pwa/dashboard.mjs clients/pwa/release.mjs clients/pwa/sw.js clients/pwa/manifest.webmanifest clients/pwa/sovereign.css clients/pwa/sovereign.mjs ./app/pwa_static/
+COPY clients/pwa/index.html clients/pwa/dashboard.mjs clients/pwa/release.mjs clients/pwa/sw.js clients/pwa/manifest.webmanifest clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/intelligence.mjs clients/pwa/integration-panels.mjs ./app/pwa_static/
 COPY clients/public ./app/public_static
 COPY clients/shared ./app/shared_static
 ARG ORQEVIA_RUNTIME_REVISION

@@ -6,6 +6,8 @@ Observation opens existing stores read-only and never initializes absent stores.
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -17,6 +19,7 @@ from typing import Literal
 import uuid
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request
+import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from .agent_registry import load_agent_registry
@@ -25,8 +28,28 @@ from .compute_catalog import load_catalog, task_tier
 from .interface_telemetry import agent_activity, model_runtime_readiness
 from .objective_api import select_capabilities
 from .settings import PrimeSettings
+from . import observation_integrations
 
-router = APIRouter(prefix="/api/osip/v1", tags=["sovereign-intelligence-plane"])
+
+@asynccontextmanager
+async def optional_observations_lifespan(app):
+    task = (
+        asyncio.create_task(observation_integrations.poll())
+        if os.getenv("ORQEVIA_OBSERVATION_POLLING") == "1"
+        else None
+    )
+    try:
+        yield
+    finally:
+        if task:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+
+
+router = APIRouter(
+    prefix="/api/osip/v1", tags=["sovereign-intelligence-plane"], lifespan=optional_observations_lifespan
+)
 PROTOCOL = "orqevia.osip.v1"
 
 
@@ -188,6 +211,64 @@ def snapshot() -> dict:
 def status(request: Request, authorization: str | None = Header(default=None)):
     _authorize(authorization)
     return {**snapshot(), "correlation_id": _correlation(request)}
+
+
+async def observed_integrations():
+    result = observation_integrations.snapshot()
+    owner = os.getenv("ORQEVIA_PWA_OWNER_ACCOUNT_ID", "").strip()
+    token = os.getenv("ORQEVIA_SPINE_TOKEN", "").strip()
+    semantic = {"status": "UNAVAILABLE", "formal_proof": False}
+    if owner and len(token) >= 16:
+        try:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(2, connect=1), trust_env=False, follow_redirects=False
+            ) as client:
+                response = await client.get(
+                    "http://host.docker.internal:8150/semantic/health",
+                    headers={
+                        "Authorization": "Bearer " + token,
+                        "X-ORQEVIA-Owner": hashlib.sha256(owner.encode()).hexdigest(),
+                    },
+                )
+                if response.status_code == 200 and len(response.content) <= 12000:
+                    value = response.json()
+                    if value.get("protocol") == "orqevia.semantic.v1":
+                        semantic = {
+                            key: value.get(key)
+                            for key in (
+                                "status",
+                                "model",
+                                "revision",
+                                "model_sha256",
+                                "runtime",
+                                "scope",
+                                "formal_proof",
+                                "qualification",
+                                "input_persistence",
+                                "truth_or_source_authenticity_verified",
+                            )
+                        }
+        except (httpx.HTTPError, ValueError, TypeError, AttributeError):
+            pass
+    return {**result, "semantic_entailment": semantic}
+
+
+@router.get("/observations")
+async def observations(request: Request, authorization: str | None = Header(default=None)):
+    _authorize(authorization)
+    return {**(await observed_integrations()), "correlation_id": _correlation(request)}
+
+
+@router.post("/observations/refresh")
+async def refresh_observations(body: Contract, request: Request, authorization: str | None = Header(default=None)):
+    _authorize(authorization)
+    collected = await observation_integrations.refresh()
+    return {
+        **(await observed_integrations()),
+        "collection_status": collected["status"],
+        "correlation_id": _correlation(request),
+        "execution_authority_granted": False,
+    }
 
 
 @router.post("/plans", response_model=Plan)

@@ -13,7 +13,8 @@ import urllib.request
 from urllib.parse import unquote
 from fastapi import FastAPI,HTTPException,Request
 from fastapi.responses import JSONResponse
-from .local_knowledge import GENERATION_MODEL,KnowledgeEngine,MAX_UPLOAD
+from pydantic import BaseModel,ConfigDict,Field
+from .local_knowledge import GENERATION_MODEL,MAX_UPLOAD,generation_base_url
 from . import workspace_capabilities
 from .observability import PRIVACY_FASTAPI_TELEMETRY, install_observability
 
@@ -27,6 +28,10 @@ async def lifespan(app):
     # Load only the existing offline embedding model; no model download/pull.
     try:await asyncio.to_thread(ENGINE._embed,['ORQEVIA readiness'])
     except Exception:ENGINE.last_error='EMBEDDING_INITIALIZATION_FAILED'
+    from .semantic_entailment import ENGINE as entailment
+    if os.getenv('ORQEVIA_NLI_MODEL_DIR','').strip():
+        try:await asyncio.to_thread(entailment.load)
+        except Exception:entailment.last_error='MODEL_INITIALIZATION_FAILED'
     yield
 
 app=FastAPI(title='ORQEVIA local knowledge',docs_url=None,redoc_url=None,openapi_url=None,lifespan=lifespan,
@@ -70,7 +75,7 @@ def operation(action,call):
     except HTTPException:raise
     except ValueError as e:
         audit(action,'completed',422);raise HTTPException(422,str(e)) from None
-    except (OSError,RuntimeError,ImportError,KeyError,subprocess.TimeoutExpired) as e:
+    except (OSError,RuntimeError,ImportError,KeyError,subprocess.TimeoutExpired):
         try:audit(action,'completed',503)
         except OSError:pass
         raise HTTPException(503,'Local intelligence dependency unavailable; existing documents preserved') from None
@@ -81,7 +86,7 @@ def health():
     state=ENGINE.health()
     try:
         opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        with opener.open('http://127.0.0.1:11434/api/tags',timeout=3) as r:models=json.load(r).get('models',[])
+        with opener.open(generation_base_url()+'/api/tags',timeout=3) as r:models=json.load(r).get('models',[])
         model=next((m for m in models if m.get('name')==GENERATION_MODEL),None)
         state['generation']={'status':'MODEL_INSTALLED' if model else 'MODEL_UNAVAILABLE','model':GENERATION_MODEL,'digest':model.get('digest') if model else None}
     except (OSError,ValueError):state['generation']={'status':'UNAVAILABLE'}
@@ -91,6 +96,24 @@ def health():
 
 @app.get('/documents')
 def documents():return operation('documents.read',ENGINE.list_documents)
+
+
+class SemanticRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    premise:str=Field(min_length=1,max_length=5000)
+    claim:str=Field(min_length=1,max_length=2000)
+
+
+@app.get('/semantic/health')
+def semantic_health():
+    from .semantic_entailment import ENGINE as entailment
+    return entailment.health()
+
+
+@app.post('/semantic/assess')
+async def semantic_assess(body:SemanticRequest):
+    from .semantic_entailment import ENGINE as entailment
+    return await asyncio.to_thread(operation,'semantic.assess',lambda:entailment.assess(body.premise,body.claim))
 
 @app.get('/workspace')
 def workspace():return workspace_capabilities.workspace_status(ROOT)

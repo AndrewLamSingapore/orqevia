@@ -114,6 +114,7 @@ def prepare():
         "ORQEVIA_HARNESS_DB": "/data/action-harness.db",
         "ORQEVIA_MODEL_KEEP_ALIVE": "2m",
         "ORQEVIA_PUBLIC_AGENT_TRACE": "0",
+        "ORQEVIA_OBSERVATION_POLLING": "1",
         "ORQEVIA_HIGGSFIELD_ENABLED": "0",
     }
     interface_env = {
@@ -152,6 +153,7 @@ def prepare():
             "environment": backend_env,
             "volumes": [data, bind(PRIVATE / "provider-catalog.json", "/run/provider-catalog.json")],
             "mem_limit": "2g",
+            "networks": ["default", "frontend"],
         },
         "interface": {
             "image": image,
@@ -197,7 +199,7 @@ def prepare():
             ],
             "volumes": [bind(SOURCE / "scripts/staging_model_proxy.py", "/app/scripts/staging_model_proxy.py")],
             "mem_limit": "256m",
-            "networks": {"default": {"aliases": ["host.docker.internal"]}, "shared_inference": {}},
+            "networks": {"default": {}, "shared_inference": {}},
         },
         "intelligence": {
             "image": inspect("orqevia-intelligence-1")["Image"],
@@ -225,6 +227,7 @@ def prepare():
                 "ORQEVIA_LOCAL_AI_ROOT": "/data/knowledge",
                 "ORQEVIA_LOCAL_RELEASE": revision,
                 "ORQEVIA_LOCAL_GENERATION_MODEL": "gemma3:12b",
+                "ORQEVIA_LOCAL_GENERATION_URL": "http://ollama:11434",
                 "ORQEVIA_MINILM_BACKEND": "onnx",
                 "ORQEVIA_MINILM_ONNX_DIR": "/model",
                 "ORQEVIA_MINILM_ONNX_SHA256": model_digest,
@@ -235,12 +238,18 @@ def prepare():
             },
             "volumes": [data, bind(model_dir, "/model")],
             "mem_limit": "1g",
-            "network_mode": "service:ollama",
+            "networks": {"default": {"aliases": ["host.docker.internal"]}},
         },
     }
     for service in services.values():
         service["restart"] = "no"
         service["logging"] = {"driver": "json-file", "options": {"max-size": "5m", "max-file": "2"}}
+    nli = Path.home() / "orqevia-ai/models/nli-deberta-v3-base-standard-6c749ce3"
+    if (nli / "model-manifest.json").is_file():
+        services["knowledge"]["mem_limit"] = "3g"
+        services["knowledge"]["cpus"] = 2
+        services["knowledge"]["environment"]["ORQEVIA_NLI_MODEL_DIR"] = "/nli"
+        services["knowledge"]["volumes"].append(bind(nli, "/nli"))
     compose = {
         "name": PROJECT,
         "services": services,
@@ -353,10 +362,24 @@ def refresh():
         ],
         "mem_limit": "256m",
         "restart": "no",
-        "networks": {"default": {"aliases": ["host.docker.internal"]}, "shared_inference": {}},
+        "networks": {"default": {}, "shared_inference": {}},
         "logging": {"driver": "json-file", "options": {"max-size": "5m", "max-file": "2"}},
     }
     services["knowledge"]["environment"]["ORQEVIA_LOCAL_GENERATION_MODEL"] = "gemma3:12b"
+    services["knowledge"].pop("network_mode", None)
+    services["knowledge"]["networks"] = {"default": {"aliases": ["host.docker.internal"]}}
+    services["knowledge"]["environment"]["ORQEVIA_LOCAL_GENERATION_URL"] = "http://ollama:11434"
+    services["backend"]["networks"] = ["default", "frontend"]
+    services["backend"]["environment"]["ORQEVIA_OBSERVATION_POLLING"] = "1"
+    nli = Path.home() / "orqevia-ai/models/nli-deberta-v3-base-standard-6c749ce3"
+    if (nli / "model-manifest.json").is_file():
+        services["knowledge"]["mem_limit"] = "3g"
+        services["knowledge"]["cpus"] = 2
+        services["knowledge"]["environment"]["ORQEVIA_NLI_MODEL_DIR"] = "/nli"
+        services["knowledge"]["volumes"] = [v for v in services["knowledge"]["volumes"] if v["target"] != "/nli"]
+        services["knowledge"]["volumes"].append(
+            {"type": "bind", "source": str(nli), "target": "/nli", "read_only": True}
+        )
     compose["volumes"].pop("models", None)
     compose["networks"] = {
         "default": {"internal": True},

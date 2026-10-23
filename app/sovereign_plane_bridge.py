@@ -21,7 +21,13 @@ from .interface_contract import authorize
 from . import pwa_sessions
 
 router = APIRouter(prefix="/interface/v1/osip", tags=["osip-interface"])
-PATHS = {"status": {"GET"}, "plans": {"POST"}, "approvals": {"GET"}}
+PATHS = {
+    "status": {"GET"},
+    "plans": {"POST"},
+    "approvals": {"GET"},
+    "observations": {"GET"},
+    "observations/refresh": {"POST"},
+}
 _admissions = OrderedDict()
 _admission_lock = threading.Lock()
 
