@@ -78,7 +78,7 @@ export function normalLatestLines(value, now=Date.now()) {
 
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
-  let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, generation=null;
+  let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, interfaceClientId=null, generation=null;
   function invalidatePending(){sessionEpoch++;pending?.abort();pending=null;}
   const text=(id,value)=>{if($(id))$(id).textContent=value;};
   function view(name,updateRoute=true){
@@ -151,13 +151,19 @@ if(typeof document!=='undefined') {
       text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'—');
     }
     text('telemetry-source',`${latest.source.instance} · ${readiness||'agent readiness UNKNOWN'} · observed ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(latest.observed_at))} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
+    if(!events.size){
+      const active=latest.metrics.find(metric=>metric.metric_id==='active_job_records');
+      const count=active?.collection_status==='OBSERVED'&&Number.isSafeInteger(active.value)?active.value:null;
+      text('activity-state',count>0?'ACTIVE WORK':'IDLE');
+      text('dashboard-activity-rows',count>0?'Active work exists. Open a task or submit an objective to view its owned event stream.':count===0?'No ORQEVIA jobs are currently active.':'Activity is unavailable.');
+    }
     const list=$('agent-provenance-list');list.replaceChildren();
     for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · availability ${agent.availability}`;row.append(title,status);list.append(row);}
   }
   async function poll(){
     if(!authenticated||document.hidden||!navigator.onLine||pending)return;
     const controller=new AbortController(), epoch=sessionEpoch;pending=controller;
-    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:10000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==clientId){unavailable('UNKNOWN');return;}latest=value;render();}
+    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:10000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}latest=value;render();}
     catch(error){if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;unavailable([401,403].includes(error.status)?'UNAUTHORIZED':!navigator.onLine?'OFFLINE':'UNAVAILABLE');}
     finally{if(pending===controller)pending=null;}
   }
@@ -171,7 +177,7 @@ if(typeof document!=='undefined') {
     for(const record of [...events.values()].reverse().slice(0,8)){const entry=document.createElement('div');entry.className='agent-record';entry.textContent=`${record.id} · ${record.state} · ${record.updated||'source timestamp UNKNOWN'}`;activity.append(entry);}
     text('activity-state','OWNED TASK OBSERVATIONS');
   });
-  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;if(authenticated&&next?.clientId===clientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;generation=next?.generation??null;events.clear();latest=null;unavailable('UNAUTHORIZED');text('dashboard-activity-rows','No owned task event stream selected.');text('activity-state','UNAVAILABLE');const rows=$('dashboard-task-rows');rows.replaceChildren();const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent='Open an owned task to inspect its genuine execution record.';row.append(cell);rows.append(row);if(next)void poll();});
+  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();latest=null;unavailable('UNAUTHORIZED');text('dashboard-activity-rows','No owned task event stream selected.');text('activity-state',next?'NO RECENT TASK':'UNAVAILABLE');const rows=$('dashboard-task-rows');rows.replaceChildren();const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent='Open an owned task to inspect its genuine execution record.';row.append(cell);rows.append(row);if(next)void poll();});
   function suspend(){invalidatePending();unavailable('OFFLINE');}
   window.addEventListener('offline',suspend);window.addEventListener('online',()=>void poll());
   document.addEventListener('visibilitychange',()=>{if(document.hidden){invalidatePending();}else void poll();});

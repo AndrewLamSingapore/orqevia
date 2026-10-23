@@ -6,7 +6,7 @@ surface does not start a second pool or create a new Registry/queue authority.
 """
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from .interface_contract import router
@@ -40,6 +40,12 @@ from .workflow_bridge import router as workflow_bridge_router
 app.include_router(workflow_bridge_router)
 app.mount('/pwa', StaticFiles(directory=os.getenv('ORQEVIA_PWA_STATIC_DIR',
     str(Path(__file__).with_name('pwa_static'))), html=True, check_dir=False), name='pwa')
+
+
+@app.get('/', include_in_schema=False)
+async def root_redirect():
+    """Send legacy and previously installed clients to the canonical PWA."""
+    return RedirectResponse('/pwa/', status_code=307)
 
 PROTOCOL = 'orqevia.interface.v1'
 ERRORS = {

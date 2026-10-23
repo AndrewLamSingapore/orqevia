@@ -1,0 +1,7 @@
+# Patch only request admission; preserve the installed Singapore intelligence
+# service and all its existing dependencies, data handlers and configuration.
+ARG INTELLIGENCE_BASE_IMAGE
+FROM ${INTELLIGENCE_BASE_IMAGE}
+COPY app/orqevia/security.py /service/app/orqevia/security.py
+ARG CAPACITY_PATCH_REVISION=UNKNOWN
+LABEL com.orqevia.capacity-patch-revision=${CAPACITY_PATCH_REVISION}

@@ -24,6 +24,10 @@ assert.ok(html.includes('id="objective-form"'));assert.ok(html.includes('id="enr
 assert.ok(!html.includes('21/21 agents ready'));assert.ok(!/>\s*100%\s*</.test(html));
 const dashboardSource=readFileSync(new URL('./dashboard.mjs',import.meta.url),'utf8');
 assert.ok(dashboardSource.includes("known.add('objective')"));
+assert.ok(dashboardSource.includes('value?.audience?.client_id!==interfaceClientId'));
+assert.ok(dashboardSource.includes("text('activity-state',count>0?'ACTIVE WORK':'IDLE')"));
+const appSource=readFileSync(new URL('./app.mjs',import.meta.url),'utf8');
+assert.ok(appSource.includes('interfaceClientId:session.interfaceClientId||session.clientId'));
 console.log('Dashboard source, objective routing, freshness, agent-readiness separation, duplicate-agent rejection, PWA identity and API cache boundary: 18 assertions PASS');
 
 assert.equal(telemetryFreshness({...report,agents:[]},time),'OBSERVED');

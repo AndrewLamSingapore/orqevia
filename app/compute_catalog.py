@@ -21,6 +21,10 @@ _BOUNDED_LIST_ZH = re.compile(
     r"(?:创建|写|生成|制作).{0,120}(?:[一二三四五六七八九十]|[1-9]|10)\s*(?:项|条).{0,80}(?:清单|列表)",
     re.S,
 )
+_BOUNDED_REPLY = re.compile(
+    r"^\s*(?:please\s+)?(?:reply|respond|return|say)\s+(?:with\s+)?(?:exactly|only)\b",
+    re.I,
+)
 
 
 def bounded_list_task(objective):
@@ -37,7 +41,9 @@ def task_tier(objective, task_class='auto'):
     text=objective.lower()
     if any(x in text for x in ('repository','implement','debug','refactor','architecture','formal proof','cryptographic')):return Tier.FLAGSHIP
     # Only tightly bounded tasks enter Nano without verified success data.
-    if text.startswith(('classify ','extract labels ','reply exactly:')) or bounded_list_task(objective):return Tier.NANO
+    if (text.startswith(('classify ','extract labels ','reply exactly:'))
+            or bounded_list_task(objective) or _BOUNDED_REPLY.search(objective)):
+        return Tier.NANO
     return Tier.MINI
 
 

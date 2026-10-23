@@ -1,5 +1,96 @@
 # STATUS.md — Portfolio status record
 
+## Live single-node release acceptance — 23 October 2026
+
+### Claimed, not independently checked
+
+- Backend/interface application source `98b2537`, image
+  `sha256:026ff681d12785aa9afd0b55787103d9b028abffe3e5428a96f57f7f38947481`,
+  is deployed and healthy. All 205 Python files matched that source after
+  explicit checkout newline normalization. Nine GitHub checks passed on that
+  source, including 5,202 canonical tests with one skip and browser assurance.
+- Authenticated live PWA task `99aa2f5b-2848-4fa0-ad8f-49a7f8369e22`
+  completed on ABEX in about 1.03 seconds from creation through completion.
+  Owner enrollment, trusted refresh, fourteen navigation sections, rendered
+  Intelligence/God's Eye observations, Build candidate generation, the actual
+  Test action, persisted result, SHA-256 verified download and logout passed.
+  Anonymous/invalid backend credentials returned 401; authorized reads returned
+  200. Strict TLS 1.2/1.3 and wrong-hostname rejection passed.
+- The earlier approved HF gateway call remains recorded as one completed
+  request with computed cost $0.00000155. No additional paid inference was used.
+- The independently selected 12B model passed 8/8 bounded local checks at N=1;
+  the node now uses the measured 8K context. The Intelligence read burst repair
+  retains two slots and supplied its existing server authority from backend
+  memory. Its Singapore service handlers, data, ports and existing environment
+  were retained; the prior container remains available for rollback.
+- A separate bare-marker diagnostic returned an empty model reply and failed
+  closed. Small-model benchmark formatting failures, unconfigured providers,
+  advisory Hyper-Inference doubles and maximum-context/concurrency limits are
+  retained as explicit limitations. Disposable test-folder deletion was
+  rejected by automatic tool policy; no production data was deleted.
+
+Detailed receipts and the final acceptance matrix are retained locally in
+`operations/release-qualification-20261023`. This is operational evidence, not
+owner-only Verified status or independent agent certification.
+
+## Monolith release qualification — 23 October 2026
+
+### Claimed, not independently checked
+
+- Consolidated release work preserves deployed `651b303` through `dd8fc6b`,
+  adds the tested pairing-default fix, strict LAN certificate repair tooling,
+  and the PWA logout-state regression fix. Publication and image promotion
+  remain separate events until their receipts are recorded.
+- Live approved cloud classification completed through the gateway as job
+  `a005f792-81c7-402c-be75-3e61992d30fe`: one attempt, 27 input / 2 output
+  tokens, computed cost $0.00000155, within the explicit $0.01 cap.
+- Live authenticated PWA task `72da5ba0-c24d-4d2e-9a1c-4c70848d2d0f`
+  completed local inference, persisted its result and returned a SHA-256
+  verified Markdown download. Its sign-out exposed stale UI access state;
+  the source fix and regression passed, with release-image acceptance pending.
+- Strict Python 3.13 and Chromium accepted the repaired LAN certificate.
+  Existing private keys and SPKI pins were preserved. The stopped collector
+  recovered; a subsequent Docker engine stall required a Docker-only restart.
+  Existing containers and durable volumes recovered; stall cause is unproven.
+- 81 release boundary tests, 392 inference-fabric tests and 14 focused PWA
+  race/cache tests passed. These suites overlap prior audit coverage and do
+  not imply all fabric providers are live. Hyper-Inference proxies remain
+  explicitly advisory test doubles. Hardware qualification remains bounded
+  to measured CPU inference at concurrency one.
+
+See [release qualification](docs/RELEASE-QUALIFICATION-20261023.md) for scope,
+review, evidence identifiers, deployment boundaries and known limitations.
+
+## Phase 2–5 source and environment audit — 23 October 2026
+
+### Claimed, not independently checked
+
+- The running backend and interface identify source `dd8fc6b` and image
+  `sha256:a5a2fb90cf31ddcc3c8404669c58509edddf73a2674253382a7d385b070503ff`.
+  GitHub `main` remains `77cd1ad`; publication and deployment are separate.
+- Existing isolated checks on `dd8fc6b`: 240 inference/routing passed with one
+  skip, 72 security passed, and 133 orchestration passed. The Windows security
+  run also emitted a temporary SQLite-file cleanup error at interpreter exit.
+- A synthetic local-only gateway request completed as job
+  `ae3da511-d998-42eb-9449-14f9f2188eef`, using `ollama-fast` / `gemma3:1b`,
+  one attempt, cloud disabled and recorded cost zero. Cloud provider readiness
+  is configured; current external health remains UNMEASURED. No audit cloud
+  inference call was made.
+- The PWA previously granted anonymous OWNER admission if its access-mode
+  variable was missing. The running interface explicitly selects pairing and
+  rejects anonymous access. Local candidate `00903bb` changes the missing-mode
+  default to pairing, retains explicit open opt-in and preserves trusted-device
+  refresh. Its 55 focused Python checks, 85 PWA checks, Ruff and whitespace
+  checks passed. This candidate has not been pushed, merged or deployed.
+- Python 3.12 verified local TLS and observed TRUST_REQUIRED / HTTP 401 for
+  anonymous private access. Python 3.13 strict TLS verification rejected the
+  local certificate for a missing Authority Key Identifier; certificate
+  remediation remains separate from this code candidate.
+
+Evidence: local assessment `assessments/github-architecture-competitive-sweep-20261023`
+under the ABEX workspace. No infrastructure, access policy, cloud budget or
+production source was changed by this audit.
+
 Interpretation updated: 6 October 2026. Dated observations below retain their original dates.
 
 STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.

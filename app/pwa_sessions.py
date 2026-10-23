@@ -23,7 +23,7 @@ DEVICE_COOKIE='__Host-JARVIS-Device'
 SCOPES=['identity.read','health.read','objective.submit','task.read','task.cancel','artifact.read']
 OWNER_SCOPES=[*SCOPES,'authority.owner.verify']
 SESSION_SECONDS=8*3600
-DEVICE_SECONDS=90*24*3600
+DEVICE_SECONDS=365*24*3600
 router=APIRouter(prefix='/pwa/api',tags=['pwa-session'])
 owner_router=APIRouter(prefix='/pwa/owner',tags=['local-pairing'])
 
@@ -95,14 +95,15 @@ def device_state(request):
 def device(request):return device_state(request)[1]
 
 def access_mode():
-    """Owner directive 2026-10-16: default to one-tap, code-free access.
+    """Require established device trust unless open admission is explicit.
 
     'open'    - the session endpoint admits this browser without any code.
-    'pairing' - the historical pairing-code trust gate.
-    Unknown values fail closed to 'pairing'."""
+    'pairing' - the pairing-code trust gate for an untrusted browser.
+    Missing or unknown values fail closed to 'pairing'. Trusted devices keep
+    their existing silent session refresh without requiring another code."""
     if open_access.enabled():
         return 'open'
-    mode=os.getenv('ORQEVIA_PWA_ACCESS_MODE','open').strip().lower()
+    mode=os.getenv('ORQEVIA_PWA_ACCESS_MODE','pairing').strip().lower()
     return mode if mode in {'open','pairing'} else 'pairing'
 
 def _auto_admit(request):
@@ -171,14 +172,39 @@ def safe_shell_navigation(request):
             and request.headers.get('sec-fetch-dest') in {'document','empty'})
 
 def pwa_origins():
-    primary=os.getenv('ORQEVIA_PWA_ORIGIN','').rstrip('/')
-    try:parsed=urlsplit(primary)
-    except ValueError:return ()
-    if parsed.scheme!='https' or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:return ()
-    additional=os.getenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS','')
-    # The public hostname is an explicit, single-origin opt-in, not a general host allowlist.
-    if additional not in {'','https://jarvis.lamjarvis.com'}:return ()
-    return (primary,additional) if additional else (primary,)
+    """Explicit https-only origin allowlist (config-driven, fail closed).
+
+    ORQEVIA_PWA_ORIGIN is the primary origin.
+    ORQEVIA_PWA_ADDITIONAL_ORIGINS is an optional comma-separated list of
+    additional bare https origins (for example the Cloudflare hostnames).
+    Every entry must be https with a host and no path, query, fragment or
+    userinfo. Malformed configuration yields an empty allowlist.
+    """
+    primary = os.getenv('ORQEVIA_PWA_ORIGIN', '').rstrip('/')
+    try:
+        parsed = urlsplit(primary)
+    except ValueError:
+        return ()
+    if (parsed.scheme != 'https' or not parsed.netloc or parsed.path
+            or parsed.query or parsed.fragment or parsed.username):
+        return ()
+    origins = [primary]
+    raw_additional = os.getenv('ORQEVIA_PWA_ADDITIONAL_ORIGINS', '')
+    if raw_additional.strip():
+        for entry in raw_additional.split(','):
+            candidate = entry.strip().rstrip('/')
+            if not candidate:
+                return ()
+            try:
+                parsed = urlsplit(candidate)
+            except ValueError:
+                return ()
+            if (parsed.scheme != 'https' or not parsed.netloc or '*' in parsed.netloc or parsed.path
+                    or parsed.query or parsed.fragment or parsed.username):
+                return ()
+            if candidate not in origins:
+                origins.append(candidate)
+    return tuple(origins)
 
 
 def origin_valid(request,write=False):
@@ -260,8 +286,14 @@ def get_session(request:Request):
                 session_token=bounded_cookie;current['expiresAt']=expires
     recovery=None if current else ('DEVICE_REVOKED' if device_status=='REVOKED' else
         'DEVICE_EXPIRED' if device_status=='EXPIRED' else 'TRUST_REQUIRED')
-    response=JSONResponse({'protocol':'orqevia.interface.v1','authenticated':bool(current),
-        'recovery':recovery,**(current or {})},headers={'Cache-Control':'no-store'})
+    payload={'protocol':'orqevia.interface.v1','authenticated':bool(current),
+        'recovery':recovery,**(current or {})}
+    if current:
+        # Telemetry uses the open-access owner identity when the browser does
+        # not send a separate thin-client credential.
+        payload['interfaceClientId']=(open_access.OPEN_OWNER_ID
+            if open_access.enabled() else current['clientId'])
+    response=JSONResponse(payload,headers={'Cache-Control':'no-store'})
     if clear_credentials:
         secure=not open_access.enabled()
         same_site='strict' if secure else 'lax'

@@ -269,6 +269,17 @@ class JobQueue:
         if not row: raise KeyError(job_id)
         return dict(row)
 
+    def update_progress(self, job_id: str, result: str) -> bool:
+        """Expose bounded partial model output while a job remains running."""
+        if not isinstance(result, str) or len(result) > 128000:
+            return False
+        with self.lock, self.connect() as c:
+            changed=c.execute(
+                "UPDATE compute_jobs SET result=?,updated_at=? WHERE id=? AND status='running'",
+                (result,utcnow(),job_id),
+            ).rowcount
+        return changed==1
+
     def list(self, status: str | None = None, limit: int = 100) -> list[dict]:
         with self.connect() as c:
             if status: rows=c.execute("SELECT * FROM compute_jobs WHERE status=? ORDER BY priority DESC,created_at LIMIT ?",(status,min(limit,500))).fetchall()

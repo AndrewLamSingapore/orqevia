@@ -4,6 +4,7 @@ import json
 import hashlib
 import httpx
 import uuid
+import time
 
 
 def inference_request(job, provider, *, settings, options):
@@ -101,7 +102,7 @@ def validate_owned_inference_request(actual, original, provider, *, settings, op
         raise ValueError('Owned inference payload changed')
 
 
-async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False):
+async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,progress=lambda _text:None):
     async def run():
         response_format = job.get('response_format', 'text')
         if response_format not in {'text', 'strict_json'}:
@@ -116,6 +117,8 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
         async with httpx.AsyncClient(timeout=float(job['timeout_seconds'])) as client:
             async with client.stream('POST',settings.ollama_base_url+'/api/chat',json=payload) as response:
                 response.raise_for_status();parts=[];final=None
+                last_progress_at=None
+                last_progress_size=0
                 async for line in response.aiter_lines():
                     if not line:continue
                     capacity(provider.model)
@@ -127,7 +130,17 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False)
                         raise RuntimeError('Malformed model response')
                     if 'done' in item and type(item['done']) is not bool:
                         raise RuntimeError('Malformed model completion')
-                    parts.append(message.get('content',''))
+                    content=message.get('content','')
+                    parts.append(content)
+                    combined=''.join(parts)
+                    now=time.monotonic()
+                    if (combined.strip() and
+                            (last_progress_at is None or now-last_progress_at>=0.4 or
+                             len(combined)-last_progress_size>=120)):
+                        try:progress(combined)
+                        except Exception:pass
+                        last_progress_at=now
+                        last_progress_size=len(combined)
                     if item.get('done') is True:final=item
                 if final is None or not ''.join(parts).strip():raise RuntimeError('Incomplete or empty model response')
                 contract_error = ''

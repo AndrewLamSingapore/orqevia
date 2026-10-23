@@ -32,7 +32,10 @@ def install(app):
                     return b''.join(parts)
                 request._body=await asyncio.wait_for(read(),3)
             except (ValueError,TimeoutError):return JSONResponse({'detail':'Request bound exceeded'},status_code=413)
-        try:await asyncio.wait_for(slots.acquire(),0.05)
+        # Initial Intelligence views issue several bounded reads together.
+        # Queue those reads briefly instead of rejecting an ordinary page load;
+        # concurrent execution remains capped at the existing two slots.
+        try:await asyncio.wait_for(slots.acquire(),2.0 if request.method=='GET' else 0.05)
         except TimeoutError:return JSONResponse({'detail':'Service capacity occupied'},status_code=429)
         actor=request.headers.get('x-orqevia-actor','abex-service')
         event={'at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),

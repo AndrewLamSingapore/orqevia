@@ -1,0 +1,10 @@
+# Measured CPU node: 32,085 MiB physical RAM, integrated GPU, no VRAM offload.
+# Native chat stalled at 16K; 8K returned READY in 0.22s. Keep queue N=1.
+# Roles remain operator-configured; observed 12B passed the bounded 8-case run.
+services:
+  backend:
+    environment:
+      ORQEVIA_CONTEXT_TOKENS: "8192"
+  interface:
+    environment:
+      ORQEVIA_CONTEXT_TOKENS: "8192"
