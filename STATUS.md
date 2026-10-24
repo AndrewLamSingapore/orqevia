@@ -1,5 +1,19 @@
 # STATUS.md — Portfolio status record
 
+## Scoped fabric production and workbench qualification - 24 October 2026
+
+### Claimed, not independently checked
+
+Recorded by Codex on ABEX; not personally spot-checked or promoted by Lam.
+
+- The bounded 36-fabric release is running at source `237acfd5e5232425be13ecd578b80ae20af0c57c`, image `sha256:742bea5f8c6024dba5b2f02aaeef360278a4ae041eb7072637b2b27eca2c5711`. Backend and interface were observed healthy. All 36 named operation scopes passed actual trusted HTTPS oracles. This is not certification of every fabric roadmap. PR #442 merged as `76b18270c0e8a853f54edcf620af71c1f747cfaa`; HTTPS CLI PR #443 merged as `3beaa06a9296e9af4d3aa81c7b39003319e3a88d`.
+- The production workspace defaults to `https://localhost:8443/pwa/`. The exposed HTTP bootstrap on port 8081 was retired; its exact container was removed after a separate runtime action restarted it. Only that Compose service was changed to a non-server command with no published ports and no automatic restart. Certificates, profiles, sessions, models, product deployments and independent research were preserved. Private loopback and Docker transports are a separate migration scope.
+- Release evidence includes 5,534 canonical main tests passed, five skips and 92 passed subtests; nine successful source CI checks; a real stage restart, baseline rollback and candidate reactivation retaining the same execution hash; and 454 SQLite backup/restoration checks using integrity, schema and logical-content equality. These are scoped operational observations, not an unrestricted production-readiness verdict.
+- The next workbench increment adds visible fabric execution, typed contracts, explicit WAV playback/download, original PNG input and primary-source HTTPS retrieval. Its application code passed 5,668 canonical main tests, five skips and 92 subtests at `661ae112fb85b5f90e90bcbdf83581bb6d5110ed`. Actual stage schema verification found an F02 nullable-page contract mismatch and gateway error-envelope mismatches. Those failures are retained and must be corrected before this increment is promoted. PR #444 tracks qualification; the source and deployment receipts remain distinct.
+- Game Platform source `3a9a5cf45be2781ba5dd99f7bac5f72c80017d34` and Sky Tablet source `49f658516ecc8b2c1b32b46d87322c4fe96f4a2e` have separate live-function receipts. Broader AI-world behavior, historical/astronomical certification and final media acceptance remain unfinished. Neither product requires ORQEVIA or Higgsfield for essential runtime.
+
+ABEX evidence is retained under `operations/orqevia36-live-20261024/`, including `production-https-all36-first.json`, `release-acceptance-237acfd.json`, `HTTPS-PERSISTENT-RETIREMENT.json`, `HTTPS-RETIRED-CONTAINER-CLEANUP.json` and `qualification-event-661ae11.json`. The original reports and failures remain dated evidence.
+
 ## 36-fabric evidence contract candidate - 24 October 2026
 
 ### Claimed, not independently checked

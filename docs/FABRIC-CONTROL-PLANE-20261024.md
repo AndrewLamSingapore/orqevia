@@ -1,18 +1,42 @@
-# Fabric evidence and repository execution increment
+# Fabric control plane and supported workbench operations
 
 This increment extends the existing ORQEVIA stack. It adds no model, database,
 public inference endpoint, product dependency or permanent agent.
 
 `GET /api/collective/v1/fabrics/registry` and the existing
 `/interface/v1/collective/fabrics/registry` gateway expose 36 versioned contracts.
-Both use the existing bound-owner authentication. Registry discovery does not
-grant permission to execute a tool. No HTTP endpoint accepts arbitrary commands.
+The backend uses the existing bound-owner authentication. The interface uses
+its configured workspace access mode and server-held forwarding credentials.
+Registry discovery does not grant permission to execute a tool. No fabric
+execution endpoint accepts arbitrary commands.
+
+The Operations page discovers the real registry, selects a fabric and operation,
+shows its scope and schemas, and submits explicit JSON parameters. Discovery and
+selection never start an operation. Each response includes its execution UUID,
+source revision and hashes. A lost response is recovered through
+`GET /interface/v1/collective/fabrics/executions/{uuid}`; the browser never retries
+an ambiguous POST automatically. Session changes and offline transitions clear
+private inputs and results.
+
+Speech results expose explicit playback and download only after validating the
+PCM16 WAV container and SHA-256. They do not autoplay. Image inspection and
+measurement accept an optional PNG picker with a 512 KiB limit, signature
+validation and original-byte preservation. These operations provide supported
+measurements, not general image semantics or speech recognition.
+
+Authenticated discovery also supports `?summary=1` for compact routing metadata
+and `?fabric_id=f04` for one complete contract. The default response remains the
+complete catalog. Unknown or duplicated query parameters are rejected.
 
 ```mermaid
 flowchart LR
     Owner[Owner session] --> Gateway[Existing HTTPS interface]
     Gateway --> Collective[Existing bound-owner collective API]
-    Collective --> Catalog[36 versioned contracts]
+    Collective --> Catalog[36 versioned contracts / 43 named operations]
+    Collective --> Execute[Bounded execution adapters]
+    Execute --> Journal[Owner and tenant scoped execution journal]
+    Execute --> Host[Existing inference / speech / browser services]
+    Execute --> Source[Approved primary HTTPS sources]
     Collective --> Receipts[Local source-bound functional receipts]
     Engineer[Authorized local engineer] --> Runner[Repository check CLI]
     Runner --> Product[Selected owning repository]
@@ -80,8 +104,29 @@ ORQEVIA, Game Platform and Sky Tablet retain separate repositories, databases
 and deployment lifecycles. This optional evaluation runner reads or executes
 authorized tests in the owning repository without becoming a runtime dependency.
 
-F10 and F12 now document concrete schemas for their listed local operations.
-Other incomplete schemas are explicitly PARTIAL. Existing financial scenario
-calculations and last-value forecast evaluation are inventoried rather than
-duplicated. Full forecasting, advanced intelligence, physical automation and
-confidential computing are not certified by this increment.
+All 36 supported HTTP fabric contracts describe their actual request wrapper,
+typed operation inputs and results, persisted execution receipt and response
+envelope. The catalog contains 43 named operations. The separate F10/F12 local
+operator contracts remain under `local_entrypoint_contract`. Definition and
+schema validation do not change a fabric to VERIFIED; fresh functional evidence
+for its stated scope is still required.
+
+F19 retains source-attributed local observations and adds primary-source HTTPS
+retrieval. This operation accepts only the documented exact primary hosts,
+validates every redirect, limits response size and excerpt length, rejects
+credentials and nonstandard ports, and has a hard 20-second deadline. It records
+the final URL, retrieval time, media type, byte count and content hash. A fetched
+page or excerpt is source material, not a verified fact or an instruction to
+execute. It performs no model invocation or paid generation.
+
+The deployment qualification includes actual HTTPS request/result validation
+against Draft 2020-12 schemas, independent numerical/content/hash oracles,
+persisted readback, deliberate rejection checks and real browser interactions.
+Keep failed receipts: contract mismatches discovered in staging must be corrected
+and retested before promotion. Source tests, CI, staging and production receipts
+remain separate records.
+
+Existing financial scenario calculations and last-value forecast evaluation
+are reused. Full forecasting, general multimodal understanding, physical
+automation, confidential-computing hardware guarantees and broader fabric
+roadmaps are not certified by these operation contracts.
