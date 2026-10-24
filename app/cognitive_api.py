@@ -1,4 +1,4 @@
-"""Guarded cognitive endpoints for Personal JARVIS."""
+"""Guarded cognitive endpoints for ORQEVIA."""
 from __future__ import annotations
 import hmac, os
 from typing import Any

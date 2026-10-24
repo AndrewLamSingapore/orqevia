@@ -75,7 +75,10 @@ class PublicTracePublisher:
                 "X-JARVIS-Publisher": self.publisher_id,
                 "X-JARVIS-Timestamp": timestamp,
                 "X-JARVIS-Signature": signature,
-                "User-Agent": "jarvis-prime-public-trace/1.1",
+                "X-ORQEVIA-Publisher": self.publisher_id,
+                "X-ORQEVIA-Timestamp": timestamp,
+                "X-ORQEVIA-Signature": signature,
+                "User-Agent": "orqevia-public-trace/1.1",
             },
         )
         with self.opener(request, timeout=20) as response:

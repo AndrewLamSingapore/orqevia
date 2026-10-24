@@ -20,6 +20,8 @@ from . import open_access
 
 COOKIE='__Host-JARVIS-PWA'
 DEVICE_COOKIE='__Host-JARVIS-Device'
+ORQEVIA_COOKIE='__Host-ORQEVIA-PWA'
+ORQEVIA_DEVICE_COOKIE='__Host-ORQEVIA-Device'
 SCOPES=['identity.read','health.read','objective.submit','task.read','task.cancel','artifact.read']
 OWNER_SCOPES=[*SCOPES,'authority.owner.verify']
 SESSION_SECONDS=8*3600
@@ -66,7 +68,7 @@ def client_policy(client):
             **({'owner_account_id':row[2]} if row[2] else {})}
 
 def session_state(request):
-    cookie=request.cookies.get(COOKIE,'')
+    cookie=request.cookies.get(COOKIE,'') or request.cookies.get(ORQEVIA_COOKIE,'')
     if not cookie:return 'MISSING',None
     if not re.fullmatch(r'[A-Za-z0-9_-]{43}',cookie):return 'INVALID',None
     with database() as db:row=db.execute('SELECT client_id,expires,revoked,role,owner_account_id FROM sessions WHERE session_hash=?',(digest(cookie),)).fetchone()
@@ -129,7 +131,9 @@ def _cookies(response,session_token,device_token=None):
     secure=not open_access.enabled()
     same_site='strict' if secure else 'lax'
     if session_token:response.set_cookie(COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
+    if session_token:response.set_cookie(ORQEVIA_COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     if device_token:response.set_cookie(DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
+    if device_token:response.set_cookie(ORQEVIA_DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     return response
 
 def _issue_device(current):
@@ -275,7 +279,7 @@ def get_session(request:Request):
     if current and bound and not session_token and current['expiresAt']-clock()<SESSION_SECONDS/2:
         # Extend the same opaque credential. Normal active use must not rotate
         # cookies across tabs or require enrollment every eight hours.
-        bounded_cookie=request.cookies.get(COOKIE,'')
+        bounded_cookie=request.cookies.get(COOKIE,'') or request.cookies.get(ORQEVIA_COOKIE,'')
         if not re.fullmatch(r'[A-Za-z0-9_-]{43}',bounded_cookie):current=None;clear_credentials=True
         else:
             expires=min(clock()+SESSION_SECONDS,bound['deviceExpiresAt'])
@@ -332,7 +336,7 @@ async def enroll(request:Request):
 
 @router.post('/logout')
 def logout(request:Request):
-    raw=request.cookies.get(COOKIE,'')
+    raw=request.cookies.get(COOKIE,'') or request.cookies.get(ORQEVIA_COOKIE,'')
     device_raw=request.cookies.get(DEVICE_COOKIE,'')
     with database() as db:
         db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))

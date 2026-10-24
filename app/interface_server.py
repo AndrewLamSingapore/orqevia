@@ -44,6 +44,9 @@ from .collective_bridge import router as collective_board_router
 app.include_router(collective_board_router)
 from .public_site import router as public_router, PUBLIC, SHARED
 app.include_router(public_router)
+from .public_agent_api import router as jarvis_public_router, router_orqevia
+app.include_router(jarvis_public_router)
+app.include_router(router_orqevia)
 app.mount('/public-assets', StaticFiles(directory=str(PUBLIC / 'assets'), check_dir=False), name='public-assets')
 app.mount('/design', StaticFiles(directory=str(SHARED), check_dir=False), name='shared-design')
 app.mount('/pwa/design', StaticFiles(directory=str(SHARED), check_dir=False), name='pwa-shared-design')
