@@ -2,6 +2,7 @@ ARG BASE_IMAGE=orqevia:baseline-98b2537-20261023
 FROM ${BASE_IMAGE}
 WORKDIR /app
 COPY app ./app
+COPY mbti_in_thoughts ./mbti_in_thoughts
 COPY config ./config
 COPY clients/pwa/index.html clients/pwa/dashboard.mjs clients/pwa/release.mjs clients/pwa/sw.js clients/pwa/manifest.webmanifest clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/operations.mjs clients/pwa/intelligence.mjs clients/pwa/integration-panels.mjs clients/pwa/knowledge.mjs ./app/pwa_static/
 COPY clients/public ./app/public_static

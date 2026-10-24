@@ -48,7 +48,7 @@ CONTRACT_FIELDS = (
     "notes",
 )
 
-_VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+_VERSION_RE = re.compile(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\Z")
 _DEFAULT_SCHEMA = {"type": "object", "description": "Contract not yet specified"}
 
 # Fresh live receipts from the 2026-10-24 post-reboot observation.
@@ -95,8 +95,8 @@ def _f(
         "state": state,
         "purpose": purpose,
         "operations": operations or [],
-        "input_schema": input_schema or _DEFAULT_SCHEMA,
-        "output_schema": output_schema or _DEFAULT_SCHEMA,
+        "input_schema": deepcopy(input_schema or _DEFAULT_SCHEMA),
+        "output_schema": deepcopy(output_schema or _DEFAULT_SCHEMA),
         "dependencies": dependencies or [],
         "configuration": configuration or {},
         "auth": auth,
@@ -593,37 +593,123 @@ _FABRICS = [
 ]
 
 
+def _existing_contracts(entries):
+    """Describe bounded existing entrypoints without implying full fabric coverage."""
+    by_id = {item["id"]: item for item in entries}
+    by_id["f26"].update(
+        state="IMPLEMENTED",
+        operations=["chronological last-value holdout evaluation"],
+        dependencies=["app/predictive_intelligence.py:evaluate_last_value_baseline"],
+        tests_status="tests/test_historical_predictive.py; runtime verification requires fresh functional evidence",
+        notes="Existing last-value baseline only. Confidence intervals and drift monitoring remain pending.",
+    )
+    by_id["f34"].update(
+        state="IMPLEMENTED",
+        operations=["bounded operating-cost and scenario calculations"],
+        dependencies=["app/project_workflows.py:calculate_financials"],
+        tests_status="tests/test_project_workflows.py; runtime verification requires fresh functional evidence",
+        notes="Existing deterministic user-supplied business scenarios; not financial advice or market forecasting.",
+    )
+    path_schema = {"type": "string", "minLength": 1, "maxLength": 4096}
+    by_id["f10"].update(
+        operations=["inspect owning repository", "run selected existing check profile"],
+        dependencies=["app/repository_evaluation.py", "scripts/evaluate_repository.py", "git"],
+        input_schema={
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["repository", "profile", "evidence_root"],
+            "properties": {
+                "repository": path_schema,
+                "evidence_root": path_schema,
+                "profile": {"enum": ["python", "node", "static-web"]},
+            },
+        },
+        output_schema={
+            "type": "object",
+            "required": ["execution_id", "status", "directory", "receipt_sha256"],
+            "properties": {
+                "execution_id": {"type": "string", "format": "uuid"},
+                "status": {"enum": ["PASS", "FAIL"]},
+                "directory": path_schema,
+                "checks": {"type": "integer", "minimum": 1, "maximum": 16},
+                "receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            },
+        },
+        health_check="pytest tests/test_repository_evaluation.py",
+        timeout_policy="300s default per explicit check, 1800s hard maximum; fixed profiles 600s; sequential execution",
+        auth="Explicit local repository execution authorization; no remote arbitrary-command route",
+        notes="Runs actual selected checks and rescans evidence. General patch generation and independent AI review remain separate capabilities.",
+    )
+    by_id["f12"].update(
+        input_schema={
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["receipt_directory"],
+            "properties": {"receipt_directory": path_schema},
+        },
+        output_schema={
+            "type": "object",
+            "required": ["execution_id", "status", "errors", "execution_sha256"],
+            "properties": {
+                "execution_id": {"type": "string", "format": "uuid"},
+                "status": {"enum": ["PASS", "FAIL"]},
+                "errors": {"type": "array", "items": {"type": "string"}},
+                "execution_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+                "publication_authorized": {"const": False},
+            },
+        },
+        health_check="pytest tests/test_repository_evaluation.py tests/test_fabric_verification.py",
+        notes="Deterministic independent file/JUnit rescan; no claim of independent AI review from deterministic evidence alone.",
+    )
+    return entries
+
+
 def validate_registry(entries):
     """Fail loudly on structural or honesty violations."""
     if not isinstance(entries, list) or len(entries) != FABRIC_COUNT:
         raise ValueError("registry must contain exactly %d fabrics" % FABRIC_COUNT)
     seen = set()
+    identifiers = set()
     for index, item in enumerate(entries):
+        if not isinstance(item, dict):
+            raise ValueError("fabric entry must be an object")
         for field in CONTRACT_FIELDS:
             if field not in item:
                 raise ValueError("fabric %s missing contract field %s" % (item.get("id", index), field))
         if item["id"] in seen:
             raise ValueError("duplicate fabric id %s" % item["id"])
+        if item["id"] != "f%02d" % (index + 1):
+            raise ValueError("fabric ids must be the ordered f01-f36 set")
         seen.add(item["id"])
         if item["state"] not in STATES:
             raise ValueError("fabric %s has invalid state %s" % (item["id"], item["state"]))
-        if not _VERSION_RE.match(item["version"]):
+        if not isinstance(item["version"], str) or not _VERSION_RE.fullmatch(item["version"]):
             raise ValueError("fabric %s has invalid version %s" % (item["id"], item["version"]))
         if item["state"] == "VERIFIED" and not item["evidence"]:
             raise ValueError("VERIFIED fabric %s has no recorded evidence" % item["id"])
         if item["state"] in ("IMPLEMENTED", "VERIFIED") and not item["identifier"]:
             raise ValueError("implemented fabric %s has no runtime identifier" % item["id"])
+        if not isinstance(item["identifier"], str) or item["identifier"] in identifiers:
+            raise ValueError("fabric identifiers must be unique strings")
+        identifiers.add(item["identifier"])
+        if not all(isinstance(item[field], dict) for field in ("input_schema", "output_schema")):
+            raise ValueError("fabric schemas must be objects")
     return entries
 
 
 def load_fabric_registry():
     """Independent catalog snapshot; historical receipts never imply current health."""
-    entries = deepcopy(_FABRICS)
+    entries = _existing_contracts(deepcopy(_FABRICS))
     for item in entries:
         if item["state"] == "VERIFIED":
             item["recorded_historical_state"] = "VERIFIED"
             item["state"] = "IMPLEMENTED"
         item["verification"] = {"status": "UNVERIFIED", "reason": "CURRENT_FUNCTIONAL_RECEIPT_REQUIRED"}
+        item["contract_status"] = (
+            "PARTIAL"
+            if item["input_schema"] == _DEFAULT_SCHEMA or item["output_schema"] == _DEFAULT_SCHEMA
+            else "DEFINED_FOR_LISTED_OPERATIONS"
+        )
     return {
         "registry_version": REGISTRY_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),

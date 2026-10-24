@@ -29,6 +29,7 @@ PATHS = {
     "fabrics/mlp": {"GET"},
     "fabrics/mlp/infer": {"POST"},
     "fabrics/events": {"GET"},
+    "fabrics/registry": {"GET"},
 }
 
 

@@ -251,6 +251,18 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit this exact candidate note while retaining the complete frozen proof.
+    fabric_title = "## 36-fabric evidence contract candidate - 24 October 2026"
+    assert after.count(fabric_title) == 1
+    fabric_start = after.index(fabric_title)
+    fabric_end = after.index("\n## ", fabric_start + len(fabric_title)) + 1
+    fabric_update = after[fabric_start:fabric_end].encode("utf-8")
+    assert len(fabric_update) == 880
+    assert (
+        hashlib.sha256(fabric_update).hexdigest() == "fc2c72d2abb8055055d2864ea12b091d1ec907c4d8a6804efc19620804275db5"
+    )
+    assert b"### Verified" not in fabric_update
+    after = after[:fabric_start] + after[fabric_end:]
     # Admit only this exact dated OSIP candidate addition. All prior history
     # and Owner-only Verified sections retain their existing byte checks.
     osip_start = after.index("## ORQEVIA 2.0 candidate \u2014 23 October 2026")
@@ -266,7 +278,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     audit_end = after.index("Interpretation updated:", audit_start)
     audit_update = after[audit_start:audit_end].encode("utf-8")
     assert len(audit_update) == 5651
-    assert hashlib.sha256(audit_update).hexdigest() == "2ef87211a0d3df7f8e20baacd114cb0eb7e8424d7f5c5530cbe45a0c44e3694a"
+    assert (
+        hashlib.sha256(audit_update).hexdigest() == "2ef87211a0d3df7f8e20baacd114cb0eb7e8424d7f5c5530cbe45a0c44e3694a"
+    )
     assert audit_update.count(b"### Claimed, not independently checked") == 3
     assert b"### Verified" not in audit_update
     after = after[:audit_start] + after[audit_end:]
@@ -278,8 +292,7 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     final_update = after[final_start:final_end].encode("utf-8")
     assert len(final_update) == 2969
     assert (
-        hashlib.sha256(final_update).hexdigest()
-        == "5a3735074a6bc2558b3742b0bf705ea8a9e4ba6c4690cba15cc14493a47560ae"
+        hashlib.sha256(final_update).hexdigest() == "5a3735074a6bc2558b3742b0bf705ea8a9e4ba6c4690cba15cc14493a47560ae"
     )
     assert b"### Claimed, not independently checked" in final_update
     assert b"### Verified" not in final_update
@@ -291,7 +304,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     sweep_end = after.index("\n## ", sweep_start + len(sweep_title)) + 1
     sweep_update = after[sweep_start:sweep_end].encode("utf-8")
     assert len(sweep_update) == 1950
-    assert hashlib.sha256(sweep_update).hexdigest() == "3aef3535a51ab6345eeea978799597bc9575f929f9971e1cea5db4c0f99fb9e3"
+    assert (
+        hashlib.sha256(sweep_update).hexdigest() == "3aef3535a51ab6345eeea978799597bc9575f929f9971e1cea5db4c0f99fb9e3"
+    )
     assert b"### Claimed, not independently checked" in sweep_update
     assert b"### Verified" not in sweep_update
     after = after[:sweep_start] + after[sweep_end:]
@@ -314,7 +329,9 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     iphone_end = after.index("\n## ", iphone_start + len(iphone_title)) + 1
     iphone_update = after[iphone_start:iphone_end].encode("utf-8")
     assert len(iphone_update) == 1667
-    assert hashlib.sha256(iphone_update).hexdigest() == "181b52694e635e1cea4fcd501334dadfbbd367ec4072da550323f93b2ed99eac"
+    assert (
+        hashlib.sha256(iphone_update).hexdigest() == "181b52694e635e1cea4fcd501334dadfbbd367ec4072da550323f93b2ed99eac"
+    )
     assert b"### Claimed, not independently checked" in iphone_update
     assert b"### Verified" not in iphone_update
     after = after[:iphone_start] + after[iphone_end:]

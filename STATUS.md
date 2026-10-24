@@ -1,5 +1,21 @@
 # STATUS.md — Portfolio status record
 
+## 36-fabric evidence contract candidate - 24 October 2026
+
+### Claimed, not independently checked
+
+The candidate adds authenticated contract discovery, expiring source-bound
+functional evidence and a bounded local repository evaluation CLI with a separate
+deterministic evidence rescan. Catalog entries expose incomplete schemas and do
+not retain historical verification as current health. Existing forecasting and
+financial primitives are inventoried with explicit limits. Pinned optional
+profile data and public/shared assets are retained in source release packages.
+
+This is an implementation increment, not completion of all 36 fabrics. Test,
+review, CI, staging and production receipts remain separate. The existing live
+production source is not promoted by this source-status entry. Owner-only
+Verified sections are unchanged. See `docs/FABRIC-CONTROL-PLANE-20261024.md`.
+
 ## ORQEVIA 2.0 candidate — 23 October 2026
 
 ### Claimed, not independently checked
