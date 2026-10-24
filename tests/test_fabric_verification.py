@@ -14,11 +14,17 @@ REVISION = "a" * 40
 
 
 def observation(root, *, status="PASS", kind="FUNCTIONAL", age=30, check_status="PASS"):
-    record = {"fabric_id": "f06", "version": "1.0.0", "runtime_revision": REVISION,
-              "kind": kind, "scope": "SYNTHETIC_QUADRATIC_REFERENCE_ONLY",
-              "observed_at": (NOW - timedelta(seconds=age)).isoformat(),
-              "expires_at": (NOW - timedelta(seconds=age) + timedelta(hours=1)).isoformat(),
-              "status": status, "checks": [{"name": "quadratic-oracle", "status": check_status}]}
+    record = {
+        "fabric_id": "f06",
+        "version": "1.0.0",
+        "runtime_revision": REVISION,
+        "kind": kind,
+        "scope": "SYNTHETIC_QUADRATIC_REFERENCE_ONLY",
+        "observed_at": (NOW - timedelta(seconds=age)).isoformat(),
+        "expires_at": (NOW - timedelta(seconds=age) + timedelta(hours=1)).isoformat(),
+        "status": status,
+        "checks": [{"name": "quadratic-oracle", "status": check_status}],
+    }
     raw = json.dumps(record).encode()
     (root / "execution.json").write_bytes(raw)
     ref = {k: v for k, v in record.items() if k not in {"status", "checks"}}

@@ -57,7 +57,11 @@ def apply_evidence(registry, index, evidence_root: Path, *, runtime_revision: st
                 raise ValueError("SOURCE_MISMATCH")
             if observation["version"] != item["version"]:
                 raise ValueError("VERSION_MISMATCH")
-            if observation["kind"] != "FUNCTIONAL" or not isinstance(observation["scope"], str) or not observation["scope"].strip():
+            if (
+                observation["kind"] != "FUNCTIONAL"
+                or not isinstance(observation["scope"], str)
+                or not observation["scope"].strip()
+            ):
                 raise ValueError("FUNCTIONAL_EVIDENCE_REQUIRED")
             observed = _timestamp(observation["observed_at"])
             expires = _timestamp(observation["expires_at"])
@@ -89,9 +93,16 @@ def apply_evidence(registry, index, evidence_root: Path, *, runtime_revision: st
                 if receipt.get(field) != observation[field]:
                     raise ValueError("RECEIPT_BINDING_MISMATCH")
             checks = receipt.get("checks")
-            if not isinstance(checks, list) or not checks or not all(
-                isinstance(check, dict) and isinstance(check.get("name"), str) and check["name"].strip()
-                and check.get("status") in {"PASS", "FAIL"} for check in checks
+            if (
+                not isinstance(checks, list)
+                or not checks
+                or not all(
+                    isinstance(check, dict)
+                    and isinstance(check.get("name"), str)
+                    and check["name"].strip()
+                    and check.get("status") in {"PASS", "FAIL"}
+                    for check in checks
+                )
             ):
                 raise ValueError("EXECUTED_CHECKS_REQUIRED")
             if expires <= now:
@@ -99,14 +110,26 @@ def apply_evidence(registry, index, evidence_root: Path, *, runtime_revision: st
                 continue
             passed = receipt["status"] == "PASS" and all(check["status"] == "PASS" for check in checks)
             item["state"] = "VERIFIED" if passed else "FAILED"
-            item["verification"] = {"status": "PASS" if passed else "FAIL", "scope": observation["scope"],
-                                    "observed_at": observation["observed_at"], "expires_at": observation["expires_at"],
-                                    "runtime_revision": runtime_revision, "evidence_sha256": observation["sha256"]}
+            item["verification"] = {
+                "status": "PASS" if passed else "FAIL",
+                "scope": observation["scope"],
+                "observed_at": observation["observed_at"],
+                "expires_at": observation["expires_at"],
+                "runtime_revision": runtime_revision,
+                "evidence_sha256": observation["sha256"],
+            }
         except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError) as error:
-            reason = str(error) if isinstance(error, ValueError) and re.fullmatch(r"[A-Z_]+", str(error)) else "INVALID_EVIDENCE"
+            reason = (
+                str(error)
+                if isinstance(error, ValueError) and re.fullmatch(r"[A-Z_]+", str(error))
+                else "INVALID_EVIDENCE"
+            )
             item["verification"] = {"status": "UNVERIFIED", "reason": reason}
-    result["verification_context"] = {"runtime_revision": runtime_revision, "observed_at": now.isoformat(),
-                                      "scope": "local functional receipts; not hardware or independent AI attestation"}
+    result["verification_context"] = {
+        "runtime_revision": runtime_revision,
+        "observed_at": now.isoformat(),
+        "scope": "local functional receipts; not hardware or independent AI attestation",
+    }
     return result
 
 
