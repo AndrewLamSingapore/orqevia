@@ -3,9 +3,10 @@
 const $=id=>document.getElementById(id);
 const element=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let session=null,active=new URL(location.href).searchParams.get('view')==='operations',epoch=0,pending=null,current=null;
+let fabricCatalog=[],fabricRequest=null,fabricSequence=0,fabricRun=null,fabricRunSequence=0;
 const kinds=['agents','fabrics','capabilities','dependencies','policies','models','health_snapshots','execution_records','evidence','knowledge_claims','knowledge_contributions','knowledge_relationships','knowledge_challenges','puzzles','puzzle_requirements','gaps','remediation_plans','remediation_executions','remediation_verifications','lessons_learned'];
 function status(message,error=false){$('operations-state').textContent=message;$('operations-state').dataset.state=error?'error':'ready';}
-function clear(){epoch++;pending?.abort();pending=null;current=null;for(const id of ['operations-metrics','operations-records','operations-detail'])$(id)?.replaceChildren();}
+function clear(){epoch++;pending?.abort();pending=null;current=null;clearFabricConsole();for(const id of ['operations-metrics','operations-records','operations-detail'])$(id)?.replaceChildren();}
 async function api(path,body,signal){
  const response=await fetch('/interface/v1/collective/'+path,{method:body===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',redirect:'error',signal,
   headers:{'Content-Type':'application/json','X-ORQEVIA-PWA':'1'},body:body===undefined?undefined:JSON.stringify(body)});
@@ -59,6 +60,7 @@ async function load(){
  if(!session||session.role!=='OWNER'){clear();status('Restore the bound owner connection to view the Operations Board.');return;}
  if(!navigator.onLine){clear();status('Offline. Private records were cleared. Reconnect to load current evidence.');return;}
  status('Loading the governed Operations Board…');const timeout=setTimeout(()=>controller.abort(),20000);
+ void loadFabrics();
  try{const value=await api('status',undefined,controller.signal);if(generation!==epoch||!active)return;current=value;drawMetrics(value);drawRecords(value.gaps?.items||[]);status(`Observed ${value.observed_at||value.metrics?.observed_at}. Claims, execution observations and verified facts remain distinct.`);}
  catch(error){if(generation===epoch)status(controller.signal.aborted?'The registry timed out. Refresh to retry.':error.message,true);}
  finally{clearTimeout(timeout);if(pending===controller)pending=null;}
@@ -69,6 +71,124 @@ async function mutate(path,body){
  catch(error){if(generation===epoch)status(error.message,true);}
  finally{buttons.forEach(b=>b.disabled=false);}
 }
+const fabricId=/^f(?:0[1-9]|[12][0-9]|3[0-6])$/;
+const executionId=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+function fabricStatus(message,error=false){const node=$('fabric-state');if(node){node.textContent=message;node.dataset.state=error?'error':'ready';}}
+function selectedFabric(){return fabricCatalog.find(item=>item.id===$('fabric-select')?.value);}
+function fabricOperations(item){return Array.isArray(item?.runtime_contract?.operations)?item.runtime_contract.operations.filter(op=>typeof op?.operation==='string'&&/^[A-Za-z0-9_.:-]{1,100}$/.test(op.operation)):[];}
+function selectedOperation(){return fabricOperations(selectedFabric()).find(op=>op.operation===$('fabric-operation')?.value);}
+function fabricControls(){
+ const connected=Boolean(active&&session?.role==='OWNER'&&navigator.onLine);
+ if($('fabric-inputs'))$('fabric-inputs').disabled=!connected||!fabricCatalog.length||Boolean(fabricRun);
+ if($('fabric-run'))$('fabric-run').disabled=!connected||!selectedOperation()||Boolean(fabricRun)||['DISABLED','UNAVAILABLE'].includes(selectedFabric()?.state);
+ if($('fabric-read'))$('fabric-read').disabled=!connected||Boolean(fabricRun)||!executionId.test($('fabric-execution-id')?.value.trim().toLowerCase()||'');
+ if($('fabric-refresh'))$('fabric-refresh').disabled=!connected||Boolean(fabricRequest);
+}
+function clearFabricConsole(){
+ fabricSequence++;fabricRunSequence++;fabricRequest?.abort();fabricRun?.abort();fabricRequest=null;fabricRun=null;fabricCatalog=[];
+ for(const id of ['fabric-select','fabric-operation','fabric-contract','fabric-result'])$(id)?.replaceChildren();
+ for(const id of ['fabric-input-schema','fabric-output-schema','fabric-summary'])if($(id))$(id).textContent='';
+ if($('fabric-parameters'))$('fabric-parameters').value='{}';
+ if($('fabric-execution-id'))$('fabric-execution-id').value='';
+ if($('fabric-run'))$('fabric-run').textContent='Run selected operation';
+ fabricStatus('Restore the bound owner connection to read fabric contracts.');fabricControls();
+}
+function drawFabricContract(){
+ const item=selectedFabric(),operation=selectedOperation(),root=$('fabric-contract');if(!root)return;root.replaceChildren();
+ if(!item){root.append(element('p','No fabric contracts are available. Refresh the catalog to retry.'));$('fabric-input-schema').textContent='No executable input schema.';$('fabric-output-schema').textContent='No executable output schema.';fabricControls();return;}
+ const verification=item.verification||{},expires=Date.parse(verification.expires_at||'');
+ const expired=Number.isFinite(expires)&&expires<=Date.now();
+ root.append(element('h3',`${item.id.toUpperCase()} · ${item.name}`),element('p',item.purpose||'Purpose not reported.'));
+ root.append(element('p',`Lifecycle: ${item.state||'UNVERIFIED'} · Contract ${item.runtime_contract?.version||item.version||'unavailable'}`,'fabric-lifecycle'));
+ if(verification.scope)root.append(element('p','Verification scope: '+verification.scope));
+ else root.append(element('p','Verification: '+(verification.reason||verification.status||'No current functional evidence reported.')));
+ if(verification.observed_at)root.append(element('p','Evidence observed: '+verification.observed_at));
+ if(verification.expires_at)root.append(element('p',`Evidence expires: ${verification.expires_at}${expired?' — expired; refresh before relying on this state.':''}`,expired?'fabric-warning':undefined));
+ if(operation)root.append(element('p','Selected operation scope: '+(operation.scope||'Not reported.')));
+ else root.append(element('p','No executable operation is exposed for this fabric. Its lifecycle entry remains visible.','fabric-warning'));
+ const limits=item.runtime_contract?.limitations;
+ if(Array.isArray(limits)&&limits.length){const list=element('ul');for(const limit of limits.slice(0,12))list.append(element('li',String(limit)));root.append(list);}
+ $('fabric-input-schema').textContent=operation?JSON.stringify(operation.input_schema||{},null,2):'No executable input schema.';
+ $('fabric-output-schema').textContent=operation?JSON.stringify(operation.output_schema||{},null,2):'No executable output schema.';
+ fabricControls();
+}
+function chooseFabric({preserve=false}={}){
+ const options=$('fabric-operation'),previous=options.value;options.replaceChildren();
+ for(const operation of fabricOperations(selectedFabric())){const node=element('option',operation.operation);node.value=operation.operation;options.append(node);}
+ if(preserve&&fabricOperations(selectedFabric()).some(op=>op.operation===previous))options.value=previous;
+ if(!preserve){$('fabric-parameters').value='{}';$('fabric-result').replaceChildren();$('fabric-execution-id').value='';$('fabric-run').textContent='Run selected operation';}
+ drawFabricContract();
+}
+async function loadFabrics(){
+ if(!$('fabric-select'))return;
+ if(!active||session?.role!=='OWNER'||!navigator.onLine){clearFabricConsole();fabricStatus(navigator.onLine?'Restore the bound owner connection to read fabric contracts.':'Offline. Private fabric inputs and receipts were cleared. Reconnect to refresh.');return;}
+ fabricRequest?.abort();const controller=new AbortController();fabricRequest=controller;const sequence=++fabricSequence,generation=epoch;
+ fabricStatus('Loading current fabric contracts and verification evidence…');fabricControls();const timeout=setTimeout(()=>controller.abort(),15000);
+ try{
+  const value=await api('fabrics/registry',undefined,controller.signal);
+  if(generation!==epoch||sequence!==fabricSequence||!active)return;
+  if(!Array.isArray(value?.fabrics)||value.fabrics.length>36||value.fabrics.some(item=>!fabricId.test(item?.id))||new Set(value.fabrics.map(item=>item.id)).size!==value.fabrics.length)throw new Error('The service returned an unsupported fabric catalog.');
+  const previous=$('fabric-select').value;fabricCatalog=value.fabrics;const select=$('fabric-select');select.replaceChildren();
+  for(const item of fabricCatalog){const node=element('option',`${item.id.toUpperCase()} · ${item.name} · ${item.state}`);node.value=item.id;select.append(node);}
+  if(fabricCatalog.some(item=>item.id===previous))select.value=previous;
+  const exposed=fabricCatalog.filter(item=>fabricOperations(item).length).length,verified=fabricCatalog.filter(item=>item.state==='VERIFIED').length;
+  $('fabric-summary').textContent=`${fabricCatalog.length} defined · ${exposed} with executable operations · ${verified} reported VERIFIED within their listed scopes. Registry observed: ${value.verification_context?.observed_at||'not reported'}.`;
+  chooseFabric({preserve:Boolean(previous&&select.value===previous)});
+  fabricStatus(fabricCatalog.length?'Catalog loaded. Select a fabric and review its operation scope and input schema.':'The registry returned no fabric contracts. Refresh to retry.');
+ }catch(error){if(generation===epoch&&sequence===fabricSequence&&active)fabricStatus(controller.signal.aborted?'The fabric catalog timed out. Refresh to retry.':error.message,true);}
+ finally{clearTimeout(timeout);if(fabricRequest===controller)fabricRequest=null;fabricControls();}
+}
+function fabricParameters(){
+ const text=$('fabric-parameters').value;
+ if(new TextEncoder().encode(text).length>800000)throw new Error('JSON input exceeds the 800 KB request limit.');
+ let value;try{value=JSON.parse(text);}catch{throw new Error('Enter valid JSON input. The input must be one object.');}
+ if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('The JSON input must be one object.');
+ const inspect=(item,depth=0)=>{if(depth>20)throw new Error('JSON nesting exceeds the supported limit.');if(typeof item==='number'&&!Number.isFinite(item))throw new Error('JSON numbers must be finite.');if(item&&typeof item==='object')for(const child of Object.values(item))inspect(child,depth+1);};inspect(value);
+ return value;
+}
+function drawFabricExecution(value,id,expected=null){
+ if(value?.execution_id!==id||typeof value.status!=='string'||(expected&&(value.fabric_id!==expected.fabric||value.operation!==expected.operation)))throw new Error('The service returned a different execution receipt. Recover the requested execution by its identifier.');
+ const root=$('fabric-result');root.replaceChildren();root.append(element('h3','Recorded execution'),element('p',`Status: ${value.status}`,'fabric-lifecycle'));
+ const facts=element('dl',undefined,'fabric-receipt');
+ for(const [label,content] of [['Execution ID',value.execution_id],['Fabric / operation',`${value.fabric_id} / ${value.operation}`],['Contract version',value.version],['Runtime source',value.runtime_revision],['Input SHA-256',value.input_sha256],['Result SHA-256',value.result_sha256],['Elapsed milliseconds',value.duration_ms],['Started',value.started_at],['Error code',value.error_code]]){
+  facts.append(element('dt',label),element('dd',content===undefined||content===null?'Not recorded':String(content)));
+ }
+ root.append(facts);if(value.result!==undefined&&value.result!==null)root.append(element('pre',JSON.stringify(value.result,null,2),'fabric-output'));
+ $('fabric-execution-id').value=id;
+ return value.status;
+}
+async function runFabric(){
+ if(fabricRun||session?.role!=='OWNER'||!active||!navigator.onLine)return;
+ const item=selectedFabric(),operation=selectedOperation();if(!item||!operation)return;
+ let parameters;try{parameters=fabricParameters();}catch(error){fabricStatus(error.message,true);return;}
+ const id=crypto.randomUUID(),generation=epoch,sequence=++fabricRunSequence,controller=new AbortController();fabricRun=controller;
+ $('fabric-result').replaceChildren();$('fabric-execution-id').value=id;fabricStatus(`Running ${item.id.toUpperCase()} / ${operation.operation}. Execution ${id}.`);fabricControls();
+ const timeout=setTimeout(()=>controller.abort(),45000);let received=false;
+ try{
+  const value=await api(`fabrics/${item.id}/execute`,{operation:operation.operation,parameters,execution_id:id},controller.signal);
+  if(generation!==epoch||sequence!==fabricRunSequence||!active)return;
+  drawFabricExecution(value,id,{fabric:item.id,operation:operation.operation});received=true;
+  const receipt=await api('fabrics/executions/'+id,undefined,controller.signal);
+  if(generation!==epoch||sequence!==fabricRunSequence||!active)return;
+  const state=drawFabricExecution(receipt,id,{fabric:item.id,operation:operation.operation});
+  fabricStatus(`Execution ${state}. Its persisted receipt was read back. Fabric verification remains limited to the catalog's recorded evidence.`,state==='FAILED');
+ }catch(error){if(generation===epoch&&sequence===fabricRunSequence&&active)fabricStatus(received?'An execution response was received, but receipt readback is unavailable. Use Read execution to recover its recorded state.':`The request did not return a confirmed outcome. Use Read execution for ${id} before repeating it. ${controller.signal.aborted?'The request timed out.':error.message}`,true);}
+ finally{clearTimeout(timeout);if(fabricRun===controller){fabricRun=null;$('fabric-run').textContent='Run new execution';}fabricControls();}
+}
+async function readFabricExecution(){
+ if(fabricRun||session?.role!=='OWNER'||!active||!navigator.onLine)return;
+ const id=$('fabric-execution-id').value.trim().toLowerCase();if(!executionId.test(id)){fabricStatus('Enter a valid execution UUID to read its scoped receipt.',true);return;}
+ const controller=new AbortController(),generation=epoch,sequence=++fabricRunSequence;fabricRun=controller;fabricStatus('Reading the persisted execution receipt…');fabricControls();const timeout=setTimeout(()=>controller.abort(),15000);
+ try{const value=await api('fabrics/executions/'+id,undefined,controller.signal);if(generation!==epoch||sequence!==fabricRunSequence||!active)return;const state=drawFabricExecution(value,id);fabricStatus(`Recorded execution ${state}. Reading a receipt does not repeat the operation.`,state==='FAILED');}
+ catch(error){if(generation===epoch&&sequence===fabricRunSequence&&active)fabricStatus(controller.signal.aborted?'Receipt readback timed out. Read execution again to retry safely.':error.message,true);}
+ finally{clearTimeout(timeout);if(fabricRun===controller)fabricRun=null;fabricControls();}
+}
+$('fabric-refresh')?.addEventListener('click',()=>void loadFabrics());
+$('fabric-select')?.addEventListener('change',()=>chooseFabric());
+$('fabric-operation')?.addEventListener('change',()=>{$('fabric-parameters').value='{}';$('fabric-result').replaceChildren();$('fabric-execution-id').value='';drawFabricContract();});
+$('fabric-form')?.addEventListener('submit',event=>{event.preventDefault();void runFabric();});
+$('fabric-read')?.addEventListener('click',()=>void readFabricExecution());
+$('fabric-execution-id')?.addEventListener('input',fabricControls);
 const evidence=value=>value.split(/[\s,]+/).filter(Boolean);
 const command=(operation,payload)=>mutate('commands',{api_version:'1.0',operation,payload,idempotency_key:'operations:'+crypto.randomUUID()});
 $('operations-refresh')?.addEventListener('click',()=>void load());
