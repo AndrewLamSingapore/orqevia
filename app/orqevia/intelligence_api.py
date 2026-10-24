@@ -23,46 +23,15 @@ DATA_DIR = Path(
     if _configured_data_dir
     else _REPO_ROOT.parent / "work" / "orqevia-intelligence-data"
 )
-# Preserve the prior import-time guarantee that the data directory exists,
-# without opening any files: SQLite handles must not pin temporary data
-# directories used by tests (see lazy store initialization below).
-DATA_DIR.mkdir(parents=True, exist_ok=True)
 if os.getenv('ORQEVIA_OBSERVATION_BACKEND','sqlite') == 'postgres':
-    _BACKEND = 'postgres'
+    OBSERVATIONS = PostgresObservationStore()
 elif os.getenv('ORQEVIA_OBSERVATION_BACKEND','sqlite') == 'sqlite':
-    _BACKEND = 'sqlite'
+    OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
 else:
     raise RuntimeError('Unknown observation backend')
-
-# Lazy initialization: opening SQLite files at import time pins whatever
-# directory ORQEVIA_DATA_DIR points at (including per-test temporary
-# directories) for the lifetime of the process, which blocks temporary
-# directory cleanup on Windows and leaks file handles. Build each store on
-# first access instead; module attribute access keeps working via __getattr__.
-_OBSERVATIONS = None
-_DOCUMENTS = None
-_DETECTION = None
+DOCUMENTS = DocumentStore.load(DATA_DIR / "documents.json")
+DETECTION = DetectionEngine(DATA_DIR / "alerts.json")
 INGEST_LOCK = threading.Lock()
-
-
-def __getattr__(name):
-    global _OBSERVATIONS, _DOCUMENTS, _DETECTION
-    if name == "OBSERVATIONS":
-        if _OBSERVATIONS is None:
-            if _BACKEND == "postgres":
-                _OBSERVATIONS = PostgresObservationStore()
-            else:
-                _OBSERVATIONS = ObservationStore(DATA_DIR / "observations.db")
-        return _OBSERVATIONS
-    if name == "DOCUMENTS":
-        if _DOCUMENTS is None:
-            _DOCUMENTS = DocumentStore.load(DATA_DIR / "documents.json")
-        return _DOCUMENTS
-    if name == "DETECTION":
-        if _DETECTION is None:
-            _DETECTION = DetectionEngine(DATA_DIR / "alerts.json")
-        return _DETECTION
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class RetrieveRequest(BaseModel):
