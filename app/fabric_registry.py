@@ -741,7 +741,12 @@ _OPERATION_DEPENDENCIES = {
     "f15": ["SQLite owner/tenant scoped execution journal"],
     "f16": ["actual deployed fabric_runtime.py, collective_api.py and production_entry.py"],
     "f18": ["fixed deterministic edit-timeline calculation"],
-    "f19": ["configured intelligence service /api/orqevia/intelligence/geo/events", "app/geo_ingest.py"],
+    "f19": [
+        "configured intelligence service /api/orqevia/intelligence/geo/events",
+        "app/geo_ingest.py",
+        "app/fabric_research.py:execute",
+        "approved primary HTTPS hosts with normal CA and hostname verification",
+    ],
     "f23": ["app/workflow_engine.py", "app/action_records.py", "fixed local digest/summary handlers"],
     "f24": ["fixed local tool policy in app/fabric_runtime.py"],
     "f29": ["authenticated CollectivePrincipal from app/collective_api.py"],
@@ -874,7 +879,17 @@ def _runtime_contract(item, runtime):
     if identifier in {"f02", "f03", "f11", "f31"}:
         item["configuration"]["service_base"] = "http://host.docker.internal:8150"
     elif identifier == "f19":
+        from .fabric_research import APPROVED_HOSTS, MAX_BODY, MAX_REDIRECTS, TOTAL_SECONDS
+
         item["configuration"]["service_base"] = "http://intelligence:8100"
+        item["configuration"]["primary_source_retrieval"] = {
+            "operation": "fetch_primary_source",
+            "approved_hosts": sorted(APPROVED_HOSTS),
+            "transport": "HTTPS_OS_TRUST_NO_CREDENTIALS_OR_HTTP_FALLBACK",
+            "maximum_body_bytes": MAX_BODY,
+            "maximum_redirects": MAX_REDIRECTS,
+            "total_deadline_seconds": TOTAL_SECONDS,
+        }
     elif identifier == "f01":
         item["configuration"]["ollama"] = {"environment": "OLLAMA_BASE_URL", "default": "http://ollama:11434"}
     item["auth"] = (
@@ -898,6 +913,12 @@ def _runtime_contract(item, runtime):
             item["timeout_policy"] += " Browser child has a 20s probe deadline and 25s process timeout."
         elif identifier == "f31":
             item["timeout_policy"] += " Windows synthesis child timeout: 30s."
+        elif identifier == "f19":
+            item["timeout_policy"] += (
+                " These service bounds apply to retrieve_observations."
+                " fetch_primary_source uses connect 3s/read 10s, a hard total 20s deadline,"
+                " at most two revalidated redirects and 262144 response bytes."
+            )
     item["retry_policy"] = (
         "No automatic retries. Reusing an execution UUID returns the persisted scoped receipt; RUNNING, FAILED and INTERRUPTED results never imply success or trigger replay."
     )
