@@ -117,3 +117,10 @@ test('an unavailable capability remains visible without preventing selection of 
  const value=catalog();value.fabrics[30].state='UNAVAILABLE';value.fabrics[30].runtime_contract.operations=[];
  await fixture(page,{catalogResponse:value});await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f31');await expect(page.locator('#fabric-contract')).toContainText('UNAVAILABLE');await expect(page.locator('#fabric-contract')).toContainText('No executable operation');await expect(page.locator('#fabric-run')).toBeDisabled();await expect(page.locator('#fabric-select')).toBeEnabled();await page.locator('#fabric-select').selectOption('f04');await expect(page.locator('#fabric-run')).toBeEnabled();
 });
+
+test('board-wide button recovery cannot execute a fabric whose lifecycle disables it',async({page})=>{
+ const value=catalog();value.fabrics[30].state='UNAVAILABLE';const seen=await fixture(page,{catalogResponse:value});await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f31');await expect(page.locator('#fabric-run')).toBeDisabled();
+ // Reproduce another board operation releasing its general button lock. The
+ // execution handler must check the selected contract as well as DOM state.
+ await page.evaluate(()=>{document.getElementById('fabric-run').disabled=false;document.getElementById('fabric-form').requestSubmit();});await expect(page.locator('#fabric-run')).toBeDisabled();expect(seen.posts).toHaveLength(0);
+});

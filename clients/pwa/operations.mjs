@@ -69,7 +69,7 @@ async function mutate(path,body){
  if(!session||!navigator.onLine||current?.stale===true)return;const generation=epoch;const buttons=$('operations-view').querySelectorAll('button');buttons.forEach(b=>b.disabled=true);status('Submitting an authorized, bounded operation…');
  try{const value=await api(path,body,AbortSignal.timeout(35000));if(generation!==epoch)return;await load();if(value.record)chooseRecord(value.record);status(value.job_id?`Investigation queued as ${value.job_id}. Its eventual result must still be checked.`:'Operation recorded. Refresh or inspect the record for its actual state and evidence.');}
  catch(error){if(generation===epoch)status(error.message,true);}
- finally{buttons.forEach(b=>b.disabled=false);}
+ finally{buttons.forEach(b=>b.disabled=false);fabricControls();}
 }
 const fabricId=/^f(?:0[1-9]|[12][0-9]|3[0-6])$/;
 const executionId=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
@@ -159,7 +159,7 @@ function drawFabricExecution(value,id,expected=null){
 }
 async function runFabric(){
  if(fabricRun||session?.role!=='OWNER'||!active||!navigator.onLine)return;
- const item=selectedFabric(),operation=selectedOperation();if(!item||!operation)return;
+ const item=selectedFabric(),operation=selectedOperation();if(!item||!operation||['DISABLED','UNAVAILABLE'].includes(item.state)){fabricControls();return;}
  let parameters;try{parameters=fabricParameters();}catch(error){fabricStatus(error.message,true);return;}
  const id=crypto.randomUUID(),generation=epoch,sequence=++fabricRunSequence,controller=new AbortController();fabricRun=controller;
  $('fabric-result').replaceChildren();$('fabric-execution-id').value=id;fabricStatus(`Running ${item.id.toUpperCase()} / ${operation.operation}. Execution ${id}.`);fabricControls();
