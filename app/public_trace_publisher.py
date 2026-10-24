@@ -72,9 +72,6 @@ class PublicTracePublisher:
             headers={
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "X-JARVIS-Publisher": self.publisher_id,
-                "X-JARVIS-Timestamp": timestamp,
-                "X-JARVIS-Signature": signature,
                 "X-ORQEVIA-Publisher": self.publisher_id,
                 "X-ORQEVIA-Timestamp": timestamp,
                 "X-ORQEVIA-Signature": signature,

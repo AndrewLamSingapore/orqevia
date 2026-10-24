@@ -130,9 +130,7 @@ def _cookies(response,session_token,device_token=None):
         return value
     secure=not open_access.enabled()
     same_site='strict' if secure else 'lax'
-    if session_token:response.set_cookie(COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     if session_token:response.set_cookie(ORQEVIA_COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
-    if device_token:response.set_cookie(DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     if device_token:response.set_cookie(ORQEVIA_DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     return response
 
