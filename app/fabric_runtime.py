@@ -228,7 +228,7 @@ _BUILTIN_OUTPUTS = {
                         "citation": _R_STRING,
                         "document_id": _R_SHA,
                         "source": _R_STRING,
-                        "page": {"type": "integer", "minimum": 1},
+                        "page": _nullable({"type": "integer", "minimum": 1}),
                         "document_version": {"type": "integer", "minimum": 1},
                         "passage": _R_STRING,
                         "sha256": _R_SHA,

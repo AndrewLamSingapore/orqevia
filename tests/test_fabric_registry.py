@@ -1,6 +1,8 @@
 """Contract tests for the versioned 36-fabric registry."""
 
 from copy import deepcopy
+import hashlib
+import json
 import re
 import uuid
 
@@ -430,3 +432,93 @@ def test_scope_limits_remain_explicit_in_current_contracts():
     assert "confidential-computing" in entries["f28"]["notes"]
     assert "24 hours" in entries["f07"]["notes"]
     assert all(item["verification"]["status"] == "UNVERIFIED" for item in entries.values())
+
+
+def test_retrieval_preserves_unknown_page_provenance_for_unpaginated_sources(tmp_path):
+    from app.local_knowledge import extract_document
+
+    document = tmp_path / "unpaginated.md"
+    document.write_text("A synthetic unpaginated document.", encoding="utf-8")
+    pages = extract_document(document)
+    assert pages == [("A synthetic unpaginated document.", None)]
+    item = next(item for item in load_fabric_registry()["fabrics"] if item["id"] == "f02")
+    schema = item["runtime_contract"]["operations"][0]["output_schema"]
+    passage, page = pages[0]
+    hit = {
+        "citation": "[1]",
+        "document_id": hashlib.sha256(document.name.encode()).hexdigest(),
+        "source": document.name,
+        "page": page,
+        "document_version": 1,
+        "passage": passage,
+        "sha256": hashlib.sha256(passage.encode()).hexdigest(),
+        "similarity": 0.9,
+        "content_is_authority": False,
+        "instructions_may_execute": False,
+    }
+    result = {
+        "status": "RETRIEVED",
+        "results": [hit],
+        "embedding_model": "synthetic-MiniLM-fixture",
+        "diagnostics": {"index_chunks": 1, "eligible_chunks": 1, "metric": "normalized inner product"},
+    }
+    _assert_declared_shape(result, schema)
+    for invalid_page in ("unknown", False, 0):
+        broken = deepcopy(result)
+        broken["results"][0]["page"] = invalid_page
+        with pytest.raises(AssertionError):
+            _assert_declared_shape(broken, schema)
+    missing = deepcopy(result)
+    missing["results"][0].pop("page")
+    with pytest.raises(AssertionError):
+        _assert_declared_shape(missing, schema)
+
+
+def test_direct_backend_and_collective_gateway_errors_use_explicit_closed_shapes(contract_client):
+    item = next(item for item in load_fabric_registry()["fabrics"] if item["id"] == "f04")
+    schema = item["runtime_contract"]["error_response_schema"]
+    backend = contract_client.post(
+        "/api/collective/v1/fabrics/f04/execute",
+        json={"operation": "distance_km", "parameters": {"a": [91, 0], "b": [0, 1]}},
+    )
+    assert backend.status_code == 422
+    _assert_declared_shape(backend.json(), schema)
+    # Observed stage gateway shape; message text is a fixture, not source content.
+    gateway = {
+        "protocol": "orqevia.collective.v1",
+        "error": {"code": "COLLECTIVE_REQUEST_FAILED", "message": "Controlled upstream failure.", "retryable": False},
+        "correlation_id": str(uuid.uuid4()),
+    }
+    _assert_declared_shape(gateway, schema)
+    for field in gateway:
+        incomplete = deepcopy(gateway)
+        incomplete.pop(field)
+        with pytest.raises(AssertionError):
+            _assert_declared_shape(incomplete, schema)
+    for field in gateway["error"]:
+        incomplete = deepcopy(gateway)
+        incomplete["error"].pop(field)
+        with pytest.raises(AssertionError):
+            _assert_declared_shape(incomplete, schema)
+    for changed in (
+        {**gateway, "token": "fixture-never-a-real-credential"},
+        {**gateway, "correlation_id": "not-a-uuid"},
+        {**gateway, "error": {**gateway["error"], "retryable": True}},
+        {**gateway, "error": {**gateway["error"], "message": 1}},
+    ):
+        with pytest.raises(AssertionError):
+            _assert_declared_shape(changed, schema)
+
+
+@pytest.mark.parametrize("status", [401, 403, 404, 405, 409, 422, 426, 429, 500, 503])
+def test_actual_early_interface_error_shapes_are_declared(status):
+    from app.interface_server import error_response
+
+    actual = json.loads(error_response(status).body)
+    item = next(item for item in load_fabric_registry()["fabrics"] if item["id"] == "f04")
+    schema = item["runtime_contract"]["error_response_schema"]
+    _assert_declared_shape(actual, schema)
+    incomplete = deepcopy(actual)
+    incomplete["error"].pop("retryable")
+    with pytest.raises(AssertionError):
+        _assert_declared_shape(incomplete, schema)

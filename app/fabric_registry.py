@@ -18,7 +18,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-REGISTRY_VERSION = "1.4.0"
+REGISTRY_VERSION = "1.4.1"
 FABRIC_COUNT = 36
 STATES = ("PROPOSED", "IMPLEMENTED", "VERIFIED", "DEGRADED", "FAILED", "DISABLED", "UNAVAILABLE")
 
@@ -754,6 +754,62 @@ _OPERATION_DEPENDENCIES = {
 }
 
 
+def _error_response_schema():
+    """Exact direct-backend and interface error envelopes, not success results."""
+    message = {"type": "string", "minLength": 1}
+    error_properties = {
+        "code": {"type": "string"},
+        "message": message,
+        "retryable": {"type": "boolean", "const": False},
+    }
+
+    def envelope(protocol, codes, *, correlation):
+        properties = {
+            "protocol": {"type": "string", "const": protocol},
+            "error": {
+                "type": "object",
+                "required": ["code", "message", "retryable"],
+                "properties": {**error_properties, "code": {"type": "string", "enum": codes}},
+                "additionalProperties": False,
+            },
+        }
+        if correlation:
+            properties["correlation_id"] = {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$",
+            }
+        return {"type": "object", "required": list(properties), "properties": properties, "additionalProperties": False}
+
+    return {
+        "oneOf": [
+            {
+                "type": "object",
+                "required": ["detail"],
+                "properties": {"detail": message},
+                "additionalProperties": False,
+            },
+            envelope("orqevia.collective.v1", ["COLLECTIVE_REQUEST_FAILED"], correlation=True),
+            envelope(
+                "orqevia.interface.v1",
+                [
+                    "AUTHENTICATION_REQUIRED",
+                    "CLIENT_SCOPE_DENIED",
+                    "NOT_FOUND",
+                    "METHOD_NOT_ALLOWED",
+                    "STATE_CONFLICT",
+                    "INVALID_REQUEST",
+                    "HTTPS_REQUIRED",
+                    "RATE_LIMITED",
+                    "SERVICE_UNAVAILABLE",
+                    "INTERNAL_ERROR",
+                ],
+                correlation=False,
+            ),
+        ]
+    }
+
+
 def _runtime_contract(item, runtime):
     """Publish the supported HTTP contract without promoting source into evidence."""
     from .fabric_runtime import execution_receipt_schema, execution_request_schema, execution_response_schema
@@ -890,13 +946,8 @@ def _runtime_contract(item, runtime):
         "resource_limits": limits,
         "cost_policy": "No new paid provider calls from this execution adapter. Existing governed APIs separately enforce their explicit budgets.",
         "completion_semantics": "COMPLETED records successful execution only. It is not a capability verification or domain correctness verdict; a workflow result can independently report failures.",
-        "error_statuses": [401, 403, 404, 408, 409, 413, 422, 503],
-        "error_response_schema": {
-            "type": "object",
-            "required": ["detail"],
-            "properties": {"detail": {"type": "string"}},
-            "additionalProperties": False,
-        },
+        "error_statuses": [401, 403, 404, 405, 408, 409, 413, 422, 426, 429, 500, 503],
+        "error_response_schema": _error_response_schema(),
     }
 
 
