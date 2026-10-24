@@ -1,11 +1,77 @@
 import unittest
+import json
 from pathlib import Path
+import shutil
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class RuntimeOperationsContractTests(unittest.TestCase):
+    def test_windows_browser_navigation_uses_https_and_preserves_private_backend_checks(self):
+        powershell = shutil.which("pwsh") or shutil.which("powershell.exe")
+        if powershell is None:
+            self.skipTest("Executable operator navigation check requires PowerShell")
+        # Execute only the reviewed startup function and open switch clause.
+        # All Docker/network/process entrypoints are replaced with local fixture
+        # commands; this test never starts a browser, reads .env or changes data.
+        program = r"""
+$ErrorActionPreference='Stop'
+Set-StrictMode -Version Latest
+$tokens=$null;$errors=$null
+$ast=[System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) 'scripts/orqevia.ps1'),[ref]$tokens,[ref]$errors)
+if($errors.Count){throw 'Operator PowerShell parse failed'}
+foreach($name in @('LocalBase','PublicWorkbench')){
+ $assignment=@($ast.FindAll({param($node) $node -is [System.Management.Automation.Language.AssignmentStatementAst] -and $node.Left.Extent.Text -eq ('$'+$name)},$true))
+ if($assignment.Count -ne 1){throw 'Operator default assignment is ambiguous'}
+ Invoke-Expression $assignment[0].Extent.Text
+}
+if($LocalBase -ne 'http://127.0.0.1:8000'){throw 'Private backend transport changed'}
+$script:opened=@();$script:messages=@();$NoOpen=$false
+function Start-Process {param([string]$FilePath) $script:opened+=,$FilePath}
+function Write-Host {param([string]$Object,[string]$ForegroundColor) $script:messages+=,$Object}
+function Assert-Docker {}
+function Invoke-Docker {param([string[]]$Arguments,[switch]$AllowFailure)}
+function Get-ComposeArgs {param([object[]]$Arguments,[bool]$UseTunnel) return $Arguments}
+function Adopt-PersistentVolumes {}
+function Assert-PersistentVolumes {}
+function Assert-PortAvailable {}
+function Assert-NoConflictingCoreContainers {}
+function Resolve-TunnelMode {return $false}
+function Get-EnvValue {param([string]$Name) return 'synthetic-pinned-image'}
+function Write-Step {param([string]$Message)}
+function Wait-ForPrime {}
+function Test-PrimeContract {param([switch]$Quiet)}
+$start=@($ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Start-OrqeviaStack'},$true))
+if($start.Count -ne 1){throw 'Reviewed startup function missing'}
+Invoke-Expression $start[0].Extent.Text
+Start-OrqeviaStack
+$switch=@($ast.FindAll({param($node) $node -is [System.Management.Automation.Language.SwitchStatementAst] -and $node.Condition.Extent.Text -eq '$Action'},$true))
+if($switch.Count -ne 1){throw 'Reviewed operator switch missing'}
+$open=@($switch[0].Clauses | Where-Object {$_.Item1.Value -eq 'open'})
+if($open.Count -ne 1){throw 'Reviewed open action missing'}
+Invoke-Expression ('& '+$open[0].Item2.Extent.Text)
+$NoOpen=$true
+Start-OrqeviaStack
+if($script:opened.Count -ne 2){throw 'Browser opt-out or navigation dispatch changed'}
+foreach($url in $script:opened){if($url -ne 'https://localhost:8443/pwa/'){throw 'Browser target is not the HTTPS workspace'}}
+if(@($script:messages | Where-Object {$_ -eq 'ORQEVIA READY - https://localhost:8443/pwa/'}).Count -ne 2){throw 'Ready output is not the HTTPS workspace'}
+ConvertTo-Json -Compress @{opened=$script:opened;private_api=$LocalBase;no_open_preserved=$true}
+"""
+        result = subprocess.run(
+            [powershell, "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", program],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = json.loads(result.stdout)
+        self.assertEqual(receipt["opened"], ["https://localhost:8443/pwa/"] * 2)
+        self.assertTrue(receipt["no_open_preserved"])
+        self.assertEqual(receipt["private_api"], "http://127.0.0.1:8000")
+
     def test_backend_healthcheck_authenticates_without_embedding_a_secret(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         healthcheck = next(line for line in compose.splitlines() if "urllib.request.Request" in line)

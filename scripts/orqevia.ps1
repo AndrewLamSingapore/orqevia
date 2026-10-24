@@ -17,6 +17,9 @@ $ComposeFile = Join-Path $Root "docker-compose.yml"
 $EnvFile = Join-Path $Root ".env"
 $Project = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME } else { "orqevia" }
 $LocalBase = "http://127.0.0.1:8000"
+# Browser navigation uses the trusted HTTPS interface. The loopback API above
+# remains a private transport until its separate TLS migration is qualified.
+$PublicWorkbench = "https://localhost:8443/pwa/"
 $ExpectedVersion = "7.3.1.1-evidence-grounded"
 $script:Checkpoint = $null
 
@@ -297,8 +300,8 @@ function Start-OrqeviaStack([switch]$RepairOnly) {
     Wait-ForPrime | Out-Null
     Test-PrimeContract -Quiet
     if ($useTunnel) { Assert-NoConflictingEdgeContainers }
-    Write-Host "ORQEVIA READY - $LocalBase/control" -ForegroundColor Green
-    if (-not $NoOpen) { Start-Process "$LocalBase/control" }
+    Write-Host "ORQEVIA READY - $PublicWorkbench" -ForegroundColor Green
+    if (-not $NoOpen) { Start-Process "$PublicWorkbench" }
 }
 
 function Show-Status {
@@ -347,7 +350,7 @@ switch ($Action) {
     "status" { Show-Status }
     "doctor" { Invoke-Doctor }
     "repair" { Assert-Docker; Save-Checkpoint | Out-Null; Invoke-Doctor; Write-Host "Repair is inventory-only until recovered state is independently accepted." -ForegroundColor Yellow }
-    "open" { Start-Process "$LocalBase/control" }
+    "open" { Start-Process "$PublicWorkbench" }
     "update" { Update-OrqeviaStack }
     "contract" { Test-SourceContract }
 }
