@@ -1,0 +1,14 @@
+{
+  "schema": "orqevia.platform-registry.v1",
+  "updated_at": "2026-10-24",
+  "platforms": [
+    {"id": "openhands", "name": "OpenHands", "category": "autonomous-coding-agent", "operator": "All Hands AI", "source_url": "https://github.com/All-Hands-AI/OpenHands", "notes": "Open-source software engineering agent; benchmarked on SWE-bench-style tasks."},
+    {"id": "autogen", "name": "AutoGen", "category": "multi-agent-framework", "operator": "Microsoft", "source_url": "https://github.com/microsoft/autogen", "notes": "Multi-agent conversation framework; event-driven agent design patterns."},
+    {"id": "crewai", "name": "CrewAI", "category": "multi-agent-framework", "operator": "CrewAI", "source_url": "https://github.com/crewAIInc/crewAI", "notes": "Role-based agent crews with task delegation."},
+    {"id": "langgraph", "name": "LangGraph", "category": "agent-orchestration", "operator": "LangChain", "source_url": "https://github.com/langchain-ai/langgraph", "notes": "Graph-based agent orchestration with durable state."},
+    {"id": "fetch-ai", "name": "Fetch.ai", "category": "autonomous-agent-ecosystem", "operator": "Fetch.ai", "source_url": "https://fetch.ai", "notes": "Agent marketplace and hackathon ecosystem; observed via Fetch-A-Thon events."},
+    {"id": "bnb-agent-marketplace", "name": "BNB Chain Agent Marketplace", "category": "agent-marketplace", "operator": "BNB Chain", "source_url": "https://www.bnbchain.org/en/hackathons/smart-money-era-set-and-earn", "notes": "Web3 AI-agent marketplace hackathon; commercial and financial mechanics."},
+    {"id": "clawbench", "name": "ClawBench", "category": "agent-benchmark", "operator": "ClawBench", "source_url": "https://www.clawbench.com", "notes": "Public agent benchmark with leaderboard submission and trace evidence."},
+    {"id": "openai-agents-sdk", "name": "OpenAI Agents SDK", "category": "agent-framework", "operator": "OpenAI", "source_url": "https://github.com/openai/openai-agents-python", "notes": "Lightweight agent primitives with handoffs and guardrails."}
+  ]
+}

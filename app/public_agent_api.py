@@ -10,6 +10,7 @@ from fastapi import APIRouter, Response
 
 from .runtime import authority
 from .agent_registry import registered_agent_ids
+from .platform_registry import public_platforms
 
 router = APIRouter(prefix="/api/public/jarvis", tags=["public-agent-runtime"])
 router_orqevia = APIRouter(prefix="/api/public/orqevia", tags=["public-agent-runtime"])
@@ -55,3 +56,12 @@ def public_models(response: Response):
     response.headers["Cache-Control"] = "no-store"
     return {"ok": True, "models": PUBLIC_MODELS,
             "boundary": "Public-safe model metadata only; no credentials, endpoints or topology."}
+
+
+@router.get("/platforms")
+@router_orqevia.get("/platforms")
+def public_platforms_route(response: Response):
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return {"ok": True, "platforms": public_platforms(),
+            "boundary": "Curated public-safe external platform registry; observed, not endorsed."}
