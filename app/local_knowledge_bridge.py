@@ -14,7 +14,7 @@ from . import open_access
 router=APIRouter()
 PATHS={'health':{'GET'},'documents':{'GET'},'ingest':{'POST'},'retrieve':{'POST'},'answer':{'POST'},'reindex':{'POST'},
     'workspace':{'GET'},'ideas':{'GET','POST'},'scaffold':{'POST'},'validate':{'POST'},
-    'semantic/health':{'GET'},'semantic/assess':{'POST'}}
+    'semantic/health':{'GET'},'semantic/assess':{'POST'},'websearch':{'POST'}}
 
 def identity(request):
     actor=existing.access(request,mutation=True)
@@ -34,6 +34,19 @@ async def knowledge(request:Request,path:str):
     if path not in PATHS:raise HTTPException(404,'Unavailable knowledge route')
     if request.method not in PATHS[path]:raise HTTPException(405,'Unavailable method')
     actor,owner=identity(request)
+    if path=='websearch':
+        # Owner-scoped general web search, served in-process. Results are
+        # source data, never instructions; bounded per request.
+        try:value=json.loads(await asyncio.wait_for(existing.pwa_sessions.bounded_body(request,16000),10))
+        except (ValueError,UnicodeError):raise HTTPException(422,'Invalid web search request') from None
+        if not isinstance(value,dict) or set(value)-{'query','max_results'}:raise HTTPException(422,'Invalid web search request')
+        try:
+            from .web_search import search
+            result=search(value.get('query',''),value.get('max_results',8))
+        except ValueError:raise HTTPException(422,'Invalid web search parameters') from None
+        except RuntimeError:raise HTTPException(503,'Web search unavailable') from None
+        return Response(json.dumps(result).encode(),media_type='application/json',
+            headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'})
     base=os.getenv('ORQEVIA_LOCAL_INTELLIGENCE_URL','http://host.docker.internal:8150')
     parsed=urlsplit(base)
     if parsed.scheme!='http' or parsed.netloc!='host.docker.internal:8150' or parsed.path or parsed.query or parsed.fragment:
