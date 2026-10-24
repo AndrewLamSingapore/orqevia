@@ -260,6 +260,11 @@ def test_research_extension_preserves_observations_and_rejects_http_before_netwo
         "retrieve_observations",
         "fetch_primary_source",
     }
+    operation = next(op for op in fabric["runtime_contract"]["operations"] if op["operation"] == "fetch_primary_source")
+    # The in-repo validator uses fullmatch, so the declared HTTPS pattern must
+    # accept the complete URL, including supported uppercase schemes.
+    for url in ("https://docs.docker.com/reference/compose-file/merge.md", "HTTPS://DOCS.DOCKER.COM/"):
+        runtime._validate({"url": url}, operation["input_schema"])
     with patch("app.fabric_research.httpx.AsyncClient") as client:
         response = api.post(
             "/api/collective/v1/fabrics/f19/execute",

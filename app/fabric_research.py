@@ -57,7 +57,7 @@ CONTRACTS = {
                     "properties": {
                         "url": {
                             **_URL,
-                            "pattern": "^https://",
+                            "pattern": "^[Hh][Tt][Tt][Pp][Ss]://.*$",
                             "description": "HTTPS only, exact approved host, no userinfo, only default/443 port. Redirects undergo the same checks.",
                         }
                     },
