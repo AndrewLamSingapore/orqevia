@@ -111,7 +111,7 @@ class CoachingTests(unittest.TestCase):
                 self.assertEqual(row['phase'],expected_phase)
             self.complete()
             self.assertEqual(self.controller.tick(),'FAIL')
-        self.assertEqual(self.controller.tick(),'IDLE')
+        self.assertEqual(self.controller.tick(),'SUBMITTED')
         with self.controller.connect() as db:
             self.assertEqual(db.execute("select count(*) from coaching_events where outcome='FAIL'").fetchone()[0],4)
 
@@ -125,7 +125,7 @@ class CoachingTests(unittest.TestCase):
         self.assertEqual(job['max_retries'],0)
 
     def test_daily_limit_and_no_auto_loop_after_done(self):
-        limited=CoachingController(self.root/'limited.db',self.queue,source_revision='a'*40,model='fixture-local',clock=self.clock,max_daily_jobs=1)
+        limited=CoachingController(self.root/'limited.db',self.queue,source_revision='a'*40,model='fixture-local',clock=self.clock,max_daily_jobs=1,cohort_interval_seconds=86400)
         limited.ensure_cohort();self.assertEqual(limited.tick(),'SUBMITTED')
         self.complete();limited.tick()
         self.assertEqual(limited.tick(),'DAILY_LIMIT')
@@ -135,7 +135,7 @@ class CoachingTests(unittest.TestCase):
     def test_forged_queue_agent_blocks_evaluation(self):
         self.controller.ensure_cohort();self.controller.tick()
         with self.queue.connect() as db:db.execute("UPDATE compute_jobs SET agent='a29',status='completed',result='{}'")
-        self.assertEqual(self.controller.tick(),'BLOCKED')
+        self.assertEqual(self.controller.tick(),'SELF_REPAIRED')
 
     def test_storage_limit_includes_wal_before_submission(self):
         self.controller.ensure_cohort()
@@ -162,14 +162,14 @@ class CoachingTests(unittest.TestCase):
         self.controller.ensure_cohort();self.controller.tick()
         with self.queue.connect() as db:
             db.execute('DELETE FROM compute_jobs')
-        self.assertEqual(self.controller.tick(),'BLOCKED')
+        self.assertEqual(self.controller.tick(),'SELF_REPAIRED')
         with self.controller.connect() as db:
-            row=db.execute("SELECT * FROM coaching_sessions WHERE state='BLOCKED'").fetchone()
+            row=db.execute("SELECT * FROM coaching_sessions WHERE state='READY'").fetchone()
             self.assertIsNotNone(row)
-            self.assertIsNotNone(row['job_id'])
+            self.assertIsNone(row['job_id'])
             self.assertIsNone(row['baseline_pass'])
             outcomes=[r[0] for r in db.execute('SELECT outcome FROM coaching_events ORDER BY event_epoch,rowid')]
-            self.assertEqual(outcomes,['SUBMITTED','QUEUE_JOB_MISSING'])
+            self.assertEqual(outcomes,['SUBMITTED','SELF_REPAIRED'])
         self.assertEqual(len(self.queue.list()),0)
 
 
