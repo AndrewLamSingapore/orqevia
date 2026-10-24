@@ -18,7 +18,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-REGISTRY_VERSION = "1.1.0"
+REGISTRY_VERSION = "1.2.0"
 FABRIC_COUNT = 36
 STATES = ("PROPOSED", "IMPLEMENTED", "VERIFIED", "DEGRADED", "FAILED", "DISABLED", "UNAVAILABLE")
 
@@ -700,6 +700,9 @@ def validate_registry(entries):
 def load_fabric_registry():
     """Independent catalog snapshot; historical receipts never imply current health."""
     entries = _existing_contracts(deepcopy(_FABRICS))
+    from .fabric_runtime import executable_contracts
+
+    executable = executable_contracts()
     for item in entries:
         if item["state"] == "VERIFIED":
             item["recorded_historical_state"] = "VERIFIED"
@@ -710,6 +713,28 @@ def load_fabric_registry():
             if item["input_schema"] == _DEFAULT_SCHEMA or item["output_schema"] == _DEFAULT_SCHEMA
             else "DEFINED_FOR_LISTED_OPERATIONS"
         )
+        runtime = executable.get(item["id"])
+        if runtime:
+            item["version"] = runtime["version"]
+            if item["state"] == "PROPOSED":
+                item["state"] = "IMPLEMENTED"
+            item["runtime_contract"] = {
+                "endpoint": "/api/collective/v1/fabrics/" + item["id"] + "/execute",
+                "interface_endpoint": "/interface/v1/collective/fabrics/" + item["id"] + "/execute",
+                "operations": runtime["operations"],
+                "limitations": runtime.get("limitations", []),
+                "availability": "ADAPTER_INSTALLED_RUNTIME_PROBE_REQUIRED",
+                "auth": "Existing bound owner token and actor, or authenticated same-origin interface session",
+                "execution_id": "Required in receipts; supplied UUID provides idempotency; failed/running results never imply PASS",
+                "timeout_policy": "Bounded deterministic operations; host calls 60s, no automatic retries",
+                "resource_limits": {
+                    "concurrency": 4,
+                    "input_bytes": 800000,
+                    "output_bytes": 1500000,
+                    "journal_records": 50000,
+                },
+                "cost_policy": "No paid provider calls from the execution adapter; existing governed APIs handle separate explicit budgets",
+            }
     return {
         "registry_version": REGISTRY_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),

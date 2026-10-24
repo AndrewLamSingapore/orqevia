@@ -149,6 +149,8 @@ def main():
     names.extend(['collective_intelligence', 'collective_runtime', 'collective_repair', 'collective_api'])
     names.append('fabric_adapters')
     names.extend(['fabric_registry', 'fabric_verification', 'repository_evaluation'])
+    names.extend(['fabric_runtime', 'fabric_analytics', 'fabric_foundations', 'fabric_multimodal', 'fabric_speech'])
+    names.append('fabric_browser')
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

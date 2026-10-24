@@ -66,6 +66,16 @@ def main():
         'TRANSFORMERS_OFFLINE':'1','HF_HUB_DISABLE_TELEMETRY':'1',
         'PYTHONUTF8':'1','OMP_NUM_THREADS':'2','TOKENIZERS_PARALLELISM':'false',
         'PYTHONDONTWRITEBYTECODE':'1'})
+    browser=config.get('browser_worker')
+    if browser is not None:
+        required={'node_executable','playwright_module'}
+        if not isinstance(browser,dict) or not required <= browser.keys() or set(browser)-required-{'target_origin'}:
+            raise RuntimeError('Invalid operator browser worker configuration')
+        if not Path(browser['node_executable']).is_absolute() or not Path(browser['node_executable']).is_file() or not Path(browser['playwright_module']).is_absolute() or not Path(browser['playwright_module']).is_dir():
+            raise RuntimeError('Installed operator browser runtime unavailable')
+        child_env.update({'ORQEVIA_BROWSER_NODE_EXECUTABLE':browser['node_executable'],
+                          'ORQEVIA_BROWSER_PLAYWRIGHT_MODULE':browser['playwright_module'],
+                          'ORQEVIA_BROWSER_TARGET_ORIGIN':browser.get('target_origin','https://localhost:8443')})
     logs=RUNTIME/'logs';logs.mkdir(parents=True,exist_ok=True)
     with (logs/'service.stdout.log').open('ab') as out,(logs/'service.stderr.log').open('ab') as err:
         executable=Path(sys.executable)

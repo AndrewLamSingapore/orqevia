@@ -38,6 +38,10 @@ async def collective_bridge(path: str, request: Request):
     methods = PATHS.get(path)
     if methods is None and re.fullmatch(r"jobs/[a-f0-9-]{36}/publish", path):
         methods = {"POST"}
+    if methods is None and re.fullmatch(r"fabrics/f(?:0[1-9]|[12][0-9]|3[0-6])/execute", path):
+        methods = {"POST"}
+    if methods is None and re.fullmatch(r"fabrics/executions/[a-f0-9-]{36}", path):
+        methods = {"GET"}
     if methods is None:
         raise HTTPException(404, "Unavailable operations-board route")
     if request.method not in methods:
@@ -52,9 +56,10 @@ async def collective_bridge(path: str, request: Request):
         raise HTTPException(503, "Service authority unavailable")
     correlation = str(uuid.uuid4())
     try:
-        body = await asyncio.wait_for(pwa_sessions.bounded_body(request, 64000), 3) if request.method == "POST" else b""
+        limit = 900000 if re.fullmatch(r"fabrics/f\d{2}/execute", path) else 64000
+        body = await asyncio.wait_for(pwa_sessions.bounded_body(request, limit), 3) if request.method == "POST" else b""
         async with httpx.AsyncClient(
-            timeout=httpx.Timeout(35, connect=2), trust_env=False, follow_redirects=False
+            timeout=httpx.Timeout(65 if limit == 900000 else 35, connect=2), trust_env=False, follow_redirects=False
         ) as client:
             async with client.stream(
                 request.method,
@@ -89,7 +94,7 @@ async def collective_bridge(path: str, request: Request):
                 chunks, size = [], 0
                 async for chunk in upstream.aiter_bytes():
                     size += len(chunk)
-                    if size > 512000:
+                    if size > (2_000_000 if path.startswith("fabrics/") else 512000):
                         raise ValueError("Bounded response exceeded")
                     chunks.append(chunk)
                 return Response(
