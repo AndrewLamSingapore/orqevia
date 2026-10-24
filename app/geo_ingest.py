@@ -215,9 +215,17 @@ class ObservationStore:
     def __init__(self, db_path: Path | str) -> None:
         self.path = Path(db_path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.path), check_same_thread=False)
+        # Do not open the SQLite connection at construction time: opening here
+        # pins the database file (and any temporary directory it lives in) for
+        # the lifetime of the process, which blocks temporary directory cleanup
+        # on Windows. Connect lazily on first use instead.
+        self._conn = None
         self.lock = threading.Lock()
-        self.conn.execute(
+
+    def _connection(self):
+        if self._conn is None:
+            conn = sqlite3.connect(str(self.path), check_same_thread=False)
+            conn.execute(
             """
             CREATE TABLE IF NOT EXISTS observations (
                 event_id TEXT PRIMARY KEY,
@@ -228,35 +236,38 @@ class ObservationStore:
                 updated_at TEXT NOT NULL
             )
             """
-        )
-        self.conn.commit()
+            )
+            conn.commit()
+            self._conn = conn
+        return self._conn
 
     def upsert(self, record: dict[str, Any], provenance: dict[str, Any]) -> bool:
         now = utc_now()
         with self.lock:
-            cur = self.conn.execute(
+            conn = self._connection()
+            cur = conn.execute(
                 "SELECT ingested_at FROM observations WHERE event_id = ?", (record["event_id"],)
             )
             existing = cur.fetchone()
             payload = json.dumps(record, sort_keys=True)
             prov = json.dumps(provenance, sort_keys=True)
             if existing:
-                self.conn.execute(
+                conn.execute(
                     "UPDATE observations SET payload=?, provenance=?, updated_at=? WHERE event_id=?",
                     (payload, prov, now, record["event_id"]),
                 )
-                self.conn.commit()
+                conn.commit()
                 return False
-            self.conn.execute(
+            conn.execute(
                 "INSERT INTO observations (event_id, kind, payload, provenance, ingested_at, updated_at) VALUES (?,?,?,?,?,?)",
                 (record["event_id"], record["kind"], payload, prov, record["ingested_at"], now),
             )
-            self.conn.commit()
+            conn.commit()
             return True
 
     def get(self, event_id: str) -> dict[str, Any] | None:
         with self.lock:
-            row = self.conn.execute("SELECT payload FROM observations WHERE event_id = ?", (event_id,)).fetchone()
+            row = self._connection().execute("SELECT payload FROM observations WHERE event_id = ?", (event_id,)).fetchone()
             return json.loads(row[0]) if row else None
 
     def query(self, *, min_lat=None, max_lat=None, min_lon=None, max_lon=None, min_time=None, max_time=None, limit=200):
@@ -275,12 +286,12 @@ class ObservationStore:
             clauses.append("json_extract(payload, '$.observed_at') <= ?"); params.append(max_time)
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         with self.lock:
-            rows = self.conn.execute(f"SELECT payload FROM observations {where} ORDER BY ingested_at DESC LIMIT ?", (*params, limit)).fetchall()
+            rows = self._connection().execute(f"SELECT payload FROM observations {where} ORDER BY ingested_at DESC LIMIT ?", (*params, limit)).fetchall()
             return [json.loads(row[0]) for row in rows]
 
     def count(self) -> int:
         with self.lock:
-            return self.conn.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+            return self._connection().execute("SELECT COUNT(*) FROM observations").fetchone()[0]
 
 
 @dataclass
