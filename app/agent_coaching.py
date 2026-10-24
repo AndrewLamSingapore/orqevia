@@ -56,7 +56,8 @@ def effective_prompt(agent, phase, seed, feedback=()):
 
 class CoachingController:
     def __init__(self, path, queue, *, source_revision, model, clock=time.time,
-                 max_daily_jobs=0, max_practice_attempts=2, cohort_interval_seconds=0):
+                 max_daily_jobs=0, max_practice_attempts=2, cohort_interval_seconds=0,
+                 storage_limit_bytes=STORAGE_LIMIT_BYTES):
         if not re.fullmatch('[a-f0-9]{40}',source_revision):
             raise ValueError('pinned coaching source revision required')
         if not model or len(model)>128:
@@ -68,6 +69,7 @@ class CoachingController:
         self.path,self.queue = Path(path),queue
         self.source,self.model,self.clock = source_revision,model,clock
         self.daily,self.attempts,self.interval = max_daily_jobs,max_practice_attempts,cohort_interval_seconds
+        self.storage_limit = storage_limit_bytes
         self.path.parent.mkdir(parents=True,exist_ok=True)
         with self.connect() as db:
             db.execute('PRAGMA journal_mode=WAL')
@@ -114,7 +116,7 @@ class CoachingController:
                 size += Path(str(self.path)+suffix).stat().st_size
             except FileNotFoundError:
                 pass  # SQLite may remove a sidecar after its last reader closes.
-        return size >= STORAGE_LIMIT_BYTES
+        return size >= self.storage_limit
 
     def self_repair(self, db, row, cause, details=None):
         """Owner-directed maximum autonomy: recoverable stalls reset to a fresh
@@ -235,7 +237,8 @@ class CoachingController:
                                     ram_mb=1024,vram_mb=0,timeout_seconds=300,max_retries=0,max_cost_usd=0,
                                     allow_cloud=False,external_execution=False,classification='R0',
                                     data_classification='LOCAL_ONLY',task_class='classification',response_format='strict_json',
-                                    response_schema=request.get('response_schema'),idempotency_key=key)
+                                    response_schema=request.get('response_schema'),idempotency_key=key,
+                                    request_digest=request_hash)
             db.execute("UPDATE coaching_sessions SET state='WAITING',job_id=?,job_key=?,request_sha256=?,prompt_sha256=?,baseline_request_sha256=COALESCE(baseline_request_sha256,?),updated_epoch=? WHERE id=?",
                        (job['id'],key,request_hash,prompt_hash,request_hash if row['phase']=='baseline' else None,self.clock(),row['id']))
             self.event(db,{**row,'job_id':job['id']},'SUBMITTED',{'request_sha256':request_hash,'effective_prompt_sha256':prompt_hash,'max_cost_usd':0})

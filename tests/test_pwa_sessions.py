@@ -355,7 +355,7 @@ def test_mismatched_session_and_device_fail_closed_without_authority_switch(setu
         code=secrets.token_urlsafe(16)
         with pwa.database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used,owner_account_id,role) VALUES(?,?,0,?,?)',(pwa.digest(code),time.time()+300,'owner:fixture','OWNER'))
         owner_result=owner.post('/pwa/api/enroll',headers=HEADERS,json={'code':code});assert owner_result.status_code==200
-        member.cookies.set(pwa.DEVICE_COOKIE,owner.cookies.get(pwa.DEVICE_COOKIE),domain='192.168.1.23',path='/')
+        member.cookies.set(pwa.ORQEVIA_DEVICE_COOKIE,owner.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE),domain='192.168.1.23',path='/')
         assert member.get('/pwa/api/session').json()['authenticated'] is False
         assert member.cookies.get(pwa.COOKIE) is None and member.cookies.get(pwa.DEVICE_COOKIE) is None
         with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,member_result.json()['clientId']))
@@ -368,6 +368,7 @@ def test_active_legacy_session_bootstraps_durable_device_without_reenrollment(se
     with TestClient(app,base_url=ORIGIN) as client:
         enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
         client.cookies.delete(pwa.DEVICE_COOKIE)
+        client.cookies.delete(pwa.ORQEVIA_DEVICE_COOKIE)
         with pwa.database() as db:db.execute('DELETE FROM devices WHERE client_id=?',(identity,))
         current=client.get('/pwa/api/session')
         assert current.json()['authenticated'] is True and current.json()['clientId']==identity

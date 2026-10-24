@@ -28,7 +28,7 @@ def test_explicit_open_mode_admits_without_any_code(setup):
         state=client.get('/pwa/api/session').json()
         assert state['protocol']=='orqevia.interface.v1'
         assert state['authenticated'] is True and state['role']=='OWNER' and state['recovery'] is None
-        cookie=client.cookies.get(pwa.COOKIE);device=client.cookies.get(pwa.DEVICE_COOKIE)
+        cookie=client.cookies.get(pwa.ORQEVIA_COOKIE);device=client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
         assert cookie and device
         with pwa.database() as db:
             row=db.execute('SELECT expires,revoked,role FROM sessions WHERE session_hash=?',(pwa.digest(cookie),)).fetchone()
@@ -77,8 +77,8 @@ def test_missing_or_invalid_access_mode_never_grants_anonymous_owner(setup,monke
         response=client.get('/pwa/api/session')
         state=response.json()
         assert state['authenticated'] is False and state['recovery']=='TRUST_REQUIRED'
-        assert not client.cookies.get(pwa.COOKIE)
-        assert not client.cookies.get(pwa.DEVICE_COOKIE)
+        assert not client.cookies.get(pwa.ORQEVIA_COOKIE)
+        assert not client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
         with pwa.database() as db:
             assert db.execute('SELECT count(*) FROM sessions').fetchone()[0]==0
             assert db.execute('SELECT count(*) FROM devices').fetchone()[0]==0
