@@ -421,7 +421,7 @@ class PWASessionMiddleware(BaseHTTPMiddleware):
                 "connect-src *; worker-src * blob:; object-src *; "
                 "base-uri *; frame-ancestors *"
                 if open_access.enabled() else
-                "default-src 'self'; connect-src 'self'; worker-src 'self'; "
+                "default-src 'self'; connect-src 'self'; worker-src 'self'; media-src 'self' blob:; "
                 "object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
             )
             return response

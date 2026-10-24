@@ -208,3 +208,77 @@ def test_http_owner_auth_and_real_execution(api):
         ]
         == 0
     )
+
+
+def test_compact_discovery_preserves_real_scopes_without_full_schemas(api):
+    headers = {
+        "Authorization": "Bearer " + TOKEN,
+        "X-ORQEVIA-Owner": hashlib.sha256(OWNER.encode()).hexdigest(),
+        "X-ORQEVIA-Actor": "discovery-test",
+    }
+    full = api.get("/api/collective/v1/fabrics/registry", headers=headers)
+    compact = api.get("/api/collective/v1/fabrics/registry?summary=1", headers=headers)
+    assert full.status_code == compact.status_code == 200
+    data = compact.json()["data"]
+    assert data["fabric_count"] == len(data["fabrics"]) == 36
+    assert data["discovery_mode"] == "COMPACT_SUPPORTED_OPERATIONS"
+    assert len(compact.content) < len(full.content) / 3
+    assert all(
+        item["operations"] and item["limitations"] and item["verification"]["status"] == "UNVERIFIED"
+        for item in data["fabrics"]
+    )
+    assert "input_schema" not in json.dumps(data) and "output_schema" not in json.dumps(data)
+    selected = api.get(data["fabrics"][3]["contract_url"], headers=headers).json()["data"]
+    assert selected["fabric_count"] == 36 and selected["selected_fabric_count"] == 1
+    assert selected["fabrics"][0]["id"] == "f04" and selected["fabrics"][0]["input_schema"]
+    assert api.get("/api/collective/v1/fabrics/registry?summary=1").status_code == 401
+
+
+@pytest.mark.parametrize(
+    "query,status",
+    [("summary=all", 422), ("summary=1&summary=0", 422), ("fabric_id=f37", 404), ("fabric_id=f04&role=OWNER", 422)],
+)
+def test_discovery_query_is_bounded(api, query, status):
+    headers = {
+        "Authorization": "Bearer " + TOKEN,
+        "X-ORQEVIA-Owner": hashlib.sha256(OWNER.encode()).hexdigest(),
+        "X-ORQEVIA-Actor": "discovery-test",
+    }
+    assert api.get("/api/collective/v1/fabrics/registry?" + query, headers=headers).status_code == status
+
+
+def test_research_extension_preserves_observations_and_rejects_http_before_network(api):
+    headers = {
+        "Authorization": "Bearer " + TOKEN,
+        "X-ORQEVIA-Owner": hashlib.sha256(OWNER.encode()).hexdigest(),
+        "X-ORQEVIA-Actor": "research-test",
+    }
+    registry = api.get("/api/collective/v1/fabrics/registry?fabric_id=f19", headers=headers).json()["data"]
+    fabric = registry["fabrics"][0]
+    assert fabric["version"] == "1.1.0"
+    assert {op["operation"] for op in fabric["runtime_contract"]["operations"]} == {
+        "retrieve_observations",
+        "fetch_primary_source",
+    }
+    with patch("app.fabric_research.httpx.AsyncClient") as client:
+        response = api.post(
+            "/api/collective/v1/fabrics/f19/execute",
+            headers=headers,
+            json={"operation": "fetch_primary_source", "parameters": {"url": "http://docs.docker.com/"}},
+        )
+        assert response.status_code == 422
+    client.assert_not_called()
+
+
+@pytest.mark.parametrize("candidate", ["-" * 36, "a" * 36, "not-a-uuid"])
+def test_trace_metadata_is_a_canonical_uuid(api, candidate):
+    headers = {
+        "Authorization": "Bearer " + TOKEN,
+        "X-ORQEVIA-Owner": hashlib.sha256(OWNER.encode()).hexdigest(),
+        "X-ORQEVIA-Actor": "trace-test",
+        "X-Request-ID": candidate,
+    }
+    response = api.get("/api/collective/v1/fabrics/registry?summary=1", headers=headers)
+    identifier = response.json()["correlation_id"]
+    assert str(uuid.UUID(identifier)) == identifier and identifier != candidate
+    assert response.headers["X-Request-ID"] == identifier

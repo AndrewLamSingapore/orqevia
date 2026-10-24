@@ -971,6 +971,12 @@ def executable_contracts():
                 "mean": {"type": "number", "minimum": 0, "maximum": 255},
             }
         )
+    from .fabric_research import CONTRACTS as research_contracts
+
+    research = research_contracts["f19"]
+    result["f19"]["version"] = research["version"]
+    result["f19"]["operations"].extend(deepcopy(research["operations"]))
+    result["f19"]["limitations"].extend(research["limitations"])
     return result
 
 
@@ -1246,6 +1252,10 @@ def _builtin(identifier, operation, value, *, principal, data_root, execution_id
             "provider_cost_usd": 0,
         }
     if identifier == "f19":
+        if operation == "fetch_primary_source":
+            from .fabric_research import execute
+
+            return execute(identifier, operation, value)
         return _service("/api/orqevia/intelligence/geo/events?limit=5", None, principal, knowledge=False)
     if identifier == "f23":
         from .workflow_engine import Task, execute

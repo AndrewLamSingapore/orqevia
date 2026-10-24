@@ -18,7 +18,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-REGISTRY_VERSION = "1.3.0"
+REGISTRY_VERSION = "1.4.0"
 FABRIC_COUNT = 36
 STATES = ("PROPOSED", "IMPLEMENTED", "VERIFIED", "DEGRADED", "FAILED", "DISABLED", "UNAVAILABLE")
 

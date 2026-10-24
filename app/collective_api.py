@@ -68,8 +68,12 @@ def _principal(request: Request) -> CollectivePrincipal:
 
 
 def _response(request: Request, data):
-    correlation = request.headers.get("x-request-id", "")
-    if not re.fullmatch(r"[a-f0-9-]{36}", correlation):
+    supplied = request.headers.getlist("x-request-id")
+    correlation = supplied[0] if len(supplied) == 1 else ""
+    try:
+        if str(uuid.UUID(correlation)) != correlation:
+            raise ValueError()
+    except ValueError:
         correlation = str(uuid.uuid4())
     return JSONResponse(
         {
@@ -212,6 +216,36 @@ def fabric_registry(request: Request):
             registry["evidence_index_status"] = "INVALID_OR_UNAVAILABLE"
     else:
         registry["evidence_index_status"] = "NOT_CONFIGURED"
+    # Discovery can avoid putting every schema into an agent's model context.
+    keys = {key for key, _ in request.query_params.multi_items()}
+    if keys - {"summary", "fabric_id"} or any(len(request.query_params.getlist(key)) != 1 for key in keys):
+        raise HTTPException(422, "Invalid fabric discovery query")
+    compact = request.query_params.get("summary", "0")
+    if compact not in {"0", "1"}:
+        raise HTTPException(422, "Invalid fabric discovery mode")
+    selected = request.query_params.get("fabric_id")
+    if selected is not None:
+        if not re.fullmatch(r"f(?:0[1-9]|[12][0-9]|3[0-6])", selected):
+            raise HTTPException(404, "Unknown fabric")
+        registry["fabrics"] = [item for item in registry["fabrics"] if item["id"] == selected]
+        registry["selected_fabric_count"] = 1
+    if compact == "1":
+        registry["fabrics"] = [
+            {
+                **{
+                    key: item[key]
+                    for key in ("id", "name", "identifier", "version", "purpose", "state", "verification")
+                },
+                "operations": [
+                    {"operation": operation["operation"], "scope": operation["scope"]}
+                    for operation in item["runtime_contract"]["operations"]
+                ],
+                "limitations": item["runtime_contract"]["limitations"],
+                "contract_url": "/api/collective/v1/fabrics/registry?fabric_id=" + item["id"],
+            }
+            for item in registry["fabrics"]
+        ]
+        registry["discovery_mode"] = "COMPACT_SUPPORTED_OPERATIONS"
     return _response(request, {**registry, "summary": registry_report(registry)})
 
 
