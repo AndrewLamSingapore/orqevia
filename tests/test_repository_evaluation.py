@@ -16,8 +16,11 @@ def repository(tmp_path):
     root = tmp_path / "product"
     root.mkdir()
     (root / "app.py").write_text("value = 42\n", encoding="utf-8")
-    for argv in (("init",), ("add", "app.py"),
-                 ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "fixture")):
+    for argv in (
+        ("init",),
+        ("add", "app.py"),
+        ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "fixture"),
+    ):
         subprocess.run(["git", "-C", str(root), *argv], check=True, capture_output=True, timeout=15)
     return root
 
@@ -27,7 +30,9 @@ def command(name, code, timeout=5, **kwargs):
 
 
 def test_real_check_and_separate_evidence_verification(repository, tmp_path):
-    result = evaluate(repository, tmp_path / "evidence", (command("numeric-oracle", "assert 6*7 == 42; print('PASS')"),))
+    result = evaluate(
+        repository, tmp_path / "evidence", (command("numeric-oracle", "assert 6*7 == 42; print('PASS')"),)
+    )
     assert result["status"] == "PASS"
     directory = Path(result["directory"])
     assert verify_receipt(directory)["status"] == "PASS"
@@ -36,7 +41,9 @@ def test_real_check_and_separate_evidence_verification(repository, tmp_path):
 
 
 def test_nonzero_exit_cannot_be_overridden_by_printed_pass(repository, tmp_path):
-    result = evaluate(repository, tmp_path / "evidence", (command("failed-test", "print('PASS'); raise SystemExit(2)"),))
+    result = evaluate(
+        repository, tmp_path / "evidence", (command("failed-test", "print('PASS'); raise SystemExit(2)"),)
+    )
     assert result["status"] == "FAIL"
     receipt = json.loads(Path(result["directory"], "execution.json").read_text())
     assert receipt["checks"][0]["exit_code"] == 2
@@ -46,7 +53,7 @@ def test_junit_cases_overrule_successful_process_exit(repository, tmp_path):
     output = tmp_path / "check"
     output.mkdir()
     xml = output / "tests.xml"
-    code = f"from pathlib import Path; Path({str(xml)!r}).write_text('<testsuite tests=\"99\" failures=\"0\"><testcase name=\"broken\"><failure>wrong answer</failure></testcase></testsuite>')"
+    code = f'from pathlib import Path; Path({str(xml)!r}).write_text(\'<testsuite tests="99" failures="0"><testcase name="broken"><failure>wrong answer</failure></testcase></testsuite>\')'
     check = run_check(repository, output, command("dishonest-counter", code, junit=xml.name))
     assert check["exit_code"] == 0 and check["status"] == "FAIL"
     assert check["test_counts"] == {"tests": 1, "failed": 1, "skipped": 0}
@@ -63,7 +70,9 @@ def test_cancellation_stops_real_running_tool(repository, tmp_path):
     timer = threading.Timer(0.2, cancellation.set)
     timer.start()
     try:
-        result = run_check(repository, tmp_path, command("cancelled-tool", "import time; time.sleep(60)"), cancel=cancellation)
+        result = run_check(
+            repository, tmp_path, command("cancelled-tool", "import time; time.sleep(60)"), cancel=cancellation
+        )
     finally:
         timer.cancel()
     assert result["status"] == "CANCELLED" and result["seconds"] < 10
@@ -73,7 +82,12 @@ def test_pre_cancelled_check_does_not_execute(repository, tmp_path):
     cancellation = threading.Event()
     cancellation.set()
     target = tmp_path / "must-not-exist"
-    result = run_check(repository, tmp_path, command("cancelled-before-start", f"from pathlib import Path; Path({str(target)!r}).touch()"), cancel=cancellation)
+    result = run_check(
+        repository,
+        tmp_path,
+        command("cancelled-before-start", f"from pathlib import Path; Path({str(target)!r}).touch()"),
+        cancel=cancellation,
+    )
     assert result["status"] == "CANCELLED" and not target.exists()
 
 
@@ -95,7 +109,7 @@ def test_missing_tool_is_unavailable(repository, tmp_path):
     assert result["status"] == "UNAVAILABLE" and result["exit_code"] is None
 
 
-@pytest.mark.parametrize("timeout", [0, -1, float("nan"), float("inf"), True, 1801])
+@pytest.mark.parametrize("timeout", [0, -1, float("nan"), float("inf"), True, 1801, "60", None])
 def test_unbounded_timeout_is_rejected(timeout):
     with pytest.raises(ValueError):
         Check("test", (sys.executable,), timeout)
@@ -124,3 +138,22 @@ def test_passing_receipt_does_not_claim_deployment_or_ai_review(repository, tmp_
     assert receipt["production_deployed"] is False
     assert verification["publication_authorized"] is False
     assert "not independent AI review" in verification["scope"]
+
+
+def test_fast_command_exceeding_output_limit_cannot_pass(repository, tmp_path, monkeypatch):
+    from app import repository_evaluation as engine
+
+    monkeypatch.setattr(engine, "MAX_LOG_BYTES", 4096)
+    check = command("too-much-output", "print('x' * 32768)")
+    result = run_check(repository, tmp_path, check)
+    assert result["status"] == "OUTPUT_LIMIT"
+    assert (tmp_path / result["log"]).stat().st_size <= 4096
+
+
+def test_dirty_repository_is_diagnostic_only(repository, tmp_path):
+    (repository / "uncommitted.py").write_text("unreviewed = True\n")
+    result = evaluate(repository, tmp_path / "evidence", (command("passing-test", "pass"),))
+    receipt = json.loads(Path(result["directory"], "execution.json").read_text())
+    assert result["status"] == "PASS"
+    assert receipt["release_eligible"] is False
+    assert len(receipt["runner"]["source_sha256"]) == 64

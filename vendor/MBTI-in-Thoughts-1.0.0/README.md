@@ -31,8 +31,10 @@ provides inference, storage and security; the upstream package supplies
 provenance plus the priming data exposed by `mbti_in_thoughts`.
 
 The upstream priming file `priming/priming_without_mention_of_mbti.json` is
-copied byte-for-byte to
-`mbti_in_thoughts/data/priming_without_mention_of_mbti.json`.
+retained at `mbti_in_thoughts/data/priming_without_mention_of_mbti.json` in the
+reviewed CRLF checkout form. Git preserves those pinned bytes on every platform.
+Its text content matches the pinned upstream revision; the upstream LF file has
+SHA-256 `3018d73190fb50d739a00192436a665db262359f5a5b266240d8bb497a5411cf`.
 
 - Profile-data SHA-256:
   `bcc7338677d5295259e2041b8e7e8fed7c2d7349a356aa06bf0e49ad82838258`

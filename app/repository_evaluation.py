@@ -34,10 +34,26 @@ _SECRET = re.compile(
     r"eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,})"
 )
 _ENV = {
-    "PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC", "TEMP", "TMP",
-    "HOME", "USERPROFILE", "LOCALAPPDATA", "APPDATA", "PROGRAMFILES",
-    "PROGRAMFILES(X86)", "SYSTEMDRIVE", "LANG", "LC_ALL", "NUMBER_OF_PROCESSORS",
-    "PROCESSOR_ARCHITECTURE", "UV_PYTHON_INSTALL_DIR", "PLAYWRIGHT_BROWSERS_PATH",
+    "PATH",
+    "PATHEXT",
+    "SYSTEMROOT",
+    "WINDIR",
+    "COMSPEC",
+    "TEMP",
+    "TMP",
+    "HOME",
+    "USERPROFILE",
+    "LOCALAPPDATA",
+    "APPDATA",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
+    "SYSTEMDRIVE",
+    "LANG",
+    "LC_ALL",
+    "NUMBER_OF_PROCESSORS",
+    "PROCESSOR_ARCHITECTURE",
+    "UV_PYTHON_INSTALL_DIR",
+    "PLAYWRIGHT_BROWSERS_PATH",
 }
 
 
@@ -59,8 +75,12 @@ def digest(path: Path) -> str:
 
 def git(root: Path, *args: str) -> str:
     process = subprocess.run(
-        ["git", "-C", str(root), *args], capture_output=True, timeout=15,
-        encoding="utf-8", errors="replace", check=True,
+        ["git", "-C", str(root), *args],
+        capture_output=True,
+        timeout=15,
+        encoding="utf-8",
+        errors="replace",
+        check=True,
     )
     return process.stdout.strip()
 
@@ -88,7 +108,16 @@ def inspect_repository(root: Path) -> dict:
         raw_hash = digest(path)
         tree.update(name.encode("utf-8") + b"\0" + raw_hash.encode() + b"\n")
         if path.stat().st_size > 2 * 1024 * 1024 or path.suffix.lower() not in {
-            ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".json", ".yml", ".yaml", ".env",
+            ".py",
+            ".js",
+            ".mjs",
+            ".cjs",
+            ".ts",
+            ".tsx",
+            ".json",
+            ".yml",
+            ".yaml",
+            ".env",
         }:
             continue
         for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
@@ -101,7 +130,9 @@ def inspect_repository(root: Path) -> dict:
         "dirty": bool(git(root, "status", "--porcelain")),
         "tracked_content_sha256": tree.hexdigest(),
         "tracked_files": len(list(filter(None, tracked))),
-        "manifest_sha256": manifests, "secret_findings": findings, "unreadable_or_linked": skipped,
+        "manifest_sha256": manifests,
+        "secret_findings": findings,
+        "unreadable_or_linked": skipped,
         "security_scope": "credential patterns in tracked text; not a vulnerability or authorization audit",
     }
 
@@ -114,9 +145,20 @@ class Check:
     junit: str | None = None
 
     def __post_init__(self):
-        if not _NAME.fullmatch(self.name) or not self.argv or not all(isinstance(x, str) and x for x in self.argv):
+        if (
+            not isinstance(self.name, str)
+            or not _NAME.fullmatch(self.name)
+            or not isinstance(self.argv, tuple)
+            or not self.argv
+            or not all(isinstance(x, str) and x and "\0" not in x for x in self.argv)
+        ):
             raise ValueError("Invalid check identity or argv")
-        if isinstance(self.timeout_seconds, bool) or not math.isfinite(self.timeout_seconds) or not 0 < self.timeout_seconds <= 1800:
+        if (
+            isinstance(self.timeout_seconds, bool)
+            or not isinstance(self.timeout_seconds, (int, float))
+            or not math.isfinite(self.timeout_seconds)
+            or not 0 < self.timeout_seconds <= 1800
+        ):
             raise ValueError("Check timeout must be finite and between zero and 1800 seconds")
         if self.junit is not None and (Path(self.junit).name != self.junit or not self.junit.endswith(".xml")):
             raise ValueError("JUnit must name a receipt-local XML file")
@@ -157,21 +199,37 @@ def _junit(path: Path) -> dict:
 def run_check(root: Path, directory: Path, check: Check, *, cancel: threading.Event | None = None) -> dict:
     started = time.monotonic()
     log = directory / (check.name + ".log")
-    result = {"name": check.name, "started_at": utcnow(), "execution_mode": "DETERMINISTIC",
-              "argv": list(check.argv), "timeout_seconds": check.timeout_seconds}
+    result = {
+        "name": check.name,
+        "started_at": utcnow(),
+        "execution_mode": "DETERMINISTIC",
+        "argv": list(check.argv),
+        "timeout_seconds": check.timeout_seconds,
+    }
     environment = {key: value for key, value in os.environ.items() if key.upper() in _ENV}
-    environment.update(PYTHONUTF8="1", PYTHONDONTWRITEBYTECODE="1", CI="1", NO_COLOR="1",
-                       ORQEVIA_DATA_DIR=str(directory / "runtime-data"),
-                       ORQEVIA_COMPUTE_QUEUE_DB=str(directory / "runtime-data" / "queue.db"))
+    environment.update(
+        PYTHONUTF8="1",
+        PYTHONDONTWRITEBYTECODE="1",
+        CI="1",
+        NO_COLOR="1",
+        ORQEVIA_DATA_DIR=str(directory / "runtime-data"),
+        ORQEVIA_COMPUTE_QUEUE_DB=str(directory / "runtime-data" / "queue.db"),
+    )
     if cancel is not None and cancel.is_set():
         result.update(status="CANCELLED", exit_code=None)
     else:
         try:
             with log.open("xb") as output:
-                process = subprocess.Popen(check.argv, cwd=root, env=environment, stdin=subprocess.DEVNULL,
-                                           stdout=output, stderr=subprocess.STDOUT,
-                                           start_new_session=os.name != "nt",
-                                           creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0)
+                process = subprocess.Popen(
+                    check.argv,
+                    cwd=root,
+                    env=environment,
+                    stdin=subprocess.DEVNULL,
+                    stdout=output,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=os.name != "nt",
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+                )
                 status = None
                 while process.poll() is None:
                     if cancel is not None and cancel.is_set():
@@ -184,10 +242,15 @@ def run_check(root: Path, directory: Path, check: Check, *, cancel: threading.Ev
                         _stop(process)
                         break
                     time.sleep(0.025)
-                result.update(status=status or ("PASS" if process.returncode == 0 else "FAIL"), exit_code=process.returncode)
+                result.update(
+                    status=status or ("PASS" if process.returncode == 0 else "FAIL"), exit_code=process.returncode
+                )
         except OSError as error:
             result.update(status="UNAVAILABLE", exit_code=None, error_type=type(error).__name__)
     if log.exists():
+        # A fast command can exceed the limit and exit between polling ticks.
+        if log.stat().st_size > MAX_LOG_BYTES and result["status"] == "PASS":
+            result["status"] = "OUTPUT_LIMIT"
         with log.open("rb") as stream:
             raw = stream.read(MAX_LOG_BYTES)
         safe = _SECRET.sub("[REDACTED_CREDENTIAL]", raw.decode("utf-8", errors="replace"))
@@ -225,7 +288,12 @@ def verify_receipt(directory: Path) -> dict:
             if field not in check:
                 continue
             path = directory / check[field]
-            if path.is_symlink() or path.parent != directory or not path.is_file() or digest(path) != check.get(field + "_sha256"):
+            if (
+                path.is_symlink()
+                or path.parent != directory
+                or not path.is_file()
+                or digest(path) != check.get(field + "_sha256")
+            ):
                 errors.append("evidence_mismatch:" + check["name"] + ":" + field)
             elif field == "junit":
                 try:
@@ -234,10 +302,16 @@ def verify_receipt(directory: Path) -> dict:
                         errors.append("test_oracle_failed:" + check["name"])
                 except (ValueError, ET.ParseError):
                     errors.append("invalid_test_evidence:" + check["name"])
-    return {"execution_id": receipt["execution_id"], "status": "PASS" if not errors else "FAIL",
-            "execution_sha256": digest(directory / "execution.json"), "errors": errors,
-            "execution_mode": "DETERMINISTIC", "scope": "separate evidence rescan; not independent AI review",
-            "verified_at": utcnow(), "publication_authorized": False}
+    return {
+        "execution_id": receipt["execution_id"],
+        "status": "PASS" if not errors else "FAIL",
+        "execution_sha256": digest(directory / "execution.json"),
+        "errors": errors,
+        "execution_mode": "DETERMINISTIC",
+        "scope": "separate evidence rescan; not independent AI review",
+        "verified_at": utcnow(),
+        "publication_authorized": False,
+    }
 
 
 def evaluate(root: Path, evidence_root: Path, checks: tuple[Check, ...], *, cancel=None) -> dict:
@@ -247,28 +321,59 @@ def evaluate(root: Path, evidence_root: Path, checks: tuple[Check, ...], *, canc
     before = inspect_repository(root)
     directory = Path(evidence_root).resolve() / str(uuid.uuid4())
     directory.mkdir(parents=True, exist_ok=False)
-    _json(directory / "intent.json", {"execution_id": directory.name, "repository": str(root),
-          "source": before, "started_at": utcnow(), "status": "RUNNING",
-          "scope": "authorized local repository checks", "paid_provider_budget_usd": 0})
+    _json(
+        directory / "intent.json",
+        {
+            "execution_id": directory.name,
+            "repository": str(root),
+            "source": before,
+            "started_at": utcnow(),
+            "status": "RUNNING",
+            "scope": "authorized local repository checks",
+            "paid_provider_budget_usd": 0,
+        },
+    )
     results = [run_check(root, directory, check, cancel=cancel) for check in checks]
     after = inspect_repository(root)
-    result = {"version": VERSION, "execution_id": directory.name, "repository": str(root),
-              "source_before": before, "source_after": after, "checks": results,
-              "status": "PASS" if all(item["status"] == "PASS" for item in results) and before == after else "FAIL",
-              "completed_at": utcnow(), "production_deployed": False,
-              "external_cost_usd": None, "cost_scope": "no provider invoked by runner; child check costs not inferred"}
+    result = {
+        "version": VERSION,
+        "execution_id": directory.name,
+        "repository": str(root),
+        "source_before": before,
+        "source_after": after,
+        "checks": results,
+        "status": "PASS" if all(item["status"] == "PASS" for item in results) and before == after else "FAIL",
+        "completed_at": utcnow(),
+        "production_deployed": False,
+        "external_cost_usd": None,
+        "cost_scope": "no provider invoked by runner; child check costs not inferred",
+    }
+    result["release_eligible"] = result["status"] == "PASS" and not before["dirty"] and not after["dirty"]
+    result["runner"] = {
+        "module": "app.repository_evaluation",
+        "version": VERSION,
+        "source_sha256": digest(Path(__file__)),
+        "execution_mode": "DETERMINISTIC",
+    }
     _json(directory / "execution.json", result)
     verification = verify_receipt(directory)
     _json(directory / "verification.json", verification)
-    return {"execution_id": directory.name, "status": verification["status"], "directory": str(directory),
-            "checks": len(results), "receipt_sha256": digest(directory / "execution.json")}
+    return {
+        "execution_id": directory.name,
+        "status": verification["status"],
+        "directory": str(directory),
+        "checks": len(results),
+        "receipt_sha256": digest(directory / "execution.json"),
+    }
 
 
 def profile_checks(root: Path, profile: str) -> tuple[Check, ...]:
     """Small fixed recipes; the API never accepts arbitrary shell commands."""
     if profile == "python":
         python = root / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-        return (Check("python-tests", (str(python) if python.is_file() else sys.executable, "-m", "pytest", "-q"), 600),)
+        return (
+            Check("python-tests", (str(python) if python.is_file() else sys.executable, "-m", "pytest", "-q"), 600),
+        )
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if not npm:
         raise ValueError("npm is unavailable")

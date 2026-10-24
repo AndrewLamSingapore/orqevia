@@ -98,3 +98,38 @@ def test_validator_rejects_verified_without_evidence():
         assert "no recorded evidence" in str(exc)
     else:
         raise AssertionError("validator accepted VERIFIED without evidence")
+
+
+def test_schema_objects_are_independent_between_fabrics_and_directions():
+    registry = load_fabric_registry()
+    registry["fabrics"][0]["input_schema"]["injected"] = True
+    assert "injected" not in registry["fabrics"][0]["output_schema"]
+    assert "injected" not in registry["fabrics"][1]["input_schema"]
+
+
+def test_validator_rejects_replacement_id_and_duplicate_runtime_identifier():
+    import pytest
+
+    registry = load_fabric_registry()
+    registry["fabrics"][-1]["id"] = "f37"
+    with pytest.raises(ValueError, match="f01-f36"):
+        validate_registry(registry["fabrics"])
+    registry = load_fabric_registry()
+    registry["fabrics"][1]["identifier"] = registry["fabrics"][0]["identifier"]
+    with pytest.raises(ValueError, match="unique"):
+        validate_registry(registry["fabrics"])
+
+
+def test_placeholder_schemas_are_explicitly_partial():
+    registry = load_fabric_registry()
+    assert next(x for x in registry["fabrics"] if x["id"] == "f01")["contract_status"] == "PARTIAL"
+    assert (
+        next(x for x in registry["fabrics"] if x["id"] == "f10")["contract_status"] == "DEFINED_FOR_LISTED_OPERATIONS"
+    )
+
+
+def test_existing_forecast_and_financial_implementations_are_not_duplicated():
+    by_id = {x["id"]: x for x in load_fabric_registry()["fabrics"]}
+    assert by_id["f26"]["state"] == by_id["f34"]["state"] == "IMPLEMENTED"
+    assert "intervals" in by_id["f26"]["notes"]
+    assert "project_workflows.py" in by_id["f34"]["dependencies"][0]
