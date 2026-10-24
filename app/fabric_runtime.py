@@ -8,6 +8,8 @@ No request selects a command, module, credential, filesystem root or network URL
 from __future__ import annotations
 
 import ast
+import base64
+import binascii
 from contextlib import closing
 from datetime import datetime, timezone
 import hashlib
@@ -20,6 +22,7 @@ import sqlite3
 import threading
 import time
 import uuid
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 SLOTS = threading.BoundedSemaphore(4)
@@ -33,6 +36,274 @@ class FabricUnavailable(RuntimeError):
 
 class FabricConflict(ValueError):
     """An execution identity cannot be rebound to other arguments."""
+
+
+class OutputContractViolation(FabricUnavailable):
+    """Sanitized output failure; unvalidated results never enter the journal."""
+
+
+# Deliberately the fixed operation vocabulary, not an arbitrary-schema engine.
+# Unknown assertions/formats fail closed, and catalog tests inventory this set.
+OUTPUT_SCHEMA_KEYWORDS = frozenset(
+    {
+        "type",
+        "properties",
+        "required",
+        "additionalProperties",
+        "items",
+        "minItems",
+        "maxItems",
+        "oneOf",
+        "anyOf",
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "const",
+        "enum",
+        "pattern",
+        "format",
+        "propertyNames",
+        "minLength",
+        "maxLength",
+        "minProperties",
+        "maxProperties",
+        "patternProperties",
+        "contentEncoding",
+        "description",
+        "title",
+        "default",
+        "$schema",
+    }
+)
+OUTPUT_SCHEMA_FORMATS = frozenset({"uuid", "date-time", "uri"})
+OUTPUT_MAX_DEPTH = 64
+OUTPUT_MAX_VISITS = 100_000
+
+
+class _OutputMismatch(Exception):
+    pass
+
+
+def _output_schema_supported(schema, budget, depth=0):
+    budget[0] -= 1
+    if depth > OUTPUT_MAX_DEPTH or budget[0] < 0:
+        raise OutputContractViolation("Output contract validation bound exceeded")
+    if type(schema) is bool:
+        return
+    if not isinstance(schema, dict) or set(schema) - OUTPUT_SCHEMA_KEYWORDS:
+        raise OutputContractViolation("Unsupported output contract vocabulary")
+    if schema.get("format") is not None and schema["format"] not in OUTPUT_SCHEMA_FORMATS:
+        raise OutputContractViolation("Unsupported output contract format")
+    if schema.get("contentEncoding") is not None and schema["contentEncoding"] != "base64":
+        raise OutputContractViolation("Unsupported output contract encoding")
+    try:
+        if "pattern" in schema:
+            re.compile(schema["pattern"])
+        for pattern in schema.get("patternProperties", {}):
+            re.compile(pattern)
+    except (TypeError, re.error):
+        raise OutputContractViolation("Invalid output contract pattern") from None
+    kinds = schema.get("type", [])
+    kinds = [kinds] if isinstance(kinds, str) else kinds
+    if not isinstance(kinds, list) or any(
+        kind not in {"object", "array", "string", "number", "integer", "boolean", "null"} for kind in kinds
+    ):
+        raise OutputContractViolation("Unsupported output contract type")
+    for keyword in ("properties", "patternProperties"):
+        for child in schema.get(keyword, {}).values():
+            _output_schema_supported(child, budget, depth + 1)
+    for keyword in ("items", "additionalProperties", "propertyNames"):
+        if keyword in schema:
+            _output_schema_supported(schema[keyword], budget, depth + 1)
+    for keyword in ("oneOf", "anyOf"):
+        if keyword in schema:
+            branches = schema[keyword]
+            if not isinstance(branches, list) or not 1 <= len(branches) <= 32:
+                raise OutputContractViolation("Output contract branch bound exceeded")
+            for child in branches:
+                _output_schema_supported(child, budget, depth + 1)
+
+
+def _json_equal(left, right):
+    if isinstance(left, bool) or isinstance(right, bool):
+        return type(left) is type(right) and left == right
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return left == right
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_json_equal(left[key], right[key]) for key in left)
+    if isinstance(left, list):
+        return len(left) == len(right) and all(_json_equal(a, b) for a, b in zip(left, right))
+    return left == right
+
+
+def _output_kind(value, kind):
+    return {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "number": type(value) in (int, float),
+        "integer": type(value) is int or (type(value) is float and value.is_integer()),
+        "boolean": type(value) is bool,
+        "null": value is None,
+    }.get(kind, False)
+
+
+def _output_format(value, format_):
+    if format_ == "uuid":
+        try:
+            return str(uuid.UUID(value)) == value
+        except (ValueError, AttributeError):
+            return False
+    if format_ == "date-time":
+        if (
+            re.fullmatch(
+                r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})",
+                value,
+            )
+            is None
+        ):
+            return False
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00").replace("z", "+00:00")).utcoffset() is not None
+        except ValueError:
+            return False
+    if format_ == "uri":
+        if (
+            not value.isascii()
+            or any(ord(char) < 33 or ord(char) == 127 or char in '<>"{}|\\^`' for char in value)
+            or re.search(r"%(?![0-9A-Fa-f]{2})", value)
+        ):
+            return False
+        try:
+            parsed = urlsplit(value)
+            if re.fullmatch(r"[A-Za-z][A-Za-z0-9+.-]*", parsed.scheme or "") is None:
+                return False
+            if parsed.scheme.lower() in {"http", "https"}:
+                return bool(parsed.hostname) and (parsed.port is None or 1 <= parsed.port <= 65535)
+            return True
+        except ValueError:
+            return False
+    return False
+
+
+def _output_value(value, schema, budget, depth=0):
+    budget[0] -= 1
+    if depth > OUTPUT_MAX_DEPTH or budget[0] < 0:
+        raise OutputContractViolation("Output contract validation bound exceeded")
+    if schema is True:
+        return
+    if schema is False:
+        raise _OutputMismatch()
+    if "const" in schema and not _json_equal(value, schema["const"]):
+        raise _OutputMismatch()
+    if "enum" in schema and not any(_json_equal(value, choice) for choice in schema["enum"]):
+        raise _OutputMismatch()
+    for keyword in ("oneOf", "anyOf"):
+        if keyword in schema:
+            matches = 0
+            for branch in schema[keyword]:
+                try:
+                    _output_value(value, branch, budget, depth + 1)
+                    matches += 1
+                except _OutputMismatch:
+                    pass
+                if keyword == "anyOf" and matches:
+                    break
+            if (keyword == "oneOf" and matches != 1) or (keyword == "anyOf" and not matches):
+                raise _OutputMismatch()
+    kinds = schema.get("type")
+    if kinds is not None and not any(
+        _output_kind(value, kind) for kind in ([kinds] if isinstance(kinds, str) else kinds)
+    ):
+        raise _OutputMismatch()
+    if isinstance(value, dict):
+        if (
+            not schema.get("minProperties", 0) <= len(value) <= schema.get("maxProperties", MAX_RESULT)
+            or set(schema.get("required", [])) - value.keys()
+        ):
+            raise _OutputMismatch()
+        properties, patterns = schema.get("properties", {}), schema.get("patternProperties", {})
+        for key, child in value.items():
+            if not isinstance(key, str):
+                raise _OutputMismatch()
+            if "propertyNames" in schema:
+                _output_value(key, schema["propertyNames"], budget, depth + 1)
+            matched = False
+            if key in properties:
+                _output_value(child, properties[key], budget, depth + 1)
+                matched = True
+            for pattern, definition in patterns.items():
+                if re.search(pattern, key) is not None:
+                    _output_value(child, definition, budget, depth + 1)
+                    matched = True
+            if not matched and schema.get("additionalProperties", True) is not True:
+                _output_value(child, schema["additionalProperties"], budget, depth + 1)
+    elif isinstance(value, list):
+        if not schema.get("minItems", 0) <= len(value) <= schema.get("maxItems", MAX_RESULT):
+            raise _OutputMismatch()
+        if schema.get("items", True) is not True:
+            for child in value:
+                _output_value(child, schema["items"], budget, depth + 1)
+    elif isinstance(value, str):
+        if not schema.get("minLength", 0) <= len(value) <= schema.get("maxLength", MAX_RESULT):
+            raise _OutputMismatch()
+        if "pattern" in schema and re.search(schema["pattern"], value) is None:
+            raise _OutputMismatch()
+        if "format" in schema and not _output_format(value, schema["format"]):
+            raise _OutputMismatch()
+        if schema.get("contentEncoding") == "base64":
+            try:
+                base64.b64decode(value, validate=True)
+            except (ValueError, binascii.Error):
+                raise _OutputMismatch() from None
+    elif type(value) in (int, float):
+        if (
+            not schema.get("minimum", -math.inf) <= value <= schema.get("maximum", math.inf)
+            or ("exclusiveMinimum" in schema and value <= schema["exclusiveMinimum"])
+            or ("exclusiveMaximum" in schema and value >= schema["exclusiveMaximum"])
+        ):
+            raise _OutputMismatch()
+
+
+def _validate_output(value, schema):
+    """Bounded guard for this catalog's explicit assertions, not full JSON Schema."""
+    try:
+        raw = _json(value)
+        if len(raw.encode()) > MAX_RESULT:
+            raise OutputContractViolation("Operation output exceeds bound")
+        # Also reject lone surrogates hidden inside otherwise unconstrained data.
+        json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8")
+    except (ValueError, TypeError, OverflowError, RecursionError, UnicodeError):
+        raise OutputContractViolation("Operation output is not bounded finite JSON") from None
+    # Schema-free data is still bounded JSON: never let an unconstrained field
+    # conceal a tuple, converted nonstring key, or a deeply nested result tree.
+    pending, visits = [(value, 0)], 0
+    while pending:
+        child, depth = pending.pop()
+        visits += 1
+        if depth > OUTPUT_MAX_DEPTH or visits > OUTPUT_MAX_VISITS:
+            raise OutputContractViolation("Output JSON validation bound exceeded")
+        if type(child) is dict:
+            if any(type(key) is not str for key in child):
+                raise OutputContractViolation("Operation output contains non-JSON data")
+            if visits + len(pending) + len(child) > OUTPUT_MAX_VISITS:
+                raise OutputContractViolation("Output JSON validation bound exceeded")
+            pending.extend((item, depth + 1) for item in child.values())
+        elif type(child) is list:
+            if visits + len(pending) + len(child) > OUTPUT_MAX_VISITS:
+                raise OutputContractViolation("Output JSON validation bound exceeded")
+            pending.extend((item, depth + 1) for item in child)
+        elif type(child) not in (str, int, float, bool, type(None)):
+            raise OutputContractViolation("Operation output contains non-JSON data")
+    _output_schema_supported(schema, [10_000])
+    try:
+        _output_value(value, schema, [OUTPUT_MAX_VISITS])
+    except _OutputMismatch:
+        raise OutputContractViolation("Operation output violates its declared contract") from None
+    return raw
 
 
 def _json(value):
@@ -76,7 +347,7 @@ POINT = {
 
 
 def _result_object(properties, *, optional=(), additional=False):
-    """Contract metadata only; operation execution and validation are unchanged."""
+    """Closed result shape enforced before a new execution can complete."""
     return {
         "type": "object",
         "properties": properties,
@@ -874,7 +1145,7 @@ def execution_request_schema(contract):
 
 
 def execution_receipt_schema(fabric_id, contract):
-    """Completed results are operation typed; replay can return a nonfinal receipt."""
+    """Current POST receipts; cross-version replay is 409, historical GET is separate."""
     from copy import deepcopy
 
     variants = []
@@ -1307,7 +1578,7 @@ def _builtin(identifier, operation, value, *, principal, data_root, execution_id
 
 
 def execute_fabric(identifier, operation, parameters, *, principal, data_root, execution_id):
-    """Run an explicit operation once; failed/interrupted calls never replay as PASS."""
+    """Run once; cross-version POST replay is 409, historical GET stays immutable."""
     if str(uuid.UUID(execution_id)) != execution_id:
         raise ValueError("Canonical execution ID required")
     contracts = executable_contracts()
@@ -1328,6 +1599,7 @@ def execute_fabric(identifier, operation, parameters, *, principal, data_root, e
                 row["owner"] != principal.owner_id
                 or row["tenant"] != principal.tenant_id
                 or row["input_sha256"] != fingerprint
+                or row["version"] != contracts[identifier]["version"]
             ):
                 raise FabricConflict("Execution identity is already bound")
             db.rollback()
@@ -1391,10 +1663,8 @@ def execute_fabric(identifier, operation, parameters, *, principal, data_root, e
 
                 result = execute(identifier, operation, parameters)
         if not isinstance(result, dict):
-            raise ValueError("Operation must return an object")
-        raw = _json(result)
-        if len(raw.encode()) > MAX_RESULT:
-            raise ValueError("Operation output exceeds bound")
+            raise OutputContractViolation("Operation must return an object")
+        _validate_output(result, selected["output_schema"])
         error = None
     except Exception as exception:
         error = type(exception).__name__
