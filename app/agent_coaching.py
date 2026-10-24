@@ -21,7 +21,7 @@ from .agent_registry import agent_record, registered_agent_ids
 from .coaching_exercises import METHODS, VERSION, practice_request, review_practice
 
 PHASES = ('baseline', 'practice', 'acceptance')
-STORAGE_LIMIT_BYTES = 64*1024*1024
+STORAGE_LIMIT_BYTES = 512*1024*1024
 
 def canonical(value):
     return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)
@@ -56,15 +56,15 @@ def effective_prompt(agent, phase, seed, feedback=()):
 
 class CoachingController:
     def __init__(self, path, queue, *, source_revision, model, clock=time.time,
-                 max_daily_jobs=84, max_practice_attempts=2, cohort_interval_seconds=86400):
+                 max_daily_jobs=0, max_practice_attempts=2, cohort_interval_seconds=0):
         if not re.fullmatch('[a-f0-9]{40}',source_revision):
             raise ValueError('pinned coaching source revision required')
         if not model or len(model)>128:
             raise ValueError('existing local model required')
-        if type(max_daily_jobs) is not int or not 1<=max_daily_jobs<=84:
+        if type(max_daily_jobs) is not int or not 0<=max_daily_jobs<=100000000:
             raise ValueError('bounded daily job limit required')
-        if max_practice_attempts not in (1,2) or cohort_interval_seconds<86400:
-            raise ValueError('bounded retry and scheduling policy required')
+        if max_practice_attempts not in (1,2) or cohort_interval_seconds<0:
+            raise ValueError('bounded retry policy required; cohort interval may be zero (resume immediately)')
         self.path,self.queue = Path(path),queue
         self.source,self.model,self.clock = source_revision,model,clock
         self.daily,self.attempts,self.interval = max_daily_jobs,max_practice_attempts,cohort_interval_seconds
@@ -116,6 +116,15 @@ class CoachingController:
                 pass  # SQLite may remove a sidecar after its last reader closes.
         return size >= STORAGE_LIMIT_BYTES
 
+    def self_repair(self, db, row, cause, details=None):
+        """Owner-directed maximum autonomy: recoverable stalls reset to a fresh
+        baseline run instead of waiting for manual reconciliation."""
+        self.event(db, row, 'SELF_REPAIRED', {'cause': cause, **(details or {})})
+        db.execute("UPDATE coaching_sessions SET phase='baseline',attempt=1,state='READY',job_id=NULL,"
+                   "job_key=NULL,request_sha256=NULL,prompt_sha256=NULL,feedback_json='[]',updated_epoch=? WHERE id=?",
+                   (self.clock(), row['id']))
+        return 'SELF_REPAIRED'
+
     def ensure_cohort(self):
         """At most 21 logical sessions per scheduled cohort, never 21 workers."""
         agents = sorted(registered_agent_ids(include_orchestrator=False))
@@ -125,12 +134,9 @@ class CoachingController:
             db.execute('BEGIN IMMEDIATE')
             if self.storage_limit_reached():
                 return None
-            if db.execute('SELECT COUNT(*) FROM coaching_events').fetchone()[0]>=20000:
+            if db.execute('SELECT COUNT(*) FROM coaching_events').fetchone()[0]>=2000000:
                 return None
             if db.execute("SELECT 1 FROM coaching_sessions WHERE state NOT IN ('DONE','BLOCKED') LIMIT 1").fetchone():
-                return None
-            # A blocked cohort is an explicit repair dependency, not a retry loop.
-            if db.execute("SELECT 1 FROM coaching_sessions WHERE state='BLOCKED' LIMIT 1").fetchone():
                 return None
             last = db.execute('SELECT MAX(created_epoch) FROM coaching_cohorts').fetchone()[0]
             if last is not None and self.clock()-last<self.interval:
@@ -138,7 +144,7 @@ class CoachingController:
             cohort = uuid.uuid4().hex
             db.execute('INSERT INTO coaching_cohorts VALUES(?,?,?)',(cohort,self.source,self.clock()))
             for i,agent in enumerate(agents):
-                seed = 1001+i+int(self.clock()//self.interval)%90000
+                seed = 1001+i+int(self.clock()//(self.interval or 1))%90000
                 db.execute('INSERT INTO coaching_sessions(id,cohort_id,agent,seed,phase,attempt,state,updated_epoch) VALUES(?,?,?,?,?,?,?,?)',
                            (uuid.uuid4().hex,cohort,agent,seed,'baseline',1,'READY',self.clock()))
             return cohort
@@ -154,33 +160,24 @@ class CoachingController:
             if self.storage_limit_reached():
                 return 'STORAGE_LIMIT'
             if row['source_revision']!=self.source:
-                db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
-                self.event(db,row,'SOURCE_CHANGED')
-                return 'SOURCE_CHANGED'
+                return self.self_repair(db,row,'SOURCE_CHANGED',
+                    {'cohort_source':row['source_revision'],'controller_source':self.source})
             request,prompt = effective_prompt(row['agent'],row['phase'],row['seed'],json.loads(row['feedback_json']))
             request_hash,prompt_hash = digest(request),hashlib.sha256(prompt.encode()).hexdigest()
             if waiting:
                 if row['request_sha256']!=request_hash or row['prompt_sha256']!=prompt_hash:
-                    db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
-                    self.event(db,row,'CONTRACT_CHANGED')
-                    return 'CONTRACT_CHANGED'
+                    return self.self_repair(db,row,'CONTRACT_CHANGED')
                 try:
                     job = self.queue.get(row['job_id'])
                 except KeyError:
-                    # Lost queue evidence cannot be graded or silently replayed.
-                    # Keep the original job binding for explicit reconciliation.
-                    db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
-                    self.event(db,row,'QUEUE_JOB_MISSING')
-                    return 'BLOCKED'
+                    return self.self_repair(db,row,'QUEUE_JOB_MISSING',{'job_id':row.get('job_id')})
                 if job['status'] not in {'completed','failed','cancelled','budget_blocked'}:
                     return 'WAITING'
                 bound = (job.get('agent')==row['agent'] and job.get('prompt')==prompt and
                          job.get('allow_cloud')==0 and job.get('external_execution')==0 and
                          job.get('data_classification')=='LOCAL_ONLY' and job.get('actual_cost_usd',0)==0)
                 if not bound:
-                    db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
-                    self.event(db,row,'EXECUTION_BINDING_MISMATCH')
-                    return 'BLOCKED'
+                    return self.self_repair(db,row,'EXECUTION_BINDING_MISMATCH',{'job_id':row.get('job_id')})
                 passed,errors = False,['execution_not_completed']
                 if job['status']=='completed':
                     if row['phase']=='practice':
@@ -211,22 +208,29 @@ class CoachingController:
                            (next_phase,next_attempt,state,canonical(feedback),self.clock(),row['id']))
                 return 'PASS' if passed else 'FAIL'
             key = 'coaching:'+row['id']+':'+row['phase']+':'+str(row['attempt'])
+            key_hash = hashlib.sha256(key.encode()).hexdigest()
             # Recover a queue commit that preceded a controller crash. This is
             # readback of our exact submission, not new work bypassing priority.
             with self.queue.connect() as queue_db:
-                prior = queue_db.execute('SELECT job_id FROM compute_submission_keys WHERE agent=? AND key_sha256=?',
-                    (row['agent'],hashlib.sha256(key.encode()).hexdigest())).fetchone()
+                prior = queue_db.execute('SELECT request_sha256,job_id FROM compute_submission_keys WHERE agent=? AND key_sha256=?',
+                    (row['agent'],key_hash)).fetchone()
+                # A case-spec repair can change the request behind an old
+                # controller-owned key. The stale binding's job is terminal
+                # history; reconcile the key now instead of failing forever.
+                if prior and prior['request_sha256']!=request_hash:
+                    queue_db.execute('DELETE FROM compute_submission_keys WHERE agent=? AND key_sha256=?',(row['agent'],key_hash))
+                    self.event(db,{**row,'job_id':prior['job_id']},'STALE_BINDING_RECONCILED',
+                        {'stale_request_sha256':prior['request_sha256'],'current_request_sha256':request_hash})
+                    prior = None
             # One coaching job at a time. Ordinary/Owner work precedes new practice.
             if prior is None and (self.queue.list(status='queued',limit=1) or self.queue.list(status='running',limit=1)):
                 return 'OWNER_QUEUE_BUSY'
             count = db.execute("SELECT COUNT(*) FROM coaching_events WHERE outcome='SUBMITTED' AND event_epoch>?",(self.clock()-86400,)).fetchone()[0]
-            if prior is None and count>=self.daily: return 'DAILY_LIMIT'
-            if prior is None and db.execute('SELECT COUNT(*) FROM coaching_events').fetchone()[0]>=20000:
+            if prior is None and self.daily and count>=self.daily: return 'DAILY_LIMIT'
+            if prior is None and db.execute('SELECT COUNT(*) FROM coaching_events').fetchone()[0]>=2000000:
                 return 'HISTORY_LIMIT'
             if row['phase']=='acceptance' and row['baseline_request_sha256']!=request_hash:
-                db.execute("UPDATE coaching_sessions SET state='BLOCKED',updated_epoch=? WHERE id=?",(self.clock(),row['id']))
-                self.event(db,row,'ACCEPTANCE_REQUEST_CHANGED')
-                return 'BLOCKED'
+                return self.self_repair(db,row,'ACCEPTANCE_REQUEST_CHANGED')
             job = self.queue.submit(agent=row['agent'],prompt=prompt,priority='background',model_role='deep',model=self.model,
                                     ram_mb=1024,vram_mb=0,timeout_seconds=300,max_retries=0,max_cost_usd=0,
                                     allow_cloud=False,external_execution=False,classification='R0',
