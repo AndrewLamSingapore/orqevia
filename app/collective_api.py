@@ -14,6 +14,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
+from httpx import HTTPError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from . import pwa_sessions
@@ -109,6 +110,11 @@ async def _body(request: Request, model):
 @asynccontextmanager
 async def collective_lifespan(app):
     from .collective_runtime import reconcile_loop
+    from pathlib import Path
+    from .fabric_runtime import recover_interrupted
+
+    if os.getenv("ORQEVIA_COLLECTIVE_ENABLED") == "1":
+        recover_interrupted(Path(os.getenv("ORQEVIA_DATA_DIR", "/data")))
 
     task = asyncio.create_task(reconcile_loop()) if os.getenv("ORQEVIA_COLLECTIVE_ENABLED") == "1" else None
     try:
@@ -121,6 +127,69 @@ async def collective_lifespan(app):
 
 
 router = APIRouter(prefix="/api/collective/v1", tags=["collective-operations"], lifespan=collective_lifespan)
+
+
+class FabricExecutionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    operation: str = Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_.:-]+$")
+    parameters: dict = Field(default_factory=dict)
+    execution_id: str = Field(default_factory=lambda: str(uuid.uuid4()), pattern=r"^[a-f0-9-]{36}$")
+
+
+@router.post("/fabrics/{fabric_id}/execute")
+async def execute_fabric(fabric_id: str, request: Request):
+    principal = _principal(request)
+    if not re.fullmatch(r"f(?:0[1-9]|[12][0-9]|3[0-6])", fabric_id):
+        raise HTTPException(404, "Unknown fabric")
+    from pathlib import Path
+    from .fabric_runtime import execute_fabric as execute, FabricConflict, FabricUnavailable
+
+    try:
+        raw = await asyncio.wait_for(pwa_sessions.bounded_body(request, 900000), 3)
+        body = FabricExecutionRequest.model_validate_json(raw)
+        # Reject nonfinite numbers, invalid Unicode and pathological nesting
+        # before a durable execution or downstream component sees the input.
+        import json
+
+        json.dumps(body.parameters, allow_nan=False, ensure_ascii=False).encode("utf-8")
+        result = await asyncio.to_thread(
+            execute,
+            fabric_id,
+            body.operation,
+            body.parameters,
+            principal=principal,
+            data_root=Path(os.getenv("ORQEVIA_DATA_DIR", "/data")),
+            execution_id=body.execution_id,
+        )
+        return _response(request, result)
+    except FabricConflict:
+        raise HTTPException(409, "Execution identity is already bound") from None
+    except (ValidationError, ValueError, UnicodeError, RecursionError):
+        raise HTTPException(422, "Invalid fabric operation contract") from None
+    except KeyError:
+        raise HTTPException(404, "Fabric execution or resource not found") from None
+    except TimeoutError:
+        raise HTTPException(408, "Fabric request timed out") from None
+    except (FabricUnavailable, OSError, RuntimeError, sqlite3.Error, HTTPError):
+        raise HTTPException(
+            503, "Fabric runtime unavailable; inspect its scoped health and execution evidence"
+        ) from None
+
+
+@router.get("/fabrics/executions/{execution_id}")
+def fabric_execution(execution_id: str, request: Request):
+    principal = _principal(request)
+    from pathlib import Path
+    from .fabric_runtime import read_execution, FabricUnavailable
+
+    try:
+        return _response(request, read_execution(Path(os.getenv("ORQEVIA_DATA_DIR", "/data")), execution_id, principal))
+    except ValueError:
+        raise HTTPException(422, "Invalid execution ID") from None
+    except KeyError:
+        raise HTTPException(404, "Execution not found") from None
+    except (FabricUnavailable, OSError, sqlite3.Error):
+        raise HTTPException(503, "Execution evidence unavailable") from None
 
 
 @router.get("/fabrics/registry")
@@ -136,8 +205,9 @@ def fabric_registry(request: Request):
     index = root / "index.json"
     if index.exists():
         try:
-            registry = apply_evidence(registry, load_evidence(index), root,
-                                      runtime_revision=os.getenv("ORQEVIA_RUNTIME_REVISION", "UNKNOWN"))
+            registry = apply_evidence(
+                registry, load_evidence(index), root, runtime_revision=os.getenv("ORQEVIA_RUNTIME_REVISION", "UNKNOWN")
+            )
         except (ValueError, OSError):
             registry["evidence_index_status"] = "INVALID_OR_UNAVAILABLE"
     else:

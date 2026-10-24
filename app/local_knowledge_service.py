@@ -97,6 +97,27 @@ def health():
 @app.get('/documents')
 def documents():return operation('documents.read',ENGINE.list_documents)
 
+@app.post('/speech/synthesize')
+async def speech_synthesize(request:Request):
+    # Uses this service's existing token/owner middleware and single-operation slot.
+    try:
+        value=json.loads(await request.body())
+        if not isinstance(value,dict) or set(value)-{'text','voice'} or 'text' not in value:
+            raise ValueError()
+        from .fabric_speech import synthesize,VOICES
+        return await asyncio.to_thread(operation,'speech.synthesize',lambda:synthesize(value['text'],value.get('voice',VOICES[0])))
+    except (ValueError,UnicodeError):
+        raise HTTPException(422,'Invalid bounded speech request') from None
+
+@app.post('/browser/inspect')
+async def browser_inspect(request:Request):
+    try:
+        value=json.loads(await request.body())
+        from .fabric_browser import inspect_browser
+        return await asyncio.to_thread(operation,'browser.inspect',lambda:inspect_browser(value))
+    except (ValueError,UnicodeError):
+        raise HTTPException(422,'Invalid browser inspection request') from None
+
 
 class SemanticRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
