@@ -18,7 +18,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-REGISTRY_VERSION = "1.2.0"
+REGISTRY_VERSION = "1.3.0"
 FABRIC_COUNT = 36
 STATES = ("PROPOSED", "IMPLEMENTED", "VERIFIED", "DEGRADED", "FAILED", "DISABLED", "UNAVAILABLE")
 
@@ -694,7 +694,210 @@ def validate_registry(entries):
         identifiers.add(item["identifier"])
         if not all(isinstance(item[field], dict) for field in ("input_schema", "output_schema")):
             raise ValueError("fabric schemas must be objects")
+        runtime = item.get("runtime_contract")
+        if runtime:
+            actual = [operation["operation"] for operation in runtime["operations"]]
+            if item["operations"] != actual or len(set(actual)) != len(actual):
+                raise ValueError("top-level operations must match the executable contract")
+            if item.get("contract_status") != "DEFINED_FOR_LISTED_OPERATIONS":
+                raise ValueError("an executable contract must describe its listed operation schemas")
+            variants = item["input_schema"].get("oneOf", [])
+            declared = [variant.get("properties", {}).get("operation", {}).get("const") for variant in variants]
+            if (
+                declared != actual
+                or item["output_schema"].get("properties", {}).get("data") != runtime["execution_receipt_schema"]
+            ):
+                raise ValueError("execution wrappers must bind the listed operations and receipt schema")
     return entries
+
+
+_OPERATION_DEPENDENCIES = {
+    "f01": ["app/settings.py", "httpx", "configured Ollama /api/tags"],
+    "f02": ["app/local_knowledge_service.py:/retrieve", "pinned existing MiniLM index"],
+    "f03": [
+        "app/local_knowledge_service.py:/semantic/assess",
+        "app/semantic_entailment.py",
+        "pinned offline NLI artifacts",
+    ],
+    "f04": ["app/geospatial.py:haversine_km"],
+    "f05": ["app/fabric_adapters.py:event_observation", "app/event_fabric.py", "actual governed compute queue stores"],
+    "f06": ["app/fabric_adapters.py:mlp_infer", "app/mlp_fabric.py", "config/mlp/quadratic-reference-v1.json"],
+    "f07": [
+        "app/fabric_adapters.py:hf_observation",
+        "app/compute_catalog.py",
+        "actual queue and compute-ledger.db records no older than 24 hours",
+    ],
+    "f08": ["app/compute_queue_api.py:queue", "app/job_queue.py:JobQueue.metrics"],
+    "f09": ["app/geospatial.py", "app/fabric_adapters.py:mlp_infer"],
+    "f10": ["Python ast", "actual deployed app/*.py source"],
+    "f11": [
+        "app/local_knowledge_service.py:/browser/inspect",
+        "app/fabric_browser.py",
+        "scripts/fabric_browser_probe.cjs",
+        "existing Chromium and Playwright",
+    ],
+    "f12": ["app/fabric_runtime.py:read_execution", "owner/tenant scoped execution journal"],
+    "f14": ["app/governed_knowledge.py", "SQLite owner/tenant scoped context store"],
+    "f15": ["SQLite owner/tenant scoped execution journal"],
+    "f16": ["actual deployed fabric_runtime.py, collective_api.py and production_entry.py"],
+    "f18": ["fixed deterministic edit-timeline calculation"],
+    "f19": ["configured intelligence service /api/orqevia/intelligence/geo/events", "app/geo_ingest.py"],
+    "f23": ["app/workflow_engine.py", "app/action_records.py", "fixed local digest/summary handlers"],
+    "f24": ["fixed local tool policy in app/fabric_runtime.py"],
+    "f29": ["authenticated CollectivePrincipal from app/collective_api.py"],
+    "f31": [
+        "app/local_knowledge_service.py:/speech/synthesize",
+        "app/fabric_speech.py",
+        "installed Windows System.Speech and allowlisted desktop voices",
+    ],
+    "f33": ["psutil", "current execution process resource counters"],
+}
+
+
+def _runtime_contract(item, runtime):
+    """Publish the supported HTTP contract without promoting source into evidence."""
+    from .fabric_runtime import execution_receipt_schema, execution_request_schema, execution_response_schema
+
+    runtime = deepcopy(runtime)
+    prior = {
+        key: deepcopy(item[key])
+        for key in (
+            "purpose",
+            "operations",
+            "input_schema",
+            "output_schema",
+            "dependencies",
+            "auth",
+            "health_check",
+            "timeout_policy",
+            "retry_policy",
+            "tests_status",
+            "notes",
+        )
+    }
+    if item["id"] in {"f10", "f12"}:
+        item["local_entrypoint_contract"] = {
+            "classification": "EXISTING_LOCAL_OPERATOR_CLI_SEPARATE_FROM_HTTP_EXECUTION",
+            "entrypoint": "scripts/evaluate_repository.py"
+            if item["id"] == "f10"
+            else "app.repository_evaluation:verify_receipt",
+            **prior,
+        }
+    item["historical_inventory"] = {
+        "classification": "DATED_SOURCE_INVENTORY_NOT_CURRENT_RUNTIME_VERIFICATION",
+        **prior,
+    }
+    identifier = item["id"]
+    operations = runtime["operations"]
+    item["version"] = runtime["version"]
+    item["operations"] = [operation["operation"] for operation in operations]
+    item["purpose"] = "Supported scope: " + " ".join(operation["scope"] for operation in operations)
+    item["supported_scopes"] = [operation["scope"] for operation in operations]
+    item["roadmap_purpose"] = prior["purpose"]
+    item["limitations"] = deepcopy(runtime.get("limitations", []))
+    item["contract_status"] = "DEFINED_FOR_LISTED_OPERATIONS"
+    item["input_schema"] = deepcopy(execution_request_schema(runtime))
+    item["output_schema"] = deepcopy(execution_response_schema(identifier, runtime))
+    adapter = "app/fabric_runtime.py"
+    if identifier in {"f21", "f22", "f25", "f26", "f27", "f34", "f35"}:
+        adapter = "app/fabric_analytics.py"
+    elif identifier in {"f13", "f20", "f28", "f30", "f36"}:
+        adapter = "app/fabric_foundations.py"
+    elif identifier in {"f17", "f32"}:
+        adapter = "app/fabric_multimodal.py"
+    item["dependencies"] = ["app/fabric_runtime.py:execute_fabric", *_OPERATION_DEPENDENCIES.get(identifier, [adapter])]
+    if identifier == "f34":
+        item["dependencies"].append("app/project_workflows.py:calculate_financials")
+    item["configuration"] = {
+        "data_directory": {"environment": "ORQEVIA_DATA_DIR", "default": "/data"},
+        "runtime_revision_environment": "ORQEVIA_RUNTIME_REVISION",
+        "activation_environment": {"ORQEVIA_COLLECTIVE_ENABLED": "1"},
+        "credential_environment_names": ["ORQEVIA_SPINE_TOKEN", "ORQEVIA_PWA_OWNER_ACCOUNT_ID"],
+        "tenant_environment": {"name": "ORQEVIA_TENANT_ID", "default": "personal"},
+    }
+    if identifier in {"f02", "f03", "f11", "f31"}:
+        item["configuration"]["service_base"] = "http://host.docker.internal:8150"
+    elif identifier == "f19":
+        item["configuration"]["service_base"] = "http://intelligence:8100"
+    elif identifier == "f01":
+        item["configuration"]["ollama"] = {"environment": "OLLAMA_BASE_URL", "default": "http://ollama:11434"}
+    item["auth"] = (
+        "Backend requires the existing service bearer token, bound owner digest and validated actor. The interface uses its existing session boundary and server-held forwarding credentials. Client content never grants authority."
+    )
+    item["health_check"] = (
+        "Authenticated registry discovery is not a functional health test. Execute a listed operation with a separately checked oracle and fresh source/version-bound evidence; contract regression: tests/test_fabric_registry.py."
+    )
+    item["timeout_policy"] = (
+        "Schema/loop-bounded in-process work; no overall cancellation timer is asserted. Execution-journal SQLite busy timeout: 5s."
+    )
+    if identifier == "f01":
+        item["timeout_policy"] = (
+            "Configured Ollama HTTP I/O timeout 8s; this is not a whole-request execution deadline."
+        )
+    elif identifier in {"f02", "f03", "f11", "f19", "f31"}:
+        item["timeout_policy"] = (
+            "Configured service HTTP I/O timeout 60s, connect timeout 3s, response cap 2000000 bytes; not a global wall-clock deadline."
+        )
+        if identifier == "f11":
+            item["timeout_policy"] += " Browser child has a 20s probe deadline and 25s process timeout."
+        elif identifier == "f31":
+            item["timeout_policy"] += " Windows synthesis child timeout: 30s."
+    item["retry_policy"] = (
+        "No automatic retries. Reusing an execution UUID returns the persisted scoped receipt; RUNNING, FAILED and INTERRUPTED results never imply success or trigger replay."
+    )
+    limits = {
+        "concurrency": 4,
+        "input_canonical_json_bytes": 800000,
+        "output_canonical_json_bytes": 1500000,
+        "journal_records": 50000,
+        "new_paid_provider_calls": 0,
+    }
+    item["resource_cost_limits"] = {
+        **limits,
+        "scope": "This adapter only. Electricity, subscriptions and separate governed provider workflows are not claimed free.",
+    }
+    item["observability_provenance"] = (
+        "Persistent owner/tenant execution ID, source revision, contract version, input/result hashes and duration. OpenTelemetry fabric.execute span records fabric ID, operation and execution ID when telemetry is configured."
+    )
+    item["failure_fallback"] = (
+        "Reject invalid contracts (422), missing resources (404), identity rebinding (409), timeout (408) or unavailable optional runtime/capacity (503). Journal failed/interrupted calls; do not silently substitute another capability or treat execution completion as verification."
+    )
+    item["tests_status"] = (
+        "Source contract/runtime regression tests; current deployment capability requires independent fresh functional evidence. Schema validation alone is not operational verification."
+    )
+    item["notes"] = "Implemented for the listed operation scopes only. " + " ".join(item["limitations"])
+    if identifier == "f06":
+        item["notes"] += " grants_agent_authority=false; automatic_training=false."
+    if identifier == "f07":
+        item["notes"] += (
+            " Fresh observation of an actual governed inference is required within 24 hours; a read-only observation initiates no new inference."
+        )
+    item["runtime_contract"] = {
+        "version": runtime["version"],
+        "endpoint": "/api/collective/v1/fabrics/" + identifier + "/execute",
+        "interface_endpoint": "/interface/v1/collective/fabrics/" + identifier + "/execute",
+        "method": "POST",
+        "response_status": 200,
+        "request_schema": deepcopy(item["input_schema"]),
+        "response_schema": deepcopy(item["output_schema"]),
+        "execution_receipt_schema": deepcopy(execution_receipt_schema(identifier, runtime)),
+        "operations": operations,
+        "limitations": deepcopy(item["limitations"]),
+        "availability": "ADAPTER_INSTALLED_RUNTIME_PROBE_REQUIRED",
+        "auth": item["auth"],
+        "execution_id": "Optional in the POST request; required in persisted receipts. A supplied UUID is idempotent and bound to owner, tenant, operation and arguments.",
+        "timeout_policy": item["timeout_policy"],
+        "resource_limits": limits,
+        "cost_policy": "No new paid provider calls from this execution adapter. Existing governed APIs separately enforce their explicit budgets.",
+        "completion_semantics": "COMPLETED records successful execution only. It is not a capability verification or domain correctness verdict; a workflow result can independently report failures.",
+        "error_statuses": [401, 403, 404, 408, 409, 413, 422, 503],
+        "error_response_schema": {
+            "type": "object",
+            "required": ["detail"],
+            "properties": {"detail": {"type": "string"}},
+            "additionalProperties": False,
+        },
+    }
 
 
 def load_fabric_registry():
@@ -708,33 +911,12 @@ def load_fabric_registry():
             item["recorded_historical_state"] = "VERIFIED"
             item["state"] = "IMPLEMENTED"
         item["verification"] = {"status": "UNVERIFIED", "reason": "CURRENT_FUNCTIONAL_RECEIPT_REQUIRED"}
-        item["contract_status"] = (
-            "PARTIAL"
-            if item["input_schema"] == _DEFAULT_SCHEMA or item["output_schema"] == _DEFAULT_SCHEMA
-            else "DEFINED_FOR_LISTED_OPERATIONS"
-        )
+        item["contract_status"] = "PARTIAL"
         runtime = executable.get(item["id"])
         if runtime:
-            item["version"] = runtime["version"]
             if item["state"] == "PROPOSED":
                 item["state"] = "IMPLEMENTED"
-            item["runtime_contract"] = {
-                "endpoint": "/api/collective/v1/fabrics/" + item["id"] + "/execute",
-                "interface_endpoint": "/interface/v1/collective/fabrics/" + item["id"] + "/execute",
-                "operations": runtime["operations"],
-                "limitations": runtime.get("limitations", []),
-                "availability": "ADAPTER_INSTALLED_RUNTIME_PROBE_REQUIRED",
-                "auth": "Existing bound owner token and actor, or authenticated same-origin interface session",
-                "execution_id": "Required in receipts; supplied UUID provides idempotency; failed/running results never imply PASS",
-                "timeout_policy": "Bounded deterministic operations; host calls 60s, no automatic retries",
-                "resource_limits": {
-                    "concurrency": 4,
-                    "input_bytes": 800000,
-                    "output_bytes": 1500000,
-                    "journal_records": 50000,
-                },
-                "cost_policy": "No paid provider calls from the execution adapter; existing governed APIs handle separate explicit budgets",
-            }
+            _runtime_contract(item, runtime)
     return {
         "registry_version": REGISTRY_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),

@@ -55,7 +55,7 @@ def _op(name, properties=None, required=(), *, scope):
     return {
         "operation": name,
         "input_schema": _object(properties, required),
-        "output_schema": {"type": "object"},
+        "output_schema": _BUILTIN_OUTPUTS[name],
         "scope": scope,
     }
 
@@ -63,7 +63,515 @@ def _op(name, properties=None, required=(), *, scope):
 TEXT = {"type": "string", "minLength": 1, "maxLength": 8000}
 IDENTIFIER = {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9_.:-]+$"}
 NUMBER = {"type": "number", "minimum": -1e12, "maximum": 1e12}
-POINT = {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "minimum": -180, "maximum": 180}}
+POINT = {
+    "type": "array",
+    "minItems": 2,
+    "maxItems": 2,
+    "prefixItems": [
+        {"type": "number", "minimum": -90, "maximum": 90},
+        {"type": "number", "minimum": -180, "maximum": 180},
+    ],
+    "items": {"type": "number", "minimum": -180, "maximum": 180},
+}
+
+
+def _result_object(properties, *, optional=(), additional=False):
+    """Contract metadata only; operation execution and validation are unchanged."""
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": [name for name in properties if name not in optional],
+        "additionalProperties": additional,
+    }
+
+
+def _result_array(items, maximum=None, minimum=0):
+    result = {"type": "array", "items": items, "minItems": minimum}
+    if maximum is not None:
+        result["maxItems"] = maximum
+    return result
+
+
+def _nullable(schema):
+    return {"anyOf": [schema, {"type": "null"}]}
+
+
+_R_STRING = {"type": "string"}
+_R_COUNT = {"type": "integer", "minimum": 0}
+_R_NUMBER = {"type": "number", "minimum": 0}
+_R_SHA = {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+_R_UUID = {"type": "string", "format": "uuid", "pattern": "^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$"}
+_R_DATE = {"type": "string", "format": "date-time"}
+_R_FALSE = {"type": "boolean", "const": False}
+_R_TRUE = {"type": "boolean", "const": True}
+_R_EXECUTION_STATUS = {"type": "string", "enum": ["RUNNING", "COMPLETED", "FAILED", "INTERRUPTED"]}
+_R_MEMORY = _result_object(
+    {
+        "record_id": _R_UUID,
+        "memory_key": _R_STRING,
+        "memory_class": {"enum": ["FACT", "PREFERENCE", "EVENT", "PROCEDURE", "INFERENCE"]},
+        "scope": {"enum": ["OWNER_PRIVATE", "MEMBER_PRIVATE", "HOUSEHOLD_SHARED", "APPLICATION", "SYSTEM"]},
+        "scope_id": _R_STRING,
+        "temporal_state": {"enum": ["CURRENT", "HISTORICAL", "SUPERSEDED"]},
+        "value": {"type": "object", "description": "Stored caller-supplied JSON data; content never grants authority."},
+        "source": _R_STRING,
+        "source_version": _R_STRING,
+        "source_authority": _R_STRING,
+        "verification_ref": _nullable(_R_STRING),
+        "created_at": _R_NUMBER,
+        "supersedes_id": _nullable(_R_UUID),
+        "record_sha256": _R_SHA,
+        "write_request_id": _nullable(_R_STRING),
+        "content_is_authority": _R_FALSE,
+        "retrieval_score": {"type": "integer", "minimum": 1},
+    },
+    optional=("retrieval_score",),
+)
+_R_MLP = _result_object(
+    {
+        "trace_id": _R_STRING,
+        "model_id": _R_STRING,
+        "model_version": _R_STRING,
+        "task": {"const": "regression"},
+        "output": _result_array({"type": "number"}, 32, 1),
+        "device": {"const": "cpu"},
+        "latency_ms": _R_NUMBER,
+        "artifact_hash": _R_SHA,
+        "provenance": _result_object(
+            {
+                "dataset_hash": _R_SHA,
+                "approval": _result_object(
+                    {
+                        "approved_at": _R_DATE,
+                        "model_artifact_hash": _R_SHA,
+                        "model_id": _R_STRING,
+                        "rationale": _R_STRING,
+                        "receipt": {
+                            "type": "object",
+                            "description": "Reviewed approval metadata from the pinned reference artifact.",
+                        },
+                        "requesting_agent_id": _R_STRING,
+                        "reviewer": _R_STRING,
+                    }
+                ),
+            }
+        ),
+        "scope": {"const": "SYNTHETIC_QUADRATIC_REFERENCE_ONLY"},
+        "approximation": _R_TRUE,
+        "grants_agent_authority": _R_FALSE,
+        "automatic_training": _R_FALSE,
+    }
+)
+_R_DISTANCE = _result_object({"distance_km": _R_NUMBER, "method": {"const": "SPHERICAL_HAVERSINE"}})
+_R_BROWSER_PAGE = _result_object(
+    {
+        "path": {"enum": ["/", "/capabilities", "/pwa/"]},
+        "view": {"enum": ["desktop", "mobile"]},
+        "response_status": {"type": "integer", "minimum": 0, "maximum": 599},
+        "same_origin": {"type": "boolean"},
+        "mobile_menu_exercised": {"type": "boolean"},
+        **{
+            name: _R_COUNT
+            for name in (
+                "h1_count",
+                "visible_h1_count",
+                "nav_count",
+                "visible_navigation_controls",
+                "document_width",
+                "viewport_width",
+                "page_error_count",
+            )
+        },
+        "horizontal_overflow": {"type": "boolean"},
+        "screenshot_sha256": _R_SHA,
+        "page_error_sha256": _result_array(_R_SHA, 10),
+        "http_error_status_counts": {
+            "type": "object",
+            "additionalProperties": _R_COUNT,
+            "propertyNames": {"pattern": "^[45][0-9]{2}$"},
+        },
+        "passed": {"type": "boolean"},
+    }
+)
+_R_TASK_ERROR = _result_object({"status": {"const": "FAILED"}, "error": _R_STRING, "seconds": _R_NUMBER})
+_R_TASK_BLOCKED = _result_object({"status": {"const": "BLOCKED"}, "reason": _R_STRING})
+
+
+def _workflow_task(result):
+    return {
+        "oneOf": [
+            _result_object({"status": {"const": "COMPLETED"}, "result": result, "seconds": _R_NUMBER}),
+            _R_TASK_ERROR,
+            _R_TASK_BLOCKED,
+        ]
+    }
+
+
+_BUILTIN_OUTPUTS = {
+    "list_models": _result_object(
+        {
+            "models": _result_array(
+                _result_object(
+                    {"name": _nullable(_R_STRING), "digest": _nullable(_R_STRING), "size": _nullable(_R_COUNT)}
+                ),
+                50,
+            ),
+            "inference_executed": _R_FALSE,
+        }
+    ),
+    "retrieve": _result_object(
+        {
+            "status": {"enum": ["RETRIEVED", "NO_EVIDENCE"]},
+            "results": _result_array(
+                _result_object(
+                    {
+                        "citation": _R_STRING,
+                        "document_id": _R_SHA,
+                        "source": _R_STRING,
+                        "page": {"type": "integer", "minimum": 1},
+                        "document_version": {"type": "integer", "minimum": 1},
+                        "passage": _R_STRING,
+                        "sha256": _R_SHA,
+                        "similarity": {"type": "number", "minimum": 0.2},
+                        "content_is_authority": _R_FALSE,
+                        "instructions_may_execute": _R_FALSE,
+                    }
+                ),
+                5,
+            ),
+            "embedding_model": _R_STRING,
+            "diagnostics": {
+                "oneOf": [
+                    _result_object(
+                        {
+                            "index_chunks": _R_COUNT,
+                            "eligible_chunks": _R_COUNT,
+                            "metric": {"const": "normalized inner product"},
+                        }
+                    ),
+                    _result_object(
+                        {
+                            "backend": {"const": "pgvector"},
+                            "metric": {"const": "exact cosine"},
+                            "dimensions": {"const": 384},
+                            "owner_filtered": _R_TRUE,
+                        }
+                    ),
+                ]
+            },
+        },
+        optional=("diagnostics",),
+    ),
+    "assess": _result_object(
+        {
+            "protocol": {"const": "orqevia.semantic.v1"},
+            "relation": {"enum": ["contradiction", "entailment", "neutral"]},
+            "assessment": {"enum": ["CONTRADICTION", "ENTAILMENT", "NEUTRAL", "UNCERTAIN"]},
+            "uncalibrated_model_scores": _result_object(
+                {
+                    name: {"type": "number", "minimum": 0, "maximum": 1}
+                    for name in ("contradiction", "entailment", "neutral")
+                }
+            ),
+            "model": _R_STRING,
+            "revision": _R_STRING,
+            "model_sha256": _R_SHA,
+            "elapsed_seconds": _R_NUMBER,
+            "premise_sha256": _R_SHA,
+            "claim_sha256": _R_SHA,
+            "formal_proof": _R_FALSE,
+            "source_authenticity_verified": _R_FALSE,
+            "may_persist_as_verified_fact": _R_FALSE,
+            "grants_execution_authority": _R_FALSE,
+            "disclosure": _R_STRING,
+        }
+    ),
+    "distance_km": _R_DISTANCE,
+    "verify_latest_projection": _result_object(
+        {
+            "event_id": _R_STRING,
+            "job_id": _R_STRING,
+            "result_sha256": _R_SHA,
+            "projectors_verified": {"const": 4},
+            "persistence_integrity": {"const": "PASS"},
+            "auto_promoted": _R_FALSE,
+            "health_scope": {"const": "PERSISTED_EXECUTION_AND_FOUR_PROJECTOR_READBACK"},
+        }
+    ),
+    "reference_infer": _R_MLP,
+    "observe_governed_execution": _result_object(
+        {
+            "job_id": _R_STRING,
+            "provider": _R_STRING,
+            "model": _R_STRING,
+            "result_sha256": _R_SHA,
+            "completed_at": _R_DATE,
+            "actual_cost_usd": _R_NUMBER,
+            "max_cost_usd": {"type": "number", "exclusiveMinimum": 0},
+            "input_tokens": _nullable(_R_COUNT),
+            "output_tokens": _nullable(_R_COUNT),
+            "execution_ledger_id": _R_STRING,
+            "execution_ledger_sha256": _R_SHA,
+            "billing_status": _R_STRING,
+            "health_scope": {"const": "LAST_GOVERNED_INFERENCE_WITHIN_24_HOURS_NOT_CONTINUOUS_PROVIDER_SLA"},
+            "probe_spends_money": _R_FALSE,
+        }
+    ),
+    "queue_metrics": _result_object(
+        {
+            "statuses": {"type": "object", "additionalProperties": _R_COUNT},
+            "running": _result_array(
+                _result_object(
+                    {
+                        "id": _R_STRING,
+                        "agent": _R_STRING,
+                        "provider": _nullable(_R_STRING),
+                        "ram_mb": _R_COUNT,
+                        "vram_mb": _R_COUNT,
+                        "started_at": _nullable(_R_DATE),
+                    }
+                )
+            ),
+            "cloud_inflight": _result_array(
+                _result_object(
+                    {
+                        "id": _R_STRING,
+                        "agent": _R_STRING,
+                        "provider": _nullable(_R_STRING),
+                        "status": _R_STRING,
+                        "lease_until": _nullable(_R_NUMBER),
+                    }
+                )
+            ),
+            "daily_spend_usd": _R_NUMBER,
+            "policy": _result_object(
+                {
+                    **{
+                        name: {"type": "integer", "minimum": 0}
+                        for name in (
+                            "global_concurrency",
+                            "per_agent_concurrency",
+                            "background_concurrency",
+                            "local_ram_mb",
+                            "local_vram_mb",
+                            "cloud_wait_seconds",
+                            "starvation_interval_seconds",
+                            "starvation_boost_per_interval",
+                            "starvation_boost_cap",
+                            "cloud_concurrency",
+                        )
+                    },
+                    "max_job_cost_usd": _R_NUMBER,
+                    "daily_cost_ceiling_usd": _R_NUMBER,
+                }
+            ),
+        }
+    ),
+    "invoke_tool": {
+        "oneOf": [
+            _result_object(
+                {"tool": {"const": "geo.distance"}, "result": _R_DISTANCE, "credential_disclosed": _R_FALSE}
+            ),
+            _result_object({"tool": {"const": "mlp.reference"}, "result": _R_MLP, "credential_disclosed": _R_FALSE}),
+        ]
+    },
+    "inspect_deployed_module": _result_object(
+        {
+            "module": _R_STRING,
+            "source_sha256": _R_SHA,
+            "bytes": {"type": "integer", "minimum": 0, "maximum": 2_000_000},
+            "functions": _result_array(_R_STRING, 2000),
+            "imports": _result_array(_R_STRING, 1000),
+            "runtime_revision": _R_STRING,
+        }
+    ),
+    "inspect_workbench": _result_object(
+        {
+            "protocol": {"const": "orqevia.fabric.browser-probe.v1"},
+            "status": {"enum": ["PASS", "FAIL"]},
+            "pages": _result_array(_R_BROWSER_PAGE, 6),
+            "probe_script_sha256": _R_SHA,
+            "observed_at": _R_DATE,
+            "origin": _R_STRING,
+            "execution_mode": {"const": "REAL_CHROMIUM"},
+            "mocked": _R_FALSE,
+            "tls_bypass": _R_FALSE,
+            "scope": {"const": "PUBLIC_PAGES_DESKTOP_AND_EMULATED_MOBILE"},
+            "physical_device_verified": _R_FALSE,
+            "authenticated_workflow_verified": _R_FALSE,
+            "execution_status": {"enum": ["FAILED", "COMPLETED"]},
+            "browser_version": _R_STRING,
+            "playwright_version": _R_STRING,
+            "error": _R_STRING,
+            "error_sha256": _R_SHA,
+        },
+        optional=(
+            "observed_at",
+            "origin",
+            "execution_mode",
+            "mocked",
+            "tls_bypass",
+            "scope",
+            "physical_device_verified",
+            "authenticated_workflow_verified",
+            "execution_status",
+            "browser_version",
+            "playwright_version",
+            "error",
+            "error_sha256",
+        ),
+    ),
+    "verify_execution_integrity": _result_object(
+        {
+            "execution_id": _R_UUID,
+            "integrity_verified": {"type": "boolean"},
+            "status": _R_EXECUTION_STATUS,
+            "result_sha256": _nullable(_R_SHA),
+            "runtime_revision": _R_STRING,
+            "correctness_verified": _R_FALSE,
+        }
+    ),
+    "store_context": _result_object({"record": _R_MEMORY, "automatically_verified_fact": _R_FALSE}),
+    "search_context": _result_object({"records": _result_array(_R_MEMORY, 20)}),
+    "execution_metrics": _result_object(
+        {
+            "execution_counts": _result_array(
+                _result_object(
+                    {"status": _R_EXECUTION_STATUS, "count": _R_COUNT, "average_duration_ms": _nullable(_R_NUMBER)}
+                ),
+                4,
+            ),
+            "source": {"const": "PERSISTED_EXECUTION_JOURNAL"},
+            "total_operating_cost_usd": {"type": "null"},
+            "cost_scope": {"const": "NOT_MEASURED"},
+        }
+    ),
+    "release_identity": _result_object(
+        {
+            "runtime_revision": _R_STRING,
+            "source_files": _result_object(
+                {name: _R_SHA for name in ("fabric_runtime.py", "collective_api.py", "production_entry.py")}
+            ),
+            "deployment_executed": _R_FALSE,
+        }
+    ),
+    "prepare_storyboard": _result_object(
+        {
+            "brief": TEXT,
+            "scenes": _result_array(
+                _result_object(
+                    {
+                        "description": TEXT,
+                        "seconds": {"type": "integer", "minimum": 1, "maximum": 60},
+                        "source_kind": {"enum": ["product_capture", "illustration", "attested_reference"]},
+                        "start_seconds": {"type": "integer", "minimum": 0, "maximum": 179},
+                        "end_seconds": {"type": "integer", "minimum": 1, "maximum": 180},
+                        "requires_reconstruction_label": {"type": "boolean"},
+                    }
+                ),
+                20,
+                1,
+            ),
+            "duration_seconds": {"type": "integer", "minimum": 1, "maximum": 180},
+            "review_state": {"const": "DRAFT"},
+            "publication_authorized": _R_FALSE,
+            "provider_called": _R_FALSE,
+            "provider_cost_usd": {"const": 0},
+        }
+    ),
+    "retrieve_observations": _result_object(
+        {
+            "count": {"type": "integer", "minimum": 0, "maximum": 5},
+            "records": _result_array(
+                _result_object(
+                    {
+                        "event_id": _R_STRING,
+                        "kind": _R_STRING,
+                        "ingested_at": _R_STRING,
+                        "source": _R_STRING,
+                        "source_url": _R_STRING,
+                        "attribution": _R_STRING,
+                        "observed_at": _nullable(_R_STRING),
+                        "location": _nullable(
+                            _result_object(
+                                {
+                                    "lat": {"type": "number", "minimum": -90, "maximum": 90},
+                                    "lon": {"type": "number", "minimum": -180, "maximum": 180},
+                                    "depth_km": {"type": "number"},
+                                },
+                                optional=("depth_km",),
+                            )
+                        ),
+                    },
+                    optional=("source", "source_url", "attribution", "observed_at", "location"),
+                    additional={"description": "Unverified source-specific observation payload extension."},
+                ),
+                5,
+            ),
+        }
+    ),
+    "run_digest_workflow": _result_object(
+        {
+            "tasks": {
+                "type": "object",
+                "minProperties": 2,
+                "maxProperties": 2,
+                "additionalProperties": False,
+                "patternProperties": {
+                    "^[a-f0-9-]{36}:digest$": _workflow_task(_result_object({"sha256": _R_SHA})),
+                    "^[a-f0-9-]{36}:summary$": _workflow_task(
+                        _result_object({"characters": _R_COUNT, "words": _R_COUNT, "dependency_count": _R_COUNT})
+                    ),
+                },
+            },
+            "seconds": _R_NUMBER,
+            "status": {"enum": ["COMPLETED", "COMPLETED_WITH_FAILURES"]},
+        }
+    ),
+    "evaluate_tool_permission": _result_object(
+        {
+            "allowed": {"type": "boolean"},
+            "policy": {"const": "FIXED_LOCAL_READ_AND_REFERENCE_TOOLS"},
+            "grants_consequential_authority": _R_FALSE,
+        }
+    ),
+    "bound_identity": _result_object(
+        {
+            "tenant": _R_STRING,
+            "bound_owner": _R_STRING,
+            "actor": _R_STRING,
+            "credential_disclosed": _R_FALSE,
+            "hardware_attested": _R_FALSE,
+        }
+    ),
+    "synthesize_speech": _result_object(
+        {
+            "audio_base64": {"type": "string", "contentEncoding": "base64", "maxLength": 1_333_392},
+            "audio_sha256": _R_SHA,
+            "mime_type": {"const": "audio/wav"},
+            "frames": {"type": "integer", "minimum": 1, "maximum": 500000},
+            "sample_rate_hz": {"const": 16000},
+            "channels": {"const": 1},
+            "sample_width_bytes": {"const": 2},
+            "duration_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 31.25},
+            "voice": {"enum": ["Microsoft David Desktop", "Microsoft Zira Desktop"]},
+            "engine": {"const": "WINDOWS_SYSTEM_SPEECH_OFFLINE"},
+            "paid_provider_called": _R_FALSE,
+            "speech_recognition_supported": _R_FALSE,
+        }
+    ),
+    "edge_telemetry": _result_object(
+        {
+            "node_scope": {"const": "CURRENT_EXECUTION_PROCESS"},
+            "pid": {"type": "integer", "minimum": 1},
+            "cpu_seconds": _R_NUMBER,
+            "resident_bytes": _R_COUNT,
+            "logical_cpu_count": _nullable({"type": "integer", "minimum": 1}),
+            "physical_actions_enabled": _R_FALSE,
+            "hardware_attested": _R_FALSE,
+        }
+    ),
+}
 
 BUILTINS = {
     "f01": {
@@ -80,7 +588,10 @@ BUILTINS = {
         "operations": [
             _op(
                 "retrieve",
-                {"question": TEXT, "top_k": {"type": "integer", "minimum": 1, "maximum": 10}},
+                {
+                    "question": {"type": "string", "minLength": 1, "maxLength": 4096},
+                    "top_k": {"type": "integer", "minimum": 1, "maximum": 5},
+                },
                 ("question",),
                 scope="Actual existing owner-scoped MiniLM retrieval.",
             )
@@ -322,6 +833,115 @@ BUILTINS = {
 }
 
 
+# Conditional schemas describe the two real allowlisted tool signatures. The
+# runtime already validates their nested arguments against those exact tools.
+BUILTINS["f09"]["operations"][0]["input_schema"]["oneOf"] = [
+    _result_object({"tool": {"const": tool}, "arguments": BUILTINS[fabric]["operations"][0]["input_schema"]})
+    for tool, fabric in (("geo.distance", "f04"), ("mlp.reference", "f06"))
+]
+
+
+def execution_request_schema(contract):
+    """Actual POST wrapper; empty parameters and the UUID are server defaults."""
+    from copy import deepcopy
+
+    variants = []
+    for operation in contract["operations"]:
+        required = ["operation"]
+        if operation["input_schema"].get("required"):
+            required.append("parameters")
+        parameters = deepcopy(operation["input_schema"])
+        if "parameters" not in required:
+            parameters["default"] = {}
+        variants.append(
+            _object(
+                {
+                    "operation": {"type": "string", "const": operation["operation"]},
+                    "parameters": parameters,
+                    "execution_id": {
+                        **_R_UUID,
+                        "description": "Optional canonical UUID. Omission generates a new execution; reuse is bound to owner, tenant, operation and arguments.",
+                    },
+                },
+                required,
+            )
+        )
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "Bounded fabric execution request",
+        "oneOf": variants,
+    }
+
+
+def execution_receipt_schema(fabric_id, contract):
+    """Completed results are operation typed; replay can return a nonfinal receipt."""
+    from copy import deepcopy
+
+    variants = []
+    for operation in contract["operations"]:
+        shared = {
+            "execution_id": _R_UUID,
+            "owner": _R_STRING,
+            "tenant": _R_STRING,
+            "fabric_id": {"const": fabric_id},
+            "operation": {"const": operation["operation"]},
+            "version": {"const": contract["version"]},
+            "runtime_revision": _R_STRING,
+            "input_sha256": _R_SHA,
+            "started_at": _R_DATE,
+        }
+        variants.extend(
+            [
+                _result_object(
+                    {
+                        **shared,
+                        "status": {"const": "COMPLETED"},
+                        "result": deepcopy(operation["output_schema"]),
+                        "result_sha256": _R_SHA,
+                        "duration_ms": _R_NUMBER,
+                        "error_code": {"type": "null"},
+                    }
+                ),
+                _result_object(
+                    {
+                        **shared,
+                        "status": {"enum": ["RUNNING", "FAILED", "INTERRUPTED"]},
+                        "result": {"type": "null"},
+                        # read_execution retains this storage field when its
+                        # value is NULL; completed receipts pop the encoded JSON.
+                        "result_json": {"type": "null"},
+                        "result_sha256": {"type": "null"},
+                        "duration_ms": _nullable(_R_NUMBER),
+                        "error_code": _nullable(_R_STRING),
+                    }
+                ),
+            ]
+        )
+    return deepcopy({"oneOf": variants})
+
+
+def execution_response_schema(fabric_id, contract):
+    """Real HTTP response envelope; completion is distinct from verification."""
+    from copy import deepcopy
+
+    return deepcopy(
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            **_result_object(
+                {
+                    "protocol": {"const": "orqevia.collective.v1"},
+                    "observed_at": _R_DATE,
+                    # The HTTP handler accepts a 36-character correlation header which
+                    # is intentionally broader than the canonical execution UUID.
+                    "correlation_id": {"type": "string", "pattern": "^[a-f0-9-]{36}$"},
+                    "data": execution_receipt_schema(fabric_id, contract),
+                    "grants_execution_authority": _R_FALSE,
+                }
+            ),
+        }
+    )
+
+
 def executable_contracts():
     """Imports are fixed source, never selected by user input."""
     from copy import deepcopy
@@ -341,6 +961,16 @@ def executable_contracts():
         for identifier, value in CONTRACTS.items():
             if value.get("operations"):
                 result[identifier] = deepcopy(value)
+    channel_output = result.get("f32", {}).get("operations", [])
+    if channel_output:
+        channel_output[0]["output_schema"]["properties"]["channel_statistics"]["items"] = _result_object(
+            {
+                "channel": {"enum": ["red", "green", "blue", "alpha"]},
+                "minimum": {"type": "integer", "minimum": 0, "maximum": 255},
+                "maximum": {"type": "integer", "minimum": 0, "maximum": 255},
+                "mean": {"type": "number", "minimum": 0, "maximum": 255},
+            }
+        )
     return result
 
 
