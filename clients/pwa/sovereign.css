@@ -11,3 +11,8 @@ html{color-scheme:inherit}body{background:var(--oq-bg);color:var(--oq-text);font
 @media(max-width:760px){.workspace-title{margin:1rem 0 0}.fabric-heading{flex-wrap:wrap}.fabric-selectors,.fabric-schemas{grid-template-columns:1fr;gap:.5rem}.fabric-recovery>div{grid-template-columns:1fr}.fabric-receipt{grid-template-columns:1fr;gap:.3rem}.fabric-receipt dd{margin-bottom:.5rem}.fabric-console{padding:1rem}}
 
 .fabric-audio{border-top:1px solid var(--oq-line);margin-top:1rem;padding-top:1rem}.fabric-audio h4{font-size:.9rem;font-weight:500}.fabric-audio audio{display:block;width:100%;max-width:32rem;margin:.8rem 0}.fabric-audio a{display:inline-flex;align-items:center;min-height:44px;color:var(--oq-accent);overflow-wrap:anywhere}
+
+#coaching-view .coaching-role-head{flex-wrap:wrap}
+#coaching-view .coaching-marks{white-space:normal;overflow-wrap:anywhere;max-width:100%}
+#coaching-view .coaching-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+#coaching-view .coaching-stat{min-width:0;overflow-wrap:anywhere}
