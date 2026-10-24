@@ -123,6 +123,28 @@ async def collective_lifespan(app):
 router = APIRouter(prefix="/api/collective/v1", tags=["collective-operations"], lifespan=collective_lifespan)
 
 
+@router.get("/fabrics/registry")
+def fabric_registry(request: Request):
+    """Discover all contracts through the existing bound-owner authentication."""
+    _principal(request)
+    from pathlib import Path
+    from .fabric_registry import load_fabric_registry, registry_report
+    from .fabric_verification import apply_evidence, load_evidence
+
+    registry = load_fabric_registry()
+    root = Path(os.getenv("ORQEVIA_DATA_DIR", "/data")) / "fabric-evidence"
+    index = root / "index.json"
+    if index.exists():
+        try:
+            registry = apply_evidence(registry, load_evidence(index), root,
+                                      runtime_revision=os.getenv("ORQEVIA_RUNTIME_REVISION", "UNKNOWN"))
+        except (ValueError, OSError):
+            registry["evidence_index_status"] = "INVALID_OR_UNAVAILABLE"
+    else:
+        registry["evidence_index_status"] = "NOT_CONFIGURED"
+    return _response(request, {**registry, "summary": registry_report(registry)})
+
+
 @router.get("/status")
 def status(request: Request):
     principal = _principal(request)

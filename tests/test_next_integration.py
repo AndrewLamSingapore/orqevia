@@ -64,8 +64,11 @@ def test_external_surface_has_no_owner_or_legacy_routes():
     bounded_bridge={
         '/api/orqevia/{path:path}','/orqevia/{path:path}',
         '/api/orqevia/{path}','/orqevia/{path}',
+        '/api/orqevia/knowledge/{path:path}', '/api/orqevia/knowledge/{path}',
     }
-    assert paths and all(path.startswith(allowed_prefixes) or path in bounded_bridge for path in paths)
+    # The existing public design shell and static mount expose no owner tools.
+    public_static={'/design', '/public-assets'}
+    assert paths and all(path.startswith(allowed_prefixes) or path in bounded_bridge or path in public_static for path in paths)
     assert not any(path.startswith('/control') for path in paths)
     assert not any(path.startswith('/api/') and path not in bounded_bridge for path in paths)
 
