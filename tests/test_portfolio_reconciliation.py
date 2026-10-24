@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit the exact new non-Verified observation; retain every frozen check below.
+    live_title = "## Scoped fabric production and workbench qualification - 24 October 2026"
+    assert after.count(live_title) == 1
+    live_start = after.index(live_title)
+    live_end = after.index("\n## ", live_start + len(live_title)) + 1
+    live_update = after[live_start:live_end].encode("utf-8")
+    assert len(live_update) == 2832
+    assert hashlib.sha256(live_update).hexdigest() == "fb11af6d5ef49e53b96dcfe11aaed675d279708faf5d9eb1c595b4c26cf0c665"
+    assert b"### Claimed, not independently checked" in live_update
+    assert b"### Verified" not in live_update
+    after = after[:live_start] + after[live_end:]
     # Admit this exact candidate note while retaining the complete frozen proof.
     fabric_title = "## 36-fabric evidence contract candidate - 24 October 2026"
     assert after.count(fabric_title) == 1

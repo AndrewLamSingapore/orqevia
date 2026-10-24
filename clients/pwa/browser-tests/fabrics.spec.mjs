@@ -1,0 +1,178 @@
+// Explicit browser fixtures for the operator UI. These are not live fabric receipts.
+import { expect, test } from '@playwright/test';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { mockSession, mockTaskApi, waitForSession, sessionBody, expectNoHorizontalOverflow } from './fixtures.mjs';
+
+const prefix='/interface/v1/collective/';
+const envelope=data=>({protocol:'orqevia.collective.v1',data});
+const point={type:'array',minItems:2,maxItems:2,items:{type:'number'}};
+const catalog=()=>({verification_context:{observed_at:'2026-10-24T06:00:00Z'},fabrics:Array.from({length:36},(_,index)=>{
+ const id='f'+String(index+1).padStart(2,'0');
+ const image=['f17','f32'].includes(id),operation=id==='f04'?'distance_km':id==='f31'?'synthesize':id==='f17'?'image.inspect':id==='f32'?'image.measure':'inspect';
+ const input=image?{type:'object',required:['image_base64'],properties:{image_base64:{type:'string',maxLength:699052}},additionalProperties:false}:id==='f04'?{type:'object',required:['a','b'],properties:{a:point,b:point},additionalProperties:false}:{type:'object',properties:{},additionalProperties:false};
+ return {id,name:id==='f04'?'Geospatial Intelligence':'Fixture fabric '+(index+1),version:'1.0.0',state:'VERIFIED',purpose:'Bounded browser fixture capability.',verification:{status:'PASS',scope:'Fixture verification scope only',observed_at:'2026-10-24T06:00:00Z',expires_at:'2099-10-24T06:00:00Z'},runtime_contract:{version:'1.0.0',limitations:['Fixture scope; no broad certification.'],operations:[{operation,input_schema:input,output_schema:{type:'object'},scope:id==='f04'?'Spherical distance only; no route planning.':'Fixture inspection only.'}]}};
+})});
+
+async function fixture(page,{role='OWNER',catalogError=false,holdExecution=false,loseExecutionResponse=false,catalogResponse=null,resultOverride=null}={}){
+ const observed={posts:[],reads:[],registries:0,record:null,release:null};
+ await mockSession(page);await mockTaskApi(page);
+ if(role!=='OWNER')await page.route(/\/pwa\/api\/session(?:\?.*)?$/,route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...sessionBody(),role})}));
+ await page.route('**/interface/v1/collective/**',async route=>{
+  const request=route.request(),path=new URL(request.url()).pathname.slice(prefix.length);
+  const reply=(data,status=200)=>route.fulfill({status,contentType:'application/json',headers:{'Cache-Control':'no-store'},body:JSON.stringify(envelope(data))});
+  if(path==='status')return reply({observed_at:'2026-10-24T06:00:00Z',metrics:{fabrics:{integrated:7,discovered:7}},gaps:{items:[]}});
+  if(path==='fabrics/registry'){
+   observed.registries++;
+   if(catalogError&&observed.registries===1)return reply({},503);
+   return reply(catalogResponse||catalog());
+  }
+  const run=path.match(/^fabrics\/(f\d{2})\/execute$/);
+  if(run&&request.method()==='POST'){
+   const body=JSON.parse(request.postData());observed.posts.push({body,headers:await request.allHeaders(),path});
+   observed.record={execution_id:body.execution_id,fabric_id:run[1],operation:body.operation,version:'1.0.0',runtime_revision:'a'.repeat(40),status:'COMPLETED',input_sha256:'b'.repeat(64),result_sha256:'c'.repeat(64),duration_ms:1.5,started_at:'2026-10-24T06:00:00Z',error_code:null,result:resultOverride||{distance_km:111.195,untrusted:'<img src=x onerror="globalThis.fabricInjection=true">'}};
+   if(holdExecution)await new Promise(resolve=>observed.release=resolve);
+   if(loseExecutionResponse)return route.abort('failed');
+   return reply(observed.record).catch(()=>{});
+  }
+  if(path.startsWith('fabrics/executions/')){observed.reads.push(path.split('/').at(-1));return reply(observed.record||{},observed.record?200:404);}
+  return reply({},404);
+ });
+ await page.goto('/pwa/');await waitForSession(page);
+ if((await page.viewportSize()).width<760){await page.locator('#mobile-more-open').click();await page.locator('#mobile-more-dialog [data-view="operations"]').click();}
+ else await page.locator('.desktop-navigation [data-view="operations"]').click();
+ return observed;
+}
+
+test('the registry exposes all 36 scoped contracts without executing on discovery or selection',async({page})=>{
+ const seen=await fixture(page);
+ await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ await expect(page.locator('#fabric-summary')).toContainText('36 defined');
+ await expect(page.locator('#operations-metrics')).toContainText('Baseline provider fabrics');await expect(page.locator('#operations-metrics')).toContainText('7 / 7');
+ await page.locator('#fabric-select').selectOption('f04');
+ await expect(page.locator('#fabric-operation')).toHaveValue('distance_km');
+ await expect(page.locator('#fabric-contract')).toContainText('Spherical distance only');
+ await expect(page.locator('#fabric-contract')).toContainText('Fixture verification scope only');
+ await expect(page.locator('#fabric-input-schema')).toContainText('"required"');
+ await expect(page.locator('#fabric-output-schema')).toContainText('"object"');
+ await page.locator('#fabric-select').selectOption('f18');
+ expect(seen.posts).toHaveLength(0);
+ await expect(page.locator('.workspace-title')).toBeVisible();
+});
+
+function wavFixture(){
+ const frames=8000,rate=16000,raw=Buffer.alloc(44+frames*2);raw.write('RIFF',0);raw.writeUInt32LE(raw.length-8,4);raw.write('WAVEfmt ',8);raw.writeUInt32LE(16,16);raw.writeUInt16LE(1,20);raw.writeUInt16LE(1,22);raw.writeUInt32LE(rate,24);raw.writeUInt32LE(rate*2,28);raw.writeUInt16LE(2,32);raw.writeUInt16LE(16,34);raw.write('data',36);raw.writeUInt32LE(frames*2,40);
+ for(let index=0;index<frames;index++)raw.writeInt16LE(Math.round(Math.sin(index/10)*1500),44+index*2);
+ return {raw,result:{mime_type:'audio/wav',audio_base64:raw.toString('base64'),audio_sha256:createHash('sha256').update(raw).digest('hex'),frames,sample_rate_hz:rate,channels:1,sample_width_bytes:2,duration_seconds:frames/rate,speech_recognition_supported:false}};
+}
+
+async function observeAudioUrls(page){
+ await page.addInitScript(()=>{
+  const create=URL.createObjectURL.bind(URL),revoke=URL.revokeObjectURL.bind(URL);globalThis.audioUrls={created:[],revoked:[]};
+  URL.createObjectURL=blob=>{const url=create(blob);globalThis.audioUrls.created.push({url,size:blob.size,type:blob.type});return url;};URL.revokeObjectURL=url=>{globalThis.audioUrls.revoked.push(url);return revoke(url);};
+ });
+}
+
+test('validated WAV results provide native controls and an exact download without autoplay or visible base64',async({page})=>{
+ await page.setViewportSize({width:390,height:844});const audio=wavFixture();await observeAudioUrls(page);await fixture(page,{resultOverride:audio.result});await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f31');await page.locator('#fabric-parameters').fill('{"text":"Fixture voice"}');await page.locator('#fabric-run').click();await expect(page.locator('#fabric-state')).toContainText('persisted receipt was read back');
+ const player=page.locator('#fabric-result audio');await expect(player).toHaveCount(1);await expect(player).toHaveAttribute('aria-label','Generated speech audio');await expect(player).toHaveJSProperty('controls',true);await expect(player).toHaveJSProperty('autoplay',false);await expect(player).toHaveJSProperty('paused',true);await expect(player).toHaveAttribute('src',/^blob:/);
+ await expect(page.locator('#fabric-result .fabric-output')).toContainText('16044 WAV bytes');await expect(page.locator('#fabric-result .fabric-output')).not.toContainText(audio.result.audio_base64);
+ const downloadEvent=page.waitForEvent('download');await page.getByRole('link',{name:'Download WAV audio'}).click();const download=await downloadEvent;expect(download.suggestedFilename()).toMatch(/^orqevia-speech-[a-f0-9-]{36}\.wav$/);expect(await readFile(await download.path())).toEqual(audio.raw);
+ await page.getByRole('button',{name:'Play speech',exact:true}).click();await expect(page.locator('.fabric-audio [role="status"]')).toHaveText(/The audio player is playing\.|Playback finished\.|This browser could not play the WAV\./);
+ await expectNoHorizontalOverflow(page);
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('orqevia-session',{detail:null})));await expect(player).toHaveCount(0);await expect.poll(()=>page.evaluate(()=>audioUrls.created.every(value=>audioUrls.revoked.includes(value.url)))).toBe(true);
+});
+
+for(const kind of ['wrong-mime','invalid-base64','wrong-container','oversized','wrong-hash'])test(`unsupported audio is omitted safely: ${kind}`,async({page})=>{
+ const {result}=wavFixture();
+ if(kind==='wrong-mime')result.mime_type='text/html';
+ if(kind==='invalid-base64')result.audio_base64='not base64!';
+ if(kind==='wrong-container')result.audio_base64=Buffer.from('RIFF-not-a-valid-WAV').toString('base64');
+ if(kind==='oversized')result.audio_base64='A'.repeat(4*Math.ceil(1048576/3)+4);
+ if(kind==='wrong-hash')result.audio_sha256='0'.repeat(64);
+ await observeAudioUrls(page);await fixture(page,{resultOverride:result});await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f31');await page.locator('#fabric-run').click();await expect(page.locator('#fabric-state')).toContainText('persisted receipt was read back');await expect(page.locator('#fabric-result .fabric-warning')).toContainText('Audio preview unavailable');await expect(page.locator('#fabric-result audio')).toHaveCount(0);await expect(page.getByRole('link',{name:'Download WAV audio'})).toHaveCount(0);expect(await page.evaluate(()=>audioUrls.created.length)).toBe(0);await expect(page.locator('#fabric-result .fabric-output')).not.toContainText(result.audio_base64);
+});
+
+test('the PNG picker preserves original bytes and submits only after explicit Run',async({page})=>{
+ const raw=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAADUlEQVR4nGP4zwAE/wEHAAH/4iOeWQAAAABJRU5ErkJggg==','base64'),seen=await fixture(page);await expect(page.locator('#fabric-select option')).toHaveCount(36);await expect(page.locator('#fabric-image-upload')).toBeHidden();await page.locator('#fabric-select').selectOption('f32');await expect(page.locator('#fabric-image-upload')).toBeVisible();
+ await page.locator('#fabric-image-file').setInputFiles({name:'pixels.png',mimeType:'image/png',buffer:raw});await expect(page.locator('#fabric-image-state')).toContainText(createHash('sha256').update(raw).digest('hex'));expect(JSON.parse(await page.locator('#fabric-parameters').inputValue())).toEqual({image_base64:raw.toString('base64')});expect(seen.posts).toHaveLength(0);
+ await page.locator('#fabric-run').click();await expect(page.locator('#fabric-state')).toContainText('persisted receipt was read back');expect(seen.posts[0].body.parameters).toEqual({image_base64:raw.toString('base64')});await page.locator('#fabric-select').selectOption('f31');await expect(page.locator('#fabric-image-upload')).toBeHidden();await expect(page.locator('#fabric-image-file')).toHaveValue('');await expect(page.locator('#fabric-parameters')).toHaveValue('{}');
+});
+
+test('PNG selection rejects wrong MIME, non-PNG content and oversized files without a request',async({page})=>{
+ const seen=await fixture(page);await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f32');
+ for(const file of [{name:'wrong.jpg',mimeType:'image/jpeg',buffer:Buffer.from('not png')},{name:'wrong.png',mimeType:'image/png',buffer:Buffer.from('not a PNG file')},{name:'large.png',mimeType:'image/png',buffer:Buffer.alloc(524289)}]){
+  await page.locator('#fabric-image-file').setInputFiles(file);await expect(page.locator('#fabric-image-state')).toContainText('existing JSON input was not changed');await expect(page.locator('#fabric-parameters')).toHaveValue('{}');
+ }
+ expect(seen.posts).toHaveLength(0);
+});
+
+test('an explicit operation uses CSRF/session transport and shows actual persisted result identifiers and hashes',async({page})=>{
+ const seen=await fixture(page);await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ await page.locator('#fabric-select').selectOption('f04');await page.locator('#fabric-parameters').fill('{"a":[0,0],"b":[0,1]}');await page.locator('#fabric-run').click();
+ await expect(page.locator('#fabric-state')).toContainText('persisted receipt was read back');
+ await expect(page.locator('#fabric-result')).toContainText('111.195');
+ await expect(page.locator('#fabric-result')).toContainText('c'.repeat(64));
+ expect(seen.posts).toHaveLength(1);expect(seen.posts[0].body.parameters).toEqual({a:[0,0],b:[0,1]});expect(seen.posts[0].headers['x-orqevia-pwa']).toBe('1');expect(seen.posts[0].headers.authorization).toBeUndefined();
+ expect(seen.posts[0].body.execution_id).toMatch(/^[a-f0-9-]{36}$/);expect(seen.reads).toEqual([seen.posts[0].body.execution_id]);
+ await expect(page.locator('#fabric-result img')).toHaveCount(0);expect(await page.evaluate(()=>globalThis.fabricInjection)).toBeUndefined();
+ await page.locator('#fabric-read').click();await expect.poll(()=>seen.reads.length).toBe(2);expect(seen.posts).toHaveLength(1);
+ await expect(page.locator('#operations-observation-form')).toBeAttached();await expect(page.locator('#operations-challenge-form')).toBeAttached();
+});
+
+test('malformed, array and nonfinite JSON are rejected before any operation request',async({page})=>{
+ const seen=await fixture(page);await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ for(const [input,message] of [['{bad','Enter valid JSON'],['[]','must be one object'],['{"value":1e400}','must be finite']]){
+  await page.locator('#fabric-parameters').fill(input);await page.locator('#fabric-run').click();await expect(page.locator('#fabric-state')).toContainText(message);
+ }
+ expect(seen.posts).toHaveLength(0);
+});
+
+test('a lost POST response recovers by execution ID without automatically repeating the operation',async({page})=>{
+ const seen=await fixture(page,{loseExecutionResponse:true});await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ await page.locator('#fabric-run').click();await expect(page.locator('#fabric-state')).toContainText('did not return a confirmed outcome');
+ await expect(page.locator('#fabric-execution-id')).toHaveValue(seen.record.execution_id);await page.locator('#fabric-read').click();
+ await expect(page.locator('#fabric-state')).toContainText('Recorded execution COMPLETED');expect(seen.posts).toHaveLength(1);expect(seen.reads).toEqual([seen.record.execution_id]);
+});
+
+test('logout clears inputs and rejects a late prior-session execution response',async({page})=>{
+ const seen=await fixture(page,{holdExecution:true});await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ await page.locator('#fabric-run').click();await expect.poll(()=>seen.posts.length).toBe(1);
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('orqevia-session',{detail:null})));seen.release();
+ await expect(page.locator('#fabric-select option')).toHaveCount(0);await expect(page.locator('#fabric-result')).toBeEmpty();await expect(page.locator('#fabric-execution-id')).toHaveValue('');await expect(page.locator('#fabric-parameters')).toHaveValue('{}');await expect(page.locator('#fabric-run')).toBeDisabled();await expect(page.locator('#fabric-select')).toBeDisabled();
+ expect(seen.reads).toHaveLength(0);
+});
+
+test('catalog errors recover by refresh and offline mode clears private execution state',async({page,context})=>{
+ const seen=await fixture(page,{catalogError:true});await expect(page.locator('#fabric-state')).toHaveAttribute('data-state','error');
+ await page.locator('#fabric-refresh').click();await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ await page.locator('#fabric-parameters').fill('{"private":"local fixture"}');await context.setOffline(true);
+ await expect(page.locator('#fabric-select option')).toHaveCount(0);await expect(page.locator('#fabric-parameters')).toHaveValue('{}');await expect(page.locator('#fabric-result')).toBeEmpty();await expect(page.locator('#fabric-run')).toBeDisabled();await expect(page.locator('#fabric-select')).toBeDisabled();
+ await context.setOffline(false);await expect(page.locator('#fabric-select option')).toHaveCount(36);expect(seen.posts).toHaveLength(0);
+});
+
+test('member sessions do not request owner-scoped fabric contracts',async({page})=>{
+ const seen=await fixture(page,{role:'MEMBER'});await expect(page.locator('#fabric-state')).toContainText('bound owner');await expect(page.locator('#fabric-run')).toBeDisabled();await expect(page.locator('#fabric-select')).toBeDisabled();expect(seen.registries).toBe(0);expect(seen.posts).toHaveLength(0);
+});
+
+test('the mobile catalog and long receipt hashes remain within the viewport',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await fixture(page);await expect(page.locator('#fabric-select option')).toHaveCount(36);
+ await page.locator('#fabric-run').click();await expect(page.locator('#fabric-result')).toContainText('c'.repeat(64));
+ await expectNoHorizontalOverflow(page);await expect(page.locator('#fabric-read')).toBeVisible();
+});
+
+test('an empty catalog has an explicit recovery state and cannot submit an operation',async({page})=>{
+ const seen=await fixture(page,{catalogResponse:{fabrics:[]}});await expect(page.locator('#fabric-state')).toContainText('no fabric contracts');await expect(page.locator('#fabric-select option')).toHaveCount(0);await expect(page.locator('#fabric-run')).toBeDisabled();await expect(page.locator('#fabric-input-schema')).toContainText('No executable input schema');expect(seen.posts).toHaveLength(0);
+});
+
+test('an unavailable capability remains visible without preventing selection of another fabric',async({page})=>{
+ const value=catalog();value.fabrics[30].state='UNAVAILABLE';value.fabrics[30].runtime_contract.operations=[];
+ await fixture(page,{catalogResponse:value});await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f31');await expect(page.locator('#fabric-contract')).toContainText('UNAVAILABLE');await expect(page.locator('#fabric-contract')).toContainText('No executable operation');await expect(page.locator('#fabric-run')).toBeDisabled();await expect(page.locator('#fabric-select')).toBeEnabled();await page.locator('#fabric-select').selectOption('f04');await expect(page.locator('#fabric-run')).toBeEnabled();
+});
+
+test('board-wide button recovery cannot execute a fabric whose lifecycle disables it',async({page})=>{
+ const value=catalog();value.fabrics[30].state='UNAVAILABLE';const seen=await fixture(page,{catalogResponse:value});await expect(page.locator('#fabric-select option')).toHaveCount(36);await page.locator('#fabric-select').selectOption('f31');await expect(page.locator('#fabric-run')).toBeDisabled();
+ // Reproduce another board operation releasing its general button lock. The
+ // execution handler must check the selected contract as well as DOM state.
+ await page.evaluate(()=>{document.getElementById('fabric-run').disabled=false;document.getElementById('fabric-form').requestSubmit();});await expect(page.locator('#fabric-run')).toBeDisabled();expect(seen.posts).toHaveLength(0);
+});

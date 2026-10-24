@@ -421,3 +421,13 @@ def test_service_worker_empty_destination_navigation_admits_only_public_shell(se
         assert client.post('/pwa/api/enroll',headers=headers,json={'code':'x'}).status_code==403
         assert client.get('/pwa/',headers={**headers,'Origin':'https://evil.invalid'}).status_code==403
         assert client.get('/pwa/',headers={**headers,'Sec-Fetch-Mode':'cors'}).status_code==403
+
+def test_paired_workspace_allows_local_generated_audio_without_remote_media(setup,monkeypatch):
+    monkeypatch.setenv('ORQEVIA_OPEN_ACCESS','0')
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client:
+        response=client.get('/pwa/')
+        policy=response.headers['Content-Security-Policy']
+        assert "media-src 'self' blob:" in policy
+        assert "connect-src 'self'" in policy and "object-src 'none'" in policy
+        assert 'media-src *' not in policy and 'http:' not in policy
