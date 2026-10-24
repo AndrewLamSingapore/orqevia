@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from .interface_contract import router
 from . import pwa_sessions
 import os
@@ -19,6 +20,14 @@ from . import open_access
 
 app=FastAPI(title='ORQEVIA Thin-client Interface',docs_url=None,redoc_url=None,openapi_url=None,
     telemetry=PRIVACY_FASTAPI_TELEMETRY)
+# Owner directive 2026-10-24: HTTPS only, always. HSTS makes every browser
+# upgrade to TLS and never fall back to plain HTTP for this origin.
+class HTTPSOnlyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        return response
+app.add_middleware(HTTPSOnlyMiddleware)
 app.include_router(router)
 app.include_router(pwa_sessions.router)
 app.add_middleware(pwa_sessions.PWASessionMiddleware)
@@ -44,6 +53,9 @@ from .collective_bridge import router as collective_board_router
 app.include_router(collective_board_router)
 from .public_site import router as public_router, PUBLIC, SHARED
 app.include_router(public_router)
+from .public_agent_api import router as jarvis_public_router, router_orqevia
+app.include_router(jarvis_public_router)
+app.include_router(router_orqevia)
 app.mount('/public-assets', StaticFiles(directory=str(PUBLIC / 'assets'), check_dir=False), name='public-assets')
 app.mount('/design', StaticFiles(directory=str(SHARED), check_dir=False), name='shared-design')
 app.mount('/pwa/design', StaticFiles(directory=str(SHARED), check_dir=False), name='pwa-shared-design')

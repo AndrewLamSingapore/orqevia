@@ -171,16 +171,17 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', response_schema: dict | None = None, response_schema_order: str = 'canonical', idempotency_key: str | None = None) -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', response_schema: dict | None = None, response_schema_order: str = 'canonical', idempotency_key: str | None = None, request_digest: str | None = None) -> dict:
         # Bind the complete submitted request before local normalization. Reusing
         # a key with a changed request must never disclose or dispatch a new job.
         if idempotency_key is not None:
             if not isinstance(idempotency_key,str) or not re.fullmatch(r'[A-Za-z0-9._:-]{1,128}',idempotency_key):
                 raise ValueError('invalid idempotency_key')
-            submitted={key:value for key,value in locals().items() if key not in {'self','idempotency_key'}
+            submitted={key:value for key,value in locals().items() if key not in {'self','idempotency_key','request_digest'}
                        and not (key == 'response_schema' and value is None)
                        and not (key == 'response_schema_order' and value == 'canonical')}
-            request_hash=hashlib.sha256(json.dumps(submitted,sort_keys=True,allow_nan=False,separators=(',',':')).encode()).hexdigest()
+            request_hash=(request_digest if isinstance(request_digest,str) and re.fullmatch('[0-9a-f]{64}',request_digest)
+                          else hashlib.sha256(json.dumps(submitted,sort_keys=True,allow_nan=False,separators=(',',':')).encode()).hexdigest())
             key_hash=hashlib.sha256(idempotency_key.encode()).hexdigest()
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
         if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')

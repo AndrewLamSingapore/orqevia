@@ -1,4 +1,4 @@
-"""Read-only JARVIS Control Surface composed around ORQEVIA's existing APIs."""
+"""Read-only ORQEVIA Control Surface composed around the existing APIs."""
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -19,7 +19,7 @@ LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 def _trusted_authorization(request: Request) -> str:
     """Grant bounded Control Surface adapters access only on the local origin."""
     if request.url.hostname not in LOCAL_HOSTS:
-        raise HTTPException(status_code=403, detail="JARVIS Control is available only on this device")
+        raise HTTPException(status_code=403, detail="ORQEVIA Control is available only on this device")
     origin = request.headers.get("origin")
     if origin and urlsplit(origin).hostname not in LOCAL_HOSTS:
         raise HTTPException(status_code=403, detail="Cross-origin Control Surface access is denied")
@@ -40,7 +40,7 @@ def control_surface() -> HTMLResponse:
 @router.get("/api/control-surface/manifest")
 def control_surface_manifest() -> dict:
     return {
-        "name": "JARVIS Control Surface",
+        "name": "ORQEVIA Control Surface",
         "version": "2.0.0",
         "mode": "approval-gated",
         "authority": "ORQEVIA CORE",
@@ -205,7 +205,7 @@ def control_surface_acceptance(request: Request) -> dict:
             "missing": missing,
         })
     return {
-        "name": "JARVIS Control Surface P1 acceptance",
+        "name": "ORQEVIA Control Surface P1 acceptance",
         "status": "pass" if all(item["status"] == "pass" for item in results) else "fail",
         "mode": "approval-gated",
         "access": "trusted-local",

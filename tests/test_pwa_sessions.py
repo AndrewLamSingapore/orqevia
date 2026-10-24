@@ -40,7 +40,7 @@ def test_cookie_flags_hash_storage_replay_logout(setup):
         cookie=response.headers['set-cookie'];assert 'HttpOnly' in cookie and 'Secure' in cookie and 'SameSite=strict' in cookie
         assert 'Domain=' not in cookie and 'Max-Age=28800' in cookie
         assert client.get('/pwa/api/session').json()['authenticated']
-        rawcookie=client.cookies.get(pwa.COOKIE)
+        rawcookie=client.cookies.get(pwa.ORQEVIA_COOKIE)
         with pwa.database() as db:
             assert db.execute('SELECT session_hash FROM sessions').fetchone()[0]==pwa.digest(rawcookie)
             assert db.execute('SELECT code_hash FROM pairing').fetchone()[0]==pwa.digest(code)
@@ -303,14 +303,14 @@ def test_existing_unlinked_session_not_broadened_by_environment(setup,monkeypatc
 def test_durable_device_refresh_preserves_identity_role_and_running_task(setup,monkeypatch,explicit_mode):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:
-        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];device_cookie=client.cookies.get(pwa.DEVICE_COOKIE)
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];device_cookie=client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
         if not explicit_mode:
             monkeypatch.delenv('ORQEVIA_PWA_ACCESS_MODE',raising=False)
         with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
         refreshed=client.get('/pwa/api/session')
         assert refreshed.status_code==200 and refreshed.json()['authenticated'] is True
         assert refreshed.json()['clientId']==identity and refreshed.json()['role']=='MEMBER'
-        assert client.cookies.get(pwa.DEVICE_COOKIE)==device_cookie
+        assert client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)==device_cookie
 
 def test_invalid_or_revoked_device_fails_closed_without_changing_identity(setup):
     root,pwa,app,node=setup
@@ -326,11 +326,11 @@ def test_invalid_or_revoked_device_fails_closed_without_changing_identity(setup)
 def test_revoked_device_cannot_be_reissued_while_short_session_is_active(setup):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:
-        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];old=client.cookies.get(pwa.DEVICE_COOKIE)
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId'];old=client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
         with pwa.database() as db:db.execute('UPDATE devices SET revoked=1 WHERE client_id=?',(identity,))
         current=client.get('/pwa/api/session')
         assert current.json()['authenticated'] is False
-        assert old and client.cookies.get(pwa.DEVICE_COOKIE) is None
+        assert old and client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE) is None
         with pwa.database() as db:assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(identity,)).fetchone()==(1,)
 
 def test_revoked_session_cannot_be_resurrected_by_valid_device(setup):
@@ -346,7 +346,7 @@ def test_invalid_session_token_cannot_use_valid_device_for_silent_recovery(setup
     with TestClient(app,base_url=ORIGIN) as client:
         enroll(pwa,client);client.cookies.set(pwa.COOKIE,secrets.token_urlsafe(32),domain='192.168.1.23',path='/')
         assert client.get('/pwa/api/session').json()['authenticated'] is False
-        assert client.cookies.get(pwa.COOKIE) is None and client.cookies.get(pwa.DEVICE_COOKIE) is None
+        assert client.cookies.get(pwa.ORQEVIA_COOKIE) is None and client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE) is None
 
 def test_mismatched_session_and_device_fail_closed_without_authority_switch(setup):
     root,pwa,app,node=setup
@@ -355,7 +355,7 @@ def test_mismatched_session_and_device_fail_closed_without_authority_switch(setu
         code=secrets.token_urlsafe(16)
         with pwa.database() as db:db.execute('INSERT INTO pairing(code_hash,expires,used,owner_account_id,role) VALUES(?,?,0,?,?)',(pwa.digest(code),time.time()+300,'owner:fixture','OWNER'))
         owner_result=owner.post('/pwa/api/enroll',headers=HEADERS,json={'code':code});assert owner_result.status_code==200
-        member.cookies.set(pwa.DEVICE_COOKIE,owner.cookies.get(pwa.DEVICE_COOKIE),domain='192.168.1.23',path='/')
+        member.cookies.set(pwa.ORQEVIA_DEVICE_COOKIE,owner.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE),domain='192.168.1.23',path='/')
         assert member.get('/pwa/api/session').json()['authenticated'] is False
         assert member.cookies.get(pwa.COOKIE) is None and member.cookies.get(pwa.DEVICE_COOKIE) is None
         with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,member_result.json()['clientId']))
@@ -368,15 +368,16 @@ def test_active_legacy_session_bootstraps_durable_device_without_reenrollment(se
     with TestClient(app,base_url=ORIGIN) as client:
         enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
         client.cookies.delete(pwa.DEVICE_COOKIE)
+        client.cookies.delete(pwa.ORQEVIA_DEVICE_COOKIE)
         with pwa.database() as db:db.execute('DELETE FROM devices WHERE client_id=?',(identity,))
         current=client.get('/pwa/api/session')
         assert current.json()['authenticated'] is True and current.json()['clientId']==identity
-        assert client.cookies.get(pwa.DEVICE_COOKIE)
+        assert client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
 
 def test_pwa_close_reopen_and_service_restart_refresh_same_durable_identity(setup):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as first:
-        enrolled,_=enroll(pwa,first);identity=enrolled.json()['clientId'];device_token=first.cookies.get(pwa.DEVICE_COOKIE)
+        enrolled,_=enroll(pwa,first);identity=enrolled.json()['clientId'];device_token=first.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
     # A new browser process/app instance represents close/reopen and server restart;
     # only the durable HttpOnly device credential is carried forward.
     with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()-1,identity))
@@ -392,12 +393,12 @@ def test_active_trusted_session_slides_without_changing_token_or_role(setup):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:
         enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
-        token=client.cookies.get(pwa.COOKIE);device=client.cookies.get(pwa.DEVICE_COOKIE)
+        token=client.cookies.get(pwa.ORQEVIA_COOKIE);device=client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
         with pwa.database() as db:db.execute('UPDATE sessions SET expires=? WHERE client_id=?',(time.time()+30,identity))
         renewed=client.get('/pwa/api/session')
         assert renewed.json()['authenticated'] and renewed.json()['role']=='MEMBER'
         assert renewed.json()['expiresAt']>time.time()+pwa.SESSION_SECONDS-10
-        assert client.cookies.get(pwa.COOKIE)==token and client.cookies.get(pwa.DEVICE_COOKIE)==device
+        assert client.cookies.get(pwa.ORQEVIA_COOKIE)==token and client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)==device
         assert 'no-store' in renewed.headers['cache-control']
         assert client.post('/pwa/api/owner-authority-check',headers=HEADERS).status_code==403
 

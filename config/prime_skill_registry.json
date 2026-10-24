@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "registry_version": "0.1.0-branch-candidate",
-  "scope": "Isolated branch candidate; not production activation evidence",
+  "registry_version": "1.0.0",
+  "scope": "Production activation",
   "skills": [
     {
       "skill_id": "core.evidence-boundary",

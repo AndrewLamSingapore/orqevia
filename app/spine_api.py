@@ -1,4 +1,4 @@
-"""Guarded API surface for the Personal JARVIS Stable Spine."""
+"""Guarded API surface for the ORQEVIA Stable Spine."""
 from __future__ import annotations
 
 import hmac

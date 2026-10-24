@@ -22,7 +22,7 @@ class ProductHandoffTests(unittest.TestCase):
         self.config=self.data.parent/'product-handoff.json'
         self.policy={'directory':str(self.root),'issued_at':time.time()-1,'expires_at':time.time()+300}
         self.write_config()
-        (self.root/'JARVIS-DELL-PRODUCTION-RECONNECT.zip').write_bytes(b'public fixture bundle only')
+        (self.root/'ORQEVIA-DELL-PRODUCTION-RECONNECT.zip').write_bytes(b'public fixture bundle only')
         clients={name:{'token_sha256':hashlib.sha256(name.encode()).hexdigest(),'expires_at':time.time()+300,
                       'capabilities':['task.read']} for name in ('dell:DESKTOP-IPV4PH9','other')}
         self.env=patch.dict(os.environ,{'ORQEVIA_DATA_DIR':str(self.data),'ORQEVIA_INTERFACE_CLIENTS_JSON':json.dumps(clients)})
@@ -115,7 +115,7 @@ class ProductHandoffTests(unittest.TestCase):
 
     def test_versioned_download_separate_bytes_and_original_proof_receipt(self):
         root2=self.root.parent/'transfer-v2';root2.mkdir()
-        (root2/'JARVIS-DELL-PRODUCTION-RECONNECT.zip').write_bytes(b'corrected fixture v2')
+        (root2/'ORQEVIA-DELL-PRODUCTION-RECONNECT.zip').write_bytes(b'corrected fixture v2')
         config2=self.config.with_name('product-handoff-v2.json')
         config2.write_text(json.dumps({**self.policy,'directory':str(root2)}))
         before=self.config.read_bytes()

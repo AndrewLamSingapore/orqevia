@@ -20,6 +20,38 @@ from . import open_access
 
 router = APIRouter(prefix='/interface/v1', tags=['dell-contract'])
 
+PUBLIC_FABRICS_SUMMARY = [
+    ("f01", "Ollama Local", "IMPLEMENTED"), ("f02", "Knowledge MiniLM", "IMPLEMENTED"),
+    ("f03", "Semantic NLI", "IMPLEMENTED"), ("f04", "Geospatial Intelligence", "IMPLEMENTED"),
+    ("f05", "Portfolio Event Fabric", "VERIFIED"), ("f06", "MLP Fabric", "VERIFIED"),
+    ("f07", "HF Gemma Nano", "VERIFIED"), ("f08", "Agent Orchestration", "IMPLEMENTED"),
+    ("f09", "Tool & MCP", "IMPLEMENTED"), ("f10", "Code Intelligence", "IMPLEMENTED"),
+    ("f11", "Browser Intelligence", "IMPLEMENTED"), ("f12", "Verification & Evaluation", "IMPLEMENTED"),
+    ("f13", "Security Intelligence", "IMPLEMENTED"), ("f14", "Memory & Context", "IMPLEMENTED"),
+    ("f15", "Observability", "IMPLEMENTED"), ("f16", "Deployment & DevOps", "IMPLEMENTED"),
+    ("f17", "Multimodal Intelligence", "IMPLEMENTED"), ("f18", "Creative Media", "IMPLEMENTED"),
+    ("f19", "Research Intelligence", "IMPLEMENTED"), ("f20", "Knowledge Graph", "IMPLEMENTED"),
+    ("f21", "Simulation & Digital Twin", "PROPOSED"), ("f22", "Decision Intelligence", "PROPOSED"),
+    ("f23", "Workflow Automation", "IMPLEMENTED"), ("f24", "Human Governance", "IMPLEMENTED"),
+    ("f25", "Causal Reasoning", "PROPOSED"), ("f26", "Forecasting", "PROPOSED"),
+    ("f27", "Optimization", "PROPOSED"), ("f28", "Privacy & Confidential Computing", "PROPOSED"),
+    ("f29", "Identity & Trust", "IMPLEMENTED"), ("f30", "Document Intelligence", "IMPLEMENTED"),
+    ("f31", "Voice & Speech", "PROPOSED"), ("f32", "Computer Vision", "IMPLEMENTED"),
+    ("f33", "Robotics & Edge", "PROPOSED"), ("f34", "Financial Intelligence", "PROPOSED"),
+    ("f35", "Scientific Computing", "PROPOSED"), ("f36", "Adversarial Testing", "IMPLEMENTED"),
+]
+
+@router.get('/registry', include_in_schema=False)
+def public_registry_summary():
+    return {
+        'protocol': 'orqevia.interface.v1',
+        'registry': {
+            'fabrics': [{'id': f, 'name': n, 'status': s} for f, n, s in PUBLIC_FABRICS_SUMMARY],
+            'total': len(PUBLIC_FABRICS_SUMMARY),
+        },
+        'note': 'Public-safe catalog summary. Operation execution requires a bound-owner session.',
+    }
+
 
 def authorize(request: Request, capability: str):
     if request.url.scheme != 'https' and not open_access.enabled():
