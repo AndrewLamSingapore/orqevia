@@ -18,6 +18,15 @@ source revision and hashes. A lost response is recovered through
 an ambiguous POST automatically. Session changes and offline transitions clear
 private inputs and results.
 
+An execution UUID also binds its operation contract version. A POST attempting
+to reuse it after that version changes receives 409, preserving the original
+receipt. Historical GET recovery still returns the original source, version,
+result and hashes. A new operation requires a new UUID. Before recording a fresh
+result as COMPLETED, the runtime checks its declared supported output-schema
+vocabulary and size; malformed output becomes a sanitized failed receipt without
+retaining the provider's invalid payload. This shape check is not independent
+verification of the result's factual correctness.
+
 Speech results expose explicit playback and download only after validating the
 PCM16 WAV container and SHA-256. They do not autoplay. Image inspection and
 measurement accept an optional PNG picker with a 512 KiB limit, signature

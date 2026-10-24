@@ -920,7 +920,7 @@ def _runtime_contract(item, runtime):
                 " at most two revalidated redirects and 262144 response bytes."
             )
     item["retry_policy"] = (
-        "No automatic retries. Reusing an execution UUID returns the persisted scoped receipt; RUNNING, FAILED and INTERRUPTED results never imply success or trigger replay."
+        "No automatic retries. Same-contract-version UUID reuse returns the persisted scoped receipt; version drift returns 409 without changing history. Historical GET recovery remains available. RUNNING, FAILED and INTERRUPTED results never imply success or trigger replay."
     )
     limits = {
         "concurrency": 4,
@@ -962,7 +962,7 @@ def _runtime_contract(item, runtime):
         "limitations": deepcopy(item["limitations"]),
         "availability": "ADAPTER_INSTALLED_RUNTIME_PROBE_REQUIRED",
         "auth": item["auth"],
-        "execution_id": "Optional in the POST request; required in persisted receipts. A supplied UUID is idempotent and bound to owner, tenant, operation and arguments.",
+        "execution_id": "Optional in the POST request; required in persisted receipts. A supplied UUID is idempotent and bound to owner, tenant, operation, arguments and contract version. Version drift returns 409; historical GET preserves the original receipt.",
         "timeout_policy": item["timeout_policy"],
         "resource_limits": limits,
         "cost_policy": "No new paid provider calls from this execution adapter. Existing governed APIs separately enforce their explicit budgets.",
