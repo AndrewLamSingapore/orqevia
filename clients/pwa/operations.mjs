@@ -1,4 +1,5 @@
 // Governed operations use the same authenticated backend as the workspace.
+import './intelligence-capabilities.mjs';
 // Agent text is rendered as text, never interpreted as markup or authority.
 const $=id=>document.getElementById(id);
 const element=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};

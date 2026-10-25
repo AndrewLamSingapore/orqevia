@@ -105,14 +105,16 @@ class PublicTracePublisherTests(unittest.TestCase):
         self.assertFalse(forbidden_keys.intersection(all_keys(payload)))
         self.assertNotIn(secret, body.decode("utf-8"))
 
-        timestamp = request.get_header("X-jarvis-timestamp")
+        timestamp = request.get_header("X-orqevia-timestamp")
+        self.assertEqual(timestamp, "1788484800")
         expected = hmac.new(
             secret.encode("utf-8"),
             timestamp.encode("ascii") + b"." + body,
             hashlib.sha256,
         ).hexdigest()
-        self.assertEqual(request.get_header("X-jarvis-signature"), expected)
-        self.assertEqual(request.get_header("X-jarvis-publisher"), "prime-dell-1")
+        self.assertEqual(request.get_header("X-orqevia-signature"), expected)
+        self.assertEqual(request.get_header("X-orqevia-publisher"), "prime-dell-1")
+        self.assertIsNone(request.get_header("X-jarvis-signature"))
 
 
 if __name__ == "__main__":

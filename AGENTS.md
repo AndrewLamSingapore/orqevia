@@ -2,6 +2,16 @@
 
 ## Owner execution directives - 25 October 2026
 
+Latest amendments: **REA and MiroFish are EXCLUDED FROM INTEGRATION. Do not
+repair, install or integrate either project.** Preserve their audit findings.
+Automatic approval review blocked deletion of the unused, inactive REA package
+with "blocked by policy"; do not claim it was deleted or bypass the rejection.
+
+**Do not overload or overwork the estate. Spread and space work.** Run heavy
+benchmarks, broad regressions and live acceptance sequentially, use existing
+capacity observations and keep research/production responsive. Linux/Docker
+may be used where appropriate. This does not authorize any queue guard.
+
 **USE ONLY HTTPS. DO NOT USE ANY QUEUE GUARD.**
 
 The Owner removed the shared HTTPS request-rate limit, queue guards,
@@ -12,10 +22,8 @@ independent research. New network integrations and live acceptance use HTTPS
 with certificate verification. Retired port8081 remains retired; existing
 private transports require coordinated migration before changing endpoints.
 
-MiroFish and REA are conditional implementations: when the evidence-backed
-security, licensing, compatibility and functional assessments pass, implement
-and verify an optional integration. Report a failed assessment precisely and
-do not force adoption. PIF, MEL and adopted integrations remain independently
+The earlier conditional MiroFish/REA instruction is superseded by the exclusion
+above. PIF and MEL remain independently
 operable, independently disableable and independently reversible.
 
 ## Owner amendment - single-entity authority (16 October 2026)

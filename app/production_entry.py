@@ -245,5 +245,9 @@ from .sovereign_plane import router as sovereign_plane_router
 app.include_router(sovereign_plane_router)
 from .collective_api import router as collective_board_router
 app.include_router(collective_board_router)
+from .pif_api import router as pif_router
+from .mel_api import router as mel_router
+app.include_router(pif_router)
+app.include_router(mel_router)
 app.mount('/', direct_entry.app)
 OBSERVABILITY = install_observability(app)

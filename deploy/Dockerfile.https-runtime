@@ -1,7 +1,10 @@
 # Apply a reviewed request-transport change over the retained production image.
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
-COPY app/pwa_sessions.py app/sovereign_plane_bridge.py app/collective_intelligence.py /app/app/
+COPY requirements.pip-security.txt /tmp/orqevia-pip-security.txt
+RUN python -m pip install --no-cache-dir --no-deps --require-hashes --index-url https://pypi.org/simple -r /tmp/orqevia-pip-security.txt
+COPY app /app/app/
+COPY clients/pwa/operations.mjs clients/pwa/intelligence-capabilities.mjs clients/pwa/sw.js clients/pwa/release.mjs /app/app/pwa_static/
 ARG ORQEVIA_RUNTIME_REVISION
 ENV ORQEVIA_RUNTIME_REVISION=${ORQEVIA_RUNTIME_REVISION}
 LABEL org.opencontainers.image.revision=${ORQEVIA_RUNTIME_REVISION}

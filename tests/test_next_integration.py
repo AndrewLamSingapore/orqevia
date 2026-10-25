@@ -68,9 +68,21 @@ def test_external_surface_has_no_owner_or_legacy_routes():
     }
     # The existing public design shell and static mount expose no owner tools.
     public_static={'/design', '/public-assets'}
-    assert paths and all(path.startswith(allowed_prefixes) or path in bounded_bridge or path in public_static for path in paths)
+    public_metadata = {
+        f'/api/public/{brand}/{operation}'
+        for brand in ('jarvis', 'orqevia')
+        for operation in ('agent-trace', 'models', 'platforms')
+    }
+    assert public_metadata <= paths
+    assert paths and all(
+        path.startswith(allowed_prefixes) or path in bounded_bridge or path in public_static or path in public_metadata
+        for path in paths
+    )
     assert not any(path.startswith('/control') for path in paths)
-    assert not any(path.startswith('/api/') and path not in bounded_bridge for path in paths)
+    assert not any(path.startswith('/api/') and path not in bounded_bridge | public_metadata for path in paths)
+    for route in app.routes:
+        if getattr(route, 'path', None) in public_metadata:
+            assert route.methods == {'GET'}
 
 
 def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkeypatch):

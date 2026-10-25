@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 from scripts import validate_fresh_initialization_20261019 as v
+from tests.pinned_batch_fixture import pinned_batch_checkout, protected_validation_at_pin
 
 
 def test_batch_plan_matches_pinned_digest_and_evidence():
@@ -31,8 +32,10 @@ def test_batch_plan_matches_pinned_digest_and_evidence():
         assert entry["runtime_image_id"] == v.IMAGE
 
 
-def test_protected_validation_dry_run_with_fake_guard():
+def test_protected_validation_dry_run_with_fake_guard(tmp_path):
     plan = json.loads((ROOT / v.PLAN).read_bytes())
+    # Retain the real byte-closure check against this batch's original Git pin.
+    snapshot = pinned_batch_checkout(ROOT, v, plan, tmp_path / "pinned-batch")
     sha = v.VERIFIER
     env = {
         "GITHUB_REPOSITORY": v.REPOSITORY,
@@ -57,19 +60,15 @@ def test_protected_validation_dry_run_with_fake_guard():
         "repository": {"full_name": v.REPOSITORY},
     }
 
-    def fake(path):
-        if path == "/actions/runs/555":
-            return run
-        return {"total_count": 1, "workflow_runs": [run]}
-
     started = dt.datetime.now(dt.timezone.utc)
-    times = iter((started, started + dt.timedelta(seconds=5)))
-    result = v.protected_validation(
+    result = protected_validation_at_pin(
+        snapshot,
+        v,
         plan,
         env=env,
         checkout_head=sha,
-        github_read=fake,
-        clock=lambda: next(times),
+        run=run,
+        started=started,
     )
     assert result["original_case_count"] == 29
     assert result["all_original_oracles"] == "PASS"

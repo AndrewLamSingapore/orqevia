@@ -30,12 +30,28 @@ PATHS = {
     "fabrics/mlp/infer": {"POST"},
     "fabrics/events": {"GET"},
     "fabrics/registry": {"GET"},
+    "intelligence/pif/status": {"GET"},
+    "intelligence/pif/fit": {"POST"},
+    "intelligence/pif/forecast": {"POST"},
+    "intelligence/pif/transition": {"POST"},
+    "intelligence/pif/risk": {"POST"},
+    "intelligence/pif/scenario": {"POST"},
+    "intelligence/pif/model": {"GET"},
+    "intelligence/pif/hidden-state": {"POST"},
+    "intelligence/pif/intervention": {"POST"},
+    "intelligence/pif/rollback": {"POST"},
+    "intelligence/mel/status": {"GET"},
+    "intelligence/mel/inventory": {"GET"},
+    "intelligence/mel/experiments": {"GET", "POST"},
+    "intelligence/mel/recommendation": {"GET"},
 }
 
 
 @router.api_route("/{path:path}", methods=["GET", "POST"])
 async def collective_bridge(path: str, request: Request):
     methods = PATHS.get(path)
+    if methods is None and re.fullmatch(r"intelligence/pif/evidence/[a-f0-9-]{36}", path):
+        methods = {"GET"}
     if methods is None and re.fullmatch(r"jobs/[a-f0-9-]{36}/publish", path):
         methods = {"POST"}
     if methods is None and re.fullmatch(r"fabrics/f(?:0[1-9]|[12][0-9]|3[0-6])/execute", path):

@@ -1,5 +1,35 @@
 # STATUS.md — Portfolio status record
 
+## Optional intelligence implementation and external exclusions - 25 October 2026
+
+### Claimed, not independently checked
+
+PIF and MEL source implementations are separate optional packages with independent
+flags, health and rollback. PIF mathematical/service tests passed45 cases; MEL
+passed33 cases and39 adjacent encoder/registry checks; nine integration API cases
+passed, including four feature combinations using actual deterministic objectives.
+No new mandatory service or inference framework is required by core execution.
+Source implementation and automated checks do not establish live deployment.
+
+PIF uses read-only queue histories, versioned shadow forecasts, explicit evidence
+and chronological diagnostics. Hidden-state/causal production claims remain
+unavailable without evidence. MEL completed an actual CPU FP32/INT8 benchmark on
+five controlled synthetic chunks; measured output differences prevent any zero-
+loss claim. The production baseline remains selected. Representative operational
+model quality, production acceleration and NVIDIA sparsity are not established.
+
+REA and MiroFish are excluded by explicit Owner instruction; neither is integrated.
+Automatic approval review rejected deletion of the inactive REA package and a
+disposable test cache with "blocked by policy". Those files were not deleted.
+The ABEX Defender scan reported no threats; the broader system-drive scan remains
+in progress. Dependency findings and actual fixes remain separately evidenced.
+Work is spread and spaced to preserve capacity. HTTPS only; no queue guard.
+
+The reconciled dd68e54 release passed36 live scopes. One extended primary-source
+request failed temporarily; the original failure and later recheck are preserved.
+See the optional deployment runbook and actual source-bound operation receipts.
+Owner-only Verified sections and all prior history remain unchanged.
+
 ## Owner HTTPS and unrestricted execution directive - 25 October 2026
 
 ### Claimed, not independently checked
