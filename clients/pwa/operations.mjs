@@ -6,30 +6,35 @@ const element=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==und
 let session=null,active=new URL(location.href).searchParams.get('view')==='operations',epoch=0,pending=null,current=null;
 let fabricCatalog=[],fabricRequest=null,fabricSequence=0,fabricRun=null,fabricRunSequence=0;
 let fabricAudioUrl=null,fabricAudioTimer=null,fabricMediaSequence=0,fabricImageSequence=0;
+let requestsInFlight=0;
+window.addEventListener('orqevia-before-shell-update',event=>{if(pending||fabricRequest||fabricRun||requestsInFlight)event.preventDefault();});
+const updateSafe=()=>window.dispatchEvent(new CustomEvent('orqevia-shell-update-safe'));
 const kinds=['agents','fabrics','capabilities','dependencies','policies','models','health_snapshots','execution_records','evidence','knowledge_claims','knowledge_contributions','knowledge_relationships','knowledge_challenges','puzzles','puzzle_requirements','gaps','remediation_plans','remediation_executions','remediation_verifications','lessons_learned'];
 function status(message,error=false){$('operations-state').textContent=message;$('operations-state').dataset.state=error?'error':'ready';}
 function clear(){epoch++;pending?.abort();pending=null;current=null;clearFabricConsole();for(const id of ['operations-metrics','operations-records','operations-detail'])$(id)?.replaceChildren();}
 async function api(path,body,signal){
+ requestsInFlight++;try{
  const response=await fetch('/interface/v1/collective/'+path,{method:body===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',redirect:'error',signal,
   headers:{'Content-Type':'application/json','X-ORQEVIA-PWA':'1'},body:body===undefined?undefined:JSON.stringify(body)});
- const messages={401:'Your session expired. Restore your connection.',403:'This operation requires the bound owner or a trusted independent verifier.',404:'The requested record is unavailable in this account.',409:'The record changed or its prerequisites are not satisfied. Refresh before retrying.',422:'The request does not satisfy the evidence or workflow requirements.',429:'The bounded request budget is reached. Wait before trying again.',503:'The registry is unavailable. Existing task execution keeps its own controls.'};
+ const messages={401:'Your session expired. Restore your connection.',403:'This operation requires the bound owner or a trusted independent verifier.',404:'The requested record is unavailable in this account.',409:'The record changed or its prerequisites are not satisfied. Refresh before retrying.',422:'The request does not satisfy the evidence or workflow requirements.',429:'The service temporarily refused this request. Try again.',503:'The registry is unavailable. Existing task execution keeps its own controls.'};
  if(!response.ok)throw new Error(messages[response.status]||`The service could not complete this request (${response.status}).`);
  const value=await response.json();if(value?.protocol!=='orqevia.collective.v1')throw new Error('Unsupported operations-board contract.');return value.data;
+ }finally{requestsInFlight--;updateSafe();}
 }
 function addMetric(parent,label,value,note){const n=element('div',undefined,'oq-module operations-metric');n.append(element('strong',String(value??'UNAVAILABLE')),element('span',label));if(note)n.append(element('small',note));parent.append(n);}
 function drawMetrics(value){
  const m=value.metrics||{},root=$('operations-metrics');root.replaceChildren();
- addMetric(root,'Registered agents',`${m.agents?.registered??0} / ${m.agents?.expected??21}`,'Registration and qualification are separate.');
- addMetric(root,'Verified contribution paths',`${m.agents?.verified_contributing_agents??0} / 21`,'Bound to actual completed queue executions.');
- addMetric(root,'Questioning paths tested',`${m.agents?.questioning_tested_agents??0} / 21`);
- addMetric(root,'Gap participation tested',`${m.agents?.gap_workflow_tested_agents??0} / 21`);
- addMetric(root,'Baseline provider fabrics',`${m.fabrics?.integrated??0} / ${m.fabrics?.discovered??0}`,'Seven existing provider integrations; the full capability catalog is shown below.');
- addMetric(root,'Verified facts',m.knowledge?.verified_facts??0);
- addMetric(root,'Active / completed puzzles',`${m.puzzles?.active??0} / ${m.puzzles?.completed??0}`);
- addMetric(root,'Open / resolved challenges',`${m.challenges?.open??0} / ${m.challenges?.resolved??0}`);
- addMetric(root,'Open / verified closed gaps',`${m.gaps?.open??0} / ${m.gaps?.verified_closed??0}`);
- addMetric(root,'Awaiting approval',m.gaps?.awaiting_approval??0);
- addMetric(root,'Unresolved contradictions',m.knowledge?.unresolved_contradictions??0);
+ addMetric(root,'Registered agents',`${m.agents?.registered??'UNKNOWN'} / ${m.agents?.expected??'UNKNOWN'}`,'Registration and qualification are separate.');
+ addMetric(root,'Verified contribution paths',`${m.agents?.verified_contributing_agents??'UNKNOWN'} / 21`,'Bound to actual completed queue executions.');
+ addMetric(root,'Questioning paths tested',`${m.agents?.questioning_tested_agents??'UNKNOWN'} / 21`);
+ addMetric(root,'Gap participation tested',`${m.agents?.gap_workflow_tested_agents??'UNKNOWN'} / 21`);
+ addMetric(root,'Baseline provider fabrics',`${m.fabrics?.integrated??'UNKNOWN'} / ${m.fabrics?.discovered??'UNKNOWN'}`,'Seven existing provider integrations; the full capability catalog is shown below.');
+ addMetric(root,'Verified facts',m.knowledge?.verified_facts??'UNKNOWN');
+ addMetric(root,'Active / completed puzzles',`${m.puzzles?.active??'UNKNOWN'} / ${m.puzzles?.completed??'UNKNOWN'}`);
+ addMetric(root,'Open / resolved challenges',`${m.challenges?.open??'UNKNOWN'} / ${m.challenges?.resolved??'UNKNOWN'}`);
+ addMetric(root,'Open / verified closed gaps',`${m.gaps?.open??'UNKNOWN'} / ${m.gaps?.verified_closed??'UNKNOWN'}`);
+ addMetric(root,'Awaiting approval',m.gaps?.awaiting_approval??'UNKNOWN');
+ addMetric(root,'Unresolved contradictions',m.knowledge?.unresolved_contradictions??'UNKNOWN');
  addMetric(root,'Registry integrity',m.registry_health||'UNAVAILABLE',m.resources?.sqlite_bytes!==undefined?`${(m.resources.sqlite_bytes/1048576).toFixed(2)} MB SQLite · ${m.resources.query_elapsed_ms} ms observation`:undefined);
  $('operations-freshness').textContent=`Observed ${value.observed_at||m.observed_at||'time unavailable'}. Mandatory AWS dependency: ${m.resources?.mandatory_aws_cost_usd===0?'US$0':'unavailable'}. Latest knowledge update: ${m.knowledge?.newest_updated_at||'no claims recorded'}.`;
 }
@@ -65,7 +70,7 @@ async function load(){
  void loadFabrics();
  try{const value=await api('status',undefined,controller.signal);if(generation!==epoch||!active)return;current=value;drawMetrics(value);drawRecords(value.gaps?.items||[]);status(`Observed ${value.observed_at||value.metrics?.observed_at}. Claims, execution observations and verified facts remain distinct.`);}
  catch(error){if(generation===epoch)status(controller.signal.aborted?'The registry timed out. Refresh to retry.':error.message,true);}
- finally{clearTimeout(timeout);if(pending===controller)pending=null;}
+ finally{clearTimeout(timeout);if(pending===controller)pending=null;updateSafe();}
 }
 async function mutate(path,body){
  if(!session||!navigator.onLine||current?.stale===true)return;const generation=epoch;const buttons=$('operations-view').querySelectorAll('button');buttons.forEach(b=>b.disabled=true);status('Submitting an authorized, bounded operation…');
@@ -82,6 +87,7 @@ function selectedOperation(){return fabricOperations(selectedFabric()).find(op=>
 function fabricImageOperation(){const item=selectedFabric(),operation=selectedOperation();return Boolean((item?.id==='f17'&&operation?.operation==='image.inspect'||item?.id==='f32'&&operation?.operation==='image.measure')&&operation.input_schema?.properties?.image_base64?.type==='string');}
 function clearFabricImage(){fabricImageSequence++;if($('fabric-image-file'))$('fabric-image-file').value='';if($('fabric-image-state'))$('fabric-image-state').textContent='Select a PNG up to 512 KB. Its original bytes populate the declared image input; select Run to execute.';}
 function fabricControls(){
+ if(!fabricRun&&!fabricRequest)updateSafe();
  const connected=Boolean(active&&session?.role==='OWNER'&&navigator.onLine);
  if($('fabric-inputs'))$('fabric-inputs').disabled=!connected||!fabricCatalog.length||Boolean(fabricRun);
  if($('fabric-run'))$('fabric-run').disabled=!connected||!selectedOperation()||Boolean(fabricRun)||['DISABLED','UNAVAILABLE'].includes(selectedFabric()?.state);

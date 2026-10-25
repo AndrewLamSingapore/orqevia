@@ -27,6 +27,7 @@ if(anchor){
  }
  anchor.querySelector('.fabric-heading').append(jumps);
  let pending=null,session=null;
+ window.addEventListener('orqevia-before-shell-update',event=>{if(pending)event.preventDefault();});
  async function api(path,body,signal){
   const response=await fetch('/interface/v1/collective/intelligence/'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-ORQEVIA-PWA':'1'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',redirect:'error',cache:'no-store',signal});
   if(!response.ok)throw new Error(`The service could not complete this request (${response.status}).`);
@@ -50,7 +51,7 @@ if(anchor){
   if(pending)return;const controller=new AbortController();pending=controller;buttons.forEach(control=>control.disabled=true);state.textContent='Reading service evidence…';
   try{const value=await action(controller.signal);if(!controller.signal.aborted){draw(value);state.textContent='Service evidence received.';}}
   catch(error){if(!controller.signal.aborted){state.textContent=error.message;output.replaceChildren();evidence.textContent='';}}
-  finally{if(pending===controller)pending=null;buttons.forEach(control=>control.disabled=false);}
+  finally{if(pending===controller)pending=null;buttons.forEach(control=>control.disabled=false);window.dispatchEvent(new CustomEvent('orqevia-shell-update-safe'));}
  }
  function button(text,action,destination=controls){const control=create('button',text);control.type='button';control.className='secondary';control.addEventListener('click',()=>void run(action));buttons.push(control);destination.append(control);}
  const forecast=()=>{const steps=Number(horizon.value);if(!Number.isSafeInteger(steps)||steps<0)throw new Error('Enter a nonnegative whole number of state transitions.');return {start:start.value,steps};};

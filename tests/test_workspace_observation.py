@@ -57,7 +57,7 @@ def workspace(tmp_path, monkeypatch):
                         PRIVATE,
                         CREATED,
                         CREATED if status != "queued" else None,
-                    updated if status in {"completed", "failed", "cancelled", "budget_blocked", "denied"} else None,
+                        updated if status in {"completed", "failed", "cancelled", "budget_blocked", "denied"} else None,
                         job["id"],
                     ),
                 )
