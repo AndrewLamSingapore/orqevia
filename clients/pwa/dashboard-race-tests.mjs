@@ -31,10 +31,10 @@ async function fixture(){
   await import('data:text/javascript;base64,'+encoded);
   return {nodes,listeners,documentListeners,intervals,requests,
     session(value){listeners.get('orqevia-session')({detail:value?{...value,clientId:'fixture-client',generation:1}:null});},
-    respond(i,instance='CURRENT',observed=Date.now(),audience='fixture-client',coaching=null){
+    respond(i,instance='CURRENT',observed=Date.now(),audience='fixture-client',coaching=null,work_observation=null){
       requests[i].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date(observed).toISOString(),freshness_seconds:60,
         audience:{client_id:audience},metrics:[{metric_id:'registered_agents',collection_status:'OBSERVED',value:21}],source:{instance,revision:'a'.repeat(40)},
-        coaching,agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,name:'fixture',registration:'REGISTERED',availability:'UNKNOWN'}))}),
+        coaching,work_observation,agents:Array.from({length:21},(_,n)=>({agent_id:`fixture-${n}`,name:'fixture',registration:'REGISTERED',availability:'UNKNOWN'}))}),
         {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
     }
   };
@@ -51,14 +51,24 @@ test('a valid-looking measurement addressed to a different client is rejected',a
   assert.equal(f.nodes.get('telemetry-state').textContent,'UNKNOWN');assert.equal(f.nodes.get('agent-provenance-list').children.length,0);
 });
 
-test('task events require the current client and ownership generation',async()=>{
+test('local task events require ownership and refresh canonical work instead of inventing activity',async()=>{
   const f=await fixture();f.session({role:'MEMBER'});
-  const task={id:'owned-task',agents:['a02'],state:'COMPLETED',revision:1,clientId:'fixture-client',generation:1};
-  f.listeners.get('orqevia-task')({detail:task});assert.equal(f.nodes.get('activity-state').textContent,'OWNED TASK OBSERVATIONS');
-  const before=f.nodes.get('dashboard-task-rows').children[0];
+  f.respond(0);await settle();
+  const task={id:'owned-task',agents:['a02'],state:'RUNNING',revision:1,clientId:'fixture-client',generation:1};
   for(const wrong of [{clientId:'other-client'},{generation:0}])f.listeners.get('orqevia-task')({detail:{...task,id:'other-task',...wrong}});
+  assert.equal(f.requests.length,1);
+  f.listeners.get('orqevia-task')({detail:task});assert.equal(f.requests.length,2);
+  assert.equal(f.nodes.get('activity-state').textContent,'UNAVAILABLE');
+  const timestamp=new Date().toISOString();
+  f.respond(1,'CURRENT',Date.now(),'fixture-client',null,{schema_version:'orqevia.owned-work.v1',status:'OBSERVED',scope:'OWNER_ACCOUNT',observed_at:timestamp,
+    tasks:[{id:task.id,state:task.state,revision:1,agents:['a02'],progress:null,updated_at:timestamp}],
+    activity:[{event:'TASK_STATE_OBSERVATION',task_id:task.id,state:task.state,timestamp}],has_more:false});await settle();
+  assert.equal(f.nodes.get('activity-state').textContent,'OBSERVED TASK STATES');
+  assert.equal(f.nodes.get('dashboard-task-rows').children.length,1);
+  const before=f.nodes.get('dashboard-task-rows').children[0];
+  f.listeners.get('orqevia-task')({detail:{...task,clientId:'other-client'}});
   assert.equal(f.nodes.get('dashboard-task-rows').children[0],before);
-  f.session({role:'MEMBER'});assert.equal(f.nodes.get('activity-state').textContent,'OWNED TASK OBSERVATIONS');
+  f.session({role:'MEMBER'});assert.equal(f.nodes.get('activity-state').textContent,'OBSERVED TASK STATES');
   f.session(null);assert.equal(f.nodes.get('activity-state').textContent,'UNAVAILABLE');
 });
 
@@ -94,7 +104,7 @@ test('Expired observed data becomes stale with empty agent rows',async()=>{
   try{Date.now=()=>originalNow()+2000;f.intervals.find(x=>x.ms===5000).fn();}
   finally{Date.now=originalNow;}
   assert.equal(f.nodes.get('telemetry-state').textContent,'STALE');
-  assert.equal(f.nodes.get('registered-count').textContent,'—');
+  assert.equal(f.nodes.get('registered-count').textContent,'UNKNOWN');
   assert.equal(f.nodes.get('agent-provenance-list').children.length,0);
 });
 
@@ -154,7 +164,7 @@ test('Observed host gauges render values and honest availability text',async()=>
 
 test('Absent host metrics stay unknown; logout clears previously observed gauge values',async()=>{
   const f=await fixture();f.session({role:'OWNER'});f.respond(0);await settle();
-  assert.equal(f.nodes.get('metric-cpu').textContent,'—');
+  assert.equal(f.nodes.get('metric-cpu').textContent,'UNKNOWN');
   assert.match(f.nodes.get('telemetry-source').textContent,/host gauges unavailable/);
   const g=await fixture();g.session({role:'OWNER'});
   g.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date().toISOString(),freshness_seconds:60,
@@ -164,5 +174,5 @@ test('Absent host metrics stay unknown; logout clears previously observed gauge 
   await settle();
   assert.equal(g.nodes.get('metric-cpu').textContent,'7');
   g.session(null);
-  assert.equal(g.nodes.get('metric-cpu').textContent,'—');
+  assert.equal(g.nodes.get('metric-cpu').textContent,'UNKNOWN');
 });

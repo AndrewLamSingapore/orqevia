@@ -67,7 +67,8 @@ assert.ok(intelligenceCapabilities.includes("heading.focus({preventScroll:true})
 const dashboardSource=readFileSync(new URL('./dashboard.mjs',import.meta.url),'utf8');
 assert.ok(dashboardSource.includes("known.add('objective')"));
 assert.ok(dashboardSource.includes('value?.audience?.client_id!==interfaceClientId'));
-assert.ok(dashboardSource.includes("text('activity-state',count>0?'ACTIVE WORK':'IDLE')"));
+assert.ok(dashboardSource.includes("const facts=operationalFacts(latest);bindSnapshot(facts);renderWork(facts)"));
+assert.ok(!dashboardSource.includes("count>0?'ACTIVE WORK':'IDLE'"),'Missing observations must not be classified as idle');
 const appSource=readFileSync(new URL('./app.mjs',import.meta.url),'utf8');
 assert.ok(appSource.includes('interfaceClientId:session.interfaceClientId||session.clientId'));
 console.log('Shared dashboard panels, complete mobile/desktop navigation, direct Operations, PIF/MEL discovery, retained Projects, source freshness and cache boundaries: PASS');

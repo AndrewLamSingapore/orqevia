@@ -130,7 +130,7 @@ def agent_activity():
             db.close()
 
 
-def snapshot(client_id, role, *, model_runtime_probe=None):
+def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None):
     observed = datetime.now(timezone.utc).isoformat()
     registry = load_agent_registry()
     stores = telemetry_store_counts()
@@ -211,6 +211,10 @@ def snapshot(client_id, role, *, model_runtime_probe=None):
         [agent['agent_id'] for agent in agents if agent['agent_id'] not in fresh_agent_ids]
         if fresh_count is not None else []
     )
+    work = work_observation if isinstance(work_observation, dict) else {
+        'schema_version': 'orqevia.owned-work.v1', 'status': 'UNAVAILABLE',
+        'scope': 'CLIENT', 'observed_at': observed, 'tasks': [], 'activity': [],
+        'has_more': False, 'reason': 'OWNED_WORK_OBSERVER_NOT_AVAILABLE'}
     return {'schema_version': 'orqevia.telemetry.v1', 'snapshot_id': str(uuid.uuid4()),
             'observed_at': observed, 'freshness_seconds': 60,
             'audience': {'client_id': client_id, 'role': role},
@@ -231,5 +235,9 @@ def snapshot(client_id, role, *, model_runtime_probe=None):
             'model_runtime': model_runtime,
             'agents': agents,
             'coaching': coaching,
-            'privacy': {'aggregate_only': True, 'private_tasks_exposed': False,
-                        'credentials_exposed': False}}
+            'work_observation': work,
+            'privacy': {'aggregate_only': not bool(work.get('tasks')),
+                        'private_tasks_exposed': bool(work.get('tasks')),
+                        'authorized_task_metadata_only': True,
+                        'unrelated_tasks_exposed': False,
+                        'model_content_exposed': False, 'credentials_exposed': False}}

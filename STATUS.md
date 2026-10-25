@@ -1,5 +1,23 @@
 # STATUS.md — Portfolio status record
 
+## Shared operational observations and shell coherence - 25 October 2026
+
+### Claimed, not independently checked
+
+The cross-device candidate now reads authorized work from existing interface
+account/request bindings and canonical objective state through a read-only
+observer. Desktop and mobile share one snapshot interpretation and the same
+operational panels. Missing telemetry stays UNKNOWN or UNAVAILABLE; local task
+notifications only trigger authenticated refreshes. Existing task authorization
+and privacy boundaries remain enforced. No database, service or queue is added.
+
+The v40 shell confines fallback to its own complete public cache, checks for
+updates on foreground/resume and defers reload during active work or unsaved
+input. Session and retry references remain intact. Mobile task rows retain all
+fields, and Operations, PIF and MEL are directly discoverable. Deployment and
+physical iPhone acceptance remain separate pending milestones. Models and
+independent feature flags are unchanged. See docs/CROSS-DEVICE-PARITY-RUNBOOK.md.
+
 ## Shared desktop and mobile interface discovery - 25 October 2026
 
 ### Claimed, not independently checked
