@@ -251,6 +251,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    intelligence_title = "## Optional intelligence implementation and external exclusions - 25 October 2026"
+    assert after.count(intelligence_title) == 1
+    intelligence_start = after.index(intelligence_title)
+    intelligence_end = after.index("\n## ", intelligence_start + len(intelligence_title)) + 1
+    intelligence_update = after[intelligence_start:intelligence_end].encode("utf-8")
+    assert len(intelligence_update) == 1879
+    assert hashlib.sha256(intelligence_update).hexdigest() == "8c155f1962a1cd9de9c9b9b0d97348894eadc08c5ffe3fac332b06f5a4b9d6cc"
+    assert b"### Claimed, not independently checked" in intelligence_update
+    assert b"### Verified" not in intelligence_update
+    after = after[:intelligence_start] + after[intelligence_end:]
     unrestricted_title = "## Owner HTTPS and unrestricted execution directive - 25 October 2026"
     assert after.count(unrestricted_title) == 1
     unrestricted_start = after.index(unrestricted_title)

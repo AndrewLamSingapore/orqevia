@@ -41,7 +41,7 @@ OWNER_OPERATIONS = {
 }
 
 
-def _principal(request: Request) -> CollectivePrincipal:
+def _principal(request: Request, *, require_enabled: bool = True) -> CollectivePrincipal:
     # This new surface always authenticates, including on a legacy open-access
     # runtime. A lookup entry or a legacy mode flag cannot expand its authority.
     expected = os.getenv("ORQEVIA_SPINE_TOKEN", "").strip()
@@ -62,7 +62,7 @@ def _principal(request: Request) -> CollectivePrincipal:
     tenant = os.getenv("ORQEVIA_TENANT_ID", "personal")
     if not re.fullmatch(r"[A-Za-z0-9_.:-]{1,80}", tenant):
         raise HTTPException(503, "Tenant scope unavailable")
-    if os.getenv("ORQEVIA_COLLECTIVE_ENABLED") != "1":
+    if require_enabled and os.getenv("ORQEVIA_COLLECTIVE_ENABLED") != "1":
         raise HTTPException(503, "Collective operations are not activated in this environment")
     return CollectivePrincipal(tenant, owner, actor, roles=frozenset({"OWNER"}))
 

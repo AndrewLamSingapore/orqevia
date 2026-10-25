@@ -36,6 +36,7 @@ COPY clients/pwa/icons ./app/pwa_static/icons
 COPY clients/public ./app/public_static
 COPY clients/shared ./app/shared_static
 COPY clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/operations.mjs ./app/pwa_static/
+COPY clients/pwa/intelligence-capabilities.mjs ./app/pwa_static/
 
 # Keep revision metadata after dependency installation so a new source commit
 # does not invalidate the expensive, reproducible requirements layer.
