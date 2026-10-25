@@ -14,6 +14,13 @@ and account bindings identify tasks visible under the caller's current policy.
 uses the existing canonical objective calculation, never generated prose or a
 device's selected-task history. No new database, service or queue is introduced.
 
+Session metadata advertises the same durable client identity injected by cookie
+middleware. The browser retains its strict audience check. In open mode,
+execution policy is unchanged; PWA account metadata follows the actual active
+server session. Expired-session ownership falls back to preserved bindings.
+Other accounts are excluded before policy lookup, while caller and same-account
+rebindings still fail closed. No historical account is reassigned or combined.
+
 The schema contains status, scope, observation time, at most 50 recent tasks,
 timestamped state observations, truncation information and provenance. Task
 records contain original IDs, state, revision, agent IDs, stored timestamps and

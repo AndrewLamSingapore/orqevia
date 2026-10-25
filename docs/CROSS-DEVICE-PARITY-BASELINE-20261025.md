@@ -26,6 +26,17 @@ Verified causes:
   worker's atomic shell installation therefore failed. The release now copies
   the complete explicit public asset set from source; CI checks shell and
   transitive module coverage in both current image recipes.
+- Actual browser testing confirmed a second data-path defect: session metadata
+  advertised the generic open-mode identity while cookie middleware retained the
+  durable PWA client identity. The strict audience check correctly rejected the
+  mismatch despite a valid fresh telemetry200 response. Session metadata must
+  match the identity injected by the existing middleware; the check is retained.
+- Open-mode account metadata also replaced durable PWA account bindings with a
+  generic account, causing ownership conflicts. The correction preserves active
+  server session accounts and expired-session ownership fallback, excluding
+  other accounts before reading their current policy. No accounts are rewritten.
+- Real light-theme overview labels had1.6595:1 contrast on white. Shared labels
+  now use the existing theme's muted text token for both color schemes.
 
 The desktop shortcut targets `https://localhost:8443/pwa/`. The public hostname's
 configured origin routes to the same HTTPS interface with CA validation. Direct
