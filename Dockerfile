@@ -5,6 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 RUN mkdir -p /run/orqevia-tls
+COPY requirements.pip-security.txt ./
+RUN python -m pip install --no-cache-dir --no-deps --require-hashes --index-url https://pypi.org/simple -r requirements.pip-security.txt
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
