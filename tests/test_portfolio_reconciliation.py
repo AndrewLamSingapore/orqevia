@@ -251,6 +251,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    session_title = "## Current fabric HTTPS verification and session continuity - 25 October 2026"
+    assert after.count(session_title) == 1
+    session_start = after.index(session_title)
+    session_end = after.index("\n## ", session_start + len(session_title)) + 1
+    session_update = after[session_start:session_end].encode("utf-8")
+    assert len(session_update) == 1141
+    assert hashlib.sha256(session_update).hexdigest() == "f1c607dd3be7982fe7d051fa0aefcac70d99623803ae8d1bbe7909790f1ccf92"
+    assert b"### Claimed, not independently checked" in session_update
+    assert b"### Verified" not in session_update
+    after = after[:session_start] + after[session_end:]
     # Admit the exact new non-Verified observation; retain every frozen check below.
     live_title = "## Scoped fabric production and workbench qualification - 24 October 2026"
     assert after.count(live_title) == 1
