@@ -1,5 +1,20 @@
 # STATUS.md — Portfolio status record
 
+## Mobile intelligence provenance wrapping - 25 October 2026
+
+### Claimed, not independently checked
+
+Actual stage WebKit with iPhone 13 emulation at d747b468 showed that the long
+model-version value could clip at the forecast card edge. The complete value
+remained available in diagnostics and the recorded response. This candidate
+allows result text to wrap within that panel, retaining the full hash and all
+evidence. Backend, model, feature flag and authorization behavior is unchanged.
+
+The earlier browser receipts retain their original scope. Candidate source
+checks and a staged visual recheck remain separate from production acceptance.
+Physical iPhone behavior is unverified. Owner-only Verified sections and all
+prior history remain unchanged.
+
 ## Optional intelligence implementation and external exclusions - 25 October 2026
 
 ### Claimed, not independently checked

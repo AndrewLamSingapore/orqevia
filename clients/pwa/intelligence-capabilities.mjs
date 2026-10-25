@@ -8,7 +8,7 @@ if(anchor){
  const label=create('label','Starting state '),start=create('select');start.id='prediction-start';
  for(const name of ['queued','held','running','completed','failed','cancelled']){const option=create('option',name);option.value=name;start.append(option);}label.append(start);
  const horizonLabel=create('label','State transitions '),horizon=create('input');horizon.type='number';horizon.min='0';horizon.step='1';horizon.value='2';horizon.id='prediction-horizon';horizonLabel.append(horizon);
- const output=create('div');output.id='intelligence-capability-result';
+ const output=create('div');output.id='intelligence-capability-result';output.style.overflowWrap='anywhere';
  const details=create('details'),summary=create('summary','Evidence and diagnostics'),evidence=create('pre');details.append(summary,evidence);
  panel.append(create('h2','Forecasting and model efficiency'),create('p','Forecasts are advisory. Scenario outcomes are simulations. Optimization evidence does not replace the current model.'),state,label,horizonLabel,controls,output,details);anchor.after(panel);
  let pending=null,session=null;

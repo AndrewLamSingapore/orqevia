@@ -251,6 +251,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    wrapping_title = "## Mobile intelligence provenance wrapping - 25 October 2026"
+    assert after.count(wrapping_title) == 1
+    wrapping_start = after.index(wrapping_title)
+    wrapping_end = after.index("\n## ", wrapping_start + len(wrapping_title)) + 1
+    wrapping_update = after[wrapping_start:wrapping_end].encode("utf-8")
+    assert len(wrapping_update) == 756
+    assert hashlib.sha256(wrapping_update).hexdigest() == "320bc594f310f675dba172d2cf4dd56c151e8ab2413687b34d14f762b992875e"
+    assert b"### Claimed, not independently checked" in wrapping_update
+    assert b"### Verified" not in wrapping_update
+    after = after[:wrapping_start] + after[wrapping_end:]
     intelligence_title = "## Optional intelligence implementation and external exclusions - 25 October 2026"
     assert after.count(intelligence_title) == 1
     intelligence_start = after.index(intelligence_title)
