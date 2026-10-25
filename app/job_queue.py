@@ -593,6 +593,10 @@ class WorkerPool:
                  on_complete: Callable[[str], None] | None = None):
         self.queue,self.providers,self.execute=queue,providers,execute
         self.on_complete=on_complete
+        try:
+            self.pace=min(60.0,max(0.0,float(os.getenv("ORQEVIA_QUEUE_PACE_SECONDS","0"))))
+        except (TypeError,ValueError):
+            self.pace=0.0
         self.stop_event=threading.Event(); self.threads:list[threading.Thread]=[]
 
     def start(self) -> None:
@@ -680,3 +684,5 @@ class WorkerPool:
                             self.queue._event(connection,job['id'],'collective_publication_unavailable',{'retry':'bounded_reconciliation'})
                     except Exception:
                         pass
+            if self.pace>0:
+                self.stop_event.wait(self.pace)
