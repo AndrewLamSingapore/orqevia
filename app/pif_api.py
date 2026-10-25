@@ -81,6 +81,8 @@ def fit(request: Request, body: Fit):
             states=QUEUE_STATES,
             absorbing_states=QUEUE_ABSORBING,
             allowed_edges=QUEUE_EDGES,
+            since=body.since,
+            until=body.until,
             validation_cutoff=body.validation_cutoff,
             source_revision=revision if len(revision) == 40 else None,
             evidence_source="COMPUTE_EVENT_LEDGER_UNCLASSIFIED",

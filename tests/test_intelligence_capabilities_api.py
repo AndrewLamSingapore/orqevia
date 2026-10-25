@@ -1,6 +1,8 @@
 """Real SQLite/API integration; fixtures never establish predictive quality."""
 
 import hashlib
+import json
+import sqlite3
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -19,6 +21,7 @@ MEL = "/api/collective/v1/intelligence/mel"
 def context(tmp_path, monkeypatch):
     for name, value in {
         "ORQEVIA_DATA_DIR": str(tmp_path),
+        "ORQEVIA_COMPUTE_QUEUE_DB": str(tmp_path / "compute-queue.db"),
         "ORQEVIA_SPINE_TOKEN": TOKEN,
         "ORQEVIA_PWA_OWNER_ACCOUNT_ID": OWNER,
         "ORQEVIA_TENANT_ID": "fixture",
@@ -137,3 +140,30 @@ def test_mel_evidence_validation_and_baseline_fallback(context):
     actual = client.get(MEL + "/recommendation").json()["data"]
     assert actual["status"] == "retain_baseline" and actual["model_routing_changed"] is False
     assert client.get(MEL + "/inventory").json()["data"]["model_routing_changed"] is False
+
+
+def test_history_window_does_not_leak_later_outcomes(context):
+    client, root = context
+    with sqlite3.connect(root / "compute-queue.db") as db:
+        db.executescript(
+            "CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,created_at TEXT,updated_at TEXT);"
+            "CREATE TABLE compute_events(id TEXT,job_id TEXT,event_type TEXT,details_json TEXT,created_at TEXT);"
+        )
+        db.execute(
+            "INSERT INTO compute_jobs VALUES(?,?,?,?,?)",
+            ("window-job", "abex", "completed", "2026-10-01T00:00:00Z", "2026-10-03T00:00:00Z"),
+        )
+        for event, kind, details, time in (
+            ("submitted-window", "submitted", {"status": "queued"}, "2026-10-01T00:00:00Z"),
+            ("claimed-window", "claimed", {}, "2026-10-02T00:00:00Z"),
+            ("completed-window", "completed", {}, "2026-10-03T00:00:00Z"),
+        ):
+            db.execute(
+                "INSERT INTO compute_events VALUES(?,?,?,?,?)", (event, "window-job", kind, json.dumps(details), time)
+            )
+    actual = client.post(PIF + "/fit", json={"until": "2026-10-01T12:00:00Z"}).json()["data"]
+    assert actual["status"] == "INSUFFICIENT_DATA"
+    assert actual["ingestion"]["diagnostics"]["jobs_retained"] == 1
+    assert actual["model_provenance"]["transitions"] == 0
+    end = actual["observation_period"][1]
+    assert end is None or end <= "2026-10-01T12:00:00+00:00"
