@@ -134,16 +134,18 @@ def _cookies(response,session_token,device_token=None):
     def token(value):
         if not isinstance(value,str) or re.fullmatch(r'[A-Za-z0-9_-]{43}',value) is None:raise HTTPException(503,'Session token unavailable')
         return value
-    secure=not open_access.enabled()
-    same_site='strict' if secure else 'lax'
+    # Browsers reject __Host- cookies without Secure, including in open mode.
+    # Admission policy does not change the HTTPS credential transport contract.
+    secure=True
+    same_site='strict'
     if session_token:response.set_cookie(ORQEVIA_COOKIE,token(session_token),max_age=SESSION_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     if device_token:response.set_cookie(ORQEVIA_DEVICE_COOKIE,token(device_token),max_age=DEVICE_SECONDS,httponly=True,secure=secure,samesite=same_site,path='/')
     return response
 
 def _delete_credentials(response):
     """Clear both the emitted ORQEVIA cookies and any legacy JARVIS aliases."""
-    secure=not open_access.enabled()
-    same_site='strict' if secure else 'lax'
+    secure=True
+    same_site='strict'
     for name in (COOKIE,DEVICE_COOKIE,ORQEVIA_COOKIE,ORQEVIA_DEVICE_COOKIE):
         response.delete_cookie(name,path='/',secure=secure,httponly=True,samesite=same_site)
     return response

@@ -1,5 +1,25 @@
 # STATUS.md — Portfolio status record
 
+## Current fabric HTTPS verification and session continuity - 25 October 2026
+
+### Claimed, not independently checked
+
+ABEX observed all 36 deployed fabric scopes and all 43 exposed operations passing
+fresh production HTTPS execution, persistence and schema checks at backend
+`c281cc8a26c8e64ce7a2b27a80c82abaad0a72fc`. Current source-bound, expiring
+receipts were published and the production registry read back 36 VERIFIED.
+These are listed operation scopes, not general domain or roadmap certification.
+
+A longer Chromium test found a real session-continuity fault: unrestricted
+admission emitted `__Host-` cookies without `Secure`, so browsers rejected the
+credentials and the next renewal changed identity and reset fabric inputs.
+The candidate retains the existing admission policy and emits valid HTTPS
+cookies in every mode. Its 51 focused tests passed; full regression, staging,
+deployment and renewed browser acceptance remain separate pending milestones.
+Original failures and current receipts are preserved in the ABEX operational
+package `operations/orqevia36-production-20261025/`. Owner-only Verified sections
+are unchanged.
+
 ## Scoped fabric production and workbench qualification - 24 October 2026
 
 ### Claimed, not independently checked
