@@ -38,6 +38,7 @@ _JOB_STATES = frozenset(
         "completed",
         "failed",
         "cancelled",
+        "budget_blocked",
         "denied",
         "awaiting_approval",
         "awaiting_authority",

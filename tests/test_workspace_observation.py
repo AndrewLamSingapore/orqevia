@@ -57,7 +57,7 @@ def workspace(tmp_path, monkeypatch):
                         PRIVATE,
                         CREATED,
                         CREATED if status != "queued" else None,
-                        updated if status in {"completed", "failed", "cancelled", "denied"} else None,
+                    updated if status in {"completed", "failed", "cancelled", "budget_blocked", "denied"} else None,
                         job["id"],
                     ),
                 )
@@ -115,6 +115,7 @@ def test_two_devices_share_canonical_owned_work_without_private_content(workspac
         ("completed", "COMPLETED"),
         ("failed", "COMPLETED_WITH_FAILURES"),
         ("cancelled", "COMPLETED_WITH_FAILURES"),
+        ("budget_blocked", "COMPLETED_WITH_FAILURES"),
         ("held", "COMPLETED_WITH_FAILURES"),
         ("denied", "COMPLETED_WITH_FAILURES"),
     ],
