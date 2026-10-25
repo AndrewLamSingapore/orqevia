@@ -218,7 +218,7 @@ if(typeof document!=='undefined') {
   async function poll(){
     if(!authenticated||document.hidden||!navigator.onLine||pending)return;
     const controller=new AbortController(), epoch=sessionEpoch;pending=controller;
-    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:10000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}latest=value;render();}
+    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:20000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}latest=value;render();}
     catch(error){if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;unavailable([401,403].includes(error.status)?'UNAUTHORIZED':!navigator.onLine?'OFFLINE':'UNAVAILABLE');}
     finally{if(pending===controller)pending=null;}
   }
@@ -230,7 +230,7 @@ if(typeof document!=='undefined') {
     // Read the existing authenticated source again for the canonical state.
     void poll();
   });
-  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();latest=null;unavailable(next?'UNAVAILABLE':'UNAUTHORIZED');if(next)void poll();});
+  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();if(next){latest=null;void poll();}else{latest=null;unavailable('UNAUTHORIZED');}});
   function suspend(){invalidatePending();unavailable('OFFLINE');}
   window.addEventListener('offline',suspend);window.addEventListener('online',()=>void poll());
   window.addEventListener('orqevia-shell-state',event=>{if(event.detail?.state==='offline')suspend();});
