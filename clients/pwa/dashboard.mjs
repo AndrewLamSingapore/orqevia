@@ -175,10 +175,11 @@ if(typeof document!=='undefined') {
       const progress=Number.isFinite(task.progress)&&task.progress>=0&&task.progress<=100?task.progress+'%':'UNKNOWN';
       for(const [label,value] of [['Agent',task.agents.join(', ')||'UNKNOWN'],['Task',task.id],['Status',task.state],['Progress',progress],['Updated',task.updated_at||'UNKNOWN']]){
         const cell=document.createElement('td');cell.setAttribute('data-label',label);
-        if(label==='Task'){const button=document.createElement('button');button.type='button';button.textContent=value;button.setAttribute('aria-label','Open task '+task.id);button.addEventListener?.('click',()=>window.dispatchEvent(new CustomEvent('orqevia-open-owned-task',{detail:{id:task.id}})));cell.append(button);}
+        if(label==='Task'){const button=document.createElement('button');button.type='button';button.textContent=value;button.disabled=task.revision===null;button.setAttribute('aria-label',button.disabled?'Task '+task.id+' requires reconciliation; canonical revision unavailable':'Open task '+task.id);button.addEventListener?.('click',()=>window.dispatchEvent(new CustomEvent('orqevia-open-owned-task',{detail:{id:task.id}})));cell.append(button);}
         else cell.textContent=value;row.append(cell);
       }rows.append(row);
     }
+    if(active.length&&work.has_more)emptyRow('Showing recent authorized task records. Older records may exist.');
     text('activity-state',work.activity.length?'OBSERVED TASK STATES':'NO TIMESTAMPED ACTIVITY');
     if(!work.activity.length)activity.textContent='No timestamped task state observation is available.';
     for(const record of work.activity){const entry=document.createElement('div');entry.className='agent-record';entry.setAttribute('data-task-id',record.task_id);entry.setAttribute('data-task-state',record.state);entry.textContent=`${record.task_id} · ${record.state} · ${record.timestamp}`;activity.append(entry);}

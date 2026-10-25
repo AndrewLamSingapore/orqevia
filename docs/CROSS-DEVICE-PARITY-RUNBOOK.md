@@ -39,7 +39,7 @@ retain every field with labels and an authorized task-details action.
 
 ## Cache and update behavior
 
-Worker and page release `orqevia-shell-v40` share a generation handshake. Only
+Worker and page release `orqevia-shell-v41` share a generation handshake. Only
 the complete current public shell is eligible for offline fallback. Auth, API,
 task, result, upload and query requests are excluded. Foreground/resume triggers
 an update check. Reload attempts are keyed to the target generation.

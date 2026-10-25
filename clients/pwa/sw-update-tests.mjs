@@ -52,6 +52,8 @@ test('worker release handshake returns only this worker generation',()=>{
 
 const releaseSource=readFileSync(new URL('./release.mjs',import.meta.url),'utf8');
 const currentRelease=releaseSource.match(/const RELEASE='([^']+)'/)[1];
+const releaseNumber=Number(currentRelease.match(/v(\d+)$/)[1]);
+const nextRelease=`orqevia-shell-v${releaseNumber+1}`,laterRelease=`orqevia-shell-v${releaseNumber+2}`;
 const flush=async()=>{await new Promise(resolve=>setTimeout(resolve,0));await new Promise(resolve=>setTimeout(resolve,0));};
 
 function release({pageRelease=currentRelease,activeRelease=pageRelease,values=new Map(),storageFails=false,updateFails=false}={}){
@@ -87,40 +89,40 @@ test('coherent initial page registers and checks without an unnecessary reload',
 
 test('future controller releases reload once per TARGET generation and preserve unrelated storage',async()=>{
   const values=new Map([['enrollment-reference','retained'],[`${currentRelease}:controller-reload`,'1']]);
-  const first=release({values});await flush();first.changeController('orqevia-shell-v41');await flush();
-  assert.equal(first.reloads,1);assert.equal(values.get('orqevia-shell-v41:controller-reload'),'1');
-  const next=release({pageRelease:'orqevia-shell-v41',values});await flush();
-  next.changeController('orqevia-shell-v42');await flush();assert.equal(next.reloads,1);
-  assert.equal(values.get('orqevia-shell-v42:controller-reload'),'1');assert.equal(values.get('enrollment-reference'),'retained');
+  const first=release({values});await flush();first.changeController(nextRelease);await flush();
+  assert.equal(first.reloads,1);assert.equal(values.get(`${nextRelease}:controller-reload`),'1');
+  const next=release({pageRelease:nextRelease,values});await flush();
+  next.changeController(laterRelease);await flush();assert.equal(next.reloads,1);
+  assert.equal(values.get(`${laterRelease}:controller-reload`),'1');assert.equal(values.get('enrollment-reference'),'retained');
 });
 
 test('repeated notifications cannot reload an already attempted target again',async()=>{
-  const r=release({activeRelease:'orqevia-shell-v41',values:new Map([['orqevia-shell-v41:controller-reload','1']])});await flush();
-  r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,0);
+  const r=release({activeRelease:nextRelease,values:new Map([[`${nextRelease}:controller-reload`,'1']])});await flush();
+  r.changeController(nextRelease);await flush();assert.equal(r.reloads,0);
   assert.equal(r.context.__ORQEVIA_SHELL_STATE__.reason,'reload_already_attempted');
 });
 
 test('unsaved objective or fabric text stays in memory until finished',async()=>{
   const r=release();await flush();const input=r.node('textarea');r.edit(input,'unsaved owner input');
-  r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,0);assert.equal(input.value,'unsaved owner input');
+  r.changeController(nextRelease);await flush();assert.equal(r.reloads,0);assert.equal(input.value,'unsaved owner input');
   assert.equal(r.context.__ORQEVIA_SHELL_STATE__.state,'update-ready');assert.equal(r.values.size,0);
   input.value='';r.safe();await flush();assert.equal(r.reloads,1);
 });
 
 test('application active-work cancellation defers until the safe-handoff event',async()=>{
   const r=release();await flush();const defer=event=>event.preventDefault();
-  r.window.addEventListener('orqevia-before-shell-update',defer);r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,0);
+  r.window.addEventListener('orqevia-before-shell-update',defer);r.changeController(nextRelease);await flush();assert.equal(r.reloads,0);
   r.window.removeEventListener('orqevia-before-shell-update',defer);r.safe();await flush();assert.equal(r.reloads,1);
 });
 
 test('handoff waits for the existing asynchronous reference transaction',async()=>{
   const r=release();await flush();let saved;const transaction=new Promise(resolve=>{saved=resolve;});
   r.window.addEventListener('orqevia-before-shell-update',event=>event.detail.waitUntil(transaction));
-  r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,0);saved();await flush();assert.equal(r.reloads,1);
+  r.changeController(nextRelease);await flush();assert.equal(r.reloads,0);saved();await flush();assert.equal(r.reloads,1);
 });
 
 test('offline and active busy states never trigger automatic reload',async()=>{
-  const r=release();await flush();r.busy=true;r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,0);
+  const r=release();await flush();r.busy=true;r.changeController(nextRelease);await flush();assert.equal(r.reloads,0);
   r.busy=false;r.navigator.onLine=false;r.safe();await flush();assert.equal(r.reloads,0);assert.equal(r.context.__ORQEVIA_SHELL_STATE__.state,'offline');
   r.navigator.onLine=true;r.window.dispatchEvent(new Event('online'));await flush();assert.equal(r.reloads,1);
 });
@@ -134,7 +136,7 @@ test('foreground, restored page and online events check updates without a contin
 });
 
 test('unavailable session storage does not disable a safe coherent update',async()=>{
-  const r=release({storageFails:true});await flush();r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,1);
+  const r=release({storageFails:true});await flush();r.changeController(nextRelease);await flush();assert.equal(r.reloads,1);
 });
 
 test('failed update lookup remains unknown even when loaded page and worker match',async()=>{
@@ -146,5 +148,5 @@ test('failed update lookup remains unknown even when loaded page and worker matc
 test('a changed file selection defers an update without persisting filenames',async()=>{
   const r=release();await flush();const field=r.node('input');field.type='file';field.files=[{name:'fixture.txt',size:20,lastModified:1}];
   const event=new Event('change');Object.defineProperty(event,'target',{value:field});r.document.dispatchEvent(event);
-  r.changeController('orqevia-shell-v41');await flush();assert.equal(r.reloads,0);assert.equal(r.values.size,0);
+  r.changeController(nextRelease);await flush();assert.equal(r.reloads,0);assert.equal(r.values.size,0);
 });

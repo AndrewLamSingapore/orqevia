@@ -81,6 +81,16 @@ test('A delayed prior-session success cannot repopulate telemetry after logout',
   assert.doesNotMatch(f.nodes.get('telemetry-source').textContent,/OLD-SESSION/);
 });
 
+test('truncated work observations remain explicit and unreconciled revisions cannot open an unsupported task flow',async()=>{
+  const f=await fixture();f.session({role:'MEMBER'});
+  const timestamp=new Date().toISOString();
+  f.respond(0,'CURRENT',Date.now(),'fixture-client',null,{schema_version:'orqevia.owned-work.v1',status:'OBSERVED',scope:'OWNER_ACCOUNT',observed_at:timestamp,
+    tasks:[{id:'owned-task',state:'reconciliation_required',revision:null,agents:['a02'],progress:null,updated_at:timestamp}],activity:[],has_more:true});await settle();
+  const rows=f.nodes.get('dashboard-task-rows').children;
+  assert.equal(rows.length,2);assert.equal(rows[0].children[1].children[0].disabled,true);
+  assert.match(rows[1].children[0].textContent,/Older records may exist/);
+});
+
 test('A delayed old authorization failure cannot erase a newer session measurement',async()=>{
   const f=await fixture();f.session({role:'OWNER'});f.session(null);f.session({role:'MEMBER'});
   assert.equal(f.requests.length,2);f.respond(1,'NEW-SESSION');await settle();
