@@ -20,6 +20,12 @@ Verified causes:
 - The v39 update reload key represented the loaded page rather than the target
   worker. A later controller change in the same tab could be ignored. Offline
   fallback used a global cache lookup instead of the current generation.
+- An actual verified-HTTPS sweep of all39 shell resources found
+  `integration-panels.mjs` returned404 while the other38 returned200. Its source
+  exists and Intelligence imports it, but the image recipes omitted it. The
+  worker's atomic shell installation therefore failed. The release now copies
+  the complete explicit public asset set from source; CI checks shell and
+  transitive module coverage in both current image recipes.
 
 The desktop shortcut targets `https://localhost:8443/pwa/`. The public hostname's
 configured origin routes to the same HTTPS interface with CA validation. Direct

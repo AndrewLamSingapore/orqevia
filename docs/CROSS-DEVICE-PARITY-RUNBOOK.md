@@ -57,6 +57,10 @@ emulation is separate from physical Safari and installed-PWA acceptance.
 ## Release and rollback
 
 Build the established HTTPS runtime image with the exact clean source revision.
+Both current image recipes explicitly package the complete public shell and its
+transitive imports, including `integration-panels.mjs`. The packaging contract
+test checks this closure; actual HTTPS acceptance must additionally confirm
+every resource is present and the worker installs successfully.
 Retain the previous image, complete private configuration and verified SQLite
 backups. Stage on the existing HTTPS staging profile, verify ownership, facts,
 navigation, cache behavior and actual PIF/MEL/fabric requests. Promote through the
