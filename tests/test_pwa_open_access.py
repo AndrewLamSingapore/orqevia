@@ -48,6 +48,31 @@ def open_access_id():
     from app.open_access import OPEN_OWNER_ID
     return OPEN_OWNER_ID
 
+
+@pytest.mark.parametrize('unrestricted', ['0', '1'])
+def test_open_https_host_cookies_survive_session_refresh(setup, monkeypatch, unrestricted):
+    _, pwa, app = setup
+    monkeypatch.setenv('ORQEVIA_OPEN_ACCESS', unrestricted)
+    with TestClient(app, base_url=ORIGIN) as client:
+        admitted = client.get('/pwa/api/session')
+        identity = admitted.json()['clientId']
+        cookies = admitted.headers.get_list('set-cookie')
+        assert len(cookies) == 2
+        for value in cookies:
+            name, *attributes = value.split(';')
+            assert name.startswith('__Host-')
+            flags = {attribute.strip().lower() for attribute in attributes}
+            assert {'secure', 'httponly', 'path=/', 'samesite=strict'} <= flags
+            assert not any(flag.startswith('domain=') for flag in flags)
+        assert client.cookies.get(pwa.ORQEVIA_COOKIE)
+        assert client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
+        assert client.get('/pwa/api/session').json()['clientId'] == identity
+        logout = client.post('/pwa/api/logout', headers=HEADERS)
+        assert logout.status_code == 200
+        for value in logout.headers.get_list('set-cookie'):
+            flags = {attribute.strip().lower() for attribute in value.split(';')[1:]}
+            assert {'secure', 'httponly', 'path=/', 'samesite=strict'} <= flags
+
 def test_open_mode_still_rejects_cross_origin_and_write_csrf(setup):
     root,pwa,app=setup
     with TestClient(app,base_url=ORIGIN) as client:
