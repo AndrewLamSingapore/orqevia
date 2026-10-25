@@ -1,19 +1,30 @@
 # STATUS.md — Portfolio status record
 
-## Mobile intelligence provenance wrapping - 25 October 2026
+## Shared desktop and mobile interface discovery - 25 October 2026
 
 ### Claimed, not independently checked
 
-Actual stage WebKit with iPhone 13 emulation at d747b468 showed that the long
-model-version value could clip at the forecast card edge. The complete value
-remained available in diagnostics and the recorded response. This candidate
-allows result text to wrap within that panel, retaining the full hash and all
-evidence. Backend, model, feature flag and authorization behavior is unchanged.
+The Owner reported that Operations and PIF were not findable on the iPhone
+interface and requested the same operational content across devices. Source
+inspection found mobile CSS hiding System Overview, Live System Health, Active
+Tasks and other existing dashboard cards, plus an inconsistent navigation
+breakpoint. This candidate reflows those shared sections on mobile, retains
+their original measurement IDs, adds one shared ready-agent counter and removes
+the duplicate mobile-only readiness facts. Welcome and existing shortcuts remain;
+operational facts precede shortcuts. More exposes all existing desktop pages and
+named panel shortcuts. Operations is a visible main mobile tab with 44-pixel
+minimum touch targets, alongside all five existing controls.
 
-The earlier browser receipts retain their original scope. Candidate source
-checks and a staged visual recheck remain separate from production acceptance.
-Physical iPhone behavior is unverified. Owner-only Verified sections and all
-prior history remain unchanged.
+Named Probabilistic Intelligence Fabric (PIF) and Model Efficiency Layer (MEL)
+sections precede the 36-fabric catalog and metrics, with catalog focus shortcuts.
+Availability remains service-reported; no extra fabric identifier or static live
+badge is added. Full forecast model-version evidence wraps on narrow screens.
+
+Focused source checks and retained-history tests are separate from shared-data
+integration, cache renewal, staged visual checks and production acceptance.
+Earlier d747 browser receipts keep their original scope. Physical iPhone behavior
+remains unverified. Backend, models, flags and authorization are unchanged.
+Owner-only Verified sections and prior frozen history remain unchanged.
 
 ## Optional intelligence implementation and external exclusions - 25 October 2026
 
