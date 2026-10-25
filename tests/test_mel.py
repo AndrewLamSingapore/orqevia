@@ -125,6 +125,10 @@ def test_unsupported_runtime_retains_baseline(tmp_path):
     lambda d: d["measurements"]["baseline"]["batch_1"].update(samples=1),
     lambda d: d["measurements"]["baseline"]["batch_1"].update(mean_ms=float("inf")),
     lambda d: d["measurements"]["baseline"]["batch_1"].update(p95_ms=0.5),
+    lambda d: d["measurements"]["baseline"]["batch_1"].update(throughput_items_per_second=100000),
+    lambda d: d["measurements"]["baseline"].update(artifact_bytes=0.5),
+    lambda d: d["measurements"]["baseline"].update(peak_process_memory_bytes=100),
+    lambda d: d["measurements"]["baseline"].update(wall_seconds=10**1000),
 ])
 def test_invalid_evidence_is_rejected_without_insert(tmp_path, mutate):
     service = MELService(tmp_path / "registry.db", enabled=True)
@@ -141,6 +145,20 @@ def test_storage_failure_is_separate_health(tmp_path):
     service = MELService(path, enabled=True)
     assert service.health()["status"] == "degraded"
     assert service.health()["reason"] == "experiment_storage_unavailable"
+
+
+def test_changed_stored_evidence_cannot_qualify(tmp_path):
+    path = tmp_path / "registry.db"
+    service = MELService(path, enabled=True)
+    service.record_experiment(evidence(qualified=True), tenant_id="tenant", actor="owner")
+    changed = evidence(qualified=True)
+    changed["model_id"] = "altered-model"
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE mel_experiments SET evidence_json=?", (json.dumps(changed),))
+    assert service.experiments("tenant")["experiments"][0]["integrity"] == "FAIL"
+    result = service.recommend("altered-model", tenant_id="tenant")
+    assert result["status"] == "retain_baseline"
+    assert result["reasons"] == ["stored_evidence_integrity_failed"]
 
 
 def test_inventory_does_not_infer_gpu_support(tmp_path, monkeypatch):

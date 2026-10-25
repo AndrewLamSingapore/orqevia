@@ -32,7 +32,13 @@ def _identifier(value: Any, name: str) -> str:
 
 
 def _number(value: Any, name: str, *, positive: bool = False) -> float:
-    if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value):
+    if isinstance(value, bool) or not isinstance(value, (float, int)):
+        raise ValueError(f"{name} must be finite")
+    try:
+        finite = math.isfinite(value)
+    except OverflowError as error:
+        raise ValueError(f"{name} must be finite") from error
+    if not finite:
         raise ValueError(f"{name} must be finite")
     if value < 0 or (positive and value == 0):
         raise ValueError(f"{name} must be {'positive' if positive else 'nonnegative'}")
@@ -139,6 +145,10 @@ class ExperimentEvidence:
             raise ValueError(f"{label} measurement fields do not match the contract")
         for name in expected - {"batch_1", "batch_8"}:
             _number(data[name], f"{label}.{name}", positive=name == "artifact_bytes")
+            if name.endswith("bytes") and type(data[name]) is not int:
+                raise ValueError("memory and artifact byte counts must be integers")
+        if data["peak_process_memory_bytes"] < data["startup_peak_memory_bytes"]:
+            raise ValueError("process peak cannot decrease below its startup peak")
         for name in ("batch_1", "batch_8"):
             timing = data[name]
             if not isinstance(timing, dict) or set(timing) != {"mean_ms", "p50_ms", "p95_ms", "stdev_ms", "min_ms", "max_ms", "samples", "throughput_items_per_second"}:
@@ -151,6 +161,10 @@ class ExperimentEvidence:
                 raise ValueError("timing quantiles must be ordered")
             if not timing["min_ms"] <= timing["mean_ms"] <= timing["max_ms"]:
                 raise ValueError("timing mean must be within observed range")
+            batch_size = 1 if name == "batch_1" else 8
+            expected_throughput = 1000 * batch_size / timing["mean_ms"]
+            if not math.isclose(timing["throughput_items_per_second"], expected_throughput, rel_tol=1e-6):
+                raise ValueError("throughput must agree with measured batch size and mean latency")
 
 
 class MELService:
@@ -206,7 +220,9 @@ class MELService:
     @staticmethod
     def _record(row: sqlite3.Row) -> dict:
         item = dict(row)
-        item["evidence"] = json.loads(item.pop("evidence_json"))
+        encoded = item.pop("evidence_json")
+        item["integrity"] = "PASS" if hashlib.sha256(encoded.encode()).hexdigest() == item["evidence_sha256"] else "FAIL"
+        item["evidence"] = json.loads(encoded)
         return item
 
     def record_experiment(self, evidence: Mapping[str, Any], *, tenant_id: str, actor: str) -> dict:
@@ -233,7 +249,14 @@ class MELService:
             rows = db.execute("SELECT * FROM mel_experiments WHERE tenant_id=? ORDER BY recorded_at DESC", (tenant_id,)).fetchall()
         reasons = set()
         for row in rows:
-            evidence = ExperimentEvidence.parse(json.loads(row["evidence_json"]))
+            if hashlib.sha256(row["evidence_json"].encode()).hexdigest() != row["evidence_sha256"]:
+                reasons.add("stored_evidence_integrity_failed")
+                continue
+            try:
+                evidence = ExperimentEvidence.parse(json.loads(row["evidence_json"]))
+            except ValueError:
+                reasons.add("stored_evidence_invalid")
+                continue
             if evidence.model_id != model_id:
                 continue
             if not evidence.compatible:
