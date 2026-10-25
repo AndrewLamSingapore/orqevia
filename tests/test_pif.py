@@ -303,6 +303,20 @@ def test_insufficient_data_and_disabled_are_explicit_no_database_side_effects(tm
     assert svc.fit_history([], states=("queued",))["reason"] == "NO_OBSERVED_TRANSITIONS"
 
 
+def test_simultaneous_outcomes_are_not_sorted_by_label_into_fake_shift():
+    train = [history(i, ("start", "a" if i % 2 else "z")) for i in range(10)]
+    test = [history(i, ("start", "a" if i % 2 else "z"), day=30) for i in range(10, 14)]
+    report = chronological_validation(
+        train + test,
+        states=("start", "a", "z"),
+        absorbing_states=("a", "z"),
+        cutoff="2026-10-20T00:00:00Z",
+        min_train_transitions=1,
+        min_test_transitions=1,
+    )
+    assert report["held_out_outcome_shift_total_variation"] == 0
+
+
 def test_service_prediction_provenance_and_tenant_scoped_evidence(tmp_path):
     svc, fit = service(tmp_path)
     result = svc.forecast_state("pending", steps=2)

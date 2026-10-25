@@ -17,7 +17,7 @@ Source base: canonical main `4d415d8528c48e9f795e5758d33f244d782cb53f`.
 | Existing queue adapter | PASS (local integration) | Actual existing JobQueue submit/claim/finish lifecycle read without migration or dispatch. Missing, unknown, malformed and impossible histories excluded; future completion excluded; private prompt/result bytes absent from reports; original fixture ledger bytes unchanged. |
 | Independent flag and disabled behavior | PASS (local) | Default off, disabled calls create no registry directory, environment flag toggles independently. No service/worker/network startup at package import. |
 | End-to-end local shadow reporting | PASS (fixtures) | CLI reads ledger, fits, persists evidence, produces shadow/insufficient states, preserves source bytes and refuses overwriting retained evidence. |
-| PIF-focused tests | PASS | `python -B -m pytest tests/test_pif.py -q --disable-warnings --tb=short`: **44 passed** after final changes. |
+| PIF-focused tests | PASS | `python -B -m pytest tests/test_pif.py -q --disable-warnings --tb=short`: **45 passed** after final changes, including tied timestamp/outcome drift regression. |
 | Existing relevant regressions | PASS | Earlier combined run of PIF's then-40 tests plus model registry, historical predictive and job queue: **69 passed in 51.59s**. The final four additional tests and subsequent PIF-specific changes passed the final 44-test run. |
 | Static checks | PASS | Strict Ruff E9/F checks, Ruff format and Git whitespace check on all added Python. |
 | Whole-platform regression and source integration | NOT VERIFIED | Parent integration owns central router/HTTPS wiring and complete platform suite; this package does not edit them. |

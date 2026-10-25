@@ -115,7 +115,9 @@ def chronological_validation(
         }
         for b in bins
     ]
-    outcomes.sort()
+    # Stable time ordering must not sort timestamp ties by their outcome label:
+    # doing that would manufacture a first/second-half distribution shift.
+    outcomes.sort(key=lambda row: row[0])
     halfway = len(outcomes) // 2
 
     def frequencies(values):
