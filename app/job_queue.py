@@ -10,6 +10,7 @@ import sqlite3
 import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
@@ -246,6 +247,19 @@ class JobQueue:
             if row['status'] not in TERMINAL:
                 c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=CASE WHEN status='held' THEN 0 ELSE actual_cost_usd END,updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
                 self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
+        self.wake.set()
+        return self.get(job_id)
+
+    def abort(self, job_id: str, error: str) -> dict:
+        """Mark a deadline-exceeded local job terminal without an executor claim."""
+        with self.lock, self.connect() as c:
+            row = c.execute("SELECT status FROM compute_jobs WHERE id=?", (job_id,)).fetchone()
+            if not row: raise KeyError(job_id)
+            if row["status"] == "running":
+                ts = utcnow()
+                c.execute("UPDATE compute_jobs SET status='failed',error=?,lease_until=NULL,cloud_inflight=0,updated_at=?,completed_at=? WHERE id=?",
+                          (error, ts, ts, job_id))
+                self._event(c, job_id, "aborted_deadline", {"error": error})
         self.wake.set()
         return self.get(job_id)
 
@@ -585,6 +599,17 @@ class WorkerPool:
         if self.threads:return
         for index in range(self.queue.policy.global_concurrency):
             t=threading.Thread(target=self._run,args=(f"worker-{index+1}",),daemon=True);t.start();self.threads.append(t)
+        t=threading.Thread(target=self._reap_loop,args=("reaper",),daemon=True);t.start();self.threads.append(t)
+
+    def _reap_loop(self, name: str) -> None:
+        """Independent stale-job reaper: recovers wedged/dead workers even when
+        every worker thread is blocked inside a generation."""
+        while not self.stop_event.is_set():
+            try:
+                self.queue.recover_expired()
+            except Exception:
+                pass
+            self.stop_event.wait(15)
 
     def stop(self) -> None:
         self.stop_event.set()
@@ -605,9 +630,21 @@ class WorkerPool:
             with span('agent.job.execute',{'component':'compute-queue','provider':provider.name,
                                           'job_type':job.get('task_class','auto')}) as current:
                 try:
-                    self.queue.finish(job["id"],**self.execute(job,provider))
+                    deadline=max(30,int(job.get("timeout_seconds") or 300))
+                    with ThreadPoolExecutor(max_workers=1) as executor:
+                        future=executor.submit(self.execute,job,provider)
+                        try:
+                            result=future.result(timeout=deadline+30)
+                        except FutureTimeout:
+                            self.queue.abort(job["id"],'LOCAL_EXECUTION_TIMEOUT')
+                            outcome='TIMEOUT'
+                            current.set_attribute('status','TIMEOUT')
+                            continue
+                    self.queue.finish(job["id"],**result)
                     outcome='OK'
                     current.set_attribute('status','OK')
+                except ValueError:
+                    outcome='ALREADY_TERMINAL'
                 except Exception as exc:
                     current.set_attribute('status','ERROR')
                     if provider.kind=='cloud':
@@ -615,10 +652,16 @@ class WorkerPool:
                         # ambiguous external request, and no raw upstream error body.
                         from .provider_runtime import ProviderFailure
                         code=exc.code if isinstance(exc,ProviderFailure) else 'EXTERNAL_EXECUTION_FAILED'
-                        self.queue.finish(job['id'],error=code,retryable=False,
-                            actual_cost_usd=None,input_tokens=None,output_tokens=None)
+                        try:
+                            self.queue.finish(job['id'],error=code,retryable=False,
+                                actual_cost_usd=None,input_tokens=None,output_tokens=None)
+                        except ValueError:
+                            pass
                     else:
-                        self.queue.finish(job["id"],error='LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,PermissionError))
+                        try:
+                            self.queue.finish(job["id"],error='LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,PermissionError))
+                        except ValueError:
+                            pass
                 finally:
                     attributes={'component':'compute-queue','provider':provider.name,
                                 'job_type':job.get('task_class','auto'),'status':outcome}

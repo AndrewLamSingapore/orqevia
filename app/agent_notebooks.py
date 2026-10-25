@@ -521,7 +521,7 @@ class AgentNotebookStore:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urlopen(request, timeout=20) as response:
+        with urlopen(request, timeout=int(os.getenv("EMBED_REQUEST_TIMEOUT_SECONDS", "20"))) as response:
             payload = json.loads(response.read().decode("utf-8"))
         embeddings = payload.get("embeddings") or []
         if not embeddings:
