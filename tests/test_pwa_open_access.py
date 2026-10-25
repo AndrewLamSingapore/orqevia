@@ -35,18 +35,57 @@ def test_explicit_open_mode_admits_without_any_code(setup):
             assert row and row[1]==0 and row[2]=='OWNER'
         assert client.get('/pwa/api/session').json()['authenticated'] is True
 
-def test_open_access_publishes_telemetry_audience_alias(setup,monkeypatch):
+def test_open_access_publishes_cookie_bound_telemetry_audience(setup,monkeypatch):
     root,pwa,app=setup
     monkeypatch.setenv('ORQEVIA_OPEN_ACCESS','1')
     with TestClient(app,base_url=ORIGIN) as client:
         state=client.get('/pwa/api/session').json()
         assert state['authenticated'] is True
         assert state['clientId'].startswith('pwa:')
-        assert state['interfaceClientId']==open_access_id()
+        assert state['interfaceClientId']==state['clientId']
 
-def open_access_id():
-    from app.open_access import OPEN_OWNER_ID
-    return OPEN_OWNER_ID
+@pytest.mark.parametrize('unrestricted', ['0', '1'])
+def test_real_interface_session_cookie_matches_telemetry_audience(setup, monkeypatch, unrestricted):
+    _, pwa, _ = setup
+    monkeypatch.setenv('ORQEVIA_OPEN_ACCESS', unrestricted)
+    from app import interface_telemetry
+    from app.interface_server import app
+
+    # Only the unrelated model-runtime network probe is unavailable in this
+    # in-process test. Session admission, cookie middleware, authorization,
+    # telemetry construction and the checked-in agent registry all run normally.
+    monkeypatch.setattr(interface_telemetry, 'model_runtime_readiness', lambda: {
+        'status': 'UNAVAILABLE', 'ready': False, 'endpoint': 'not-probed',
+        'required_models': [], 'missing_models': [], 'observed_at': None,
+        'network_probe_performed': False,
+    })
+    with TestClient(app, base_url=ORIGIN) as client:
+        admitted = client.get('/pwa/api/session')
+        assert admitted.status_code == 200
+        state = admitted.json()
+        assert state['authenticated'] is True and state['role'] == 'OWNER'
+        assert state['clientId'].startswith('pwa:')
+        assert client.cookies.get(pwa.ORQEVIA_COOKIE)
+        assert client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
+
+        # No caller identity headers: the actual PWA cookie middleware must
+        # bind the following request to the audience published by session GET.
+        response = client.get('/interface/v1/telemetry')
+        assert response.status_code == 200
+        telemetry = response.json()
+        assert telemetry['audience'] == {
+            'client_id': state['interfaceClientId'], 'role': state['role'],
+        }
+        assert state['interfaceClientId'] == state['clientId']
+        assert 'no-store' in response.headers['cache-control']
+        metrics = {row['metric_id']: row for row in telemetry['metrics']}
+        assert metrics['registered_agents']['collection_status'] == 'OBSERVED'
+        assert metrics['registered_agents']['value'] == 21
+        assert len({agent['agent_id'] for agent in telemetry['agents']}) == 21
+        assert telemetry['ready_agent_count'] is None
+        refreshed = client.get('/pwa/api/session').json()
+        assert refreshed['clientId'] == state['clientId']
+        assert refreshed['interfaceClientId'] == telemetry['audience']['client_id']
 
 
 @pytest.mark.parametrize('unrestricted', ['0', '1'])
