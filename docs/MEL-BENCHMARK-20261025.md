@@ -87,8 +87,9 @@ Integrity and evidence:
 - Original private candidate/receipt directory: `C:/Users/Admin/AppData/Local/ABEX/engineering/mel-benchmark-07503ae-20261025`.
 - Official optional-wheel integrity, package advisory response and installation log are retained in `operations/system-security-20261025/mel-wheel-integrity.json`, `mel-dependency-audit.json` and `mel-optional-deps.log`.
 
-Only the metrics receipt may be reused as deployment evidence. The private
-frozen corpus is outside Git/public output and must remain private. Neither
+Only the metrics receipt may be imported as benchmark evidence; it does not
+establish deployment. The private frozen corpus is outside Git/public output
+and must remain private. Neither
 document text nor embeddings appear in the metrics receipt. The benchmark
 checked the retained baseline digest again after execution; that model and the
 original corpus were not modified. Candidate artifacts remain inert, with no
