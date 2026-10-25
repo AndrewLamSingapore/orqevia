@@ -1,13 +1,10 @@
 """Bound-owner OSIP adapter; fixed target, bounded bodies and no ambient authority."""
 
 import asyncio
-from collections import OrderedDict, deque
 import hashlib
 import hmac
 import os
 import re
-import threading
-import time
 import uuid
 
 import httpx
@@ -28,22 +25,13 @@ PATHS = {
     "observations": {"GET"},
     "observations/refresh": {"POST"},
 }
-_admissions = OrderedDict()
-_admission_lock = threading.Lock()
-
-
 def _admit(actor: str):
-    now = time.monotonic()
-    with _admission_lock:
-        history = _admissions.pop(actor, deque())
-        while history and now - history[0] >= 60:
-            history.popleft()
-        _admissions[actor] = history
-        if len(history) >= 60:
-            raise HTTPException(429, "Intelligence-plane request limit reached")
-        history.append(now)
-        while len(_admissions) > 1024:
-            _admissions.popitem(last=False)
+    """Owner removed the shared HTTPS request-rate limit on 25 October 2026.
+
+    Keep the existing bridge call contract without tracking or rejecting a
+    request count. Identity, HTTPS and operation contracts remain server-owned.
+    """
+    return None
 
 
 def _identity(request: Request):

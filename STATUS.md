@@ -1,5 +1,24 @@
 # STATUS.md — Portfolio status record
 
+## Owner HTTPS and unrestricted execution directive - 25 October 2026
+
+### Claimed, not independently checked
+
+ABEX observed source `630af1b86766a78cd7c6bc25d5c8da7e815c8f06` running in
+production with 36 scoped fabric checks, all 43 operation checks, 36 desktop
+executions, 36 mobile receipt recoveries and 260 browser checks passing. The
+workspace Defender scan completed with no threats reported. These observations
+retain their listed scope and do not qualify every fabric roadmap.
+
+The Owner explicitly requires HTTPS only and no queue guard, and removed the
+shared request-rate limit, artificial queue delays, firewalls and mandatory
+execution sandboxes. All Windows firewall profiles were already disabled;
+the explicit Ollama CPU quota was removed live. Queue delays were configured
+to zero. The source candidate removes the shared gateway request-rate counter.
+Source checks, deployment and renewed runtime verification remain separate.
+PIF/MEL implementation and evidence-based MiroFish/REA decisions are continuing.
+Owner-only Verified sections are unchanged.
+
 ## Current fabric HTTPS verification and session continuity - 25 October 2026
 
 ### Claimed, not independently checked

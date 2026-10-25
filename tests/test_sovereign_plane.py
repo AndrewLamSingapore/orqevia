@@ -31,8 +31,6 @@ def environment(tmp_path, monkeypatch):
         "PRIME_PROVIDER_CATALOG": "",
     }.items():
         monkeypatch.setenv(key, value)
-    with bridge._admission_lock:
-        bridge._admissions.clear()
     app = FastAPI()
     app.include_router(plane.router)
     return tmp_path, TestClient(app, base_url="https://testserver")
@@ -293,11 +291,7 @@ def test_public_navigation_content_theme_and_transport(environment):
         assert client.get("/unavailable-public-page").status_code == 404
 
 
-def test_request_capacity_is_bounded():
-    with bridge._admission_lock:
-        bridge._admissions.clear()
-    for _ in range(60):
-        bridge._admit("bounded-fixture")
-    with pytest.raises(Exception) as error:
-        bridge._admit("bounded-fixture")
-    assert error.value.status_code == 429
+def test_owner_removed_shared_https_request_rate_limit():
+    # Cross the former per-minute ceiling repeatedly without a fresh identity.
+    for _ in range(600):
+        assert bridge._admit("same-owner-fixture") is None
