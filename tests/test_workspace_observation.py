@@ -380,6 +380,168 @@ def test_existing_open_access_policy_reuses_explicit_owner_account(workspace, mo
     assert value["tasks"][0]["id"] == task
 
 
+def _durable_pwa_accounts(w):
+    """Server-stored identities/bindings; no cookie, user header or model grants membership."""
+    from app import pwa_sessions
+
+    clients = {
+        name: "pwa:" + char * 32
+        for name, char in (("desktop", "1"), ("phone", "2"), ("foreign", "3"), ("unbound", "4"))
+    }
+    with closing(pwa_sessions.database()) as db, db:
+        for name, client in clients.items():
+            account = None if name == "unbound" else "owner:two" if name == "foreign" else "owner:one"
+            db.execute(
+                "INSERT INTO sessions VALUES(?,?,?,0,?,?)",
+                (hashlib.sha256(client.encode()).hexdigest(), client, time.time() + 300, account, "MEMBER"),
+            )
+    with closing(w["node"].db_connect()) as db, db:
+        for client in clients.values():
+            w["node"].account_binding(db, client, current_required=True)
+    return clients
+
+
+def test_open_pwa_policy_preserves_full_execution_and_actual_server_account(workspace, monkeypatch):
+    w = workspace
+    from app import open_access
+
+    clients = _durable_pwa_accounts(w)
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    for name in ("desktop", "phone", "foreign", "unbound"):
+        expected = open_access.owner_policy()
+        account = "owner:two" if name == "foreign" else "owner:one"
+        if name == "unbound":
+            expected.pop("owner_account_id")
+        else:
+            expected["owner_account_id"] = account
+        assert w["node"].client_policy(clients[name]) == expected
+
+
+def test_open_pwa_two_devices_share_only_owned_tasks_and_real_task_get_agrees(workspace, monkeypatch):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from app.interface_contract import router
+
+    w = workspace
+    clients = _durable_pwa_accounts(w)
+    desktop_task = w["persist"](clients["desktop"])
+    phone_task = w["persist"](clients["phone"], "failed")
+    foreign_task = w["persist"](clients["foreign"])
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    monkeypatch.setattr(w["observer"], "_utcnow", lambda: UPDATED)
+    desktop = w["observe"](clients["desktop"])
+    assert desktop == w["observe"](clients["phone"])
+    assert desktop["status"] == "OBSERVED" and desktop["scope"] == "OWNER_ACCOUNT"
+    assert {row["id"] for row in desktop["tasks"]} == {desktop_task, phone_task}
+    assert foreign_task not in json.dumps(desktop) and PRIVATE not in json.dumps(desktop)
+    app = FastAPI()
+    app.include_router(router)
+    with TestClient(app, base_url="https://testserver") as client:
+        for name in ("desktop", "phone"):
+            headers = {"X-Client-ID": clients[name]}
+            for row in desktop["tasks"]:
+                response = client.get("/interface/v1/tasks/" + row["id"], headers=headers)
+                assert response.status_code == 200
+                assert response.json()["state"] == row["state"]
+            assert client.get("/interface/v1/tasks/" + foreign_task, headers=headers).status_code == 404
+
+
+def test_open_pwa_observation_and_policy_never_invoke_session_or_interface_migrators(workspace, monkeypatch):
+    from app import pwa_sessions
+
+    w = workspace
+    clients = _durable_pwa_accounts(w)
+    w["persist"](clients["desktop"])
+    w["persist"](clients["foreign"])
+    paths = [w["root"] / name for name in ("pwa-sessions.db", "interface.db", "objectives.db")]
+    before = {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    monkeypatch.setattr(pwa_sessions, "database", lambda: pytest.fail("Open PWA policy must remain read-only"))
+    monkeypatch.setattr(w["node"], "db_connect", lambda: pytest.fail("Observer must not migrate Interface Node"))
+    assert w["observe"](clients["phone"])["status"] == "OBSERVED"
+    assert {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths} == before
+
+
+def test_foreign_preserved_account_is_skipped_before_its_current_policy_is_consulted(workspace, monkeypatch):
+    w = workspace
+    clients = _durable_pwa_accounts(w)
+    task = w["persist"](clients["desktop"])
+    w["persist"](clients["foreign"])
+    # A foreign account's changed current policy cannot join or disable this owner.
+    with closing(sqlite3.connect(w["root"] / "pwa-sessions.db")) as db, db:
+        db.execute("UPDATE sessions SET owner_account_id='owner:one' WHERE client_id=?", (clients["foreign"],))
+    original = w["observer"]._policy_reader
+
+    def reader(*args):
+        read = original(*args)
+
+        def guarded(client):
+            assert client != clients["foreign"], "Other account policy must not be consulted"
+            return read(client)
+
+        return guarded
+
+    monkeypatch.setattr(w["observer"], "_policy_reader", reader)
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    value = w["observe"](clients["phone"])
+    assert value["status"] == "OBSERVED" and [row["id"] for row in value["tasks"]] == [task]
+
+
+def test_open_pwa_expired_origin_retains_preserved_ownership_without_new_membership(workspace, monkeypatch):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from app import open_access
+    from app.interface_contract import router
+
+    w = workspace
+    clients = _durable_pwa_accounts(w)
+    task = w["persist"](clients["desktop"])
+    w["persist"](clients["foreign"])
+    with closing(sqlite3.connect(w["root"] / "pwa-sessions.db")) as db, db:
+        db.execute("UPDATE sessions SET expires=? WHERE client_id=?", (time.time() - 1, clients["desktop"]))
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    expected = open_access.owner_policy()
+    expected.pop("owner_account_id")
+    assert w["node"].client_policy(clients["desktop"]) == expected
+    value = w["observe"](clients["phone"])
+    assert value["status"] == "OBSERVED" and [row["id"] for row in value["tasks"]] == [task]
+    app = FastAPI()
+    app.include_router(router)
+    with TestClient(app, base_url="https://testserver") as client:
+        assert client.get("/interface/v1/tasks/" + task, headers={"X-Client-ID": clients["phone"]}).status_code == 200
+
+
+def test_open_pwa_unbound_client_retains_only_direct_tasks(workspace, monkeypatch):
+    w = workspace
+    clients = _durable_pwa_accounts(w)
+    task = w["persist"](clients["unbound"])
+    w["persist"](clients["desktop"])
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    value = w["observe"](clients["unbound"])
+    assert value["status"] == "OBSERVED" and value["scope"] == "CLIENT"
+    assert [row["id"] for row in value["tasks"]] == [task]
+
+
+@pytest.mark.parametrize("changed", ["desktop", "phone"])
+def test_open_pwa_same_account_or_caller_rebinding_still_fails_closed(workspace, monkeypatch, changed):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from app.interface_contract import router
+
+    w = workspace
+    clients = _durable_pwa_accounts(w)
+    task = w["persist"](clients["desktop"])
+    with closing(sqlite3.connect(w["root"] / "pwa-sessions.db")) as db, db:
+        db.execute("UPDATE sessions SET owner_account_id='owner:two' WHERE client_id=?", (clients[changed],))
+    monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
+    value = w["observe"](clients["phone"])
+    assert value["status"] == "UNAUTHORIZED" and value["tasks"] == []
+    app = FastAPI()
+    app.include_router(router)
+    with TestClient(app, base_url="https://testserver") as client:
+        assert client.get("/interface/v1/tasks/" + task, headers={"X-Client-ID": clients["phone"]}).status_code == 503
+
+
 @pytest.mark.parametrize("limit", [0, -1, 51, True, "50"])
 def test_invalid_display_page_never_reads_canonical_records(workspace, monkeypatch, limit):
     w = workspace

@@ -87,23 +87,38 @@ def _policy_reader(root: Path, stack: ExitStack):
         nonlocal session_db
         if client in cached:
             return cached[client]
-        if open_access.enabled() or not client.startswith("pwa:"):
+        if not client.startswith("pwa:"):
             value = node.client_policy(client)
         else:
             from . import pwa_sessions
 
+            unrestricted = open_access.enabled()
+            value = open_access.owner_policy() if unrestricted else {}
+            if unrestricted:
+                value.pop("owner_account_id", None)
             if not re.fullmatch(r"pwa:[a-f0-9]{32}", client):
-                cached[client] = {}
-                return {}
+                cached[client] = value
+                return value
             if session_db is None:
                 session_db = _read_only(root / "pwa-sessions.db", stack)
             row = session_db.execute(
                 "SELECT expires,revoked,owner_account_id,role FROM sessions WHERE client_id=?",
                 (client,),
             ).fetchone()
-            if not row or row[1] or row[0] <= time.time():
-                value = {}
-            else:
+            active = (
+                row
+                and not row[1]
+                and isinstance(row[0], (int, float))
+                and math.isfinite(row[0])
+                and row[0] > time.time()
+            )
+            if unrestricted:
+                # Match node.client_policy's open execution policy, retaining
+                # only server-stored active PWA account membership. Expired or
+                # unbound origins can use their existing preserved binding.
+                if active and row[3] in {"OWNER", "MEMBER"} and row[2]:
+                    value["owner_account_id"] = _account(row[2])
+            elif active:
                 if row[3] not in {"OWNER", "MEMBER"}:
                     raise _Unavailable()
                 # These are the existing PWA policy checks, without database().
@@ -159,6 +174,11 @@ def _owned_clients(db, caller, account, read_policy):
     for owner, preserved in db.execute(
         "SELECT DISTINCT r.client,a.account FROM requests r LEFT JOIN client_accounts a ON a.client=r.client"
     ):
+        # A different account's preserved work is outside this observation.
+        # Do not consult or rebind its policy, and do not let it disable the
+        # caller's view. Caller/same-account conflicts still fail closed.
+        if preserved is not None and preserved != account:
+            continue
         current = _account(read_policy(owner).get("owner_account_id"))
         if current is not None and preserved is not None and current != preserved:
             if account in {current, preserved}:
