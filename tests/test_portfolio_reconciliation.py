@@ -251,6 +251,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    unrestricted_title = "## Owner HTTPS and unrestricted execution directive - 25 October 2026"
+    assert after.count(unrestricted_title) == 1
+    unrestricted_start = after.index(unrestricted_title)
+    unrestricted_end = after.index("\n## ", unrestricted_start + len(unrestricted_title)) + 1
+    unrestricted_update = after[unrestricted_start:unrestricted_end].encode("utf-8")
+    assert len(unrestricted_update) == 1072
+    assert hashlib.sha256(unrestricted_update).hexdigest() == "45f31c3c420988bf808ce3eb7befb9bc556cfef3a8f07a3e35d02896f2a5919a"
+    assert b"### Claimed, not independently checked" in unrestricted_update
+    assert b"### Verified" not in unrestricted_update
+    after = after[:unrestricted_start] + after[unrestricted_end:]
     session_title = "## Current fabric HTTPS verification and session continuity - 25 October 2026"
     assert after.count(session_title) == 1
     session_start = after.index(session_title)

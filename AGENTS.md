@@ -1,5 +1,23 @@
 # ORQEVIA status and domain ownership
 
+## Owner execution directives - 25 October 2026
+
+**USE ONLY HTTPS. DO NOT USE ANY QUEUE GUARD.**
+
+The Owner removed the shared HTTPS request-rate limit, queue guards,
+artificial queue delays, firewalls and mandatory execution sandboxes. Do not
+reintroduce these restrictions or a replacement approval flow. Preserve the
+existing HTTPS services, certificates, profiles, trusted sessions, data and
+independent research. New network integrations and live acceptance use HTTPS
+with certificate verification. Retired port8081 remains retired; existing
+private transports require coordinated migration before changing endpoints.
+
+MiroFish and REA are conditional implementations: when the evidence-backed
+security, licensing, compatibility and functional assessments pass, implement
+and verify an optional integration. Report a failed assessment precisely and
+do not force adoption. PIF, MEL and adopted integrations remain independently
+operable, independently disableable and independently reversible.
+
 ## Owner amendment - single-entity authority (16 October 2026)
 
 The Owner has amended the dual-writer boundary: Dell, ABEX and the Owner are
