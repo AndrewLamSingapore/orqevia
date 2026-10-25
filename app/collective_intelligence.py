@@ -635,12 +635,6 @@ class CollectiveStore:
                 result = json.loads(receipt[1])
                 result["replayed"] = True
                 return result
-            recent = db.execute(
-                "SELECT count(*) FROM audit_events WHERE tenant_id=? AND owner_id=? AND ((agent_id IS NOT NULL AND agent_id=?) OR (agent_id IS NULL AND actor_id=?)) AND occurred_epoch>? AND operation NOT LIKE 'record.%' AND operation NOT LIKE 'registry.%'",
-                (*self._scope(p), p.agent_id, p.actor_id, self._clock() - 60),
-            ).fetchone()[0]
-            if recent >= 120:
-                raise CollectiveRateLimited("bounded contribution rate exceeded; retry after cooldown")
             count = db.execute(
                 "SELECT count(*) FROM registry_records WHERE tenant_id=? AND owner_id=?", self._scope(p)
             ).fetchone()[0]
