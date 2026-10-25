@@ -57,11 +57,19 @@ def peak_process_memory() -> int:
 
         class MemoryCounters(ctypes.Structure):
             _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD)] + [
-                (field, ctypes.c_size_t) for field in (
-                    "PeakWorkingSetSize", "WorkingSetSize", "QuotaPeakPagedPoolUsage", "QuotaPagedPoolUsage",
-                    "QuotaPeakNonPagedPoolUsage", "QuotaNonPagedPoolUsage", "PagefileUsage", "PeakPagefileUsage",
+                (field, ctypes.c_size_t)
+                for field in (
+                    "PeakWorkingSetSize",
+                    "WorkingSetSize",
+                    "QuotaPeakPagedPoolUsage",
+                    "QuotaPagedPoolUsage",
+                    "QuotaPeakNonPagedPoolUsage",
+                    "QuotaNonPagedPoolUsage",
+                    "PagefileUsage",
+                    "PeakPagefileUsage",
                 )
             ]
+
         counters = MemoryCounters()
         counters.cb = ctypes.sizeof(counters)
         kernel = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -72,6 +80,7 @@ def peak_process_memory() -> int:
             raise OSError("process peak-memory observation unavailable")
         return int(counters.PeakWorkingSetSize)
     import resource
+
     value = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return int(value if sys.platform == "darwin" else value * 1024)
 
@@ -146,7 +155,9 @@ def aggregate(workers: list[dict]) -> dict:
     for field in ("peak_process_memory_bytes", "startup_peak_memory_bytes", "artifact_bytes"):
         result[field] = max(item[field] for item in workers)
     for batch in (1, 8):
-        result[f"batch_{batch}"] = summarize_times([value for item in workers for value in item[f"batch_{batch}"]], batch)
+        result[f"batch_{batch}"] = summarize_times(
+            [value for item in workers for value in item[f"batch_{batch}"]], batch
+        )
     return result
 
 
@@ -192,9 +203,12 @@ def quantize_baseline(model_dir: Path, candidate: Path) -> dict:
     onnx.checker.check_model(graph)
     baseline_elements = sum(math.prod(tensor.dims) for tensor in graph.graph.initializer)
     quantize_dynamic(
-        str(model_dir / "model.onnx"), str(candidate / "model.onnx"),
-        op_types_to_quantize=["MatMul"], weight_type=QuantType.QInt8,
-        per_channel=True, reduce_range=False,
+        str(model_dir / "model.onnx"),
+        str(candidate / "model.onnx"),
+        op_types_to_quantize=["MatMul"],
+        weight_type=QuantType.QInt8,
+        per_channel=True,
+        reduce_range=False,
     )
     transformed = onnx.load(str(candidate / "model.onnx"), load_external_data=False)
     onnx.checker.check_model(transformed)
@@ -231,7 +245,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.repeats < 2 or args.process_runs < 2 or not 1 <= args.threads <= 8:
         parser.error("repeated observations and a production-compatible thread count are required")
     if args.worker:
-        print(json.dumps(worker(args.model_dir, args.expected_sha256, args.corpus, args.repeats, args.threads), allow_nan=False))
+        print(
+            json.dumps(
+                worker(args.model_dir, args.expected_sha256, args.corpus, args.repeats, args.threads), allow_nan=False
+            )
+        )
         return 0
     if args.output_dir.exists():
         parser.error("output directory already exists; preserve earlier benchmark evidence")
@@ -254,10 +272,32 @@ def main(argv: list[str] | None = None) -> int:
         for label in order:
             directory = model_dir if label == "baseline" else candidate_dir
             digest = MINILM_SHA256 if label == "baseline" else candidate_sha
-            command = [sys.executable, "-B", "-m", "app.mel.benchmark", "--worker", "--model-dir", str(directory), "--expected-sha256", digest, "--corpus", str(workload), "--output-dir", str(args.output_dir), "--source-revision", args.source_revision, "--repeats", str(args.repeats), "--threads", str(args.threads)]
+            command = [
+                sys.executable,
+                "-B",
+                "-m",
+                "app.mel.benchmark",
+                "--worker",
+                "--model-dir",
+                str(directory),
+                "--expected-sha256",
+                digest,
+                "--corpus",
+                str(workload),
+                "--output-dir",
+                str(args.output_dir),
+                "--source-revision",
+                args.source_revision,
+                "--repeats",
+                str(args.repeats),
+                "--threads",
+                str(args.threads),
+            ]
             observed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
             if observed.returncode:
-                (args.output_dir / f"worker-{label}-{process_run}-error.log").write_text(observed.stderr, encoding="utf-8")
+                (args.output_dir / f"worker-{label}-{process_run}-error.log").write_text(
+                    observed.stderr, encoding="utf-8"
+                )
                 raise RuntimeError(f"{label} benchmark worker failed; private diagnostic retained")
             workers[label].append(json.loads(observed.stdout))
             print(f"Measured {label} process {process_run + 1}/{args.process_runs}", file=sys.stderr)
@@ -265,28 +305,72 @@ def main(argv: list[str] | None = None) -> int:
     if file_digest(model_dir / "model.onnx") != MINILM_SHA256:
         raise ValueError("retained baseline changed during benchmarking")
     from .inventory import runtime_inventory
+
     inventory = runtime_inventory()
     evidence = {
-        "schema_version": "1.0", "model_id": "all-MiniLM-L6-v2",
-        "technique": "onnx_dynamic_int8", "baseline_sha256": MINILM_SHA256,
+        "schema_version": "1.0",
+        "model_id": "all-MiniLM-L6-v2",
+        "technique": "onnx_dynamic_int8",
+        "baseline_sha256": MINILM_SHA256,
         "candidate_sha256": candidate_sha,
-        "measured_at": datetime.now(timezone.utc).isoformat(), "source_revision": args.source_revision,
-        "workload": {"sha256": file_digest(workload), "sample_count": len(texts), "kind": args.workload_kind, "representative": False, "labeled_sample_count": 0},
-        "hardware": {"platform": platform.system(), "processor": platform.processor(), "logical_cpus": os.cpu_count(), "threads": args.threads, "provider": workers["baseline"][0]["provider"], "packages": inventory["packages"]},
+        "measured_at": datetime.now(timezone.utc).isoformat(),
+        "source_revision": args.source_revision,
+        "workload": {
+            "sha256": file_digest(workload),
+            "sample_count": len(texts),
+            "kind": args.workload_kind,
+            "representative": False,
+            "labeled_sample_count": 0,
+        },
+        "hardware": {
+            "platform": platform.system(),
+            "processor": platform.processor(),
+            "logical_cpus": os.cpu_count(),
+            "threads": args.threads,
+            "provider": workers["baseline"][0]["provider"],
+            "packages": inventory["packages"],
+        },
         "measurements": {label: aggregate(value) for label, value in workers.items()},
-        "quality": quality, "compatible": True, "preparation": preparation,
+        "quality": quality,
+        "compatible": True,
+        "preparation": preparation,
     }
     ExperimentEvidence.parse(evidence)
     for values in workers.values():
         for item in values:
             item.pop("vectors")
     report = {
-        "evidence": evidence, "raw_measurements": workers,
-        "decision": "retain_baseline", "operational_quality": "NOT_VERIFIED",
-        "method": {"fresh_process_runs_per_artifact": args.process_runs, "warmup_calls_per_batch": 3, "timed_repeats_per_batch_per_process": args.repeats, "timing_includes_tokenization": True, "cold_definition": "fresh process/session and first batch; OS disk cache retained", "memory_definition": "OS process peak working set/RSS, maximum across separate workers", "query_definition": "First nonempty line of each local document; agreement proxy only, no relevance labels", "worker_order": "alternating artifact order by process run", "shared_host_other_workloads_controlled": False, "physical_energy_or_dollar_cost": "NOT_MEASURED", "private_input": "private-workload.json is local private input; never publish or commit"},
+        "evidence": evidence,
+        "raw_measurements": workers,
+        "decision": "retain_baseline",
+        "operational_quality": "NOT_VERIFIED",
+        "method": {
+            "fresh_process_runs_per_artifact": args.process_runs,
+            "warmup_calls_per_batch": 3,
+            "timed_repeats_per_batch_per_process": args.repeats,
+            "timing_includes_tokenization": True,
+            "cold_definition": "fresh process/session and first batch; OS disk cache retained",
+            "memory_definition": "OS process peak working set/RSS, maximum across separate workers",
+            "query_definition": "First nonempty line of each local document; agreement proxy only, no relevance labels",
+            "worker_order": "alternating artifact order by process run",
+            "shared_host_other_workloads_controlled": False,
+            "physical_energy_or_dollar_cost": "NOT_MEASURED",
+            "private_input": "private-workload.json is local private input; never publish or commit",
+        },
     }
-    (args.output_dir / "benchmark.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    print(json.dumps({"decision": "retain_baseline", "operational_quality": "NOT_VERIFIED", "output": str(args.output_dir / "benchmark.json")}, indent=2))
+    (args.output_dir / "benchmark.json").write_text(
+        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {
+                "decision": "retain_baseline",
+                "operational_quality": "NOT_VERIFIED",
+                "output": str(args.output_dir / "benchmark.json"),
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

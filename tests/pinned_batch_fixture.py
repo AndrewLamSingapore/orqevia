@@ -21,9 +21,21 @@ def pinned_batch_checkout(repository: Path, validator, plan: dict, destination: 
     """
     destination.mkdir()
     archive = subprocess.run(
-        ["git", "archive", "--format=tar", validator.VERIFIER, "--", "app", "scripts", "config",
-         "governance/agent-cert-verifier-azure-pins.json"],
-        cwd=repository, capture_output=True, check=True, timeout=30,
+        [
+            "git",
+            "archive",
+            "--format=tar",
+            validator.VERIFIER,
+            "--",
+            "app",
+            "scripts",
+            "config",
+            "governance/agent-cert-verifier-azure-pins.json",
+        ],
+        cwd=repository,
+        capture_output=True,
+        check=True,
+        timeout=30,
     ).stdout
     names = set()
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as stream:
@@ -50,10 +62,17 @@ def pinned_batch_checkout(repository: Path, validator, plan: dict, destination: 
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes((repository / name).read_bytes())
 
-    objects = subprocess.run(
-        ["git", "rev-parse", "--path-format=absolute", "--git-path", "objects"],
-        cwd=repository, capture_output=True, check=True, timeout=10,
-    ).stdout.decode().strip()
+    objects = (
+        subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-path", "objects"],
+            cwd=repository,
+            capture_output=True,
+            check=True,
+            timeout=10,
+        )
+        .stdout.decode()
+        .strip()
+    )
     subprocess.run(["git", "init", "--quiet", str(destination)], check=True, capture_output=True, timeout=10)
     (destination / ".git/objects/info/alternates").write_bytes(Path(objects).as_posix().encode("utf-8") + b"\n")
     return destination
@@ -82,7 +101,9 @@ print(json.dumps(result))
 """
 
 
-def protected_validation_at_pin(snapshot: Path, validator, plan: dict, *, env: dict, checkout_head: str, run: dict, started):
+def protected_validation_at_pin(
+    snapshot: Path, validator, plan: dict, *, env: dict, checkout_head: str, run: dict, started
+):
     """Run the real historical domain/oracles without polluting current imports."""
     child_env = dict(os.environ)
     child_env["ORQEVIA_DATA_DIR"] = str(snapshot / "fixture-data")
@@ -90,7 +111,11 @@ def protected_validation_at_pin(snapshot: Path, validator, plan: dict, *, env: d
     payload = dict(plan=plan, env=env, checkout_head=checkout_head, run=run, started=started.isoformat())
     completed = subprocess.run(
         [sys.executable, "-B", "-c", DRY_RUN, validator.__name__],
-        cwd=snapshot, env=child_env, input=json.dumps(payload).encode(), capture_output=True, timeout=120,
+        cwd=snapshot,
+        env=child_env,
+        input=json.dumps(payload).encode(),
+        capture_output=True,
+        timeout=120,
     )
     assert completed.returncode == 0, completed.stderr.decode(errors="replace")
     return json.loads(completed.stdout)

@@ -118,7 +118,15 @@ class ExperimentEvidence:
         for label, measurement in result.measurements.items():
             cls._validate_measurement(measurement, label)
         quality = result.quality
-        if set(quality) != {"mean_cosine", "min_cosine", "max_absolute_error", "top1_agreement", "critical_task_quality_validated", "task_quality_loss", "task_quality_evidence_sha256"}:
+        if set(quality) != {
+            "mean_cosine",
+            "min_cosine",
+            "max_absolute_error",
+            "top1_agreement",
+            "critical_task_quality_validated",
+            "task_quality_loss",
+            "task_quality_evidence_sha256",
+        }:
             raise ValueError("quality fields must match the MEL evidence contract")
         for name in ("mean_cosine", "min_cosine"):
             value = quality[name]
@@ -140,7 +148,17 @@ class ExperimentEvidence:
 
     @staticmethod
     def _validate_measurement(data: Any, label: str) -> None:
-        expected = {"load_ms", "cold_first_batch_ms", "peak_process_memory_bytes", "startup_peak_memory_bytes", "artifact_bytes", "cpu_seconds", "wall_seconds", "batch_1", "batch_8"}
+        expected = {
+            "load_ms",
+            "cold_first_batch_ms",
+            "peak_process_memory_bytes",
+            "startup_peak_memory_bytes",
+            "artifact_bytes",
+            "cpu_seconds",
+            "wall_seconds",
+            "batch_1",
+            "batch_8",
+        }
         if not isinstance(data, dict) or set(data) != expected:
             raise ValueError(f"{label} measurement fields do not match the contract")
         for name in expected - {"batch_1", "batch_8"}:
@@ -151,7 +169,16 @@ class ExperimentEvidence:
             raise ValueError("process peak cannot decrease below its startup peak")
         for name in ("batch_1", "batch_8"):
             timing = data[name]
-            if not isinstance(timing, dict) or set(timing) != {"mean_ms", "p50_ms", "p95_ms", "stdev_ms", "min_ms", "max_ms", "samples", "throughput_items_per_second"}:
+            if not isinstance(timing, dict) or set(timing) != {
+                "mean_ms",
+                "p50_ms",
+                "p95_ms",
+                "stdev_ms",
+                "min_ms",
+                "max_ms",
+                "samples",
+                "throughput_items_per_second",
+            }:
                 raise ValueError("timing fields do not match the contract")
             if type(timing["samples"]) is not int or timing["samples"] < 2:
                 raise ValueError("repeated measurements are required")
@@ -173,7 +200,9 @@ class MELService:
     def __init__(self, path: str | Path | None = None, *, enabled: bool | None = None) -> None:
         if enabled is not None and type(enabled) is not bool:
             raise ValueError("enabled must be boolean")
-        self.enabled = enabled if enabled is not None else os.getenv("ORQEVIA_MEL_ENABLED", "0").lower() in {"1", "true", "yes"}
+        self.enabled = (
+            enabled if enabled is not None else os.getenv("ORQEVIA_MEL_ENABLED", "0").lower() in {"1", "true", "yes"}
+        )
         default = Path(os.getenv("ORQEVIA_DATA_DIR", "/data")) / "model-registry.db"
         self.path = Path(path or os.getenv("ORQEVIA_MODEL_REGISTRY_DB") or default)
 
@@ -184,14 +213,24 @@ class MELService:
         try:
             db.row_factory = sqlite3.Row
             with db:
-                db.execute("CREATE TABLE IF NOT EXISTS mel_experiments (experiment_id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, actor TEXT NOT NULL, recorded_at TEXT NOT NULL, evidence_sha256 TEXT NOT NULL, evidence_json TEXT NOT NULL)")
-                db.execute("CREATE INDEX IF NOT EXISTS mel_experiments_tenant ON mel_experiments(tenant_id,recorded_at)")
+                db.execute(
+                    "CREATE TABLE IF NOT EXISTS mel_experiments (experiment_id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, actor TEXT NOT NULL, recorded_at TEXT NOT NULL, evidence_sha256 TEXT NOT NULL, evidence_json TEXT NOT NULL)"
+                )
+                db.execute(
+                    "CREATE INDEX IF NOT EXISTS mel_experiments_tenant ON mel_experiments(tenant_id,recorded_at)"
+                )
                 yield db
         finally:
             db.close()
 
     def health(self) -> dict:
-        result = {"capability": "mel", "enabled": self.enabled, "status": "disabled", "independent_of_pif": True, "automatic_promotion": False}
+        result = {
+            "capability": "mel",
+            "enabled": self.enabled,
+            "status": "disabled",
+            "independent_of_pif": True,
+            "automatic_promotion": False,
+        }
         if self.enabled:
             try:
                 with self._connect() as db:
@@ -214,14 +253,19 @@ class MELService:
         if not self.enabled:
             return {**self.health(), "experiments": []}
         with self._connect() as db:
-            rows = db.execute("SELECT * FROM mel_experiments WHERE tenant_id=? ORDER BY recorded_at DESC,experiment_id DESC LIMIT ?", (tenant_id, limit)).fetchall()
+            rows = db.execute(
+                "SELECT * FROM mel_experiments WHERE tenant_id=? ORDER BY recorded_at DESC,experiment_id DESC LIMIT ?",
+                (tenant_id, limit),
+            ).fetchall()
         return {"status": "available", "experiments": [self._record(row) for row in rows]}
 
     @staticmethod
     def _record(row: sqlite3.Row) -> dict:
         item = dict(row)
         encoded = item.pop("evidence_json")
-        item["integrity"] = "PASS" if hashlib.sha256(encoded.encode()).hexdigest() == item["evidence_sha256"] else "FAIL"
+        item["integrity"] = (
+            "PASS" if hashlib.sha256(encoded.encode()).hexdigest() == item["evidence_sha256"] else "FAIL"
+        )
         item["evidence"] = json.loads(encoded)
         return item
 
@@ -233,10 +277,19 @@ class MELService:
         parsed = ExperimentEvidence.parse(evidence)
         encoded = json.dumps(asdict(parsed), sort_keys=True, separators=(",", ":"), allow_nan=False)
         experiment_id = str(uuid.uuid4())
-        values = (experiment_id, tenant_id, actor, datetime.now(timezone.utc).isoformat(), hashlib.sha256(encoded.encode()).hexdigest(), encoded)
+        values = (
+            experiment_id,
+            tenant_id,
+            actor,
+            datetime.now(timezone.utc).isoformat(),
+            hashlib.sha256(encoded.encode()).hexdigest(),
+            encoded,
+        )
         with self._connect() as db:
             db.execute("INSERT INTO mel_experiments VALUES(?,?,?,?,?,?)", values)
-            row = db.execute("SELECT * FROM mel_experiments WHERE experiment_id=? AND tenant_id=?", (experiment_id, tenant_id)).fetchone()
+            row = db.execute(
+                "SELECT * FROM mel_experiments WHERE experiment_id=? AND tenant_id=?", (experiment_id, tenant_id)
+            ).fetchone()
         return {"status": "recorded", "experiment": self._record(row), "model_routing_changed": False}
 
     def recommend(self, model_id: str, *, tenant_id: str, max_quality_loss: float = 0.01) -> dict:
@@ -244,9 +297,17 @@ class MELService:
         _number(max_quality_loss, "max_quality_loss")
         if not self.enabled:
             return self.health()
-        result = {"status": "retain_baseline", "model_id": model_id, "model_routing_changed": False, "automatic_promotion": False, "reasons": ["no_qualified_experiment"]}
+        result = {
+            "status": "retain_baseline",
+            "model_id": model_id,
+            "model_routing_changed": False,
+            "automatic_promotion": False,
+            "reasons": ["no_qualified_experiment"],
+        }
         with self._connect() as db:
-            rows = db.execute("SELECT * FROM mel_experiments WHERE tenant_id=? ORDER BY recorded_at DESC", (tenant_id,)).fetchall()
+            rows = db.execute(
+                "SELECT * FROM mel_experiments WHERE tenant_id=? ORDER BY recorded_at DESC", (tenant_id,)
+            ).fetchall()
         reasons = set()
         for row in rows:
             if hashlib.sha256(row["evidence_json"].encode()).hexdigest() != row["evidence_sha256"]:
@@ -271,7 +332,14 @@ class MELService:
             if not self._performance_supported(evidence):
                 reasons.add("latency_improvement_not_supported")
                 continue
-            return {**result, "status": "eligible_candidate", "experiment_id": row["experiment_id"], "candidate_sha256": evidence.candidate_sha256, "reasons": ["representative_quality_and_repeated_latency_evidence"], "caveat": "Advisory evidence only; existing model activation and rollback contracts remain authoritative."}
+            return {
+                **result,
+                "status": "eligible_candidate",
+                "experiment_id": row["experiment_id"],
+                "candidate_sha256": evidence.candidate_sha256,
+                "reasons": ["representative_quality_and_repeated_latency_evidence"],
+                "caveat": "Advisory evidence only; existing model activation and rollback contracts remain authoritative.",
+            }
         if reasons:
             result["reasons"] = sorted(reasons)
         return result
@@ -282,7 +350,9 @@ class MELService:
         for batch in ("batch_1", "batch_8"):
             baseline = evidence.measurements["baseline"][batch]
             candidate = evidence.measurements["candidate"][batch]
-            radius = 1.96 * math.sqrt(baseline["stdev_ms"] ** 2 / baseline["samples"] + candidate["stdev_ms"] ** 2 / candidate["samples"])
+            radius = 1.96 * math.sqrt(
+                baseline["stdev_ms"] ** 2 / baseline["samples"] + candidate["stdev_ms"] ** 2 / candidate["samples"]
+            )
             if candidate["p95_ms"] > baseline["p95_ms"] or candidate["mean_ms"] + radius >= baseline["mean_ms"]:
                 return False
         return True

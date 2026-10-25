@@ -37,11 +37,35 @@ def runtime_inventory() -> dict:
             "reason": "A device, compatible graph, sparse kernel and representative benchmark are all required.",
         },
         "compatibility": [
-            {"technique": "onnx_dynamic_int8", "status": "BENCHMARK_REQUIRED", "scope": "Reviewed local MiniLM CPU graph only"},
-            {"technique": "fp16_bf16", "status": "NOT_VERIFIED", "scope": "No compatible accelerated execution benchmark"},
-            {"technique": "int4", "status": "NOT_VERIFIED", "scope": "Model/operator and kernel compatibility not established"},
-            {"technique": "structured_pruning", "status": "NOT_VERIFIED", "scope": "No recovery training or task-quality evidence"},
-            {"technique": "unstructured_pruning", "status": "NOT_VERIFIED", "scope": "No sparse-kernel performance evidence"},
-            {"technique": "remote_api_weight_modification", "status": "NOT_APPLICABLE", "scope": "Externally hosted weights are not controlled locally"},
+            {
+                "technique": "onnx_dynamic_int8",
+                "status": "BENCHMARK_REQUIRED",
+                "scope": "Reviewed local MiniLM CPU graph only",
+            },
+            {
+                "technique": "fp16_bf16",
+                "status": "NOT_VERIFIED",
+                "scope": "No compatible accelerated execution benchmark",
+            },
+            {
+                "technique": "int4",
+                "status": "NOT_VERIFIED",
+                "scope": "Model/operator and kernel compatibility not established",
+            },
+            {
+                "technique": "structured_pruning",
+                "status": "NOT_VERIFIED",
+                "scope": "No recovery training or task-quality evidence",
+            },
+            {
+                "technique": "unstructured_pruning",
+                "status": "NOT_VERIFIED",
+                "scope": "No sparse-kernel performance evidence",
+            },
+            {
+                "technique": "remote_api_weight_modification",
+                "status": "NOT_APPLICABLE",
+                "scope": "Externally hosted weights are not controlled locally",
+            },
         ],
     }
