@@ -597,6 +597,10 @@ class WorkerPool:
             self.pace=min(60.0,max(0.0,float(os.getenv("ORQEVIA_QUEUE_PACE_SECONDS","0"))))
         except (TypeError,ValueError):
             self.pace=0.0
+        try:
+            self.deep_spacing=min(300.0,max(0.0,float(os.getenv("ORQEVIA_DEEP_JOB_SPACING_SECONDS","0"))))
+        except (TypeError,ValueError):
+            self.deep_spacing=0.0
         self.stop_event=threading.Event(); self.threads:list[threading.Thread]=[]
 
     def start(self) -> None:
@@ -629,6 +633,8 @@ class WorkerPool:
                 self.queue.wake.wait(.5)
                 continue
             provider=next(p for p in self.providers if p.name==job["provider"])
+            if self.deep_spacing>0 and job.get("model_role","") in {"deep","evaluator"}:
+                self.stop_event.wait(self.deep_spacing)
             started=time.perf_counter()
             outcome='ERROR'
             with span('agent.job.execute',{'component':'compute-queue','provider':provider.name,
