@@ -1,5 +1,22 @@
 # STATUS.md — Portfolio status record
 
+## Activity Pocket integration candidate - 26 October 2026
+
+### Claimed, not independently checked
+
+The candidate extends the existing Academy, canonical Library/registry, connector
+Tools and workflow executor with a durable Activity Pocket Factory. It adds
+versioned contracts, authenticated owner APIs and console, controlled HTTPS
+extraction, failure coaching, held-out evaluation, owner promotion, rollback,
+retention and fenced restart recovery. The existing backend lifespan starts the
+worker; standalone API/worker entry points require no orchestration service.
+Review and verification receipts are recorded in docs/ACTIVITY-POCKET-RECONCILIATION.md
+and docs/ACTIVITY-POCKET-RUNBOOK.md. Source and controlled tests do not establish
+an installed production release. No production settings, data or credentials
+were changed. Full fleet live coaching completion and current 21/21 qualification
+work were explicitly parked by the Owner during this mission. They remain
+unverified and are not completion gates for this candidate delivery.
+
 ## Shared operational observations and shell coherence - 25 October 2026
 
 ### Claimed, not independently checked
