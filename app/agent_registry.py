@@ -165,6 +165,79 @@ def agent_record(agent_id: str) -> dict[str, Any]:
     return dict(_index()[canonical])
 
 
+class AgentLibrary:
+    """Versioned artifact adapter over this registry, never a second agent registry.
+
+    Qualifications are read through the existing independent evidence projector.
+    Published artifacts are immutable, tenant-owned and explicitly pinned by pockets.
+    """
+    def __init__(self, store, qualifications):
+        self.store, self.qualifications = store, qualifications
+
+    def manifest(self, agent_id, owner):
+        from .activity_pockets.contracts import AgentManifest
+        if agent_id not in registered_agent_ids(include_orchestrator=False):
+            raise RegistryError("canonical specialist required")
+        row = agent_record(agent_id)
+        return AgentManifest(owner=owner, agent_id=agent_id, version=row["version"],
+            capabilities=tuple(row["capability_requirements"]), tool_ids=tuple(row["tool_eligibility"]),
+            provenance=self.store.provenance("library", "config/agent_registry.json"))
+
+    def qualified(self, agent_id, owner, *, now):
+        from .activity_pockets.contracts import QualificationEvidence
+        manifest = self.manifest(agent_id, owner)
+        capability = "responsibility." + agent_id
+        projection = self.qualifications.project(agent_id, capability, now=now)
+        if (projection["level"] not in {"L2", "L3", "L4", "L5", "L6", "L7"}
+                or projection["trust_state"] in {"UNPROVEN", "REVALIDATION-REQUIRED"}
+                or not {"baseline", "role"} <= set(projection["current_dimensions"])):
+            raise PermissionError("current independent baseline and role qualification required")
+        return manifest, QualificationEvidence(owner=owner, agent_id=agent_id,
+            capability_id=capability, projection=projection,
+            provenance=self.store.provenance("library", "app/agent_certification.py"))
+
+    def skill(self, db, owner, version):
+        from .activity_pockets.contracts import SkillManifest
+        row = db.execute("SELECT id FROM pocket_records WHERE kind='library_skill' AND owner=? "
+                         "AND json_extract(body,'$.version')=?", (owner, version)).fetchone()
+        if row is None:
+            raise KeyError("pinned skill version unavailable")
+        return SkillManifest.model_validate(self.store.get(db, "library_skill", row[0], owner))
+
+    def publish(self, db, skill):
+        from .activity_pockets.store import digest
+        try:
+            previous = self.skill(db, skill.owner, skill.version)
+        except KeyError:
+            return self.store.put(db, "library_skill", skill)
+        if (digest(previous.artifact) != digest(skill.artifact)
+                or previous.tool_ids != skill.tool_ids or previous.agent_ids != skill.agent_ids):
+            raise ValueError("published skill versions are immutable")
+        return previous.model_dump(mode="json")
+
+    def ensure_builtin(self, db, owner):
+        from .activity_pockets.contracts import SkillManifest, ExtractionConfig
+        from .academy import PersistentAcademy
+        artifact = ExtractionConfig(title_fields=("title",), price_fields=("price",))
+        from .activity_pockets.store import digest
+        academy = PersistentAcademy(self.store)
+        admission = db.execute("SELECT id FROM pocket_records WHERE kind='skill_validation' AND owner=? "
+            "AND json_extract(body,'$.proposal_id')='bundled:1.0.0' AND json_extract(body,'$.candidate_sha256')=? "
+            "AND json_extract(body,'$.provenance.source_revision')=? AND json_extract(body,'$.suite_sha256')=?",
+            (owner, digest(artifact), self.store.revision, academy.suite_digest())).fetchone()
+        if admission is None:
+            PersistentAcademy(self.store).validate_builtin(db, owner, artifact)
+        else:
+            evidence = self.store.get(db, "skill_validation", admission[0], owner)
+            if (not evidence["passed"] or evidence["candidate_sha256"] != digest(artifact)
+                    or evidence["provenance"]["source_revision"] != self.store.revision):
+                raise PermissionError("bundled skill requires current scoped admission")
+        return self.publish(db, SkillManifest(owner=owner, version="1.0.0", agent_ids=("a07", "a14"),
+            tool_ids=("provided_context.read",), artifact=artifact,
+            permissions=("provided_context.read",),
+            provenance=self.store.provenance("library", "skills/web.structured-extraction/SKILL.md")))
+
+
 def responsibility_owner(capability: str) -> str:
     """Unique deterministic responsibility routing; never infer execution authority."""
     owners=[a['id'] for a in _index().values() if capability in a['capability_requirements']]

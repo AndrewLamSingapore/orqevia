@@ -4,6 +4,15 @@
   "activation": "advisory_only",
   "skills": [
     {
+      "id": "web.structured-extraction",
+      "name": "Authorized structured catalogue extraction",
+      "version": "1.0.0",
+      "status": "DRAFT_CANDIDATE",
+      "qualified": false,
+      "owner_agents": ["a07", "a14"],
+      "dependencies": []
+    },
+    {
       "id": "reasoning.deductive",
       "name": "Deductive reasoning",
       "version": "1.0.0",

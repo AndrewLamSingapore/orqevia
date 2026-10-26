@@ -51,6 +51,11 @@ from .sovereign_plane_bridge import router as sovereign_plane_router
 app.include_router(sovereign_plane_router)
 from .collective_bridge import router as collective_board_router
 app.include_router(collective_board_router)
+from .activity_pockets.api import build_router as pocket_router, console_router as pocket_console_router
+from .activity_pockets.orqevia import build_router as pocket_objective_router
+app.include_router(pocket_router())
+app.include_router(pocket_objective_router())
+app.include_router(pocket_console_router())
 from .public_site import router as public_router, PUBLIC, SHARED
 app.include_router(public_router)
 from .public_agent_api import router as jarvis_public_router, router_orqevia

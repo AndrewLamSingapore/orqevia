@@ -1,4 +1,4 @@
-# Sidecar controller only: the existing PRIME service remains the sole executor.
+# Sidecar controller only: the existing ORQEVIA direct runtime owns execution.
 # Point ORQEVIA_COACHING_DATA_VOLUME at its existing Docker data volume.
 name: orqevia-coaching
 services:

@@ -1,0 +1,21 @@
+# Optional, reviewed source configuration. Apply only as part of an approved rollout.
+# Uses the existing shared data volume. No service, port or queue is added.
+services:
+  backend:
+    environment:
+      ORQEVIA_POCKET_SOURCES_FILE: /run/orqevia-pockets/sources.json
+      ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED: '1'
+    volumes:
+      - type: bind
+        source: ${ORQEVIA_POCKET_SOURCES_FILE:?reviewed permitted-source JSON required}
+        target: /run/orqevia-pockets/sources.json
+        read_only: true
+  interface:
+    environment:
+      ORQEVIA_POCKET_SOURCES_FILE: /run/orqevia-pockets/sources.json
+      ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED: '1'
+    volumes:
+      - type: bind
+        source: ${ORQEVIA_POCKET_SOURCES_FILE:?same reviewed permitted-source JSON required}
+        target: /run/orqevia-pockets/sources.json
+        read_only: true
