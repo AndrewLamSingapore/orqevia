@@ -15,14 +15,18 @@ No parked activity is represented as complete.
 | Durable state, interruption fencing, eight-hour off-time recovery, rollback and isolation | VERIFIED in controlled tests | No physical PC power cycle or installed-production recovery claim |
 | Existing adjacent components | VERIFIED within executed scope | 103 passed, 1 existing skip, 63 subtests passed |
 | Existing PWA unit suite | VERIFIED | Node unit command passed; live candidate browser deployment remains parked |
-| Linux canonical quality gate | VERIFIED at `5bcc81e` | All executable tests passed after admitting the exact new status entry; the initial failed receipt is preserved in CI |
+| Linux canonical quality gate | VERIFIED at `7e45a56` | 5,909 passed, 1 existing skip, 92 subtests passed; initial failures remain in CI history |
 | Security/source-review work | VERIFIED as performed source review | Two Codex review agents; distinct from ORQEVIA logical-agent execution or certification |
 | Repository publication | DELIVERED | [PR #459](https://github.com/AndrewLamSingapore/orqevia/pull/459); dedicated feature branch and incremental commits |
-| Current CI formatting repair | IMPLEMENTED; final CI receipt pending | Only newly added Python files formatted; historical modules are not broadly reformatted |
+| Final CI and formatting | VERIFIED at `7e45a56`: all nine checks successful | [CI receipt](evidence/activity-pockets-20261026/ci-receipt.json); only new Python files formatted |
 
 The full Windows canonical run encountered failures and was stopped before
 completion. It is not counted as a passing full-suite result. Linux CI and the
 focused Windows receipts retain their own scopes.
+
+The evidence folder includes the clean-revision 41-test receipt, exact tested
+file hashes, actual controlled outputs and trace events. The final report-only
+commit changes none of the verified runtime/test/contract implementation bytes.
 
 ## Separate a07 source checkpoint
 

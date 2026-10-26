@@ -16,7 +16,7 @@ registry, Tools, coaching, skill-registry, workflow and certification suites.
 Controlled verifier: `uv run python scripts/verify_activity_pockets.py`.
 The completed verifier at the source-delivery checkpoint passed **41 tests, 0 failures,
 0 errors, 0 skips**. Its receipt and exported actual outputs/events are in
-`.artifacts/activity-pockets/run-bcb738dbf8cc421dbd7e117b3049eb3c/`.
+[`evidence/activity-pockets-20261026/`](evidence/activity-pockets-20261026/).
 This is real HTTPS with a transient controlled CA, real handlers and workflow
 execution, real authenticated session storage, and real SQLite persistence.
 Only external agent-qualification admission is supplied by labelled synthetic
@@ -53,7 +53,7 @@ controlled behavior passed, not that production performed it.
 | 17 | Independent pockets isolated | VERIFIED: owner-scoped data and emergency control; concurrent execution and cancellation |
 | 18 | Stop at budget exhaustion | VERIFIED: attempts, transfer and output budgets; interrupted reservation accounting |
 | 19 | Run without orchestration | VERIFIED: standalone API lifespan/worker, independent Factory constructor and subprocess persistence |
-| 20 | Complete workflow in CI | PARTIAL at this checkpoint: added to existing canonical CI and schema check; remote run receipt must be attached before calling this VERIFIED |
+| 20 | Complete workflow in CI | VERIFIED at `7e45a56`: all nine checks successful; Linux canonical suite 5,909 passed, 1 existing skip, 92 subtests passed; attached CI receipt |
 
 Additional executed tests cover real Interface creation with a separately
 constructed backend Factory sharing configuration/state, source-origin pacing,
@@ -71,7 +71,7 @@ of completed pockets, retention-linked feedback and daemon DNS shutdown.
 | Durable Factory and reference pocket | VERIFIED in controlled source execution | No unrestricted live acceptance dependency |
 | API and workbench visibility | VERIFIED for mounted APIs/static console and shared component execution | Actual browser/physical-device deployment acceptance remains separate |
 | Nightly PC restart semantics | VERIFIED for simulated off-time and real subprocess persistence | No physical power cut was performed |
-| Source packaging and CI | PARTIAL pending final broader/remote receipts | Candidate branch; no production installation implied |
+| Source packaging and CI | VERIFIED for source delivery | Nine successful remote checks; candidate branch, no production installation implied |
 | Operational documentation | VERIFIED as delivered source instructions | Deployment overlay is an example, not an applied configuration |
 | Production rollout/readiness | BLOCKED for a live configured pocket | Requires a reviewed permitted-source configuration and deployment acceptance; no production credential/data/settings changes made here |
 | Fleet coaching / 21/21 current qualifications | PARTIAL; PARKED BY OWNER | Actual grades/freshness remain visible; not a delivery gate |
