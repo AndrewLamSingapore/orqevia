@@ -1,0 +1,82 @@
+{
+  "verified_source_revision": "7e45a56dd1125bb73168cff238bed7cc0acfd5ec",
+  "checks": [
+    {
+      "name": "CodeQL",
+      "id": 121475926503,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/runs/121475926503"
+    },
+    {
+      "name": "quality",
+      "id": 121475721697,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294063180/job/121475721697"
+    },
+    {
+      "name": "tooling-governance",
+      "id": 121475721522,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294063180/job/121475721522"
+    },
+    {
+      "name": "browser-assurance",
+      "id": 121475721289,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294063180/job/121475721289"
+    },
+    {
+      "name": "status-authority",
+      "id": 121475719990,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294062953/job/121475719990"
+    },
+    {
+      "name": "isolated-verifier",
+      "id": 121475719916,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294062920/job/121475719916"
+    },
+    {
+      "name": "Analyze (javascript-typescript)",
+      "id": 121475708813,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294057573/job/121475708813"
+    },
+    {
+      "name": "Analyze (actions)",
+      "id": 121475708798,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294057573/job/121475708798"
+    },
+    {
+      "name": "Analyze (python)",
+      "id": 121475708789,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/AndrewLamSingapore/orqevia/actions/runs/40294057573/job/121475708789"
+    }
+  ],
+  "scope": "source-and-controlled-fixture-verification-not-production",
+  "canonical_python": {
+    "passed": 5909,
+    "skipped": 1,
+    "subtests_passed": 92
+  },
+  "controlled_factory": {
+    "passed": 41,
+    "failed": 0,
+    "skipped": 0,
+    "qualification_fixture": true
+  },
+  "production_deployed": false,
+  "parked_activities": "See docs/ACTIVITY-POCKET-STATUS-20261026.md: all eight are PARKED - NOT STARTED"
+}

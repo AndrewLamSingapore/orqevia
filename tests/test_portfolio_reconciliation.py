@@ -251,6 +251,16 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    pocket_title = "## Activity Pocket integration candidate - 26 October 2026"
+    assert after.count(pocket_title) == 1
+    pocket_start = after.index(pocket_title)
+    pocket_end = after.index("\n## ", pocket_start + len(pocket_title)) + 1
+    pocket_update = after[pocket_start:pocket_end].encode("utf-8")
+    assert len(pocket_update) == 1042
+    assert hashlib.sha256(pocket_update).hexdigest() == "8ac0fd5f1077d6f266c2218516379655a4880e8abfd13412543cf4c8876a8293"
+    assert b"### Claimed, not independently checked" in pocket_update
+    assert b"### Verified" not in pocket_update
+    after = after[:pocket_start] + after[pocket_end:]
     parity_title = "## Shared operational observations and shell coherence - 25 October 2026"
     assert after.count(parity_title) == 1
     parity_start = after.index(parity_title)

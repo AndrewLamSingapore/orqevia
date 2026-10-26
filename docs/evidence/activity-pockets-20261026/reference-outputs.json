@@ -1,0 +1,92 @@
+[
+  {
+    "actor": "a07",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.840847Z",
+    "details": {
+      "bytes": 342,
+      "cost_usd": 0,
+      "records": [
+        {
+          "currency": "SGD",
+          "price": "12.50",
+          "product_id": "book-1",
+          "title": "Field Notes"
+        },
+        {
+          "currency": "SGD",
+          "price": "20.00",
+          "product_id": "book-2",
+          "title": "Atlas"
+        }
+      ],
+      "run_id": "936c384e64b74a0caeda1860e5ced441",
+      "seconds": 0.06199999999989814,
+      "skill_sha256": "65d0654ae5cdee9aeab07872a50af5d5ef976b5d2a072ea610b016ecd3b34f42",
+      "skill_version": "1.0.0",
+      "source_id": "controlled",
+      "source_sha256": "8216fb75fa84bcc0094969b9eef2532adbe34f20e9e5da5d7daee9ae26721a23",
+      "source_url": "https://127.0.0.1:59996/catalog"
+    },
+    "event_type": "extraction.output",
+    "id": "8e07e907c6104f0bb425286eeb67986c",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "936c384e64b74a0caeda1860e5ced441",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "a07",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:40.370744Z",
+    "details": {
+      "bytes": 350,
+      "cost_usd": 0,
+      "records": [
+        {
+          "currency": "SGD",
+          "price": "12.50",
+          "product_id": "book-1",
+          "title": "Field Notes"
+        },
+        {
+          "currency": "SGD",
+          "price": "20.00",
+          "product_id": "book-2",
+          "title": "Atlas"
+        }
+      ],
+      "run_id": "d03f531cbd664faea00e2acf5fa34ec6",
+      "seconds": 0.0929999999998472,
+      "skill_sha256": "5de935c9fa13135a59d7f9a1938b5dfc2edb728ab1bb686622fdb615f700c64a",
+      "skill_version": "1.0.1",
+      "source_id": "controlled",
+      "source_sha256": "c555a2fb188844c804c8e3f36e3c042be77f373054cff450ad775e2c00e83b84",
+      "source_url": "https://127.0.0.1:59996/changed"
+    },
+    "event_type": "extraction.output",
+    "id": "f873b199da9a40bcb7bcce916ed3dffc",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "d03f531cbd664faea00e2acf5fa34ec6",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  }
+]

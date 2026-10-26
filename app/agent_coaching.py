@@ -32,6 +32,39 @@ def digest(value):
 def timestamp(epoch):
     return datetime.fromtimestamp(epoch,timezone.utc).isoformat()
 
+
+def extraction_coaching_proposal(store, pocket, evidence_id, observed_fields):
+    """Bounded diagnostic proposal. Only declarative parser aliases may change.
+
+    No generated code, policy change, qualification or deployment occurs here.
+    Held-out examples belong to the Academy evaluator and are not consulted.
+    """
+    from .activity_pockets.contracts import CoachingProposal, ExtractionConfig
+    owner, pocket_id = pocket["owner"], pocket["id"]
+    with store.connect() as db:
+        # Read the already-pinned artifact, never infer authority from page text.
+        row = db.execute("SELECT body FROM pocket_records WHERE kind='library_skill' AND owner=? "
+                         "AND json_extract(body,'$.version')=?", (owner, pocket["version"])).fetchone()
+        if row is None:
+            raise KeyError("coaching baseline artifact unavailable")
+        from .activity_pockets.contracts import SkillManifest
+        current = SkillManifest.model_validate_json(row[0])
+    # Explicit, reviewed vocabulary for this reference catalogue domain.
+    fields = set(observed_fields)
+    titles = tuple(dict.fromkeys((*current.artifact.title_fields, *(key for key in ("name",) if key in fields))))
+    prices = tuple(dict.fromkeys((*current.artifact.price_fields, *(key for key in ("amount",) if key in fields))))
+    major, minor, patch = map(int, current.version.split("."))
+    actor = json.loads(pocket["manifest"])["agent_ids"][-1]
+    return CoachingProposal(owner=owner, pocket_id=pocket_id, proposer=actor,
+        supporting_evidence=(evidence_id,), observed_deficiency="Extraction field contract failed after a source layout change.",
+        proposed_change=ExtractionConfig(title_fields=titles, price_fields=prices),
+        expected_benefit="Recover supported catalogue aliases while retaining the original layout.",
+        evaluation_methodology="Academy exact-record held-out regression and negative source-content corpus.",
+        risk_assessment="Parser aliases may capture ambiguous data; exact records and privacy checks must still pass.",
+        rollback_procedure="Restore the pocket's previous pinned Library version through owner rollback API.",
+        from_version=current.version, to_version=f"{major}.{minor}.{patch + 1}",
+        provenance=store.provenance("academy", "app/agent_coaching.py"))
+
 def request_for(agent, phase, seed):
     if phase == 'practice':
         return practice_request(agent,seed)

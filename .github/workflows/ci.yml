@@ -45,6 +45,8 @@ jobs:
           tests/test_release_provenance_20261021.py
           tests/test_sovereign_isolation_20261021.py
           tests/test_open_access_mode.py
+      - name: Validate shared Activity Pocket schemas
+        run: python scripts/export_pocket_contracts.py --check
       - name: Parse opt-in HF Compose secret mount without credential
         env:
           OLLAMA_IMAGE: ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532

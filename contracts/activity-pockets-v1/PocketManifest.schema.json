@@ -1,0 +1,253 @@
+{
+  "$defs": {
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "academy",
+            "library",
+            "tools",
+            "factory",
+            "orqevia"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "origin": {
+          "default": "runtime",
+          "enum": [
+            "runtime",
+            "controlled-fixture",
+            "legacy-adapter"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "reference": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "source_revision": {
+          "pattern": "^[a-f0-9]{40}$",
+          "title": "Source Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "source_revision",
+        "reference"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "ResourceBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {
+          "default": 20,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "max_bytes": {
+          "default": 2000000,
+          "maximum": 100000000,
+          "minimum": 1,
+          "title": "Max Bytes",
+          "type": "integer"
+        },
+        "max_cost_usd": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Max Cost Usd",
+          "type": "number"
+        },
+        "max_records": {
+          "default": 1000,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Max Records",
+          "type": "integer"
+        },
+        "max_retries": {
+          "default": 2,
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Max Retries",
+          "type": "integer"
+        },
+        "max_wall_seconds": {
+          "default": 300,
+          "exclusiveMinimum": 0,
+          "maximum": 86400,
+          "title": "Max Wall Seconds",
+          "type": "number"
+        }
+      },
+      "title": "ResourceBudget",
+      "type": "object"
+    }
+  },
+  "$id": "https://orqevia.local/contracts/activity-pockets/v1/PocketManifest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "agent_ids": {
+      "default": [
+        "a07"
+      ],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Agent Ids",
+      "type": "array"
+    },
+    "audit_refs": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Refs",
+      "type": "array"
+    },
+    "budget": {
+      "$ref": "#/$defs/ResourceBudget"
+    },
+    "compatibility": {
+      "default": [
+        "activity-pockets/1"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "title": "Compatibility",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "not_before": {
+      "format": "date-time",
+      "title": "Not Before",
+      "type": "string"
+    },
+    "objective": {
+      "maxLength": 4000,
+      "minLength": 10,
+      "title": "Objective",
+      "type": "string"
+    },
+    "owner": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Owner",
+      "type": "string"
+    },
+    "permissions": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Permissions",
+      "type": "array"
+    },
+    "permitted_operations": {
+      "default": [
+        "provided_context.read"
+      ],
+      "items": {
+        "const": "provided_context.read",
+        "type": "string"
+      },
+      "title": "Permitted Operations",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "retention_days": {
+      "default": 30,
+      "maximum": 3650,
+      "minimum": 1,
+      "title": "Retention Days",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_id": {
+      "const": "web.structured-extraction",
+      "default": "web.structured-extraction",
+      "title": "Skill Id",
+      "type": "string"
+    },
+    "skill_version": {
+      "default": "1.0.0",
+      "pattern": "^\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}$",
+      "title": "Skill Version",
+      "type": "string"
+    },
+    "source_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Source Ids",
+      "type": "array"
+    },
+    "stop_conditions": {
+      "default": [
+        "budget_exhausted",
+        "quality_failure",
+        "owner_cancelled"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "title": "Stop Conditions",
+      "type": "array"
+    },
+    "success_criteria": {
+      "maxLength": 1000,
+      "minLength": 5,
+      "title": "Success Criteria",
+      "type": "string"
+    }
+  },
+  "required": [
+    "owner",
+    "provenance",
+    "objective",
+    "source_ids",
+    "success_criteria"
+  ],
+  "title": "PocketManifest",
+  "type": "object"
+}

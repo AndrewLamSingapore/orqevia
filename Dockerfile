@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir --no-deps /tmp/mbti_in_thoughts-1.0.0-1orqevia-py
 COPY app ./app
 COPY mbti_in_thoughts ./mbti_in_thoughts
 COPY config ./config
+COPY skills ./skills
 # The deterministic architecture lookup reads the current golden record at /app/governance.
 # Keep the image scope narrow; other governance files are not runtime inputs.
 COPY governance/golden-gen4-manifest.json ./governance/

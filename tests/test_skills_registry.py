@@ -22,7 +22,7 @@ def test_manifest_schema_and_status():
 
 def test_every_skill_is_unqualified_and_versioned():
     manifest = _manifest()
-    assert len(manifest["skills"]) == 13
+    assert len(manifest["skills"]) == 14
     for skill in manifest["skills"]:
         assert re.fullmatch(r"\d+\.\d+\.\d+", skill["version"])
         assert skill["owner_agents"]

@@ -290,3 +290,177 @@ class Academy:
         }
         self.assessment_results.append(record)
         return dict(record)
+
+
+class PersistentAcademy(Academy):
+    """Durable pocket adapter for the existing Academy and coaching functions.
+
+    This adapter owns evidence and assessments, not execution or certification.
+    Training observations and held-out acceptance are stored as different kinds.
+    """
+    def __init__(self, store, owner=None):
+        super().__init__()
+        self.store, self.owner = store, owner
+        if owner is not None:
+            with store.connect() as db:
+                saved = self._load(db, owner)
+                self.training_attempts, self.assessment_results = saved.training_attempts, saved.assessment_results
+
+    def _load(self, db, owner):
+        academy = Academy()
+        for row in db.execute("SELECT id,kind,body FROM pocket_records WHERE owner=? AND "
+                              "kind IN ('academy_training','academy_assessment','academy_feedback') ORDER BY rowid", (owner,)):
+            record = self.store.get(db, row["kind"], row["id"], owner)["details"]
+            if row["kind"] == "academy_training":
+                academy.training_attempts.append(record)
+            elif row["kind"] == "academy_assessment":
+                academy.assessment_results.append(record)
+            else:
+                academy.record_feedback(record["attempt_id"], record["feedback"])
+        return academy
+
+    def _save(self, db, owner, kind, record, actor, pocket_id="academy"):
+        from .activity_pockets.contracts import ExecutionEvent
+        envelope = ExecutionEvent(owner=owner, pocket_id=pocket_id, actor=actor,
+            event_type=kind.replace("_", "."), details=record,
+            provenance=self.store.provenance("academy", "app/academy.py"))
+        self.store.put(db, kind, envelope, pocket_id)
+        return record
+
+    def _owned(self):
+        if self.owner is None:
+            raise AcademyError("persistent room operations require an explicit owner scope")
+        return self.owner
+
+    def submit_training_attempt(self, agent_id, room_id, scenario_id, *, tokens, wall_seconds, result=None):
+        owner = self._owned()
+        with self.store.transaction() as db:
+            record = self._load(db, owner).submit_training_attempt(agent_id, room_id, scenario_id,
+                        tokens=tokens, wall_seconds=wall_seconds, result=result)
+            from uuid import uuid4
+            record["attempt_id"] = uuid4().hex
+            return self._save(db, owner, "academy_training", record, agent_id)
+
+    def record_feedback(self, attempt_id, feedback):
+        owner = self._owned()
+        with self.store.transaction() as db:
+            record = self._load(db, owner).record_feedback(attempt_id, feedback)
+            origin = db.execute("SELECT pocket_id FROM pocket_records WHERE owner=? AND kind='academy_training' "
+                "AND json_extract(body,'$.details.attempt_id')=?", (owner, attempt_id)).fetchone()
+            self._save(db, owner, "academy_feedback", {"attempt_id": attempt_id, "feedback": feedback},
+                       record["agent_id"], origin[0])
+            return record
+
+    def submit_assessment(self, agent_id, room_id, scenario_id, *, outcome):
+        owner = self._owned()
+        with self.store.transaction() as db:
+            record = self._load(db, owner).submit_assessment(agent_id, room_id, scenario_id, outcome=outcome)
+            from uuid import uuid4
+            record["assessment_id"] = uuid4().hex
+            return self._save(db, owner, "academy_assessment", record, agent_id)
+
+    def observe_failure(self, db, pocket, evidence_id, observed_fields, failure_code="LAYOUT_FIELDS_MISSING"):
+        from .agent_coaching import extraction_coaching_proposal
+        from .activity_pockets.contracts import ExecutionEvent
+        import json
+        actor = json.loads(pocket["manifest"])["agent_ids"][-1]
+        attempt = self._load(db, pocket["owner"]).submit_training_attempt(actor, "autonomy-safety", "s-autonomy-01", tokens=0,
+            wall_seconds=0, result={"execution_evidence": evidence_id, "observed_fields": observed_fields, "failure_code": failure_code})
+        from uuid import uuid4
+        attempt["attempt_id"] = uuid4().hex
+        feedback = ExecutionEvent(owner=pocket["owner"], pocket_id=pocket["id"], actor=actor,
+            event_type="academy.feedback", details=attempt,
+            provenance=self.store.provenance("academy", evidence_id))
+        self.store.put(db, "academy_training", feedback, pocket["id"])
+        if failure_code != "LAYOUT_FIELDS_MISSING":
+            self.store.event(db, pocket["id"], pocket["owner"], "academy", "coaching.unsupported_deficiency",
+                             {"evidence_id": evidence_id, "code": failure_code})
+            return None
+        proposal = extraction_coaching_proposal(self.store, pocket, evidence_id, observed_fields)
+        self.store.put(db, "coaching_proposal", proposal, pocket["id"])
+        self.store.event(db, pocket["id"], pocket["owner"], "academy", "coaching.proposed",
+                         {"proposal_id": proposal.id, "evidence_id": evidence_id})
+        return proposal
+
+    def evaluate_candidate(self, db, proposal):
+        import hashlib
+        import json
+        from pathlib import Path
+        from .activity_pockets.contracts import EvaluationRecord, ExecutionEvent
+        from .activity_pockets.store import digest
+        from .activity_pockets.web import extract, QualityError
+        root = Path(__file__).parent / "activity_pockets" / "fixtures" / "heldout"
+        corpus = json.loads((root / "cases.json").read_text(encoding="utf-8"))
+        results, suite = [], []
+        for case in corpus:
+            body = (root / case["file"]).read_text(encoding="utf-8")
+            suite.append({**case, "body_sha256": hashlib.sha256(body.encode()).hexdigest()})
+            try:
+                records = extract(body, proposal.proposed_change)
+                passed = not case.get("reject", False) and records == case.get("expected")
+            except (QualityError, ValueError):
+                passed = case.get("reject", False)
+            results.append({"case_id": case["id"], "passed": bool(passed), "category": case["category"]})
+        category = lambda name: all(row["passed"] for row in results if row["category"] == name)
+        baseline = db.execute("SELECT id FROM pocket_records WHERE kind='library_skill' AND owner=? "
+                              "AND json_extract(body,'$.version')=?", (proposal.owner, proposal.from_version)).fetchone()
+        original = self.store.get(db, "library_skill", baseline[0], proposal.owner) if baseline else None
+        if original is None or digest(original["artifact"]) == digest(proposal.proposed_change):
+            results.append({"case_id": "candidate-must-change-the-observed-behavior", "passed": False, "category": "correctness"})
+        evaluation = EvaluationRecord(owner=proposal.owner, proposal_id=proposal.id, evaluator="a18",
+            candidate_sha256=digest(proposal.proposed_change), suite_sha256=digest(suite),
+            passed=all(row["passed"] for row in results), regression_results=tuple(results),
+            safety_passed=category("safety"), correctness_passed=category("correctness"),
+            traceability_passed=category("traceability"), generalization_passed=category("generalization"),
+            audit_refs=(proposal.id, *proposal.supporting_evidence),
+            provenance=self.store.provenance("academy", "activity_pockets/fixtures/heldout/cases.json"))
+        assessment = self._load(db, proposal.owner).submit_assessment(proposal.proposer, "autonomy-safety", "s-autonomy-02",
+            outcome={"evaluation_id": evaluation.id, "passed": evaluation.passed, "certification_awarded": False})
+        from uuid import uuid4
+        assessment["assessment_id"] = uuid4().hex
+        self.store.put(db, "academy_assessment", ExecutionEvent(owner=proposal.owner,
+            pocket_id=proposal.pocket_id, actor="a18", event_type="academy.assessment", details=assessment,
+            provenance=self.store.provenance("academy", evaluation.id)), proposal.pocket_id)
+        self.store.put(db, "evaluation", evaluation, proposal.pocket_id)
+        self.store.event(db, proposal.pocket_id, proposal.owner, "a18", "evaluation.completed",
+                         {"evaluation_id": evaluation.id, "passed": evaluation.passed})
+        return evaluation
+
+    def suite_digest(self):
+        import hashlib
+        import json
+        from pathlib import Path
+        from .activity_pockets.store import digest
+        root = Path(__file__).parent / "activity_pockets" / "fixtures" / "heldout"
+        cases = json.loads((root / "cases.json").read_text(encoding="utf-8"))
+        return digest([{**case, "body_sha256": hashlib.sha256((root / case["file"]).read_text(encoding="utf-8").encode()).hexdigest()}
+                       for case in cases])
+
+    def validate_builtin(self, db, owner, artifact):
+        """Scoped admission of reviewed bundled behavior, not general certification."""
+        from .activity_pockets.contracts import EvaluationRecord
+        from .activity_pockets.store import digest
+        from .activity_pockets.web import extract, QualityError
+        import json
+        from pathlib import Path
+        root = Path(__file__).parent / "activity_pockets" / "fixtures" / "heldout"
+        cases = json.loads((root / "cases.json").read_text(encoding="utf-8"))
+        results = []
+        for case in cases:
+            if case["category"] == "generalization":
+                continue  # The baseline does not claim support for new layout aliases.
+            try:
+                actual = extract((root / case["file"]).read_text(encoding="utf-8"), artifact)
+                passed = not case.get("reject", False) and actual == case.get("expected")
+            except QualityError:
+                passed = case.get("reject", False)
+            results.append({"case_id": case["id"], "passed": passed, "category": case["category"]})
+        if not results or not all(result["passed"] for result in results):
+            raise AcademyError("bundled skill failed scoped baseline admission")
+        record = EvaluationRecord(owner=owner, proposal_id="bundled:1.0.0", evaluator="a18",
+            candidate_sha256=digest(artifact), suite_sha256=self.suite_digest(), passed=True,
+            regression_results=tuple(results), safety_passed=True, correctness_passed=True,
+            traceability_passed=True, generalization_passed=False,
+            provenance=self.store.provenance("academy", "bundled-original-layout-admission-only"))
+        self.store.put(db, "skill_validation", record)
+        return record
