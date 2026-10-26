@@ -4,7 +4,9 @@ from __future__ import annotations
 import os
 import json
 import hashlib
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from dataclasses import replace
 from pathlib import Path
 from typing import Literal
@@ -15,6 +17,7 @@ from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
 from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
+from .observability import record_counter, record_duration, span
 from .settings import SETTINGS
 from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
 from . import open_access
@@ -151,6 +154,87 @@ def _publish_completed_job(job_id: str) -> None:
 
 pool=WorkerPool(queue,providers(),_execute,on_complete=_publish_completed_job)
 
+# Permanent Owner posture (2026-10-26): no output queues. Every submitted job
+# executes immediately on its own thread; the execution journal is retained so
+# fabric evidence (f05/f07/f08) and the ledger remain verifiable. The legacy
+# consumer pool is only used when explicitly re-enabled with queued mode.
+OUTPUT_QUEUE_MODE = os.getenv("ORQEVIA_OUTPUT_QUEUE_MODE", "direct").strip().lower()
+if OUTPUT_QUEUE_MODE not in {"direct", "queued"}:
+    raise RuntimeError("ORQEVIA_OUTPUT_QUEUE_MODE must be 'direct' or 'queued'")
+_direct_stop = threading.Event()
+_reaper_thread: threading.Thread | None = None
+
+
+def _run_direct(job_id: str) -> None:
+    claimed = queue.claim_direct(job_id, providers())
+    if not claimed:
+        return
+    provider = next(p for p in providers() if p.name == claimed["provider"])
+    started = time.perf_counter()
+    outcome = "ERROR"
+    with span('agent.job.execute', {'component': 'compute-queue', 'provider': provider.name,
+                                    'job_type': claimed.get('task_class', 'auto')}) as current:
+        try:
+            deadline = max(30, int(claimed.get("timeout_seconds") or 300))
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_execute, claimed, provider)
+                try:
+                    result = future.result(timeout=deadline + 30)
+                except FutureTimeout:
+                    queue.abort(claimed["id"], "LOCAL_EXECUTION_TIMEOUT")
+                    outcome = "TIMEOUT"
+                    current.set_attribute('status', 'TIMEOUT')
+                    return
+            queue.finish(claimed["id"], **result)
+            outcome = "OK"
+            current.set_attribute('status', 'OK')
+        except ValueError:
+            outcome = "ALREADY_TERMINAL"
+        except Exception as exc:
+            current.set_attribute('status', 'ERROR')
+            if provider.kind == 'cloud':
+                from .provider_runtime import ProviderFailure
+                code = exc.code if isinstance(exc, ProviderFailure) else 'EXTERNAL_EXECUTION_FAILED'
+                try:
+                    queue.finish(claimed['id'], error=code, retryable=False,
+                                 actual_cost_usd=None, input_tokens=None, output_tokens=None)
+                except ValueError:
+                    pass
+            else:
+                try:
+                    queue.finish(claimed["id"], error='LOCAL_EXECUTION_FAILED',
+                                 retryable=not isinstance(exc, PermissionError))
+                except ValueError:
+                    pass
+        finally:
+            attributes = {'component': 'compute-queue', 'provider': provider.name,
+                          'job_type': claimed.get('task_class', 'auto'), 'status': outcome}
+            record_counter('orqevia.agent.jobs', 1, attributes)
+            record_duration('orqevia.agent.job.duration', (time.perf_counter() - started) * 1000, attributes)
+    if _publish_completed_job is not None:
+        try:
+            if queue.get(claimed['id'])['status'] == 'completed':
+                _publish_completed_job(claimed['id'])
+        except Exception:
+            record_counter('orqevia.collective.publication_failures', 1, {'component': 'collective-board'})
+
+
+def dispatch(job_id: str) -> None:
+    """Execute a submitted job immediately; there is no output queue."""
+    threading.Thread(target=_run_direct, args=(job_id,), daemon=True,
+                     name="direct-" + job_id[:8]).start()
+
+
+def _direct_reap_loop() -> None:
+    while not _direct_stop.is_set():
+        try:
+            queue.recover_expired()
+            for row in queue.list(status="queued", limit=500):
+                dispatch(row["id"])
+        except Exception:
+            pass
+        _direct_stop.wait(15)
+
 
 def authorize(authorization: str | None) -> None:
     from .client_auth import authenticate_owner
@@ -256,7 +340,10 @@ def submit_hf_qa(body: SubmitHFQA, authorization: str | None = Header(None)):
 def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
     authorize(authorization)
     if open_access.enabled():
-        try:return queue.submit(**body.model_dump())
+        try:
+            row = queue.submit(**body.model_dump())
+            if OUTPUT_QUEUE_MODE == "direct": dispatch(row["id"])
+            return row
         except ValueError as exc:raise HTTPException(422,str(exc)) from exc
     if body.external_execution:raise HTTPException(503,'External native job execution is not configured')
     if body.allow_cloud:
@@ -274,7 +361,10 @@ def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
         canonical = canonical_agent_id(body.agent)
     except RegistryError:
         canonical = body.agent.strip().lower()
-    try:return queue.submit(**body.model_dump())
+    try:
+        row = queue.submit(**body.model_dump())
+        if OUTPUT_QUEUE_MODE == "direct": dispatch(row["id"])
+        return row
     except ValueError as exc:raise HTTPException(422,str(exc)) from exc
 
 
@@ -316,5 +406,20 @@ def provider_usage(authorization: str|None=Header(None)):
     return usage_projection(DATA/'compute-ledger.db',POLICY)
 
 
-def start_compute_queue() -> None: pool.start()
-def stop_compute_queue() -> None: pool.stop()
+def start_compute_queue() -> None:
+    global _reaper_thread
+    if OUTPUT_QUEUE_MODE == "direct":
+        if _reaper_thread and _reaper_thread.is_alive(): return
+        _direct_stop.clear()
+        _reaper_thread = threading.Thread(target=_direct_reap_loop, name="direct-reaper", daemon=True)
+        _reaper_thread.start()
+        return
+    pool.start()
+
+
+def stop_compute_queue() -> None:
+    if OUTPUT_QUEUE_MODE == "direct":
+        _direct_stop.set()
+        if _reaper_thread: _reaper_thread.join(timeout=3)
+        return
+    pool.stop()
