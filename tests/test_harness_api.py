@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -41,6 +42,13 @@ class HarnessApiTests(unittest.TestCase):
         )
         self.client = TestClient(app)
         self.headers = {"Authorization": "Bearer test-owner-token"}
+        # The estate's permanent direct-execution mode spawns background
+        # inference threads on submission. These API/policy tests do not
+        # exercise live inference, so dispatch is neutralized for the
+        # duration of each test to keep teardown deterministic.
+        self._dispatch_patch = patch.object(compute_queue_api, "dispatch", lambda job_id: None)
+        self._dispatch_patch.start()
+        self.addCleanup(self._dispatch_patch.stop)
 
     def tearDown(self):
         self.client.close()

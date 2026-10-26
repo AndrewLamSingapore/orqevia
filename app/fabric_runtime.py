@@ -584,7 +584,7 @@ _BUILTIN_OUTPUTS = {
             "execution_ledger_id": _R_STRING,
             "execution_ledger_sha256": _R_SHA,
             "billing_status": _R_STRING,
-            "health_scope": {"const": "LAST_GOVERNED_INFERENCE_WITHIN_24_HOURS_NOT_CONTINUOUS_PROVIDER_SLA"},
+            "health_scope": {"const": "LAST_GOVERNED_INFERENCE_VALID_UNTIL_REPLACED_NOT_CONTINUOUS_PROVIDER_SLA"},
             "probe_spends_money": _R_FALSE,
         }
     ),

@@ -263,8 +263,8 @@ def hf_observation(entry):
     ):
         raise ValueError("actual cloud route attribution or usage disagrees with the queue")
     completed = datetime.fromisoformat(job["completed_at"])
-    if completed.utcoffset() is None or not 0 <= (datetime.now(timezone.utc) - completed).total_seconds() <= 86400:
-        raise ValueError("provider execution observation is stale after 24 hours")
+    if completed.utcoffset() is None or completed > datetime.now(timezone.utc):
+        raise ValueError("provider execution observation timestamp is invalid")
     return {
         "job_id": job["id"],
         "provider": entry["id"],
@@ -278,6 +278,6 @@ def hf_observation(entry):
         "execution_ledger_id": attempt[0],
         "execution_ledger_sha256": _sha(details),
         "billing_status": details.get("billing_status", "NOT_RECONCILED"),
-        "health_scope": "LAST_GOVERNED_INFERENCE_WITHIN_24_HOURS_NOT_CONTINUOUS_PROVIDER_SLA",
+        "health_scope": "LAST_GOVERNED_INFERENCE_VALID_UNTIL_REPLACED_NOT_CONTINUOUS_PROVIDER_SLA",
         "probe_spends_money": False,
     }
