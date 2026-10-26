@@ -1,4 +1,5 @@
 """SQLite lifecycle storage with atomic transitions, fencing and chained evidence."""
+
 from contextlib import contextmanager
 import hashlib
 import json
@@ -80,21 +81,32 @@ class Store:
 
     def put(self, db, kind, record, pocket_id=""):
         body = record.model_dump(mode="json")
-        db.execute("INSERT INTO pocket_records VALUES(?,?,?,?,?)",
-                   (kind, record.id, record.owner, pocket_id, canonical(body)))
-        self.event(db, pocket_id or "library", record.owner, record.provenance.component,
-                   "evidence.recorded", {"kind": kind, "id": record.id, "sha256": digest(body)})
+        db.execute(
+            "INSERT INTO pocket_records VALUES(?,?,?,?,?)", (kind, record.id, record.owner, pocket_id, canonical(body))
+        )
+        self.event(
+            db,
+            pocket_id or "library",
+            record.owner,
+            record.provenance.component,
+            "evidence.recorded",
+            {"kind": kind, "id": record.id, "sha256": digest(body)},
+        )
         return body
 
     def get(self, db, kind, record_id, owner, pocket_id=None):
-        row = db.execute("SELECT body,pocket_id FROM pocket_records WHERE kind=? AND id=? AND owner=?",
-                         (kind, record_id, owner)).fetchone()
+        row = db.execute(
+            "SELECT body,pocket_id FROM pocket_records WHERE kind=? AND id=? AND owner=?", (kind, record_id, owner)
+        ).fetchone()
         if row is None or (pocket_id is not None and row["pocket_id"] != pocket_id):
             raise KeyError("record unavailable in this scope")
         body = json.loads(row["body"])
-        evidence = db.execute("SELECT * FROM pocket_events WHERE owner=? AND "
+        evidence = db.execute(
+            "SELECT * FROM pocket_events WHERE owner=? AND "
             "json_extract(body,'$.event_type')='evidence.recorded' AND json_extract(body,'$.details.kind')=? "
-            "AND json_extract(body,'$.details.id')=?", (owner, kind, record_id)).fetchone()
+            "AND json_extract(body,'$.details.id')=?",
+            (owner, kind, record_id),
+        ).fetchone()
         if evidence is None:
             raise ValueError("record has no original audit evidence")
         event = json.loads(evidence["body"])
@@ -104,18 +116,30 @@ class Store:
         return body
 
     def records(self, db, kind, owner, pocket_id):
-        return [self.get(db, kind, row[0], owner, pocket_id) for row in db.execute(
-            "SELECT id FROM pocket_records WHERE kind=? AND owner=? AND pocket_id=? ORDER BY rowid",
-            (kind, owner, pocket_id)).fetchall()]
+        return [
+            self.get(db, kind, row[0], owner, pocket_id)
+            for row in db.execute(
+                "SELECT id FROM pocket_records WHERE kind=? AND owner=? AND pocket_id=? ORDER BY rowid",
+                (kind, owner, pocket_id),
+            ).fetchall()
+        ]
 
     def event(self, db, pocket_id, owner, actor, event_type, details=None):
-        event = ExecutionEvent(pocket_id=pocket_id, owner=owner, actor=actor, event_type=event_type,
-                               details=details or {}, provenance=self.provenance("factory", pocket_id))
+        event = ExecutionEvent(
+            pocket_id=pocket_id,
+            owner=owner,
+            actor=actor,
+            event_type=event_type,
+            details=details or {},
+            provenance=self.provenance("factory", pocket_id),
+        )
         last = db.execute("SELECT sequence,sha256 FROM pocket_events ORDER BY sequence DESC LIMIT 1").fetchone()
         sequence, previous = (last[0] + 1, last[1]) if last else (1, "0" * 64)
         value = {"sequence": sequence, "event": event.model_dump(mode="json"), "previous_sha256": previous}
-        db.execute("INSERT INTO pocket_events VALUES(?,?,?,?,?,?)",
-                   (sequence, pocket_id, owner, canonical(value["event"]), previous, digest(value)))
+        db.execute(
+            "INSERT INTO pocket_events VALUES(?,?,?,?,?,?)",
+            (sequence, pocket_id, owner, canonical(value["event"]), previous, digest(value)),
+        )
         return event.id
 
     def verify_events(self, db):

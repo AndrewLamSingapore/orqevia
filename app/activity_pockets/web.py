@@ -1,4 +1,5 @@
 """Authorized HTTPS catalogue retrieval and declarative, non-executable extraction."""
+
 from dataclasses import dataclass
 from concurrent.futures import Future, TimeoutError as FutureTimeout
 from decimal import Decimal, InvalidOperation
@@ -47,8 +48,16 @@ class Source:
         origins = set()
         for url in self.urls:
             parsed = urlsplit(url)
-            if (parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password
-                    or parsed.query or parsed.fragment or "\\" in url or parsed.path.startswith("//")):
+            if (
+                parsed.scheme != "https"
+                or not parsed.hostname
+                or parsed.username
+                or parsed.password
+                or parsed.query
+                or parsed.fragment
+                or "\\" in url
+                or parsed.path.startswith("//")
+            ):
                 raise ValueError("explicit HTTPS catalogue URLs without credentials or queries required")
             origins.add((parsed.hostname, parsed.port or 443))
         if len(origins) != 1 or not 0 <= self.min_interval_seconds <= 86400:
@@ -60,9 +69,13 @@ class Source:
         return f"https://{parsed.hostname.lower()}:{parsed.port or 443}"
 
     def public(self):
-        return {"id": self.id, "urls": self.urls, "terms_reference": self.terms_reference,
-                "controlled_private_source": self.allow_private,
-                "min_interval_seconds": self.min_interval_seconds}
+        return {
+            "id": self.id,
+            "urls": self.urls,
+            "terms_reference": self.terms_reference,
+            "controlled_private_source": self.allow_private,
+            "min_interval_seconds": self.min_interval_seconds,
+        }
 
 
 class _PinnedHTTPS(http.client.HTTPSConnection):
@@ -81,6 +94,7 @@ class _PinnedHTTPS(http.client.HTTPSConnection):
 
 class HTTPSFetcher:
     """Pinned DNS address, verified hostname, no proxies, redirects or plaintext fallback."""
+
     def __init__(self, *, ca_file=None):
         self.context = ssl.create_default_context(cafile=ca_file)
         self.resolving, self.resolver_lock = None, threading.Lock()
@@ -95,11 +109,13 @@ class HTTPSFetcher:
                 raise RetrievalError("DNS_BUSY", retryable=True, retry_after=1)
             future = Future()
             self.resolving = future
+
             def resolve():
                 try:
                     future.set_result(socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM))
                 except Exception as exc:
                     future.set_exception(exc)
+
             threading.Thread(target=resolve, name="pocket-dns", daemon=True).start()
         try:
             return sorted({row[4][0] for row in future.result(timeout=max(0.001, timeout))})
@@ -111,13 +127,15 @@ class HTTPSFetcher:
         host, port = parsed.hostname, parsed.port or 443
         try:
             addresses = self.addresses(host, port, min(5, max(0.001, deadline - time.monotonic())))
-            if not addresses or (not source.allow_private and any(
-                    not ipaddress.ip_address(address).is_global for address in addresses)):
+            if not addresses or (
+                not source.allow_private and any(not ipaddress.ip_address(address).is_global for address in addresses)
+            ):
                 raise RetrievalError("SOURCE_ADDRESS_DENIED")
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise RetrievalError("TIME_BUDGET_EXHAUSTED")
             connection = _PinnedHTTPS(host, port, addresses[0], self.context, min(15, remaining))
+
             def abort():
                 if connection.sock:
                     try:
@@ -125,14 +143,22 @@ class HTTPSFetcher:
                     except OSError:
                         pass
                 connection.close()
+
             timer = threading.Timer(remaining, abort)
             timer.daemon = True
             timer.start()
             body = bytearray()
             try:
-                connection.request("GET", parsed.path or "/", headers={
-                    "User-Agent": "ORQEVIA-ActivityPocket/1.0", "Accept": "text/html,text/plain",
-                    "Accept-Encoding": "identity", "Connection": "close"})
+                connection.request(
+                    "GET",
+                    parsed.path or "/",
+                    headers={
+                        "User-Agent": "ORQEVIA-ActivityPocket/1.0",
+                        "Accept": "text/html,text/plain",
+                        "Accept-Encoding": "identity",
+                        "Connection": "close",
+                    },
+                )
                 response = connection.getresponse()
                 if response.status in (429, 503) or response.status >= 500:
                     retry = response.getheader("Retry-After", "1")
@@ -175,7 +201,11 @@ class HTTPSFetcher:
         parsed = urlsplit(url)
         deadline = time.monotonic() + wall_seconds
         robots_url = f"https://{parsed.netloc}/robots.txt"
-        cached = robots_cache is not None and robots_cache.get("origin") == source.origin and robots_cache.get("expires_at", 0) > clock()
+        cached = (
+            robots_cache is not None
+            and robots_cache.get("origin") == source.origin
+            and robots_cache.get("expires_at", 0) > clock()
+        )
         robots_bytes = 0
         if cached:
             robots = robots_cache["body"]
@@ -197,15 +227,20 @@ class HTTPSFetcher:
             delay = max(delay, request_rate.seconds / request_rate.requests)
         delay = max(delay, source.min_interval_seconds)
         if not cached:
-            robots_cache = {"origin": source.origin, "body": robots, "next_at": clock() + delay,
-                            "expires_at": clock() + max(300, delay + 60)}
+            robots_cache = {
+                "origin": source.origin,
+                "body": robots,
+                "next_at": clock() + delay,
+                "expires_at": clock() + max(300, delay + 60),
+            }
             if save_robots:
                 save_robots(robots_cache)
         wait = max(0, robots_cache["next_at"] - clock())
         if wait:
             if deadline - time.monotonic() <= wait:
-                raise RetrievalError("SOURCE_RATE_RETRY", retryable=True, bytes_read=robots_bytes,
-                                     retry_after=math.ceil(wait))
+                raise RetrievalError(
+                    "SOURCE_RATE_RETRY", retryable=True, bytes_read=robots_bytes, retry_after=math.ceil(wait)
+                )
             time.sleep(wait)  # Source permission, not a deployment guard or inference queue delay.
         if robots_bytes >= max_bytes:
             raise RetrievalError("BYTE_BUDGET_EXHAUSTED", bytes_read=robots_bytes)
@@ -216,10 +251,14 @@ class HTTPSFetcher:
             raise
         if save_robots:
             save_robots(None)  # One page per permission snapshot; next page refreshes directives.
-        return {"body": body, "bytes": size + robots_bytes,
-                "sha256": hashlib.sha256(body.encode()).hexdigest(),
-                "source_url": url, "source_id": source.id,
-                "next_interval_seconds": max(source.min_interval_seconds, delay)}
+        return {
+            "body": body,
+            "bytes": size + robots_bytes,
+            "sha256": hashlib.sha256(body.encode()).hexdigest(),
+            "source_url": url,
+            "source_id": source.id,
+            "next_interval_seconds": max(source.min_interval_seconds, delay),
+        }
 
 
 class _CatalogueParser(HTMLParser):
@@ -241,7 +280,21 @@ class _CatalogueParser(HTMLParser):
             if self.current is not None:
                 raise QualityError("NESTED_RECORD")
             self.current = {"id": attrs.get("data-id", ""), "fields": {}, "currency": attrs.get("data-currency", "USD")}
-        if tag not in {"br", "hr", "img", "meta", "link", "input", "wbr", "source", "area", "embed", "param", "col", "base"}:
+        if tag not in {
+            "br",
+            "hr",
+            "img",
+            "meta",
+            "link",
+            "input",
+            "wbr",
+            "source",
+            "area",
+            "embed",
+            "param",
+            "col",
+            "base",
+        }:
             self.stack.append((tag, field if not self.blocked else None))
 
     def handle_startendtag(self, tag, attrs):
@@ -284,9 +337,14 @@ def extract(body, config: ExtractionConfig):
         if not title or not price:
             raise QualityError("LAYOUT_FIELDS_MISSING", observed_fields=parser.fields)
         # Reference scope is non-personal public catalogue records only.
-        if (not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", item["id"]) or item["id"] in identifiers
-                or len(title) > 200 or "@" in title or re.search(r"\b\d[\d ()+-]{7,}\d\b", title)
-                or item["currency"] not in {"USD", "SGD", "EUR"}):
+        if (
+            not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", item["id"])
+            or item["id"] in identifiers
+            or len(title) > 200
+            or "@" in title
+            or re.search(r"\b\d[\d ()+-]{7,}\d\b", title)
+            or item["currency"] not in {"USD", "SGD", "EUR"}
+        ):
             raise QualityError("RECORD_CONTRACT_FAILED", observed_fields=parser.fields)
         try:
             amount = Decimal(price)
@@ -295,6 +353,7 @@ def extract(body, config: ExtractionConfig):
         except InvalidOperation:
             raise QualityError("PRICE_CONTRACT_FAILED", observed_fields=parser.fields) from None
         identifiers.add(item["id"])
-        records.append({"product_id": item["id"], "title": title,
-                        "price": format(amount, ".2f"), "currency": item["currency"]})
+        records.append(
+            {"product_id": item["id"], "title": title, "price": format(amount, ".2f"), "currency": item["currency"]}
+        )
     return records

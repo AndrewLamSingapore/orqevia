@@ -3,6 +3,9 @@
 The Factory extends the existing Academy, Library, Tools and workflow executor.
 It requires no ORQEVIA inference or orchestration service for independent
 execution. This candidate is not a production deployment receipt.
+See [the current scope register](ACTIVITY-POCKET-STATUS-20261026.md): the Owner
+has parked staging, production rollout, live verification and qualification
+execution. Commands below are documentation, not instructions to unpark them.
 
 ## Install and verify locally
 

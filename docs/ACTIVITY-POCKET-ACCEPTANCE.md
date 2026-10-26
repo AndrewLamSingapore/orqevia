@@ -1,6 +1,8 @@
 # Activity Pocket Factory acceptance and closure register
 
 This register distinguishes executable controlled acceptance from deployment.
+The latest Owner scope and explicit eight-item parking register are in
+[ACTIVITY-POCKET-STATUS-20261026.md](ACTIVITY-POCKET-STATUS-20261026.md).
 The Owner explicitly parked live coaching completion and current 21/21
 qualification work during this mission. Those activities are outside this
 delivery's completion gates; their evidence remains visible and unverified.
@@ -12,9 +14,9 @@ Baseline: **103 passed, 1 skipped, 63 subtests passed** across existing Academy,
 registry, Tools, coaching, skill-registry, workflow and certification suites.
 
 Controlled verifier: `uv run python scripts/verify_activity_pockets.py`.
-The latest completed verifier at this checkpoint passed **38 tests, 0 failures,
+The completed verifier at the source-delivery checkpoint passed **41 tests, 0 failures,
 0 errors, 0 skips**. Its receipt and exported actual outputs/events are in
-`.artifacts/activity-pockets/run-d208bf1116634055a8f1e1169986a556/`.
+`.artifacts/activity-pockets/run-bcb738dbf8cc421dbd7e117b3049eb3c/`.
 This is real HTTPS with a transient controlled CA, real handlers and workflow
 execution, real authenticated session storage, and real SQLite persistence.
 Only external agent-qualification admission is supplied by labelled synthetic

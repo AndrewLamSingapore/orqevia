@@ -3,6 +3,8 @@
 Source baseline: `20bdad87a97e649eb751dd6c7add53d3fb9d65fe` (main fetched
 26 October 2026). Candidate branch: `codex/activity-pocket-factory-20261026`.
 This report concerns source and isolated execution, not deployed production.
+The current delivery/parking register is
+[ACTIVITY-POCKET-STATUS-20261026.md](ACTIVITY-POCKET-STATUS-20261026.md).
 
 ## Baseline and ownership
 

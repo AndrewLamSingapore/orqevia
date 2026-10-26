@@ -1,4 +1,5 @@
 """Generate/check the ten versioned Activity Pocket JSON schemas from runtime models."""
+
 import argparse
 import json
 from pathlib import Path

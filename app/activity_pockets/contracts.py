@@ -1,4 +1,5 @@
 """Versioned contracts shared by Academy, Library, Tools and the Factory."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -76,7 +77,9 @@ class ToolManifest(Envelope):
     version: Version
     input_contract: dict
     output_contract: dict
-    side_effects: Literal["authorized-source-read", "local-read", "local-write", "external-consequential"] = "authorized-source-read"
+    side_effects: Literal["authorized-source-read", "local-read", "local-write", "external-consequential"] = (
+        "authorized-source-read"
+    )
 
 
 class ResourceBudget(Contract):
@@ -176,5 +179,15 @@ class RecoveryRecord(Envelope):
     evidence_refs: tuple[str, ...]
 
 
-SCHEMAS = (AgentManifest, SkillManifest, ToolManifest, PocketManifest, ExecutionEvent,
-           EvaluationRecord, CoachingProposal, QualificationEvidence, PromotionDecision, RecoveryRecord)
+SCHEMAS = (
+    AgentManifest,
+    SkillManifest,
+    ToolManifest,
+    PocketManifest,
+    ExecutionEvent,
+    EvaluationRecord,
+    CoachingProposal,
+    QualificationEvidence,
+    PromotionDecision,
+    RecoveryRecord,
+)
