@@ -1,5 +1,49 @@
 # STATUS.md — Portfolio status record
 
+## Shared operational observations and shell coherence - 25 October 2026
+
+### Claimed, not independently checked
+
+The cross-device candidate now reads authorized work from existing interface
+account/request bindings and canonical objective state through a read-only
+observer. Desktop and mobile share one snapshot interpretation and the same
+operational panels. Missing telemetry stays UNKNOWN or UNAVAILABLE; local task
+notifications only trigger authenticated refreshes. Existing task authorization
+and privacy boundaries remain enforced. No database, service or queue is added.
+
+The v40 shell confines fallback to its own complete public cache, checks for
+updates on foreground/resume and defers reload during active work or unsaved
+input. Session and retry references remain intact. Mobile task rows retain all
+fields, and Operations, PIF and MEL are directly discoverable. Deployment and
+physical iPhone acceptance remain separate pending milestones. Models and
+independent feature flags are unchanged. See docs/CROSS-DEVICE-PARITY-RUNBOOK.md.
+
+## Shared desktop and mobile interface discovery - 25 October 2026
+
+### Claimed, not independently checked
+
+The Owner reported that Operations and PIF were not findable on the iPhone
+interface and requested the same operational content across devices. Source
+inspection found mobile CSS hiding System Overview, Live System Health, Active
+Tasks and other existing dashboard cards, plus an inconsistent navigation
+breakpoint. This candidate reflows those shared sections on mobile, retains
+their original measurement IDs, adds one shared ready-agent counter and removes
+the duplicate mobile-only readiness facts. Welcome and existing shortcuts remain;
+operational facts precede shortcuts. More exposes all existing desktop pages and
+named panel shortcuts. Operations is a visible main mobile tab with 44-pixel
+minimum touch targets, alongside all five existing controls.
+
+Named Probabilistic Intelligence Fabric (PIF) and Model Efficiency Layer (MEL)
+sections precede the 36-fabric catalog and metrics, with catalog focus shortcuts.
+Availability remains service-reported; no extra fabric identifier or static live
+badge is added. Full forecast model-version evidence wraps on narrow screens.
+
+Focused source checks and retained-history tests are separate from shared-data
+integration, cache renewal, staged visual checks and production acceptance.
+Earlier d747 browser receipts keep their original scope. Physical iPhone behavior
+remains unverified. Backend, models, flags and authorization are unchanged.
+Owner-only Verified sections and prior frozen history remain unchanged.
+
 ## Optional intelligence implementation and external exclusions - 25 October 2026
 
 ### Claimed, not independently checked

@@ -30,7 +30,7 @@ COPY clients/pwa/index.html clients/pwa/recovery.js clients/pwa/release.mjs clie
 COPY clients/pwa/reset.html clients/pwa/reset.mjs ./app/pwa_static/
 COPY clients/pwa/dashboard.mjs clients/pwa/dashboard.css ./app/pwa_static/
 COPY clients/pwa/projects.html clients/pwa/projects.css clients/pwa/projects.mjs ./app/pwa_static/
-COPY clients/pwa/intelligence.mjs clients/pwa/intelligence.css clients/pwa/command-center.css ./app/pwa_static/
+COPY clients/pwa/intelligence.mjs clients/pwa/integration-panels.mjs clients/pwa/intelligence.css clients/pwa/command-center.css ./app/pwa_static/
 COPY clients/pwa/knowledge.mjs clients/pwa/knowledge.css clients/pwa/workspace-tools.mjs ./app/pwa_static/
 COPY clients/pwa/command-map.mjs clients/pwa/command-map.css clients/pwa/agent-readiness.json clients/pwa/registry.json ./app/pwa_static/
 COPY clients/pwa/vendor ./app/pwa_static/vendor

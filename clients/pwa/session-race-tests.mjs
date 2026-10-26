@@ -3,6 +3,7 @@
 import test,{afterEach} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 const settle=()=>new Promise(resolve=>setTimeout(resolve,0));
 let serial=0;
 let activeFixture;
@@ -122,4 +123,26 @@ test('late account-A local storage failure cannot disconnect account B',async()=
   f.store.load=client=>client==='member-a'?new Promise((_resolve,reject)=>{rejectOld=reject;}):Promise.resolve({pending:null,history:[]});
   await f.authenticated('member-a');f.validate();await f.authenticated('member-b');rejectOld(new Error('fixture storage error'));await settle();
   assert.equal(f.nodes.get('connection-label').textContent,'Connected to ORQEVIA');assert.match(f.nodes.get('session-detail').textContent,/member-b/);
+});
+
+test('foreground renewal preserves an uploaded unsubmitted attachment for the same identity',async()=>{
+  const f=await fixture();await f.authenticated('member-a');
+  const file=new File(['controlled attachment fixture'],'note.txt',{type:'text/plain'}),input=f.nodes.get('file-input');input.files=[file];input.value='note.txt';
+  const uploading=input.listeners.get('change')();await settle();
+  const bytes=Buffer.from(await file.arrayBuffer());
+  f.response(1,{artifactId:'owned-attachment',bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});await uploading;
+  assert.equal(input.value,'');assert.equal(f.nodes.get('attachment-list').children.length,1);
+  f.validate();await f.authenticated('member-a');
+  assert.equal(f.nodes.get('attachment-list').children.length,1);
+  assert.match(f.nodes.get('attachment-list').children[0].textContent,/note.txt/);
+  const update=new Event('orqevia-before-shell-update',{cancelable:true});f.listeners.get(update.type)(update);assert.equal(update.defaultPrevented,true);
+  f.validate();await f.authenticated('member-b');assert.equal(f.nodes.get('attachment-list').children.length,0);
+});
+
+test('failed upload preserves the selected file and defers a shell update',async()=>{
+  const f=await fixture();await f.authenticated('member-a');
+  const input=f.nodes.get('file-input');input.files=[new File(['fixture'],'note.txt')];input.value='note.txt';
+  const uploading=input.listeners.get('change')();await settle();f.response(1,{},503);await uploading;
+  assert.equal(input.value,'note.txt');assert.equal(f.nodes.get('attachment-list').children.length,0);
+  const update=new Event('orqevia-before-shell-update',{cancelable:true});f.listeners.get(update.type)(update);assert.equal(update.defaultPrevented,true);
 });

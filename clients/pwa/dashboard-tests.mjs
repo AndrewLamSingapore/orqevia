@@ -22,13 +22,56 @@ assert.ok(sw.includes("'/pwa/dashboard.mjs'"));assert.ok(!sw.includes("'/interfa
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
 assert.ok(html.includes('id="objective-form"'));assert.ok(html.includes('id="enrollment-form"'));assert.ok(html.includes('id="artifact-section"'));
 assert.ok(!html.includes('21/21 agents ready'));assert.ok(!/>\s*100%\s*</.test(html));
+const mobileNavigation=html.match(/<nav class="mobile-navigation"[\s\S]*?<\/nav>/)?.[0];
+assert.ok(mobileNavigation,'Main mobile navigation must remain present');
+const mobileButtons=[...mobileNavigation.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/g)].map(match=>match[0]);
+assert.equal(mobileButtons.length,6,'Keep all five existing controls and add direct Operations');
+const directOperations=mobileButtons.filter(button=>button.includes('data-view="operations"'));
+assert.equal(directOperations.length,1,'Operations must be reachable from the main mobile bar');
+assert.ok(directOperations[0].includes('<small>Operations</small>'));
+assert.ok(directOperations[0].includes('aria-label="Operations Board"'));
+for(const view of ['home','intelligence','gods-eye'])assert.ok(mobileButtons.some(button=>button.includes(`data-view="${view}"`)));
+assert.ok(mobileButtons.some(button=>button.includes('data-new-objective')));
+assert.ok(mobileButtons.some(button=>button.includes('id="mobile-more-open"')));
+const moreDialog=html.match(/<dialog id="mobile-more-dialog"[\s\S]*?<\/dialog>/)?.[0];
+assert.ok(moreDialog?.includes('data-view="operations"'),'Preserve existing More menu Operations access');
+assert.ok(moreDialog?.includes('href="/pwa/projects.html"'),'Preserve Projects and notebooks');
+const desktopNavigation=html.match(/<nav class="desktop-navigation"[\s\S]*?<\/nav>/)?.[0];
+assert.ok(desktopNavigation?.includes('data-view="operations"'),'Preserve direct desktop Operations');
+
+const desktopViews=[...desktopNavigation.matchAll(/data-view="([^"]+)"/g)].map(match=>match[1].replaceAll('&amp;','&'));
+const mobileViews=[...moreDialog.matchAll(/data-view="([^"]+)"/g)].map(match=>match[1].replaceAll('&amp;','&'));
+for(const view of desktopViews)assert.ok(mobileViews.includes(view),`Every desktop page must remain available in More: ${view}`);
+for(const [id,label] of [['system-overview','System Overview'],['live-system-health','Live System Health'],['active-tasks','Active Tasks'],['live-activity','Live Activity']]){
+  assert.ok(html.includes(`id="${id}"`),`Shared dashboard panel must exist: ${label}`);
+  assert.ok(moreDialog.includes(`data-panel="${id}"`),`Mobile panel shortcut must exist: ${label}`);
+}
+assert.equal([...html.matchAll(/id="ready-agent-count"/g)].length,1,'Readiness must have one shared counter');
+assert.ok(!html.includes('class="mobile-summary'),'Mobile facts must use the existing shared panels');
+assert.ok(html.indexOf('class="function-grid"')>html.indexOf('id="live-activity"'),'Mobile shortcuts must follow shared operational facts');
+const dashboardCss=readFileSync(new URL('./dashboard.css',import.meta.url),'utf8');
+assert.ok(!dashboardCss.includes('.dashboard-top,.dashboard-tasks,.dashboard-bottom{display:none}'),'Essential dashboard panels must not disappear on mobile');
+assert.ok(dashboardCss.includes('@media(max-width:760px)'),'Mobile layout and navigation must use the same breakpoint');
+assert.ok(!dashboardCss.includes('(min-width:701px)'),'Desktop navigation must not leave a 701-760px gap');
+
+const sovereignCss=readFileSync(new URL('./sovereign.css',import.meta.url),'utf8');
+assert.ok(sovereignCss.includes('.mobile-navigation{grid-template-columns:repeat(6,minmax(0,1fr))}'));
+assert.ok(sovereignCss.includes('@media(max-width:760px){.workspace-layout{display:block}.mobile-navigation{display:grid}'));
+assert.ok(sovereignCss.includes('.mobile-navigation button{min-width:44px;min-height:52px;'));
+const intelligenceCapabilities=readFileSync(new URL('./intelligence-capabilities.mjs',import.meta.url),'utf8');
+assert.ok(intelligenceCapabilities.includes('Probabilistic Intelligence Fabric (PIF)'));
+assert.ok(intelligenceCapabilities.includes('Model Efficiency Layer (MEL)'));
+assert.ok(intelligenceCapabilities.includes("document.getElementById('operations-metrics')||anchor).before(panel)"),'PIF/MEL must precede the catalog and metrics');
+assert.ok(intelligenceCapabilities.includes("jump.dataset.intelligenceJump=name.toLowerCase()"));
+assert.ok(intelligenceCapabilities.includes("heading.focus({preventScroll:true})"));
 const dashboardSource=readFileSync(new URL('./dashboard.mjs',import.meta.url),'utf8');
 assert.ok(dashboardSource.includes("known.add('objective')"));
 assert.ok(dashboardSource.includes('value?.audience?.client_id!==interfaceClientId'));
-assert.ok(dashboardSource.includes("text('activity-state',count>0?'ACTIVE WORK':'IDLE')"));
+assert.ok(dashboardSource.includes("const facts=operationalFacts(latest);bindSnapshot(facts);renderWork(facts)"));
+assert.ok(!dashboardSource.includes("count>0?'ACTIVE WORK':'IDLE'"),'Missing observations must not be classified as idle');
 const appSource=readFileSync(new URL('./app.mjs',import.meta.url),'utf8');
 assert.ok(appSource.includes('interfaceClientId:session.interfaceClientId||session.clientId'));
-console.log('Dashboard source, objective routing, freshness, agent-readiness separation, duplicate-agent rejection, PWA identity and API cache boundary: 18 assertions PASS');
+console.log('Shared dashboard panels, complete mobile/desktop navigation, direct Operations, PIF/MEL discovery, retained Projects, source freshness and cache boundaries: PASS');
 
 assert.equal(telemetryFreshness({...report,agents:[]},time),'OBSERVED');
 assert.equal(telemetryFreshness({...report,agents:report.agents.slice(0,2)},time),'OBSERVED');

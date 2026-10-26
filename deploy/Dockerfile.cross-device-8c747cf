@@ -1,0 +1,6 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+COPY clients/pwa/dashboard.mjs /app/app/pwa_static/dashboard.mjs
+ARG ORQEVIA_RUNTIME_REVISION
+ENV ORQEVIA_RUNTIME_REVISION=${ORQEVIA_RUNTIME_REVISION}
+LABEL org.opencontainers.image.revision=${ORQEVIA_RUNTIME_REVISION}

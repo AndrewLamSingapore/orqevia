@@ -5,13 +5,29 @@ if(anchor){
  const panel=create('section');panel.className='oq-module';panel.id='intelligence-capabilities';
  const state=create('p','Check availability to read the independent services.');state.setAttribute('role','status');state.setAttribute('aria-live','polite');
  const controls=create('div');controls.className='oq-approval-actions';
+ const pif=create('section');pif.id='pif-controls';
+ const pifHeading=create('h3','Probabilistic Intelligence Fabric (PIF)');pifHeading.id='pif-heading';pifHeading.tabIndex=-1;
+ const pifButtons=create('div');pifButtons.className='oq-approval-actions';
+ const mel=create('section');mel.id='mel-controls';
+ const melHeading=create('h3','Model Efficiency Layer (MEL)');melHeading.id='mel-heading';melHeading.tabIndex=-1;
+ const melButtons=create('div');melButtons.className='oq-approval-actions';
  const label=create('label','Starting state '),start=create('select');start.id='prediction-start';
  for(const name of ['queued','held','running','completed','failed','cancelled']){const option=create('option',name);option.value=name;start.append(option);}label.append(start);
  const horizonLabel=create('label','State transitions '),horizon=create('input');horizon.type='number';horizon.min='0';horizon.step='1';horizon.value='2';horizon.id='prediction-horizon';horizonLabel.append(horizon);
- const output=create('div');output.id='intelligence-capability-result';
+ const output=create('div');output.id='intelligence-capability-result';output.style.overflowWrap='anywhere';
  const details=create('details'),summary=create('summary','Evidence and diagnostics'),evidence=create('pre');details.append(summary,evidence);
- panel.append(create('h2','Forecasting and model efficiency'),create('p','Forecasts are advisory. Scenario outcomes are simulations. Optimization evidence does not replace the current model.'),state,label,horizonLabel,controls,output,details);anchor.after(panel);
+ pif.append(pifHeading,create('p','Forecast states from observed history or compare reproducible simulated scenarios. Forecasts are advisory.'),label,horizonLabel,pifButtons);
+ mel.append(melHeading,create('p','Inspect optimization evidence while retaining the current serving model.'),melButtons);
+ panel.append(create('h2','36 fabrics + PIF / MEL'),create('p','PIF and MEL are separate optional capabilities alongside the 36-fabric catalog. Check availability for their current state.'),state,controls,pif,mel,output,details);
+ (document.getElementById('operations-metrics')||anchor).before(panel);
+ const jumps=create('div');jumps.className='oq-approval-actions intelligence-jumps';
+ for(const [name,heading] of [['PIF',pifHeading],['MEL',melHeading]]){
+  const jump=create('button','Open '+name);jump.type='button';jump.className='secondary';jump.dataset.intelligenceJump=name.toLowerCase();
+  jump.addEventListener('click',()=>{heading.scrollIntoView({block:'start',behavior:'auto'});heading.focus({preventScroll:true});});jumps.append(jump);
+ }
+ anchor.querySelector('.fabric-heading').append(jumps);
  let pending=null,session=null;
+ window.addEventListener('orqevia-before-shell-update',event=>{if(pending)event.preventDefault();});
  async function api(path,body,signal){
   const response=await fetch('/interface/v1/collective/intelligence/'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-ORQEVIA-PWA':'1'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',redirect:'error',cache:'no-store',signal});
   if(!response.ok)throw new Error(`The service could not complete this request (${response.status}).`);
@@ -35,16 +51,16 @@ if(anchor){
   if(pending)return;const controller=new AbortController();pending=controller;buttons.forEach(control=>control.disabled=true);state.textContent='Reading service evidence…';
   try{const value=await action(controller.signal);if(!controller.signal.aborted){draw(value);state.textContent='Service evidence received.';}}
   catch(error){if(!controller.signal.aborted){state.textContent=error.message;output.replaceChildren();evidence.textContent='';}}
-  finally{if(pending===controller)pending=null;buttons.forEach(control=>control.disabled=false);}
+  finally{if(pending===controller)pending=null;buttons.forEach(control=>control.disabled=false);window.dispatchEvent(new CustomEvent('orqevia-shell-update-safe'));}
  }
- function button(text,action){const control=create('button',text);control.type='button';control.className='secondary';control.addEventListener('click',()=>void run(action));buttons.push(control);controls.append(control);}
+ function button(text,action,destination=controls){const control=create('button',text);control.type='button';control.className='secondary';control.addEventListener('click',()=>void run(action));buttons.push(control);destination.append(control);}
  const forecast=()=>{const steps=Number(horizon.value);if(!Number.isSafeInteger(steps)||steps<0)throw new Error('Enter a nonnegative whole number of state transitions.');return {start:start.value,steps};};
  // Sequential explicit actions avoid another background poller.
  button('Check availability',async signal=>({pif:await api('pif/status',undefined,signal),mel:await api('mel/status',undefined,signal)}));
- button('Fit observed queue history',signal=>api('pif/fit',{},signal));
- button('Forecast states',signal=>api('pif/forecast',forecast(),signal));
- button('Simulate scenario',signal=>api('pif/scenario',{...forecast(),samples:100,seed:0},signal));
- button('View efficiency evidence',signal=>api('mel/recommendation?model_id=all-MiniLM-L6-v2',undefined,signal));
+ button('Fit observed queue history',signal=>api('pif/fit',{},signal),pifButtons);
+ button('Forecast states',signal=>api('pif/forecast',forecast(),signal),pifButtons);
+ button('Simulate scenario',signal=>api('pif/scenario',{...forecast(),samples:100,seed:0},signal),pifButtons);
+ button('View efficiency evidence',signal=>api('mel/recommendation?model_id=all-MiniLM-L6-v2',undefined,signal),melButtons);
  function clear(){pending?.abort();pending=null;output.replaceChildren();evidence.textContent='';state.textContent=navigator.onLine?'Check availability to read the independent services.':'Offline. Reconnect to read service evidence.';buttons.forEach(control=>control.disabled=false);}
  window.addEventListener('offline',clear);window.addEventListener('orqevia-session',event=>{const next=event.detail;if(next?.clientId!==session?.clientId||next?.role!==session?.role||next?.generation!==session?.generation)clear();session=next;});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)pending?.abort();});

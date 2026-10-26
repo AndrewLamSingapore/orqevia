@@ -122,7 +122,10 @@ def health(request: Request):
 def telemetry(request: Request):
     client, _ = authorize(request, 'health.read')
     from .interface_telemetry import snapshot
-    return JSONResponse(snapshot(client, node.client_policy(client).get('role', 'UNKNOWN')),
+    from .workspace_observation import owned_work_snapshot
+    policy = node.client_policy(client)
+    return JSONResponse(snapshot(client, policy.get('role', 'UNKNOWN'),
+                                 work_observation=owned_work_snapshot(client, policy)),
                         headers={'Cache-Control': 'private, no-store'})
 
 

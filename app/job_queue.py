@@ -496,6 +496,44 @@ class JobQueue:
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
         return None
 
+    @traced('queue.claim',{'component':'compute-queue','operation':'claim-direct'})
+    def claim_direct(self, job_id: str, providers: list[Provider]) -> dict | None:
+        """Route and start one named job immediately; it never rests queued."""
+        with self.lock, self.connect() as c:
+            c.execute("BEGIN IMMEDIATE")
+            row = c.execute("SELECT * FROM compute_jobs WHERE id=? AND status='queued'", (job_id,)).fetchone()
+            if row is None:
+                return None
+            try:
+                canonical = canonical_agent_id(row["agent"])
+            except RegistryError:
+                c.execute("UPDATE compute_jobs SET status='failed',error='agent retired or unregistered',updated_at=?,completed_at=? WHERE id=?",
+                          (utcnow(), utcnow(), row["id"]))
+                self._event(c, row["id"], "registry_denied", {"agent": row["agent"]})
+                return None
+            if canonical != row["agent"]:
+                self._event(c, row["id"], "registry_migrated", {"from": row["agent"], "to": canonical})
+                c.execute("UPDATE compute_jobs SET agent=? WHERE id=?", (canonical, row["id"]))
+                row = c.execute("SELECT * FROM compute_jobs WHERE id=?", (row["id"],)).fetchone()
+            provider, reason, estimate = self._route(c, row, providers)
+            if not provider:
+                if "cost ceiling" in reason or "job ceiling" in reason:
+                    c.execute("UPDATE compute_jobs SET status='budget_blocked',route_reason=?,estimated_cost_usd=?,updated_at=?,completed_at=? WHERE id=?",
+                              (reason, estimate, utcnow(), utcnow(), row["id"]))
+                    self._event(c, row["id"], "budget_blocked", {"reason": reason, "estimate": estimate})
+                return None
+            ts = utcnow()
+            lease = time.time() + row["timeout_seconds"] + 30
+            changed = c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
+                             actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
+                             lease_until=?,cloud_inflight=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=?
+                             WHERE id=? AND status='queued'""",
+                          (provider.name, reason, estimate, lease, int(provider.kind == 'cloud'), ts, ts, row["id"]))
+            if changed.rowcount:
+                self._event(c, row["id"], "claimed", {"worker": "direct", "provider": provider.name, "reason": reason})
+                return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?", (row["id"],)).fetchone())
+        return None
+
     @traced('queue.finish',{'component':'compute-queue','operation':'finish'})
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
                output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,

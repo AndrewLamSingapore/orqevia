@@ -307,10 +307,9 @@ def get_session(request:Request):
     payload={'protocol':'orqevia.interface.v1','authenticated':bool(current),
         'recovery':recovery,**(current or {})}
     if current:
-        # Telemetry uses the open-access owner identity when the browser does
-        # not send a separate thin-client credential.
-        payload['interfaceClientId']=(open_access.OPEN_OWNER_ID
-            if open_access.enabled() else current['clientId'])
+        # Cookie-authenticated interface requests retain this session identity
+        # in PWASessionMiddleware, including when open access is enabled.
+        payload['interfaceClientId']=current['clientId']
     response=JSONResponse(payload,headers={'Cache-Control':'no-store'})
     if clear_credentials:
         return _delete_credentials(response)

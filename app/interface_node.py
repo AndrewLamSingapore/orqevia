@@ -118,7 +118,33 @@ def evidence_aggregates():
 def client_policy(client_id):
     """Only server configuration sets disclosure and per-dispatch spend limits."""
     if open_access.enabled():
-        return open_access.owner_policy()
+        policy = open_access.owner_policy()
+        if isinstance(client_id, str) and client_id.startswith('pwa:'):
+            # Open execution authority does not reassign durable PWA ownership.
+            # Read session metadata only: policy lookup must not initialize or
+            # migrate the session store, including during workspace observation.
+            policy.pop('owner_account_id', None)
+            path = Path(os.getenv('ORQEVIA_DATA_DIR', '/data')) / 'pwa-sessions.db'
+            db = None
+            try:
+                if re.fullmatch(r'pwa:[a-f0-9]{32}', client_id) and path.is_file():
+                    db = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=2)
+                    row = db.execute(
+                        'SELECT expires,revoked,owner_account_id,role FROM sessions WHERE client_id=?',
+                        (client_id,),
+                    ).fetchone()
+                    if (row and not row[1] and isinstance(row[0], (int, float))
+                            and math.isfinite(row[0]) and row[0] > time.time()
+                            and row[3] in {'OWNER', 'MEMBER'} and row[2]):
+                        if not isinstance(row[2], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,63}', row[2]):
+                            raise HTTPException(503, 'Owner linkage unavailable')
+                        policy['owner_account_id'] = row[2]
+            except (OSError, sqlite3.Error):
+                raise HTTPException(503, 'Owner linkage unavailable') from None
+            finally:
+                if db is not None:
+                    db.close()
+        return policy
     if isinstance(client_id,str) and client_id.startswith('pwa:'):
         from .pwa_sessions import client_policy as pwa_policy
         return pwa_policy(client_id)

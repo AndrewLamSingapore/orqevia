@@ -251,6 +251,26 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    parity_title = "## Shared operational observations and shell coherence - 25 October 2026"
+    assert after.count(parity_title) == 1
+    parity_start = after.index(parity_title)
+    parity_end = after.index("\n## ", parity_start + len(parity_title)) + 1
+    parity_update = after[parity_start:parity_end].encode("utf-8")
+    assert len(parity_update) == 1050
+    assert hashlib.sha256(parity_update).hexdigest() == "056d28287b1e4119db16a56ea4716f32a5f3d5e672c75ba7eb0980ffa3100821"
+    assert b"### Claimed, not independently checked" in parity_update
+    assert b"### Verified" not in parity_update
+    after = after[:parity_start] + after[parity_end:]
+    discovery_title = "## Shared desktop and mobile interface discovery - 25 October 2026"
+    assert after.count(discovery_title) == 1
+    discovery_start = after.index(discovery_title)
+    discovery_end = after.index("\n## ", discovery_start + len(discovery_title)) + 1
+    discovery_update = after[discovery_start:discovery_end].encode("utf-8")
+    assert len(discovery_update) == 1577
+    assert hashlib.sha256(discovery_update).hexdigest() == "513a64480829fb00a1a845ee40555d923e0a5317d89fadd1ee1a4225a6429d03"
+    assert b"### Claimed, not independently checked" in discovery_update
+    assert b"### Verified" not in discovery_update
+    after = after[:discovery_start] + after[discovery_end:]
     intelligence_title = "## Optional intelligence implementation and external exclusions - 25 October 2026"
     assert after.count(intelligence_title) == 1
     intelligence_start = after.index(intelligence_title)

@@ -1,4 +1,4 @@
-import {InterfaceAPI, safeID} from './core.mjs';
+import {InterfaceAPI, safeID, terminal} from './core.mjs';
 
 export function telemetryFreshness(value, now=Date.now()) {
   if(value?.schema_version!=='orqevia.telemetry.v1'||typeof value.source?.instance!=='string'||typeof value.source?.revision!=='string'||!Array.isArray(value.metrics)||!Array.isArray(value.agents)||value.agents.length>1000||new Set(value.agents.map(a=>a?.agent_id)).size!==value.agents.length||value.agents.some(a=>!safeID(a?.agent_id))) return 'UNKNOWN';
@@ -14,6 +14,32 @@ export function agentReadinessSummary(value) {
   const models=value?.model_runtime;
   if(!models||typeof models!=='object'||typeof models.ready!=='boolean'||!Array.isArray(models.required_models)||!Array.isArray(models.missing_models)) return null;
   return `Observed history ${observed} / 21 · fresh queue ${fresh} / 21 · ready ${ready} / 21`;
+}
+
+// One device-independent interpretation of the authenticated telemetry record.
+// This does not consult local task history, screen size or model-generated text.
+export function operationalFacts(value, now=Date.now()) {
+  const status=telemetryFreshness(value,now);
+  const unavailable={status,snapshotId:'UNKNOWN',observedAt:null,sourceRevision:'UNKNOWN',registered:null,ready:null,activeJobs:null,
+    host:{cpu:null,memory:null,disk:null,network_latency:null},work:{status:'UNAVAILABLE',tasks:[],activity:[]}};
+  if(status!=='OBSERVED')return unavailable;
+  const metric=name=>value.metrics.find(row=>row?.metric_id===name);
+  const measured=(name,integer=false)=>{const row=metric(name);return row?.collection_status==='OBSERVED'&&Number.isFinite(row.value)&&row.value>=0&&(!integer||Number.isSafeInteger(row.value))?row.value:null;};
+  const host=Object.fromEntries(['cpu','memory','disk','network_latency'].map(name=>[name,measured(name)]));
+  for(const name of ['cpu','memory','disk'])if(host[name]>100)host[name]=null;
+  const raw=value.work_observation, stamp=Date.parse(raw?.observed_at||'');
+  let work=unavailable.work;
+  if(raw?.schema_version==='orqevia.owned-work.v1'&&raw.status==='UNAUTHORIZED')work={status:'UNAUTHORIZED',tasks:[],activity:[]};
+  if(raw?.schema_version==='orqevia.owned-work.v1'&&raw.status==='OBSERVED'&&['OWNER_ACCOUNT','CLIENT'].includes(raw.scope)&&
+     Number.isFinite(stamp)&&stamp<=now+5000&&now-stamp<=value.freshness_seconds*1000&&Array.isArray(raw.tasks)&&raw.tasks.length<=50&&Array.isArray(raw.activity)&&raw.activity.length<=50){
+    const states=new Set(['RUNNING','WAITING FOR RESOURCE','COMPLETED','COMPLETED_WITH_FAILURES','reconciliation_required']);
+    const taskValid=row=>safeID(row?.id)&&states.has(row.state)&&((Number.isSafeInteger(row.revision)&&row.revision>=0)||(row.state==='reconciliation_required'&&row.revision===null))&&Array.isArray(row.agents)&&row.agents.length<=21&&row.agents.every(safeID);
+    const activityValid=row=>row?.event==='TASK_STATE_OBSERVATION'&&safeID(row.task_id)&&states.has(row.state)&&Number.isFinite(Date.parse(row.timestamp))&&Date.parse(row.timestamp)<=now+5000;
+    if(raw.tasks.every(taskValid)&&new Set(raw.tasks.map(row=>row.id)).size===raw.tasks.length&&raw.activity.every(activityValid))work=raw;
+  }
+  return {status,snapshotId:typeof value.snapshot_id==='string'?value.snapshot_id:'UNKNOWN',observedAt:value.observed_at,
+    sourceRevision:value.source.revision,registered:measured('registered_agents',true),ready:agentReadinessSummary(value)?value.ready_agent_count:null,
+    activeJobs:measured('active_job_records',true),host,work};
 }
 
 export function coachingStatus(value, now=Date.now()) {
@@ -79,11 +105,13 @@ export function normalLatestLines(value, now=Date.now()) {
 if(typeof document!=='undefined') {
   const api=new InterfaceAPI(), $=id=>document.getElementById(id);
   let latest=null, pending=null, events=new Map(), sessionEpoch=0, authenticated=false, clientId=null, interfaceClientId=null, generation=null;
+  const panelIds=new Set(['system-overview','live-system-health','active-tasks','live-activity']);
   function invalidatePending(){sessionEpoch++;pending?.abort();pending=null;}
   const text=(id,value)=>{if($(id))$(id).textContent=value;};
-  function view(name,updateRoute=true){
+  function view(name,updateRoute=true,panel=null){
     const known=new Set([...document.querySelectorAll('[data-view]')].map(x=>x.dataset.view));known.add('objective');if(!known.has(name))name='home';
-    if(updateRoute){const url=new URL(location.href);url.searchParams.set('view',name);history.pushState({},'',url);}
+    panel=name==='home'&&panelIds.has(panel)?panel:null;
+    if(updateRoute){const url=new URL(location.href);url.searchParams.set('view',name);if(panel)url.searchParams.set('panel',panel);else url.searchParams.delete('panel');history.pushState({},'',url);}
     const intelligence=['intelligence','gods-eye'].includes(name);
     $('intelligence-workspace')?.classList.toggle('hidden',!intelligence);
     window.dispatchEvent(new CustomEvent('orqevia-view',{detail:{name}}));
@@ -92,20 +120,21 @@ if(typeof document!=='undefined') {
     $('capability-view').classList.toggle('hidden',['home','objective','intelligence','gods-eye','coaching','plane','approvals','operations'].includes(name));
     $('coaching-view').classList.toggle('hidden',name!=='coaching');
     text('capability-title',name==='objective'?'New objective':name[0].toUpperCase()+name.slice(1));
-    const descriptions={agents:'Registry membership is verified separately from readiness. Individual live execution and heartbeat evidence is unavailable.',evidence:'Open your owned task to retrieve its original result and integrity-checked artifacts. Other accounts’ tasks are not exposed.','data & tools':'Upload TXT, Markdown or JSON through the existing authenticated objective interface. Host CPU, memory, disk and network collectors are not configured.',settings:'Manage the existing server session and permissions through Your connection.',intelligence:'Use the existing objective interface for bounded analysis. Every returned result retains its own execution record.',ideas:'Submit an objective through the existing orchestrator. Results and evidence remain attached to the original task.',architecture:'Request architectural analysis through the existing authorized objective interface.',build:'A dedicated build runner is unavailable. Advisory objectives are available; a response is not proof that code was built.',test:'A dedicated test runner is unavailable. Source tests and genuine execution receipts are classified separately.',deploy:'Production deployment remains an owner-authorized operation; this interface has no deployment adapter.',present:'A presentation execution adapter is unavailable. Existing objectives can request a draft; no completed deck is invented.'};
+    const descriptions={agents:'Registry membership, readiness and recorded execution evidence are reported separately from current authenticated observations.',evidence:'Open your owned task to retrieve its original result and integrity-checked artifacts. Other accounts’ tasks are not exposed.','data & tools':'Upload TXT, Markdown or JSON through the existing authenticated objective interface. Live System Health reports each host metric with its current observation status.',settings:'Manage the existing server session and permissions through Your connection.',intelligence:'Use the existing objective interface for bounded analysis. Every returned result retains its own execution record.',ideas:'Submit an objective through the existing orchestrator. Results and evidence remain attached to the original task.',architecture:'Request architectural analysis through the existing authorized objective interface.',build:'Inspect the available build operations and their source-bound execution evidence. A generated response alone is not proof that code was built.',test:'Inspect available checks and their recorded outcomes. Source tests and live execution receipts retain their own evidence scope.',deploy:'Production deployment remains an owner-authorized operation; this interface has no deployment adapter.',present:'A presentation execution adapter is unavailable. Existing objectives can request a draft; no completed deck is invented.'};
     text('capability-description',descriptions[name]||'Use the existing owned objective and task interfaces.');
     $('agent-provenance-list').classList.toggle('hidden',name!=='agents');
     for(const item of document.querySelectorAll('[data-view]'))item.setAttribute('aria-current',String(item.dataset.view===name));
     if(name==='settings')$('account-button').click();
     if(name==='objective')$('objective').focus();
-    window.scrollTo({top:0,behavior:'smooth'});
+    if(panel)$(panel)?.scrollIntoView?.({block:'start',behavior:'smooth'});else window.scrollTo({top:0,behavior:'smooth'});
   }
-  for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>view(button.dataset.view));
+  for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>view(button.dataset.view,true,button.dataset.panel));
   for(const button of document.querySelectorAll('[data-new-objective]'))button.addEventListener('click',()=>view('objective'));
   for(const button of document.querySelectorAll('[data-open-task]'))button.addEventListener('click',()=>{view('evidence');$('resume-button').click();});
-  window.addEventListener('orqevia-open-view',e=>view(e.detail.name));
-  window.addEventListener('popstate',()=>view(new URL(location.href).searchParams.get('view')||'home',false));
-  view(new URL(location.href).searchParams.get('view')||'home',false);
+  window.addEventListener('orqevia-open-view',e=>view(e.detail.name,true,e.detail.panel));
+  const route=()=>{const params=new URL(location.href).searchParams;view(params.get('view')||'home',false,params.get('panel'));};
+  window.addEventListener('popstate',route);
+  route();
   for(const button of document.querySelectorAll('[data-profile]'))button.addEventListener('click',()=>$('account-button').click());
   function renderCoaching(coaching){
     const list=$('coaching-roles'), summary=$('coaching-summary');
@@ -129,57 +158,82 @@ if(typeof document!=='undefined') {
     if(list){list.replaceChildren();for(const agent of coaching.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const head=document.createElement('div');head.className='coaching-role-head';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${typeof agent.role==='string'?agent.role.slice(0,128):'Role UNKNOWN'} - ${agent.phase||'UNKNOWN'} - ${agent.state||'UNKNOWN'}`;const marks=document.createElement('span');marks.className='coaching-marks';const m=(k)=>agent[k]===true?'P':agent[k]===false?'F':'-';marks.textContent=`Baseline ${m('baseline_pass')} / Practice ${m('practice_pass')} / Synthetic acceptance ${m('acceptance_pass')}`;head.append(name,marks);const t=document.createElement('small');const transition=Date.parse(agent.last_transition_at||'');t.textContent=Number.isFinite(transition)&&transition<=Date.now()+5000?`Last transition ${new Date(transition).toLocaleString()}`:'Last transition UNKNOWN';row.append(head,t);for(const line of coachingDetailLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
     if(list&&normal?.status==='OBSERVED'&&normal.agents?.length===21){for(const agent of normal.agents){if(!safeID(agent?.agent_id))continue;const row=document.createElement('div');row.className='coaching-role';const name=document.createElement('strong');name.textContent=`${agent.agent_id.toUpperCase()} - ${agent.role||'Role UNKNOWN'} - Normal-role follow-up`;row.append(name);for(const line of normalFollowupLines(agent)){const detail=document.createElement('small');detail.textContent=line;row.append(detail);}list.append(row);}}
   }
-  function unavailable(state){latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);text('mobile-system-state',state==='UNAUTHORIZED'?'Not connected':state);text('registered-count','—');text('active-count','—');text('mobile-ready','— / 21');for(const id of ['metric-cpu','metric-memory','metric-disk','metric-network_latency'])text(id,'—');text('telemetry-source','No current authenticated measurement');}
+  function bindSnapshot(facts){
+    const root=$('dashboard');
+    for(const [key,value] of [['snapshot-id',facts.snapshotId],['observed-at',facts.observedAt||'UNKNOWN'],['source-revision',facts.sourceRevision],['telemetry-state',facts.status],['work-state',facts.work.status]])root?.setAttribute('data-'+key,value);
+  }
+  function renderWork(facts){
+    const work=facts.work,rows=$('dashboard-task-rows'),activity=$('dashboard-activity-rows');rows.replaceChildren();activity.replaceChildren();
+    const emptyRow=message=>{const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent=message;row.append(cell);rows.append(row);};
+    if(work.status!=='OBSERVED'){
+      emptyRow('Active task observations '+work.status+'.');text('activity-state',work.status);activity.textContent='Live activity observations '+work.status+'.';return;
+    }
+    const active=work.tasks.filter(task=>!terminal(task.state));
+    if(!active.length)emptyRow(work.has_more?'No active tasks in this page of authorized records. Older records may exist.':'No active tasks in the authorized observation.');
+    for(const task of active){
+      const row=document.createElement('tr');row.setAttribute('data-task-id',task.id);row.setAttribute('data-task-state',task.state);
+      const progress=Number.isFinite(task.progress)&&task.progress>=0&&task.progress<=100?task.progress+'%':'UNKNOWN';
+      for(const [label,value] of [['Agent',task.agents.join(', ')||'UNKNOWN'],['Task',task.id],['Status',task.state],['Progress',progress],['Updated',task.updated_at||'UNKNOWN']]){
+        const cell=document.createElement('td');cell.setAttribute('data-label',label);
+        if(label==='Task'){const button=document.createElement('button');button.type='button';button.textContent=value;button.disabled=task.revision===null;button.setAttribute('aria-label',button.disabled?'Task '+task.id+' requires reconciliation; canonical revision unavailable':'Open task '+task.id);button.addEventListener?.('click',()=>window.dispatchEvent(new CustomEvent('orqevia-open-owned-task',{detail:{id:task.id}})));cell.append(button);}
+        else cell.textContent=value;row.append(cell);
+      }rows.append(row);
+    }
+    if(active.length&&work.has_more)emptyRow('Showing recent authorized task records. Older records may exist.');
+    text('activity-state',work.activity.length?'OBSERVED TASK STATES':'NO TIMESTAMPED ACTIVITY');
+    if(!work.activity.length)activity.textContent='No timestamped task state observation is available.';
+    for(const record of work.activity){const entry=document.createElement('div');entry.className='agent-record';entry.setAttribute('data-task-id',record.task_id);entry.setAttribute('data-task-state',record.state);entry.textContent=`${record.task_id} · ${record.state} · ${record.timestamp}`;activity.append(entry);}
+  }
+  function unavailable(state){
+    latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);
+    for(const id of ['registered-count','ready-agent-count','active-count','critical-count','metric-cpu','metric-memory','metric-disk','metric-network_latency']){text(id,'UNKNOWN');$(id)?.setAttribute('data-collection-status','UNAVAILABLE');}
+    text('telemetry-source','No current authenticated measurement');
+    const facts=operationalFacts(null);facts.status=state;bindSnapshot(facts);renderWork(facts);
+  }
   function render(){
     const state=telemetryFreshness(latest);
     if(state!=='OBSERVED'){unavailable(state);return;}
     renderCoaching(latest?.coaching??null);
     const normalLines=normalLatestLines(latest?.normal_latest);
     if(normalLines){const box=document.createElement('div');box.className='coaching-stat';const title=document.createElement('strong');title.textContent=normalLines[0];box.append(title);for(const line of normalLines.slice(1)){const detail=document.createElement('small');detail.textContent=line;box.append(detail);}$('coaching-summary').append(box);}
-    text('telemetry-state',state);text('mobile-system-state','Observations received');
+    const facts=operationalFacts(latest);bindSnapshot(facts);renderWork(facts);
+    text('telemetry-state',state);text('ready-agent-count',facts.ready===null?'UNKNOWN':String(facts.ready));$('ready-agent-count')?.setAttribute('data-collection-status',facts.ready===null?'UNAVAILABLE':'OBSERVED');text('critical-count','UNKNOWN');$('critical-count')?.setAttribute('data-collection-status','UNAVAILABLE');
     const readiness=agentReadinessSummary(latest);
-    text('mobile-ready',readiness?'ready '+(latest.ready_agent_count)+' / 21':'— / 21');
-    for(const [id,name] of [['registered-count','registered_agents'],['active-count','active_job_records']]){
-      const metric=latest.metrics.find(m=>m.metric_id===name);
-      text(id,metric?.collection_status==='OBSERVED'&&Number.isSafeInteger(metric.value)&&metric.value>=0?String(metric.value):'—');
+    for(const [id,value] of [['registered-count',facts.registered],['active-count',facts.activeJobs]]){
+      text(id,value===null?'UNKNOWN':String(value));
+      $(id)?.setAttribute('data-collection-status',value===null?'UNAVAILABLE':'OBSERVED');
     }
     let hostObserved=0;
     for(const [id,name] of [['metric-cpu','cpu'],['metric-memory','memory'],['metric-disk','disk'],['metric-network_latency','network_latency']]){
       const metric=latest.metrics.find(m=>m.metric_id===name);
-      const ok=metric?.collection_status==='OBSERVED'&&Number.isFinite(metric.value)&&metric.value>=0;
+      const ok=facts.host[name]!==null;
       if(ok)hostObserved++;
-      text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'—');
+      $(id)?.setAttribute('data-collection-status',ok?'OBSERVED':'UNAVAILABLE');
+      text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'UNKNOWN');
     }
     text('telemetry-source',`${latest.source.instance} · ${readiness||'agent readiness UNKNOWN'} · observed ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(latest.observed_at))} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
-    if(!events.size){
-      const active=latest.metrics.find(metric=>metric.metric_id==='active_job_records');
-      const count=active?.collection_status==='OBSERVED'&&Number.isSafeInteger(active.value)?active.value:null;
-      text('activity-state',count>0?'ACTIVE WORK':'IDLE');
-      text('dashboard-activity-rows',count>0?'Active work exists. Open a task or submit an objective to view its owned event stream.':count===0?'No ORQEVIA jobs are currently active.':'Activity is unavailable.');
-    }
     const list=$('agent-provenance-list');list.replaceChildren();
     for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · availability ${agent.availability}`;row.append(title,status);list.append(row);}
   }
   async function poll(){
     if(!authenticated||document.hidden||!navigator.onLine||pending)return;
     const controller=new AbortController(), epoch=sessionEpoch;pending=controller;
-    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:10000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}latest=value;render();}
+    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:20000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}latest=value;render();}
     catch(error){if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;unavailable([401,403].includes(error.status)?'UNAUTHORIZED':!navigator.onLine?'OFFLINE':'UNAVAILABLE');}
     finally{if(pending===controller)pending=null;}
   }
   window.addEventListener('orqevia-task',event=>{
     const task=event.detail;if(!authenticated||task?.clientId!==clientId||task?.generation!==generation||!safeID(task?.id))return;
-    const rows=$('dashboard-task-rows');rows.replaceChildren();const row=document.createElement('tr');
-    for(const value of [task.agents.join(', ')||'UNKNOWN',task.id,task.state,'UNKNOWN',task.updated||'UNKNOWN']){const cell=document.createElement('td');cell.textContent=value;row.append(cell);}rows.append(row);
     const key=`${task.id}:${task.revision}:${task.state}`;if(events.has(key))return;
     events.set(key,task);if(events.size>50)events.delete(events.keys().next().value);
-    const activity=$('dashboard-activity-rows');activity.replaceChildren();
-    for(const record of [...events.values()].reverse().slice(0,8)){const entry=document.createElement('div');entry.className='agent-record';entry.textContent=`${record.id} · ${record.state} · ${record.updated||'source timestamp UNKNOWN'}`;activity.append(entry);}
-    text('activity-state','OWNED TASK OBSERVATIONS');
+    // Local browser notifications never become shared live execution evidence.
+    // Read the existing authenticated source again for the canonical state.
+    void poll();
   });
-  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();latest=null;unavailable('UNAUTHORIZED');text('dashboard-activity-rows','No owned task event stream selected.');text('activity-state',next?'NO RECENT TASK':'UNAVAILABLE');const rows=$('dashboard-task-rows');rows.replaceChildren();const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent='Open an owned task to inspect its genuine execution record.';row.append(cell);rows.append(row);if(next)void poll();});
+  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();if(next){latest=null;void poll();}else{latest=null;unavailable('UNAUTHORIZED');}});
   function suspend(){invalidatePending();unavailable('OFFLINE');}
   window.addEventListener('offline',suspend);window.addEventListener('online',()=>void poll());
+  window.addEventListener('orqevia-shell-state',event=>{if(event.detail?.state==='offline')suspend();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){invalidatePending();}else void poll();});
   const clock=()=>text('dashboard-clock',new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'medium'}).format(new Date()));
   clock();setInterval(clock,1000);setInterval(()=>void poll(),30000);setInterval(()=>{if(latest)render();},5000);void poll();

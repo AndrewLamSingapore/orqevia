@@ -60,7 +60,8 @@ jobs:
           node clients/pwa/revision-tests.mjs
           node clients/pwa/dashboard-tests.mjs
           node clients/pwa/dashboard-coaching-tests.mjs
-          node --test clients/pwa/dashboard-race-tests.mjs clients/pwa/session-race-tests.mjs clients/pwa/sw-update-tests.mjs clients/pwa/intelligence-tests.mjs clients/pwa/intelligence-flow-tests.mjs
+          node --test clients/pwa/packaging-tests.mjs
+          node --test clients/pwa/dashboard-race-tests.mjs clients/pwa/operational-facts-tests.mjs clients/pwa/session-race-tests.mjs clients/pwa/sw-update-tests.mjs clients/pwa/intelligence-tests.mjs clients/pwa/intelligence-flow-tests.mjs
           node --test clients/pwa/knowledge-tests.mjs clients/pwa/workspace-tools-tests.mjs
           node --test tests/command_map.test.mjs
           node --test tests/control_surface_approval_security.test.mjs tests/control_surface_health.test.mjs
