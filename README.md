@@ -1,3 +1,5 @@
+[![ORQEVIA — Coordinate work. Preserve the evidence.](docs/repository-banner.svg)](https://authority-engine-app.vercel.app/orqevia)
+
 <p align="center">
   <img src="clients/pwa/icons/orqevia-official-v1-192.png" width="112" alt="ORQEVIA logo" />
 </p>
@@ -9,6 +11,7 @@
 [Public walkthrough](https://authority-engine-app.vercel.app/orqevia) ·
 [Architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) ·
 [Current status](STATUS.md) ·
+[Discussions](https://github.com/AndrewLamSingapore/orqevia/discussions) ·
 [Contact](https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration)
 
 ![MIT license](https://img.shields.io/badge/license-MIT-2E8B57?style=flat-square)
@@ -23,6 +26,16 @@ durable memory and operational evidence.
 
 The public walkthrough is open. The owner workspace is protected by Cloudflare
 Access, TLS and server-side session authorization.
+
+## Start here
+
+| You want to… | Go to |
+| --- | --- |
+| Explore the product | [Public walkthrough](https://authority-engine-app.vercel.app/orqevia); the operational workspace requires authenticated access |
+| Understand the source | [System map](#system-map), [architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) and [PWA guide](clients/pwa/README.md) |
+| Inspect evidence | [Dated status claims](STATUS.md) and [local verification](#local-verification); source and CI do not establish current deployment |
+
+[Browse all six projects and their source](https://github.com/AndrewLamSingapore/AndrewLamSingapore#selected-work) · [About Andrew](https://authority-engine-app.vercel.app/about)
 
 ## What makes it different
 
