@@ -3,9 +3,9 @@
 Observed 26 October 2026. **Cross-device parity: VERIFIED. Output queues:
 REMOVED. Physical-device acceptance: CONFIRMED. Broader role/L7
 certification: NOT ESTABLISHED.** Local production runs application source
-`fed0da073b77b4fcb35687e88a005e9a027c0a4e` (image
-`orqevia:cross-device-fed0da0`), bound to golden baseline
-`orqevia-golden-gen21-20261026`. This report does not award general agent
+`db22290f536f0b5ee93f88b9d4fd7c6f1cb5ac61` (image
+`orqevia:cross-device-db22290`), bound to golden baseline
+`orqevia-golden-gen22-20261026`. This report does not award general agent
 qualification or L7.
 
 ## Verified live
@@ -20,6 +20,8 @@ qualification or L7.
   live inference job completed straight through without any queue consumer.
   The execution journal is retained, so queue-related fabric evidence
   continues to verify.
+- The Hugging Face observation expiry is removed: the last governed
+  inference observation stays valid until replaced by a newer execution.
 - Fabric evidence refreshed at the running revision: 36/36 VERIFIED, zero
   failed.
 - Runtime attestation re-signed every five minutes: status VERIFIED with
@@ -57,9 +59,9 @@ operations above are the discovered integrated contracts.
 - Remaining owner-parked items are unchanged: WSL2 memory cap, off-device
   backup sync, pre-logon startup, physical read-aloud acceptance, and the
   Velyqua campaign visual merge.
-- HF observations expire after 24 hours without fresh execution. Readiness
-  polling never submits paid calls, and no paid provider call was made for
-  this acceptance.
+- HF observations no longer expire: the last governed inference observation
+  stays valid until replaced by a newer execution. Readiness polling never
+  submits paid calls, and no paid provider call was made for this acceptance.
 
 ## Scope
 
