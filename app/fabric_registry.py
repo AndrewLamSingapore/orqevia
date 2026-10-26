@@ -208,9 +208,9 @@ _FABRICS = [
         operations=["governed cloud inference (bounded)"],
         dependencies=["ORQEVIA_HF_TOKEN_FILE"],
         health_check="collective lookup",
-        tests_status="last governed inference within 24h at observation 2026-10-24",
+        tests_status="last governed inference valid until replaced at observation 2026-10-24",
         evidence=[_STATUS_RECEIPT, _FABRIC_RECEIPT],
-        notes="Evidence expires 24 hours after the governed execution; not a continuous provider SLA.",
+        notes="Evidence remains valid until replaced by a newer governed execution; not a continuous provider SLA.",
     ),
     _f(
         "f08",
@@ -725,7 +725,7 @@ _OPERATION_DEPENDENCIES = {
     "f07": [
         "app/fabric_adapters.py:hf_observation",
         "app/compute_catalog.py",
-        "actual queue and compute-ledger.db records no older than 24 hours",
+        "actual queue and compute-ledger.db records with no expiry",
     ],
     "f08": ["app/compute_queue_api.py:queue", "app/job_queue.py:JobQueue.metrics"],
     "f09": ["app/geospatial.py", "app/fabric_adapters.py:mlp_infer"],
@@ -947,7 +947,7 @@ def _runtime_contract(item, runtime):
         item["notes"] += " grants_agent_authority=false; automatic_training=false."
     if identifier == "f07":
         item["notes"] += (
-            " Fresh observation of an actual governed inference is required within 24 hours; a read-only observation initiates no new inference."
+            " The latest governed inference observation remains valid until replaced; a read-only observation initiates no new inference."
         )
     item["runtime_contract"] = {
         "version": runtime["version"],

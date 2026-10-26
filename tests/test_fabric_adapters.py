@@ -193,6 +193,14 @@ def test_hf_observer_uses_actual_persisted_queue_contract_and_freshness(local, t
             "UPDATE compute_jobs SET completed_at=? WHERE id=?",
             ((datetime.now(timezone.utc) - timedelta(days=2)).isoformat(), job["id"]),
         )
+    assert fa.hf_observation(entry)["health_scope"] == (
+        "LAST_GOVERNED_INFERENCE_VALID_UNTIL_REPLACED_NOT_CONTINUOUS_PROVIDER_SLA"
+    )
+    with queue.connect() as db:
+        db.execute(
+            "UPDATE compute_jobs SET completed_at=? WHERE id=?",
+            ((datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(), job["id"]),
+        )
     with pytest.raises(ValueError):
         fa.hf_observation(entry)
     with pytest.raises(ValueError):

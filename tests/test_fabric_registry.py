@@ -430,7 +430,7 @@ def test_scope_limits_remain_explicit_in_current_contracts():
     assert "No attached robot" in entries["f33"]["notes"]
     assert "new MCP" in entries["f09"]["notes"]
     assert "confidential-computing" in entries["f28"]["notes"]
-    assert "24 hours" in entries["f07"]["notes"]
+    assert "valid until replaced" in entries["f07"]["notes"].lower()
     assert all(item["verification"]["status"] == "UNVERIFIED" for item in entries.values())
 
 
