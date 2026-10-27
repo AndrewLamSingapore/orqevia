@@ -71,3 +71,8 @@ The versioned source registry defines 36 fabrics, but this does **not** establis
 ## Component verification snapshot — 27 October 2026
 
 This is a status finding, not a remediation claim. Agent Factory is source-present but production routing/registration is unverified; Academy endpoint responds with a STALE cohort and no recorded assessment passes; 36 fabrics have 0 current VERIFIED receipts; PIF's probed live status path and both probed MLP status paths returned HTTPS 404; and full inference-path coverage remains unverified. Exact observations, caveats and follow-up evidence requirements are in `ORQEVIA_CODEX_HANDOVER.md`, `ORQEVIA_HEALTH_VERIFICATION.md`, and the checkpoint's `evidence/component-status-audit-20261027T071032Z.json`. No code activation, status forcing, or fabricated pass was performed as part of this audit.
+
+
+## Complete live deployment plan
+
+The sequenced implementation, staging, rollout, rollback, offline-recovery, and acceptance plan is recorded in [ORQEVIA_LIVE_DEPLOYMENT_PLAN.md](ORQEVIA_LIVE_DEPLOYMENT_PLAN.md). Status is **PLANNED, NOT EXECUTED**. The plan does not change the current incomplete verdict.

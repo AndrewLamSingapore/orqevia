@@ -65,3 +65,7 @@ Current evidence: Agent Factory is source-present but has no verified live produ
 ## Inference coverage — 27 October 2026
 
 **All inference paths working: NOT VERIFIED.** ORQEVIA has multiple inference components and paths; the checks recorded here are not a full inventory or end-to-end test of every request/model/fabric/agent integration. PIF’s current HTTPS status probe returned 404; MLP’s two current HTTPS status probes returned 404; the live Academy response is fixture curriculum/cohort state, not evidence of production predictive inference. No global inference-availability or accuracy claim is supported. Enumerate every deployed inference route and verify authenticated request → intended model/fabric → provenance/evidence persistence → response and restart recovery before marking all inference working.
+
+## Complete live deployment plan
+
+See [ORQEVIA_LIVE_DEPLOYMENT_PLAN.md](ORQEVIA_LIVE_DEPLOYMENT_PLAN.md) for the phased route inventory, repair, staging, sequential production rollout, rollback, offline recovery, and closure criteria. The plan is **PLANNED, NOT EXECUTED**; component statuses remain as reported until backed by live evidence.

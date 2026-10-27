@@ -79,3 +79,8 @@ The versioned source registry defines 36 fabrics, but this does **not** establis
 ## Inference coverage — 27 October 2026
 
 **All inference paths working: NOT VERIFIED.** ORQEVIA has multiple inference components and paths; the checks recorded here are not a full inventory or end-to-end test of every request/model/fabric/agent integration. PIF’s current HTTPS status probe returned 404; MLP’s two current HTTPS status probes returned 404; the live Academy response is fixture curriculum/cohort state, not evidence of production predictive inference. No global inference-availability or accuracy claim is supported. Enumerate every deployed inference route and verify authenticated request → intended model/fabric → provenance/evidence persistence → response and restart recovery before marking all inference working.
+
+
+## Complete live deployment plan
+
+The sequenced implementation, staging, rollout, rollback, offline-recovery, and acceptance plan is recorded in [ORQEVIA_LIVE_DEPLOYMENT_PLAN.md](ORQEVIA_LIVE_DEPLOYMENT_PLAN.md). Status is **PLANNED, NOT EXECUTED**. The plan does not change the current incomplete verdict.
