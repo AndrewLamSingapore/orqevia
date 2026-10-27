@@ -63,3 +63,10 @@ the result fields. The independent numerical oracle is unchanged. Arithmetic
 notes are learner output, not trusted instructions or independent evidence;
 only independently correct result fields can pass. Live learning quality remains
 separate from source tests and controller health.
+
+Direct local requests must not wait for legacy queue admission counters. The
+existing local model service owns its physical scheduling and retains one
+resident model and one parallel inference. Journal jobs can therefore include
+requests waiting inside that service; a running journal count is not proof of
+parallel model computation. Local model/memory requirements and cloud cost rules
+remain checked. Legacy explicitly queued execution keeps its prior policy.

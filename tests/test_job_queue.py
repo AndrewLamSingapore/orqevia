@@ -32,6 +32,35 @@ def test_unknown_agent_is_rejected(tmp_path):
         raise AssertionError("unregistered compute agent must fail closed")
 
 
+def test_direct_local_requests_are_not_held_by_legacy_queue_admission_limits(tmp_path):
+    q=queue(tmp_path,**{'global':1})
+    model=Provider('ollama-deep','local','gemma3:12b',8192,0,1)
+    background=q.submit(agent='a01',prompt='fixture learning',priority='background',model=model.model)
+    assert q.claim_direct(background['id'],[model])['id']==background['id']
+    owner=q.submit(agent='a02',prompt='fixture ordinary Owner request',priority='critical',model=model.model)
+    assert q.claim_direct(owner['id'],[model])['id']==owner['id']
+    same_actor=q.submit(agent='a01',prompt='fixture same actor independent request',model=model.model)
+    assert q.claim_direct(same_actor['id'],[model])['id']==same_actor['id']
+    assert q.claim_direct(owner['id'],[model]) is None
+    # The local model server remains responsible for its configured single
+    # inference. No physical model invocation occurs in this journal test.
+    legacy=q.submit(agent='a04',prompt='fixture explicit legacy queued mode',model=model.model)
+    assert q.claim('legacy-worker',[model]) is None
+    assert q.get(legacy['id'])['status']=='queued'
+
+
+def test_direct_local_routing_preserves_model_capacity_and_cloud_policy(tmp_path):
+    q=queue(tmp_path,**{'global':1})
+    model=Provider('ollama-deep','local','gemma3:12b',8192,0,1)
+    active=q.submit(agent='a01',prompt='fixture active',model=model.model)
+    q.claim_direct(active['id'],[model])
+    missing=q.submit(agent='a02',prompt='fixture unavailable model',model='not-installed',allow_cloud=False)
+    assert q.claim_direct(missing['id'],[model,CLOUD]) is None
+    oversized=q.submit(agent='a04',prompt='fixture memory too large',model=model.model,ram_mb=8193)
+    assert q.claim_direct(oversized['id'],[model]) is None
+    assert q.get(missing['id'])['attempts']==q.get(oversized['id'])['attempts']==0
+
+
 def test_response_format_survives_queue_restart_without_changing_old_jobs(tmp_path):
     q=queue(tmp_path)
     ordinary=q.submit(agent='a19',prompt='ordinary')
