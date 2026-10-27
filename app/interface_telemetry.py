@@ -1,6 +1,7 @@
 """Bounded workspace aggregates with evidence-bound runtime readiness."""
 from datetime import datetime, timezone
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -14,16 +15,39 @@ from .agent_registry import load_agent_registry
 
 def activity_is_fresh(value, *, now, max_age_seconds):
     """Return true only for a timestamped observation inside the allowed clock window."""
-    if not isinstance(value, str) or not isinstance(max_age_seconds, int):
-        return False
+    return timestamp_observation(value, now=now, max_age_seconds=max_age_seconds)['status'] == 'OBSERVED'
+
+
+def _timestamp_epoch(value):
+    if not isinstance(value, str) or len(value) > 64:
+        return None
     try:
-        observed = datetime.fromisoformat(value.replace('Z', '+00:00'))
-        if observed.tzinfo is None:
-            observed = observed.replace(tzinfo=timezone.utc)
-        age = now - observed.timestamp()
+        stamp = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        if stamp.tzinfo is None or stamp.utcoffset() is None:
+            return None
+        epoch = stamp.timestamp()
+        return epoch if math.isfinite(epoch) else None
     except (OverflowError, TypeError, ValueError):
-        return False
-    return -5 <= age <= max_age_seconds
+        return None
+
+
+def timestamp_observation(value, *, now, max_age_seconds):
+    """Receipt time never repairs missing, naive, future or stale source time."""
+    result = {'status': 'UNKNOWN', 'reason': 'TIMESTAMP_INVALID', 'age_seconds': None}
+    if value is None:
+        return {**result, 'reason': 'TIMESTAMP_NOT_RECORDED'}
+    epoch = _timestamp_epoch(value)
+    if epoch is None:
+        return result
+    age = now - epoch
+    result['age_seconds'] = round(age, 3)
+    if age < -5:
+        return {**result, 'reason': 'TIMESTAMP_IN_FUTURE'}
+    if type(max_age_seconds) is not int or max_age_seconds < 1:
+        return {**result, 'reason': 'FRESHNESS_WINDOW_INVALID'}
+    if age > max_age_seconds:
+        return {**result, 'status': 'STALE', 'reason': 'ACTIVITY_STALE'}
+    return {**result, 'status': 'OBSERVED', 'reason': None}
 
 
 def queue_freshness_seconds():
@@ -108,7 +132,12 @@ def telemetry_store_counts():
 
 
 def agent_activity():
-    """Collect bounded queue-backed activity without claiming process liveness."""
+    """Project journal metadata only, ordered by actual transition time.
+
+    A newly inserted row does not supersede an older job's later transition.
+    An unorderable newest insertion remains explicit unknown evidence instead
+    of falling back to an older successful row and claiming readiness.
+    """
     root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data')).resolve()
     path = root/'compute-queue.db'
     if not path.is_file():
@@ -116,13 +145,70 @@ def agent_activity():
     db = None
     try:
         db = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0.2)
+        db.row_factory = sqlite3.Row
+        deadline = time.monotonic() + 0.2
+        db.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
         columns = {row[1] for row in db.execute('PRAGMA table_info(compute_jobs)')}
         if not {'agent', 'status'}.issubset(columns):
             return None
-        timestamp = 'updated_at' if 'updated_at' in columns else 'NULL'
-        return {row[0]: {'status': row[1], 'observed_at': row[2]} for row in db.execute(
-            f"SELECT agent,status,{timestamp} FROM compute_jobs WHERE rowid IN "
-            "(SELECT MAX(rowid) FROM compute_jobs GROUP BY agent)")}
+        names = ('id', 'agent', 'status', 'created_at', 'started_at', 'completed_at',
+                 'updated_at', 'provider', 'model', 'task_class')
+        projection = ','.join(name if name in columns else f'NULL AS {name}' for name in names)
+        # Free-text errors, inputs, outputs, leases and credentials never enter
+        # the projection. Unknown errors retain a fixed classification only.
+        error = ("CASE WHEN error IN ('LOCAL_EXECUTION_FAILED','LOCAL_EXECUTION_TIMEOUT',"
+                 "'LOCAL_INFERENCE_FAILED','STRICT_JSON_CONTRACT_FAILED',"
+                 "'EXTERNAL_EXECUTION_FAILED','worker lease expired',"
+                 "'agent retired or unregistered','actual cost ceiling reached') THEN error "
+                 "WHEN error IS NULL OR error='' THEN NULL ELSE 'EXECUTION_FAILURE' END"
+                 if 'error' in columns else 'NULL')
+        known = {agent['id'] for agent in load_agent_registry()['agents']}
+        result = {}
+        def order(task, field='updated_at'):
+            epoch = _timestamp_epoch(task.get(field))
+            if epoch is None and field == 'completed_at':
+                epoch = _timestamp_epoch(task.get('updated_at'))
+            return (epoch if epoch is not None else float('-inf'), task['_rowid'])
+        for raw in db.execute(f'SELECT rowid AS _rowid,{projection},{error} AS error_code FROM compute_jobs'):
+            if time.monotonic() >= deadline:
+                return None
+            task = dict(raw)
+            aid = task['agent']
+            if aid not in known:
+                continue
+            item = result.setdefault(aid, {'history_count': 0, '_inserted': None,
+                                          'latest_task': None, 'last_success': None, 'last_failure': None})
+            item['history_count'] += 1
+            if item['_inserted'] is None or task['_rowid'] > item['_inserted']['_rowid']:
+                item['_inserted'] = task
+            if item['latest_task'] is None or order(task) > order(item['latest_task']):
+                item['latest_task'] = task
+            category = 'last_success' if task['status'] == 'completed' else (
+                'last_failure' if task['status'] in {'failed', 'budget_blocked', 'blocked'} else None)
+            if category and (item[category] is None or order(task, 'completed_at') > order(item[category], 'completed_at')):
+                item[category] = task
+        for item in result.values():
+            inserted = item.pop('_inserted')
+            if _timestamp_epoch(inserted['updated_at']) is None:
+                item['latest_task'] = inserted
+                item['ordering'] = 'LATEST_INSERTED_TASK_TIMESTAMP_UNORDERABLE'
+            else:
+                item['ordering'] = 'MOST_RECENT_TASK_TRANSITION'
+            item['status'] = item['latest_task']['status']
+            item['observed_at'] = item['latest_task']['updated_at']
+            for key in ('latest_task', 'last_success', 'last_failure'):
+                task = item[key]
+                if task is None:
+                    continue
+                task = item[key] = dict(task)
+                task.pop('_rowid')
+                task.pop('agent')
+                task['job_id'] = task.pop('id')
+                task['task_id'] = None
+                task['task_id_status'] = 'OBJECTIVE_JOIN_NOT_OBSERVED'
+                task['evidence_scope'] = 'COMPUTE_EXECUTION_NOT_OUTPUT_CORRECTNESS'
+        _join_objective_ids(root, result)
+        return result
     except (OSError, sqlite3.Error, TypeError, ValueError):
         return None
     finally:
@@ -130,11 +216,127 @@ def agent_activity():
             db.close()
 
 
+def _join_objective_ids(root, activity):
+    """A journal job ID is not a parent objective ID; missing joins stay null."""
+    tasks = [item[key] for item in activity.values() for key in
+             ('latest_task', 'last_success', 'last_failure') if item[key] is not None]
+    ids = {task['job_id'] for task in tasks if task['job_id'] is not None}
+    path = root / 'objectives.db'
+    if not ids or not path.is_file():
+        return
+    db = None
+    try:
+        db = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0.2)
+        deadline = time.monotonic() + 0.2
+        db.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
+        placeholders = ','.join('?' for _ in ids)
+        rows = db.execute(
+            "SELECT o.id,json_extract(s.value,'$.dispatch.job.id') FROM objectives o,"
+            f"json_each(o.steps_json) s WHERE json_extract(s.value,'$.dispatch.job.id') IN ({placeholders})",
+            tuple(ids)).fetchall()
+        joins = {}
+        for task_id, job_id in rows:
+            joins.setdefault(job_id, set()).add(task_id)
+        for task in tasks:
+            parents = joins.get(task['job_id'], set())
+            if len(parents) == 1:
+                task['task_id'] = next(iter(parents))
+                task['task_id_status'] = 'OBJECTIVE_STORE_JOIN'
+            elif len(parents) > 1:
+                task['task_id_status'] = 'OBJECTIVE_JOIN_AMBIGUOUS'
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        pass
+    finally:
+        if db is not None:
+            db.close()
+
+
+def execution_configuration():
+    flag = os.getenv('PRIME_REGISTRY_V1_ENABLED', os.getenv('ORQEVIA_REGISTRY_V1_ENABLED', ''))
+    return {
+        'dispatch_status': 'ENABLED' if flag == '1' else 'DISABLED' if flag == '0' else 'UNKNOWN',
+        'execution_mode': os.getenv('ORQEVIA_OUTPUT_QUEUE_MODE', 'direct').strip().lower(),
+        'runtime_model': 'LOGICAL_ON_DEMAND_SHARED_INFERENCE',
+        'dedicated_worker_expected': False,
+        'source': 'RUNTIME_CONFIGURATION',
+    }
+
+
+def role_observation(agent, record, *, collector_available, now, max_age_seconds,
+                     model_runtime, configuration):
+    latest = record['latest_task'] if record else None
+    activity = timestamp_observation(latest['updated_at'] if latest else None,
+                                     now=now, max_age_seconds=max_age_seconds)
+    model_time = timestamp_observation(model_runtime.get('observed_at'), now=now, max_age_seconds=60)
+    completion = timestamp_observation(latest.get('completed_at') if latest else None,
+                                       now=now, max_age_seconds=max_age_seconds)
+    status = latest['status'] if latest else None
+    reason = None
+    readiness = 'UNCONFIRMED'
+    blocker = None
+    if agent.get('lifecycle_status') != 'active':
+        readiness, reason = 'DISABLED', 'ROLE_LIFECYCLE_NOT_ACTIVE'
+    elif configuration['dispatch_status'] == 'DISABLED':
+        readiness, reason = 'DISABLED', 'ADVISORY_DISPATCH_DISABLED'
+    elif configuration['dispatch_status'] != 'ENABLED' or configuration['execution_mode'] not in {'direct', 'queued'}:
+        reason = 'EXECUTION_CONFIGURATION_UNCONFIRMED'
+    elif not collector_available:
+        reason = 'COMPUTE_JOURNAL_UNAVAILABLE'
+    elif not latest:
+        reason = 'NO_RECORDED_TASK'
+    elif activity['status'] != 'OBSERVED':
+        reason = activity['reason']
+    elif status in {'failed', 'budget_blocked', 'blocked', 'cancelled'}:
+        reason = 'LATEST_TASK_' + status.upper()
+    elif status != 'completed':
+        reason = 'TASK_EXECUTION_IN_PROGRESS' if status == 'running' else 'TASK_COMPLETION_NOT_CONFIRMED'
+    elif completion['status'] != 'OBSERVED':
+        reason = 'COMPLETION_' + (completion['reason'] or 'UNCONFIRMED')
+    elif not latest.get('job_id'):
+        reason = 'JOB_ID_NOT_RECORDED'
+    elif model_runtime.get('status') != 'OBSERVED' or model_time['status'] != 'OBSERVED':
+        reason = 'CURRENT_MODEL_OBSERVATION_UNAVAILABLE'
+    elif model_runtime.get('ready') is not True:
+        reason = 'CONFIGURED_MODELS_UNAVAILABLE'
+        readiness = 'BLOCKED'
+        blocker = {'scope': 'CONFIGURED_MODEL_INFERENCE', 'reason_code': reason}
+    else:
+        readiness, reason = 'CONFIRMED', 'RECENT_SUCCESSFUL_EXECUTION_AND_CURRENT_MODEL_OBSERVATION'
+    availability = ('RUNNING' if status == 'running' else 'QUEUED' if status in {'queued', 'awaiting_approval'}
+                    else 'IDLE' if record else 'NOT_OBSERVED' if collector_available else 'COLLECTOR_UNAVAILABLE')
+    return {
+        'agent_id': agent['id'], 'name': agent['name'], 'registration': 'REGISTERED',
+        'lifecycle_status': agent.get('lifecycle_status'), 'capability_ids': agent.get('capability_requirements', []),
+        'availability': availability, 'availability_scope': 'LAST_RECORDED_TASK_STATE_NOT_PROCESS_LIVENESS',
+        'runtime_model': configuration['runtime_model'], 'heartbeat': None,
+        'heartbeat_status': 'NOT_COLLECTED', 'heartbeat_reason': 'LOGICAL_ON_DEMAND_ROLE_WITHOUT_DEDICATED_WORKER',
+        'last_activity_at': latest['updated_at'] if latest else None,
+        'activity_source': 'compute-queue', 'activity_freshness': activity,
+        'last_task': latest, 'last_success': record['last_success'] if record else None,
+        'last_failure': record['last_failure'] if record else None,
+        'history_count': record['history_count'] if record else (0 if collector_available else None),
+        'task_ordering': record['ordering'] if record else 'NO_TASK_OBSERVATION',
+        'readiness_status': readiness, 'reason_code': reason, 'blocker': blocker,
+        'dependency_summary': {
+            'registry': 'OBSERVED', 'dispatch': configuration['dispatch_status'],
+            'execution_mode': configuration['execution_mode'],
+            'compute_journal': 'OBSERVED' if collector_available else 'UNAVAILABLE',
+            'model_runtime': model_runtime.get('status', 'UNAVAILABLE'),
+            'model_available': model_runtime.get('ready'),
+            'model_observed_at': model_runtime.get('observed_at'), 'model_observation_freshness': model_time,
+            'required_models': model_runtime.get('required_models', []),
+            'missing_models': model_runtime.get('missing_models', []),
+            'role_competence': 'NOT_ESTABLISHED_BY_EXECUTION_OR_COACHING_COUNT',
+        },
+    }
+
+
 def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None):
     observed = datetime.now(timezone.utc).isoformat()
     registry = load_agent_registry()
     stores = telemetry_store_counts()
     from .coaching_observation import coaching_snapshot
+    from .observability_health import operational_health_snapshot
     coaching = coaching_snapshot(Path(os.getenv('ORQEVIA_DATA_DIR','/data')))
     activity = agent_activity()
     model_runtime = model_runtime_probe or model_runtime_readiness()
@@ -145,12 +347,14 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
     if not re.fullmatch(r'[a-f0-9]{40}', revision):
         revision = 'UNKNOWN'
 
-    def metric(name, value, status, producer, unit='count'):
+    def metric(name, value, status, producer, unit='count', *, event_timestamp=None,
+               reason=None, source=None, age_seconds=None):
         return {'metric_id': name, 'value': value, 'unit': unit,
                 'collection_status': status, 'source_system': 'ORQEVIA',
                 'source_instance': instance, 'producer': producer,
-                'scope': 'WORKSPACE_AGGREGATE', 'event_timestamp': None,
+                'scope': 'WORKSPACE_AGGREGATE', 'event_timestamp': event_timestamp,
                 'observed_at': observed,
+                'reason': reason, 'source': source, 'age_seconds': age_seconds,
                 'provenance': 'READ_ONLY_STORE_OBSERVATION' if status == 'OBSERVED' else 'NO_MEASUREMENT'}
 
     active = stores['compute_jobs']['active_count']
@@ -163,41 +367,36 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
     for name, unit, field in [('cpu', 'percent', 'cpu_percent'), ('memory', 'percent', 'memory_percent'),
                               ('disk', 'percent', 'disk_percent'), ('network_latency', 'ms', 'network_latency_ms')]:
         value = host['values'].get(field)
-        metrics.append(metric(name, value, 'OBSERVED' if value is not None else 'UNAVAILABLE', host_producer, unit))
-    agents=[]
-    for agent in registry['agents']:
-        record=activity.get(agent['id']) if activity is not None else None
-        status=record['status'] if record else None
-        availability=('RUNNING' if status=='running' else 'QUEUED' if status in {'queued','awaiting_approval'}
-                      else 'IDLE' if record else 'NOT_OBSERVED' if activity is not None else 'COLLECTOR_UNAVAILABLE')
-        agents.append({'agent_id':agent['id'],'name':agent['name'],'registration':'REGISTERED',
-                       'availability':availability,'heartbeat':record['observed_at'] if record else None,
-                       'activity_source':'compute-queue'})
-    observed_count = (
-        sum(item['availability'] in {'RUNNING','QUEUED','IDLE'} for item in agents)
-        if activity is not None else None
-    )
+        detail = host.get('field_status', {}).get(field, {})
+        status = detail.get('collection_status', 'OBSERVED' if value is not None else 'UNAVAILABLE')
+        captured = detail.get('captured_at', host.get('captured_at'))
+        event_timestamp = None
+        if type(captured) in (int, float) and math.isfinite(captured):
+            try:
+                event_timestamp = datetime.fromtimestamp(captured, timezone.utc).isoformat()
+            except (OverflowError, OSError, ValueError):
+                pass
+        metrics.append(metric(name, value if status == 'OBSERVED' else None, status, host_producer, unit,
+                              event_timestamp=event_timestamp,
+                              reason=detail.get('reason', host.get('reason')),
+                              source=detail.get('source', host.get('source')),
+                              age_seconds=host.get('age_seconds')))
     max_age_seconds = queue_freshness_seconds()
     now_epoch = datetime.fromisoformat(observed).timestamp()
-    fresh_agent_ids = []
-    if activity is not None and max_age_seconds is not None:
-        fresh_agent_ids = [
-            agent['agent_id']
-            for agent in agents
-            if agent['agent_id'] in activity
-            and activity_is_fresh(
-                activity[agent['agent_id']]['observed_at'],
-                now=now_epoch,
-                max_age_seconds=max_age_seconds,
-            )
-        ]
+    configuration = execution_configuration()
+    agents = [role_observation(agent, activity.get(agent['id']) if activity is not None else None,
+                              collector_available=activity is not None, now=now_epoch,
+                              max_age_seconds=max_age_seconds, model_runtime=model_runtime,
+                              configuration=configuration) for agent in registry['agents']]
+    observed_count = sum(item['last_task'] is not None for item in agents) if activity is not None else None
+    fresh_agent_ids = [item['agent_id'] for item in agents if item['activity_freshness']['status'] == 'OBSERVED']
     fresh_count = len(fresh_agent_ids) if activity is not None and max_age_seconds is not None else None
-    ready = (
-        fresh_count
-        if fresh_count is not None and model_runtime['ready']
-        else 0 if activity is not None and model_runtime['status'] == 'OBSERVED'
-        else None
-    )
+    model_time = timestamp_observation(model_runtime.get('observed_at'), now=now_epoch, max_age_seconds=60)
+    readiness_observed = (fresh_count is not None and model_runtime.get('status') == 'OBSERVED'
+                          and model_time['status'] == 'OBSERVED'
+                          and configuration['dispatch_status'] in {'ENABLED', 'DISABLED'}
+                          and configuration['execution_mode'] in {'direct', 'queued'})
+    ready = sum(item['readiness_status'] == 'CONFIRMED' for item in agents) if readiness_observed else None
     metrics.append(metric('observed_agents', observed_count,
                           'OBSERVED' if observed_count is not None else 'UNAVAILABLE',
                           'compute-queue'))
@@ -220,19 +419,26 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
             'audience': {'client_id': client_id, 'role': role},
             'source': {'system': 'ORQEVIA', 'instance': instance, 'revision': revision},
             'metrics': metrics,
+            'host': host,
             'ready_agent_count': ready,
+            'confirmed_readiness_count': ready,
             'observed_agent_count': observed_count,
             'fresh_agent_count': fresh_count,
-            'readiness_scope': 'CURRENT_MODEL_RUNTIME_AND_QUEUE_ROUTABLE',
+            'unconfirmed_agent_count': sum(item['readiness_status'] == 'UNCONFIRMED' for item in agents),
+            'disabled_agent_count': sum(item['readiness_status'] == 'DISABLED' for item in agents),
+            'blocked_agent_count': sum(item['readiness_status'] == 'BLOCKED' for item in agents),
+            'readiness_scope': 'RECENT_SUCCESSFUL_EXECUTION_WITH_CURRENT_MODEL_OBSERVATION_NOT_ROLE_COMPETENCE',
+            'execution_configuration': configuration,
             'queue_freshness': {
                 'status': 'OBSERVED' if fresh_count is not None else 'UNAVAILABLE',
                 'max_age_seconds': max_age_seconds,
                 'fresh_agent_count': fresh_count,
                 'not_fresh_agent_count': len(not_fresh_agent_ids) if fresh_count is not None else None,
                 'not_fresh_agent_ids': not_fresh_agent_ids,
-                'rule': 'latest queue observation must be timestamped, within max age, and no more than five seconds in the future',
+                'rule': 'latest actual task transition must have an explicit timezone, be within max age, and no more than five seconds in the future; failures count as activity, never confirmed readiness',
             },
             'model_runtime': model_runtime,
+            **operational_health_snapshot(),
             'agents': agents,
             'coaching': coaching,
             'work_observation': work,

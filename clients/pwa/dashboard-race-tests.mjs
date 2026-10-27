@@ -153,6 +153,26 @@ test('Parent telemetry expiry clears coaching before returning from render',asyn
   assert.equal(f.nodes.get('coaching-state').textContent,'STALE');
 });
 
+test('diagnostic failures back off while an online transition retries immediately',async()=>{
+  const f=await fixture();f.session({role:'OWNER'});
+  f.requests[0].resolve(new Response('{}',{status:503,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));await settle();
+  assert.equal(f.nodes.get('telemetry-state').textContent,'UNAVAILABLE');
+  await f.intervals.find(item=>item.ms===30000).fn();assert.equal(f.requests.length,1);
+  f.listeners.get('online')();await settle();assert.equal(f.requests.length,2);
+});
+
+test('returning after a long hidden period clears expired facts before network replies',async()=>{
+  const f=await fixture();f.session({role:'OWNER'});f.respond(0);await settle();
+  const originalNow=Date.now;
+  try{
+    Date.now=()=>originalNow()+3600000;
+    document.hidden=false;f.documentListeners.get('visibilitychange')();
+    assert.equal(f.nodes.get('telemetry-state').textContent,'STALE');
+    assert.equal(f.nodes.get('critical-count').textContent,'UNKNOWN');
+    assert.equal(f.nodes.get('agent-provenance-list').children.length,0);
+  }finally{Date.now=originalNow;}
+});
+
 test('Observed host gauges render values and honest availability text',async()=>{
   const f=await fixture();f.session({role:'OWNER'});
   f.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date().toISOString(),freshness_seconds:60,
@@ -165,10 +185,10 @@ test('Observed host gauges render values and honest availability text',async()=>
     source:{instance:'ABEX',revision:'a'.repeat(40)},coaching:null,agents:[]}),
     {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
   await settle();
-  assert.equal(f.nodes.get('metric-cpu').textContent,'0');
-  assert.equal(f.nodes.get('metric-memory').textContent,'41.6');
-  assert.equal(f.nodes.get('metric-disk').textContent,'19.7');
-  assert.equal(f.nodes.get('metric-network_latency').textContent,'3.5');
+  assert.equal(f.nodes.get('metric-cpu').textContent,'0%');
+  assert.equal(f.nodes.get('metric-memory').textContent,'41.6%');
+  assert.equal(f.nodes.get('metric-disk').textContent,'19.7%');
+  assert.equal(f.nodes.get('metric-network_latency').textContent,'3.5 ms');
   assert.match(f.nodes.get('telemetry-source').textContent,/host metrics OBSERVED/);
 });
 
@@ -182,7 +202,7 @@ test('Absent host metrics stay unknown; logout clears previously observed gauge 
     source:{instance:'ABEX',revision:'a'.repeat(40)},coaching:null,agents:[]}),
     {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
   await settle();
-  assert.equal(g.nodes.get('metric-cpu').textContent,'7');
+  assert.equal(g.nodes.get('metric-cpu').textContent,'7%');
   g.session(null);
   assert.equal(g.nodes.get('metric-cpu').textContent,'UNKNOWN');
 });

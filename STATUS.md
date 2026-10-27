@@ -1,5 +1,55 @@
 # STATUS.md — Portfolio status record
 
+## Live observability integration continuation - 27 October 2026
+
+### Claimed, not independently checked
+
+The Owner resumed implementation after the saved DeepSeek checkpoint and
+clarified that full operational access means all configured ORQEVIA agents and
+services. Nightly PC shutdown and extended offline time are explicit acceptance
+requirements: durable state must survive and observations must become stale;
+restart must resume collection without fabricating current health or work.
+
+The existing Windows sampler now invokes an installed bounded operational hook.
+Actual scheduled receipts contain CPU, memory, disk and network detail and pass
+source-integrity, native-host and same-boot checks. Existing configured runtime
+writers retain access. Original scripts and permissions were backed up. No
+duplicate task, daemon, queue guard or model warmup was introduced.
+
+The frontend candidate consumes original child timestamps, source and failure
+reasons; individually classifies services and keeps known incident records
+separate from an authoritative critical count. Focused frontend checks passed
+46 tests. Host/telemetry/health checks passed 68 tests; the producer's corrected
+15-test suite passed. A container-inspect template defect affecting services
+without Docker health checks was reproduced and fixed, not hidden as an outage.
+
+The new image, actual receipt bind, deployed API/browser flow and prolonged
+offline/restart acceptance remain pending at this source checkpoint. The public
+HTTPS functional probe returned certificate-verified 403; access was not bypassed.
+Idle executor heartbeat and private gateway/tunnel functional evidence remain
+explicit measurement limitations. See the mission verification and handover.
+
+## Observability recovery and DeepSeek handover - 27 October 2026
+
+### Claimed, not independently checked
+
+The P0 observability investigation found an empty host-receipt bind, lost
+sample metadata, readiness inferred from failed activity, and disconnected
+service/incident reporting. A branch candidate repairs host reading and
+collection, truthful on-demand readiness and operational incident handling.
+The combined focused source run passed 68 tests; lint and collector syntax
+checks passed. These results do not establish deployed runtime acceptance.
+
+The Owner requested a saved handover to Codex DeepSeek before PC shutdown
+because allowance was below 25 percent. The producer hook, actual collector
+installation/mount, frontend integration, runtime failure/recovery tests,
+current identity acceptance and final system closure remain unfinished.
+Production remains on the earlier b360da9 release. All 21 roles are
+individually accounted for; no READY or healthy values were manufactured.
+See ORQEVIA_HANDOVER_CODEX_DEEPSEEK.md and the six mission records.
+The saved handover is not a declaration of production readiness. Dell
+verification remains parked; REA/MiroFish remain excluded.
+
 ## Native coaching recovery and probability education - 27 October 2026
 
 ### Claimed, not independently checked

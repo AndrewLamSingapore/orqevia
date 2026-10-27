@@ -1,12 +1,16 @@
-# Operator-owned host metrics sampler. No caller arguments, paths or commands
-# are accepted. Produces an atomic, read-only-consumable receipt for the
-# interface telemetry surface. Run under a protected broker account.
+# Host-owned Windows sampler. Accepts no caller arguments or network URLs.
+# The receipt is an observation, not an assertion about its writer's ACLs.
 $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0) { throw 'Collector accepts no caller arguments' }
 
 $Root = 'C:\ProgramData\ABEX\PrimeHostMetrics'
 $OutputDirectory = Join-Path $Root 'receipt'
 $OutputPath = Join-Path $OutputDirectory 'host-metrics.json'
+$MaximumReceiptBytes = 131072
+# The existing producer runs every minute. Allow scheduling/completion jitter
+# without changing the original sample times or the producer cadence.
+$MaximumRateIntervalSeconds = 150
+
 Add-Type -TypeDefinition @'
 using System;
 using System.ComponentModel;
@@ -26,60 +30,291 @@ public static class OrqeviaAtomicFile
     }
 }
 '@
+
+function Get-EpochNow {
+    return [double]([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() / 1000.0)
+}
+
+function Get-CollectionReason($record) {
+    if ($record.Exception -is [UnauthorizedAccessException] -or
+        $record.CategoryInfo.Category -eq 'PermissionDenied') {
+        return 'PERMISSION_DENIED'
+    }
+    return 'COLLECTION_FAILED'
+}
+
+function New-Observation([string]$source) {
+    return [ordered]@{
+        collection_status = 'UNAVAILABLE'
+        reason = 'COLLECTION_FAILED'
+        source = $source
+        captured_at = Get-EpochNow
+    }
+}
+
 foreach ($path in @($Root, $OutputDirectory)) {
     if (-not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Pre-provisioned directory required: $path"
     }
     if ((Get-Item -LiteralPath $path).Attributes -band [IO.FileAttributes]::ReparsePoint) {
-        throw 'Protected broker directory reparse point forbidden'
+        throw 'Collector directory reparse point forbidden'
     }
 }
 
-$os = Get-CimInstance Win32_OperatingSystem
-$cpu = [double]((Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average)
-$memory = [double](100.0 * (1.0 - ([double]$os.FreePhysicalMemory / [double]$os.TotalVisibleMemorySize)))
-$disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
-$diskPercent = [double](100.0 * (1.0 - ([double]$disk.FreeSpace / [double]$disk.Size)))
-$gateway = Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue | Sort-Object RouteMetric | Select-Object -First 1
-$latency = $null
-if ($gateway -and $gateway.NextHop) {
-    $ping = Test-Connection -ComputerName ([string]$gateway.NextHop) -Count 2 -ErrorAction SilentlyContinue
-    if ($ping) {
-        $latency = [double](($ping | Measure-Object -Property ResponseTime -Average).Average)
+# A previous receipt is only a same-boot counter baseline. Reboot, reset or an
+# unreadable/absent baseline leaves rates unknown instead of reporting zero.
+$previous = $null
+try {
+    if (Test-Path -LiteralPath $OutputPath -PathType Leaf) {
+        $item = Get-Item -LiteralPath $OutputPath
+        if ($item.Length -le $MaximumReceiptBytes -and
+            -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            $previous = [IO.File]::ReadAllText($OutputPath) | ConvertFrom-Json
+        }
     }
-}
-foreach ($value in @($cpu, $memory, $diskPercent)) {
-    if ([double]::IsNaN($value) -or [double]::IsInfinity($value) -or $value -lt 0 -or $value -gt 100) {
-        throw 'Host metric out of range'
+} catch { $previous = $null }
+
+$os = $null
+$osFailure = 'COLLECTION_FAILED'
+try { $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop }
+catch { $osFailure = Get-CollectionReason $_ }
+$osCapturedAt = Get-EpochNow
+$bootId = if ($os -and $os.LastBootUpTime) { $os.LastBootUpTime.ToUniversalTime().ToString('o') } else { $null }
+
+$cpu = New-Observation 'Win32_Processor.LoadPercentage'
+$cpu.percent = $null
+$cpu.logical_processors = $null
+try {
+    $processors = @(Get-CimInstance Win32_Processor -ErrorAction Stop)
+    $loads = @($processors | Where-Object { $null -ne $_.LoadPercentage } | ForEach-Object { [double]$_.LoadPercentage })
+    if ($processors.Count -eq 0 -or $loads.Count -ne $processors.Count -or
+        @($loads | Where-Object { $_ -lt 0 -or $_ -gt 100 -or [double]::IsNaN($_) -or [double]::IsInfinity($_) }).Count) {
+        $cpu.reason = 'METRIC_NOT_REPORTED'
+    } else {
+        $cpu.percent = [double](($loads | Measure-Object -Average).Average)
+        $cpu.logical_processors = [int](($processors | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum)
+        $cpu.collection_status = 'OBSERVED'
+        $cpu.reason = $null
     }
-}
-if ($null -ne $latency -and ([double]::IsNaN($latency) -or [double]::IsInfinity($latency) -or $latency -lt 0)) {
-    throw 'Network latency out of range'
+} catch { $cpu.reason = Get-CollectionReason $_ }
+$cpu.captured_at = Get-EpochNow
+
+$memory = New-Observation 'Win32_OperatingSystem.TotalVisibleMemorySize/FreePhysicalMemory'
+$memory.total_bytes = $null
+$memory.used_bytes = $null
+$memory.available_bytes = $null
+$memory.percent = $null
+if ($os -and $null -ne $os.TotalVisibleMemorySize -and $null -ne $os.FreePhysicalMemory -and
+    $os.TotalVisibleMemorySize -gt 0 -and $os.FreePhysicalMemory -ge 0 -and
+    $os.FreePhysicalMemory -le $os.TotalVisibleMemorySize) {
+    $memory.total_bytes = [long]$os.TotalVisibleMemorySize * 1024
+    $memory.available_bytes = [long]$os.FreePhysicalMemory * 1024
+    $memory.used_bytes = $memory.total_bytes - $memory.available_bytes
+    $memory.percent = [double](100.0 * $memory.used_bytes / $memory.total_bytes)
+    $memory.collection_status = 'OBSERVED'
+    $memory.reason = $null
+} else { $memory.reason = if ($os) { 'METRIC_NOT_REPORTED' } else { $osFailure } }
+$memory.captured_at = $osCapturedAt
+
+$disk = New-Observation 'Win32_LogicalDisk.Size/FreeSpace'
+$disk.device = if ($env:SystemDrive) { [string]$env:SystemDrive } else { 'C:' }
+$disk.total_bytes = $null
+$disk.used_bytes = $null
+$disk.available_bytes = $null
+$disk.percent = $null
+try {
+    $volume = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($disk.device)'" -ErrorAction Stop
+    if ($volume -and $null -ne $volume.Size -and $null -ne $volume.FreeSpace -and
+        $volume.Size -gt 0 -and $volume.FreeSpace -ge 0 -and $volume.FreeSpace -le $volume.Size) {
+        $disk.total_bytes = [long]$volume.Size
+        $disk.available_bytes = [long]$volume.FreeSpace
+        $disk.used_bytes = $disk.total_bytes - $disk.available_bytes
+        $disk.percent = [double](100.0 * $disk.used_bytes / $disk.total_bytes)
+        $disk.collection_status = 'OBSERVED'
+        $disk.reason = $null
+    } else { $disk.reason = 'METRIC_NOT_REPORTED' }
+} catch { $disk.reason = Get-CollectionReason $_ }
+$disk.captured_at = Get-EpochNow
+
+$network = New-Observation 'Get-NetAdapter/Get-NetAdapterStatistics'
+$network.interfaces = @()
+$network.latency_ms = $null
+$network.latency_status = 'UNAVAILABLE'
+$network.latency_reason = 'GATEWAY_NOT_AVAILABLE'
+$network.latency_source = 'Test-Connection/default IPv4 gateway'
+$network.latency_captured_at = $null
+try {
+    $adapters = @(Get-NetAdapter -ErrorAction Stop)
+    $statistics = @{}
+    foreach ($statistic in @(Get-NetAdapterStatistics -Name '*' -ErrorAction Stop)) {
+        $statistics[[string]$statistic.Name] = $statistic
+    }
+    $network.captured_at = Get-EpochNow
+    $baselineReason = 'RATE_BASELINE_UNAVAILABLE'
+    $baselineValid = $false
+    $interval = $null
+    if ($previous -and $previous.schema -eq 'orqevia.host-metrics.v1' -and
+        $previous.collector_id -eq 'abex-host-metrics-v1' -and $previous.host_id -eq $env:COMPUTERNAME) {
+        if ($previous.boot_id -ne $bootId) { $baselineReason = 'RATE_BASELINE_BOOT_CHANGED' }
+        elseif ($previous.network -and $null -ne $previous.network.captured_at) {
+            $interval = [double]$network.captured_at - [double]$previous.network.captured_at
+            if ($interval -gt 0 -and $interval -le $MaximumRateIntervalSeconds) { $baselineValid = $true }
+            else { $baselineReason = 'RATE_BASELINE_INTERVAL_INVALID' }
+        }
+    }
+    $counterFields = [ordered]@{
+        received_bytes = 'ReceivedBytes'
+        sent_bytes = 'SentBytes'
+        received_packet_errors = 'ReceivedPacketErrors'
+        outbound_packet_errors = 'OutboundPacketErrors'
+        received_discarded_packets = 'ReceivedDiscardedPackets'
+        outbound_discarded_packets = 'OutboundDiscardedPackets'
+    }
+    $rows = @()
+    foreach ($adapter in $adapters) {
+        $row = [ordered]@{
+            name = [string]$adapter.Name
+            interface_index = [int]$adapter.ifIndex
+            description = [string]$adapter.InterfaceDescription
+            status = [string]$adapter.Status
+            link_speed = [string]$adapter.LinkSpeed
+            hardware_interface = [bool]$adapter.HardwareInterface
+            collection_status = 'UNAVAILABLE'
+            reason = 'INTERFACE_COUNTERS_UNAVAILABLE'
+            source = 'Get-NetAdapter/Get-NetAdapterStatistics'
+            captured_at = $network.captured_at
+            received_bytes_per_second = $null
+            sent_bytes_per_second = $null
+            rate_interval_seconds = $null
+            rate_status = 'UNAVAILABLE'
+            rate_reason = $baselineReason
+        }
+        $stat = $statistics[[string]$adapter.Name]
+        $validCounters = 0
+        foreach ($field in $counterFields.Keys) {
+            $value = if ($stat) { $stat.($counterFields[$field]) } else { $null }
+            $row[$field] = if ($null -ne $value -and $value -ge 0) { [uint64]$value } else { $null }
+            if ($null -ne $row[$field]) { $validCounters++ }
+        }
+        if ($baselineValid -and $null -ne $row.received_bytes -and $null -ne $row.sent_bytes) {
+            $prior = @($previous.network.interfaces | Where-Object {
+                $_.interface_index -eq $row.interface_index -and $_.name -eq $row.name -and $_.description -eq $row.description
+            }) | Select-Object -First 1
+            if (-not $prior -or $null -eq $prior.received_bytes -or $null -eq $prior.sent_bytes) {
+                $row.rate_reason = 'RATE_BASELINE_INTERFACE_CHANGED'
+            } elseif ($row.received_bytes -lt $prior.received_bytes -or $row.sent_bytes -lt $prior.sent_bytes) {
+                $row.rate_reason = 'RATE_COUNTER_RESET'
+            } else {
+                $row.received_bytes_per_second = [double](($row.received_bytes - $prior.received_bytes) / $interval)
+                $row.sent_bytes_per_second = [double](($row.sent_bytes - $prior.sent_bytes) / $interval)
+                $row.rate_interval_seconds = $interval
+                $row.rate_status = 'OBSERVED'
+                $row.rate_reason = $null
+            }
+        }
+        if ($validCounters -eq $counterFields.Count) {
+            $row.collection_status = if ($row.rate_status -eq 'OBSERVED') { 'OBSERVED' } else { 'PARTIAL' }
+            $row.reason = $row.rate_reason
+        } elseif ($validCounters -gt 0) {
+            $row.collection_status = 'PARTIAL'
+            $row.reason = 'INTERFACE_COUNTERS_INCOMPLETE'
+        }
+        $rows += $row
+    }
+    $network.interfaces = @($rows)
+    if ($rows.Count -eq 0) { $network.reason = 'NO_NETWORK_INTERFACES' }
+    elseif (@($rows | Where-Object { $_.collection_status -ne 'OBSERVED' }).Count -eq 0) {
+        $network.collection_status = 'OBSERVED'
+        $network.reason = $null
+    } else {
+        $network.collection_status = 'PARTIAL'
+        $network.reason = 'INTERFACE_MEASUREMENTS_INCOMPLETE'
+    }
+} catch {
+    $network.reason = Get-CollectionReason $_
+    $network.captured_at = Get-EpochNow
 }
 
+# Gateway latency remains a separate measurement from interface throughput.
+try {
+    $gateway = Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction Stop | Sort-Object RouteMetric | Select-Object -First 1
+    if ($gateway -and $gateway.NextHop -and $gateway.NextHop -ne '0.0.0.0') {
+        $ping = @(Test-Connection -ComputerName ([string]$gateway.NextHop) -Count 2 -ErrorAction SilentlyContinue)
+        $responses = @($ping | Where-Object { $null -ne $_.ResponseTime } | ForEach-Object { [double]$_.ResponseTime })
+        if ($responses.Count) {
+            $latency = [double](($responses | Measure-Object -Average).Average)
+            if (-not [double]::IsNaN($latency) -and -not [double]::IsInfinity($latency) -and $latency -ge 0) {
+                $network.latency_ms = $latency
+                $network.latency_status = 'OBSERVED'
+                $network.latency_reason = $null
+            } else { $network.latency_reason = 'METRIC_NOT_REPORTED' }
+        } else { $network.latency_reason = 'GATEWAY_PROBE_FAILED' }
+    }
+} catch { $network.latency_reason = Get-CollectionReason $_ }
+$network.latency_captured_at = Get-EpochNow
+
+$fieldStatus = [ordered]@{}
+foreach ($mapping in @(
+    @('cpu_percent', $cpu), @('memory_percent', $memory), @('disk_percent', $disk)
+)) {
+    $observation = $mapping[1]
+    $fieldStatus[$mapping[0]] = [ordered]@{
+        collection_status = $observation.collection_status
+        reason = $observation.reason
+        source = $observation.source
+        captured_at = $observation.captured_at
+    }
+}
+$fieldStatus.network_latency_ms = [ordered]@{
+    collection_status = $network.latency_status
+    reason = $network.latency_reason
+    source = $network.latency_source
+    captured_at = $network.latency_captured_at
+}
 $receipt = [ordered]@{
     schema = 'orqevia.host-metrics.v1'
     host_id = $env:COMPUTERNAME
-    boot_id = $os.LastBootUpTime.ToUniversalTime().ToString('o')
+    boot_id = $bootId
     collector_id = 'abex-host-metrics-v1'
-    captured_at = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-    cpu_percent = $cpu
-    memory_percent = $memory
-    disk_percent = $diskPercent
-    network_latency_ms = $latency
+    captured_at = Get-EpochNow
+    cadence_seconds = 60
+    cpu_percent = $cpu.percent
+    memory_percent = $memory.percent
+    disk_percent = $disk.percent
+    network_latency_ms = $network.latency_ms
+    field_status = $fieldStatus
+    cpu = $cpu
+    memory = $memory
+    disk = $disk
+    network = $network
 }
-$json = $receipt | ConvertTo-Json -Compress -Depth 3
+$json = $receipt | ConvertTo-Json -Compress -Depth 8
+$encoding = [System.Text.UTF8Encoding]::new($false)
+if ($encoding.GetByteCount($json) -gt $MaximumReceiptBytes) { throw 'Host receipt exceeds bounded file size' }
 $temporary = Join-Path $OutputDirectory ([System.IO.Path]::GetRandomFileName())
 try {
-    [System.IO.File]::WriteAllText($temporary, $json, [System.Text.UTF8Encoding]::new($false))
+    [System.IO.File]::WriteAllText($temporary, $json, $encoding)
     if ([System.IO.File]::Exists($OutputPath)) {
-        # Replace the directory entry in one filesystem operation. File.Replace
-        # is unsupported on this bridged/NTFS path shape, while a copy exposes a
-        # transient partial JSON receipt to the canary reader.
+        # Replace the directory entry atomically. File.Replace is unsupported
+        # on this bridged/NTFS path; copying exposes transient partial JSON.
         [OrqeviaAtomicFile]::Replace($temporary, $OutputPath)
     } else {
         [System.IO.File]::Move($temporary, $OutputPath)
     }
 } finally {
     if ([System.IO.File]::Exists($temporary)) { [System.IO.File]::Delete($temporary) }
+}
+
+# An optional fixed sibling produces operational receipts in the same existing
+# scheduled invocation. No caller-controlled command, path or URL enters it.
+$operationalCollector = Join-Path $Root 'collect-operational-health.ps1'
+if (Test-Path -LiteralPath $operationalCollector -PathType Leaf) {
+    try {
+        if ((Get-Item -LiteralPath $operationalCollector).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw 'Operational collector reparse point forbidden'
+        }
+        $null = & $operationalCollector
+    } catch {
+        Write-Warning ('Operational health collector failed; host receipt preserved (' + $_.Exception.GetType().Name + ')')
+    }
 }

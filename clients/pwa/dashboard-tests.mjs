@@ -10,8 +10,8 @@ assert.equal(telemetryFreshness({...report,observed_at:new Date(time+6000).toISO
 assert.equal(telemetryFreshness({...report,freshness_seconds:3600},time),'UNKNOWN');
 assert.equal(telemetryFreshness({...report,agents:[...report.agents.slice(0,20),report.agents[0]]},time),'UNKNOWN');
 const models={ready:true,required_models:['gemma3:1b'],missing_models:[]};
-assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:21,model_runtime:models}),'Observed history 21 / 21 · fresh queue 21 / 21 · ready 21 / 21');
-assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:18,ready_agent_count:0,model_runtime:models}),'Observed history 21 / 21 · fresh queue 18 / 21 · ready 0 / 21');
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:21,model_runtime:models}),'Observed history 21 / 21 · recent activity 21 / 21 · confirmed execution 21 / 21');
+assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:18,ready_agent_count:0,model_runtime:models}),'Observed history 21 / 21 · recent activity 18 / 21 · confirmed execution 0 / 21');
 assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:22,model_runtime:models}),null);
 assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:null,ready_agent_count:0,model_runtime:models}),null);
 assert.equal(agentReadinessSummary({observed_agent_count:21,fresh_agent_count:21,ready_agent_count:0,model_runtime:null}),null);

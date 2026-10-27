@@ -1,0 +1,2091 @@
+﻿{
+    "schema_version":  "orqevia.observability-discovery-evidence.v1",
+    "captured_at":  "2026-10-27T03:56:43.1902268Z",
+    "source_revision":  "b360da98641a1332856c8fdeb2063d36312b7669",
+    "scope":  "READ_ONLY_DISCOVERY_NO_ACCEPTANCE_OR_INFERENCE_CALLS",
+    "persistent_inventory_count":  9,
+    "disposable_stage_count":  1,
+    "inventory":  [
+                      {
+                          "name":  "orqevia-epoch-20261016-backend-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  "healthy",
+                          "healthcheck_configured":  true,
+                          "healthcheck_observations":  [
+                                                           {
+                                                               "started_at":  "2026-10-27T03:55:44.517183956Z",
+                                                               "completed_at":  "2026-10-27T03:55:45.783333418Z",
+                                                               "exit_code":  0
+                                                           },
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:15.781931854Z",
+                                                               "completed_at":  "2026-10-27T03:56:16.383718001Z",
+                                                               "exit_code":  0
+                                                           }
+                                                       ],
+                          "started_at":  "2026-10-27T03:39:44.532472455Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c",
+                          "source_revision":  "b360da98641a1332856c8fdeb2063d36312b7669",
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+                                              {
+                                                  "source":  "/var/lib/docker/volumes/orqevia-epoch-20261016-data/_data",
+                                                  "destination":  "/data",
+                                                  "read_write":  true
+                                              }
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-epoch-20261016-interface-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  "healthy",
+                          "healthcheck_configured":  true,
+                          "healthcheck_observations":  [
+                                                           {
+                                                               "started_at":  "2026-10-27T03:55:50.090148775Z",
+                                                               "completed_at":  "2026-10-27T03:55:50.677969687Z",
+                                                               "exit_code":  0
+                                                           },
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:20.676238726Z",
+                                                               "completed_at":  "2026-10-27T03:56:22.480574984Z",
+                                                               "exit_code":  0
+                                                           }
+                                                       ],
+                          "started_at":  "2026-10-27T03:39:50.358317664Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c",
+                          "source_revision":  "b360da98641a1332856c8fdeb2063d36312b7669",
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+                                              {
+                                                  "source":  "/var/lib/docker/volumes/orqevia-epoch-20261016-data/_data",
+                                                  "destination":  "/data",
+                                                  "read_write":  true
+                                              }
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-epoch-20261016-ollama-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  "healthy",
+                          "healthcheck_configured":  true,
+                          "healthcheck_observations":  [
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:24.858537532Z",
+                                                               "completed_at":  "2026-10-27T03:56:25.153216846Z",
+                                                               "exit_code":  0
+                                                           },
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:35.15177418Z",
+                                                               "completed_at":  "2026-10-27T03:56:35.348063428Z",
+                                                               "exit_code":  0
+                                                           }
+                                                       ],
+                          "started_at":  "2026-10-27T00:16:03.484302437Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+                          "source_revision":  null,
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-intelligence-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  "healthy",
+                          "healthcheck_configured":  true,
+                          "healthcheck_observations":  [
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:14.286070291Z",
+                                                               "completed_at":  "2026-10-27T03:56:14.885235936Z",
+                                                               "exit_code":  0
+                                                           },
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:29.886163992Z",
+                                                               "completed_at":  "2026-10-27T03:56:31.220282843Z",
+                                                               "exit_code":  0
+                                                           }
+                                                       ],
+                          "started_at":  "2026-10-27T00:16:03.490465942Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+                          "source_revision":  "sgscope-v1",
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+                                              {
+                                                  "source":  "/var/lib/docker/volumes/orqevia-intelligence-data/_data",
+                                                  "destination":  "/data",
+                                                  "read_write":  true
+                                              }
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-coaching-coaching-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  "healthy",
+                          "healthcheck_configured":  true,
+                          "healthcheck_observations":  [
+                                                           {
+                                                               "started_at":  "2026-10-27T03:55:38.058286556Z",
+                                                               "completed_at":  "2026-10-27T03:55:38.400196334Z",
+                                                               "exit_code":  0
+                                                           },
+                                                           {
+                                                               "started_at":  "2026-10-27T03:56:08.398143626Z",
+                                                               "completed_at":  "2026-10-27T03:56:08.57442552Z",
+                                                               "exit_code":  0
+                                                           }
+                                                       ],
+                          "started_at":  "2026-10-27T03:44:01.326396024Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:73171676cd0904a9bf53502c1c68f578d2a2d996d5d01897802a28901f8121ab",
+                          "source_revision":  "b360da98641a1332856c8fdeb2063d36312b7669",
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+                                              {
+                                                  "source":  "/var/lib/docker/volumes/orqevia-epoch-20261016-data/_data",
+                                                  "destination":  "/data",
+                                                  "read_write":  true
+                                              }
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "2",
+                                                          "max-size":  "2m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-epoch-20261016-otel-collector-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  null,
+                          "healthcheck_configured":  false,
+                          "healthcheck_observations":  [
+
+                                                       ],
+                          "started_at":  "2026-10-27T03:39:51.485431353Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda",
+                          "source_revision":  "6c65793ec707f673304e52dfcb642684fda1a048",
+                          "network_mode":  "container:ff52f6973f78e674ecb42ebdac332712a51525db16e7042164af2852f30c85b6",
+                          "data_mounts":  [
+                                              {
+                                                  "source":  "/var/lib/docker/volumes/orqevia-otel-data/_data",
+                                                  "destination":  "/otel",
+                                                  "read_write":  true
+                                              }
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-epoch-20261016-integration-gateway-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  null,
+                          "healthcheck_configured":  false,
+                          "healthcheck_observations":  [
+
+                                                       ],
+                          "started_at":  "2026-10-27T00:16:03.401091444Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e",
+                          "source_revision":  null,
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-epoch-20261016-cloudflared-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  null,
+                          "healthcheck_configured":  false,
+                          "healthcheck_observations":  [
+
+                                                       ],
+                          "started_at":  "2026-10-27T00:16:03.407286789Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+                          "source_revision":  null,
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-epoch-20261016-cloudflared-dual-1",
+                          "persistent":  true,
+                          "state":  "running",
+                          "health":  null,
+                          "healthcheck_configured":  false,
+                          "healthcheck_observations":  [
+
+                                                       ],
+                          "started_at":  "2026-10-27T00:16:03.477142577Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+                          "source_revision":  null,
+                          "network_mode":  "orqevia-epoch-20261016_default",
+                          "data_mounts":  [
+
+                                          ],
+                          "logging":  {
+                                          "driver":  "json-file",
+                                          "options":  {
+                                                          "max-file":  "3",
+                                                          "max-size":  "10m"
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      },
+                      {
+                          "name":  "orqevia-local-closure-stage-20261027-linux",
+                          "persistent":  false,
+                          "state":  "running",
+                          "health":  null,
+                          "healthcheck_configured":  false,
+                          "healthcheck_observations":  [
+
+                                                       ],
+                          "started_at":  "2026-10-27T02:35:45.372782545Z",
+                          "restart_count":  0,
+                          "image_id":  "sha256:8fac4a9975b2bb3cef503de9e8d112c325d6b8f1031b6df9d0da0c9a4267196a",
+                          "source_revision":  "45eef23a4243985e2196cb1c0e352d84673d1428",
+                          "network_mode":  "bridge",
+                          "data_mounts":  [
+                                              {
+                                                  "source":  "/var/lib/docker/volumes/orqevia-local-closure-stage-20261027/_data",
+                                                  "destination":  "/data",
+                                                  "read_write":  true
+                                              }
+                                          ],
+                          "logging":  {
+                                          "driver":  "local",
+                                          "options":  {
+
+                                                      }
+                                      },
+                          "process_running_is_service_readiness":  false
+                      }
+                  ],
+    "canary":  {
+                   "source":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\LATEST-FULL-STACK-CANARY.json",
+                   "schema_version":  "orqevia.full-stack-canary.v1",
+                   "observed_at":  "2026-10-27T03:56:12.1461456Z",
+                   "overall":  "FAIL",
+                   "check_count":  16,
+                   "failed_count":  1,
+                   "checks":  [
+                                  {
+                                      "name":  "docker-engine",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:55:45.1399573Z",
+                                      "last_success_at":  "2026-10-27T03:55:45.1399573Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "persistent-containers",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:55:47.2844969Z",
+                                      "last_success_at":  "2026-10-27T03:55:47.2844969Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "backend-health",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:55:49.8156168Z",
+                                      "last_success_at":  "2026-10-27T03:55:49.8156168Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "cloud-inference-configuration",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:55:51.1515739Z",
+                                      "last_success_at":  "2026-10-27T03:55:51.1515739Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "interface-local",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:55:53.4429687Z",
+                                      "last_success_at":  "2026-10-27T03:55:53.4429687Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "cloudflare-tunnel",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:55:53.6432905Z",
+                                      "last_success_at":  "2026-10-27T03:55:53.6432905Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "auth-boundary",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:00.0400825Z",
+                                      "last_success_at":  "2026-10-27T03:56:00.0400825Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "host-telemetry-freshness",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:00.2639489Z",
+                                      "last_success_at":  "2026-10-27T03:56:00.2639489Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "model-runtime",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:00.7735024Z",
+                                      "last_success_at":  "2026-10-27T03:56:00.7735024Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "fabrics-and-ai-scaffold-imports",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:03.1798123Z",
+                                      "last_success_at":  "2026-10-27T03:56:03.1798123Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "agent-liveness-receipt",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:03.1955858Z",
+                                      "last_success_at":  "2026-10-27T03:56:03.1955858Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "deployment-identity",
+                                      "status":  "FAIL",
+                                      "observed_at":  "2026-10-27T03:56:03.3282774Z",
+                                      "last_success_at":  "2026-10-27T02:51:46.8385714Z",
+                                      "current_failure_first_seen_at":  "2026-10-27T02:57:37.2923885Z",
+                                      "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c source=b360da98641a1332856c8fdeb2063d36312b7669",
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "queue-runtime-and-cost",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:03.6819696Z",
+                                      "last_success_at":  "2026-10-27T03:56:03.6819696Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "workflow-and-notebook-persistence",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:04.0086600Z",
+                                      "last_success_at":  "2026-10-27T03:56:04.0086600Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "rollback-readiness",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:04.6659657Z",
+                                      "last_success_at":  "2026-10-27T03:56:04.6659657Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  },
+                                  {
+                                      "name":  "permanent-supervision-tasks",
+                                      "status":  "PASS",
+                                      "observed_at":  "2026-10-27T03:56:12.1461456Z",
+                                      "last_success_at":  "2026-10-27T03:56:12.1461456Z",
+                                      "current_failure_first_seen_at":  null,
+                                      "reason":  null,
+                                      "coverage_scope":  "EXISTING_CANARY_CHECK_NOT_GENERAL_SERVICE_HEALTH"
+                                  }
+                              ],
+                   "last_overall_success":  {
+                                                "overall":  "PASS",
+                                                "failed_count":  0,
+                                                "at_utc":  "2026-10-27T02:46:06.9005298Z",
+                                                "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T024606Z.json"
+                                            }
+               },
+    "expected_runtime":  {
+                             "schema_version":  "orqevia.expected-runtime.v1",
+                             "image":  "orqevia:cross-device-db22290",
+                             "image_id":  "sha256:181d59eaad8a856dd676b297f9f8af7dade0b6f404354c69beef88414adde4b9",
+                             "source_revision":  "db22290f536f0b5ee93f88b9d4fd7c6f1cb5ac61",
+                             "updated_at_utc":  "2026-10-27T00:36:01.388070+00:00",
+                             "evidence":  "operations/promote-db22290-20261026/DEPLOY-NOTE.md",
+                             "golden_manifest_sha256":  "e833232a0f9bc8dc2bb76d62f2fb2d4d7c73ea79c1fc7699cfa698db80399c38",
+                             "golden_generation":  "orqevia-golden-gen22-20261026",
+                             "acceptance_state":  "IDENTITY_MATCHES_SAVED_APPROVED_DEPLOYMENT_RECEIPT",
+                             "context_tokens":  8192,
+                             "execution_mode":  "direct",
+                             "note":  "Identity is pinned to the accepted gen22 deployment, independently compared to live Docker state; not a general role-certification claim."
+                         },
+    "scheduled_tasks":  [
+                            {
+                                "name":  "ABEX-ORQEVIA-Full-Stack-Canary",
+                                "state":  "Ready",
+                                "enabled":  true,
+                                "last_run_at":  "2026-10-27T03:55:37.0000000Z",
+                                "next_run_at":  "2026-10-27T04:00:52.0000000Z",
+                                "last_result":  2,
+                                "intervals":  [
+                                                  "PT10M",
+                                                  "PT10M"
+                                              ]
+                            },
+                            {
+                                "name":  "ABEX-ORQEVIA-Runtime-Watchdog",
+                                "state":  "Ready",
+                                "enabled":  true,
+                                "last_run_at":  "2026-10-27T03:55:54.0000000Z",
+                                "next_run_at":  "2026-10-27T03:56:53.0000000Z",
+                                "last_result":  0,
+                                "intervals":  [
+                                                  null,
+                                                  "PT1M"
+                                              ]
+                            }
+                        ],
+    "historical_check_receipts":  [
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T024606Z.json",
+                                          "observed_at":  "2026-10-27T02:46:06.9005298Z",
+                                          "overall":  "PASS",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:45:40.5357872Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:45:42.8758740Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:45:46.8221978Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:45:50.9659875Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:45:53.9044005Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:45:54.5516493Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:01.4608789Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:01.5877739Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:01.8633757Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:02.9638493Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:02.9706460Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:03.0916723Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:03.3009773Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:03.4560230Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:03.7720250Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:46:06.8970936Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T025151Z.json",
+                                          "observed_at":  "2026-10-27T02:51:51.0221411Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:34.6191398Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:35.1043257Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:37.4462704Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:38.0564318Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:40.2117189Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:40.3522674Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:45.5850497Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:45.7637323Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:46.0571728Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T02:51:46.5268123Z",
+                                                             "reason":  "Fabric or AI scaffold import failed"
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:46.5273366Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:46.8385714Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T02:51:46.8907740Z",
+                                                             "reason":  "Queue observability check failed"
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T02:51:46.9458159Z",
+                                                             "reason":  "Workflow or notebook persistence check failed"
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:47.2631175Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:51:51.0221411Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T025753Z.json",
+                                          "observed_at":  "2026-10-27T02:57:53.4795217Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:00.8320648Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:02.9417790Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:06.9563585Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:10.2616070Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:13.1551706Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:13.8714069Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:26.9907736Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:27.9176434Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:29.3801232Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:36.8377707Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:36.9043202Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T02:57:37.2923885Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:38.3338069Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:39.2301968Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:40.9523053Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T02:57:53.4751637Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T030126Z.json",
+                                          "observed_at":  "2026-10-27T03:01:26.7162538Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:01.1649168Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:02.9503993Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:07.1511691Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:07.8642284Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:10.0380765Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:10.2808713Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:16.6658568Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:16.9232638Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:17.3926484Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:19.1852596Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:19.1955372Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:01:19.2997018Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:19.6618658Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:19.9807418Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:20.5758447Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:01:26.7141210Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T030603Z.json",
+                                          "observed_at":  "2026-10-27T03:06:03.6310399Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:40.6502123Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:41.4284719Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:43.8123433Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:44.7898515Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:47.0146832Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:47.2248456Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:53.1098463Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:53.3171130Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:53.7810830Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:55.6352275Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:55.6519026Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:05:55.7924649Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:56.1415173Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:56.4806171Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:05:57.0267281Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:06:03.6288687Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T031119Z.json",
+                                          "observed_at":  "2026-10-27T03:11:19.6517548Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:10:56.8519353Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:10:57.6738714Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:00.3458626Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:01.3907861Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:03.6361575Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:03.8629738Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:10.0342313Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:10.2578044Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:10.6905420Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:12.4422962Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:12.4567500Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:11:12.5854493Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:12.9020779Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:13.2012915Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:13.7051143Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:11:19.6496632Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T031615Z.json",
+                                          "observed_at":  "2026-10-27T03:16:15.8707057Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:15:45.0358044Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:15:47.1350848Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:15:50.8468044Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:15:54.4986762Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:15:57.2073942Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:15:57.7042271Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:05.3276532Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:05.5810059Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:06.0768273Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:08.0408036Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:08.0529544Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:16:08.1529365Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:08.4344054Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:08.7428279Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:09.3116679Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:16:15.8666486Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T032149Z.json",
+                                          "observed_at":  "2026-10-27T03:21:48.9729251Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:20:56.6433334Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:20:57.4517645Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:00.1365386Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:01.2325912Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:03.5288148Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:04.0358083Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:15.9540240Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:16.9086769Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:18.4967587Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:25.2100798Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:25.2519541Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:21:25.7027462Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:26.6782201Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:27.6227188Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:29.6287862Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:21:48.9588663Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T032611Z.json",
+                                          "observed_at":  "2026-10-27T03:26:11.1780227Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:46.1461877Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:46.6293982Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:49.2102438Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:50.3042034Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:52.5834420Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:52.7989413Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:59.2327585Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:25:59.4701781Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:00.0054344Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:02.1622570Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:02.1837756Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:26:02.4507056Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:02.8210552Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:03.2017898Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:03.8284420Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:26:11.1739618Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T033121Z.json",
+                                          "observed_at":  "2026-10-27T03:31:21.8939512Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:30:57.1657828Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:30:58.0006991Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:01.0230247Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:02.4171644Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:04.7357438Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:05.0055640Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:11.4110592Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:11.6089125Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:12.1086807Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:14.0698318Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:14.0830195Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:31:14.2292024Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:14.5469816Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:14.8735034Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:15.4354501Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:31:21.8918495Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T033644Z.json",
+                                          "observed_at":  "2026-10-27T03:36:44.8782847Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:35:44.4966084Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:35:46.9376074Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:35:51.5023686Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:35:55.1705068Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:35:57.9468126Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:35:58.5639368Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:09.1438619Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:09.9885366Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:11.2993829Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:18.5064379Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:18.5561417Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:36:18.9689722Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:9492b5e3725b4c39100ba4a6806e98d0c4779c0b30778771dc13936157f7c256 source=97ef661e29f718a99ecd5865dd0977a0a78076ac"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:19.9589108Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:20.8045032Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:22.5043512Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:36:44.8694821Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T034503Z.json",
+                                          "observed_at":  "2026-10-27T03:45:03.1583246Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:37.3419569Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:38.1256385Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:40.8468320Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:41.8670989Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:44.0971591Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:44.3067840Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:50.5795404Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:50.8625085Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:51.4168873Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:53.3733099Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:53.3887869Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:44:53.5148527Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c source=b360da98641a1332856c8fdeb2063d36312b7669"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:53.8968562Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:54.2811326Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:44:55.0929069Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:03.1552636Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T034631Z.json",
+                                          "observed_at":  "2026-10-27T03:46:30.9498786Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:39.8114783Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:40.7105859Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:43.1205338Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:44.0630458Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:46.3082044Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:46.5158500Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:53.3637377Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:54.4036283Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:45:55.6934902Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:46:02.3240676Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:46:02.3483842Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:46:02.5958655Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c source=b360da98641a1332856c8fdeb2063d36312b7669"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:46:03.4362967Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:46:04.2499799Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:46:06.1827837Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:46:30.9374220Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T035124Z.json",
+                                          "observed_at":  "2026-10-27T03:51:24.4273754Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:50:57.1244551Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:50:57.9925900Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:00.4371596Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:01.6034741Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:03.9309301Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:04.2951114Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:11.9909799Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:12.2560594Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:12.8353360Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:14.8151048Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:14.8313511Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:51:14.9564921Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c source=b360da98641a1332856c8fdeb2063d36312b7669"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:15.2814924Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:15.5765889Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:16.5691572Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:51:24.4258240Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      },
+                                      {
+                                          "receipt":  "C:\\Users\\Admin\\Documents\\ABEX\\operations\\permanent-readiness-20261017\\full-stack-canary-history\\FULL-STACK-CANARY-20261027T035612Z.json",
+                                          "observed_at":  "2026-10-27T03:56:12.1461456Z",
+                                          "overall":  "FAIL",
+                                          "checks":  [
+                                                         {
+                                                             "name":  "docker-engine",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:55:45.1399573Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "persistent-containers",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:55:47.2844969Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "backend-health",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:55:49.8156168Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloud-inference-configuration",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:55:51.1515739Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "interface-local",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:55:53.4429687Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "cloudflare-tunnel",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:55:53.6432905Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "auth-boundary",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:00.0400825Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "host-telemetry-freshness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:00.2639489Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "model-runtime",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:00.7735024Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "fabrics-and-ai-scaffold-imports",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:03.1798123Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "agent-liveness-receipt",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:03.1955858Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "deployment-identity",
+                                                             "status":  "FAIL",
+                                                             "observed_at":  "2026-10-27T03:56:03.3282774Z",
+                                                             "reason":  "Deployment drift: orqevia-epoch-20261016-backend-1 image_id=sha256:d8cf1f7ed9001c013fe1473414aabd5e8d741b507d98310493f7f58ea5c1f15c source=b360da98641a1332856c8fdeb2063d36312b7669"
+                                                         },
+                                                         {
+                                                             "name":  "queue-runtime-and-cost",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:03.6819696Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "workflow-and-notebook-persistence",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:04.0086600Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "rollback-readiness",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:04.6659657Z",
+                                                             "reason":  null
+                                                         },
+                                                         {
+                                                             "name":  "permanent-supervision-tasks",
+                                                             "status":  "PASS",
+                                                             "observed_at":  "2026-10-27T03:56:12.1461456Z",
+                                                             "reason":  null
+                                                         }
+                                                     ]
+                                      }
+                                  ],
+    "mutations_performed":  [
+                                "WROTE_THIS_DISCOVERY_EVIDENCE_ONLY"
+                            ],
+    "runtime_mutated":  false,
+    "source_mutated":  false,
+    "model_calls_performed":  0,
+    "new_network_requests":  0
+}
