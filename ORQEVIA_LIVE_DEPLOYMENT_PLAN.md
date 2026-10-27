@@ -13,7 +13,7 @@
 - Report UNKNOWN when evidence is absent. Never force READY, fabricate a health value, infer agent wiring from a catalog, or claim accuracy from fixtures.
 - REA and MiroFish remain excluded. Dell-origin testing remains parked unless the Owner reopens it.
 
-## Phase 0 — Freeze the baseline and route inventory
+## Phase 0 â€” Freeze the baseline and route inventory
 
 1. Read the latest handover, mission status, runtime manifests, deployment helper instructions, and protected custody record. Verify the live commit/image/container identities and checkpoint hashes without printing secrets.
 2. Build one authoritative route-to-component matrix for every deployed inference and orchestration path. For each route record: HTTPS entrypoint, backend route, auth/tenant boundary, feature flag, source revision, model/fabric, storage/evidence path, timeout, and rollback control.
@@ -22,7 +22,7 @@
 
 **Exit evidence:** reviewed route matrix; clean source tree; protected baseline; explicit list of unknowns and intended bindings.
 
-## Phase 1 — Close source and integration gaps
+## Phase 1 â€” Close source and integration gaps
 
 1. **Agent Factory:** Decide and implement the intended production interface through existing authenticated registry/scaffolding boundaries. Keep generated candidates advisory-only with no execution authority. Verify candidate generation, schema validation, secret rejection, durable artifact readback, and explicit registry proposal/approval behavior. Do not auto-register or activate a draft.
 2. **Academy:** Trace the live endpoint and cohort controller from request through coaching store, executor, assessment, and retained-method readback. Diagnose the observed STALE state (20 READY, 1 WAITING, all baseline). Resume/repair only valid scheduled work; assess using unseen cases and real evidence. Record each of the 21 agents as PASS/FAIL/WAITING/UNAVAILABLE with reasons. Award no certification unless its independent criteria pass.
@@ -33,7 +33,7 @@
 
 **Exit evidence:** source tests and integration tests pass for each changed component; route matrix updated; independent review verifies auth, provenance, and rollback; no production change yet.
 
-## Phase 2 — Build and isolated staging
+## Phase 2 â€” Build and isolated staging
 
 1. Merge only reviewed changes through the existing repository checks; record exact commit and source export hash.
 2. Build immutable candidate images under the established CPU/memory limits. Bind each image to source, configuration digest, dependencies, and intended runtime role. Preserve current and Golden rollback images.
@@ -42,7 +42,7 @@
 
 **Exit evidence:** exact-image staging report; test logs; data-integrity and rollback proof; no impact on production containers or data.
 
-## Phase 3 — Controlled live deployment
+## Phase 3 â€” Controlled live deployment
 
 1. Recheck protected production backups and current service/container identities immediately before deployment.
 2. Deploy the smallest independent component change through the established direct deployment procedure. Preserve unrelated container IDs, mounts, env/config, volumes, jobs, sessions, certificates, model state, and network policy.
@@ -53,7 +53,7 @@
 
 **Exit evidence:** per-component live deployment receipt, route-level request/response evidence, stored receipt lookup, image/config hashes, health before and after, and rollback test reference.
 
-## Phase 4 — Offline durability and full end-to-end acceptance
+## Phase 4 â€” Offline durability and full end-to-end acceptance
 
 1. Before the planned PC shutdown, confirm the complete checkpoint is current, hashes validate, database backups pass integrity checks, startup/watchdog configuration is present, and all deployment evidence is saved.
 2. At the Owner's next real power-off/restart, verify boot identity changes; Docker and persistent services return automatically; HTTPS dashboard and local authenticated routes recover; collectors emit fresh current-boot readings; no stale reading is presented as healthy; jobs, leases, sessions, incidents, Academy records, and inference evidence persist without duplication or loss.
@@ -63,7 +63,7 @@
 
 **Exit evidence:** real post-boot receipt, HTTPS browser/API logs, current-boot sample timestamps, persistence comparison, route/fabric/agent receipts, failure/recovery evidence, database integrity, and no unexplained regressions.
 
-## Phase 5 — Closure
+## Phase 5 â€” Closure
 
 Update the six mission documents and this plan with exact commits, image digests, deployment timestamps, routes tested, results, residual limitations, and artifact paths. Acceptance requires:
 
@@ -75,7 +75,7 @@ Update the six mission documents and this plan with exact commits, image digests
 - security, data integrity, rollback, and regression criteria passed;
 - no unresolved required acceptance criterion.
 
-If any acceptance item is still open, record **PARTIALLY COMPLETE — BLOCKED** (with the specific evidence dependency) or **FAILED VERIFICATION** (if a required test failed). Declare **COMPLETE — VERIFIED** only when all acceptance evidence exists. This plan itself is not deployment evidence and does not authorize a claim of completion.
+If any acceptance item is still open, record **PARTIALLY COMPLETE â€” BLOCKED** (with the specific evidence dependency) or **FAILED VERIFICATION** (if a required test failed). Declare **COMPLETE â€” VERIFIED** only when all acceptance evidence exists. This plan itself is not deployment evidence and does not authorize a claim of completion.
 
 ## Work order after the present checkpoint
 
@@ -88,7 +88,7 @@ If any acceptance item is still open, record **PARTIALLY COMPLETE — BLOCKED** 
 
 ## Exhaustive mandatory verification register
 
-**Owner requirement:** every in-scope item currently UNVERIFIED, UNKNOWN, STALE, or only source-/historically verified must receive a current live verification result before closure. “Not tested,” “route unknown,” “404,” “process running,” “catalog entry,” fixture pass, or source test is not a passing live result. If an item cannot be verified, the mission stays open and records the exact cause and evidence. Do not close a gap by weakening the criterion or changing the label.
+**Owner requirement:** every in-scope item currently UNVERIFIED, UNKNOWN, STALE, or only source-/historically verified must receive a current live verification result before closure. â€œNot tested,â€ â€œroute unknown,â€ â€œ404,â€ â€œprocess running,â€ â€œcatalog entry,â€ fixture pass, or source test is not a passing live result. If an item cannot be verified, the mission stays open and records the exact cause and evidence. Do not close a gap by weakening the criterion or changing the label.
 
 | Scope item | Current recorded status | Required proof to close |
 |---|---|---|
@@ -101,7 +101,7 @@ If any acceptance item is still open, record **PARTIALLY COMPLETE — BLOCKED** 
 | MLP | Historical live check; current probed paths 404 | Trace exact live route and image; verify pinned artifact digest, authenticated bounded inference, numeric contract, durable evidence, isolation, disabled/failure and restart behavior. Keep synthetic reference clearly scoped. |
 | Other inference/fabric adapters | Incomplete inventory | For every item in route matrix, verify real request-to-model/fabric, provenance, evidence readback, authority constraints, timeouts, outage/retry and recovery; never infer group health from a sample. |
 | Agent readiness (21) | Latest dashboard observation 0 confirmed / 21 unconfirmed | Collect current role-by-role evidence and classify all 21 accurately; repair only legitimate faults, do not force READY. Verify freshness and reasons in the live dashboard. |
-| Academy coaching requests: helper and OTel | Request recorded; outcome unverified | Map “helper” only to a real registered identity or document no such identity; coach from observed gaps with unseen assessment. For OTel, evaluate receiver/exporter failures, bounded load and restart recovery, then record measured improvement. |
+| Academy coaching requests: helper and OTel | Request recorded; outcome unverified | Map â€œhelperâ€ only to a real registered identity or document no such identity; coach from observed gaps with unseen assessment. For OTel, evaluate receiver/exporter failures, bounded load and restart recovery, then record measured improvement. |
 | OTel collector, Cloudflare tunnels (2), integration gateway | Four containers lack meaningful checks | Add intended, bounded, certificate-verified functional checks where supported; prove correct endpoint/auth and healthy/degraded/offline transitions, freshness and recovery. Preserve current private transports until coordinated TLS migration. |
 | Core service and critical-issue monitoring | DEGRADED / authoritative count UNKNOWN | Verify each configured service at process, endpoint, dependency and readiness levels; trigger/recover representative incident; confirm dedup, persistence and authoritative totals. Never turn missing coverage into zero. |
 | Historical job and storage cleanup | Reference-aware cleanup pending; no rows deleted | Fresh protected backups; cross-store reference inventory; preserve active/recent/coaching/artifact/certification/last-outcome evidence; delete/archive only proved-disposable items; measure reclaimed bytes and recheck DB integrity, API behavior, and recovery. |
@@ -113,4 +113,4 @@ If any acceptance item is still open, record **PARTIALLY COMPLETE — BLOCKED** 
 
 ### Completion gate
 
-No required row may remain UNVERIFIED, UNKNOWN, STALE, source-only, fixture-only, historically-only, or missing evidence. Every configured component must have a current live result (PASS, a correctly evidenced non-healthy state with remediation closed, or evidenced NOT CONFIGURED where appropriate). Any unresolved access or infrastructure limitation prevents **COMPLETE — VERIFIED**. Closing all gaps requires a fresh full acceptance matrix after the final live deployment and the real offline/restart cycle.
+No required row may remain UNVERIFIED, UNKNOWN, STALE, source-only, fixture-only, historically-only, or missing evidence. Every configured component must have a current live result (PASS, a correctly evidenced non-healthy state with remediation closed, or evidenced NOT CONFIGURED where appropriate). Any unresolved access or infrastructure limitation prevents **COMPLETE â€” VERIFIED**. Closing all gaps requires a fresh full acceptance matrix after the final live deployment and the real offline/restart cycle.

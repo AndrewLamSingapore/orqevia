@@ -51,7 +51,7 @@ Disposable build contexts/stage containers/images are candidates for measured cl
 4. Regenerate gen23 candidate for final actual interface build/deploy/browser evidence, independently verify hashes and all three component bindings. Review/install only narrow compatibility diffs, then use existing signing pathway without key disclosure. Preserve gen22. Current expected-runtime/publisher still gen22 and therefore correctly disagree with b360backend/newinterface; never copy observed IDs into expectations just to pass.
 5. Gateway only exposes private HTTP static GATEWAY_ONLY liveness; no coordinated functional HTTPS path. Public `https://orqevia.lamjarvis.com/api/orqevia/intelligence/health` returned certificate-verified403. Current tunnel connection proof and idle-worker heartbeat are not exposed. Scope these limits correctly; do not bypass auth/TLS or call running processes healthy. Authoritative critical count remains null until coverage supports it.
 6. After preservation, perform safe reference-aware job retention/owned artifact cleanup and record actual reclaimed bytes. Keep historical failure/source evidence.
-7. Update six mission docs with final commits/runtime results. Only COMPLETE — VERIFIED when every required criterion is actually met; otherwise preserve honest PARTIALLY COMPLETE — BLOCKED or FAILED VERIFICATION. Whole-PC overnight result waits for real restart.
+7. Update six mission docs with final commits/runtime results. Only COMPLETE â€” VERIFIED when every required criterion is actually met; otherwise preserve honest PARTIALLY COMPLETE â€” BLOCKED or FAILED VERIFICATION. Whole-PC overnight result waits for real restart.
 
 ## Saved evidence and recovery paths
 
@@ -68,12 +68,12 @@ Full operational access means all configured ORQEVIA agents/services, not every 
 
 Earlier probability learner tests genuinely failed: v1 no retained methods; v2 ordinary probe1f994723-60de-48fd-8a32-a12c95c9ae48 completed on the older executor, strict wrapper failed calculation-length cap, diagnostic10/14math. No v3 patch exists. Scope36fabric records to prior97ef661, not current-source certification;14CLI versions do not prove agent/tool/account effects. Continued coaching must use real gaps, unseen assessments and verified retention while preserving capacity. Do not claim maximum competence from execution activity.
 
-**Overall engineering mission: PARTIALLY COMPLETE — BLOCKED.** Dashboard live and verified; safe checkpoint is independently verifiable; pending reader deployment, identity closure, reference-aware cleanup, remaining functional monitoring and real overnight verification are explicit.
+**Overall engineering mission: PARTIALLY COMPLETE â€” BLOCKED.** Dashboard live and verified; safe checkpoint is independently verifiable; pending reader deployment, identity closure, reference-aware cleanup, remaining functional monitoring and real overnight verification are explicit.
 
-## Owner shutdown checkpoint note — 27 October 2026, 06:32 UTC
+## Owner shutdown checkpoint note â€” 27 October 2026, 06:32 UTC
 
-The Owner asked whether the ABEX PC can be shut down. **Yes: the saved and hash-verified CODEX checkpoint is complete, so a normal PC shutdown is safe from the work-preservation perspective.** The checkpoint is not a whole-PC image; persistent ORQEVIA services will be unavailable while this host is powered off. No shutdown or whole-PC power-off/reboot test has yet been performed. After the next boot, verify the fresh boot identity and collector receipt, local HTTPS dashboard, current interface image, and persistence/recovery of jobs, sessions and incidents. Overnight/offline recovery remains unverified until that evidence is captured; this does not change the interim verdict **PARTIALLY COMPLETE — BLOCKED**.
-## Live runtime checkpoint — 27 October 2026, 06:52 UTC
+The Owner asked whether the ABEX PC can be shut down. **Yes: the saved and hash-verified CODEX checkpoint is complete, so a normal PC shutdown is safe from the work-preservation perspective.** The checkpoint is not a whole-PC image; persistent ORQEVIA services will be unavailable while this host is powered off. No shutdown or whole-PC power-off/reboot test has yet been performed. After the next boot, verify the fresh boot identity and collector receipt, local HTTPS dashboard, current interface image, and persistence/recovery of jobs, sessions and incidents. Overnight/offline recovery remains unverified until that evidence is captured; this does not change the interim verdict **PARTIALLY COMPLETE â€” BLOCKED**.
+## Live runtime checkpoint â€” 27 October 2026, 06:52 UTC
 
 - PR #464 merged to canonical main as `60c5c11a4c6c2cc9f4f442ea28d88861740c8f17`; all nine required checks passed. The exact merged source was built as `orqevia:observability-60c5c11a`, image `sha256:feb8d833cca35026ac7af69b1d613b54bb353864c54eafc888c72ca73bd132a1`, using a 1 CPU / 1 GiB bounded BuildKit build.
 - The interface-only deployment succeeded at 06:48 UTC. It uses the verified ABEX host receipt read-only. Deployment evidence confirms all peer container IDs and unrelated mounts were preserved; no database restore/deletion and no model job were started.
@@ -83,8 +83,8 @@ The Owner asked whether the ABEX PC can be shut down. **Yes: the saved and hash-
 - Owner coaching request recorded: **coach the helper** using actual task feedback and unseen assessment. The canonical 21-agent registry has no separate identity named `helper`; the existing Academy cohort covers the 21 registered specialist roles. Do not invent an identity or claim a coaching outcome. Attach any dedicated coaching record only to a verified registered target.
 - Permanent offline recovery is still not fully verified: no real whole-PC power-off/reboot has followed these changes. The next boot must confirm a fresh boot-bound collector receipt, local HTTPS dashboard recovery, and persisted jobs/sessions/incidents before closure.
 
-Overall verdict remains **PARTIALLY COMPLETE — BLOCKED**. This dated section supersedes older status wording in this file where those earlier entries describe the candidate as unmerged or the readiness count as UNKNOWN; retain those entries as historical evidence.
-## Shutdown save and Golden/coaching update — 27 October 2026, 06:58 UTC
+Overall verdict remains **PARTIALLY COMPLETE â€” BLOCKED**. This dated section supersedes older status wording in this file where those earlier entries describe the candidate as unmerged or the readiness count as UNKNOWN; retain those entries as historical evidence.
+## Shutdown save and Golden/coaching update â€” 27 October 2026, 06:58 UTC
 
 Fresh checkpoint: `operations/observability-recovery-20261027/checkpoint-20261027T0658Z/SHUTDOWN-HANDOVER.md`; private data/config custody is in `C:/Users/Admin/AppData/Local/ORQEVIA/checkpoints/observability-shutdown-save-20261027T0658Z`. It contains 466 protected SQLite snapshots with copied-hash and host quick-check PASS, current private Compose/environment captures, and private full-container inspection. Canonical-main and current-doc-branch source archives are sealed alongside runtime evidence. This is not a whole-PC image or end-to-end completion; the PC was not shut down.
 
@@ -95,24 +95,24 @@ Owner coaching requests: coach the helper through real feedback and unseen asses
 Still open: four missing meaningful container healthchecks; reference-aware historical-job cleanup; service and critical-monitoring coverage gaps; scoped Gen23 compatibility/signing/publication; and the real whole-PC power-off/restart recovery check. Core remains DEGRADED and the critical-issue total UNKNOWN when coverage is incomplete. Readiness is 0 confirmed/21 unconfirmed at the recorded observation. Preserve the no-deletion and no-fabricated-health rules.
 
 The Owner's latest direction is to notify them only after end-to-end completion so they can perform the PC shutdown. This safe save is not that completion notice.
-## Fabric-to-agent wiring check — 27 October 2026, 07:05 UTC
+## Fabric-to-agent wiring check â€” 27 October 2026, 07:05 UTC
 
 The versioned source registry defines 36 fabrics, but this does **not** establish that all 36 are wired and functionally verified for the registered agents. Current source test `test_old_catalog_receipts_cannot_self_certify_current_runtime` requires 0 VERIFIED without fresh runtime receipts; the collective operation endpoint reports one selected fabric for an operation. The current verified count is therefore **0/36**, and all-fabrics-to-agents wiring is **UNVERIFIED**. Build an explicit agent-capability-to-fabric map and obtain source-bound functional receipts before claiming wiring. This remains open and does not block unrelated deployment work.
-## Requested component status audit — 27 October 2026
+## Requested component status audit â€” 27 October 2026
 
 | Component | Current status | Evidence and what remains |
 |---|---|---|
 | Agent Factory | **NOT VERIFIED IN PRODUCTION** | `app/scaffolding.py::generate_agent()` exists and emits advisory-only `DRAFT_CANDIDATE` files with no execution authority. No live route or production generation/registration receipt verified. |
 | Academy | **LIVE ENDPOINT; COHORT STALE / INCOMPLETE** | Certificate-verified HTTPS `GET https://localhost:8443/pwa/api/academy/probability` responded. Record: `STALE`, 20 `READY`, 1 `WAITING`, all 21 in `baseline`; no assessment passes or certification. Endpoint response is not proof of completed coaching outcomes. |
 | 36 fabrics | **0/36 VERIFIED; AGENT WIRING UNVERIFIED** | Catalog has 36 entries; current verification expects fresh source-bound runtime receipts. Need capability-to-fabric mapping and actual receipts. |
-| PIF | **SOURCE-VERIFIED; LIVE ROUTE NOT VERIFIED** | PIF has local engineering tests and production source routes. Certificate-verified HTTPS probe to `/pwa/api/collective/v1/intelligence/pif/status` returned HTTP 404. Production activation/fit/forecast/evidence readback therefore not demonstrated; verify actual deployed route and authenticated operations before claiming live. |
-| MLP | **HISTORICAL LIVE ACCEPTANCE; CURRENT ROUTE NOT VERIFIED** | Documentation records a prior three-fabric live activation and synthetic reference checks. Current certificate-verified HTTPS probes to `/pwa/api/collective/v1/fabrics/mlp` and `/api/collective/v1/fabrics/mlp` both returned HTTP 404. Do not treat historical receipts or source code as current production availability. |
+| PIF | **LIVE SHADOW ROUTE AND EVIDENCE READBACK PASS; QUALITY UNVALIDATED** | Correct authenticated bridge status and forecast/evidence readback return 200. 45 synthetic tests pass. Held-out quality remains unvalidated due observational_unclassified source history, 0.214 outcome shift, and 0.0434 pooled calibration error. |
+| MLP | **STATUS PASS; PERSISTED INFERENCE BLOCKED BY RECORD CEILING** | Correct authenticated bridge status returns 200 and verifies the synthetic reference digest. Inference POST gets 429 at 10,000 registry records. PR #466 removes the arbitrary ceiling; merge/deploy and live inference receipt readback remain open. |
 
 The 404 responses mean those probed paths were not found at the current HTTPS listener; they do not alone prove the underlying PIF/MLP implementations are broken. These five statuses are open verification items. No readiness, pass, certification, or fabric verification was fabricated.
 
-## Inference coverage — 27 October 2026
+## Inference coverage â€” 27 October 2026
 
-**All inference paths working: NOT VERIFIED.** ORQEVIA has multiple inference components and paths; the checks recorded here are not a full inventory or end-to-end test of every request/model/fabric/agent integration. PIF’s current HTTPS status probe returned 404; MLP’s two current HTTPS status probes returned 404; the live Academy response is fixture curriculum/cohort state, not evidence of production predictive inference. No global inference-availability or accuracy claim is supported. Enumerate every deployed inference route and verify authenticated request → intended model/fabric → provenance/evidence persistence → response and restart recovery before marking all inference working.
+**All inference paths working: NOT VERIFIED.** ORQEVIA has multiple inference components and paths; the checks recorded here are not a full inventory or end-to-end test of every request/model/fabric/agent integration. PIFâ€™s current HTTPS status probe returned 404; MLPâ€™s two current HTTPS status probes returned 404; the live Academy response is fixture curriculum/cohort state, not evidence of production predictive inference. No global inference-availability or accuracy claim is supported. Enumerate every deployed inference route and verify authenticated request â†’ intended model/fabric â†’ provenance/evidence persistence â†’ response and restart recovery before marking all inference working.
 
 
 ## Complete live deployment plan
@@ -121,3 +121,14 @@ The sequenced implementation, staging, rollout, rollback, offline-recovery, and 
 
 
 Owner's latest direction: CLOSE ALL GAPS. The exhaustive verification register in ORQEVIA_LIVE_DEPLOYMENT_PLAN.md is mandatory; no in-scope UNVERIFIED/UNKNOWN/STALE/source-only item can remain at closure. Dell remains parked and REA/MiroFish remain excluded.
+
+## Live-route correction and functional results â€” 27 October 2026
+
+**Correction:** the earlier PIF/MLP 404 probes used the wrong URL prefix. Current production routes use the authenticated `/interface/v1/collective/...` bridge. Those prior 404s are superseded.
+
+- **PIF status:** certificate-verified HTTPS `GET /interface/v1/collective/intelligence/pif/status` returned 200, `AVAILABLE_SHADOW`, storage `READABLE`, enabled, with no execution authority. Hidden-state inference remains `UNAVAILABLE_VALIDATION_REQUIRED`; interventions remain unavailable without action/reward evidence.
+- **PIF model:** the active `queue-state` artifact is `SHADOW_ONLY`, not production-quality validated. It has 5,156 train entities / 10,236 train transitions and 1,290 held-out entities / 2,580 test transitions. Held-out Markov Brier is 0.3748 versus frequency 0.6861 and persistence 2.0; pooled calibration error is 0.0434 and chronological outcome shift is 0.214. Source is `observational_unclassified`.
+- **PIF live E2E:** a live one-step forecast returned HTTP 200 and `SHADOW`; persisted evidence readback returned HTTP 200 for trace `31fc7db3-1c5e-4587-8ae5-10fa59c9ec92`. No execution authority was granted. The local synthetic PIF suite passed **45/45**. Predictive quality remains **UNVALIDATED** because the event origin is unclassified and calibration/shift need improvement.
+- **MLP status:** certificate-verified HTTPS `GET /interface/v1/collective/fabrics/mlp` returned 200 and verified pinned reference artifact SHA-256 `d602f5a9436fcf6dfad47d33df16e422956114cd6942ef0f3439bf88c1dd72ac`. It is a synthetic quadratic reference, not agent qualification or production accuracy evidence.
+- **MLP inference:** one bounded POST to `/interface/v1/collective/fabrics/mlp/infer` returned 429 before evidence commit. Read-only inspection found exactly 10,000 collective records. SQLite `quick_check` passed for the 185,540,608-byte database. A fresh online backup passed `quick_check` and SHA-256 matched the protected backup: `397a08786234fe7e4d8c49a0dc23f3a9635724ffb652499231683255545ac650`. No records were deleted.
+- **Capacity fix:** PR #466 (`codex/registry-capacity-closure-20261027`) removes the arbitrary count scan/rejection and adds a >10,000-record regression test. Focused tests passed **30/30** and Ruff passed; CI is pending. The fix is **NOT MERGED OR DEPLOYED**. After deployment, repeat MLP inference and receipt readback and verify the live data count and SQLite integrity.
