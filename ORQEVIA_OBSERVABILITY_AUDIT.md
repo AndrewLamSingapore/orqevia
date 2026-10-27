@@ -17,4 +17,18 @@ Initial Windows receipts were fresh at03:50–03:55UTC, while the container moun
 
 All21 registry roles are active logical on-demand roles. Initial old API showed21 historical /6recent at03:54UTC; later counts change with coaching. Never freeze the Owner's starting12/9 as current state. Completion of a compute job is not correctness of its role assessment.
 
-Source traces, original per-role metadata and service evidence: operations/observability-recovery-20261027/agents/. See ORQEVIA_HANDOVER_CODEX_DEEPSEEK.md for exact ownership, paths, contract and next actions.
+Source traces, original per-role metadata and service evidence: operations/observability-recovery-20261027/agents/. See ORQEVIA_CODEX_HANDOVER.md for exact ownership, paths, contract and next actions.
+
+
+## CURRENT OWNER-REQUESTED CODEX SAFE CHECKPOINT
+
+The Owner requested generic CODEX labeling and immediate saving at below8%allowance. Current authority/resume instructions: **ORQEVIA_CODEX_HANDOVER.md**. Previous checkpoint statements below/above are dated; they do not override this update.
+
+-LIVE: merged42b8baff interface/PWAv43, real native receipt readonly bind, CPU/memory/disk/network detail, all21agent records, nine service classifications and persistent incident coverage. Backend/coaching b360preserved. Actual production HTTPS desktop/mobile PASS, zero page errors/plaintext requests; session revoked. Stage13actual failure/offline/restart checks PASS,180seconds stopped with21learning records/trusted session/incidents retained, stale readings rejected until fresh samples.
+-PERSISTENT CONFIGURATION: fixed existing Windows sampler+operational hook, protected digest inventory, configured writer access, DockerAutoStarttrue, restartalways, Windows logon/StartWhenAvailable tasks. Startup uses HTTPSlocalhost and reentry exited0. Actual full-PC overnight cycle NOTexecuted.
+-SOURCE ONLY: optimized readonly readiness query;24tests PASS, actual6,881row reads return all21roles in0.059–0.130s under0.2s. Current live oldquery still returnsUNKNOWN on timeout. Actual candidate classification0confirmed/21unconfirmed with12stale/8latestfailed/1inprogress; no forcedREADY. Source queued for CI/merge/deploy, not represented as live.
+-CANDIDATE ONLY: scopedgen23 receipt/manifest/compatibility diffs and7tests PASS. Unsigned, unapproved, unpublished; legacyexpected identity remains mismatched. Gateway/tunnel/public403/idle-worker evidence limitations remain. Critical authoritative count null rather than fakezero.
+-NO JOB DELETION:6,881historical records since19September,6,053completed/724failed/103cancelled/1running,32,133,120bytes at the observation.1,444coaching-linkedIDs; reference-aware purge/compaction still pending after preservation. No active jobs/data/models removed.
+-Exact latest saved commit, push/PR, archive/bundle verification, current private database backup/hash/quick_check and open actions are in ABEX operations/observability-recovery-20261027/checkpoint-20261027T0614Z/CUSTODY.json. The save is not full system certification or a whole-PC image backup. Original data/models/certificates/profiles/volumes remain in place.
+
+Overall mission remains **PARTIALLY COMPLETE — BLOCKED**. See generic CODEX handover for exact next steps; no model-specific continuation is required.

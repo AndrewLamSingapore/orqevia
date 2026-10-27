@@ -1,5 +1,4 @@
 """Read-only store fixture checks; no live application or model calls."""
-import importlib.util
 from pathlib import Path
 import sqlite3
 import sys
@@ -35,8 +34,11 @@ def test_complete_read_only_counts_and_no_unrelated_evidence_access(draft,monkey
         if path.name in ('action-records.jsonl','metadata.json','pwa-sessions.db'):raise AssertionError('Telemetry opened unrelated evidence')
         return original_open(path,*args,**kwargs)
     monkeypatch.setattr(Path,'iterdir',guarded_iterdir);monkeypatch.setattr(Path,'open',guarded_open)
-    from app import interface_node
-    monkeypatch.setattr(interface_node,'evidence_aggregates',lambda: pytest.fail('Full evidence aggregation invoked'))
+    # A read-only count test must not initialize the application's job queue
+    # against this deliberately minimal fixture schema merely to install a guard.
+    if 'app.interface_node' in sys.modules:
+        monkeypatch.setattr(sys.modules['app.interface_node'],'evidence_aggregates',
+                            lambda: pytest.fail('Full evidence aggregation invoked'))
     values=module.telemetry_store_counts()
     assert values['objectives']=={'status':'OBSERVED','count':2}
     assert values['compute_jobs']=={'status':'OBSERVED','count':5,'active_count':3}
@@ -152,3 +154,35 @@ def test_agent_activity_requires_agent_identity_column(draft):
     with sqlite3.connect(root/'compute-queue.db') as db:
         db.execute('CREATE TABLE compute_jobs(id TEXT,status TEXT)')
     assert module.agent_activity() is None
+
+
+def test_full_journal_history_does_not_exhaust_python_read_budget(draft, monkeypatch):
+    module, root = draft
+    from app.agent_registry import registered_agent_ids
+
+    agents = sorted(registered_agent_ids(include_orchestrator=False))
+    with sqlite3.connect(root / 'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT,completed_at TEXT)')
+        db.executemany('INSERT INTO compute_jobs VALUES(?,?,?,?,?)', [
+            (str(index), agents[index % 21], 'completed', '2026-10-15T01:00:00Z', '2026-10-15T01:00:00Z')
+            for index in range(7000)
+        ])
+        db.executemany('INSERT INTO compute_jobs VALUES(?,?,?,?,?)', [
+            ('failed-' + agent, agent, 'failed', '2026-10-15T02:00:00Z', '2026-10-15T02:00:00Z')
+            for agent in agents
+        ])
+    original = module._timestamp_epoch
+    parsed = 0
+
+    def counted(value):
+        nonlocal parsed
+        parsed += 1
+        return original(value)
+
+    monkeypatch.setattr(module, '_timestamp_epoch', counted)
+    activity = module.agent_activity()
+    assert activity is not None and set(activity) == set(agents)
+    assert sum(row['history_count'] for row in activity.values()) == 7021
+    assert all(row['last_success']['status'] == 'completed' for row in activity.values())
+    assert all(row['latest_task']['job_id'] == 'failed-' + agent for agent, row in activity.items())
+    assert parsed < 500

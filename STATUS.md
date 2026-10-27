@@ -1,5 +1,28 @@
 # STATUS.md — Portfolio status record
 
+## Live dashboard and generic Codex preservation checkpoint - 27 October 2026
+
+### Claimed, not independently checked
+
+PR463 merged source42b8baff. The interface was deployed with a real read-only
+Windows receipt bind; backend, inference, coaching and intelligence containers
+were preserved. Actual verified HTTPS API, desktop/mobile, offline recovery and
+source-export binding passed. Thirteen isolated failure/recovery checks passed,
+including180seconds stopped with21learning records, trusted session and incident
+history retained. Stale data remained unavailable until a fresh native sample.
+
+A live readiness defect remains: a historical journal scan exceeded0.2seconds.
+The source candidate returns all21roles from6,881rows in0.059–0.130seconds and
+passes24focusedtests. It is saved, not deployed; measured classifications are
+not forcedREADY. A scoped identity candidate is unsigned and unpublished.
+No historical jobs have been deleted. Reference-aware cleanup remains pending.
+
+The Owner ordered SAVE FIRST below8percentallowance and requested generic CODEX
+labeling for every authorized session. Current resume record is
+ORQEVIA_CODEX_HANDOVER.md. The six mission records distinguish live evidence,
+tested source, unsigned candidates and unfinished work. Actual whole-PC
+overnight verification remains pending. This is not final system closure.
+
 ## Live observability integration continuation - 27 October 2026
 
 ### Claimed, not independently checked

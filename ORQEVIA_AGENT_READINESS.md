@@ -1,6 +1,6 @@
 # ORQEVIA agent readiness - all21 accounted for, dated checkpoint
 
-All21 individual rows below are from actual initial observations. They are not current post-reboot readiness or role certification. The corrected source algorithm is tested but not deployed. Heartbeat is NOT_COLLECTED for on-demand logical roles; stale activity alone is UNCONFIRMED, not OFFLINE. See ORQEVIA_HANDOVER_CODEX_DEEPSEEK.md and the exact dated response replay in the agents evidence directory.
+All21 individual rows below are from actual initial observations. They are not current post-reboot readiness or role certification. The corrected source algorithm is tested but not deployed. Heartbeat is NOT_COLLECTED for on-demand logical roles; stale activity alone is UNCONFIRMED, not OFFLINE. See ORQEVIA_CODEX_HANDOVER.md and the exact dated response replay in the agents evidence directory.
 
 # Agent readiness audit draft - 27 October 2026
 
@@ -50,3 +50,17 @@ Each row below is a logical on-demand role. There is no independently collected 
 Keep historical-observed, recent-activity and confirmed recent successful execution counts separate. Preserve all 21 rows with original task/job IDs and timestamps, last successful/failed execution, explicit reason and lifecycle/dependency state. Leave role heartbeat null with NOT_COLLECTED for this architecture. Count a fresh failed/cancelled/running task as recent activity, never as a confirmed successful execution. Display idle stale roles as UNCONFIRMED on demand. Use current model observation time and original host receipt/field timestamps; a new aggregate observation must not renew them. Readiness is explicitly scoped to recent execution and current model observation, not role competence or coaching grade.
 
 Root assigned implementation ownership of `app/interface_telemetry.py`, `tests/test_interface_telemetry.py`, and `tests/test_interface_telemetry_counts.py` to this agent. Root owns frontend and final required docs; other agents own host metrics and operational service health. No deployment or runtime change is owned by this draft.
+
+
+## CURRENT OWNER-REQUESTED CODEX SAFE CHECKPOINT
+
+The Owner requested generic CODEX labeling and immediate saving at below8%allowance. Current authority/resume instructions: **ORQEVIA_CODEX_HANDOVER.md**. Previous checkpoint statements below/above are dated; they do not override this update.
+
+-LIVE: merged42b8baff interface/PWAv43, real native receipt readonly bind, CPU/memory/disk/network detail, all21agent records, nine service classifications and persistent incident coverage. Backend/coaching b360preserved. Actual production HTTPS desktop/mobile PASS, zero page errors/plaintext requests; session revoked. Stage13actual failure/offline/restart checks PASS,180seconds stopped with21learning records/trusted session/incidents retained, stale readings rejected until fresh samples.
+-PERSISTENT CONFIGURATION: fixed existing Windows sampler+operational hook, protected digest inventory, configured writer access, DockerAutoStarttrue, restartalways, Windows logon/StartWhenAvailable tasks. Startup uses HTTPSlocalhost and reentry exited0. Actual full-PC overnight cycle NOTexecuted.
+-SOURCE ONLY: optimized readonly readiness query;24tests PASS, actual6,881row reads return all21roles in0.059–0.130s under0.2s. Current live oldquery still returnsUNKNOWN on timeout. Actual candidate classification0confirmed/21unconfirmed with12stale/8latestfailed/1inprogress; no forcedREADY. Source queued for CI/merge/deploy, not represented as live.
+-CANDIDATE ONLY: scopedgen23 receipt/manifest/compatibility diffs and7tests PASS. Unsigned, unapproved, unpublished; legacyexpected identity remains mismatched. Gateway/tunnel/public403/idle-worker evidence limitations remain. Critical authoritative count null rather than fakezero.
+-NO JOB DELETION:6,881historical records since19September,6,053completed/724failed/103cancelled/1running,32,133,120bytes at the observation.1,444coaching-linkedIDs; reference-aware purge/compaction still pending after preservation. No active jobs/data/models removed.
+-Exact latest saved commit, push/PR, archive/bundle verification, current private database backup/hash/quick_check and open actions are in ABEX operations/observability-recovery-20261027/checkpoint-20261027T0614Z/CUSTODY.json. The save is not full system certification or a whole-PC image backup. Original data/models/certificates/profiles/volumes remain in place.
+
+Overall mission remains **PARTIALLY COMPLETE — BLOCKED**. See generic CODEX handover for exact next steps; no model-specific continuation is required.
