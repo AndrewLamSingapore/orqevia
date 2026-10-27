@@ -76,3 +76,14 @@ Overall mission remains **PARTIALLY COMPLETE — BLOCKED**. See generic CODEX ha
 - Permanent offline recovery is still not fully verified: no real whole-PC power-off/reboot has followed these changes. The next boot must confirm a fresh boot-bound collector receipt, local HTTPS dashboard recovery, and persisted jobs/sessions/incidents before closure.
 
 Overall verdict remains **PARTIALLY COMPLETE — BLOCKED**. This dated section supersedes older status wording in this file where those earlier entries describe the candidate as unmerged or the readiness count as UNKNOWN; retain those entries as historical evidence.
+## Shutdown save and Golden/coaching update — 27 October 2026, 06:58 UTC
+
+Fresh checkpoint: `operations/observability-recovery-20261027/checkpoint-20261027T0658Z/SHUTDOWN-HANDOVER.md`; private data/config custody is in `C:/Users/Admin/AppData/Local/ORQEVIA/checkpoints/observability-shutdown-save-20261027T0658Z`. It contains 466 protected SQLite snapshots with copied-hash and host quick-check PASS, current private Compose/environment captures, and private full-container inspection. Canonical-main and current-doc-branch source archives are sealed alongside runtime evidence. This is not a whole-PC image or end-to-end completion; the PC was not shut down.
+
+Golden Gen22 was checked read-only: the manifest SHA-256 `e833232a0f9bc8dc2bb76d62f2fb2d4d7c73ea79c1fc7699cfa698db80399c38` matches `EXPECTED-RUNTIME.json`; its pinned image `sha256:181d59eaad8a856dd676b297f9f8af7dade0b6f404354c69beef88414adde4b9` is present. Three containers based on that image are stopped stage/rollback containers. Their data mounts and the Golden image remain preserved.
+
+Owner coaching requests: coach the helper through real feedback and unseen assessments (registry identity is not mapped; do not fabricate one), and continuously improve the OTel collector from measured receiver/exporter reliability and recovery evidence. Neither request is a claimed coaching result; no model job was added.
+
+Still open: four missing meaningful container healthchecks; reference-aware historical-job cleanup; service and critical-monitoring coverage gaps; scoped Gen23 compatibility/signing/publication; and the real whole-PC power-off/restart recovery check. Core remains DEGRADED and the critical-issue total UNKNOWN when coverage is incomplete. Readiness is 0 confirmed/21 unconfirmed at the recorded observation. Preserve the no-deletion and no-fabricated-health rules.
+
+The Owner's latest direction is to notify them only after end-to-end completion so they can perform the PC shutdown. This safe save is not that completion notice.
