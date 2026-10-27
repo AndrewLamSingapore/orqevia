@@ -122,7 +122,7 @@ class CollectivePrincipal:
 
 
 class CollectiveStore:
-    """Synchronous, bounded store. Instantiate with a server-owned path only.
+    """Synchronous store with bounded contracts. Use a server-owned path only.
 
     Entity views expose normalized identities and versioned JSON documents;
     foreign-key relations and immutable events preserve their provenance. This
@@ -635,11 +635,6 @@ class CollectiveStore:
                 result = json.loads(receipt[1])
                 result["replayed"] = True
                 return result
-            count = db.execute(
-                "SELECT count(*) FROM registry_records WHERE tenant_id=? AND owner_id=?", self._scope(p)
-            ).fetchone()[0]
-            if count >= 10000:
-                raise CollectiveRateLimited("registry record budget reached; owner retention review required")
             result = handler(db, p, data)
             result = {"api_version": "1.0", "record": result, "replayed": False, "authority": "NO_EXECUTION_PERMISSION"}
             db.execute(
