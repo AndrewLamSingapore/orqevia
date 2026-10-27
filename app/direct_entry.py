@@ -17,6 +17,7 @@ from .project_workflows import get_project_workflow_service, router as project_w
 from .agent_notebook_api import router as agent_notebooks
 from .model_registry_api import router as model_registry
 from .debate_api import router as debates
+from .academy_api import router as academy
 from .observability import PRIVACY_FASTAPI_TELEMETRY
 
 install_direct_dispatch_conditioning()
@@ -33,7 +34,7 @@ async def lifespan(app):
 
 
 app=FastAPI(title='ORQEVIA direct-execution candidate',lifespan=lifespan,telemetry=PRIVACY_FASTAPI_TELEMETRY)
-for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events,media,project_workflows,agent_notebooks,model_registry,debates):app.include_router(router)
+for router in (agents,objectives,artifacts,interface,dell_interface,compute,certification_events,media,project_workflows,agent_notebooks,model_registry,debates,academy):app.include_router(router)
 
 
 @app.get('/health')

@@ -20,6 +20,11 @@ def coaching_snapshot(root, now=None):
         db.set_progress_handler(lambda:int(time.monotonic()>=deadline),1000)
         cohort = db.execute('SELECT id,source_revision FROM coaching_cohorts ORDER BY created_epoch DESC LIMIT 1').fetchone()
         if not cohort: return unavailable
+        program = 'role'
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='coaching_programs'").fetchone():
+            metadata = db.execute('SELECT program_id FROM coaching_programs WHERE cohort_id=?',(cohort['id'],)).fetchone()
+            if metadata:
+                program = metadata['program_id']
         rows = db.execute('SELECT agent,phase,state,baseline_pass,practice_pass,acceptance_pass,updated_epoch FROM coaching_sessions WHERE cohort_id=? LIMIT 22',(cohort['id'],)).fetchall()
         from .agent_registry import registered_agent_ids
         if len(rows)!=21 or {r['agent'] for r in rows}!=registered_agent_ids(include_orchestrator=False):
@@ -35,6 +40,8 @@ def coaching_snapshot(root, now=None):
                           'source_revision':heartbeat['source_revision'],'last_state':heartbeat['state']}
         status = 'UNKNOWN' if last is None or last>now+5 else ('STALE' if now-last>60 else 'OBSERVED')
         return {**unavailable,'status':status,'last_event_at':datetime.fromtimestamp(last,timezone.utc).isoformat() if last is not None else None,
+                'program_id':program,
+                'assessment_scope':'INTERNAL_PROBABILITY_ASSESSMENT_ONLY' if program=='probability-foundations' else 'INTERNAL_ROLE_ASSESSMENT_ONLY',
                 'cohort_source_revision':cohort['source_revision'],'cohort_id':cohort['id'],'controller':controller,
                 'baseline_pass_count':sum(r['baseline_pass']==1 for r in rows),
                 'acceptance_pass_count':sum(r['acceptance_pass']==1 for r in rows),

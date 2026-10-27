@@ -109,6 +109,13 @@ async def project_workflows(request: Request, path: str):
     return await _forward(request, "/api/project-workflows" + path, mutation=mutation)
 
 
+@router.api_route('/pwa/api/academy{path:path}', methods=['GET','POST'])
+async def academy(request: Request, path: str):
+    if not path.startswith('/') or any(part in path for part in ('..','\\',':','%')):
+        raise HTTPException(404,'Unavailable route')
+    return await _forward(request, '/api/academy'+path, mutation=request.method != 'GET')
+
+
 @router.api_route(
     "/pwa/api/notebooks{path:path}",
     methods=["GET", "POST", "PUT", "PATCH", "DELETE"],

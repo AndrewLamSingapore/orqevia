@@ -22,6 +22,7 @@ def main():
            'provider_failure_boundaries','interface_cloud_policy',
            'direct_execution','connector_sdk']
     names.extend(['agent_coaching','coaching_observation','autonomy_sync_receipts'])
+    names.extend(['academy', 'academy_api', 'probability_curriculum'])
     names.extend(['pif', 'mel', 'intelligence_capabilities_api'])
     names.append('workspace_observation')
     names.append('supreme_intelligence_benchmark')

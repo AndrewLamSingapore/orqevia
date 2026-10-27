@@ -211,6 +211,15 @@ def _run_direct(job_id: str) -> None:
                           'job_type': claimed.get('task_class', 'auto'), 'status': outcome}
             record_counter('orqevia.agent.jobs', 1, attributes)
             record_duration('orqevia.agent.job.duration', (time.perf_counter() - started) * 1000, attributes)
+    try:
+        from .agent_coaching import record_execution_gap
+        record_execution_gap(DATA, queue.get(claimed['id']), os.getenv('ORQEVIA_RUNTIME_REVISION',''))
+    except (OSError, ValueError, KeyError):
+        record_counter('orqevia.coaching.observation_failures', 1, {'component':'coaching'})
+    except Exception:
+        # Coaching observations cannot turn a completed Owner operation into
+        # a failed execution or disclose exception contents in telemetry.
+        record_counter('orqevia.coaching.observation_failures', 1, {'component':'coaching'})
     if _publish_completed_job is not None:
         try:
             if queue.get(claimed['id'])['status'] == 'completed':

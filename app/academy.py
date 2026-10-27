@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from .probability_curriculum import LESSONS as PROBABILITY_LESSONS
+
 
 ACADEMY_VERSION = "1.0.0"
 
@@ -136,6 +138,12 @@ CURRICULUM: tuple[dict[str, Any], ...] = (
     {"module_id": "m-release-01", "room_id": "release", "title": "Readiness gate", "prerequisites": ["m-verify-01", "m-quality-01"]},
     {"module_id": "m-autonomy-01", "room_id": "autonomy-safety", "title": "Bounded proactive action", "prerequisites": []},
 )
+CURRICULUM += tuple(
+    {"module_id": "m-probability-"+topic, "room_id": "autonomy-safety", "title": title,
+     "prerequisites": [] if i == 0 else ["m-probability-"+PROBABILITY_LESSONS[i-1][0]],
+     "program_id": "probability-foundations", "method": method}
+    for i, (topic, title, method) in enumerate(PROBABILITY_LESSONS)
+)
 
 SCENARIOS: tuple[dict[str, Any], ...] = (
     {"scenario_id": "s-strategy-01", "room_id": "strategy", "title": "Portfolio rebalance", "unseen": False},
@@ -150,6 +158,10 @@ SCENARIOS: tuple[dict[str, Any], ...] = (
     {"scenario_id": "s-autonomy-01", "room_id": "autonomy-safety", "title": "Research gateway denial", "unseen": False},
     {"scenario_id": "s-autonomy-02", "room_id": "autonomy-safety", "title": "Unseen bounded action", "unseen": True},
     {"scenario_id": "s-data-02", "room_id": "data", "title": "Unseen quality check", "unseen": True},
+)
+SCENARIOS += (
+    {"scenario_id": "s-probability-practice", "room_id": "autonomy-safety", "title": "Probability practice", "unseen": False},
+    {"scenario_id": "s-probability-acceptance", "room_id": "autonomy-safety", "title": "Unseen probability assessment", "unseen": True},
 )
 
 

@@ -148,7 +148,8 @@ if(typeof document!=='undefined') {
     const tick=Date.parse(coaching.controller?.last_tick_at||'');
     const controllerAvailability=Number.isFinite(tick)&&tick<=Date.now()+5000?(['OBSERVED','STALE','UNKNOWN'].includes(coaching.controller?.availability)?coaching.controller.availability:'UNKNOWN'):'UNKNOWN';
     const controller=coaching.controller?.last_state||'UNKNOWN';
-    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - synthetic role assessment only; full role acceptance is separate`);
+    const scope=coaching.program_id==='probability-foundations'?'educational probability assessment':'synthetic role assessment';
+    text('coaching-source',`cohort ${coaching.cohort_id||'UNKNOWN'} - ${src} - last event ${event} - controller ${controllerAvailability} / ${controller} - last tick ${Number.isFinite(tick)?new Date(tick).toLocaleString():'UNKNOWN'} - ${scope} only; full role acceptance is separate`);
     const counts=coachingPhaseCounts(coaching.agents);
     if(summary&&counts){for(const item of counts){const c=document.createElement('div');c.className='coaching-stat';const s=document.createElement('strong');s.textContent=`${item.assessed} / 21 assessed`;const l=document.createElement('small');l.textContent=`${item.phase}: ${item.passed} pass, ${item.failed} fail, ${item.unassessed} unassessed`;c.append(s,l);summary.append(c);}}
     const normal=coaching.normal_followup;
