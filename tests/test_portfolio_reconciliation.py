@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Exact continuation note; historical candidate notes remain pinned.
+    integration_title = '## Live observability integration continuation - 27 October 2026'
+    assert after.count(integration_title) == 1
+    integration_start = after.index(integration_title)
+    integration_end = after.index("\n## ", integration_start + len(integration_title)) + 1
+    integration_update = after[integration_start:integration_end].encode("utf-8")
+    assert len(integration_update) == 1740
+    assert hashlib.sha256(integration_update).hexdigest() == "63be56865c343a1e7fe2d0f22ecf975d08e773dd230a5a68b73976f93406b5af"
+    assert b"### Claimed, not independently checked" in integration_update
+    assert b"### Verified" not in integration_update
+    after = after[:integration_start] + after[integration_end:]
     # Admit only the exact source-only handover; prior claims stay pinned.
     handover_title = '## Observability recovery and DeepSeek handover - 27 October 2026'
     assert after.count(handover_title) == 1

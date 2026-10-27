@@ -13,7 +13,56 @@ export function agentReadinessSummary(value) {
   if(fresh>observed||ready>fresh) return null;
   const models=value?.model_runtime;
   if(!models||typeof models!=='object'||typeof models.ready!=='boolean'||!Array.isArray(models.required_models)||!Array.isArray(models.missing_models)) return null;
-  return `Observed history ${observed} / 21 · fresh queue ${fresh} / 21 · ready ${ready} / 21`;
+  return `Observed history ${observed} / 21 · recent activity ${fresh} / 21 · confirmed execution ${ready} / 21`;
+}
+
+const healthStates=new Set(['HEALTHY','DEGRADED','CRITICAL','UNKNOWN','NOT_CONFIGURED']);
+const healthText=(value,fallback='UNAVAILABLE')=>typeof value==='string'?value.slice(0,512):fallback;
+export function sampleFreshness(value,ttl,now=Date.now()) {
+  const at=typeof value==='number'?value*1000:typeof value==='string'&&/(Z|[+-]\d\d:\d\d)$/.test(value)?Date.parse(value):NaN;
+  if(!Number.isFinite(at)||!Number.isFinite(ttl)||ttl<=0||ttl>1200||at>now+5000)return 'UNKNOWN';
+  return now-at>ttl*1000?'STALE':'OBSERVED';
+}
+
+// Child observations retain their own clocks; an API poll cannot renew them.
+export function healthFacts(value,now=Date.now()) {
+  const parent=telemetryFreshness(value,now), host=value?.host;
+  const fields={cpu:'cpu_percent',memory:'memory_percent',disk:'disk_percent',network_latency:'network_latency_ms'};
+  const metrics=Object.fromEntries(Object.entries(fields).map(([name,field])=>{
+    const row=value?.metrics?.find(m=>m?.metric_id===name), meta=host?.field_status?.[field];
+    const captured=meta?.captured_at??row?.event_timestamp;
+    const freshness=sampleFreshness(captured,host?.max_age_seconds??150,now);
+    const valid=parent==='OBSERVED'&&row?.collection_status==='OBSERVED'&&(!meta||meta.collection_status==='OBSERVED')&&freshness==='OBSERVED'&&Number.isFinite(row.value)&&row.value>=0&&(name==='network_latency'||row.value<=100);
+    return [name,{value:valid?row.value:null,status:valid?'OBSERVED':parent!=='OBSERVED'?parent:freshness==='STALE'?'STALE':'UNAVAILABLE',
+      reason:valid?null:parent!=='OBSERVED'?'APPLICATION_'+parent:freshness==='STALE'?'HOST_SAMPLE_STALE':healthText(meta?.reason??row?.reason??host?.reason,'METRIC_NOT_COLLECTED'),
+      capturedAt:captured,source:healthText(meta?.source??row?.source,'SOURCE_UNAVAILABLE'),hostId:healthText(host?.source?.host_id,'HOST_UNAVAILABLE')}];
+  }));
+  const raw=value?.service_health, ttl=raw?.freshness_seconds;
+  const serviceFresh=parent==='OBSERVED'&&raw?.schema_version==='orqevia.service-health.v1'&&sampleFreshness(raw.observed_at,ttl,now)==='OBSERVED';
+  const services=serviceFresh&&Array.isArray(raw.services)&&raw.services.length<=32?raw.services.filter(r=>safeID(r?.service_id)).map(row=>{
+    const checks=Array.isArray(row.checks)?row.checks.slice(0,16):[];
+    const fresh=checks.length>0&&checks.every(c=>['PASS','FAIL'].includes(c?.status)&&c.fresh===true&&sampleFreshness(c.observed_at,ttl,now)==='OBSERVED');
+    return {...row,status:fresh&&healthStates.has(row.status)?row.status:['NOT_CONFIGURED','UNKNOWN'].includes(row.status)?row.status:'UNKNOWN',
+      reason:fresh?healthText(row.reason,'DECLARED_CHECKS_ONLY'):healthText(row.reason,'SERVICE_CHECK_UNAVAILABLE'),checks};
+  }):[];
+  const ids=new Set(services.map(row=>row.service_id));
+  const expected=['backend','interface','ollama','intelligence','coaching','otel-collector','integration-gateway','cloudflared','cloudflared-dual'];
+  const checksFresh=(checks,age)=>Array.isArray(checks)&&checks.length>0&&checks.every(c=>['PASS','FAIL'].includes(c?.status)&&c.fresh===true&&sampleFreshness(c.observed_at,age,now)==='OBSERVED');
+  const coverageFresh=serviceFresh&&services.length===9&&ids.size===9&&expected.every(id=>ids.has(id))&&services.every(r=>checksFresh(r.checks,ttl))&&
+    raw.collector_checks?.length===3&&checksFresh(raw.collector_checks,ttl)&&raw.canary_checks?.length===16&&checksFresh(raw.canary_checks,raw.coverage?.canary_freshness_seconds);
+  let coreStatus=serviceFresh&&healthStates.has(raw.status)?raw.status:parent==='OBSERVED'&&raw?.status==='NOT_CONFIGURED'?'NOT_CONFIGURED':'UNKNOWN';
+  if(coreStatus==='HEALTHY'&&!coverageFresh)coreStatus='UNKNOWN';
+  const critical=value?.critical_issues;
+  const count=Number.isSafeInteger(critical?.critical_count)&&critical.critical_count>=0?critical.critical_count:null;
+  const authoritative=coverageFresh&&raw.coverage?.complete===true&&critical?.schema_version==='orqevia.operational-incidents.v1'&&critical.coverage_complete===true&&critical.store_status==='OBSERVED'&&sampleFreshness(critical.observed_at,ttl,now)==='OBSERVED'&&count!==null;
+  if(coreStatus==='HEALTHY'&&!authoritative)coreStatus='UNKNOWN';
+  const hostFresh=parent==='OBSERVED'&&sampleFreshness(host?.captured_at,host?.max_age_seconds,now)==='OBSERVED';
+  const network=hostFresh&&sampleFreshness(host?.network?.captured_at,host?.max_age_seconds,now)==='OBSERVED'?host.network:null;
+  return {metrics,host:hostFresh?host:null,network,services,core:{status:coreStatus,observedAt:raw?.observed_at,lastSuccessAt:raw?.last_success_at,
+    reason:serviceFresh?healthText(raw.reason):parent!=='OBSERVED'?'APPLICATION_'+parent:healthText(raw?.reason,'SERVICE_MONITORING_NOT_CONFIGURED')},
+    critical:{count:authoritative?count:null,knownCount:parent==='OBSERVED'&&Number.isSafeInteger(critical?.known_critical_count)?critical.known_critical_count:null,
+      observedAt:critical?.observed_at,lastSuccessAt:critical?.last_success_at,reason:authoritative?'MONITORING_COMPLETE':parent!=='OBSERVED'?'APPLICATION_'+parent:healthText(critical?.reason,'CRITICAL_MONITORING_NOT_CONFIGURED'),
+      incidents:parent==='OBSERVED'&&Array.isArray(critical?.incidents)?critical.incidents.slice(0,100):[]}};
 }
 
 // One device-independent interpretation of the authenticated telemetry record.
@@ -24,7 +73,8 @@ export function operationalFacts(value, now=Date.now()) {
     host:{cpu:null,memory:null,disk:null,network_latency:null},work:{status:'UNAVAILABLE',tasks:[],activity:[]}};
   if(status!=='OBSERVED')return unavailable;
   const metric=name=>value.metrics.find(row=>row?.metric_id===name);
-  const measured=(name,integer=false)=>{const row=metric(name);return row?.collection_status==='OBSERVED'&&Number.isFinite(row.value)&&row.value>=0&&(!integer||Number.isSafeInteger(row.value))?row.value:null;};
+  const health=healthFacts(value,now);
+  const measured=(name,integer=false)=>{const row=metric(name);if(['cpu','memory','disk','network_latency'].includes(name)&&(value.host||row?.producer==='host-collector'))return health.metrics[name].value;return row?.collection_status==='OBSERVED'&&Number.isFinite(row.value)&&row.value>=0&&(!integer||Number.isSafeInteger(row.value))?row.value:null;};
   const host=Object.fromEntries(['cpu','memory','disk','network_latency'].map(name=>[name,measured(name)]));
   for(const name of ['cpu','memory','disk'])if(host[name]>100)host[name]=null;
   const raw=value.work_observation, stamp=Date.parse(raw?.observed_at||'');
@@ -187,9 +237,41 @@ if(typeof document!=='undefined') {
   }
   function unavailable(state){
     latest=null;$('coaching-roles').replaceChildren();$('coaching-summary').replaceChildren();text('coaching-state',state);text('coaching-source','No current authenticated coaching observation');$('agent-provenance-list').replaceChildren();text('telemetry-state',state);
-    for(const id of ['registered-count','ready-agent-count','active-count','critical-count','metric-cpu','metric-memory','metric-disk','metric-network_latency']){text(id,'UNKNOWN');$(id)?.setAttribute('data-collection-status','UNAVAILABLE');}
+    for(const id of ['registered-count','ready-agent-count','active-count','critical-count','core-services-count','metric-cpu','metric-memory','metric-disk','metric-network_latency']){text(id,'UNKNOWN');$(id)?.setAttribute('data-collection-status','UNAVAILABLE');}
+    renderHealth(null);
     text('telemetry-source','No current authenticated measurement');
     const facts=operationalFacts(null);facts.status=state;bindSnapshot(facts);renderWork(facts);
+  }
+  const sampleLabel=value=>{const time=typeof value==='number'?value*1000:Date.parse(value);return Number.isFinite(time)?new Date(time).toISOString():'unavailable';};
+  const bytes=value=>Number.isSafeInteger(value)&&value>=0?`${(value/1073741824).toFixed(2)} GiB`:'unavailable';
+  function renderHealth(value){
+    const health=healthFacts(value);
+    const details=$('health-observations');details?.replaceChildren();
+    const line=(target,message)=>{if(target){const row=document.createElement('small');row.textContent=message;target.append(row);}};
+    for(const name of ['cpu','memory','disk','network_latency']){
+      const fact=health.metrics[name], label=$('metric-'+name+'-detail');
+      text('metric-'+name+'-detail',`${fact.status}${fact.reason?' · '+fact.reason:''} · sample ${sampleLabel(fact.capturedAt)} · ${fact.hostId} · ${fact.source}`);
+      label?.setAttribute('data-freshness',fact.status);
+    }
+    for(const name of ['memory','disk']){const group=health.host?.[name];line(details,`${name==='disk'?'Disk '+healthText(group?.device,'system drive'):'Memory'}: total ${bytes(group?.total_bytes)} · used ${bytes(group?.used_bytes)} · available ${bytes(group?.available_bytes)}${group?.reason?' · '+group.reason:''}`);}
+    const network=health.network;
+    if(network&&Array.isArray(network.interfaces))for(const nic of network.interfaces.slice(0,32)){
+      const fresh=sampleFreshness(nic.captured_at,health.host.max_age_seconds)==='OBSERVED';
+      const count=(key)=>fresh&&nic.field_status?.[key]?.collection_status==='OBSERVED'&&Number.isSafeInteger(nic[key])?String(nic[key]):'unavailable';
+      const rate=key=>fresh&&nic.field_status?.[key]?.collection_status==='OBSERVED'&&Number.isFinite(nic[key])?nic[key].toFixed(1)+' B/s':'unavailable';
+      line(details,`${healthText(nic.name)} · ${healthText(nic.status)} · RX ${count('received_bytes')} bytes / ${rate('received_bytes_per_second')} · TX ${count('sent_bytes')} bytes / ${rate('sent_bytes_per_second')} · errors RX ${count('received_packet_errors')} / TX ${count('outbound_packet_errors')} · sample ${sampleLabel(nic.captured_at)}`);
+    }
+    else line(details,`Network interfaces: ${value?.host?.network?.reason||'METRIC_NOT_COLLECTED'}`);
+    line(details,'Network gauge measures the default-gateway round trip; it does not establish Internet or service readiness.');
+    text('core-services-count',health.core.status);$('core-services-count')?.setAttribute('data-collection-status',health.core.status==='UNKNOWN'?'UNAVAILABLE':'OBSERVED');
+    text('core-services-detail',`${health.core.reason} · sample ${sampleLabel(health.core.observedAt)} · last complete success ${sampleLabel(health.core.lastSuccessAt)}`);
+    text('critical-count',health.critical.count===null?'UNKNOWN':String(health.critical.count));$('critical-count')?.setAttribute('data-collection-status',health.critical.count===null?'UNAVAILABLE':'OBSERVED');
+    text('critical-detail',`${health.critical.reason}${health.critical.knownCount===null?'':' · known critical records '+health.critical.knownCount+' (coverage may be incomplete)'} · sample ${sampleLabel(health.critical.observedAt)} · last complete success ${sampleLabel(health.critical.lastSuccessAt)}`);
+    const services=$('service-health-list');services?.replaceChildren();
+    for(const service of health.services){line(services,`${service.service_id} · ${service.status} · ${service.reason} · process ${healthText(service.process_state)} · last success ${sampleLabel(service.last_success_at)}`);for(const check of service.checks)line(services,`${check.check_id}: ${check.state||check.status} · ${healthText(check.reason)} · ${healthText(check.scope)} · sample ${sampleLabel(check.observed_at)} · last success ${sampleLabel(check.last_success_at)} · ${healthText(check.source)}`);}
+    if(!health.services.length)line(services,health.core.reason);
+    const incidents=$('critical-incident-list');incidents?.replaceChildren();
+    for(const incident of health.critical.incidents)line(incidents,`${healthText(incident.service_id)} / ${healthText(incident.check_id)} · ${healthText(incident.severity)} · ${healthText(incident.state)} · ${healthText(incident.reason)}`);
   }
   function render(){
     const state=telemetryFreshness(latest);
@@ -198,7 +280,7 @@ if(typeof document!=='undefined') {
     const normalLines=normalLatestLines(latest?.normal_latest);
     if(normalLines){const box=document.createElement('div');box.className='coaching-stat';const title=document.createElement('strong');title.textContent=normalLines[0];box.append(title);for(const line of normalLines.slice(1)){const detail=document.createElement('small');detail.textContent=line;box.append(detail);}$('coaching-summary').append(box);}
     const facts=operationalFacts(latest);bindSnapshot(facts);renderWork(facts);
-    text('telemetry-state',state);text('ready-agent-count',facts.ready===null?'UNKNOWN':String(facts.ready));$('ready-agent-count')?.setAttribute('data-collection-status',facts.ready===null?'UNAVAILABLE':'OBSERVED');text('critical-count','UNKNOWN');$('critical-count')?.setAttribute('data-collection-status','UNAVAILABLE');
+    text('telemetry-state',state);text('ready-agent-count',facts.ready===null?'UNKNOWN':String(facts.ready));$('ready-agent-count')?.setAttribute('data-collection-status',facts.ready===null?'UNAVAILABLE':'OBSERVED');renderHealth(latest);
     const readiness=agentReadinessSummary(latest);
     for(const [id,value] of [['registered-count',facts.registered],['active-count',facts.activeJobs]]){
       text(id,value===null?'UNKNOWN':String(value));
@@ -210,17 +292,18 @@ if(typeof document!=='undefined') {
       const ok=facts.host[name]!==null;
       if(ok)hostObserved++;
       $(id)?.setAttribute('data-collection-status',ok?'OBSERVED':'UNAVAILABLE');
-      text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1)):'UNKNOWN');
+      text(id,ok?(Number.isInteger(metric.value)?String(metric.value):metric.value.toFixed(1))+(name==='network_latency'?' ms':'%'):'UNKNOWN');
     }
     text('telemetry-source',`${latest.source.instance} · ${readiness||'agent readiness UNKNOWN'} · observed ${new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(latest.observed_at))} · ${hostObserved===4?'host metrics OBSERVED':'host gauges unavailable'}`);
     const list=$('agent-provenance-list');list.replaceChildren();
-    for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · availability ${agent.availability}`;row.append(title,status);list.append(row);}
+    for(const agent of latest.agents){const row=document.createElement('div');row.className='agent-record';const title=document.createElement('strong'),status=document.createElement('span');title.textContent=`${agent.agent_id.toUpperCase()} · ${agent.name}`;status.textContent=`${agent.registration} · ${agent.readiness_status||'UNCONFIRMED'} · ${agent.reason_code||'READINESS_NOT_MEASURED'} · last success ${sampleLabel(agent.last_success?.completed_at)} · last failure ${sampleLabel(agent.last_failure?.completed_at)} · heartbeat ${agent.heartbeat_status||'NOT_COLLECTED'} · on-demand execution, role competence not established`;row.append(title,status);list.append(row);}
   }
+  let diagnosticFailures=0,nextDiagnosticAttempt=0;
   async function poll(){
-    if(!authenticated||document.hidden||!navigator.onLine||pending)return;
+    if(!authenticated||document.hidden||!navigator.onLine||pending||Date.now()<nextDiagnosticAttempt)return;
     const controller=new AbortController(), epoch=sessionEpoch;pending=controller;
-    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:20000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}latest=value;render();}
-    catch(error){if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;unavailable([401,403].includes(error.status)?'UNAUTHORIZED':!navigator.onLine?'OFFLINE':'UNAVAILABLE');}
+    try{const value=await api.request('/interface/v1/telemetry',{signal:controller.signal,timeout:20000});if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;if(value?.audience?.client_id!==interfaceClientId){unavailable('UNKNOWN');return;}diagnosticFailures=0;nextDiagnosticAttempt=0;latest=value;render();}
+    catch(error){if(epoch!==sessionEpoch||controller.signal.aborted||!authenticated)return;diagnosticFailures=Math.min(3,diagnosticFailures+1);nextDiagnosticAttempt=Date.now()+Math.min(120000,15000*2**diagnosticFailures);unavailable([401,403].includes(error.status)?'UNAUTHORIZED':!navigator.onLine?'OFFLINE':'UNAVAILABLE');}
     finally{if(pending===controller)pending=null;}
   }
   window.addEventListener('orqevia-task',event=>{
@@ -231,9 +314,9 @@ if(typeof document!=='undefined') {
     // Read the existing authenticated source again for the canonical state.
     void poll();
   });
-  window.addEventListener('orqevia-session',event=>{invalidatePending();const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();if(next){latest=null;void poll();}else{latest=null;unavailable('UNAUTHORIZED');}});
+  window.addEventListener('orqevia-session',event=>{invalidatePending();diagnosticFailures=0;nextDiagnosticAttempt=0;const next=event.detail;const nextInterfaceClientId=next?.interfaceClientId||next?.clientId||null;if(authenticated&&next?.clientId===clientId&&nextInterfaceClientId===interfaceClientId&&next?.generation===generation){void poll();return;}authenticated=Boolean(next?.clientId);clientId=next?.clientId||null;interfaceClientId=nextInterfaceClientId;generation=next?.generation??null;events.clear();if(next){latest=null;void poll();}else{latest=null;unavailable('UNAUTHORIZED');}});
   function suspend(){invalidatePending();unavailable('OFFLINE');}
-  window.addEventListener('offline',suspend);window.addEventListener('online',()=>void poll());
+  window.addEventListener('offline',suspend);window.addEventListener('online',()=>{nextDiagnosticAttempt=0;void poll();});
   window.addEventListener('orqevia-shell-state',event=>{if(event.detail?.state==='offline')suspend();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){invalidatePending();}else void poll();});
   const clock=()=>text('dashboard-clock',new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'medium'}).format(new Date()));
