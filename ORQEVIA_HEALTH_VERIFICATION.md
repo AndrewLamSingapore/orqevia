@@ -68,3 +68,18 @@ The Owner's latest direction is to notify them only after end-to-end completion 
 ## Fabric-to-agent wiring check — 27 October 2026, 07:05 UTC
 
 The versioned source registry defines 36 fabrics, but this does **not** establish that all 36 are wired and functionally verified for the registered agents. Current source test `test_old_catalog_receipts_cannot_self_certify_current_runtime` requires 0 VERIFIED without fresh runtime receipts; the collective operation endpoint reports one selected fabric for an operation. The current verified count is therefore **0/36**, and all-fabrics-to-agents wiring is **UNVERIFIED**. Build an explicit agent-capability-to-fabric map and obtain source-bound functional receipts before claiming wiring. This remains open and does not block unrelated deployment work.
+## Requested component status audit — 27 October 2026
+
+| Component | Current status | Evidence and what remains |
+|---|---|---|
+| Agent Factory | **NOT VERIFIED IN PRODUCTION** | `app/scaffolding.py::generate_agent()` exists and emits advisory-only `DRAFT_CANDIDATE` files with no execution authority. No live route or production generation/registration receipt verified. |
+| Academy | **LIVE ENDPOINT; COHORT STALE / INCOMPLETE** | Certificate-verified HTTPS `GET https://localhost:8443/pwa/api/academy/probability` responded. Record: `STALE`, 20 `READY`, 1 `WAITING`, all 21 in `baseline`; no assessment passes or certification. Endpoint response is not proof of completed coaching outcomes. |
+| 36 fabrics | **0/36 VERIFIED; AGENT WIRING UNVERIFIED** | Catalog has 36 entries; current verification expects fresh source-bound runtime receipts. Need capability-to-fabric mapping and actual receipts. |
+| PIF | **SOURCE-VERIFIED; LIVE ROUTE NOT VERIFIED** | PIF has local engineering tests and production source routes. Certificate-verified HTTPS probe to `/pwa/api/collective/v1/intelligence/pif/status` returned HTTP 404. Production activation/fit/forecast/evidence readback therefore not demonstrated; verify actual deployed route and authenticated operations before claiming live. |
+| MLP | **HISTORICAL LIVE ACCEPTANCE; CURRENT ROUTE NOT VERIFIED** | Documentation records a prior three-fabric live activation and synthetic reference checks. Current certificate-verified HTTPS probes to `/pwa/api/collective/v1/fabrics/mlp` and `/api/collective/v1/fabrics/mlp` both returned HTTP 404. Do not treat historical receipts or source code as current production availability. |
+
+The 404 responses mean those probed paths were not found at the current HTTPS listener; they do not alone prove the underlying PIF/MLP implementations are broken. These five statuses are open verification items. No readiness, pass, certification, or fabric verification was fabricated.
+
+## Inference coverage — 27 October 2026
+
+**All inference paths working: NOT VERIFIED.** ORQEVIA has multiple inference components and paths; the checks recorded here are not a full inventory or end-to-end test of every request/model/fabric/agent integration. PIF’s current HTTPS status probe returned 404; MLP’s two current HTTPS status probes returned 404; the live Academy response is fixture curriculum/cohort state, not evidence of production predictive inference. No global inference-availability or accuracy claim is supported. Enumerate every deployed inference route and verify authenticated request → intended model/fabric → provenance/evidence persistence → response and restart recovery before marking all inference working.
