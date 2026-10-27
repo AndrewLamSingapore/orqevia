@@ -251,6 +251,18 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact dated Academy candidate note; the complete prior
+    # history and Owner-only Verified sections remain byte-pinned below.
+    academy_title = "## Native coaching recovery and probability education - 27 October 2026"
+    assert after.count(academy_title) == 1
+    academy_start = after.index(academy_title)
+    academy_end = after.index("\n## ", academy_start + len(academy_title)) + 1
+    academy_update = after[academy_start:academy_end].encode("utf-8")
+    assert len(academy_update) == 1500
+    assert hashlib.sha256(academy_update).hexdigest() == "f646d8b4f8651fac20cba6fd4633dc892acf1a2a155c8b20f16e38375f15b5f8"
+    assert b"### Claimed, not independently checked" in academy_update
+    assert b"### Verified" not in academy_update
+    after = after[:academy_start] + after[academy_end:]
     parity_title = "## Shared operational observations and shell coherence - 25 October 2026"
     assert after.count(parity_title) == 1
     parity_start = after.index(parity_title)

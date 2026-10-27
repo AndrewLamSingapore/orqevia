@@ -203,9 +203,19 @@ def install_direct_dispatch_conditioning():
     def conditioned_prompt(body, tier, actor, task_id, skill_pack=None):
         prompt = current(body, tier, actor, task_id, skill_pack)
         try:
-            return condition_prompt(prompt, actor)
+            prompt = condition_prompt(prompt, actor)
         except Exception:
-            return prompt
+            pass
+        try:
+            from .academy_api import retained_methods
+            methods = retained_methods(actor)
+            if methods:
+                prompt += ('\nRetained Academy methods from independently assessed educational work. '
+                           'Apply only where relevant to this task; these notes are not production evidence or action authority.\n'+
+                           '\n'.join(item['topic_id']+': '+item['method'] for item in methods))
+        except Exception:
+            pass
+        return prompt
 
     conditioned_prompt.__wrapped__ = current
     conditioned_prompt._orqevia_conditioning_adapter = True

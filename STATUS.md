@@ -1,5 +1,30 @@
 # STATUS.md — Portfolio status record
 
+## Native coaching recovery and probability education - 27 October 2026
+
+### Claimed, not independently checked
+
+The local closure candidate repairs source-transition recovery, preserves original
+submission bindings and completes an agent's practice and acceptance before
+starting another baseline. It removes the shared-queue coaching admission guard.
+The existing executor receives a certificate-verified HTTPS notification after
+submission. Completed programs stop consuming unchanged inference; actual
+ordinary output-contract failures can reopen the affected role session.
+
+The existing Academy now contains fourteen original probability lessons for all
+21 registered specialists, with separate practice and unseen assessment facts.
+Existing PIF mathematics supplies Markov, stationary, absorbing and offline
+hidden-state calculations. An independent deterministic oracle grades results.
+Only fixed methods backed by a passing unseen assessment enter durable retention
+and ordinary agent prompt context. These educational fixtures do not qualify
+production forecasts or certify agents. Coaching exposes the program and original
+assessment source. The v42 shell includes native curriculum and retained-record
+inspection in the existing Coaching page.
+
+Source tests, CI, deployment and live inference acceptance are separate milestones.
+Dell-origin execution, live external CLI effects and full role certification are
+not established by the source tests. See docs/NATIVE-PROBABILITY-COACHING.md.
+
 ## Shared operational observations and shell coherence - 25 October 2026
 
 ### Claimed, not independently checked

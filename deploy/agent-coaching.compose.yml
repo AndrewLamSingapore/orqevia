@@ -11,6 +11,10 @@ services:
       ORQEVIA_DATA_DIR: /data
       ORQEVIA_COMPUTE_QUEUE_DB: /data/compute-queue.db
       ORQEVIA_COACHING_SOURCE_REVISION: ${ORQEVIA_COACHING_SOURCE_REVISION:?source revision required}
+      ORQEVIA_PROBABILITY_COACHING_ENABLED: '1'
+      ORQEVIA_COACHING_NOTIFY_ORIGIN: ${ORQEVIA_COACHING_NOTIFY_ORIGIN:?verified HTTPS interface origin required}
+      ORQEVIA_COACHING_CA_FILE: /run/orqevia-tls/ca.crt
+      ORQEVIA_MODEL_KEEP_ALIVE: 2m
       ORQEVIA_COMPUTE_PROFILE: compat
       ORQEVIA_FAST_MODEL: ${ORQEVIA_FAST_MODEL:?existing local fast model required}
       ORQEVIA_DEEP_MODEL: ${ORQEVIA_DEEP_MODEL:?existing local deep model required}
@@ -21,6 +25,7 @@ services:
       ORQEVIA_AGENT_CONCURRENCY: '1'
     volumes:
       - coaching-data:/data
+      - ${ORQEVIA_TLS_CA_FILE:?existing public CA certificate required}:/run/orqevia-tls/ca.crt:ro
     networks:
       - orqevia
     logging:
