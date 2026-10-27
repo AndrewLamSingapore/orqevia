@@ -44,3 +44,7 @@ The Owner requested generic CODEX labeling and immediate saving at below8%allowa
 -Exact latest saved commit, push/PR, archive/bundle verification, current private database backup/hash/quick_check and open actions are in ABEX operations/observability-recovery-20261027/checkpoint-20261027T0614Z/CUSTODY.json. The save is not full system certification or a whole-PC image backup. Original data/models/certificates/profiles/volumes remain in place.
 
 Overall mission remains **PARTIALLY COMPLETE — BLOCKED**. See generic CODEX handover for exact next steps; no model-specific continuation is required.
+
+## Owner shutdown checkpoint note — 27 October 2026, 06:32 UTC
+
+The Owner asked whether the ABEX PC can be shut down. **Yes: the saved and hash-verified CODEX checkpoint is complete, so a normal PC shutdown is safe from the work-preservation perspective.** The checkpoint is not a whole-PC image; persistent ORQEVIA services will be unavailable while this host is powered off. No shutdown or whole-PC power-off/reboot test has yet been performed. After the next boot, verify the fresh boot identity and collector receipt, local HTTPS dashboard, current interface image, and persistence/recovery of jobs, sessions and incidents. Overnight/offline recovery remains unverified until that evidence is captured; this does not change the interim verdict **PARTIALLY COMPLETE — BLOCKED**.
