@@ -318,7 +318,8 @@ if(typeof document!=='undefined') {
   function suspend(){invalidatePending();unavailable('OFFLINE');}
   window.addEventListener('offline',suspend);window.addEventListener('online',()=>{nextDiagnosticAttempt=0;void poll();});
   window.addEventListener('orqevia-shell-state',event=>{if(event.detail?.state==='offline')suspend();});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){invalidatePending();}else void poll();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){invalidatePending();}else{if(latest)render();void poll();}});
+  window.addEventListener('pageshow',()=>{if(latest)render();void poll();});
   const clock=()=>text('dashboard-clock',new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'medium'}).format(new Date()));
   clock();setInterval(clock,1000);setInterval(()=>void poll(),30000);setInterval(()=>{if(latest)render();},5000);void poll();
   window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));

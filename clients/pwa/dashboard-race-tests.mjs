@@ -161,6 +161,18 @@ test('diagnostic failures back off while an online transition retries immediatel
   f.listeners.get('online')();await settle();assert.equal(f.requests.length,2);
 });
 
+test('returning after a long hidden period clears expired facts before network replies',async()=>{
+  const f=await fixture();f.session({role:'OWNER'});f.respond(0);await settle();
+  const originalNow=Date.now;
+  try{
+    Date.now=()=>originalNow()+3600000;
+    document.hidden=false;f.documentListeners.get('visibilitychange')();
+    assert.equal(f.nodes.get('telemetry-state').textContent,'STALE');
+    assert.equal(f.nodes.get('critical-count').textContent,'UNKNOWN');
+    assert.equal(f.nodes.get('agent-provenance-list').children.length,0);
+  }finally{Date.now=originalNow;}
+});
+
 test('Observed host gauges render values and honest availability text',async()=>{
   const f=await fixture();f.session({role:'OWNER'});
   f.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:new Date().toISOString(),freshness_seconds:60,
