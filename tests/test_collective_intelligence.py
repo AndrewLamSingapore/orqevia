@@ -48,6 +48,43 @@ def source(store, principal, value="source", subject=None):
     return command(store, principal, "evidence.record", **payload)
 
 
+def test_evidence_write_is_not_blocked_by_historical_ten_thousand_record_count(board):
+    store, owner, _, _, _ = board
+    with store.connect() as db:
+        existing = db.execute(
+            "SELECT count(*) FROM registry_records WHERE tenant_id=? AND owner_id=?", (owner.tenant_id, owner.owner_id)
+        ).fetchone()[0]
+        db.executemany(
+            "INSERT INTO registry_records VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            [
+                (
+                    owner.tenant_id,
+                    owner.owner_id,
+                    f"retained-fixture:{index}",
+                    "evidence",
+                    "RECORDED",
+                    1,
+                    "fixture-seed",
+                    None,
+                    "2026-10-27T00:00:00+00:00",
+                    "2026-10-27T00:00:00+00:00",
+                    "{}",
+                )
+                for index in range(10_000)
+            ],
+        )
+        assert existing + 10_000 >= 10_000
+
+    receipt = source(store, owner, value="functional evidence beyond former record ceiling")
+
+    assert receipt["kind"] == "evidence"
+    with store.connect() as db:
+        count = db.execute(
+            "SELECT count(*) FROM registry_records WHERE tenant_id=? AND owner_id=?", (owner.tenant_id, owner.owner_id)
+        ).fetchone()[0]
+    assert count == existing + 10_001
+
+
 def proof(store, verifier, subject, *, content=None, environment="TEST"):
     receipt = {
         "plan_id": "test-independent-observation",
