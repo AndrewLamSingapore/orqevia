@@ -329,7 +329,8 @@ class CoachingController:
                             'certification_awarded':False,'oracle':'existing.role-normal' if row['phase']!='practice' else VERSION}
                 if row['program_id']=='probability-foundations':
                     from .academy import Academy
-                    evidence['oracle']='native.probability-foundations.v1'
+                    from .probability_curriculum import VERSION as probability_version
+                    evidence['oracle']='native.'+probability_version
                     academy = Academy()
                     if row['phase']=='practice':
                         try:

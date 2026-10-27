@@ -17,6 +17,10 @@ from app.probability_curriculum import (
 )
 
 
+def fixture_response(answers):
+    return json.dumps({"calculation": "Isolated fixture notes; not a live learner response.", "results": answers})
+
+
 def test_all_fourteen_topics_have_lessons_and_all_canonical_agents_have_paths():
     assert len(LESSONS) == 14
     assert len({key for key, _, _ in LESSONS}) == 14
@@ -58,7 +62,8 @@ def test_practice_and_unseen_assessment_have_different_inputs_without_an_answer_
         context = json.loads(req["context"])
         assert "answers" not in context and "expected" not in context
         assert req["response_schema"]["additionalProperties"] is False
-        assert set(req["response_schema"]["required"]) == {key for key, _, _ in LESSONS}
+        assert req["response_schema"]["required"] == ["calculation", "results"]
+        assert set(req["response_schema"]["properties"]["results"]["required"]) == {key for key, _, _ in LESSONS}
         assert ("lesson_methods" in context) == (phase != "baseline")
         contexts.append(context["questions"])
     for key in ["counting", "markov", "long_run", "hidden_state", "scoring"]:
@@ -68,11 +73,11 @@ def test_practice_and_unseen_assessment_have_different_inputs_without_an_answer_
 def test_every_agent_has_a_discriminating_independent_assessor():
     for agent in registered_agent_ids(include_orchestrator=False):
         _, expected = exercise(agent, 1901, "acceptance")
-        assert review_assessment(agent, 1901, "acceptance", json.dumps(expected)) == (True, [])
+        assert review_assessment(agent, 1901, "acceptance", fixture_response(expected)) == (True, [])
         for key, answer in expected.items():
             bad = dict(expected)
             bad[key] = "incorrect" if type(answer) is not str else False
-            passed, errors = review_assessment(agent, 1901, "acceptance", json.dumps(bad))
+            passed, errors = review_assessment(agent, 1901, "acceptance", fixture_response(bad))
             assert not passed and key in errors
 
 
@@ -84,19 +89,37 @@ def test_invalid_or_forged_answers_are_rejected(response):
 def test_booleans_are_not_accepted_as_numeric_scores_and_calibration_is_not_awarded():
     _, answer = exercise("a12", 1001, "acceptance")
     answer["counting"] = True
-    assert not review_assessment("a12", 1001, "acceptance", json.dumps(answer))[0]
+    assert not review_assessment("a12", 1001, "acceptance", fixture_response(answer))[0]
     _, answer = exercise("a12", 1001, "acceptance")
     answer["scoring"]["log_loss"] = True
-    assert not review_assessment("a12", 1001, "acceptance", json.dumps(answer))[0]
+    assert not review_assessment("a12", 1001, "acceptance", fixture_response(answer))[0]
     _, answer = exercise("a12", 1001, "acceptance")
     answer["scoring"]["calibration_established"] = True
-    assert not review_assessment("a12", 1001, "acceptance", json.dumps(answer))[0]
+    assert not review_assessment("a12", 1001, "acceptance", fixture_response(answer))[0]
 
 
 def test_rational_equivalence_is_allowed_without_coercing_numeric_or_boolean_types():
     _, answer = exercise("a12", 1001, "acceptance")
     rational = Fraction(answer["conditional"])
     answer["conditional"] = f"{rational.numerator * 2}/{rational.denominator * 2}"
-    assert review_assessment("a12", 1001, "acceptance", json.dumps(answer))[0]
+    assert review_assessment("a12", 1001, "acceptance", fixture_response(answer))[0]
     answer["conditional"] = float(rational)
-    assert not review_assessment("a12", 1001, "acceptance", json.dumps(answer))[0]
+    assert not review_assessment("a12", 1001, "acceptance", fixture_response(answer))[0]
+
+
+@pytest.mark.parametrize("notes", ["", "x" * 1201, False, None])
+def test_calculation_wrapper_cannot_bypass_independent_numeric_grading(notes):
+    _, answer = exercise("a12", 1001, "acceptance")
+    assert not review_assessment("a12", 1001, "acceptance", json.dumps({"calculation": notes, "results": answer}))[0]
+    answer["counting"] = -1
+    assert not review_assessment("a12", 1001, "acceptance", fixture_response(answer))[0]
+
+
+def test_joint_axes_and_rounding_are_explicit_and_worked_examples_are_separate():
+    for phase in ["baseline", "practice", "acceptance"]:
+        context = json.loads(assessment_request("a01", 1001, phase)["context"])
+        assert context["questions"]["joint"]["row_values_x"] == [0, 1]
+        assert context["questions"]["joint"]["column_values_y"] == [0, 1]
+        assert "rounded to six decimal places" in context["answer_format"]
+        assert "within 0.000001" not in context["answer_format"]
+        assert ("worked_examples" in context) == (phase != "baseline")

@@ -198,7 +198,8 @@ class CoachingTests(unittest.TestCase):
                 row = db.execute("SELECT * FROM coaching_sessions WHERE agent='a06'").fetchone()
                 self.assertEqual(row['phase'],phase)
             contexts.append(request_for('a06',phase,row['seed'],'probability-foundations')['context'])
-            self.complete(json.dumps(exercise('a06',row['seed'],phase)[1]))
+            self.complete(json.dumps({'calculation':'Isolated fixture notes; mathematics tested independently.',
+                                      'results':exercise('a06',row['seed'],phase)[1]}))
             self.assertEqual(self.controller.tick(),'PASS')
         self.assertEqual(len(set(contexts)),3)
         self.assertEqual(self.controller.tick(),'IDLE')

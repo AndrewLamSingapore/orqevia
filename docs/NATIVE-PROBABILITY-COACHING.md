@@ -55,3 +55,11 @@ Primary references used for mathematical cross-checks:
 These links are references. Their PDFs or protected explanatory text are not
 redistributed in the program. Deployment and live acceptance require separate
 source-bound runtime receipts.
+
+The first live v1 cycle completed operationally but its learner failed the
+unseen numerical assessment. Version 2 adds explicit binary table axes and
+rounding instructions, disjoint worked examples and compact arithmetic before
+the result fields. The independent numerical oracle is unchanged. Arithmetic
+notes are learner output, not trusted instructions or independent evidence;
+only independently correct result fields can pass. Live learning quality remains
+separate from source tests and controller health.

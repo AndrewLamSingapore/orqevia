@@ -258,8 +258,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     academy_start = after.index(academy_title)
     academy_end = after.index("\n## ", academy_start + len(academy_title)) + 1
     academy_update = after[academy_start:academy_end].encode("utf-8")
-    assert len(academy_update) == 1500
-    assert hashlib.sha256(academy_update).hexdigest() == "f646d8b4f8651fac20cba6fd4633dc892acf1a2a155c8b20f16e38375f15b5f8"
+    assert len(academy_update) == 1887
+    assert hashlib.sha256(academy_update).hexdigest() == "512ef7e78ec31e10e62be4e866407481a7a0d2328160d6831878bcbcf8afa723"
     assert b"### Claimed, not independently checked" in academy_update
     assert b"### Verified" not in academy_update
     after = after[:academy_start] + after[academy_end:]
