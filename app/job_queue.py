@@ -377,10 +377,23 @@ class JobQueue:
                 self._event(c, jid, 'cloud_reserved', binding)
         return [self.get(item[0]) for item in prepared]
 
-    def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider]) -> tuple[Provider | None,str,float]:
+    def _route(self, c: sqlite3.Connection, row: sqlite3.Row, providers: list[Provider], *, direct_local=False) -> tuple[Provider | None,str,float]:
         local_names={p.name for p in providers if p.kind=="local"}
         if row['preferred_provider']:
             providers=[p for p in providers if p.name==row['preferred_provider']]
+        if direct_local:
+            # Direct requests share the existing local model service. Its own
+            # one-resident-model / one-inference configuration owns physical
+            # scheduling. Legacy journal admission must not starve an Owner
+            # request while a coaching session immediately submits its next job.
+            # Keep per-request model/memory requirements and cloud cost rules.
+            for p in providers:
+                if p.kind!='local' or p.concurrency<1:continue
+                if row['ram_mb']>min(p.ram_mb,self.policy.local_ram_mb):continue
+                if row['vram_mb']>min(p.vram_mb,self.policy.local_vram_mb):continue
+                if row['model'] and row['model']!=p.model:continue
+                if not row['model'] and row['model_role']!='auto' and not p.name.endswith('-'+row['model_role']):continue
+                return p,'direct local request; model service owns inference scheduling',0
         active=c.execute("SELECT provider,agent,ram_mb,vram_mb,priority,cloud_inflight FROM compute_jobs WHERE status='running' OR cloud_inflight=1").fetchall()
         if len(active)>=self.policy.global_concurrency:return None,"global concurrency limit",0
         def identity(value: str) -> str:
@@ -515,7 +528,7 @@ class JobQueue:
                 self._event(c, row["id"], "registry_migrated", {"from": row["agent"], "to": canonical})
                 c.execute("UPDATE compute_jobs SET agent=? WHERE id=?", (canonical, row["id"]))
                 row = c.execute("SELECT * FROM compute_jobs WHERE id=?", (row["id"],)).fetchone()
-            provider, reason, estimate = self._route(c, row, providers)
+            provider, reason, estimate = self._route(c, row, providers, direct_local=True)
             if not provider:
                 if "cost ceiling" in reason or "job ceiling" in reason:
                     c.execute("UPDATE compute_jobs SET status='budget_blocked',route_reason=?,estimated_cost_usd=?,updated_at=?,completed_at=? WHERE id=?",

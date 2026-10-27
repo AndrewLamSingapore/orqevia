@@ -21,6 +21,18 @@ production forecasts or certify agents. Coaching exposes the program and origina
 assessment source. The v42 shell includes native curriculum and retained-record
 inspection in the existing Coaching page.
 
+The first real v1 learner completed its cycle but failed the unseen numerical
+assessment, so no methods were retained. The v2 candidate makes table axes and
+rounding explicit, adds disjoint worked examples and places brief arithmetic
+before results. Its numerical oracle and acceptance criteria are unchanged.
+Source tests do not establish that the live model has learned the material.
+
+A live ordinary request also exposed legacy admission limits inside direct
+execution: continuously submitted coaching work could starve it between reaper
+polls. The candidate lets eligible direct local requests reach the existing
+model service immediately. Ollama retains its single-inference configuration;
+per-request model/memory checks and cloud spending rules remain enforced.
+
 Source tests, CI, deployment and live inference acceptance are separate milestones.
 Dell-origin execution, live external CLI effects and full role certification are
 not established by the source tests. See docs/NATIVE-PROBABILITY-COACHING.md.

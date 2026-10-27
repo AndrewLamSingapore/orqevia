@@ -55,3 +55,18 @@ Primary references used for mathematical cross-checks:
 These links are references. Their PDFs or protected explanatory text are not
 redistributed in the program. Deployment and live acceptance require separate
 source-bound runtime receipts.
+
+The first live v1 cycle completed operationally but its learner failed the
+unseen numerical assessment. Version 2 adds explicit binary table axes and
+rounding instructions, disjoint worked examples and compact arithmetic before
+the result fields. The independent numerical oracle is unchanged. Arithmetic
+notes are learner output, not trusted instructions or independent evidence;
+only independently correct result fields can pass. Live learning quality remains
+separate from source tests and controller health.
+
+Direct local requests must not wait for legacy queue admission counters. The
+existing local model service owns its physical scheduling and retains one
+resident model and one parallel inference. Journal jobs can therefore include
+requests waiting inside that service; a running journal count is not proof of
+parallel model computation. Local model/memory requirements and cloud cost rules
+remain checked. Legacy explicitly queued execution keeps its prior policy.

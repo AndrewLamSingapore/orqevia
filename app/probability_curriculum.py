@@ -17,7 +17,7 @@ from .agent_registry import agent_record, registered_agent_ids
 from .pif.core import MarkovModel, absorbing_analysis, hidden_filter, stationary_distribution
 
 PROGRAM_ID = "probability-foundations"
-VERSION = "probability-foundations.v1"
+VERSION = "probability-foundations.v2"
 REFERENCES = (
     "https://www.wzchen.com/probability-cheatsheet",
     "https://www.wzchen.com/s/probability_cheatsheet.pdf",
@@ -180,7 +180,12 @@ def exercise(agent, seed, phase):
     }
     answers["bayes"] = _fraction(prior * sensitivity / (prior * sensitivity + (1 - prior) * false_positive))
     counts = [[1 + variant, 2 + variant], [3 + variant, 4 + variant]]
-    facts["joint"] = {"counts_rows_x_columns_y": counts, "ask": ["P(X=1)", "P(Y=1 given X=1)"]}
+    facts["joint"] = {
+        "row_values_x": [0, 1],
+        "column_values_y": [0, 1],
+        "counts_rows_x_columns_y": counts,
+        "ask": ["P(X=1)", "P(Y=1 given X=1)"],
+    }
     answers["joint"] = [
         _fraction(Fraction(sum(counts[1]), sum(map(sum, counts)))),
         _fraction(Fraction(counts[1][1], sum(counts[1]))),
@@ -281,14 +286,39 @@ def assessment_request(agent, seed, phase):
         "phase": phase,
         "role": agent_record(agent)["name"],
         "questions": facts,
-        "answer_format": "Return one JSON object with the fourteen topic IDs as keys. Fractions are strings such as 2/3 or 1. Keep exact integers and booleans. Use the listed order for answer arrays. Log loss is numeric within 0.000001.",
+        "answer_format": (
+            "Return an object with calculation and results. First write compact equations in calculation, "
+            "then put the fourteen topic answers in results. Recompute from this exercise's exact values. "
+            "Fractions are strings such as 2/3 or 1; do not replace a probability by its denominator. "
+            "Keep exact integers and booleans. Use the listed order for answer arrays. "
+            "Return natural-log loss rounded to six decimal places; an error tolerance is not an answer. "
+            "Keep calculation below 1200 characters."
+        ),
     }
     if phase != "baseline":
         context["lesson_methods"] = {key: method for key, _, method in LESSONS}
+        # Different facts from every exercise variant; no current answer key.
+        context["worked_examples"] = {
+            "counting": "Choose two from four without order: 4*3/2=6.",
+            "bayes": "Prior 1/20, likelihoods 4/5 and 1/5: (1/20*4/5)/(1/20*4/5+19/20*1/5)=4/23.",
+            "moments": "Equiprobable values 0 and 10 give E=5, E[X^2]=50, variance=50-25=25.",
+            "markov": "For [[1-p,p],[q,1-q]], two-step first-to-second mass is (1-p)*p+p*(1-q).",
+            "long_run": "Absorption probability r per step gives expected time 1/r. Two-state stationary second mass is p/(p+q).",
+            "scoring": "For p=1/4,y=1, Brier=(1/4-1)^2=9/16 and log loss=-ln(1/4)=1.386294.",
+        }
+    schema = {
+        "type": "object",
+        "properties": {
+            "calculation": {"type": "string"},
+            "results": _schema(answers),
+        },
+        "required": ["calculation", "results"],
+        "additionalProperties": False,
+    }
     return {
         "objective": "Solve each stated educational probability question independently; make no operational or certification claim.",
         "context": json.dumps(context, separators=(",", ":")),
-        "response_schema": _schema(answers),
+        "response_schema": schema,
         "response_format": "strict_json",
     }
 
@@ -339,6 +369,14 @@ def review_assessment(agent, seed, phase, response):
         value = json.loads(
             response, object_pairs_hook=unique, parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite"))
         )
+        if (
+            type(value) is not dict
+            or value.keys() != {"calculation", "results"}
+            or type(value["calculation"]) is not str
+            or not 1 <= len(value["calculation"]) <= 1200
+        ):
+            return False, ["field_contract_mismatch"]
+        value = value["results"]
         _, expected = exercise(agent, seed, phase)
         if type(value) is not dict or value.keys() != expected.keys():
             return False, ["field_contract_mismatch"]
