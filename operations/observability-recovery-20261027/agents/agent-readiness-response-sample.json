@@ -1,0 +1,99 @@
+{
+  "scope": "DATED_OBSERVATION_REPLAY_FOR_RESPONSE_SHAPE_NOT_LIVE_ACCEPTANCE",
+  "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+  "job_snapshot_at": "2026-10-27T03:52:45.076189+00:00",
+  "model_snapshot_at": "2026-10-27T03:54:34.398074+00:00",
+  "agent": {
+    "activity_freshness": {
+      "age_seconds": 345.59,
+      "reason": null,
+      "status": "OBSERVED"
+    },
+    "activity_source": "compute-queue",
+    "agent_id": "a01",
+    "availability": "IDLE",
+    "availability_scope": "LAST_RECORDED_TASK_STATE_NOT_PROCESS_LIVENESS",
+    "blocker": null,
+    "capability_ids": [
+      "responsibility.a01"
+    ],
+    "dependency_summary": {
+      "compute_journal": "OBSERVED",
+      "dispatch": "ENABLED",
+      "execution_mode": "direct",
+      "missing_models": [],
+      "model_available": true,
+      "model_observation_freshness": {
+        "age_seconds": -0.011,
+        "reason": null,
+        "status": "OBSERVED"
+      },
+      "model_observed_at": "2026-10-27T03:54:34.408656+00:00",
+      "model_runtime": "OBSERVED",
+      "registry": "OBSERVED",
+      "required_models": [
+        "gemma3:1b",
+        "gemma3:12b",
+        "embeddinggemma:300m-qat-q4_0"
+      ],
+      "role_competence": "NOT_ESTABLISHED_BY_EXECUTION_OR_COACHING_COUNT"
+    },
+    "heartbeat": null,
+    "heartbeat_reason": "LOGICAL_ON_DEMAND_ROLE_WITHOUT_DEDICATED_WORKER",
+    "heartbeat_status": "NOT_COLLECTED",
+    "history_count": null,
+    "last_activity_at": "2026-10-27T03:48:48.808080+00:00",
+    "last_failure": {
+      "completed_at": "2026-10-27T03:46:45.092831+00:00",
+      "created_at": "2026-10-27T03:45:38.964066+00:00",
+      "error_code": "LOCAL_EXECUTION_FAILED",
+      "evidence_scope": "COMPUTE_EXECUTION_NOT_OUTPUT_CORRECTNESS",
+      "job_id": "8464268f-1c55-461c-8b2e-836a7c66cd60",
+      "model": "gemma3:12b",
+      "provider": null,
+      "started_at": "2026-10-27T03:45:39.055732+00:00",
+      "status": "failed",
+      "task_class": "classification",
+      "task_id": null,
+      "task_id_status": "OBJECTIVE_JOIN_NOT_OBSERVED",
+      "updated_at": "2026-10-27T03:46:45.092831+00:00"
+    },
+    "last_success": {
+      "completed_at": "2026-10-27T03:48:48.808080+00:00",
+      "created_at": "2026-10-27T03:47:20.398156+00:00",
+      "error_code": null,
+      "evidence_scope": "COMPUTE_EXECUTION_NOT_OUTPUT_CORRECTNESS",
+      "job_id": "64125b7d-3cd8-4cb4-8849-3fd71c185859",
+      "model": "gemma3:12b",
+      "provider": null,
+      "started_at": "2026-10-27T03:47:20.461531+00:00",
+      "status": "completed",
+      "task_class": "classification",
+      "task_id": null,
+      "task_id_status": "OBJECTIVE_JOIN_NOT_OBSERVED",
+      "updated_at": "2026-10-27T03:48:48.808080+00:00"
+    },
+    "last_task": {
+      "completed_at": "2026-10-27T03:48:48.808080+00:00",
+      "created_at": "2026-10-27T03:47:20.398156+00:00",
+      "error_code": null,
+      "evidence_scope": "COMPUTE_EXECUTION_NOT_OUTPUT_CORRECTNESS",
+      "job_id": "64125b7d-3cd8-4cb4-8849-3fd71c185859",
+      "model": "gemma3:12b",
+      "provider": null,
+      "started_at": "2026-10-27T03:47:20.461531+00:00",
+      "status": "completed",
+      "task_class": "classification",
+      "task_id": null,
+      "task_id_status": "OBJECTIVE_JOIN_NOT_OBSERVED",
+      "updated_at": "2026-10-27T03:48:48.808080+00:00"
+    },
+    "lifecycle_status": "active",
+    "name": "Strategy Lead",
+    "readiness_status": "CONFIRMED",
+    "reason_code": "RECENT_SUCCESSFUL_EXECUTION_AND_CURRENT_MODEL_OBSERVATION",
+    "registration": "REGISTERED",
+    "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+    "task_ordering": "MOST_RECENT_TASK_TRANSITION"
+  }
+}

@@ -1,5 +1,26 @@
 # STATUS.md — Portfolio status record
 
+## Observability recovery and DeepSeek handover - 27 October 2026
+
+### Claimed, not independently checked
+
+The P0 observability investigation found an empty host-receipt bind, lost
+sample metadata, readiness inferred from failed activity, and disconnected
+service/incident reporting. A branch candidate repairs host reading and
+collection, truthful on-demand readiness and operational incident handling.
+The combined focused source run passed 68 tests; lint and collector syntax
+checks passed. These results do not establish deployed runtime acceptance.
+
+The Owner requested a saved handover to Codex DeepSeek before PC shutdown
+because allowance was below 25 percent. The producer hook, actual collector
+installation/mount, frontend integration, runtime failure/recovery tests,
+current identity acceptance and final system closure remain unfinished.
+Production remains on the earlier b360da9 release. All 21 roles are
+individually accounted for; no READY or healthy values were manufactured.
+See ORQEVIA_HANDOVER_CODEX_DEEPSEEK.md and the six mission records.
+The saved handover is not a declaration of production readiness. Dell
+verification remains parked; REA/MiroFish remain excluded.
+
 ## Native coaching recovery and probability education - 27 October 2026
 
 ### Claimed, not independently checked

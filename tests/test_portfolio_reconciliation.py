@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only the exact source-only handover; prior claims stay pinned.
+    handover_title = '## Observability recovery and DeepSeek handover - 27 October 2026'
+    assert after.count(handover_title) == 1
+    handover_start = after.index(handover_title)
+    handover_end = after.index("\n## ", handover_start + len(handover_title)) + 1
+    handover_update = after[handover_start:handover_end].encode("utf-8")
+    assert len(handover_update) == 1191
+    assert hashlib.sha256(handover_update).hexdigest() == "33012e8f0c803e44ddc87b92fa4842479cc86cfc08a69b165b07e95d35eaf1c1"
+    assert b"### Claimed, not independently checked" in handover_update
+    assert b"### Verified" not in handover_update
+    after = after[:handover_start] + after[handover_end:]
     # Admit only this exact dated Academy candidate note; the complete prior
     # history and Owner-only Verified sections remain byte-pinned below.
     academy_title = "## Native coaching recovery and probability education - 27 October 2026"

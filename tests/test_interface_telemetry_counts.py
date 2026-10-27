@@ -92,9 +92,59 @@ def test_agent_activity_classifies_queue_state_without_inventing_liveness(draft)
             ('1','a01','completed','2026-10-15T01:00:00Z'),
             ('2','a01','running','2026-10-15T02:00:00Z'),
             ('3','a02','queued','2026-10-15T03:00:00Z')])
-    assert module.agent_activity()=={
-        'a01':{'status':'running','observed_at':'2026-10-15T02:00:00Z'},
-        'a02':{'status':'queued','observed_at':'2026-10-15T03:00:00Z'}}
+    activity=module.agent_activity()
+    assert {aid:(row['status'],row['observed_at']) for aid,row in activity.items()}=={
+        'a01':('running','2026-10-15T02:00:00Z'),
+        'a02':('queued','2026-10-15T03:00:00Z')}
+    assert activity['a01']['last_success']['job_id']=='1'
+    assert activity['a01']['latest_task']['job_id']=='2'
+    assert activity['a02']['last_failure'] is None
+
+
+def test_later_transition_of_older_job_supersedes_last_inserted_row_and_joins_parent_task(draft):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT,completed_at TEXT)')
+        db.executemany('INSERT INTO compute_jobs VALUES(?,?,?,?,?)',[
+            ('older-insert','a01','completed','2026-10-15T03:00:00Z','2026-10-15T03:00:00Z'),
+            ('later-insert','a01','failed','2026-10-15T02:00:00Z','2026-10-15T02:00:00Z')])
+    with sqlite3.connect(root/'objectives.db') as db:
+        db.execute('CREATE TABLE objectives(id TEXT,steps_json TEXT)')
+        db.execute('INSERT INTO objectives VALUES(?,?)',('parent-task','[{"dispatch":{"job":{"id":"older-insert"}}}]'))
+    activity=module.agent_activity()['a01']
+    assert activity['latest_task']['job_id']=='older-insert'
+    assert activity['latest_task']['task_id']=='parent-task'
+    assert activity['latest_task']['task_id_status']=='OBJECTIVE_STORE_JOIN'
+    assert activity['last_failure']['job_id']=='later-insert'
+    assert activity['last_failure']['task_id'] is None
+    assert activity['history_count']==2
+
+
+def test_unorderable_newest_insertion_does_not_resurrect_older_success(draft):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT)')
+        db.executemany('INSERT INTO compute_jobs VALUES(?,?,?,?)',[
+            ('valid-old','a01','completed','2026-10-15T03:00:00Z'),
+            ('invalid-new','a01','failed','2026-10-15T04:00:00')])
+    activity=module.agent_activity()['a01']
+    assert activity['latest_task']['job_id']=='invalid-new'
+    assert activity['ordering']=='LATEST_INSERTED_TASK_TIMESTAMP_UNORDERABLE'
+    assert activity['last_success']['job_id']=='valid-old'
+
+
+def test_activity_errors_are_fixed_classifications_and_store_is_read_only(draft):
+    module,root=draft
+    path=root/'compute-queue.db'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT,error TEXT,prompt TEXT,result TEXT)')
+        db.execute('INSERT INTO compute_jobs VALUES(?,?,?,?,?,?,?)',
+                   ('failed','a01','failed','2026-10-15T03:00:00Z','private server body','private prompt','private answer'))
+    before=path.read_bytes()
+    activity=module.agent_activity()['a01']
+    assert activity['last_failure']['error_code']=='EXECUTION_FAILURE'
+    assert 'private' not in str(activity)
+    assert path.read_bytes()==before
 
 
 def test_agent_activity_requires_agent_identity_column(draft):

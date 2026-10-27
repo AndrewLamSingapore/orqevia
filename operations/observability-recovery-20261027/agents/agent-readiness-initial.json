@@ -1,0 +1,1949 @@
+{
+  "schema_version": "orqevia.agent-readiness-audit.v1",
+  "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+  "source_registry_sha256": "5c41c170f3e9e993ccccfa1e095fed5e7a054d8904f8e0f410cafad9a3015833",
+  "mode": "READ_ONLY_RUNTIME_AUDIT",
+  "job_snapshot_at": "2026-10-27T03:52:45.076189+00:00",
+  "https_snapshot_at": "2026-10-27T03:54:34.398074+00:00",
+  "https_certificate_verification": "Python ssl.create_default_context(); trusted certificate chain and hostname verification; no bypass",
+  "warning": "Independent read-only snapshots during ongoing real coaching; no synchronized snapshot or role competence claim.",
+  "runtime_source_hashes_match": true,
+  "https_telemetry": {
+    "agents": [
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a01",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T03:48:48.808080+00:00",
+        "name": "Strategy Lead",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a02",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T03:50:47.588295+00:00",
+        "name": "Planning and Roadmap Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a04",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T03:53:51.214160+00:00",
+        "name": "Decision and Comparison Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a05",
+        "availability": "RUNNING",
+        "heartbeat": "2026-10-27T03:54:33.420988+00:00",
+        "name": "Portfolio and Capacity Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a06",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T03:44:01.724513+00:00",
+        "name": "Research Lead",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a07",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:22:13.779421+00:00",
+        "name": "Evidence Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a09",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:40:23.876351+00:00",
+        "name": "Knowledge Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a10",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:41:51.731246+00:00",
+        "name": "Data Lead",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a12",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:43:21.932695+00:00",
+        "name": "Metrics and Analysis Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a13",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:44:43.677847+00:00",
+        "name": "Forecast Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a14",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:45:56.322439+00:00",
+        "name": "Data Quality Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a15",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:26:47.320940+00:00",
+        "name": "Engineering Lead",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a16",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:27:55.027382+00:00",
+        "name": "Architecture Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a17",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:47:26.121340+00:00",
+        "name": "Implementation Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a18",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:48:47.660140+00:00",
+        "name": "Test and Verification Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a19",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:49:59.029669+00:00",
+        "name": "Reliability Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a20",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:51:28.365162+00:00",
+        "name": "Commercial and Economic Lead",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a21",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:53:24.253312+00:00",
+        "name": "Cost and Value Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a26",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:54:45.719878+00:00",
+        "name": "Independent Quality Lead",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a28",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:34:21.468546+00:00",
+        "name": "Risk Agent",
+        "registration": "REGISTERED"
+      },
+      {
+        "activity_source": "compute-queue",
+        "agent_id": "a29",
+        "availability": "IDLE",
+        "heartbeat": "2026-10-27T02:35:53.045699+00:00",
+        "name": "Release Agent",
+        "registration": "REGISTERED"
+      }
+    ],
+    "coaching": {
+      "acceptance_pass_count": 1,
+      "baseline_pass_count": 1,
+      "cohort_id": "163786dcad89429cbe7fa8b12cecd5a2",
+      "cohort_source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+      "completed_count": 3,
+      "controller": {
+        "availability": "OBSERVED",
+        "last_state": "WAITING",
+        "last_tick_at": "2026-10-27T03:54:33.477038+00:00",
+        "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669"
+      },
+      "program_id": "role",
+      "status": "OBSERVED"
+    },
+    "fresh_agent_count": 6,
+    "model_runtime": {
+      "missing_models": [],
+      "observed_at": "2026-10-27T03:54:34.408656+00:00",
+      "ready": true,
+      "required_models": [
+        "gemma3:1b",
+        "gemma3:12b",
+        "embeddinggemma:300m-qat-q4_0"
+      ],
+      "status": "OBSERVED"
+    },
+    "observed_agent_count": 21,
+    "observed_at": "2026-10-27T03:54:34.398074+00:00",
+    "queue_freshness": {
+      "fresh_agent_count": 6,
+      "max_age_seconds": 3600,
+      "not_fresh_agent_count": 15,
+      "not_fresh_agent_ids": [
+        "a07",
+        "a09",
+        "a10",
+        "a12",
+        "a13",
+        "a14",
+        "a15",
+        "a16",
+        "a17",
+        "a18",
+        "a19",
+        "a20",
+        "a21",
+        "a28",
+        "a29"
+      ],
+      "rule": "latest queue observation must be timestamped, within max age, and no more than five seconds in the future",
+      "status": "OBSERVED"
+    },
+    "readiness_scope": "CURRENT_MODEL_RUNTIME_AND_QUEUE_ROUTABLE",
+    "ready_agent_count": 6,
+    "source": {
+      "instance": "UNKNOWN",
+      "revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+      "system": "ORQEVIA"
+    }
+  },
+  "job_status_counts": {
+    "cancelled": 103,
+    "completed": 5978,
+    "failed": 712,
+    "running": 1
+  },
+  "agents": [
+    {
+      "agent_id": "a01",
+      "name": "Strategy Lead",
+      "latest": {
+        "id": "64125b7d-3cd8-4cb4-8849-3fd71c185859",
+        "status": "completed",
+        "created_at": "2026-10-27T03:47:20.398156+00:00",
+        "started_at": "2026-10-27T03:47:20.461531+00:00",
+        "completed_at": "2026-10-27T03:48:48.808080+00:00",
+        "updated_at": "2026-10-27T03:48:48.808080+00:00",
+        "age_seconds": 236,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "6ce79f14057bb7d85d4477898e32c8e53e810b1673c0cc72aadfef772768af37"
+      },
+      "success": {
+        "id": "64125b7d-3cd8-4cb4-8849-3fd71c185859",
+        "status": "completed",
+        "created_at": "2026-10-27T03:47:20.398156+00:00",
+        "started_at": "2026-10-27T03:47:20.461531+00:00",
+        "completed_at": "2026-10-27T03:48:48.808080+00:00",
+        "updated_at": "2026-10-27T03:48:48.808080+00:00",
+        "age_seconds": 236,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "6ce79f14057bb7d85d4477898e32c8e53e810b1673c0cc72aadfef772768af37"
+      },
+      "failure": {
+        "id": "8464268f-1c55-461c-8b2e-836a7c66cd60",
+        "status": "failed",
+        "created_at": "2026-10-27T03:45:38.964066+00:00",
+        "started_at": "2026-10-27T03:45:39.055732+00:00",
+        "completed_at": "2026-10-27T03:46:45.092831+00:00",
+        "updated_at": "2026-10-27T03:46:45.092831+00:00",
+        "age_seconds": 360,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a01"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a01",
+        "latest_completed_coaching": {
+          "job_id": "64125b7d-3cd8-4cb4-8849-3fd71c185859",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": "role",
+          "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+          "timestamp": "2026-10-27T03:48:49.819257+00:00",
+          "version": "orqevia.role-practice.v1"
+        },
+        "latest_completed_id": "64125b7d-3cd8-4cb4-8849-3fd71c185859",
+        "probability_session": {
+          "acceptance_pass": 0,
+          "baseline_pass": 0,
+          "job_id": null,
+          "phase": "acceptance",
+          "practice_pass": 0,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "DONE",
+          "updated_epoch": 1793070218.134494,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a02",
+      "name": "Planning and Roadmap Agent",
+      "latest": {
+        "id": "0395b0ec-ca45-48b8-b8e7-220414bee5b2",
+        "status": "completed",
+        "created_at": "2026-10-27T03:50:01.268208+00:00",
+        "started_at": "2026-10-27T03:50:01.334931+00:00",
+        "completed_at": "2026-10-27T03:50:47.588295+00:00",
+        "updated_at": "2026-10-27T03:50:47.588295+00:00",
+        "age_seconds": 117,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "40b47da1a2307514d848646c5134e02daf2e3d2e7dde437b904fcdcc3e365489"
+      },
+      "success": {
+        "id": "0395b0ec-ca45-48b8-b8e7-220414bee5b2",
+        "status": "completed",
+        "created_at": "2026-10-27T03:50:01.268208+00:00",
+        "started_at": "2026-10-27T03:50:01.334931+00:00",
+        "completed_at": "2026-10-27T03:50:47.588295+00:00",
+        "updated_at": "2026-10-27T03:50:47.588295+00:00",
+        "age_seconds": 117,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "40b47da1a2307514d848646c5134e02daf2e3d2e7dde437b904fcdcc3e365489"
+      },
+      "failure": {
+        "id": "d94e4a95-d266-4c82-ba8a-804b11121d27",
+        "status": "failed",
+        "created_at": "2026-10-25T04:31:13.775257+00:00",
+        "started_at": "2026-10-25T04:41:02.705914+00:00",
+        "completed_at": "2026-10-25T04:43:02.783163+00:00",
+        "updated_at": "2026-10-25T04:43:02.783163+00:00",
+        "age_seconds": 169782,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a02",
+        "responsibility.a03"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a02",
+        "latest_completed_coaching": {
+          "job_id": "0395b0ec-ca45-48b8-b8e7-220414bee5b2",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": "role",
+          "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+          "timestamp": "2026-10-27T03:50:48.418366+00:00",
+          "version": "orqevia.role-practice.v1"
+        },
+        "latest_completed_id": "0395b0ec-ca45-48b8-b8e7-220414bee5b2",
+        "probability_session": {
+          "acceptance_pass": 0,
+          "baseline_pass": 0,
+          "job_id": null,
+          "phase": "acceptance",
+          "practice_pass": 0,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "DONE",
+          "updated_epoch": 1793070648.9580033,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a04",
+      "name": "Decision and Comparison Agent",
+      "latest": {
+        "id": "3f6c0959-2b43-4d0f-9ab4-07301aecaa9e",
+        "status": "running",
+        "created_at": "2026-10-27T03:52:24.279774+00:00",
+        "started_at": "2026-10-27T03:52:24.344315+00:00",
+        "completed_at": null,
+        "updated_at": "2026-10-27T03:52:44.633787+00:00",
+        "age_seconds": 0,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "26ce5cc2e69b2eeabe15d79997b79f2af8de5c0bc4b8e32c9700f991df4955e8"
+      },
+      "success": {
+        "id": "fdce5e5a-bb5e-40f6-b072-7cf73008aa1f",
+        "status": "completed",
+        "created_at": "2026-10-27T03:51:56.807541+00:00",
+        "started_at": "2026-10-27T03:51:56.877882+00:00",
+        "completed_at": "2026-10-27T03:52:22.298156+00:00",
+        "updated_at": "2026-10-27T03:52:22.298156+00:00",
+        "age_seconds": 23,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "d91f04b9e0ffcb8c98a95c4e9415e0576c3fd9cc18438ff6d08938b31fb12de2"
+      },
+      "failure": {
+        "id": "097af138-5916-40d6-897b-849e68bc606f",
+        "status": "failed",
+        "created_at": "2026-10-25T06:33:22.994795+00:00",
+        "started_at": "2026-10-25T06:33:25.831274+00:00",
+        "completed_at": "2026-10-25T06:43:55.933905+00:00",
+        "updated_at": "2026-10-25T06:43:55.933889+00:00",
+        "age_seconds": 162529,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a04",
+        "responsibility.a08"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a04",
+        "latest_completed_coaching": {
+          "job_id": "2a44999e-54f5-4f75-8ff7-be8f7d095596",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": "role",
+          "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+          "timestamp": "2026-10-27T03:53:51.600132+00:00",
+          "version": "orqevia.role-practice.v1"
+        },
+        "latest_completed_id": "2a44999e-54f5-4f75-8ff7-be8f7d095596",
+        "probability_session": {
+          "acceptance_pass": 0,
+          "baseline_pass": 0,
+          "job_id": null,
+          "phase": "acceptance",
+          "practice_pass": 0,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "DONE",
+          "updated_epoch": 1793071090.5139525,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a05",
+      "name": "Portfolio and Capacity Agent",
+      "latest": {
+        "id": "88701cd4-f6c4-474c-8846-bd10a5f7a6d9",
+        "status": "completed",
+        "created_at": "2026-10-27T03:23:26.242033+00:00",
+        "started_at": "2026-10-27T03:23:26.305667+00:00",
+        "completed_at": "2026-10-27T03:25:45.899667+00:00",
+        "updated_at": "2026-10-27T03:25:45.899667+00:00",
+        "age_seconds": 1619,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "989ad6aa5352535d2d29c8d3755093e3b3d5309119df7d082cfa54d6cead8308"
+      },
+      "success": {
+        "id": "88701cd4-f6c4-474c-8846-bd10a5f7a6d9",
+        "status": "completed",
+        "created_at": "2026-10-27T03:23:26.242033+00:00",
+        "started_at": "2026-10-27T03:23:26.305667+00:00",
+        "completed_at": "2026-10-27T03:25:45.899667+00:00",
+        "updated_at": "2026-10-27T03:25:45.899667+00:00",
+        "age_seconds": 1619,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "989ad6aa5352535d2d29c8d3755093e3b3d5309119df7d082cfa54d6cead8308"
+      },
+      "failure": {
+        "id": "22a6052b-c8c0-4b5e-a9aa-4dc108ff66e8",
+        "status": "failed",
+        "created_at": "2026-10-25T09:32:04.719594+00:00",
+        "started_at": "2026-10-25T09:32:05.018746+00:00",
+        "completed_at": "2026-10-25T09:37:35.202458+00:00",
+        "updated_at": "2026-10-25T09:37:35.202443+00:00",
+        "age_seconds": 152110,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "45f6354c742c19d602b86be880ec7460e887e68a224295ed456325da7fc269cc"
+      },
+      "capability_ids": [
+        "responsibility.a05",
+        "responsibility.a23"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a05",
+        "latest_completed_coaching": {
+          "job_id": "66b6d811-223e-46de-8a91-551e57256611",
+          "outcome": "PASS",
+          "phase": "baseline",
+          "program_id": "role",
+          "source_revision": "b360da98641a1332856c8fdeb2063d36312b7669",
+          "timestamp": "2026-10-27T03:54:46.337218+00:00",
+          "version": "orqevia.role-practice.v1"
+        },
+        "latest_completed_id": "66b6d811-223e-46de-8a91-551e57256611",
+        "probability_session": {
+          "acceptance_pass": 0,
+          "baseline_pass": 0,
+          "job_id": null,
+          "phase": "acceptance",
+          "practice_pass": 0,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "DONE",
+          "updated_epoch": 1793071545.9277947,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a06",
+      "name": "Research Lead",
+      "latest": {
+        "id": "c645ea79-40b2-4b01-b181-56a090ad1bd6",
+        "status": "failed",
+        "created_at": "2026-10-27T03:30:38.019588+00:00",
+        "started_at": "2026-10-27T03:38:22.675228+00:00",
+        "completed_at": "2026-10-27T03:44:01.724543+00:00",
+        "updated_at": "2026-10-27T03:44:01.724513+00:00",
+        "age_seconds": 523,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "f3324f8047f051bfc5bb85f3242e679114a06757b2d8ff4c003ceea5a62342eb"
+      },
+      "success": {
+        "id": "255754a0-5e55-45c7-b208-d66cec7cc24e",
+        "status": "completed",
+        "created_at": "2026-10-27T03:29:31.311643+00:00",
+        "started_at": "2026-10-27T03:29:31.400103+00:00",
+        "completed_at": "2026-10-27T03:30:36.615015+00:00",
+        "updated_at": "2026-10-27T03:30:36.615015+00:00",
+        "age_seconds": 1328,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "9cbe88472a2d7d9b77e985567e4c888e6c9fc9665325e9527a6dedfb8c165c0e"
+      },
+      "failure": {
+        "id": "c645ea79-40b2-4b01-b181-56a090ad1bd6",
+        "status": "failed",
+        "created_at": "2026-10-27T03:30:38.019588+00:00",
+        "started_at": "2026-10-27T03:38:22.675228+00:00",
+        "completed_at": "2026-10-27T03:44:01.724543+00:00",
+        "updated_at": "2026-10-27T03:44:01.724513+00:00",
+        "age_seconds": 523,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "f3324f8047f051bfc5bb85f3242e679114a06757b2d8ff4c003ceea5a62342eb"
+      },
+      "capability_ids": [
+        "responsibility.a06"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a06",
+        "latest_completed_coaching": {
+          "job_id": "255754a0-5e55-45c7-b208-d66cec7cc24e",
+          "outcome": "FAIL",
+          "phase": "practice",
+          "program_id": "probability-foundations",
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "timestamp": "2026-10-27T03:30:36.951802+00:00",
+          "version": "probability-foundations.v1"
+        },
+        "latest_completed_id": "255754a0-5e55-45c7-b208-d66cec7cc24e",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": 0,
+          "job_id": "c645ea79-40b2-4b01-b181-56a090ad1bd6",
+          "phase": "acceptance",
+          "practice_pass": 0,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a07",
+      "name": "Evidence Agent",
+      "latest": {
+        "id": "2acc82ec-77f3-42be-8098-cd25e8f2f8a3",
+        "status": "completed",
+        "created_at": "2026-10-27T02:21:28.858896+00:00",
+        "started_at": "2026-10-27T02:21:30.364967+00:00",
+        "completed_at": "2026-10-27T02:22:13.779421+00:00",
+        "updated_at": "2026-10-27T02:22:13.779421+00:00",
+        "age_seconds": 5431,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "18a1de2f3d5d50005af10d594b1aa1a285d65c6606dab7fda517f6291901f668"
+      },
+      "success": {
+        "id": "2acc82ec-77f3-42be-8098-cd25e8f2f8a3",
+        "status": "completed",
+        "created_at": "2026-10-27T02:21:28.858896+00:00",
+        "started_at": "2026-10-27T02:21:30.364967+00:00",
+        "completed_at": "2026-10-27T02:22:13.779421+00:00",
+        "updated_at": "2026-10-27T02:22:13.779421+00:00",
+        "age_seconds": 5431,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "18a1de2f3d5d50005af10d594b1aa1a285d65c6606dab7fda517f6291901f668"
+      },
+      "failure": {
+        "id": "de674c8b-ba11-4914-9112-a28a90a8bb5f",
+        "status": "failed",
+        "created_at": "2026-10-25T04:22:14.292540+00:00",
+        "started_at": "2026-10-25T04:28:51.806521+00:00",
+        "completed_at": "2026-10-25T04:30:21.885518+00:00",
+        "updated_at": "2026-10-25T04:30:21.885518+00:00",
+        "age_seconds": 170543,
+        "model": "gemma3:1b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a07"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a07",
+        "latest_completed_coaching": {
+          "job_id": "2acc82ec-77f3-42be-8098-cd25e8f2f8a3",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:22:13.995744+00:00",
+          "version": null
+        },
+        "latest_completed_id": "2acc82ec-77f3-42be-8098-cd25e8f2f8a3",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a09",
+      "name": "Knowledge Agent",
+      "latest": {
+        "id": "16ed5ae0-8751-4291-b474-e360cb784d89",
+        "status": "completed",
+        "created_at": "2026-10-27T02:39:17.322928+00:00",
+        "started_at": "2026-10-27T02:39:30.606537+00:00",
+        "completed_at": "2026-10-27T02:40:23.876351+00:00",
+        "updated_at": "2026-10-27T02:40:23.876351+00:00",
+        "age_seconds": 4341,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "28bdfd76e76b4c308a873742febe8868a939f3285075dacb01fba748265de0ac"
+      },
+      "success": {
+        "id": "16ed5ae0-8751-4291-b474-e360cb784d89",
+        "status": "completed",
+        "created_at": "2026-10-27T02:39:17.322928+00:00",
+        "started_at": "2026-10-27T02:39:30.606537+00:00",
+        "completed_at": "2026-10-27T02:40:23.876351+00:00",
+        "updated_at": "2026-10-27T02:40:23.876351+00:00",
+        "age_seconds": 4341,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "28bdfd76e76b4c308a873742febe8868a939f3285075dacb01fba748265de0ac"
+      },
+      "failure": {
+        "id": "26861baa-113f-4847-9e82-ab800fe245fa",
+        "status": "failed",
+        "created_at": "2026-10-24T11:25:08.164675+00:00",
+        "started_at": "2026-10-24T11:25:08.258948+00:00",
+        "completed_at": "2026-10-24T11:26:38.346580+00:00",
+        "updated_at": "2026-10-24T11:26:38.346580+00:00",
+        "age_seconds": 231967,
+        "model": "gemma3:1b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a09"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a09",
+        "latest_completed_coaching": {
+          "job_id": "16ed5ae0-8751-4291-b474-e360cb784d89",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:40:32.546176+00:00",
+          "version": null
+        },
+        "latest_completed_id": "16ed5ae0-8751-4291-b474-e360cb784d89",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a10",
+      "name": "Data Lead",
+      "latest": {
+        "id": "4fb55ab2-5b65-4733-9f77-16f479303bf0",
+        "status": "completed",
+        "created_at": "2026-10-27T02:40:47.587792+00:00",
+        "started_at": "2026-10-27T02:41:00.617811+00:00",
+        "completed_at": "2026-10-27T02:41:51.731246+00:00",
+        "updated_at": "2026-10-27T02:41:51.731246+00:00",
+        "age_seconds": 4253,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "cf9278a7209011270c06ed699c220fa5b0d08259f5cd40c1e105ebb31ab60117"
+      },
+      "success": {
+        "id": "4fb55ab2-5b65-4733-9f77-16f479303bf0",
+        "status": "completed",
+        "created_at": "2026-10-27T02:40:47.587792+00:00",
+        "started_at": "2026-10-27T02:41:00.617811+00:00",
+        "completed_at": "2026-10-27T02:41:51.731246+00:00",
+        "updated_at": "2026-10-27T02:41:51.731246+00:00",
+        "age_seconds": 4253,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "cf9278a7209011270c06ed699c220fa5b0d08259f5cd40c1e105ebb31ab60117"
+      },
+      "failure": {
+        "id": "e8df0139-26d3-48f9-baa4-8b8ebd3d781a",
+        "status": "failed",
+        "created_at": "2026-10-25T08:12:20.881875+00:00",
+        "started_at": "2026-10-25T08:12:23.323315+00:00",
+        "completed_at": "2026-10-25T08:22:53.489483+00:00",
+        "updated_at": "2026-10-25T08:22:53.489462+00:00",
+        "age_seconds": 156592,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "7a9a22b0b103827bd95f090b2529852e49780f563984161eeb6a0e1e5079b6bb"
+      },
+      "capability_ids": [
+        "responsibility.a10"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a10",
+        "latest_completed_coaching": {
+          "job_id": "4fb55ab2-5b65-4733-9f77-16f479303bf0",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:42:02.827500+00:00",
+          "version": null
+        },
+        "latest_completed_id": "4fb55ab2-5b65-4733-9f77-16f479303bf0",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a12",
+      "name": "Metrics and Analysis Agent",
+      "latest": {
+        "id": "324b109b-9174-457c-817e-6c44961fc1f1",
+        "status": "completed",
+        "created_at": "2026-10-27T02:42:17.873840+00:00",
+        "started_at": "2026-10-27T02:42:30.635527+00:00",
+        "completed_at": "2026-10-27T02:43:21.932695+00:00",
+        "updated_at": "2026-10-27T02:43:21.932695+00:00",
+        "age_seconds": 4163,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "208164372741caae4fa2bac49c90c4409ff6bb1e0cb7290dabf072c2f90a3afd"
+      },
+      "success": {
+        "id": "324b109b-9174-457c-817e-6c44961fc1f1",
+        "status": "completed",
+        "created_at": "2026-10-27T02:42:17.873840+00:00",
+        "started_at": "2026-10-27T02:42:30.635527+00:00",
+        "completed_at": "2026-10-27T02:43:21.932695+00:00",
+        "updated_at": "2026-10-27T02:43:21.932695+00:00",
+        "age_seconds": 4163,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "208164372741caae4fa2bac49c90c4409ff6bb1e0cb7290dabf072c2f90a3afd"
+      },
+      "failure": {
+        "id": "01b7c282-210b-44c6-bde6-0d3f3edb7efa",
+        "status": "failed",
+        "created_at": "2026-10-25T08:35:07.054930+00:00",
+        "started_at": "2026-10-25T08:35:07.111780+00:00",
+        "completed_at": "2026-10-25T08:45:37.304841+00:00",
+        "updated_at": "2026-10-25T08:45:37.304817+00:00",
+        "age_seconds": 155228,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "5486416b69745f0e1ef96bf99b174ea9cdffcaa860e39c07b21f1a574225fe30"
+      },
+      "capability_ids": [
+        "responsibility.a11",
+        "responsibility.a12"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a12",
+        "latest_completed_coaching": {
+          "job_id": "324b109b-9174-457c-817e-6c44961fc1f1",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:43:33.087387+00:00",
+          "version": null
+        },
+        "latest_completed_id": "324b109b-9174-457c-817e-6c44961fc1f1",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a13",
+      "name": "Forecast Agent",
+      "latest": {
+        "id": "c45bfb47-3db4-4cfe-a6d5-482a2627f03b",
+        "status": "completed",
+        "created_at": "2026-10-27T02:43:48.126127+00:00",
+        "started_at": "2026-10-27T02:44:00.646349+00:00",
+        "completed_at": "2026-10-27T02:44:43.677847+00:00",
+        "updated_at": "2026-10-27T02:44:43.677847+00:00",
+        "age_seconds": 4081,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "2b766a1f96f9b82db6171be4f60e99c9b3e53c963cf658b5f077f6a4f2b56f18"
+      },
+      "success": {
+        "id": "c45bfb47-3db4-4cfe-a6d5-482a2627f03b",
+        "status": "completed",
+        "created_at": "2026-10-27T02:43:48.126127+00:00",
+        "started_at": "2026-10-27T02:44:00.646349+00:00",
+        "completed_at": "2026-10-27T02:44:43.677847+00:00",
+        "updated_at": "2026-10-27T02:44:43.677847+00:00",
+        "age_seconds": 4081,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "2b766a1f96f9b82db6171be4f60e99c9b3e53c963cf658b5f077f6a4f2b56f18"
+      },
+      "failure": {
+        "id": "7b9a68c1-c786-48fd-8fd0-64a33cb68077",
+        "status": "failed",
+        "created_at": "2026-10-26T10:44:01.828649+00:00",
+        "started_at": "2026-10-26T10:44:16.245582+00:00",
+        "completed_at": "2026-10-26T21:27:28.578722+00:00",
+        "updated_at": "2026-10-26T21:27:28.578692+00:00",
+        "age_seconds": 23116,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a13"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a13",
+        "latest_completed_coaching": {
+          "job_id": "c45bfb47-3db4-4cfe-a6d5-482a2627f03b",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:44:48.302155+00:00",
+          "version": null
+        },
+        "latest_completed_id": "c45bfb47-3db4-4cfe-a6d5-482a2627f03b",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a14",
+      "name": "Data Quality Agent",
+      "latest": {
+        "id": "3b224ce2-8111-4bc0-a1b9-db9b6cee1648",
+        "status": "completed",
+        "created_at": "2026-10-27T02:45:03.346041+00:00",
+        "started_at": "2026-10-27T02:45:15.649728+00:00",
+        "completed_at": "2026-10-27T02:45:56.322439+00:00",
+        "updated_at": "2026-10-27T02:45:56.322439+00:00",
+        "age_seconds": 4009,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "c9ede9dab33a9e6cf5e0bdac700e987d4d235a97b03ada6f37da38ca84099875"
+      },
+      "success": {
+        "id": "3b224ce2-8111-4bc0-a1b9-db9b6cee1648",
+        "status": "completed",
+        "created_at": "2026-10-27T02:45:03.346041+00:00",
+        "started_at": "2026-10-27T02:45:15.649728+00:00",
+        "completed_at": "2026-10-27T02:45:56.322439+00:00",
+        "updated_at": "2026-10-27T02:45:56.322439+00:00",
+        "age_seconds": 4009,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "c9ede9dab33a9e6cf5e0bdac700e987d4d235a97b03ada6f37da38ca84099875"
+      },
+      "failure": {
+        "id": "5afcf89e-0263-4749-91e1-a8fd8a44fc7d",
+        "status": "failed",
+        "created_at": "2026-10-26T04:24:38.545883+00:00",
+        "started_at": "2026-10-26T04:24:43.896275+00:00",
+        "completed_at": "2026-10-26T07:04:59.115447+00:00",
+        "updated_at": "2026-10-26T07:04:59.115413+00:00",
+        "age_seconds": 74866,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "b013785b9d4fee3b2c4bad167a13fa005aa71a0a56a94ef0a8c2254fa4da9507"
+      },
+      "capability_ids": [
+        "responsibility.a14"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a14",
+        "latest_completed_coaching": {
+          "job_id": "3b224ce2-8111-4bc0-a1b9-db9b6cee1648",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:46:03.502285+00:00",
+          "version": null
+        },
+        "latest_completed_id": "3b224ce2-8111-4bc0-a1b9-db9b6cee1648",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a15",
+      "name": "Engineering Lead",
+      "latest": {
+        "id": "7f3f8ea0-98dc-4876-b467-7851e1c12fcf",
+        "status": "completed",
+        "created_at": "2026-10-27T02:26:14.829735+00:00",
+        "started_at": "2026-10-27T02:26:15.448989+00:00",
+        "completed_at": "2026-10-27T02:26:47.320940+00:00",
+        "updated_at": "2026-10-27T02:26:47.320940+00:00",
+        "age_seconds": 5158,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "92aa19da2ef570a26011ba13c14607bc967a6665d7d4793337db85fe7212893f"
+      },
+      "success": {
+        "id": "7f3f8ea0-98dc-4876-b467-7851e1c12fcf",
+        "status": "completed",
+        "created_at": "2026-10-27T02:26:14.829735+00:00",
+        "started_at": "2026-10-27T02:26:15.448989+00:00",
+        "completed_at": "2026-10-27T02:26:47.320940+00:00",
+        "updated_at": "2026-10-27T02:26:47.320940+00:00",
+        "age_seconds": 5158,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "92aa19da2ef570a26011ba13c14607bc967a6665d7d4793337db85fe7212893f"
+      },
+      "failure": {
+        "id": "52dd628f-19a5-4469-bf09-1c5fe67ddaa8",
+        "status": "failed",
+        "created_at": "2026-10-25T04:34:24.225446+00:00",
+        "started_at": "2026-10-25T04:45:25.206699+00:00",
+        "completed_at": "2026-10-25T04:46:55.262390+00:00",
+        "updated_at": "2026-10-25T04:46:55.262390+00:00",
+        "age_seconds": 169550,
+        "model": "gemma3:1b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a15"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a15",
+        "latest_completed_coaching": {
+          "job_id": "7f3f8ea0-98dc-4876-b467-7851e1c12fcf",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:26:59.980239+00:00",
+          "version": null
+        },
+        "latest_completed_id": "7f3f8ea0-98dc-4876-b467-7851e1c12fcf",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a16",
+      "name": "Architecture Agent",
+      "latest": {
+        "id": "c6d8b201-95f5-4840-83c2-6e9dd140fcfd",
+        "status": "completed",
+        "created_at": "2026-10-27T02:27:15.022197+00:00",
+        "started_at": "2026-10-27T02:27:15.455098+00:00",
+        "completed_at": "2026-10-27T02:27:55.027382+00:00",
+        "updated_at": "2026-10-27T02:27:55.027382+00:00",
+        "age_seconds": 5090,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "04bfea4b48fda59ddd2db820c98582649ce9b15ae02cf86fc84c9f306dee42d7"
+      },
+      "success": {
+        "id": "c6d8b201-95f5-4840-83c2-6e9dd140fcfd",
+        "status": "completed",
+        "created_at": "2026-10-27T02:27:15.022197+00:00",
+        "started_at": "2026-10-27T02:27:15.455098+00:00",
+        "completed_at": "2026-10-27T02:27:55.027382+00:00",
+        "updated_at": "2026-10-27T02:27:55.027382+00:00",
+        "age_seconds": 5090,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "04bfea4b48fda59ddd2db820c98582649ce9b15ae02cf86fc84c9f306dee42d7"
+      },
+      "failure": {
+        "id": "eecb19b3-09ca-4e88-b8e1-17e487f503cb",
+        "status": "failed",
+        "created_at": "2026-10-25T07:26:52.916629+00:00",
+        "started_at": "2026-10-25T07:26:55.156424+00:00",
+        "completed_at": "2026-10-25T07:27:10.019542+00:00",
+        "updated_at": "2026-10-25T07:27:10.019542+00:00",
+        "age_seconds": 159935,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a16"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a16",
+        "latest_completed_coaching": {
+          "job_id": "c6d8b201-95f5-4840-83c2-6e9dd140fcfd",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:28:00.174085+00:00",
+          "version": null
+        },
+        "latest_completed_id": "c6d8b201-95f5-4840-83c2-6e9dd140fcfd",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a17",
+      "name": "Implementation Agent",
+      "latest": {
+        "id": "dccd2582-6b09-4802-b973-1d2cc34dcbc0",
+        "status": "completed",
+        "created_at": "2026-10-27T02:46:18.537916+00:00",
+        "started_at": "2026-10-27T02:46:30.701689+00:00",
+        "completed_at": "2026-10-27T02:47:26.121340+00:00",
+        "updated_at": "2026-10-27T02:47:26.121340+00:00",
+        "age_seconds": 3919,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "6cc28c301c8ce7a6be40538766f5c0635fd713b2e830ed4b0f0a25c0136037de"
+      },
+      "success": {
+        "id": "dccd2582-6b09-4802-b973-1d2cc34dcbc0",
+        "status": "completed",
+        "created_at": "2026-10-27T02:46:18.537916+00:00",
+        "started_at": "2026-10-27T02:46:30.701689+00:00",
+        "completed_at": "2026-10-27T02:47:26.121340+00:00",
+        "updated_at": "2026-10-27T02:47:26.121340+00:00",
+        "age_seconds": 3919,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "6cc28c301c8ce7a6be40538766f5c0635fd713b2e830ed4b0f0a25c0136037de"
+      },
+      "failure": {
+        "id": "176a2c3c-adfb-4f4e-aba3-fe752777c3d2",
+        "status": "failed",
+        "created_at": "2026-10-25T07:28:48.028972+00:00",
+        "started_at": "2026-10-25T07:28:50.365335+00:00",
+        "completed_at": "2026-10-25T07:39:20.626248+00:00",
+        "updated_at": "2026-10-25T07:39:20.626224+00:00",
+        "age_seconds": 159204,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "9c47bee7563ac58723bb4f7bdb4e99a3295fc64d1bfcaac53ffbf1c929bb5cac"
+      },
+      "capability_ids": [
+        "responsibility.a17"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a17",
+        "latest_completed_coaching": {
+          "job_id": "dccd2582-6b09-4802-b973-1d2cc34dcbc0",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:47:33.766659+00:00",
+          "version": null
+        },
+        "latest_completed_id": "dccd2582-6b09-4802-b973-1d2cc34dcbc0",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a18",
+      "name": "Test and Verification Agent",
+      "latest": {
+        "id": "42113180-7f59-4fb9-9f2c-bd2d50e15176",
+        "status": "completed",
+        "created_at": "2026-10-27T02:47:48.813102+00:00",
+        "started_at": "2026-10-27T02:48:00.708081+00:00",
+        "completed_at": "2026-10-27T02:48:47.660140+00:00",
+        "updated_at": "2026-10-27T02:48:47.660140+00:00",
+        "age_seconds": 3837,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "faa0827ad717a04c4e4de45e58468e329d14354fbd082390c5fdc3f2d89e8f02"
+      },
+      "success": {
+        "id": "42113180-7f59-4fb9-9f2c-bd2d50e15176",
+        "status": "completed",
+        "created_at": "2026-10-27T02:47:48.813102+00:00",
+        "started_at": "2026-10-27T02:48:00.708081+00:00",
+        "completed_at": "2026-10-27T02:48:47.660140+00:00",
+        "updated_at": "2026-10-27T02:48:47.660140+00:00",
+        "age_seconds": 3837,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "faa0827ad717a04c4e4de45e58468e329d14354fbd082390c5fdc3f2d89e8f02"
+      },
+      "failure": {
+        "id": "692f54d7-288a-45a4-96f5-21ad4086e184",
+        "status": "failed",
+        "created_at": "2026-10-26T03:25:12.250245+00:00",
+        "started_at": "2026-10-26T03:25:12.402480+00:00",
+        "completed_at": "2026-10-26T03:30:42.523945+00:00",
+        "updated_at": "2026-10-26T03:30:42.523929+00:00",
+        "age_seconds": 87723,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "be762e7094d581b5356df75ad9ab1f6983b60b822d9470544541633fa258d481"
+      },
+      "capability_ids": [
+        "responsibility.a18",
+        "responsibility.a27"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a18",
+        "latest_completed_coaching": {
+          "job_id": "42113180-7f59-4fb9-9f2c-bd2d50e15176",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:48:48.963840+00:00",
+          "version": null
+        },
+        "latest_completed_id": "42113180-7f59-4fb9-9f2c-bd2d50e15176",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a19",
+      "name": "Reliability Agent",
+      "latest": {
+        "id": "f08a7972-2d51-42e4-bfb1-9f3e5f2659b8",
+        "status": "completed",
+        "created_at": "2026-10-27T02:49:03.999955+00:00",
+        "started_at": "2026-10-27T02:49:15.726104+00:00",
+        "completed_at": "2026-10-27T02:49:59.029669+00:00",
+        "updated_at": "2026-10-27T02:49:59.029669+00:00",
+        "age_seconds": 3766,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "a4be3c0e15b817e7ba58c1f0b96b265afa3debc7ab64be7df8e41f8a07511527"
+      },
+      "success": {
+        "id": "f08a7972-2d51-42e4-bfb1-9f3e5f2659b8",
+        "status": "completed",
+        "created_at": "2026-10-27T02:49:03.999955+00:00",
+        "started_at": "2026-10-27T02:49:15.726104+00:00",
+        "completed_at": "2026-10-27T02:49:59.029669+00:00",
+        "updated_at": "2026-10-27T02:49:59.029669+00:00",
+        "age_seconds": 3766,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "a4be3c0e15b817e7ba58c1f0b96b265afa3debc7ab64be7df8e41f8a07511527"
+      },
+      "failure": {
+        "id": "892bf90b-3e39-48c9-98d5-0d0120708860",
+        "status": "failed",
+        "created_at": "2026-10-25T03:46:03.375116+00:00",
+        "started_at": "2026-10-25T03:49:21.419401+00:00",
+        "completed_at": "2026-10-25T03:50:51.505125+00:00",
+        "updated_at": "2026-10-25T03:50:51.505125+00:00",
+        "age_seconds": 172914,
+        "model": "gemma3:1b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a19"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a19",
+        "latest_completed_coaching": {
+          "job_id": "f08a7972-2d51-42e4-bfb1-9f3e5f2659b8",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:50:04.189868+00:00",
+          "version": null
+        },
+        "latest_completed_id": "f08a7972-2d51-42e4-bfb1-9f3e5f2659b8",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a20",
+      "name": "Commercial and Economic Lead",
+      "latest": {
+        "id": "be09df11-3a92-4837-916c-a8e851255e6d",
+        "status": "completed",
+        "created_at": "2026-10-27T02:50:19.277921+00:00",
+        "started_at": "2026-10-27T02:50:30.742149+00:00",
+        "completed_at": "2026-10-27T02:51:28.365162+00:00",
+        "updated_at": "2026-10-27T02:51:28.365162+00:00",
+        "age_seconds": 3677,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "ffb6420522d57399c8340bd16522bfb33cca6d5662b7fc9a4063696046a4cccf"
+      },
+      "success": {
+        "id": "be09df11-3a92-4837-916c-a8e851255e6d",
+        "status": "completed",
+        "created_at": "2026-10-27T02:50:19.277921+00:00",
+        "started_at": "2026-10-27T02:50:30.742149+00:00",
+        "completed_at": "2026-10-27T02:51:28.365162+00:00",
+        "updated_at": "2026-10-27T02:51:28.365162+00:00",
+        "age_seconds": 3677,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "ffb6420522d57399c8340bd16522bfb33cca6d5662b7fc9a4063696046a4cccf"
+      },
+      "failure": {
+        "id": "e9524095-1a01-46eb-806c-b6a7cfca163e",
+        "status": "failed",
+        "created_at": "2026-10-26T22:01:08.994230+00:00",
+        "started_at": "2026-10-26T22:01:09.034234+00:00",
+        "completed_at": "2026-10-27T00:16:06.804191+00:00",
+        "updated_at": "2026-10-27T00:16:06.804153+00:00",
+        "age_seconds": 12998,
+        "model": "gemma3:12b",
+        "task_class": "planning",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "46b243f7d1fd142046c3e73d8e92042e091ad3dcafc7cd0aff606fabef43c7d9"
+      },
+      "capability_ids": [
+        "responsibility.a20",
+        "responsibility.a24"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a20",
+        "latest_completed_coaching": {
+          "job_id": "be09df11-3a92-4837-916c-a8e851255e6d",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:51:36.738061+00:00",
+          "version": null
+        },
+        "latest_completed_id": "be09df11-3a92-4837-916c-a8e851255e6d",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a21",
+      "name": "Cost and Value Agent",
+      "latest": {
+        "id": "1e762a59-71ca-4bc3-80f6-cce8447f4e30",
+        "status": "completed",
+        "created_at": "2026-10-27T02:51:51.816353+00:00",
+        "started_at": "2026-10-27T02:52:06.249542+00:00",
+        "completed_at": "2026-10-27T02:53:24.253312+00:00",
+        "updated_at": "2026-10-27T02:53:24.253312+00:00",
+        "age_seconds": 3561,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "5c009a407465b6df87a18e324dccc8e7da622568c18903d8507008cfc496a5ae"
+      },
+      "success": {
+        "id": "1e762a59-71ca-4bc3-80f6-cce8447f4e30",
+        "status": "completed",
+        "created_at": "2026-10-27T02:51:51.816353+00:00",
+        "started_at": "2026-10-27T02:52:06.249542+00:00",
+        "completed_at": "2026-10-27T02:53:24.253312+00:00",
+        "updated_at": "2026-10-27T02:53:24.253312+00:00",
+        "age_seconds": 3561,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "5c009a407465b6df87a18e324dccc8e7da622568c18903d8507008cfc496a5ae"
+      },
+      "failure": {
+        "id": "7d3e32ed-ef2e-43d2-a881-98aaee54af4b",
+        "status": "failed",
+        "created_at": "2026-10-25T03:50:06.073304+00:00",
+        "started_at": "2026-10-25T03:54:57.296638+00:00",
+        "completed_at": "2026-10-25T03:56:27.341802+00:00",
+        "updated_at": "2026-10-25T03:56:27.341802+00:00",
+        "age_seconds": 172578,
+        "model": "gemma3:1b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a21",
+        "responsibility.a22"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a21",
+        "latest_completed_coaching": {
+          "job_id": "1e762a59-71ca-4bc3-80f6-cce8447f4e30",
+          "outcome": "FAIL",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:53:37.120695+00:00",
+          "version": null
+        },
+        "latest_completed_id": "1e762a59-71ca-4bc3-80f6-cce8447f4e30",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a26",
+      "name": "Independent Quality Lead",
+      "latest": {
+        "id": "27b6b751-3fdd-4794-b2e9-eeb499a97316",
+        "status": "completed",
+        "created_at": "2026-10-27T02:53:52.163579+00:00",
+        "started_at": "2026-10-27T02:54:06.342449+00:00",
+        "completed_at": "2026-10-27T02:54:45.719878+00:00",
+        "updated_at": "2026-10-27T02:54:45.719878+00:00",
+        "age_seconds": 3479,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "b517f7ed9eb8c682ff4ea32339a97f4fd70b5cf6d1ef25a5ff9fd6da9cf63544"
+      },
+      "success": {
+        "id": "27b6b751-3fdd-4794-b2e9-eeb499a97316",
+        "status": "completed",
+        "created_at": "2026-10-27T02:53:52.163579+00:00",
+        "started_at": "2026-10-27T02:54:06.342449+00:00",
+        "completed_at": "2026-10-27T02:54:45.719878+00:00",
+        "updated_at": "2026-10-27T02:54:45.719878+00:00",
+        "age_seconds": 3479,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "b517f7ed9eb8c682ff4ea32339a97f4fd70b5cf6d1ef25a5ff9fd6da9cf63544"
+      },
+      "failure": {
+        "id": "cc9000a3-19cb-4eb0-9809-70ba6cfccbbc",
+        "status": "failed",
+        "created_at": "2026-10-25T03:19:52.332793+00:00",
+        "started_at": "2026-10-25T03:19:52.821626+00:00",
+        "completed_at": "2026-10-25T03:24:52.881349+00:00",
+        "updated_at": "2026-10-25T03:24:52.881349+00:00",
+        "age_seconds": 174472,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a25",
+        "responsibility.a26"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "RECENT_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a26",
+        "latest_completed_coaching": {
+          "job_id": "27b6b751-3fdd-4794-b2e9-eeb499a97316",
+          "outcome": "SOURCE_SUPERSEDED",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "timestamp": "2026-10-27T02:54:47.168039+00:00",
+          "version": null
+        },
+        "latest_completed_id": "27b6b751-3fdd-4794-b2e9-eeb499a97316",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a28",
+      "name": "Risk Agent",
+      "latest": {
+        "id": "0798772c-291f-45df-b568-f1584584f594",
+        "status": "completed",
+        "created_at": "2026-10-27T02:33:46.366831+00:00",
+        "started_at": "2026-10-27T02:34:00.532976+00:00",
+        "completed_at": "2026-10-27T02:34:21.468546+00:00",
+        "updated_at": "2026-10-27T02:34:21.468546+00:00",
+        "age_seconds": 4704,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "c0a83d52872658de0d3e86b52adb9e8ef3e6e400028bd2c9be487c1122b1e0ce"
+      },
+      "success": {
+        "id": "0798772c-291f-45df-b568-f1584584f594",
+        "status": "completed",
+        "created_at": "2026-10-27T02:33:46.366831+00:00",
+        "started_at": "2026-10-27T02:34:00.532976+00:00",
+        "completed_at": "2026-10-27T02:34:21.468546+00:00",
+        "updated_at": "2026-10-27T02:34:21.468546+00:00",
+        "age_seconds": 4704,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "c0a83d52872658de0d3e86b52adb9e8ef3e6e400028bd2c9be487c1122b1e0ce"
+      },
+      "failure": {
+        "id": "cd1ae053-a728-4c38-900d-0634e3dc0de5",
+        "status": "failed",
+        "created_at": "2026-10-25T03:32:24.400485+00:00",
+        "started_at": "2026-10-25T03:33:54.599525+00:00",
+        "completed_at": "2026-10-25T03:38:54.656041+00:00",
+        "updated_at": "2026-10-25T03:38:54.656041+00:00",
+        "age_seconds": 173630,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "LOCAL_EXECUTION_FAILED",
+        "error_sha256": "5cdf069956e900bfbb912638add068e7d21040030c3762de7c7ab62204f8e642",
+        "result_sha256": null
+      },
+      "capability_ids": [
+        "responsibility.a28"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a28",
+        "latest_completed_coaching": {
+          "job_id": "0798772c-291f-45df-b568-f1584584f594",
+          "outcome": "FAIL",
+          "phase": "practice",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:34:31.497502+00:00",
+          "version": null
+        },
+        "latest_completed_id": "0798772c-291f-45df-b568-f1584584f594",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    },
+    {
+      "agent_id": "a29",
+      "name": "Release Agent",
+      "latest": {
+        "id": "5bd2e792-4e15-43f3-b1ee-67114411f5f5",
+        "status": "completed",
+        "created_at": "2026-10-27T02:34:46.538927+00:00",
+        "started_at": "2026-10-27T02:35:00.544349+00:00",
+        "completed_at": "2026-10-27T02:35:53.045699+00:00",
+        "updated_at": "2026-10-27T02:35:53.045699+00:00",
+        "age_seconds": 4612,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "0f83ef4ed93b3f2eec883e4b302383e5eb0c46ccbbcb6efe233df5040f40c012"
+      },
+      "success": {
+        "id": "5bd2e792-4e15-43f3-b1ee-67114411f5f5",
+        "status": "completed",
+        "created_at": "2026-10-27T02:34:46.538927+00:00",
+        "started_at": "2026-10-27T02:35:00.544349+00:00",
+        "completed_at": "2026-10-27T02:35:53.045699+00:00",
+        "updated_at": "2026-10-27T02:35:53.045699+00:00",
+        "age_seconds": 4612,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "NONE",
+        "error_sha256": null,
+        "result_sha256": "0f83ef4ed93b3f2eec883e4b302383e5eb0c46ccbbcb6efe233df5040f40c012"
+      },
+      "failure": {
+        "id": "b33009a8-9657-403f-9f0e-6d5674040bf5",
+        "status": "failed",
+        "created_at": "2026-10-26T03:40:14.874470+00:00",
+        "started_at": "2026-10-26T03:40:15.088015+00:00",
+        "completed_at": "2026-10-26T03:45:47.966176+00:00",
+        "updated_at": "2026-10-26T03:45:47.966163+00:00",
+        "age_seconds": 86817,
+        "model": "gemma3:12b",
+        "task_class": "classification",
+        "error_classification": "worker lease expired",
+        "error_sha256": "ea88e77acbae906cfbe7b5812c1ea9a5d235a1f70b4802547cbe5199714db445",
+        "result_sha256": "bb52c4531203a7c06592646e15e58e2863c3d2b566ae202a294ee09d1c46a29e"
+      },
+      "capability_ids": [
+        "responsibility.a29"
+      ],
+      "registration": "REGISTERED",
+      "lifecycle_status": "active",
+      "runtime_model": "LOGICAL_ON_DEMAND_SHARED_INFERENCE",
+      "heartbeat_status": "NOT_COLLECTED",
+      "activity_classification": "STALE_RECORDED_ACTIVITY",
+      "disabled_status": "NO_ROLE_DISABLE_OBSERVED",
+      "blocker": "NO_CURRENT_ROLE_OPERATION_BLOCKER_ESTABLISHED",
+      "coaching_completion_observation": {
+        "agent_id": "a29",
+        "latest_completed_coaching": {
+          "job_id": "5bd2e792-4e15-43f3-b1ee-67114411f5f5",
+          "outcome": "PASS",
+          "phase": "acceptance",
+          "program_id": null,
+          "source_revision": "98b25373207dd55bd1326260a59ebc917144d770",
+          "timestamp": "2026-10-27T02:36:01.751754+00:00",
+          "version": null
+        },
+        "latest_completed_id": "5bd2e792-4e15-43f3-b1ee-67114411f5f5",
+        "probability_session": {
+          "acceptance_pass": null,
+          "baseline_pass": null,
+          "job_id": null,
+          "phase": "baseline",
+          "practice_pass": null,
+          "source_revision": "97ef661e29f718a99ecd5865dd0977a0a78076ac",
+          "state": "BLOCKED",
+          "updated_epoch": 1793072642.598119,
+          "version": "probability-foundations.v1"
+        }
+      }
+    }
+  ],
+  "findings": [
+    "At 03:54:34Z the deployed old algorithm reports 21 historically observed, 6 fresh/ready and 15 not fresh; counts change as real coaching advances and old jobs age.",
+    "Old heartbeat fields are compute_jobs.updated_at, not role heartbeats. The logical on-demand roles do not own 21 independent worker processes.",
+    "Old readiness admits failed and cancelled rows whenever recently updated and configured tags are present; a06 failed lease is a concrete current example.",
+    "MAX(rowid) chooses latest insertion rather than latest actual transition; missing or naive timestamps were previously overclaimed.",
+    "All 21 source roles are registered, lifecycle active, model unassigned, shared compute requirements; no role-specific disabled runtime was established.",
+    "Local configured route tiers are NANO and MINI, not FLAGSHIP; this is a request-scoped coverage limit and does not make the estate offline.",
+    "Current-source role cohort precedes probability v2. Probability v1 retains real failed assessments; superseded unfinished v1 sessions are BLOCKED with provenance preserved.",
+    "Installed model tags, coaching grades, a process and registry membership are separate evidence from operational competence."
+  ]
+}
