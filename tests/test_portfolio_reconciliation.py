@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Exact current preservation note; all prior historical pins remain.
+    checkpoint_title = '## Live dashboard and generic Codex preservation checkpoint - 27 October 2026'
+    assert after.count(checkpoint_title) == 1
+    checkpoint_start = after.index(checkpoint_title)
+    checkpoint_end = after.index("\n## ", checkpoint_start + len(checkpoint_title)) + 1
+    checkpoint_update = after[checkpoint_start:checkpoint_end].encode("utf-8")
+    assert len(checkpoint_update) == 1358
+    assert hashlib.sha256(checkpoint_update).hexdigest() == "5b4729fdda7ac6f262260aef9242ea00c2cf19670dbed482f90b89a0995fe190"
+    assert b"### Claimed, not independently checked" in checkpoint_update
+    assert b"### Verified" not in checkpoint_update
+    after = after[:checkpoint_start] + after[checkpoint_end:]
     # Exact continuation note; historical candidate notes remain pinned.
     integration_title = '## Live observability integration continuation - 27 October 2026'
     assert after.count(integration_title) == 1

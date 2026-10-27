@@ -153,14 +153,14 @@ def agent_activity():
             return None
         names = ('id', 'agent', 'status', 'created_at', 'started_at', 'completed_at',
                  'updated_at', 'provider', 'model', 'task_class')
-        projection = ','.join(name if name in columns else f'NULL AS {name}' for name in names)
+        projection = ','.join(f'j.{name}' if name in columns else f'NULL AS {name}' for name in names)
         # Free-text errors, inputs, outputs, leases and credentials never enter
         # the projection. Unknown errors retain a fixed classification only.
-        error = ("CASE WHEN error IN ('LOCAL_EXECUTION_FAILED','LOCAL_EXECUTION_TIMEOUT',"
+        error = ("CASE WHEN j.error IN ('LOCAL_EXECUTION_FAILED','LOCAL_EXECUTION_TIMEOUT',"
                  "'LOCAL_INFERENCE_FAILED','STRICT_JSON_CONTRACT_FAILED',"
                  "'EXTERNAL_EXECUTION_FAILED','worker lease expired',"
-                 "'agent retired or unregistered','actual cost ceiling reached') THEN error "
-                 "WHEN error IS NULL OR error='' THEN NULL ELSE 'EXECUTION_FAILURE' END"
+                 "'agent retired or unregistered','actual cost ceiling reached') THEN j.error "
+                 "WHEN j.error IS NULL OR j.error='' THEN NULL ELSE 'EXECUTION_FAILURE' END"
                  if 'error' in columns else 'NULL')
         known = {agent['id'] for agent in load_agent_registry()['agents']}
         result = {}
@@ -169,16 +169,47 @@ def agent_activity():
             if epoch is None and field == 'completed_at':
                 epoch = _timestamp_epoch(task.get('updated_at'))
             return (epoch if epoch is not None else float('-inf'), task['_rowid'])
-        for raw in db.execute(f'SELECT rowid AS _rowid,{projection},{error} AS error_code FROM compute_jobs'):
+        def timestamp_order(field):
+            if field not in columns:
+                return 'NULL'
+            # The journal writes offset-bearing ISO timestamps. A naive or
+            # malformed row cannot outrank a valid transition as though UTC.
+            return (f"CASE WHEN length({field}) BETWEEN 20 AND 64 AND "
+                    f"(substr({field},-1)='Z' OR (substr({field},-6,1) IN ('+','-') "
+                    f"AND substr({field},-3,1)=':')) THEN julianday({field}) END")
+        transition_order = timestamp_order('updated_at')
+        completion_order = f"COALESCE({timestamp_order('completed_at')},{transition_order})"
+        # Rank the full history in SQLite, but decode/validate only the few
+        # relevant candidates per role. Poll cost must not grow as Python
+        # timestamp parsing over every historical job under the same budget.
+        query = (
+            "WITH times AS MATERIALIZED (SELECT rowid AS source_rowid,agent,status,"
+            f"{transition_order} AS transition_time,{completion_order} AS terminal_time FROM compute_jobs),"
+            "latest AS (SELECT agent,COUNT(*) AS history_count,MAX(source_rowid) AS inserted,"
+            "MAX(transition_time) AS transition_time FROM times GROUP BY agent),"
+            "terminal AS (SELECT agent,status,MAX(terminal_time) AS terminal_time FROM times "
+            "WHERE status IN ('completed','failed','budget_blocked','blocked') GROUP BY agent,status),"
+            "chosen AS (SELECT inserted AS source_rowid,history_count FROM latest UNION "
+            "SELECT MAX(t.source_rowid),l.history_count FROM times t JOIN latest l ON t.agent=l.agent "
+            "AND t.transition_time=l.transition_time GROUP BY t.agent UNION "
+            "SELECT MAX(t.source_rowid),l.history_count FROM times t JOIN terminal x ON t.agent=x.agent "
+            "AND t.status=x.status AND (t.terminal_time=x.terminal_time OR "
+            "(t.terminal_time IS NULL AND x.terminal_time IS NULL)) "
+            "JOIN latest l ON t.agent=l.agent GROUP BY t.agent,t.status) "
+            f"SELECT j.rowid AS _rowid,{projection},{error} AS error_code,r.history_count AS _history_count "
+            "FROM chosen r JOIN compute_jobs j ON j.rowid=r.source_rowid"
+        )
+        for raw in db.execute(query):
             if time.monotonic() >= deadline:
                 return None
             task = dict(raw)
+            history_count = task.pop('_history_count')
             aid = task['agent']
             if aid not in known:
                 continue
             item = result.setdefault(aid, {'history_count': 0, '_inserted': None,
                                           'latest_task': None, 'last_success': None, 'last_failure': None})
-            item['history_count'] += 1
+            item['history_count'] = history_count
             if item['_inserted'] is None or task['_rowid'] > item['_inserted']['_rowid']:
                 item['_inserted'] = task
             if item['latest_task'] is None or order(task) > order(item['latest_task']):
