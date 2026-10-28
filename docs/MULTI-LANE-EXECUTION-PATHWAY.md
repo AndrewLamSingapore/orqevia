@@ -1,4 +1,4 @@
-# Coordinated four-lane execution pathway
+# Coordinated five-lane execution pathway
 
 Owner-approved direction, 28 October 2026. **UNDER IMPLEMENTATION.**
 Canonical authority: [Intelligent Efficiency Doctrine](INTELLIGENT_EFFICIENCY_DOCTRINE.md).
@@ -13,18 +13,23 @@ flowchart TD
   Coordinator --> Light[Lightweight lane: qualified Gemma 3 1B]
   Coordinator --> Embed[Embedding lane: EmbeddingGemma]
   Coordinator --> Deep[Deep lane: justified Gemma 3 12B]
+  Coordinator --> Tools[Tools lane: authorized non-inference integrations]
   Light --> Slot[Measured shared physical inference capacity]
   Embed --> Slot
   Deep --> Slot
   Deterministic --> Check[Validate, persist, checkpoint and observe]
+  Tools --> Check
   Slot --> Check
   Check --> Result[Authorized result delivery]
 ```
 
-Four logical lanes reuse the current dispatcher, databases and model server.
-They do not imply four services, four resident models or four simultaneous LLM
+Five logical lanes reuse the current dispatcher, databases and model server.
+They do not imply five services, five resident models or five simultaneous LLM
 requests. Deterministic work need not wait for an inference slot, but still
 respects host resource headroom. All21logical agent capabilities remain on demand.
+
+Latest consolidated execution plan: [Master P0 mission](MASTER-P0-ENGINEERING-MISSION.md).
+Engineering is checkpointed for the Owner's shutdown and later continuation.
 
 ## Intelligent central coordinator
 

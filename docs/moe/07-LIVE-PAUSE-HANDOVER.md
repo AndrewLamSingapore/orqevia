@@ -3,7 +3,8 @@
 ## Latest checkpoint / shutdown preparation
 
 The Owner requested save, clear status and a pause for later continuation.
-Read [the four-lane pathway](../MULTI-LANE-EXECUTION-PATHWAY.md) and the permanent
+Read [the unified mission](../MASTER-P0-ENGINEERING-MISSION.md),
+[the five-lane pathway](../MULTI-LANE-EXECUTION-PATHWAY.md) and the permanent
 [Intelligent Efficiency Doctrine](../INTELLIGENT_EFFICIENCY_DOCTRINE.md).
 Do not confuse a completed shutdown checkpoint with production acceptance.
 
