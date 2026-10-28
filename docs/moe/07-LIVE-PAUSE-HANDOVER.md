@@ -1,5 +1,44 @@
 # Current engineering handover - 28 October 2026
 
+## Latest checkpoint / shutdown preparation
+
+The Owner requested save, clear status and a pause for later continuation.
+Read [the four-lane pathway](../MULTI-LANE-EXECUTION-PATHWAY.md) and the permanent
+[Intelligent Efficiency Doctrine](../INTELLIGENT_EFFICIENCY_DOCTRINE.md).
+Do not confuse a completed shutdown checkpoint with production acceptance.
+
+Phase2 ran bounded authorized tests without releasing production:6schema-based
+1Bclassification trials passed,1embedding batch passed, and1deep scheduling
+reasoning trial failed its independent correctness oracle. The initial1Btest
+without a schema also failed output shape. All original receipts are retained;
+no quality requirement was weakened or failed result relabeled successful.
+
+Monitoring root cause:6of9services have complete declared probes. The integration
+gateway and both Cloudflare connectors lack verified HTTPS functional probes;
+the gateway currently listens on privateHTTP8080. Canary liveness recency and
+deployment-attestation warnings are mixed into the legacy aggregate. The new
+source separates service functionality from verification;32targeted tests passed.
+The API/UI repair and missing probe coverage are not deployed or complete.
+
+The observed4confirmed executions meant latest completed jobs within1hour and
+current model availability (a21/a26/a28/a29 at09:19UTC), not four functional agents.
+Later authorized a19tests changed this count. Completion does not establish
+semantic quality, and inactivity under Owner pause is not a failed agent.
+
+At09:39UTC there were no queued/running/held jobs and neither Ollama instance had
+a loaded model. Docker Ollama was0%CPU/~1.112GiB after the qualification runs;
+do not reuse the earlier58MiB snapshot as the latest value or call this a leak.
+The durable pause remained generation0. No Docker service restart occurred.
+
+455SQLite backups passed quick_check and host-copySHA256 verification. Checkpoint:
+`C:/Users/Admin/AppData/Local/ORQEVIA/checkpoints/pre-shutdown-20261028T093947Z/`.
+These are per-database consistent backups, not a distributed or off-machine backup.
+All model assets remain in their original persistent storage.
+
+Safe idle-app updates:uv0.13.6 and MicrosoftTeams26225.1806.5074.1452 installed.
+AWSCLI/Git/GitHubCLI require administrator installation; Docker/Ollama/ChatGPT
+updates affect live software and remain pending. No driver or firmware change.
+
 Read [the standing Owner policy](../HOME-ECO-OPERATING-POLICY.md) first. It
 supersedes conflicting earlier operating directions. Source, tests, deployment
 and observed runtime acceptance remain separate evidence.
@@ -90,7 +129,7 @@ sequentially; measure CPU-seconds, quality and responsiveness. Qualify actual
 ECO settings before rollout. Do not automatically resume unrelated producers.
 
 Local WIP `app/single_flight.py` and the `cancel_in_connection` helper are
-uncommitted, unintegrated and untested as a combined feature. Preserve/review
+saved, unintegrated and untested as a combined feature. Preserve/review
 them before use. They are not deployed global deduplication.
 
 ## Evidence and rollback

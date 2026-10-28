@@ -217,6 +217,25 @@ def _aggregate(checks):
     return "HEALTHY" if checks else "NOT_CONFIGURED"
 
 
+def service_functionality(services):
+    """Declared service functionality, independent of verification coverage.
+
+    Unknown probes are not failures. A confirmed service failure still takes
+    precedence over incomplete coverage. Canary attestations are separate.
+    """
+    checks=[check for service in services for check in service.get('checks',[])]
+    failures=[c for c in checks if c.get('fresh') is True and c.get('status')=='FAIL']
+    if any(c.get('state')=='CRITICAL' for c in failures):status='UNHEALTHY'
+    elif failures:status='DEGRADED'
+    elif len(services)!=len(SERVICE_SPECS) or any(not s.get('coverage_complete') for s in services):status='UNKNOWN'
+    elif all(s.get('status')=='HEALTHY' for s in services):status='HEALTHY'
+    else:status='UNKNOWN'
+    return {'status':status,'scope':'DECLARED_SERVICE_FUNCTIONAL_CHECKS_ONLY',
+        'confirmed_failure_count':len(failures),
+        'unmeasured_service_ids':[s['service_id'] for s in services if not s.get('coverage_complete')],
+        'reason':'CONFIRMED_SERVICE_FAILURE' if failures else 'SERVICE_PROBES_INCOMPLETE' if status=='UNKNOWN' else 'REQUIRED_SERVICE_PROBES_PASSED'}
+
+
 def _service(service_id, row, now, ttl, unavailable_reason=None):
     container, docker_required, required = SERVICE_SPECS[service_id]
     row = row if isinstance(row, dict) else {}
@@ -638,6 +657,12 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
         "service_health": {
             "schema_version": "orqevia.service-health.v1",
             "status": status,
+            "status_scope": "LEGACY_SERVICE_AND_VERIFICATION_AGGREGATE",
+            "functionality": service_functionality(services),
+            "verification": {"status": _aggregate(canary_checks),
+                "scope": "CANARY_VERIFICATION_NOT_SERVICE_FUNCTIONALITY",
+                "failed_check_ids": [c['check_id'] for c in canary_checks if c['status']=='FAIL'],
+                "unknown_check_ids": [c['check_id'] for c in canary_checks if not c['fresh']]},
             "reason": reason or count_reason,
             "observed_at": receipt.get("observed_at") if _epoch(receipt.get("observed_at")) is not None else None,
             "evaluated_at": _iso(now),
@@ -651,6 +676,7 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
             "canary_checks": canary_checks,
             "coverage": {
                 "complete": complete,
+                "status": "COMPLETE" if complete else "INCOMPLETE",
                 "expected_service_count": len(SERVICE_SPECS),
                 "observed_service_count": sum(row["coverage_complete"] for row in services),
                 "healthy_service_count": sum(row["status"] == "HEALTHY" for row in services),

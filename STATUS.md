@@ -4,6 +4,18 @@
 
 ### Under implementation; source candidate only
 
+The Owner requested a saved checkpoint for later continuation. The permanent
+direction is docs/INTELLIGENT_EFFICIENCY_DOCTRINE.md; the implementation pathway
+is docs/MULTI-LANE-EXECUTION-PATHWAY.md. Production background remains PAUSED.
+That pathway includes the Owner's intelligent central-coordinator and bounded
+coordinator-coaching direction; these are planned, not deployed capabilities.
+Bounded qualification passed6schema-constrained1Btrials and1embedding batch;
+the deep scheduling reasoning trial FAILED correctness. No production model
+or thread setting was enabled from these tests. Monitoring classification source
+passed32targeted tests;3HTTPSfunctional probes and API/UI deployment remain open.
+Complete HOME_ECO/ULTRA_ECO, global deduplication and21-agent current end-to-end
+quality are not production accepted. Read docs/moe/07-LIVE-PAUSE-HANDOVER.md.
+
 The Owner authorized implementation of selective agent activation, patient
 shared inference and computational-waste reduction. The MoE assessment is in
 docs/moe/README.md. Native neural MoE is an optional unperformed experiment;

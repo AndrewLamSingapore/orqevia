@@ -2,7 +2,8 @@
 
 ## Latest Owner amendments - 28 October 2026
 
-The standing direction is docs/HOME-ECO-OPERATING-POLICY.md. Patient home operation,
+The permanent authority is docs/INTELLIGENT_EFFICIENCY_DOCTRINE.md. The operating
+runbook is docs/HOME-ECO-OPERATING-POLICY.md. Patient home operation,
 correctness and minimum waste supersede conflicting throughput/always-on orders.
 Keep production background work paused until explicit Owner resume. Bounded
 isolated qualification tests are authorized; do not release unrelated producers.

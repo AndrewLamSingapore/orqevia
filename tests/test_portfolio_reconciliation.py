@@ -258,8 +258,8 @@ def test_status_insertion_preserves_all_existing_sections_and_history():
     eco_start=after.index(eco_title)
     eco_end=after.index('\n## ',eco_start+len(eco_title))+1
     eco_update=after[eco_start:eco_end].encode('utf-8')
-    assert len(eco_update)==2140
-    assert hashlib.sha256(eco_update).hexdigest()=='fb5b1eb784416fb477b644a91c7f0c9dbe0771d5158360e86883f6047ec1e370'
+    assert len(eco_update)==3009
+    assert hashlib.sha256(eco_update).hexdigest()=='73c24e9d29554791778ff27f0d6c4bb5264859014a8e6648e1e671bee4307372'
     assert b'### Verified' not in eco_update
     after=after[:eco_start]+after[eco_end:]
     # Exact current preservation note; all prior historical pins remain.

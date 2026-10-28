@@ -261,15 +261,19 @@ class JobQueue:
 
     def cancel(self,job_id):
         with self.lock,self.connect() as c:
-            row=c.execute('SELECT status,provider FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
-            if not row:raise KeyError(job_id)
-            if row['status'] not in TERMINAL:
-                c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=CASE WHEN status='held' THEN 0 ELSE actual_cost_usd END,updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
-                if self.policy.coordinated:
-                    c.execute("UPDATE compute_jobs SET lifecycle_state='CANCELLED' WHERE id=?", (job_id,))
-                self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
+            self.cancel_in_connection(c, job_id)
         self.wake.set()
         return self.get(job_id)
+
+    def cancel_in_connection(self, c, job_id):
+        """Keep consumer cancellation and the final shared-job decision atomic."""
+        row=c.execute('SELECT status,provider FROM compute_jobs WHERE id=?',(job_id,)).fetchone()
+        if not row:raise KeyError(job_id)
+        if row['status'] not in TERMINAL:
+            c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=CASE WHEN status='held' THEN 0 ELSE actual_cost_usd END,updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
+            if self.policy.coordinated:
+                c.execute("UPDATE compute_jobs SET lifecycle_state='CANCELLED' WHERE id=?", (job_id,))
+            self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
 
     def abort(self, job_id: str, error: str) -> dict:
         """Mark a deadline-exceeded local job terminal without an executor claim."""

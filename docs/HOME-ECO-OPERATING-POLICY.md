@@ -1,5 +1,9 @@
 # Standing Owner operating policy - 28 October 2026
 
+Canonical permanent authority: [Intelligent Efficiency Doctrine](INTELLIGENT_EFFICIENCY_DOCTRINE.md).
+This is its HOME_ECO operational specialization. HOME_ECO becomes default only
+after runtime qualification; ULTRA_ECO is selectable stronger conservation.
+
 ORQEVIA is a personal home mini PC platform. Correct useful work, reliability,
 Windows responsiveness and minimal wasted computation take priority over raw
 throughput. Preserve its ability to grow through reusable capabilities.

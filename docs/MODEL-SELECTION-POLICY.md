@@ -1,5 +1,7 @@
 # Owner model-selection supersession - 28 October 2026
 
+This specializes the canonical [Intelligent Efficiency Doctrine](INTELLIGENT_EFFICIENCY_DOCTRINE.md).
+
 This is the current selection policy. It supersedes earlier instructions to
 always use Gemma 3 12B, always use the largest model, exclude alternatives by
 name, or require one provider for all ORQEVIA work. Historical receipts and
