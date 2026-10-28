@@ -39,7 +39,7 @@ def record_execution_gap(root, job, source_revision):
     path = Path(root)/'agent-coaching.db'
     if (not path.is_file() or job.get('status') != 'failed' or
         job.get('error') != 'STRICT_JSON_CONTRACT_FAILED' or
-        job.get('model') != 'gemma3:12b' or
+        not job.get('model') or job.get('allow_cloud') or job.get('external_execution') or
         job.get('agent') not in registered_agent_ids(include_orchestrator=False) or
         not re.fullmatch('[a-f0-9]{40}', source_revision or '')):
         return False
@@ -410,8 +410,9 @@ def main():
     root = Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
     controller = CoachingController(root/'agent-coaching.db',queue,
         source_revision=os.environ['ORQEVIA_COACHING_SOURCE_REVISION'],model=SETTINGS.deep_model)
-    if SETTINGS.deep_model != 'gemma3:12b' or SETTINGS.evaluator_model != 'gemma3:12b':
-        raise ValueError('HIGHEST_MODEL_UNAVAILABLE')
+    # The Owner superseded exclusive model names on 28 October. The controller
+    # still binds its configured model and exact request to each assessment;
+    # no quality oracle or historical result is weakened or rewritten.
     while not stop.is_set():
         try:
             if (root/'coaching.pause').exists():

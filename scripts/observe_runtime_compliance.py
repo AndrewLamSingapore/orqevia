@@ -39,6 +39,7 @@ def command(args, *, stdin=None):
 def enforcement_matrix(requested, settings, journal):
     mode = settings.get('ORQEVIA_OUTPUT_QUEUE_MODE', 'direct')
     coordinated = mode == 'home_eco' and journal.get('lifecycle_columns_present', False)
+    pause=journal.get('background_admission') or {}
     return {
         'requested_profile': requested,
         'actual_scheduling_mode': mode,
@@ -53,6 +54,9 @@ def enforcement_matrix(requested, settings, journal):
         'scheduler_bypass': 'DIRECT_DISPATCH_BYPASSES_SHARED_ADMISSION' if mode == 'direct' else 'ALL_PRODUCERS_NOT_VERIFIED',
         'all_21_agents_functional': 'NOT_ESTABLISHED_BY_REGISTRATION_OR_CONTAINER_HEALTH',
         'ultra_eco': 'NOT_DEPLOYED' if requested == 'ULTRA_ECO' else 'NOT_REQUESTED',
+        'background_admission':('PAUSED_DATABASE_ENFORCEMENT_PRESENT' if pause.get('paused') and journal.get('background_trigger_present') else 'NOT_VERIFIED'),
+        'background_admission_generation':pause.get('generation'),
+        'new_background_starts_since_pause':journal.get('background_starts_since_pause'),
     }
 
 
@@ -72,6 +76,12 @@ with sqlite3.connect('file:/data/compute-queue.db?mode=ro',uri=True,timeout=3) a
   history.append({'agent':aid,'registered':True,'historical_persisted_deep_success':dict(row) if row else None,'current_end_to_end_status':'NOT_VERIFIED'})
  result={'canonical_agent_count':len(agents),'status_counts':statuses,'application_active_jobs':active,'application_queue_depth':statuses.get('queued',0),'lifecycle_columns_present':{'local_inflight','lifecycle_state','timings_json'}<=columns,'agents':history,'idempotency_bindings':db.execute('SELECT count(*) FROM compute_submission_keys').fetchone()[0]}
  if 'local_inflight' in columns:result['journal_slot_owners']=db.execute('SELECT count(*) FROM compute_jobs WHERE local_inflight=1').fetchone()[0]
+ if db.execute("SELECT 1 FROM sqlite_master WHERE name='compute_background_admission'").fetchone():
+  row=db.execute('SELECT * FROM compute_background_admission WHERE id=1').fetchone()
+  result['background_admission']=dict(row) if row else None
+  result['background_trigger_present']=bool(db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND name='compute_owner_background_admission'").fetchone())
+  result['background_starts_since_pause']=db.execute('SELECT count(*) FROM compute_jobs WHERE priority<50 AND started_at>?',(row['changed_at'],)).fetchone()[0] if row else None
+ result['coaching_pause_marker_present']=pathlib.Path('/data/coaching.pause').exists()
 mem={}
 for line in pathlib.Path('/proc/meminfo').read_text().splitlines():
  k,_,v=line.partition(':')

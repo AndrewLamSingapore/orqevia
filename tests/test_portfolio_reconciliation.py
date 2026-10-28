@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact dated implementation/runtime distinction. All
+    # earlier history and Owner-only Verified records retain their byte pins.
+    eco_title='## Selective-expert MoE and patient inference - 28 October 2026'
+    assert after.count(eco_title)==1
+    eco_start=after.index(eco_title)
+    eco_end=after.index('\n## ',eco_start+len(eco_title))+1
+    eco_update=after[eco_start:eco_end].encode('utf-8')
+    assert len(eco_update)==2140
+    assert hashlib.sha256(eco_update).hexdigest()=='fb5b1eb784416fb477b644a91c7f0c9dbe0771d5158360e86883f6047ec1e370'
+    assert b'### Verified' not in eco_update
+    after=after[:eco_start]+after[eco_end:]
     # Exact current preservation note; all prior historical pins remain.
     checkpoint_title = '## Live dashboard and generic Codex preservation checkpoint - 27 October 2026'
     assert after.count(checkpoint_title) == 1

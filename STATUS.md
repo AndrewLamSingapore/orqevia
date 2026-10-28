@@ -14,15 +14,25 @@ the existing SQLite queue, bounded waiting count, priority aging, retry
 backoff, cancellation ownership and patient coaching budgets. A read-only
 runtime compliance command separates requested profile from deployed behavior.
 The first regression run passed137tests plus73subtests, including21 deterministic
-scheduler pipelines; three compliance-observer tests also passed. These are
-isolated source tests, not real-model quality or production acceptance.
+scheduler pipelines. The later admission/coaching/API/observer run passed36tests
+plus63subtests. These isolated tests do not establish real-model task quality.
 
-At08:13UTC the actual nine-service runtime still used direct scheduling and
-balanced compute settings. ULTRA_ECO was not deployed; duplicate prevention
-and actual inference-request-to-mission binding were not instrumented. No
-production restart, model installation or cloud acceptance call occurred.
-Cross-mission single-flight, resource calibration, real model-quality tests and
-controlled deployment remain pending. No runtime efficiency gain is claimed.
+At08:13UTC the nine-service runtime used direct scheduling and balanced settings.
+At08:46UTC an Owner-authorized persistent background pause was installed in the
+existing compute database. Its trigger holds new noninteractive admissions
+without cancelling active or queued jobs. The Windows supervisor was corrected
+and reloaded; it preserves the pause instead of archiving it every30seconds.
+No Docker service was restarted. Existing work completed; no background job
+started after the pause in the observed window. The12B model unloaded naturally
+at08:50UTC, with unchanged2minute retention. Docker Ollama fell from about804%CPU
+and13.65GiB to idle CPU and about60MiB. This demonstrates workload deferral and
+idle memory release, not faster inference or equivalent-work efficiency gains.
+
+ULTRA_ECO, global deduplication, fair coordinated execution, model-quality/thread
+benchmarks and request-to-mission binding are not production-verified. Existing
+fast/deep/embedding roles remain configurable. The Owner superseded exclusive
+model/provider rules; see docs/MODEL-SELECTION-POLICY.md. No model was deleted,
+installed or silently downgraded. The background pause requires explicit resume.
 
 ## Live dashboard and generic Codex preservation checkpoint - 27 October 2026
 

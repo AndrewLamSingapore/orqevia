@@ -1,6 +1,8 @@
 """Isolated HTTPS-origin API contracts; no live model execution claimed."""
 
 from unittest.mock import patch
+from dataclasses import replace
+import pytest
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -10,12 +12,13 @@ from app.agent_coaching import CoachingController
 from app.job_queue import JobQueue
 
 
-def fixture(tmp_path, monkeypatch):
+def fixture(tmp_path, monkeypatch, model='gemma3:12b'):
     monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("ORQEVIA_OPEN_ACCESS", "1")
     monkeypatch.setenv("ORQEVIA_RUNTIME_REVISION", "a" * 40)
+    monkeypatch.setattr(academy_api,'SETTINGS',replace(academy_api.SETTINGS,deep_model=model))
     queue = JobQueue(tmp_path / "queue.db")
-    controller = CoachingController(tmp_path / "agent-coaching.db", queue, source_revision="a" * 40, model="gemma3:12b")
+    controller = CoachingController(tmp_path / "agent-coaching.db", queue, source_revision="a" * 40, model=model)
     app = FastAPI()
     app.include_router(academy_api.router)
     return TestClient(app, base_url="https://testserver"), queue, controller
@@ -53,6 +56,19 @@ def test_notification_dispatches_existing_owned_job_only(tmp_path, monkeypatch):
             db.execute("UPDATE compute_jobs SET prompt='changed'")
         assert client.post("/api/academy/notify/" + job["id"]).status_code == 409
         assert dispatch.call_count == 1
+
+
+@pytest.mark.parametrize('model',['gemma3:1b','qualified-alternative:local'])
+def test_notification_binds_configured_model_without_exclusive_name(tmp_path,monkeypatch,model):
+    client,queue,controller=fixture(tmp_path,monkeypatch,model)
+    controller.ensure_cohort();controller.tick()
+    job=queue.list()[0]
+    with patch('app.compute_queue_api.queue',queue),patch('app.compute_queue_api.dispatch') as dispatch:
+        assert client.post('/api/academy/notify/'+job['id']).status_code==200
+        dispatch.assert_called_once_with(job['id'])
+        with queue.connect() as db:db.execute("UPDATE compute_jobs SET model='unbound-model' WHERE id=?",(job['id'],))
+        assert client.post('/api/academy/notify/'+job['id']).status_code==409
+        assert dispatch.call_count==1
 
 
 def test_retention_rejects_unproven_or_modified_methods(tmp_path, monkeypatch):

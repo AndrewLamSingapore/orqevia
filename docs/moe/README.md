@@ -1,6 +1,9 @@
 # Selective-expert MoE assessment - 28 October 2026
 
-Status: **UNDER IMPLEMENTATION - SOURCE CANDIDATE, NOT DEPLOYED**.
+Status: **UNDER IMPLEMENTATION**. Patient scheduler source is a candidate;
+the persistent Owner background pause is separately enforced in the running DB.
+Read the [current handover](07-LIVE-PAUSE-HANDOVER.md) and
+[standing operating policy](../HOME-ECO-OPERATING-POLICY.md) before older milestones.
 
 Owner: ABEX-ORQEVIA. Source baseline: `f37673b4ce618cc7cd672c987594f849d9985f02`.
 The deployed product and resource names are ORQEVIA; ORZEVIA in the request
@@ -27,6 +30,7 @@ open implementation/experiment items. They must not be represented as delivered.
 4. [Cost matrix](04-COST-MATRIX.md)
 5. [Implementation and rollback](05-IMPLEMENTATION-ROADMAP.md)
 6. [Proof of concept](06-PROOF-OF-CONCEPT.md)
+7. [Live pause, evidence and Phase2 handover](07-LIVE-PAUSE-HANDOVER.md)
 
 Evidence levels are VERIFIED OBSERVATION, SOURCE IMPLEMENTED, ISOLATED TEST,
 ESTIMATE, and NOT VERIFIED. An isolated executor test is not a real-model quality

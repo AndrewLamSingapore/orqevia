@@ -1,5 +1,12 @@
 # ORQEVIA fast-model policy
 
+## Superseded - 28 October 2026
+
+The current [model-selection policy](MODEL-SELECTION-POLICY.md) supersedes the
+exclusive defaults and model-name exclusions below. These dated instructions
+describe prior operation and are retained as history. No model or provider is
+mandatory for every ORQEVIA task; select a qualified capability for the task.
+
 ## Standing default
 
 - Use the fastest complete path that preserves the required evidence and
