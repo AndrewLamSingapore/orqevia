@@ -4,6 +4,13 @@
 
 ### Under implementation; source candidate only
 
+The Owner permanently selected multi-service containers as the primary architecture;
+docs/ARCHITECTURE_V1.md records RulesA-H. Preserve service boundaries, one logical
+coordinator and21logical agents. New containers require documented need; measured
+benefits and explicit Owner approval are required for consolidation. A fresh
+read-only inspection found17containers/9running,69images,15volumes,7networks and
+3Compose projects. No topology change, restart or production resume was performed.
+
 The Owner requested a saved checkpoint for later continuation. The permanent
 direction is docs/INTELLIGENT_EFFICIENCY_DOCTRINE.md; the implementation pathway
 is docs/MULTI-LANE-EXECUTION-PATHWAY.md. Production background remains PAUSED.

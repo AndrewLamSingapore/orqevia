@@ -4,6 +4,11 @@ Owner-approved direction, 28 October 2026. **UNDER IMPLEMENTATION.**
 Canonical authority: [Intelligent Efficiency Doctrine](INTELLIGENT_EFFICIENCY_DOCTRINE.md).
 The persistent production background pause stays active until explicit Owner resume.
 
+Deployment follows the permanent [multi-service architecture decision](ARCHITECTURE_V1.md).
+Reuse existing service boundaries; the logical coordinator may remain in the
+backend. Neither lanes nor21agents imply new containers. Consolidation requires
+measured benefit and explicit Owner approval.
+
 ```mermaid
 flowchart TD
   Request[Authorized mission and agent identity] --> Need[Necessity, authorization and freshness]

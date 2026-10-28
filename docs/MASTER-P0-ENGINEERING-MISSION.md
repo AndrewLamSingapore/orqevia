@@ -8,6 +8,9 @@ Architecture: [Intelligent coordinator and five execution lanes](MULTI-LANE-EXEC
 Evidence/continuation: [Current handover](moe/07-LIVE-PAUSE-HANDOVER.md).
 
 This is one mission, not another scheduler, optimization programme or coordinator.
+The Owner selected [multiple service containers](ARCHITECTURE_V1.md) as the primary
+deployment architecture. Preserve modular service boundaries. New containers
+require documented need; consolidation requires measured benefit and Owner approval.
 Reuse existing code, persistence, models and telemetry. Do not repeat completed
 hardware discovery or run21heavy generations to populate health metrics.
 

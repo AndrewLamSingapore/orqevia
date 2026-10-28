@@ -2,6 +2,13 @@
 
 ## Latest checkpoint / shutdown preparation
 
+The Owner permanently selected multi-service containers as the primary deployment
+model. Read docs/ARCHITECTURE_V1.md's28October decision. One logical coordinator,
+21logical agents and five logical lanes do not require a monolith,21agent
+containers or new coordination services. New containers need justification;
+consolidation needs measured benefit and explicit Owner approval. This policy
+update did not change topology, restart services or resume background work.
+
 The Owner requested save, clear status and a pause for later continuation.
 Read [the unified mission](../MASTER-P0-ENGINEERING-MISSION.md),
 [the five-lane pathway](../MULTI-LANE-EXECUTION-PATHWAY.md) and the permanent

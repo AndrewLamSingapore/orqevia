@@ -36,6 +36,13 @@ An unsupported quality downgrade is not an efficiency improvement.
 
 ## Coordinated, patient work
 
+The primary deployment model is multiple purpose-driven service containers,
+under the [permanent architecture decision](ARCHITECTURE_V1.md). Preserve service
+isolation and independent recovery; one logical coordinator does not mean one
+giant application. Additional containers require documented need. Consolidation
+requires measured benefit and explicit Owner approval. Preserve21logical agents
+on shared infrastructure and keep Ollama independently governed.
+
 Use existing durable admission infrastructure. Maintain fair opportunities,
 anti-starvation, staggered background work, bounded retries, cancellation and
 recoverable checkpoints where beneficial. Separate queue waiting, loading,
@@ -86,7 +93,7 @@ Current evidence and unfinished work are in [the engineering handover](moe/07-LI
 Operational detail: [HOME_ECO runbook](HOME-ECO-OPERATING-POLICY.md),
 [model selection](MODEL-SELECTION-POLICY.md).
 
-The [central-coordinator and four-lane pathway](MULTI-LANE-EXECUTION-PATHWAY.md)
+The [central-coordinator and five-lane pathway](MULTI-LANE-EXECUTION-PATHWAY.md)
 adds deterministic task triage, bounded statistical prediction and event-driven
 coordinator coaching. These are planned implementation requirements, not claims
 of deployed adaptive intelligence. Coaching must preserve Owner constraints and

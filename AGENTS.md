@@ -2,6 +2,13 @@
 
 ## Latest Owner amendments - 28 October 2026
 
+The Owner selected multi-service containers as the primary deployment model.
+Follow the permanent decision in docs/ARCHITECTURE_V1.md: retain service isolation,
+one logical coordinator in the existing backend,21logical agents and shared
+task-aware lanes. New containers need documented justification; consolidation
+requires measured benefit and explicit Owner approval. Preserve the production
+background pause. Do not replace the estate with a monolith or21agent containers.
+
 The permanent authority is docs/INTELLIGENT_EFFICIENCY_DOCTRINE.md. The operating
 runbook is docs/HOME-ECO-OPERATING-POLICY.md. Patient home operation,
 correctness and minimum waste supersede conflicting throughput/always-on orders.
