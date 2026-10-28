@@ -51,6 +51,8 @@ class QueuePolicy:
     # A separate upper bound also covers inline governed cloud requests. It
     # never increases the measured global/local worker limit.
     cloud_concurrency: int = 1
+    coordinated: bool = False
+    max_waiting_jobs: int = 64
 
     @classmethod
     def from_env(cls) -> "QueuePolicy":
@@ -75,6 +77,8 @@ class QueuePolicy:
             max_job_cost_usd=decimal("ORQEVIA_MAX_JOB_COST_USD", 2.0, 0, 10000),
             daily_cost_ceiling_usd=decimal("ORQEVIA_DAILY_COST_USD", 10.0, 0, 100000),
             cloud_concurrency=integer("ORQEVIA_CLOUD_REQUEST_CAPACITY", 1, 1, 4),
+            coordinated=os.getenv('ORQEVIA_OUTPUT_QUEUE_MODE') == 'home_eco',
+            max_waiting_jobs=integer('ORQEVIA_MAX_WAITING_JOBS', 64, 1, 4096),
         )
 
 
@@ -163,6 +167,11 @@ class JobQueue:
                 # identities or a cloud provider named like a local one cannot
                 # prove cleanup; conservatively retain all cloud-eligible work.
                 c.execute("UPDATE compute_jobs SET cloud_inflight=1 WHERE status='running' AND allow_cloud=1")
+            for name, definition in [('lifecycle_state', 'TEXT'), ('timings_json', 'TEXT'),
+                                     ('local_inflight', 'INTEGER NOT NULL DEFAULT 0'),
+                                     ('not_before', 'REAL NOT NULL DEFAULT 0')]:
+                if name not in columns:
+                    c.execute(f'ALTER TABLE compute_jobs ADD COLUMN {name} {definition}')
 
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
@@ -208,14 +217,19 @@ class JobQueue:
         approval = "not_required"  # retained database column; never a prerequisite
         jid, ts = str(uuid.uuid4()), utcnow()
         with self.lock, self.connect() as c:
+            if self.policy.coordinated:
+                c.execute('BEGIN IMMEDIATE')
             if idempotency_key is not None:
                 # Serialize competing submissions across independent processes,
                 # before reading the key. The binding and job commit atomically.
-                c.execute('BEGIN IMMEDIATE')
+                if not c.in_transaction:
+                    c.execute('BEGIN IMMEDIATE')
                 prior=c.execute('SELECT request_sha256,job_id FROM compute_submission_keys WHERE agent=? AND key_sha256=?',(canonical_agent,key_hash)).fetchone()
                 if prior:
                     if prior['request_sha256']!=request_hash:raise ValueError('idempotency_key conflicts with an existing request')
                     return dict(c.execute('SELECT * FROM compute_jobs WHERE id=?',(prior['job_id'],)).fetchone())
+            if self.policy.coordinated and c.execute("SELECT count(*) FROM compute_jobs WHERE status='queued'").fetchone()[0] >= self.policy.max_waiting_jobs:
+                raise ValueError('INFERENCE_QUEUE_FULL')
             c.execute("""INSERT INTO compute_jobs
               (id,agent,prompt,priority,model_role,model,ram_mb,vram_mb,timeout_seconds,max_retries,
                max_cost_usd,allow_cloud,external_execution,status,approval_status,created_at,updated_at)
@@ -224,6 +238,11 @@ class JobQueue:
                max(1,min(86400,int(timeout_seconds))),max(0,min(10,int(max_retries))),job_cap,
                int(allow_cloud),int(external_execution),status,approval,ts,ts))
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
+            if self.policy.coordinated:
+                c.execute("UPDATE compute_jobs SET lifecycle_state='QUEUED',timings_json=? WHERE id=?",
+                          (json.dumps({'created_at': time.time(), 'queued_at': time.time()}), jid))
+                for phase in ('CREATED', 'VALIDATED', 'QUEUED'):
+                    self._event(c, jid, 'lifecycle', {'phase': phase})
             c.execute('UPDATE compute_jobs SET classification=? WHERE id=?',(classification,jid))
             c.execute('UPDATE compute_jobs SET preferred_provider=?,data_classification=?,task_class=? WHERE id=?',(preferred_provider,data_classification,task_class,jid))
             c.execute('UPDATE compute_jobs SET response_format=? WHERE id=?',(response_format,jid))
@@ -246,6 +265,8 @@ class JobQueue:
             if not row:raise KeyError(job_id)
             if row['status'] not in TERMINAL:
                 c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=CASE WHEN status='held' THEN 0 ELSE actual_cost_usd END,updated_at=?,completed_at=? WHERE id=?",(utcnow(),utcnow(),job_id))
+                if self.policy.coordinated:
+                    c.execute("UPDATE compute_jobs SET lifecycle_state='CANCELLED' WHERE id=?", (job_id,))
                 self._event(c,job_id,'cancelled',{'reason':'client cancellation'})
         self.wake.set()
         return self.get(job_id)
@@ -257,9 +278,11 @@ class JobQueue:
             if not row: raise KeyError(job_id)
             if row["status"] == "running":
                 ts = utcnow()
-                c.execute("UPDATE compute_jobs SET status='failed',error=?,lease_until=NULL,cloud_inflight=0,updated_at=?,completed_at=? WHERE id=?",
+                c.execute("UPDATE compute_jobs SET status='failed',error=?,lease_until=CASE WHEN local_inflight=1 THEN lease_until ELSE NULL END,cloud_inflight=0,updated_at=?,completed_at=? WHERE id=?",
                           (error, ts, ts, job_id))
                 self._event(c, job_id, "aborted_deadline", {"error": error})
+                if self.policy.coordinated:
+                    c.execute("UPDATE compute_jobs SET lifecycle_state='TIMED_OUT' WHERE id=?", (job_id,))
         self.wake.set()
         return self.get(job_id)
 
@@ -394,7 +417,7 @@ class JobQueue:
                 if row['model'] and row['model']!=p.model:continue
                 if not row['model'] and row['model_role']!='auto' and not p.name.endswith('-'+row['model_role']):continue
                 return p,'direct local request; model service owns inference scheduling',0
-        active=c.execute("SELECT provider,agent,ram_mb,vram_mb,priority,cloud_inflight FROM compute_jobs WHERE status='running' OR cloud_inflight=1").fetchall()
+        active=c.execute("SELECT provider,agent,ram_mb,vram_mb,priority,cloud_inflight FROM compute_jobs WHERE status='running' OR cloud_inflight=1 OR local_inflight=1").fetchall()
         if len(active)>=self.policy.global_concurrency:return None,"global concurrency limit",0
         def identity(value: str) -> str:
             try: return canonical_agent_id(value)
@@ -447,6 +470,10 @@ class JobQueue:
         if row["priority"] >= PRIORITIES["critical"]:
             return float(PRIORITIES["critical"])
         waited = max(0.0, now_epoch - datetime.fromisoformat(row["created_at"]).timestamp())
+        if self.policy.coordinated and waited >= self.policy.starvation_interval_seconds * 6:
+            # Bounded aging can eventually outrank a continuous interactive
+            # stream; active work is never preempted.
+            return 101.0
         intervals = int(waited // self.policy.starvation_interval_seconds)
         boost = min(
             self.policy.starvation_boost_cap,
@@ -459,6 +486,10 @@ class JobQueue:
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
             claim_time = time.time()
+            if self.policy.coordinated:
+                from .home_eco import resource_observation
+                if resource_observation()['admission'] in {'WAITING_FOR_CAPACITY', 'INVALID_CONFIGURATION'}:
+                    return None
             c.create_function(
                 "effective_priority", 2,
                 lambda priority, created_at: self._effective_priority(
@@ -470,6 +501,9 @@ class JobQueue:
             # Equal timestamps must tie-break by insertion order (rowid), never
             # by the random job id, so FIFO scheduling stays deterministic.
             where = "status='queued'" if held_job_id is None else "status='held' AND id=?"
+            if self.policy.coordinated:
+                where += " AND not_before <= " + str(claim_time)
+                where += " AND COALESCE(lifecycle_state,'QUEUED') NOT IN ('PAUSED','BLOCKED')"
             cursor=c.execute("""SELECT * FROM compute_jobs WHERE """ + where + """
                 ORDER BY effective_priority(priority,created_at) DESC,
                          priority DESC,created_at,rowid""", () if held_job_id is None else (held_job_id,))
@@ -505,6 +539,16 @@ class JobQueue:
                              lease_until=?,cloud_inflight=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status IN ('queued','held')""",
                           (provider.name,reason,estimate,lease,int(provider.kind=='cloud'),ts,ts,row["id"]))
                 if changed.rowcount:
+                    if self.policy.coordinated:
+                        from .home_eco import ExecutionBudget
+                        budget = ExecutionBudget.for_job(dict(row))
+                        timing = json.loads(row['timings_json'] or '{}')
+                        timing.update(admitted_at=claim_time,
+                                      queue_wait_seconds=max(0, claim_time-timing.get('queued_at', claim_time)),
+                                      budget=asdict(budget))
+                        c.execute("UPDATE compute_jobs SET lifecycle_state='ADMITTED',timings_json=?,local_inflight=?,lease_until=?,started_at=? WHERE id=?",
+                                  (json.dumps(timing), int(provider.kind == 'local'), claim_time+budget.total+30, ts, row['id']))
+                        self._event(c, row['id'], 'lifecycle', {'phase': 'ADMITTED', 'queue_wait_seconds': timing['queue_wait_seconds']})
                     self._event(c,row["id"],"claimed",{"worker":worker_id,"provider":provider.name,"reason":reason})
                     return dict(c.execute("SELECT * FROM compute_jobs WHERE id=?",(row["id"],)).fetchone())
         return None
@@ -512,6 +556,11 @@ class JobQueue:
     @traced('queue.claim',{'component':'compute-queue','operation':'claim-direct'})
     def claim_direct(self, job_id: str, providers: list[Provider]) -> dict | None:
         """Route and start one named job immediately; it never rests queued."""
+        if self.policy.coordinated:
+            # A caller cannot bypass HOME_ECO priority/admission by choosing a
+            # particular ID. The shared worker claims the next eligible job.
+            self.wake.set()
+            return None
         with self.lock, self.connect() as c:
             c.execute("BEGIN IMMEDIATE")
             row = c.execute("SELECT * FROM compute_jobs WHERE id=? AND status='queued'", (job_id,)).fetchone()
@@ -551,7 +600,7 @@ class JobQueue:
     def finish(self, job_id: str, *, result: str = "", error: str = "", input_tokens: int = 0,
                output_tokens: int = 0, actual_cost_usd: float = 0.0, retryable: bool = True,
                model_load_ns: int = 0, inference_ns: int = 0,
-               inference_receipt: dict | None = None) -> dict:
+                inference_receipt: dict | None = None, timing_metrics: dict | None = None) -> dict:
         with self.lock, self.connect() as c:
             row=c.execute("SELECT * FROM compute_jobs WHERE id=?",(job_id,)).fetchone()
             if not row: raise KeyError(job_id)
@@ -561,11 +610,16 @@ class JobQueue:
                 # itself cannot free a still-running request slot. Unknown remote
                 # billing remains reserved; this records client-request cleanup.
                 cost = row['actual_cost_usd'] if actual_cost_usd is None else max(0.0, float(actual_cost_usd))
-                c.execute("UPDATE compute_jobs SET cloud_inflight=0,lease_until=NULL,actual_cost_usd=?,input_tokens=?,output_tokens=?,updated_at=? WHERE id=?",
+                c.execute("UPDATE compute_jobs SET cloud_inflight=0,local_inflight=0,lease_until=NULL,actual_cost_usd=?,input_tokens=?,output_tokens=?,updated_at=? WHERE id=?",
                           (cost, input_tokens, output_tokens, utcnow(), job_id))
                 self._event(c, job_id, 'terminal_cloud_execution_settled', {'cost_usd': cost})
                 return dict(c.execute('SELECT * FROM compute_jobs WHERE id=?', (job_id,)).fetchone())
             if row["status"]!="running": raise ValueError("job is not running")
+            if self.policy.coordinated:
+                timing = json.loads(row['timings_json'] or '{}')
+                timing.update(timing_metrics or {})
+                timing['execution_finished_at'] = time.time()
+                c.execute('UPDATE compute_jobs SET timings_json=? WHERE id=?', (json.dumps(timing), job_id))
             if inference_receipt is not None:
                 c.execute('UPDATE compute_jobs SET inference_receipt=? WHERE id=?',
                           (json.dumps(inference_receipt,sort_keys=True,separators=(',',':'),allow_nan=False),job_id))
@@ -577,14 +631,27 @@ class JobQueue:
             elif error: status="failed"
             else: status="completed"
             c.execute("""UPDATE compute_jobs SET status=?,result=?,error=?,actual_cost_usd=?,input_tokens=?,output_tokens=?,
-                         provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,cloud_inflight=0,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
+                         provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,cloud_inflight=0,local_inflight=0,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
                       (status,result,error,cost,None if input_tokens is None else int(input_tokens),None if output_tokens is None else int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
             self._event(c,job_id,status,{"error":error,"cost_usd":cost,"attempt":row["attempts"],
                                        "model_load_ns":model_load_ns,"inference_ns":inference_ns})
+            if self.policy.coordinated:
+                phase = 'QUEUED' if status == 'queued' else status.upper()
+                if error and 'TIMEOUT' in error:
+                    phase = 'TIMED_OUT'
+                delay = min(120, 5 * 2 ** max(0, row['attempts']-1)) if status == 'queued' else 0
+                c.execute('UPDATE compute_jobs SET lifecycle_state=?,not_before=? WHERE id=?',
+                          (phase, time.time()+delay, job_id))
+                self._event(c, job_id, 'lifecycle', {'phase': phase, 'retry_backoff_seconds': delay})
         return self.get(job_id)
 
     def recover_expired(self) -> int:
         with self.lock, self.connect() as c:
+            if self.policy.coordinated:
+                # A dead executor may have persisted a terminal state before
+                # releasing ownership. Keep the lease until its finite cleanup
+                # deadline; never free an actively executing cancellation early.
+                c.execute("UPDATE compute_jobs SET local_inflight=0 WHERE local_inflight=1 AND status IN ('failed','cancelled','completed') AND lease_until IS NOT NULL AND lease_until<?", (time.time(),))
             held=c.execute("SELECT id FROM compute_jobs WHERE status='held' AND lease_until<?", (time.time(),)).fetchall()
             for row in held:
                 c.execute("UPDATE compute_jobs SET status='cancelled',actual_cost_usd=0,lease_until=NULL,error='undispatched reservation expired',updated_at=?,completed_at=? WHERE id=?",
@@ -599,6 +666,9 @@ class JobQueue:
                 c.execute("UPDATE compute_jobs SET status=?,provider=CASE WHEN cloud_inflight=1 THEN provider ELSE NULL END,lease_until=NULL,error='worker lease expired',updated_at=?,completed_at=? WHERE id=?",
                           (status,utcnow(),utcnow() if status=="failed" else None,row["id"]))
                 self._event(c,row["id"],"lease_expired",{"next_status":status})
+                if self.policy.coordinated and not row['cloud_inflight']:
+                    c.execute('UPDATE compute_jobs SET local_inflight=0,lifecycle_state=? WHERE id=?',
+                              ('RECOVERING' if status == 'queued' else 'FAILED', row['id']))
         return len(rows) + len(held)
 
     def requeue_orphaned_local(self, job_ids: list[str], *, reason: str = "worker process restarted") -> int:
@@ -636,7 +706,35 @@ class JobQueue:
             spend=self._daily_spend(c)
             running=[dict(r) for r in c.execute("SELECT id,agent,provider,ram_mb,vram_mb,started_at FROM compute_jobs WHERE status='running'")]
             inflight=[dict(r) for r in c.execute("SELECT id,agent,provider,status,lease_until FROM compute_jobs WHERE cloud_inflight=1")]
-        return {"statuses":statuses,"running":running,"cloud_inflight":inflight,"daily_spend_usd":spend,"policy":asdict(self.policy)}
+            stages=[dict(r) for r in c.execute("SELECT id,agent,lifecycle_state,local_inflight,timings_json FROM compute_jobs WHERE status IN ('queued','running') OR local_inflight=1")]
+            oldest=c.execute("SELECT min(created_at) FROM compute_jobs WHERE status='queued'").fetchone()[0]
+        return {"statuses":statuses,"running":running,"cloud_inflight":inflight,"daily_spend_usd":spend,"policy":asdict(self.policy),
+                'inference_lifecycle': stages, 'actual_local_slot_owners': sum(r['local_inflight'] for r in stages),
+                'oldest_queued_at': oldest}
+
+    def transition(self, job_id: str, phase: str) -> None:
+        if not self.policy.coordinated:
+            return
+        allowed = {'MODEL_LOADING', 'INFERENCING', 'POSTPROCESSING', 'PERSISTING'}
+        if phase not in allowed:
+            raise ValueError('Invalid execution phase')
+        with self.lock, self.connect() as c:
+            row = c.execute('SELECT status,lifecycle_state,timings_json FROM compute_jobs WHERE id=?', (job_id,)).fetchone()
+            if not row or row['status'] != 'running' or row['lifecycle_state'] == phase:
+                return
+            timing = json.loads(row['timings_json'] or '{}')
+            timing[phase.lower()+'_at'] = time.time()
+            c.execute('UPDATE compute_jobs SET lifecycle_state=?,timings_json=? WHERE id=?',
+                      (phase, json.dumps(timing), job_id))
+            self._event(c, job_id, 'lifecycle', {'phase': phase})
+
+    def settle_local(self, job_id: str) -> None:
+        """Release ownership only after the executing HTTP coroutine settled."""
+        if not self.policy.coordinated:
+            return
+        with self.lock, self.connect() as c:
+            c.execute('UPDATE compute_jobs SET local_inflight=0 WHERE id=?', (job_id,))
+        self.wake.set()
 
 
 class WorkerPool:
@@ -681,7 +779,7 @@ class WorkerPool:
             self.queue.wake.clear()
             self.queue.recover_expired();job=self.queue.claim(worker_id,self.providers)
             if not job:
-                self.queue.wake.wait(.5)
+                self.queue.wake.wait(5 if self.queue.policy.coordinated else .5)
                 continue
             provider=next(p for p in self.providers if p.name==job["provider"])
             if self.deep_spacing>0 and job.get("model_role","") in {"deep","evaluator"}:
@@ -691,7 +789,11 @@ class WorkerPool:
             with span('agent.job.execute',{'component':'compute-queue','provider':provider.name,
                                           'job_type':job.get('task_class','auto')}) as current:
                 try:
-                    deadline=max(30,int(job.get("timeout_seconds") or 300))
+                    if self.queue.policy.coordinated:
+                        from .home_eco import ExecutionBudget
+                        deadline = ExecutionBudget.for_job(job).total
+                    else:
+                        deadline=max(30,int(job.get("timeout_seconds") or 300))
                     with ThreadPoolExecutor(max_workers=1) as executor:
                         future=executor.submit(self.execute,job,provider)
                         try:
@@ -701,6 +803,7 @@ class WorkerPool:
                             outcome='TIMEOUT'
                             current.set_attribute('status','TIMEOUT')
                             continue
+                    self.queue.transition(job['id'], 'PERSISTING')
                     self.queue.finish(job["id"],**result)
                     outcome='OK'
                     current.set_attribute('status','OK')
@@ -720,10 +823,12 @@ class WorkerPool:
                             pass
                     else:
                         try:
-                            self.queue.finish(job["id"],error='LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,PermissionError))
+                            timeout = isinstance(exc, TimeoutError)
+                            self.queue.finish(job["id"],error='LOCAL_EXECUTION_TIMEOUT' if timeout else 'LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,(PermissionError, TimeoutError)))
                         except ValueError:
                             pass
                 finally:
+                    self.queue.settle_local(job['id'])
                     attributes={'component':'compute-queue','provider':provider.name,
                                 'job_type':job.get('task_class','auto'),'status':outcome}
                     record_counter('orqevia.agent.jobs',1,attributes)

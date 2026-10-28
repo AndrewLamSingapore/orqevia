@@ -19,6 +19,7 @@ import uuid
 from urllib.parse import urlsplit
 
 from .agent_registry import agent_record, registered_agent_ids
+from .home_eco import bounded_setting
 from .coaching_exercises import METHODS, VERSION, practice_request, review_practice
 
 PHASES = ('baseline', 'practice', 'acceptance')
@@ -390,7 +391,7 @@ class CoachingController:
             if row['program_id']=='role' and row['phase']=='acceptance' and row['baseline_request_sha256']!=request_hash:
                 return self.self_repair(db,row,'ACCEPTANCE_REQUEST_CHANGED')
             job = self.queue.submit(agent=row['agent'],prompt=prompt,priority='background',model_role='deep',model=self.model,
-                                    ram_mb=1024,vram_mb=0,timeout_seconds=300,max_retries=0,max_cost_usd=0,
+                                    ram_mb=1024,vram_mb=0,timeout_seconds=int(bounded_setting('ORQEVIA_COACHING_EXECUTION_SECONDS',1800,60,7200)),max_retries=0,max_cost_usd=0,
                                     allow_cloud=False,external_execution=False,classification='R0',
                                     data_classification='LOCAL_ONLY',task_class='classification',response_format='strict_json',
                                     response_schema=request.get('response_schema'),idempotency_key=key,

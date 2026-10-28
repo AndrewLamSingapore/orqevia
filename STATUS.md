@@ -1,5 +1,29 @@
 # STATUS.md — Portfolio status record
 
+## Selective-expert MoE and patient inference - 28 October 2026
+
+### Under implementation; source candidate only
+
+The Owner authorized implementation of selective agent activation, patient
+shared inference and computational-waste reduction. The MoE assessment is in
+docs/moe/README.md. Native neural MoE is an optional unperformed experiment;
+the existing default-one specialist selector is preserved.
+
+The source candidate adds opt-in HOME_ECO admission and lifecycle timing to
+the existing SQLite queue, bounded waiting count, priority aging, retry
+backoff, cancellation ownership and patient coaching budgets. A read-only
+runtime compliance command separates requested profile from deployed behavior.
+The first regression run passed137tests plus73subtests, including21 deterministic
+scheduler pipelines; three compliance-observer tests also passed. These are
+isolated source tests, not real-model quality or production acceptance.
+
+At08:13UTC the actual nine-service runtime still used direct scheduling and
+balanced compute settings. ULTRA_ECO was not deployed; duplicate prevention
+and actual inference-request-to-mission binding were not instrumented. No
+production restart, model installation or cloud acceptance call occurred.
+Cross-mission single-flight, resource calibration, real model-quality tests and
+controlled deployment remain pending. No runtime efficiency gain is claimed.
+
 ## Live dashboard and generic Codex preservation checkpoint - 27 October 2026
 
 ### Claimed, not independently checked
