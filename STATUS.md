@@ -1,6 +1,5 @@
 # STATUS.md — Portfolio status record
 
-
 ## Native acceleration candidate - 29 October 2026
 
 ### Claimed, not independently checked
