@@ -88,7 +88,8 @@ class AgentRequest(BaseModel):
     response_format: Literal['text','strict_json'] = 'text'
     response_schema: dict | None = None
     response_schema_order: Literal['canonical', 'declared'] = 'canonical'
-    deterministic_operation: Literal['sha256','json_format','json_validate','certification_role_review',
+    deterministic_operation: Literal['sha256','json_format','json_validate','schedule_single_slot',
+        'certification_role_review',
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
         'certification_artifact_review','certification_authority_event',
@@ -674,6 +675,9 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
                 if (runtime_snapshot() != runtime
                         or initialization_sha(agent_registry.REGISTRY_PATH.read_bytes()) != registry_sha):
                     raise ValueError('INITIALIZATION_DOMAINS_CHANGED')
+            elif body.deterministic_operation == 'schedule_single_slot':
+                from .deterministic_scheduling import solve_from_context
+                data = solve_from_context(body.context.encode('utf-8'))
             else:
                 data=build_report(task_id,root) if runtime_status else deterministic_ops.execute(body.deterministic_operation,body.context.encode())
         except (ValueError, UnicodeError):
