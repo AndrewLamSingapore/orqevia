@@ -346,6 +346,8 @@ def capture(profile):
     runtime_host = host.get("wsl_runtime", {})
     if (
         runtime_host.get("source") == "Get-Process/vmmemWSL.WorkingSet64"
+        and isinstance(host.get("boot_id"), str)
+        and bool(host.get("boot_id"))
         and runtime_host.get("process_count") == 1
         and runtime_host.get("boot_id") == host.get("boot_id")
     ):
