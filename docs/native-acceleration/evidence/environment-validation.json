@@ -1,0 +1,20 @@
+{
+  "scope": "POST_BENCHMARK_ENVIRONMENT_INVENTORY",
+  "python": "3.12.15",
+  "numpy": "2.5.4",
+  "psutil": "7.2.2",
+  "windows": "Windows11 26300",
+  "linux": "WSL2 6.18.33.2 glibc2.41 x86_64",
+  "baseline": "f37673b4ce618cc7cd672c987594f849d9985f02",
+  "candidate_source_normalized_sha256": {
+    "app/pif/core.py": "50fd4b82c22614f8fda691291beaef606a65cd6da2d8409f283ae86a5500f59c",
+    "app/pif/numpy_backend.py": "1f30ac7836188890a44b60430e9ecbb6035c7f103c92b3fb35825e77ce1e6b26"
+  },
+  "validation": {
+    "focused_suite": 129,
+    "additional_numerical_edge_cases": 2,
+    "additional_authority_registry_curriculum_capabilities_checks": 82,
+    "ruff_E9_F": "PASS",
+    "canonical_state": "CONSISTENT_STALE_NO_STATUS_PROMOTION"
+  }
+}

@@ -94,3 +94,6 @@ governance/observations/abex-dell-reconciliation-20261013.json -text
 
 # Preserve the follow-up integration receipt bytes.
 governance/observations/abex-integration-followup-20261013.json -text
+
+# Keep measured29October receipts byte-identical across Windows/Git exports.
+docs/native-acceleration/evidence/*.json text eol=lf

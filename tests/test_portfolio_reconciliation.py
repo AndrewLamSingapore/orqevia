@@ -251,6 +251,18 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact source-only29October checkpoint. All older
+    # sections, Owner-only verification boundaries and frozen history stay pinned.
+    current_title = '## Native acceleration candidate - 29 October 2026'
+    assert after.count(current_title) == 1
+    current_start = after.index(current_title)
+    current_end = after.index("\n## ", current_start + len(current_title)) + 1
+    current_update = after[current_start:current_end].encode("utf-8")
+    assert len(current_update) == 665
+    assert hashlib.sha256(current_update).hexdigest() == "71effe4a60a9ca0a2985ffef1f4433466fe00c65d282f7dd411f8f0c4fae5dfe"
+    assert b"### Claimed, not independently checked" in current_update
+    assert b"### Verified" not in current_update
+    after = after[:current_start] + after[current_end:]
     # Exact current preservation note; all prior historical pins remain.
     checkpoint_title = '## Live dashboard and generic Codex preservation checkpoint - 27 October 2026'
     assert after.count(checkpoint_title) == 1

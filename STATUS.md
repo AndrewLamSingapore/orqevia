@@ -1,5 +1,17 @@
 # STATUS.md — Portfolio status record
 
+## Native acceleration candidate - 29 October 2026
+
+### Claimed, not independently checked
+
+Pinned mainf37673b4 was profiled on ABEX Windows/Linux Python3.12. No custom C++
+module is justified: existing NumPy improves wider persisted PIF fixture forecasts,
+and exact Python CDF/reachability changes remove repeated work.129 focused tests
+passed. Eight-state service benefit is unproven; no production setting, model,
+agent identity, service or durable background pause changed. Source candidates
+and measured limits are in [the acceleration report](docs/native-acceleration/REPORT.md).
+This checkpoint does not promote production or portfolio verification status.
+
 ## Live dashboard and generic Codex preservation checkpoint - 27 October 2026
 
 ### Claimed, not independently checked
