@@ -10,6 +10,7 @@ Candidate source only. Production dispatch integration is the existing
 registry-v1 deterministic lane (`deterministic_operation='schedule_single_slot'`)
 and is not deployed until an approved release window.
 """
+
 from __future__ import annotations
 
 import json
@@ -147,15 +148,11 @@ def check_answer(answer: Any, jobs: Any, required_keys: Any = None) -> dict[str,
             raise SchedulingSpecError("required_keys reference unknown schedule fields")
         expected = {key: expected[key] for key in required}
     if not isinstance(answer, dict):
-        return {"match": False, "expected": expected, "observed": None,
-                "reason": "answer-is-not-an-object"}
+        return {"match": False, "expected": expected, "observed": None, "reason": "answer-is-not-an-object"}
     if set(answer) != set(expected):
-        return {"match": False, "expected": expected, "observed": answer,
-                "reason": "answer-keys-mismatch"}
-    if any(type(answer[key]) is not type(expected[key]) or answer[key] != expected[key]
-           for key in expected):
-        return {"match": False, "expected": expected, "observed": answer,
-                "reason": "answer-values-or-types-mismatch"}
+        return {"match": False, "expected": expected, "observed": answer, "reason": "answer-keys-mismatch"}
+    if any(type(answer[key]) is not type(expected[key]) or answer[key] != expected[key] for key in expected):
+        return {"match": False, "expected": expected, "observed": answer, "reason": "answer-values-or-types-mismatch"}
     return {"match": True, "expected": expected, "observed": answer, "reason": "exact-match"}
 
 
@@ -163,5 +160,8 @@ def oracle_agreement(expected: dict[str, Any], jobs: Any) -> dict[str, Any]:
     """Prove a fixed oracle equals the first-principles solution on its keys."""
     solved = solve_schedule(jobs)
     agreement = all(solved.get(key) == value for key, value in expected.items())
-    return {"agreement": bool(agreement), "expected": expected,
-            "deterministic": {key: solved.get(key) for key in expected}}
+    return {
+        "agreement": bool(agreement),
+        "expected": expected,
+        "deterministic": {key: solved.get(key) for key in expected},
+    }

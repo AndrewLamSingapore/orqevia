@@ -118,11 +118,11 @@ def test_check_answer_gate_accepts_the_exact_oracle_answer():
 
 
 def test_check_answer_gate_is_type_strict():
-    floats = {key: float(value) for key, value in DEEP_TRIAL_ORACLE.items()
-              if key != "waiting_consumes_execution_budget"}
+    floats = {
+        key: float(value) for key, value in DEEP_TRIAL_ORACLE.items() if key != "waiting_consumes_execution_budget"
+    }
     floats["waiting_consumes_execution_budget"] = False
-    assert check_answer(floats, DEEP_TRIAL_JOBS,
-                        required_keys=list(DEEP_TRIAL_ORACLE))["match"] is False
+    assert check_answer(floats, DEEP_TRIAL_JOBS, required_keys=list(DEEP_TRIAL_ORACLE))["match"] is False
 
 
 def test_full_schedule_gate_requires_every_job_key():
@@ -188,8 +188,7 @@ def test_dispatch_end_to_end_schedule_single_slot(tmp_path, monkeypatch):
         assert body["state"] == "COMPLETED"
         assert body["execution_model"] == "DETERMINISTIC"
         assert body["model_calls"] == 0
-        artifact = client.get(f"/api/artifacts/{body['artifact']['artifact_id']}",
-                              headers=headers)
+        artifact = client.get(f"/api/artifacts/{body['artifact']['artifact_id']}", headers=headers)
     assert artifact.status_code == 200, artifact.text
     solved = json.loads(artifact.content)
     assert solved == solve_schedule(DEEP_TRIAL_JOBS)
