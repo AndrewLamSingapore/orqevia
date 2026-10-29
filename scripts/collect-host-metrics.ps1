@@ -129,6 +129,20 @@ try {
     } else { $wslRuntime.reason = 'SINGLE_WSL_VM_NOT_OBSERVED' }
 } catch { $wslRuntime.reason = Get-CollectionReason $_ }
 $wslRuntime.captured_at = Get-EpochNow
+$resourceCpu = New-Observation 'Get-Counter/Processor(_Total).PercentProcessorTime'
+$resourceCpu.percent = $null
+$resourceCpu.boot_id = $bootId
+try {
+    $nativeSets = @(Get-Counter -Counter '\Processor(_Total)\% Processor Time' -SampleInterval 1 -MaxSamples 2 -ErrorAction Stop)
+    $nativeSample = @($nativeSets[-1].CounterSamples)[-1]
+    $busy = [double]$nativeSample.CookedValue
+    if ($nativeSample.Status -eq 0 -and $busy -ge 0 -and $busy -le 100 -and -not [double]::IsNaN($busy) -and -not [double]::IsInfinity($busy)) {
+        $resourceCpu.percent = $busy
+        $resourceCpu.collection_status = 'OBSERVED'
+        $resourceCpu.reason = $null
+    } else { $resourceCpu.reason = 'NATIVE_CPU_SAMPLE_INVALID' }
+} catch { $resourceCpu.reason = Get-CollectionReason $_ }
+$resourceCpu.captured_at = Get-EpochNow
 
 $disk = New-Observation 'Win32_LogicalDisk.Size/FreeSpace'
 $disk.device = if ($env:SystemDrive) { [string]$env:SystemDrive } else { 'C:' }
@@ -313,6 +327,7 @@ $receipt = [ordered]@{
     cpu = $cpu
     memory = $memory
     wsl_runtime = $wslRuntime
+    resource_cpu = $resourceCpu
     disk = $disk
     network = $network
     gpu = if ($resourceSensors) { $resourceSensors.gpu } else { @{ collection_status='UNAVAILABLE'; available_bytes=$null } }

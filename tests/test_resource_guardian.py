@@ -295,6 +295,41 @@ def test_capture_rejects_wrong_host_and_respects_field_timestamps(tmp_path):
         capture(Profile(data))
 
 
+def test_native_busy_time_is_named_fresh_and_falls_back_when_unavailable(tmp_path):
+    from app.resource_guardian import capture
+
+    now = time.time()
+    data = copy.deepcopy(profile().data)
+    path = tmp_path / "host.json"
+    data["host_metrics_path"] = str(path)
+    host = {
+        "schema": "orqevia.host-metrics.v1",
+        "collector_id": "abex-host-metrics-v1",
+        "captured_at": now,
+        "boot_id": "fixture-boot",
+        "cpu_percent": 95,
+        "field_status": {"cpu_percent": {"collection_status": "OBSERVED", "captured_at": now}},
+        "memory": {"available_bytes": 12 * GIB, "collection_status": "OBSERVED", "captured_at": now},
+        "resource_cpu": {
+            "percent": 15,
+            "collection_status": "OBSERVED",
+            "captured_at": now,
+            "boot_id": "fixture-boot",
+            "source": "Get-Counter/Processor(_Total).PercentProcessorTime",
+        },
+    }
+    path.write_text(json.dumps(host))
+    sample = capture(Profile(data))
+    assert sample.cpu_percent == 15 and sample.cpu_source.startswith("Get-Counter/")
+    host["resource_cpu"]["captured_at"] = now - 1000
+    path.write_text(json.dumps(host))
+    assert capture(Profile(data)).cpu_percent == 95
+    host["resource_cpu"]["captured_at"] = now
+    host["resource_cpu"]["boot_id"] = "other-boot"
+    path.write_text(json.dumps(host))
+    assert capture(Profile(data)).cpu_percent == 95
+
+
 def test_restarting_guardian_and_changing_modes_preserves_owner_resume(tmp_path):
     g = guardian()
     path = tmp_path / "resumed.db"

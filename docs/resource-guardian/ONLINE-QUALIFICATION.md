@@ -106,6 +106,15 @@ pins and a5%memory recovery buffer. The default buffer remains20%for other
 profiles. This is device-specific calibration requiring new cold/warm validation,
 not a claim about thermal safety, arbitrary workloads or semantic model quality.
 
+The next idle comparison observed Windows nativeProcessorTime14.56-15.31%, while
+recent WMI LoadPercentage samples caused85%busy deferrals with no active model.
+The existing sampler now adds a separate named native busy-time observation;
+Guardian prefers it only with valid source, same-boot identity and freshness.
+Legacy telemetry is retained and is the conservative fallback if native data is
+unavailable. Busy/recovery thresholds remain85/65. This avoids mislabelling the
+two observations or weakening a CPU threshold. See Microsoft's
+[Get-Counter documentation](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-counter?view=powershell-5.1).
+
 ## Deployment and rollback scope
 
 Use the existing backend/coordinator. An optional readonly bind to only Ollama's

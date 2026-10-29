@@ -67,6 +67,7 @@ class Observation:
     resident_credit_bytes: int = 0
     runtime_identity_valid: bool | None = None
     runtime_host_resident_bytes: int | None = None
+    cpu_source: str | None = None
 
 
 @dataclass(frozen=True)
@@ -321,6 +322,25 @@ def capture(profile):
         now=now,
         maximum=100,
     )
+    cpu_source = SOURCES["cpu"] if cpu is not None else None
+    native_cpu = host.get("resource_cpu", {})
+    native_source = "Get-Counter/Processor(_Total).PercentProcessorTime"
+    if (
+        native_cpu.get("source") == native_source
+        and host.get("boot_id")
+        and native_cpu.get("boot_id") == host["boot_id"]
+    ):
+        native, _ = _measurement(
+            native_cpu.get("percent"),
+            raw=native_cpu,
+            source=native_source,
+            stamp=native_cpu.get("captured_at"),
+            receipt_stamp=captured,
+            now=now,
+            maximum=100,
+        )
+        if native is not None:
+            cpu, cpu_source = native, native_source
     memory = host.get("memory", {})
     available, _ = _measurement(
         memory.get("available_bytes"),
@@ -387,6 +407,7 @@ def capture(profile):
         resident_credit_bytes=resident_bytes,
         runtime_identity_valid=capture_runtime_identity(profile),
         runtime_host_resident_bytes=runtime_host_resident,
+        cpu_source=cpu_source,
     )
 
 
