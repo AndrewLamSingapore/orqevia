@@ -1,3 +1,9 @@
+> Current ABEX runtime, 29 October 2026: Guardian is deployed and enforced in
+> persistent HOME_ECO, with Owner-resumed OPEN generation1. Offline backup and
+> logging remain parked. [Live acceptance](LIVE-ACCEPTANCE-20261029.md) supersedes
+> the earlier candidate-only or paused-state statements below. Earlier measurements
+> and failure records remain dated evidence, not current deployment instructions.
+
 # Capacity and workload evidence
 
 These are registered logical identities, not a process count or current semantic quality certification. All 21 role-quality states remain UNVERIFIED in this mission. Shared dependencies are the existing backend/coordinator, durable task and evidence stores, task-qualified on-demand model/tool paths, and the HTTPS interface.

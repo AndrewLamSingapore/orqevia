@@ -1,5 +1,22 @@
 # STATUS.md — Portfolio status record
 
+## Resource Guardian live acceptance - 29 October 2026
+
+### Claimed, not independently checked
+
+ABEX deployed application source5247611ed3a8 in immutable image5eb620f737da.
+Guardian is enforced in HOME_ECO; a real backend/OTel restart preserved it and
+Owner-resumed OPEN generation1. All nine service roles run, all five declared
+health checks pass, and21logical roles retain one physical inference slot.
+Verified HTTPS17screen navigation, objective/artifact persistence and local1B/
+12Bcold/warm checks passed within the calibrated3GiB host/10%VM reserve.
+The prior4GiB gate failure is retained; bounded trials do not certify arbitrary
+workload safety or semantic role quality. Same-drive service rollback is qualified;
+off-device/data-volume recovery is not. Offline backup/logging remain parked.
+No original resources were deleted and no Windows restart occurred. All nine
+source CI checks passed; merge into main and C++ feature activation are not claimed.
+See [dated runtime acceptance](docs/resource-guardian/LIVE-ACCEPTANCE-20261029.md).
+
 ## Online Resource Guardian qualification - 29 October 2026
 
 ### Claimed, not independently checked

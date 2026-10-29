@@ -251,6 +251,17 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact dated runtime claim; all prior records remain pinned.
+    live_title = "## Resource Guardian live acceptance - 29 October 2026"
+    assert after.count(live_title) == 1
+    live_start = after.index(live_title)
+    live_end = after.index("\n## ", live_start + len(live_title)) + 1
+    live_update = after[live_start:live_end].encode("utf-8")
+    assert len(live_update) == 1046
+    assert hashlib.sha256(live_update).hexdigest() == "be2deff0585fd3ee36cd0e280019991a6c05cccc480600eb1247afb72000460e"
+    assert b"### Claimed, not independently checked" in live_update
+    assert b"### Verified" not in live_update
+    after = after[:live_start] + after[live_end:]
     # Admit only this exact claimed-only qualification record; all old bytes stay pinned.
     current_title = "## Online Resource Guardian qualification - 29 October 2026"
     assert after.count(current_title) == 1

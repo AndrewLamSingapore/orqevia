@@ -1,3 +1,9 @@
+> Current ABEX runtime, 29 October 2026: Guardian is deployed and enforced in
+> persistent HOME_ECO, with Owner-resumed OPEN generation1. Offline backup and
+> logging remain parked. [Live acceptance](LIVE-ACCEPTANCE-20261029.md) supersedes
+> the earlier candidate-only or paused-state statements below. Earlier measurements
+> and failure records remain dated evidence, not current deployment instructions.
+
 # Candidate deployment and rollback
 
 The source is based on the saved, unmerged PR 467 candidate. It must not be
