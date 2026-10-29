@@ -1,5 +1,18 @@
 # STATUS.md — Portfolio status record
 
+## Online Resource Guardian qualification - 29 October 2026
+
+### Claimed, not independently checked
+
+Owner confirmed DeepSeek collaboration and resumed normal production; the live
+admission record is generation1. Offline backup/logging are explicitly parked.
+This candidate corrects routed-model memory lookup, verified warm-model memory
+accounting, host-field provenance and event-driven capacity reuse. It preserves
+Owner admission in both states and introduces no deployment queue guard or new
+service. No production Guardian activation is claimed. Source tests, runtime
+observations and remaining release conditions are in
+[online qualification](docs/resource-guardian/ONLINE-QUALIFICATION.md).
+
 ## Selective-expert MoE and patient inference - 28 October 2026
 
 ### Under implementation; source candidate only

@@ -14,6 +14,7 @@ import logging
 import math
 import os
 from pathlib import Path
+import re
 import time
 
 MODES = {"Eco", "Balanced", "Performance", "Mission", "Recovery", "HOME_ECO", "ULTRA_ECO"}
@@ -34,6 +35,7 @@ class Workload:
     priority: int = 50
     gpu_memory_bytes: int = 0
     inference: bool = False
+    model: str | None = None
 
     def __post_init__(self):
         if self.lane not in {"inference", "tools", "build"}:
@@ -61,6 +63,8 @@ class Observation:
     host_boot_id: str | None = None
     commit_available_bytes: int | None = None
     disk_busy_percent: float | None = None
+    resident_model: str | None = None
+    resident_credit_bytes: int = 0
 
 
 @dataclass(frozen=True)
@@ -102,6 +106,18 @@ class Profile:
         for model, value in data.get("model_memory_bytes", {}).items():
             if not isinstance(model, str) or not model or type(value) is not int or value < 1:
                 raise ValueError("Explicit qualified model memory budget required")
+        for model, value in data.get("model_digests", {}).items():
+            if (
+                model not in data.get("model_memory_bytes", {})
+                or not isinstance(value, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", value)
+            ):
+                raise ValueError("Resident credit needs an exact qualified model digest")
+        if data.get("resident_memory_path"):
+            if type(data.get("qualified_context_tokens")) is not int or data["qualified_context_tokens"] < 1:
+                raise ValueError("Resident credit needs a qualified context envelope")
+            if type(data.get("resident_base_reserve_bytes")) is not int or data["resident_base_reserve_bytes"] < 1:
+                raise ValueError("Resident credit needs a measured non-model process reserve")
         # One heavy inference remains the qualified initial physical envelope.
         if data["qualified_concurrency"]["inference"] != 1:
             raise ValueError("Additional inference slots require a separately qualified implementation")
@@ -177,7 +193,17 @@ class Profile:
             return decision(False, "RESOURCE_OBSERVATION_INVALID", True)
         host_reserve = math.ceil(capacity["host_memory_bytes"] * self.data["reserve_fractions"]["host_memory"])
         runtime_reserve = math.ceil(capacity["runtime_memory_bytes"] * self.data["reserve_fractions"]["runtime_memory"])
-        required = workload.peak_memory_bytes + max(0, reserved_bytes)
+        # A measured peak is a total footprint, not another full allocation on
+        # every request. Only this exact model's verified live working set can
+        # offset its budget; explicit job RAM above that budget remains reserved.
+        credit = 0
+        if workload.inference and workload.model is not None and workload.model == observation.resident_model:
+            if type(observation.resident_credit_bytes) is not int or observation.resident_credit_bytes < 0:
+                return decision(False, "RESOURCE_OBSERVATION_INVALID", True)
+            credit = min(
+                observation.resident_credit_bytes, self.data.get("model_memory_bytes", {}).get(workload.model, 0)
+            )
+        required = max(0, workload.peak_memory_bytes - credit) + max(0, reserved_bytes)
         if observation.host_available_bytes - required < host_reserve:
             return decision(False, "WAITING_FOR_HOST_MEMORY", True)
         if observation.commit_available_bytes is not None and required > observation.commit_available_bytes:
@@ -226,9 +252,48 @@ class Profile:
 def capture(profile):
     """Read existing host telemetry plus immediate process/VM memory headroom."""
     data = profile.data
-    host = json.loads(Path(data["host_metrics_path"]).read_text(encoding="utf-8-sig"))
-    available = host.get("memory", {}).get("available_bytes")
+    raw = Path(data["host_metrics_path"]).read_bytes()
+    if len(raw) > 131072:
+        raise ValueError("Oversized host receipt")
+    host = json.loads(raw.decode("utf-8-sig"))
+    if host.get("schema") != "orqevia.host-metrics.v1" or host.get("collector_id") != "abex-host-metrics-v1":
+        raise ValueError("Unknown host receipt provenance")
+    if data.get("host_id") and host.get("host_id") != data["host_id"]:
+        raise ValueError("Host receipt identity mismatch")
     captured = host.get("captured_at", 0)
+    from .host_metrics import SOURCES, _measurement
+
+    now = time.time()
+    cpu_field = host.get("field_status", {}).get("cpu_percent", {})
+    cpu, _ = _measurement(
+        host.get("cpu_percent"),
+        raw=cpu_field,
+        source=SOURCES["cpu"],
+        stamp=cpu_field.get("captured_at", captured),
+        receipt_stamp=captured,
+        now=now,
+        maximum=100,
+    )
+    memory = host.get("memory", {})
+    available, _ = _measurement(
+        memory.get("available_bytes"),
+        raw=memory,
+        source=SOURCES["memory"],
+        stamp=memory.get("captured_at", captured),
+        receipt_stamp=captured,
+        now=now,
+        integer=True,
+    )
+    disk = host.get("disk", {})
+    disk_available, _ = _measurement(
+        disk.get("available_bytes"),
+        raw=disk,
+        source=SOURCES["disk"],
+        stamp=disk.get("captured_at", captured),
+        receipt_stamp=captured,
+        now=now,
+        integer=True,
+    )
     # The command adapter runs natively on Windows; psutil is an existing
     # project dependency. Linux uses the mounted host receipt unchanged.
     if os.name == "nt":
@@ -241,18 +306,88 @@ def capture(profile):
         runtime_available = next(int(line.split()[1]) * 1024 for line in lines if line.startswith("MemAvailable:"))
     except (OSError, ValueError, StopIteration):
         pass
+    resident_model, resident_bytes = capture_resident_credit(profile)
     return Observation(
         captured,
         available,
-        host.get("cpu_percent"),
+        cpu,
         runtime_available,
-        host.get("disk", {}).get("available_bytes"),
+        disk_available,
         host.get("gpu", {}).get("available_bytes"),
         host.get("thermal", {}).get("maximum_c"),
         host_boot_id=host.get("boot_id"),
         commit_available_bytes=host.get("memory", {}).get("commit_available_bytes"),
         disk_busy_percent=host.get("disk", {}).get("busy_percent"),
+        resident_model=resident_model,
+        resident_credit_bytes=resident_bytes,
     )
+
+
+def resident_credit(profile, before, after, current, memory_stat, *, now=None):
+    """Pure validation of the existing runtime's model and readonly cgroup view."""
+    data = profile.data
+    if not isinstance(before, list) or len(before) != 1 or before != after:
+        return None, 0
+    model = before[0]
+    if not isinstance(model, dict):
+        return None, 0
+    name = model.get("name")
+    if name not in data.get("model_memory_bytes", {}) or model.get("digest") != data.get("model_digests", {}).get(name):
+        return None, 0
+    context = model.get("context_length")
+    if type(context) is not int or not 0 < context <= data.get("qualified_context_tokens", 0):
+        return None, 0
+    try:
+        expiry = datetime.fromisoformat(model["expires_at"].replace("Z", "+00:00"))
+        if expiry.tzinfo is None or expiry.utcoffset() is None:
+            return None, 0
+        expires = expiry.timestamp()
+        if expires <= (time.time() if now is None else now) + 5:
+            return None, 0
+    except (ValueError, TypeError, KeyError, OverflowError):
+        return None, 0
+    inactive = memory_stat.get("inactive_file")
+    if (
+        type(current) is not int
+        or type(inactive) is not int
+        or not 0 <= inactive <= current <= data["hardware"]["runtime_memory_bytes"]
+    ):
+        return None, 0
+    # Use the live working set, excluding reclaimable inactive file cache and
+    # the explicitly budgeted server overhead. Do not credit virtual/model size.
+    allocated = max(0, current - inactive - data["resident_base_reserve_bytes"])
+    return name, min(allocated, data["model_memory_bytes"][name])
+
+
+def capture_resident_credit(profile):
+    directory = profile.data.get("resident_memory_path")
+    if not directory:
+        return None, 0
+    try:
+        import urllib.request
+        from .settings import SETTINGS
+
+        if SETTINGS.context_tokens > profile.data["qualified_context_tokens"]:
+            return None, 0
+
+        # Reuse the established private inference transport unchanged. No new
+        # endpoint, credentials, model request or additional monitor is installed.
+        def models():
+            with urllib.request.urlopen(SETTINGS.ollama_base_url.rstrip("/") + "/api/ps", timeout=0.5) as response:
+                value = json.loads(response.read(131072))
+            fields = ("name", "digest", "context_length", "expires_at")
+            return [{key: model.get(key) for key in fields} for model in value.get("models", [])]
+
+        before = models()
+        root = Path(directory)
+        current = int((root / "memory.current").read_text(encoding="ascii").strip())
+        stat = {
+            key: int(value)
+            for key, value in (line.split() for line in (root / "memory.stat").read_text(encoding="ascii").splitlines())
+        }
+        return resident_credit(profile, before, models(), current, stat)
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None, 0  # Unknown residency retains the conservative full budget.
 
 
 class ResourceGuardian:
@@ -339,13 +474,16 @@ class ResourceGuardian:
         # mode change cannot bypass the background pause by routing off host.
         local = provider.kind == "local"
         observation = self.observe()
-        budget = self.profile.data.get("model_memory_bytes", {}).get(job.get("model"), 0)
+        # Admission follows the resolved provider. Ordinary jobs may select a
+        # role/automatic routing and deliberately leave requested model empty.
+        budget = self.profile.data.get("model_memory_bytes", {}).get(provider.model, 0)
         workload = Workload(
             "inference",
             max(int(job["ram_mb"]) * 1048576, int(budget)) if local else 1048576,
             priority=int(job["priority"]),
             gpu_memory_bytes=int(job["vram_mb"]) * 1048576 if local else 0,
             inference=True,
+            model=provider.model if local else None,
         )
         active = db.execute(
             "SELECT count(*) FROM compute_jobs WHERE status='running' OR local_inflight=1 OR cloud_inflight=1"

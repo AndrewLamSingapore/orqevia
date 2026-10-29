@@ -2,6 +2,9 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from datetime import datetime, timezone
+import copy
+import json
 import math
 import subprocess
 import sys
@@ -115,6 +118,170 @@ def test_modes_persist_without_clearing_owner_pause(tmp_path):
             g.set_mode(db, mode)
             assert g.status(db)["mode"] == mode
             assert tuple(db.execute("SELECT paused,generation FROM compute_background_admission").fetchone()) == (1, 0)
+
+
+@pytest.mark.parametrize("requested_model", ["", "gemma3:12b"])
+def test_routed_model_budget_uses_actual_provider_without_changing_requested_job(tmp_path, requested_model):
+    g = guardian()
+    path = tmp_path / "routed.db"
+    queue = JobQueue(path, guardian=g)
+    BackgroundAdmission(path).install_paused(actor="TEST", reason="Fixture initial state")
+    provider = Provider("ollama-deep", "local", "gemma3:12b", 4096, 0, 1)
+    job = queue.submit(
+        agent="a17",
+        prompt="deterministic fixture",
+        model=requested_model,
+        model_role="deep",
+        priority="high",
+        ram_mb=128,
+    )
+    claimed = queue.claim_direct(job["id"], [provider])
+    assert claimed is not None
+    assert claimed["provider"] == provider.name
+    assert claimed["model"] == requested_model
+    with queue.connect() as db:
+        assert tuple(db.execute("SELECT paused,generation FROM compute_background_admission").fetchone()) == (1, 0)
+
+
+def resident_fixture():
+    from app.resource_guardian import resident_credit
+
+    data = copy.deepcopy(profile().data)
+    data.update(
+        model_memory_bytes={"gemma3:12b": 6 * GIB},
+        model_digests={"gemma3:12b": "a" * 64},
+        qualified_context_tokens=8192,
+        resident_base_reserve_bytes=128 * MIB,
+    )
+    p = Profile(data)
+    model = [
+        {
+            "name": "gemma3:12b",
+            "digest": "a" * 64,
+            "context_length": 8192,
+            "expires_at": datetime.fromtimestamp(time.time() + 120, timezone.utc).isoformat(),
+        }
+    ]
+    return p, model, resident_credit
+
+
+def test_verified_warm_model_is_not_counted_twice_or_credited_to_other_work():
+    p, model, validate = resident_fixture()
+    name, credit = validate(p, model, model, 5 * GIB + 384 * MIB, {"inactive_file": 256 * MIB})
+    assert name == "gemma3:12b" and credit == 5 * GIB
+    sample = replace(
+        observation(),
+        host_available_bytes=5 * GIB,
+        runtime_available_bytes=3 * GIB,
+        resident_model=name,
+        resident_credit_bytes=credit,
+    )
+    work = Workload("inference", 6 * GIB, inference=True, model=name)
+    assert p.decide(sample, work).admitted
+    assert not p.decide(replace(sample, resident_credit_bytes=0), work).admitted
+    assert not p.decide(sample, replace(work, model="other-model")).admitted
+    assert not p.decide(sample, replace(work, lane="tools", inference=False)).admitted
+    assert not p.decide(sample, work, reserved_bytes=3 * GIB).admitted
+
+
+@pytest.mark.parametrize("change", ["digest", "context", "changed", "expired", "counter"])
+def test_unknown_or_changed_residency_keeps_full_memory_budget(change):
+    p, model, validate = resident_fixture()
+    before = copy.deepcopy(model)
+    current = 5 * GIB
+    if change == "digest":
+        model[0]["digest"] = "b" * 64
+        before = copy.deepcopy(model)
+    elif change == "context":
+        model[0]["context_length"] = 32768
+        before = copy.deepcopy(model)
+    elif change == "changed":
+        model[0]["name"] = "other-model"
+    elif change == "expired":
+        model[0]["expires_at"] = datetime.fromtimestamp(time.time() - 1, timezone.utc).isoformat()
+        before = copy.deepcopy(model)
+    elif change == "counter":
+        current = float("nan")
+    assert validate(p, before, model, current, {"inactive_file": 0}) == (None, 0)
+
+
+def test_capture_rejects_wrong_host_and_respects_field_timestamps(tmp_path):
+    from app.resource_guardian import capture
+
+    now = time.time()
+    receipt = {
+        "schema": "orqevia.host-metrics.v1",
+        "collector_id": "abex-host-metrics-v1",
+        "host_id": "fixture-host",
+        "captured_at": now,
+        "cpu_percent": 10,
+        "field_status": {"cpu_percent": {"collection_status": "OBSERVED", "captured_at": now - 1000}},
+        "memory": {"available_bytes": 12 * GIB, "captured_at": now, "collection_status": "OBSERVED"},
+    }
+    path = tmp_path / "host.json"
+    path.write_text(json.dumps(receipt))
+    data = copy.deepcopy(profile().data)
+    data.update(host_metrics_path=str(path), host_id="fixture-host")
+    sample = capture(Profile(data))
+    assert sample.cpu_percent is None
+    assert not profile().decide(sample, Workload("tools", MIB)).admitted
+    data["host_id"] = "different-host"
+    with pytest.raises(ValueError, match="identity mismatch"):
+        capture(Profile(data))
+
+
+def test_restarting_guardian_and_changing_modes_preserves_owner_resume(tmp_path):
+    g = guardian()
+    path = tmp_path / "resumed.db"
+    queue = JobQueue(path, guardian=g)
+    BackgroundAdmission(path).install_paused(actor="TEST", reason="Fixture")
+    with queue.connect() as db:
+        db.execute("UPDATE compute_background_admission SET paused=0,generation=1 WHERE id=1")
+    restarted = JobQueue(path, guardian=g)
+    for mode in MODES:
+        with restarted.connect() as db:
+            g.set_mode(db, mode)
+            assert tuple(db.execute("SELECT paused,generation FROM compute_background_admission").fetchone()) == (0, 1)
+
+
+def test_direct_resource_waiter_runs_when_capacity_is_released(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path / "api"))
+    monkeypatch.setenv("ORQEVIA_COMPUTE_QUEUE_DB", str(tmp_path / "api-default.db"))
+    from app import compute_queue_api as api
+
+    g = guardian()
+    queue = JobQueue(tmp_path / "event-driven.db", guardian=g)
+    BackgroundAdmission(queue.db_path).install_paused(actor="TEST", reason="Fixture")
+    provider = Provider("ollama-deep", "local", "gemma3:12b", 4096, 0, 1)
+    first = queue.submit(agent="a17", prompt="fixture", model_role="deep", priority="high", ram_mb=128)
+    second = queue.submit(agent="a18", prompt="fixture", model_role="deep", priority="high", ram_mb=128)
+    assert queue.claim_direct(first["id"], [provider])
+    attempted, completed = threading.Event(), threading.Event()
+    stop = threading.Event()
+
+    def dispatch(identifier):
+        claimed = queue.claim_direct(identifier, [provider])
+        attempted.set()
+        if claimed:
+            queue.finish(identifier, result="deterministic fixture result")
+            completed.set()
+
+    monkeypatch.setattr(api, "queue", queue)
+    monkeypatch.setattr(api, "_direct_stop", stop)
+    monkeypatch.setattr(api, "dispatch", dispatch)
+    worker = threading.Thread(target=api._direct_reap_loop)
+    worker.start()
+    try:
+        assert attempted.wait(2)
+        assert queue.get(second["id"])["status"] == "queued"
+        queue.finish(first["id"], result="first complete")
+        assert completed.wait(2), "The admitted successor must not wait for the15second fallback poll"
+        assert queue.get(second["id"])["status"] == "completed"
+    finally:
+        stop.set()
+        queue.wake.set()
+        worker.join(2)
+        assert not worker.is_alive()
 
 
 def test_direct_and_worker_claims_both_observe_pressure(tmp_path):

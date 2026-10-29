@@ -238,13 +238,14 @@ def dispatch(job_id: str) -> None:
 
 def _direct_reap_loop() -> None:
     while not _direct_stop.is_set():
+        queue.wake.clear()
         try:
             queue.recover_expired()
             for row in queue.list(status="queued", limit=500):
                 dispatch(row["id"])
         except Exception:
             pass
-        _direct_stop.wait(15)
+        queue.wake.wait(15)
 
 
 def authorize(authorization: str | None) -> None:
@@ -427,6 +428,7 @@ def start_compute_queue() -> None:
 def stop_compute_queue() -> None:
     if OUTPUT_QUEUE_MODE == "direct":
         _direct_stop.set()
+        queue.wake.set()
         if _reaper_thread: _reaper_thread.join(timeout=3)
         return
     pool.stop()

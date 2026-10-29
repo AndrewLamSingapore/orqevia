@@ -1,0 +1,18 @@
+{
+  "MemTotal": "16029336 kB",
+  "MemAvailable": "3198864 kB",
+  "MemFree": "219504 kB",
+  "Cached": "2980164 kB",
+  "SwapTotal": "4194304 kB",
+  "SwapFree": "4189908 kB",
+  "host_available_bytes": 6124834816,
+  "host_total_bytes": 33644036096,
+  "https_ready_latency_seconds": [
+    0.8687362000018766,
+    0.7759059999989404,
+    0.7752106999978423,
+    0.7225957999980892,
+    0.7033809999993537
+  ],
+  "scope": "LIVE_READONLY_DURING_OWNER_AUTHORIZED_BACKGROUND_WORK_NO_NEW_INFERENCE"
+}

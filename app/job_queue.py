@@ -662,6 +662,9 @@ class JobQueue:
                 c.execute('UPDATE compute_jobs SET lifecycle_state=?,not_before=? WHERE id=?',
                           (phase, time.time()+delay, job_id))
                 self._event(c, job_id, 'lifecycle', {'phase': phase, 'retry_backoff_seconds': delay})
+        # Completion frees capacity immediately for the existing dispatcher;
+        # resource deferral must not introduce a polling-sized extra wait.
+        self.wake.set()
         return self.get(job_id)
 
     def recover_expired(self) -> int:
