@@ -16,7 +16,7 @@ services:
         aliases: [intelligence]
     logging:
       driver: json-file
-      options: {max-size: 5m, max-file: '2'}
+      options: {max-size: '10m', max-file: '3'}
     healthcheck:
       test: [CMD, python, -B, -c, "import os,urllib.request; r=urllib.request.Request('http://127.0.0.1:8100/api/orqevia/intelligence/health',headers={'Authorization':'Bearer '+os.environ['ORQEVIA_SPINE_TOKEN']}); assert urllib.request.urlopen(r,timeout=3).status==200"]
       interval: 15s

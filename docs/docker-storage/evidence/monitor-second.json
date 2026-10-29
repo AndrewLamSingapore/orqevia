@@ -1,0 +1,642 @@
+{
+  "schema": "abex.docker.storage.v1",
+  "observed_at": "2026-10-29T02:19:31.111902+00:00",
+  "observed_epoch": 1793240371.111918,
+  "production_mutated": false,
+  "engine_version": "29.9.2",
+  "docker_root": "/var/lib/docker",
+  "default_log_driver": "local",
+  "container_count": 9,
+  "running_count": 9,
+  "image_count": 9,
+  "containers": [
+    {
+      "id": "2f72364be09fd1dbdbcf9b07a352ec737b3d6127dca89ea9eb9a53c41e02b611",
+      "name": "orqevia-epoch-20261016-otel-collector-1",
+      "image_id": "sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda",
+      "image_reference": "otel/opentelemetry-collector@sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.820616796Z",
+      "restart_count": 0,
+      "health": "NOT_CONFIGURED",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/2f72364be09fd1dbdbcf9b07a352ec737b3d6127dca89ea9eb9a53c41e02b611/2f72364be09fd1dbdbcf9b07a352ec737b3d6127dca89ea9eb9a53c41e02b611-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "otel-collector",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.otel-collector-20261022.yml",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "orqevia-otel-data",
+          "Source": "/var/lib/docker/volumes/orqevia-otel-data/_data",
+          "Destination": "/otel",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\deploy\\otel-collector.config.yaml",
+          "Destination": "/etc/otel/config.yaml",
+          "RW": false
+        }
+      ],
+      "networks": [],
+      "configuration_sha256": "b0f6a3ff7ce0b8343edb3e7ef277e22fb63291c20ee69bcb8126ad69bfcafcfb"
+    },
+    {
+      "id": "bf3df413b1bf19614f0dd768cc0c999a31d58ec7430d679b0ffb94ac25f62fe0",
+      "name": "orqevia-epoch-20261016-backend-1",
+      "image_id": "sha256:4c276e34db478dc89371be13c063561f556feb12ce1d371b15aff1d9ba5593cc",
+      "image_reference": "orqevia:observability-f37673b4",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.379699989Z",
+      "restart_count": 0,
+      "health": "healthy",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/bf3df413b1bf19614f0dd768cc0c999a31d58ec7430d679b0ffb94ac25f62fe0/bf3df413b1bf19614f0dd768cc0c999a31d58ec7430d679b0ffb94ac25f62fe0-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "backend",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.otel-collector-20261022.yml",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "orqevia-epoch-20261016-data",
+          "Source": "/var/lib/docker/volumes/orqevia-epoch-20261016-data/_data",
+          "Destination": "/data",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/ProgramData/ORQEVIA/inputs",
+          "Destination": "/run/orqevia-inputs",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\config\\provider-catalog.active.json",
+          "Destination": "/app/config/provider-catalog.active.json",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/ProgramData/ORQEVIA/secrets/hf_token",
+          "Destination": "/run/secrets/hf_token",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/Users/Admin/Documents/ABEX/secrets/higgsfield_api_key.txt",
+          "Destination": "/run/secrets/higgsfield_api_key",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "ba0538ce6fb39c51f607c4471c4124ed0c159010159239f5ba013a3012a6f0e0"
+    },
+    {
+      "id": "af7fb0dfc765d9ed61e39895fd51e8e9c8b8a4ef6d68dc9c73e755940d0ef874",
+      "name": "orqevia-epoch-20261016-interface-1",
+      "image_id": "sha256:feb8d833cca35026ac7af69b1d613b54bb353864c54eafc888c72ca73bd132a1",
+      "image_reference": "orqevia:observability-60c5c11a",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.369777845Z",
+      "restart_count": 0,
+      "health": "healthy",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/af7fb0dfc765d9ed61e39895fd51e8e9c8b8a4ef6d68dc9c73e755940d0ef874/af7fb0dfc765d9ed61e39895fd51e8e9c8b8a4ef6d68dc9c73e755940d0ef874-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "interface",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.otel-collector-20261022.yml",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "orqevia-epoch-20261016-data",
+          "Source": "/var/lib/docker/volumes/orqevia-epoch-20261016-data/_data",
+          "Destination": "/data",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/ProgramData/ABEX/PrimeHostMetrics/receipt",
+          "Destination": "/run/orqevia-host-metrics",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/Users/Admin/Documents/ABEX/LOCAL-SECRETS-OPEN/tls-orqevia-epoch-20261016/ca.crt",
+          "Destination": "/run/orqevia-tls/ca.crt",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/Users/Admin/Documents/ABEX/LOCAL-SECRETS-OPEN/tls-orqevia-epoch-20261016/server.crt",
+          "Destination": "/run/orqevia-tls/server.crt",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/Users/Admin/Documents/ABEX/LOCAL-SECRETS-OPEN/tls-orqevia-epoch-20261016/server.key",
+          "Destination": "/run/orqevia-tls/server.key",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/runtime/orqevia-epoch-20261016/deploy/unconfigured.mobileconfig",
+          "Destination": "/app/app/pwa_static/ORQEVIA-ABEX-HTTPS.mobileconfig",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "4353478d7cedf175278ee5224154b5c4b6aa9deaab0767a69784f2106cee6665"
+    },
+    {
+      "id": "99b40a50883114f36cceffb37285489a25ec908a035dd274dbc5d8f2e8894c5a",
+      "name": "orqevia-coaching-coaching-1",
+      "image_id": "sha256:73171676cd0904a9bf53502c1c68f578d2a2d996d5d01897802a28901f8121ab",
+      "image_reference": "orqevia-coaching:local-closure-b360da9",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.373788162Z",
+      "restart_count": 0,
+      "health": "healthy",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "2",
+          "max-size": "2m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/99b40a50883114f36cceffb37285489a25ec908a035dd274dbc5d8f2e8894c5a/99b40a50883114f36cceffb37285489a25ec908a035dd274dbc5d8f2e8894c5a-json.log",
+      "compose_project": "orqevia-coaching",
+      "compose_service": "coaching",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\deploy\\agent-coaching.compose.yml",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "orqevia-epoch-20261016-data",
+          "Source": "/var/lib/docker/volumes/orqevia-epoch-20261016-data/_data",
+          "Destination": "/data",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "/run/desktop/mnt/host/c/Users/Admin/Documents/ABEX/LOCAL-SECRETS-OPEN/tls-orqevia-epoch-20261016/ca.crt",
+          "Destination": "/run/orqevia-tls/ca.crt",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "f2bb4d017606455be197187535c7f5ff170b137c9a9bde2b808f725d2be9fcfe"
+    },
+    {
+      "id": "176c51feaf7324598ca7b9cb8e7535b5877b41a457ebbc08318a2ed3b996bbb3",
+      "name": "orqevia-epoch-20261016-ollama-1",
+      "image_id": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "image_reference": "ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.266045766Z",
+      "restart_count": 0,
+      "health": "healthy",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/176c51feaf7324598ca7b9cb8e7535b5877b41a457ebbc08318a2ed3b996bbb3/176c51feaf7324598ca7b9cb8e7535b5877b41a457ebbc08318a2ed3b996bbb3-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "ollama",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.otel-collector-20261022.yml",
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "orqevia-epoch-20261016-ollama",
+          "Source": "/var/lib/docker/volumes/orqevia-epoch-20261016-ollama/_data",
+          "Destination": "/root/.ollama",
+          "RW": true
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "031f06551296afeafbc1dbab2d3e12c676a99801205e05185118f478308cdc22"
+    },
+    {
+      "id": "116951de49b08ef9efb69325eab3ce4c25b037e510d2314fbe7ab0b19d1a7df0",
+      "name": "orqevia-intelligence-1",
+      "image_id": "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+      "image_reference": "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.38772532Z",
+      "restart_count": 0,
+      "health": "healthy",
+      "logging": {
+        "Type": "json-file",
+        "Config": {}
+      },
+      "log_path": "/var/lib/docker/containers/116951de49b08ef9efb69325eab3ce4c25b037e510d2314fbe7ab0b19d1a7df0/116951de49b08ef9efb69325eab3ce4c25b037e510d2314fbe7ab0b19d1a7df0-json.log",
+      "compose_project": null,
+      "compose_service": null,
+      "compose_files": null,
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "orqevia-intelligence-data",
+          "Source": "/var/lib/docker/volumes/orqevia-intelligence-data/_data",
+          "Destination": "/data",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/Users/Admin/Documents/ABEX/operations/open-access-20261016/intelligence-healthcheck.py",
+          "Destination": "/run/intelligence-healthcheck.py",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default",
+        "orqevia36-live-stage-93cafd8cd5c2-default"
+      ],
+      "configuration_sha256": "f8781ab7364529ce330e9ed8abf9e7566cd6855241eccf270180b36d4eac7919"
+    },
+    {
+      "id": "1a51d576505c943ebdfca2e285f9dd48669dcb7cdbb84c630d4c86286ff5e2e6",
+      "name": "orqevia-epoch-20261016-cloudflared-dual-1",
+      "image_id": "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "image_reference": "cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.344612262Z",
+      "restart_count": 0,
+      "health": "NOT_CONFIGURED",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/1a51d576505c943ebdfca2e285f9dd48669dcb7cdbb84c630d4c86286ff5e2e6/1a51d576505c943ebdfca2e285f9dd48669dcb7cdbb84c630d4c86286ff5e2e6-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "cloudflared-dual",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.reconcile-77cd1ad.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.otel-collector-20261022.yml,C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.dual-access-tunnel.yml",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\deploy\\cloudflared-dual\\config.yml",
+          "Destination": "/etc/cloudflared/config.yml",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/Users/Admin/Documents/ABEX/LOCAL-SECRETS-OPEN/tls-orqevia-epoch-20261016/ca.crt",
+          "Destination": "/etc/cloudflared/origin-ca.crt",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:/ProgramData/ORQEVIA/secrets/cloudflared-dual/tunnel-credentials.json",
+          "Destination": "/etc/cloudflared/tunnel-credentials.json",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "4f5c623a44ab930f8e909c0a039e0c064127db54390b7fe1cef5039c28ef0c09"
+    },
+    {
+      "id": "2225a2cc679fb4a3066ef7a9a21d7e483fe7192a8b90c3cd3c23caf58cd578ad",
+      "name": "orqevia-epoch-20261016-integration-gateway-1",
+      "image_id": "sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e",
+      "image_reference": "caddy@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.325819249Z",
+      "restart_count": 0,
+      "health": "NOT_CONFIGURED",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/2225a2cc679fb4a3066ef7a9a21d7e483fe7192a8b90c3cd3c23caf58cd578ad/2225a2cc679fb4a3066ef7a9a21d7e483fe7192a8b90c3cd3c23caf58cd578ad-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "integration-gateway",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\deploy\\Caddyfile",
+          "Destination": "/etc/caddy/Caddyfile",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "d0de0424a64afd3bde68d1d47d55dc522fe593d115fb7d943b9a5fcc23e8daa3"
+    },
+    {
+      "id": "84be19a1f28688cc4295311021be3921841929896d0551a3b7fec4dec926876d",
+      "name": "orqevia-epoch-20261016-cloudflared-1",
+      "image_id": "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "image_reference": "cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "status": "running",
+      "started_at": "2026-10-29T00:12:59.3494129Z",
+      "restart_count": 0,
+      "health": "NOT_CONFIGURED",
+      "logging": {
+        "Type": "json-file",
+        "Config": {
+          "max-file": "3",
+          "max-size": "10m"
+        }
+      },
+      "log_path": "/var/lib/docker/containers/84be19a1f28688cc4295311021be3921841929896d0551a3b7fec4dec926876d/84be19a1f28688cc4295311021be3921841929896d0551a3b7fec4dec926876d-json.log",
+      "compose_project": "orqevia-epoch-20261016",
+      "compose_service": "cloudflared",
+      "compose_files": "C:\\Users\\Admin\\Documents\\ABEX\\runtime\\orqevia-epoch-20261016\\docker-compose.yml",
+      "mounts": [
+        {
+          "Type": "bind",
+          "Name": null,
+          "Source": "C:\\Users\\Admin\\Documents\\ABEX\\LOCAL-SECRETS-OPEN\\tls-orqevia-epoch-20261016/ca.crt",
+          "Destination": "/run/orqevia-tls/ca.crt",
+          "RW": false
+        }
+      ],
+      "networks": [
+        "orqevia-epoch-20261016_default"
+      ],
+      "configuration_sha256": "e461282aa8a99f51878e24a2211b692d0c576cba08806c961d72ca0163ceba05"
+    }
+  ],
+  "images": [
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-10-27 15:34:10 +0800 +08",
+      "CreatedSince": "43 hours ago",
+      "Digest": "<none>",
+      "ID": "sha256:4c276e34db478dc89371be13c063561f556feb12ce1d371b15aff1d9ba5593cc",
+      "Repository": "orqevia",
+      "SharedSize": "N/A",
+      "Size": "628MB",
+      "Tag": "observability-f37673b4",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-10-27 14:45:54 +0800 +08",
+      "CreatedSince": "44 hours ago",
+      "Digest": "<none>",
+      "ID": "sha256:feb8d833cca35026ac7af69b1d613b54bb353864c54eafc888c72ca73bd132a1",
+      "Repository": "orqevia",
+      "SharedSize": "N/A",
+      "Size": "628MB",
+      "Tag": "observability-60c5c11a",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-10-27 11:34:30 +0800 +08",
+      "CreatedSince": "47 hours ago",
+      "Digest": "<none>",
+      "ID": "sha256:73171676cd0904a9bf53502c1c68f578d2a2d996d5d01897802a28901f8121ab",
+      "Repository": "orqevia-coaching",
+      "SharedSize": "N/A",
+      "Size": "617MB",
+      "Tag": "local-closure-b360da9",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-10-23 10:36:25 +0800 +08",
+      "CreatedSince": "6 days ago",
+      "Digest": "<none>",
+      "ID": "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+      "Repository": "orqevia-intelligence",
+      "SharedSize": "N/A",
+      "Size": "579MB",
+      "Tag": "capacity-release-20261023",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-10-22 00:21:00 +0800 +08",
+      "CreatedSince": "7 days ago",
+      "Digest": "<none>",
+      "ID": "sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda",
+      "Repository": "otel/opentelemetry-collector",
+      "SharedSize": "N/A",
+      "Size": "168MB",
+      "Tag": "latest",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-09-18 05:58:14 +0800 +08",
+      "CreatedSince": "5 weeks ago",
+      "Digest": "",
+      "ID": "sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e",
+      "Repository": "caddy",
+      "SharedSize": "N/A",
+      "Size": "88.8MB",
+      "Tag": "<none>",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "1",
+      "CreatedAt": "2026-09-18 05:37:49 +0800 +08",
+      "CreatedSince": "5 weeks ago",
+      "Digest": "",
+      "ID": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "Repository": "ollama/ollama",
+      "SharedSize": "N/A",
+      "Size": "9.19GB",
+      "Tag": "<none>",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "2",
+      "CreatedAt": "2026-09-11 21:49:50 +0800 +08",
+      "CreatedSince": "6 weeks ago",
+      "Digest": "",
+      "ID": "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "Repository": "cloudflare/cloudflared",
+      "SharedSize": "N/A",
+      "Size": "96.9MB",
+      "Tag": "<none>",
+      "UniqueSize": "N/A"
+    },
+    {
+      "Containers": "0",
+      "CreatedAt": "2026-04-17 07:53:26 +0800 +08",
+      "CreatedSince": "6 months ago",
+      "Digest": "<none>",
+      "ID": "sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+      "Repository": "alpine",
+      "SharedSize": "N/A",
+      "Size": "12.2MB",
+      "Tag": "3.20",
+      "UniqueSize": "N/A"
+    }
+  ],
+  "docker_usage": [
+    {
+      "Active": "8",
+      "Reclaimable": "12.18MB (0%)",
+      "Size": "10.77GB",
+      "TotalCount": "9",
+      "Type": "Images"
+    },
+    {
+      "Active": "9",
+      "Reclaimable": "0B (0%)",
+      "Size": "2.322MB",
+      "TotalCount": "9",
+      "Type": "Containers"
+    },
+    {
+      "Active": "4",
+      "Reclaimable": "0B (0%)",
+      "Size": "10.59GB",
+      "TotalCount": "4",
+      "Type": "Local Volumes"
+    },
+    {
+      "Active": "0",
+      "Reclaimable": "0B",
+      "Size": "0B",
+      "TotalCount": "0",
+      "Type": "Build Cache"
+    }
+  ],
+  "virtual_disks": [
+    {
+      "path": "C:\\Users\\Admin\\AppData\\Local\\Docker\\wsl\\disk\\docker_data.vhdx",
+      "exists": true,
+      "logical_bytes": 41087401984,
+      "allocated_bytes": 41087401984
+    },
+    {
+      "path": "C:\\Users\\Admin\\AppData\\Local\\Docker\\wsl\\main\\ext4.vhdx",
+      "exists": true,
+      "logical_bytes": 100663296,
+      "allocated_bytes": 100663296
+    }
+  ],
+  "windows_storage": {
+    "capacity_bytes": 999012954112,
+    "free_bytes": 706929528832
+  },
+  "volumes": [
+    {
+      "name": "orqevia-epoch-20261016-data",
+      "driver": "local"
+    },
+    {
+      "name": "orqevia-epoch-20261016-ollama",
+      "driver": "local"
+    },
+    {
+      "name": "orqevia-intelligence-data",
+      "driver": "local"
+    },
+    {
+      "name": "orqevia-otel-data",
+      "driver": "local"
+    }
+  ],
+  "recoverable_host_bytes": null,
+  "errors": [],
+  "linux": {
+    "filesystem": {
+      "capacity_bytes": 1081101176832,
+      "used_bytes": 23084666880,
+      "available_bytes": 1003024154624
+    },
+    "volumes": {
+      "orqevia-epoch-20261016-data": 1278500864,
+      "orqevia-epoch-20261016-ollama": 9208782848,
+      "orqevia-intelligence-data": 155648,
+      "orqevia-otel-data": 119975936
+    },
+    "logs": {
+      "2f72364be09fd1dbdbcf9b07a352ec737b3d6127dca89ea9eb9a53c41e02b611": 1711823,
+      "bf3df413b1bf19614f0dd768cc0c999a31d58ec7430d679b0ffb94ac25f62fe0": 1734021,
+      "af7fb0dfc765d9ed61e39895fd51e8e9c8b8a4ef6d68dc9c73e755940d0ef874": 470577,
+      "99b40a50883114f36cceffb37285489a25ec908a035dd274dbc5d8f2e8894c5a": 3957500,
+      "176c51feaf7324598ca7b9cb8e7535b5877b41a457ebbc08318a2ed3b996bbb3": 26843479,
+      "116951de49b08ef9efb69325eab3ce4c25b037e510d2314fbe7ab0b19d1a7df0": 2178012,
+      "1a51d576505c943ebdfca2e285f9dd48669dcb7cdbb84c630d4c86286ff5e2e6": 454614,
+      "2225a2cc679fb4a3066ef7a9a21d7e483fe7192a8b90c3cd3c23caf58cd578ad": 80586,
+      "84be19a1f28688cc4295311021be3921841929896d0551a3b7fec4dec926876d": 430485
+    }
+  },
+  "growth": {
+    "status": "OBSERVED_DELTA_NOT_RECLAIMABILITY",
+    "interval_seconds": 513.9236199855804,
+    "rates_bytes_per_day": {
+      "C:\\Users\\Admin\\AppData\\Local\\Docker\\wsl\\disk\\docker_data.vhdx": 0.0,
+      "C:\\Users\\Admin\\AppData\\Local\\Docker\\wsl\\main\\ext4.vhdx": 0.0,
+      "volumes:orqevia-epoch-20261016-ollama": 0.0,
+      "volumes:orqevia-otel-data": 28921738.993854843,
+      "volumes:orqevia-intelligence-data": 0.0,
+      "volumes:orqevia-epoch-20261016-data": 235505588.94996086,
+      "logs:bf3df413b1bf19614f0dd768cc0c999a31d58ec7430d679b0ffb94ac25f62fe0": 371205.355389878,
+      "logs:176c51feaf7324598ca7b9cb8e7535b5877b41a457ebbc08318a2ed3b996bbb3": 4362167.280933498,
+      "logs:116951de49b08ef9efb69325eab3ce4c25b037e510d2314fbe7ab0b19d1a7df0": 1357219.5806442415,
+      "logs:af7fb0dfc765d9ed61e39895fd51e8e9c8b8a4ef6d68dc9c73e755940d0ef874": 1208939.180529263,
+      "logs:2225a2cc679fb4a3066ef7a9a21d7e483fe7192a8b90c3cd3c23caf58cd578ad": 0.0,
+      "logs:84be19a1f28688cc4295311021be3921841929896d0551a3b7fec4dec926876d": 0.0,
+      "logs:2f72364be09fd1dbdbcf9b07a352ec737b3d6127dca89ea9eb9a53c41e02b611": 5149129.359094739,
+      "logs:1a51d576505c943ebdfca2e285f9dd48669dcb7cdbb84c630d4c86286ff5e2e6": 0.0,
+      "logs:99b40a50883114f36cceffb37285489a25ec908a035dd274dbc5d8f2e8894c5a": 1022664.0293644149
+    }
+  },
+  "warnings": [
+    "UNBOUNDED_JSON_LOG:orqevia-intelligence-1"
+  ],
+  "process_cpu_seconds": 0.0625,
+  "collection_seconds": 1.4863138999999137
+}

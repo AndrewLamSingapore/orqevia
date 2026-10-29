@@ -1,0 +1,19 @@
+{
+  "status": "PREPARED_NOT_APPLIED_RECREATION_REQUIRES_MAINTENANCE",
+  "expected_container_id": "116951de49b08ef9efb69325eab3ce4c25b037e510d2314fbe7ab0b19d1a7df0",
+  "expected_image_id": "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+  "expected_configuration_sha256": "f8781ab7364529ce330e9ed8abf9e7566cd6855241eccf270180b36d4eac7919",
+  "current_log_config": {
+    "Type": "json-file",
+    "Config": {}
+  },
+  "proposed_log_config": {
+    "Type": "json-file",
+    "Config": {
+      "max-size": "10m",
+      "max-file": "3"
+    }
+  },
+  "composition_owner": null,
+  "preserve_all_other_configuration": true
+}
