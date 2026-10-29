@@ -94,3 +94,6 @@ governance/observations/abex-dell-reconciliation-20261013.json -text
 
 # Preserve the follow-up integration receipt bytes.
 governance/observations/abex-integration-followup-20261013.json -text
+
+# Keep measured29October receipt hashes stable across platforms.
+docs/docker-storage/evidence/*.json text eol=lf

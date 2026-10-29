@@ -1,0 +1,26 @@
+{
+  "status": "PLAN_ONLY_NO_BACKUP_CREATED",
+  "virtual_disks": {
+    "data": {
+      "path": "C:\\Users\\Admin\\AppData\\Local\\Docker\\wsl\\disk\\docker_data.vhdx",
+      "exists": true,
+      "logical_bytes": 41087401984,
+      "allocated_bytes": 41087401984
+    },
+    "boot": {
+      "path": "C:\\Users\\Admin\\AppData\\Local\\Docker\\wsl\\main\\ext4.vhdx",
+      "exists": true,
+      "logical_bytes": 100663296,
+      "allocated_bytes": 100663296
+    }
+  },
+  "destination": "C:\\Users\\Admin\\Documents\\ABEX\\checkpoints\\docker-cold-backup-UNEXECUTED",
+  "required_copy_bytes": 41188065280,
+  "required_free_with_10_percent_margin": 45306871808,
+  "destination_free_bytes": 706899550208,
+  "all_sources_exist": true,
+  "capacity_sufficient": true,
+  "consistency": "UNVERIFIED_UNTIL_OFFLINE_EXCLUSIVE_COPY_AND_HASH_VERIFICATION",
+  "restore_qualification": "NOT_TESTED",
+  "background_pause_must_remain": true
+}

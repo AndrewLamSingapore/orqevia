@@ -1,5 +1,18 @@
 # STATUS.md — Portfolio status record
 
+## Docker storage resilience candidate - 29 October 2026
+
+### Claimed, not independently checked
+
+ABEX read-only collection accounts for9running baseline roles and4active volumes.
+On-demand monitoring, source-only Intelligence10m/3 logging policy, offline backup
+planning/verification helper and recovery/reclamation runbooks are prepared.
+9fixture tests and safe Compose parse pass. No container recreation, Docker/WSL
+shutdown, cleanup, VHDX copy or compaction occurred. Old rollback image tags are
+absent; consistency/recovery qualification and live logging require maintenance.
+See [Docker storage evidence](docs/docker-storage/HEALTH.md). This is no production
+or portfolio status promotion, and the explicit background pause is preserved.
+
 ## Live dashboard and generic Codex preservation checkpoint - 27 October 2026
 
 ### Claimed, not independently checked

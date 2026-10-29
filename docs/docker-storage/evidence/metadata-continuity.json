@@ -1,0 +1,27 @@
+{
+  "scope": "READONLY_CONTAINER_METADATA_CONTINUITY_NOT_DATABASE_RECOVERY_PROOF",
+  "containers_accounted_for": 9,
+  "unchanged_ids_images_starts_restarts_config_mounts_networks": {
+    "orqevia-epoch-20261016-otel-collector-1": true,
+    "orqevia-epoch-20261016-backend-1": true,
+    "orqevia-epoch-20261016-interface-1": true,
+    "orqevia-coaching-coaching-1": true,
+    "orqevia-epoch-20261016-ollama-1": true,
+    "orqevia-intelligence-1": true,
+    "orqevia-epoch-20261016-cloudflared-dual-1": true,
+    "orqevia-epoch-20261016-integration-gateway-1": true,
+    "orqevia-epoch-20261016-cloudflared-1": true
+  },
+  "all_preserved": true,
+  "volume_names_unchanged": true,
+  "logical_and_allocated_vhdx_unchanged": true,
+  "validation": {
+    "storage_fixture_tests": 12,
+    "additional_authority_checks": 36,
+    "total": 48,
+    "ruff_E9_F": "PASS",
+    "compose_fixture_parse": "PASS",
+    "cold_backup_executed": false,
+    "live_recreation_executed": false
+  }
+}

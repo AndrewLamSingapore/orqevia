@@ -1,0 +1,8 @@
+{
+  "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\release-qualification-20261023\\promote_intelligence_capacity.py",
+  "before_sha256": "9c4880bb96a92284699efbea04769f9871b37584d7c3a5864f768ab8aeaddace",
+  "after_sha256": "2597a03996885eac4d2150a6a1d306feef9c650b9a360323fb25abde6b7e52a9",
+  "backup": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\docker-storage-20261029\\before\\promote_intelligence_capacity.py",
+  "executed": false,
+  "change": "Set future recreated Intelligence HostConfig.LogConfig to json-file/10m/3; all other source retained"
+}

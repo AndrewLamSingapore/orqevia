@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "scope": "COMPOSE_PARSE_FIXTURE_ONLY_NOT_LIVE_RECREATION",
+  "logging": {
+    "driver": "json-file",
+    "options": {
+      "max-file": "3",
+      "max-size": "10m"
+    }
+  },
+  "secrets_used": false,
+  "containers_changed": false
+}
