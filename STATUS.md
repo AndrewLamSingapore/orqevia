@@ -456,6 +456,24 @@ STATUS.md is the human-readable portfolio status index: it records dated claims,
 
 STATUS.md records current portfolio status claims and their evidence classification. Each product owns its source, configuration, contracts, and domain records in its repository.
 
+## Resource Guardian candidate - 29 October 2026
+
+### Claimed, not independently checked
+
+The isolated `codex/resource-guardian-20261029` candidate extends the saved PR 467
+coordinator source with optional resource admission, persistent operating modes,
+owned tool/build execution and native Windows telemetry enrichment. The focused
+queue/host/profile/admission run passed 120 tests; the later resource-specific
+run passed 26 cases (overlapping coverage, not additive). A finite 252-file syntax
+workload completed across 21 logical identities at one and two owned processes.
+Short-command wrapper overhead was observed; no general throughput gain is claimed.
+See [the implementation report](docs/resource-guardian/REPORT.md).
+
+Production Guardian enforcement, model-memory qualification, protected sampler
+deployment and default HOME_ECO acceptance remain pending. Ordinary background
+admission remains paused and this source update does not grant resume or release.
+No item is promoted into an Owner-only Verified section.
+
 ## How to use this file
 
 One rule governs everything below:

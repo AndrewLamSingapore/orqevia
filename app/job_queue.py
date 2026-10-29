@@ -101,7 +101,7 @@ class Provider:
 class JobQueue:
     """SQLite queue with atomic leases and resource/cost admission control."""
 
-    def __init__(self, db_path: str | Path, policy: QueuePolicy | None = None):
+    def __init__(self, db_path: str | Path, policy: QueuePolicy | None = None, *, guardian=None):
         self.db_path = str(db_path)
         self.policy = policy or QueuePolicy.from_env()
         self.backend_endpoint = os.getenv('OLLAMA_BASE_URL', 'http://ollama:11434').rstrip('/')
@@ -109,6 +109,11 @@ class JobQueue:
         self.lock = threading.RLock()
         self.wake = threading.Event()
         self._init()
+        from .resource_guardian import ResourceGuardian
+        self.guardian = guardian if guardian is not None else ResourceGuardian.from_environment()
+        if self.guardian is not None:
+            with self.connect() as connection:
+                self.guardian.install(connection)
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
@@ -538,6 +543,10 @@ class JobQueue:
                         self._event(c,row["id"],"budget_blocked",{"reason":reason,"estimate":estimate})
                     continue
                 ts=utcnow();lease=time.time()+row["timeout_seconds"]+30
+                if self.guardian is not None:
+                    decision = self.guardian.admit(c, dict(row), provider)
+                    if not decision.admitted:
+                        continue
                 changed=c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
                              lease_until=?,cloud_inflight=?,attempts=attempts+1,started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status IN ('queued','held')""",
@@ -589,6 +598,10 @@ class JobQueue:
                     self._event(c, row["id"], "budget_blocked", {"reason": reason, "estimate": estimate})
                 return None
             ts = utcnow()
+            if self.guardian is not None:
+                decision = self.guardian.admit(c, dict(row), provider)
+                if not decision.admitted:
+                    return None
             lease = time.time() + row["timeout_seconds"] + 30
             changed = c.execute("""UPDATE compute_jobs SET status='running',provider=?,route_reason=?,estimated_cost_usd=?,
                              actual_cost_usd=NULL,input_tokens=NULL,output_tokens=NULL,
@@ -639,6 +652,8 @@ class JobQueue:
                       (status,result,error,cost,None if input_tokens is None else int(input_tokens),None if output_tokens is None else int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
             self._event(c,job_id,status,{"error":error,"cost_usd":cost,"attempt":row["attempts"],
                                        "model_load_ns":model_load_ns,"inference_ns":inference_ns})
+            if self.guardian is not None:
+                self.guardian.record_outcome(c, dict(row), cost)
             if self.policy.coordinated:
                 phase = 'QUEUED' if status == 'queued' else status.upper()
                 if error and 'TIMEOUT' in error:
@@ -712,9 +727,11 @@ class JobQueue:
             inflight=[dict(r) for r in c.execute("SELECT id,agent,provider,status,lease_until FROM compute_jobs WHERE cloud_inflight=1")]
             stages=[dict(r) for r in c.execute("SELECT id,agent,lifecycle_state,local_inflight,timings_json FROM compute_jobs WHERE status IN ('queued','running') OR local_inflight=1")]
             oldest=c.execute("SELECT min(created_at) FROM compute_jobs WHERE status='queued'").fetchone()[0]
+            resource_guardian = self.guardian.status(c) if self.guardian is not None else {'configured': False}
+            resource_estimates = self.guardian.estimates(c) if self.guardian is not None else []
         return {"statuses":statuses,"running":running,"cloud_inflight":inflight,"daily_spend_usd":spend,"policy":asdict(self.policy),
                 'inference_lifecycle': stages, 'actual_local_slot_owners': sum(r['local_inflight'] for r in stages),
-                'oldest_queued_at': oldest}
+                'oldest_queued_at': oldest, 'resource_guardian': resource_guardian, 'resource_estimates': resource_estimates}
 
     def transition(self, job_id: str, phase: str) -> None:
         if not self.policy.coordinated:

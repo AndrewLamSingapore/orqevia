@@ -271,6 +271,19 @@ $fieldStatus.network_latency_ms = [ordered]@{
     source = $network.latency_source
     captured_at = $network.latency_captured_at
 }
+$resourceSensors = $null
+$resourceSensorHelper = Join-Path $PSScriptRoot 'Get-ResourceSensors.ps1'
+if (Test-Path -LiteralPath $resourceSensorHelper -PathType Leaf) {
+    try {
+        . $resourceSensorHelper
+        $resourceSensors = Get-OrqeviaResourceSensors -ProbeThermal:($env:ORQEVIA_RESOURCE_THERMAL_PROBE -eq '1')
+        $memory.commit_available_bytes = $resourceSensors.memory.commit_available_bytes
+        $memory.committed_bytes = $resourceSensors.memory.committed_bytes
+        $memory.commit_limit_bytes = $resourceSensors.memory.commit_limit_bytes
+        $disk.busy_percent = $resourceSensors.disk.busy_percent
+        $disk.queue_length = $resourceSensors.disk.queue_length
+    } catch { $resourceSensors = $null }
+}
 $receipt = [ordered]@{
     schema = 'orqevia.host-metrics.v1'
     host_id = $env:COMPUTERNAME
@@ -287,6 +300,9 @@ $receipt = [ordered]@{
     memory = $memory
     disk = $disk
     network = $network
+    gpu = if ($resourceSensors) { $resourceSensors.gpu } else { @{ collection_status='UNAVAILABLE'; available_bytes=$null } }
+    thermal = if ($resourceSensors) { $resourceSensors.thermal } else { @{ collection_status='UNAVAILABLE'; maximum_c=$null } }
+    resource_sensors = $resourceSensors
 }
 $json = $receipt | ConvertTo-Json -Compress -Depth 8
 $encoding = [System.Text.UTF8Encoding]::new($false)

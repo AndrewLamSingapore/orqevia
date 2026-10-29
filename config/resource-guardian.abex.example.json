@@ -1,0 +1,76 @@
+{
+  "schema": "abex.resource-profile.v1",
+  "mode": "HOME_ECO",
+  "evidence": [
+    "read-only hardware audit 2026-10-29",
+    "16 half-second baseline observations; not thermal or model-memory qualification"
+  ],
+  "qualification": "CANDIDATE_ONLY_NOT_PRODUCTION_QUALIFIED",
+  "hardware": {
+    "logical_processors": 16,
+    "host_memory_bytes": 33644036096,
+    "runtime_memory_bytes": 16414040064,
+    "disk_bytes": 999012954112
+  },
+  "reserve_fractions": {
+    "host_memory": 0.2,
+    "runtime_memory": 0.1,
+    "disk": 0.1
+  },
+  "thresholds": {
+    "cpu_busy_percent": 85,
+    "cpu_recovery_percent": 65,
+    "temperature_c": null
+  },
+  "freshness_seconds": 150,
+  "qualified_concurrency": {
+    "inference": 1,
+    "tools": 2,
+    "build": 1
+  },
+  "modes": {
+    "Eco": {
+      "inference": 1,
+      "tools": 1,
+      "build": 1
+    },
+    "HOME_ECO": {
+      "inference": 1,
+      "tools": 1,
+      "build": 1
+    },
+    "ULTRA_ECO": {
+      "inference": 1,
+      "tools": 1,
+      "build": 1
+    },
+    "Balanced": {
+      "inference": 1,
+      "tools": 2,
+      "build": 1
+    },
+    "Performance": {
+      "inference": 1,
+      "tools": 2,
+      "build": 1
+    },
+    "Mission": {
+      "inference": 1,
+      "tools": 2,
+      "build": 1
+    },
+    "Recovery": {
+      "inference": 1,
+      "tools": 1,
+      "build": 1
+    }
+  },
+  "host_metrics_path": "C:/ProgramData/ABEX/PrimeHostMetrics/receipt/host-metrics.json",
+  "model_memory_bytes": {},
+  "limitations": [
+    "Provisional configurable reserves; runtime qualification pending",
+    "No temperature threshold without observed sensor/hardware policy",
+    "Additional inference or arbitrary heavy-build concurrency unqualified",
+    "No automatic cloud delegation or unregistered-process control"
+  ]
+}
