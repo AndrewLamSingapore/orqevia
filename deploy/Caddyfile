@@ -27,3 +27,33 @@
 		respond "Not Found" 404
 	}
 }
+
+# Verified HTTPS functional endpoint for the host operational collector.
+# Loopback-published; the ABEX CA server certificate covers 127.0.0.1.
+:8443 {
+	tls /run/orqevia-tls/server.crt /run/orqevia-tls/server.key
+
+	@health path /health
+	handle @health {
+		# Gateway liveness only. Backend health remains protected by its
+		# loopback/trusted-peer boundary and is checked inside the backend.
+		header X-ORQEVIA-Health-Scope "GATEWAY_ONLY"
+		respond "ok" 200
+	}
+
+	@authenticated_integrations {
+		path /api/integrations/*
+		header Authorization "Bearer {$ORQEVIA_INTEGRATION_TOKEN}"
+	}
+	handle @authenticated_integrations {
+		reverse_proxy backend:8000
+	}
+
+	handle /api/integrations/* {
+		respond "Unauthorized" 401
+	}
+
+	handle {
+		respond "Not Found" 404
+	}
+}

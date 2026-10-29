@@ -1,8 +1,9 @@
 """Bounded, content-free producer for the existing Windows host sampler hook.
 
 Run only through the fixed sibling PowerShell wrapper. No daemon, admission
-guard, model generation, private HTTP probe, application import, or runtime
-mutation is performed. Docker commands observe existing metadata and stores.
+guard, model generation, private application HTTP probe, application import,
+or runtime mutation is performed. Docker commands observe existing metadata,
+stores and the connectors' own published readiness endpoints.
 """
 
 from __future__ import annotations
@@ -25,6 +26,12 @@ ROOT = Path("C:/ProgramData/ABEX/PrimeHostMetrics")
 CANARY_ROOT = Path("C:/Users/Admin/Documents/ABEX/operations/permanent-readiness-20261017")
 DOCKER = "C:/Program Files/Docker/Docker/resources/bin/docker.exe"
 ORIGIN = "https://localhost:8443"
+GATEWAY_HTTPS_URL = "https://127.0.0.1:8445/health"
+TUNNEL_PUBLIC_ROUTES = {
+    "cloudflared": "https://jarvis.lamjarvis.com/pwa/",
+    "cloudflared-dual": "https://orqevia.lamjarvis.com/pwa/",
+}
+CLOUDFLARE_EDGE_STATUSES = {200, 301, 302, 303, 307, 308, 403}
 SERVICES = {
     "backend": (
         "orqevia-epoch-20261016-backend-1",
@@ -83,6 +90,17 @@ try:
     row=c.execute('SELECT source_revision,last_tick_epoch FROM coaching_controller WHERE id=1').fetchone()
     print(json.dumps({'source_revision':row[0],'tick_epoch':row[1]} if row else {}))
 finally: c.close()
+"""
+TUNNEL_READY_READ = """
+import json,urllib.request,urllib.error
+name=NAME
+try:
+    with urllib.request.urlopen('http://'+name+':2000/ready',timeout=3) as response:
+        data=json.loads(response.read())
+    print(json.dumps({'ready':data.get('status')==200 and type(data.get('readyConnections')) is int and data.get('readyConnections')>=1,
+        'status':data.get('status'),'ready_connections':data.get('readyConnections'),'connector_id':data.get('connectorId')}))
+except Exception as exc:
+    print(json.dumps({'ready':False,'error':type(exc).__name__}))
 """
 
 
@@ -175,6 +193,23 @@ def https_read(path, context, timeout, *, read_body=True):
         return response.status, body
 
 
+def https_url_get(url, context, timeout, *, read_body=True):
+    """Verified HTTPS GET for a fixed absolute URL; no redirects are followed."""
+    if not url.startswith("https://") or "://" in url[len("https://") :] or "?" in url or "#" in url:
+        raise ValueError("Fixed HTTPS URL required")
+    opener = urllib.request.build_opener(
+        urllib.request.ProxyHandler({}), NoRedirect(), urllib.request.HTTPSHandler(context=context)
+    )
+    with opener.open(url, timeout=timeout) as response:
+        headers = {key.lower(): value for key, value in response.headers.items()}
+        if not read_body:
+            return response.status, headers, b""
+        body = response.read(131073)
+        if len(body) > 131072:
+            raise ValueError("Observation response too large")
+        return response.status, headers, body
+
+
 def tls_check(name, path, context, budget, *, intelligence=False, reader=https_read):
     try:
         status, raw = reader(path, context, budget.remaining(3))
@@ -215,6 +250,117 @@ def tls_check(name, path, context, budget, *, intelligence=False, reader=https_r
         ORIGIN + path,
         "HTTPS_FUNCTIONAL_ENDPOINT",
         certificate_verified=False,
+    )
+
+
+def gateway_https_check(context, budget, *, reader=https_url_get):
+    """Verified HTTPS functional probe of the integration gateway's own health."""
+    try:
+        status, headers, raw = reader(GATEWAY_HTTPS_URL, context, budget.remaining(3))
+        passed = (
+            status == 200
+            and raw == b"ok"
+            and headers.get("x-orqevia-health-scope") == "GATEWAY_ONLY"
+        )
+        return check(
+            "gateway-https",
+            "HTTPS_READINESS",
+            "PASS" if passed else "FAIL",
+            iso(time.time()),
+            "GATEWAY_VERIFIED_HTTPS_HEALTH_PASSED" if passed else "GATEWAY_HTTPS_RESPONSE_INVALID",
+            GATEWAY_HTTPS_URL,
+            "GATEWAY_VERIFIED_HTTPS_HEALTH",
+            certificate_verified=True,
+            http_status=status,
+        )
+    except TimeoutError:
+        status, reason = "UNKNOWN", "COLLECTION_BUDGET_OR_TIMEOUT"
+    except urllib.error.HTTPError as exc:
+        status, reason = "FAIL", "GATEWAY_HTTPS_HTTP_ERROR_" + str(exc.code)
+    except (urllib.error.URLError, ssl.SSLError, OSError):
+        status, reason = "FAIL", "HTTPS_VERIFIED_CONNECTION_FAILED"
+    except (ValueError, TypeError):
+        status, reason = "FAIL", "HTTPS_RESPONSE_INVALID"
+    return check(
+        "gateway-https",
+        "HTTPS_READINESS",
+        status,
+        iso(time.time()),
+        reason,
+        GATEWAY_HTTPS_URL,
+        "GATEWAY_VERIFIED_HTTPS_HEALTH",
+        certificate_verified=False,
+    )
+
+
+def tunnel_https_check(service_id, url, context, budget, *, reader=https_url_get):
+    """Verified public HTTPS journey for one connector's routed hostname."""
+    try:
+        try:
+            status, headers, _ = reader(url, context, budget.remaining(3), read_body=False)
+        except urllib.error.HTTPError as exc:
+            status, headers = exc.code, {key.lower(): value for key, value in exc.headers.items()}
+        edge = "cloudflare" in str(headers.get("server", "")).lower() or bool(headers.get("cf-ray"))
+        passed = status in CLOUDFLARE_EDGE_STATUSES and edge
+        return check(
+            "tunnel-https",
+            "HTTPS_READINESS",
+            "PASS" if passed else "FAIL",
+            iso(time.time()),
+            "CLOUDFLARE_EDGE_HTTPS_JOURNEY_OBSERVED" if passed else "CLOUDFLARE_EDGE_RESPONSE_UNRECOGNIZED",
+            url,
+            "PUBLIC_CLOUDFLARE_EDGE_HTTPS_JOURNEY_" + service_id.upper(),
+            certificate_verified=True,
+            http_status=status,
+        )
+    except TimeoutError:
+        status, reason = "UNKNOWN", "COLLECTION_BUDGET_OR_TIMEOUT"
+    except (urllib.error.URLError, ssl.SSLError, OSError):
+        status, reason = "FAIL", "HTTPS_VERIFIED_CONNECTION_FAILED"
+    except (ValueError, TypeError):
+        status, reason = "FAIL", "HTTPS_RESPONSE_INVALID"
+    return check(
+        "tunnel-https",
+        "HTTPS_READINESS",
+        status,
+        iso(time.time()),
+        reason,
+        url,
+        "PUBLIC_CLOUDFLARE_EDGE_HTTPS_JOURNEY_" + service_id.upper(),
+        certificate_verified=False,
+    )
+
+
+def tunnel_connection_check(service_id, name, runner, budget, now):
+    """Current ready tunnel connections from the connector's own readiness endpoint."""
+    script = "NAME=" + repr(name) + "\n" + TUNNEL_READY_READ
+    data = {}
+    try:
+        code, raw = runner.run(
+            [DOCKER, "exec", "-i", SERVICES["backend"][0], "python", "-B", "-"],
+            script=script,
+            timeout=3,
+        )
+        if code == 0:
+            data = json.loads(raw)
+    except (OSError, ValueError, TimeoutError, subprocess.TimeoutExpired):
+        pass
+    if data.get("ready") is True:
+        status, reason = "PASS", "CURRENT_READY_TUNNEL_CONNECTIONS_OBSERVED"
+    elif data:
+        status, reason = "FAIL", "NO_READY_TUNNEL_CONNECTIONS"
+    else:
+        status, reason = "UNKNOWN", "TUNNEL_READINESS_UNAVAILABLE"
+    return check(
+        "tunnel-connection",
+        "DEPENDENCY",
+        status,
+        iso(now),
+        reason,
+        "cloudflared-ready:" + name + ":2000",
+        "CONNECTOR_OWN_READY_ENDPOINT",
+        ready_connections=data.get("ready_connections"),
+        connector_id=data.get("connector_id"),
     )
 
 
@@ -340,7 +486,9 @@ def collect(
     canary=None,
     archive_root=CANARY_ROOT / "full-stack-canary-history",
     reader=https_read,
+    url_reader=https_url_get,
     tls_context=None,
+    public_tls_context=None,
 ):
     now = time.time() if now is None else now
     previous = previous or {}
@@ -577,17 +725,19 @@ def collect(
         ("intelligence", "intelligence-https", "/api/orqevia/intelligence/health", True),
     ):
         set_check(service_id, tls_check(name, path, tls_context, budget, intelligence=intelligence, reader=reader))
+    set_check(
+        "integration-gateway",
+        gateway_https_check(tls_context, budget, reader=url_reader),
+    )
     for service_id in ("cloudflared", "cloudflared-dual"):
         set_check(
             service_id,
-            check(
-                "tunnel-connection",
-                "DEPENDENCY",
-                "UNKNOWN",
-                iso(time.time()),
-                "CURRENT_CONNECTION_OBSERVATION_NOT_EXPOSED_OVER_HTTPS",
-                "existing-tunnel-observation",
-                "CURRENT_CONNECTIONS_NOT_PROCESS_OR_OLD_REGISTRATION",
+            tunnel_connection_check(service_id, SERVICES[service_id][0], runner, budget, now),
+        )
+        set_check(
+            service_id,
+            tunnel_https_check(
+                service_id, TUNNEL_PUBLIC_ROUTES[service_id], public_tls_context, budget, reader=url_reader
             ),
         )
     result = {
@@ -603,7 +753,9 @@ def collect(
         "limits": [
             "NO_GENERATION_CALLS",
             "NO_NEW_PRIVATE_HTTP_PROBES",
-            "UNCONFIGURED_GATEWAY_AND_TUNNEL_HTTPS_PATHS",
+            "GATEWAY_HTTPS_IS_PUBLISHED_LOOPBACK_HEALTH",
+            "TUNNEL_HTTPS_IS_CLOUDFLARE_EDGE_JOURNEY_NOT_ORIGIN_APP_ACCEPTANCE",
+            "TUNNEL_CONNECTION_IS_CONNECTOR_OWN_READY_ENDPOINT",
             "RECENT_WORKER_EXECUTION_IS_NOT_CONTINUOUS_WORKER_HEARTBEAT",
         ],
     }
@@ -644,9 +796,16 @@ def main():
             pass
     ca = ROOT / "orqevia-ca.crt"
     tls_context = ssl.create_default_context(cafile=str(ca) if context.get("ca_verified") is True else None)
+    public_tls_context = ssl.create_default_context()
     budget = Budget()
     result = collect(
-        context, runner=Runner(budget), budget=budget, previous=previous, canary=canary, tls_context=tls_context
+        context,
+        runner=Runner(budget),
+        budget=budget,
+        previous=previous,
+        canary=canary,
+        tls_context=tls_context,
+        public_tls_context=public_tls_context,
     )
     atomic_write(output, result)
     refreshed = False
