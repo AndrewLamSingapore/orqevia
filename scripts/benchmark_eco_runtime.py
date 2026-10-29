@@ -76,7 +76,14 @@ try:
   try:
    observed=json.loads(result['result']);expected=spec['expected']
    quality=not result.get('error') and type(observed) is dict and observed.keys()==expected.keys() and all(type(observed[k]) is type(v) and observed[k]==v for k,v in expected.items())
-  except ValueError:quality=False
+  except ValueError:
+   quality=False;observed=None
+  cross_check=None;oracle_matches_deterministic=None
+  if spec.get('schedule_jobs') is not None:
+   from app.deterministic_scheduling import check_answer as _check_answer, solve_schedule as _solve_schedule
+   solved=_solve_schedule(spec['schedule_jobs'])
+   oracle_matches_deterministic=bool(expected and all(solved.get(k)==v for k,v in expected.items()))
+   cross_check=_check_answer(observed,spec['schedule_jobs'],required_keys=list(expected))
  allowed=set(inspect.signature(queue.finish).parameters)
  finished=queue.finish(job['id'],**{k:v for k,v in result.items() if k in allowed})
  with queue.connect() as db:
@@ -84,6 +91,7 @@ try:
  print(json.dumps({'job_id':job['id'],'job_status':finished['status'],'model':provider.model,
   'quality_pass':quality,'answer':result['result'],'input_tokens':result.get('input_tokens'),
   'output_tokens':result.get('output_tokens'),'timing':metrics,'stage_events':stages,
+  'oracle_matches_deterministic':oracle_matches_deterministic,'deterministic_cross_check':cross_check,
   'test_elapsed_seconds':time.monotonic()-began,'requested_threads':spec['threads'],
   'context_tokens':spec['context'],'keep_alive':'2m','production_background_pause_preserved':True}),flush=True)
 except Exception:
@@ -119,7 +127,14 @@ def trial_spec(model, threads, role):
             "b2_wait": 42,
             "waiting_consumes_execution_budget": False,
         }
+        schedule_jobs = [
+            {"name": "b1", "arrival": 0, "duration": 40, "priority_class": "background"},
+            {"name": "i1", "arrival": 5, "duration": 10, "priority_class": "interactive"},
+            {"name": "b2", "arrival": 8, "duration": 20, "priority_class": "background"},
+        ]
     result = {"model": model, "threads": threads, "role": role, "prompt": prompt, "expected": expected, "context": 8192}
+    if role == "deep":
+        result["schedule_jobs"] = schedule_jobs
     if role != "embedding":
         result["response_schema"] = {
             "type": "object",
@@ -203,7 +218,11 @@ def main():
     root = Path(__file__).resolve().parents[1]
     sources = {
         name: (root / path).read_text(encoding="utf-8")
-        for name, path in [("app.home_eco", "app/home_eco.py"), ("app.eco_trial_stream", "app/direct_stream.py")]
+        for name, path in [
+            ("app.home_eco", "app/home_eco.py"),
+            ("app.eco_trial_stream", "app/direct_stream.py"),
+            ("app.deterministic_scheduling", "app/deterministic_scheduling.py"),
+        ]
     }
     model = {"fast": "gemma3:1b", "deep": "gemma3:12b", "embedding": "embeddinggemma:300m-qat-q4_0"}[args.role]
     trials = []
