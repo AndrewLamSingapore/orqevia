@@ -98,6 +98,7 @@ class Profile:
         number(thresholds["cpu_recovery_percent"], minimum=1, maximum=100)
         if thresholds["cpu_recovery_percent"] >= thresholds["cpu_busy_percent"]:
             raise ValueError("Distinct pressure and recovery thresholds required")
+        number(thresholds.get("memory_recovery_multiplier", 1.2), minimum=1, maximum=2)
         if thresholds.get("temperature_c") is not None:
             number(thresholds["temperature_c"], minimum=1, maximum=150)
         number(data["freshness_seconds"], minimum=1, maximum=600)
@@ -280,7 +281,9 @@ class Profile:
             return decision(False, "WAITING_FOR_CPU_CAPACITY", True)
         if recovering and observation.cpu_percent > thresholds["cpu_recovery_percent"]:
             return decision(False, "RECOVERY_HYSTERESIS", True)
-        if recovering and observation.host_available_bytes < host_reserve * 1.2:
+        if recovering and observation.host_available_bytes < host_reserve * thresholds.get(
+            "memory_recovery_multiplier", 1.2
+        ):
             return decision(False, "RECOVERY_MEMORY_HYSTERESIS", True)
         recovering = False
         if mode == "Recovery" and workload.priority < 100:

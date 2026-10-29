@@ -95,6 +95,17 @@ cold and warm admission tests, responsiveness, existing producer coverage and
 an idle release interval that preserves accepted work. Do not call a passing
 unit suite, normal production resumption or a prepared branch enforced Guardian.
 
+A later controlled rollout is recorded separately. The proposed4GiB host reserve
+was not a hardware-derived universal safe minimum. Its first local12B echo
+completed, but the4GiB candidate resource gate failed: minimum host available
+3,810,590,720B. A separate20sample shell/verifiedHTTPS observation reached
+3,726,626,816B with zero shell timeouts and HTTPSREADY (maximum2.31s); Ollama swap
+was approximately2MiB. These failures remain retained. The revised candidate
+uses3GiB host reserve, unchanged10%VM reserve, one inference, the same model/token
+pins and a5%memory recovery buffer. The default buffer remains20%for other
+profiles. This is device-specific calibration requiring new cold/warm validation,
+not a claim about thermal safety, arbitrary workloads or semantic model quality.
+
 ## Deployment and rollback scope
 
 Use the existing backend/coordinator. An optional readonly bind to only Ollama's

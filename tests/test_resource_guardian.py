@@ -124,6 +124,18 @@ def test_precharged_vm_memory_is_not_reserved_twice_against_windows():
     assert not policy.decide(replace(current, runtime_available_bytes=GIB), local).admitted
 
 
+def test_calibrated_memory_recovery_keeps_the_reserve_and_cpu_hysteresis():
+    data = copy.deepcopy(profile().data)
+    data["thresholds"]["memory_recovery_multiplier"] = 1.05
+    policy = Profile(data)
+    current = replace(observation(), host_available_bytes=int(3.5 * GIB))
+    work = Workload("tools", MIB)
+    assert policy.decide(current, work, recovering=True).admitted
+    assert not profile().decide(current, work, recovering=True).admitted
+    assert not policy.decide(replace(current, cpu_percent=70), work, recovering=True).admitted
+    assert not policy.decide(replace(current, host_available_bytes=3 * GIB), work, recovering=True).admitted
+
+
 @pytest.mark.parametrize(
     "change,reason",
     [
