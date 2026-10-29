@@ -101,6 +101,22 @@ def test_modes_cannot_raise_measured_ceiling_or_invent_gpu():
     assert not gpu.admitted and gpu.reason == "GPU_CAPACITY_UNVERIFIED"
 
 
+def test_precharged_vm_memory_is_not_reserved_twice_against_windows():
+    data = copy.deepcopy(profile().data)
+    data.update(runtime_host_memory_ceiling_bytes=8 * GIB, runtime_host_overhead_reserve_bytes=128 * MIB)
+    policy = Profile(data)
+    current = replace(observation(), host_available_bytes=4 * GIB, runtime_host_resident_bytes=8 * GIB)
+    local = Workload("inference", 3 * GIB, inference=True, model="gemma3:12b")
+    assert policy.decide(current, local).admitted
+    assert not policy.decide(replace(current, runtime_host_resident_bytes=None), local).admitted
+    assert not policy.decide(replace(current, runtime_host_resident_bytes=GIB), local).admitted
+    assert not policy.decide(replace(current, host_available_bytes=2 * GIB), local).admitted
+    # The same Windows receipt cannot grant native tools VM reuse, or replace
+    # the separate full Linux memory calculation.
+    assert not policy.decide(current, Workload("tools", 3 * GIB)).admitted
+    assert not policy.decide(replace(current, runtime_available_bytes=GIB), local).admitted
+
+
 @pytest.mark.parametrize(
     "change,reason",
     [

@@ -66,6 +66,7 @@ class Observation:
     resident_model: str | None = None
     resident_credit_bytes: int = 0
     runtime_identity_valid: bool | None = None
+    runtime_host_resident_bytes: int | None = None
 
 
 @dataclass(frozen=True)
@@ -127,6 +128,13 @@ class Profile:
             for key in ("qualified_context_tokens", "qualified_output_tokens"):
                 if type(data.get(key)) is not int or data[key] < 1:
                     raise ValueError("Runtime qualification needs the measured token envelope")
+        if data.get("runtime_host_memory_ceiling_bytes") is not None:
+            ceiling = data["runtime_host_memory_ceiling_bytes"]
+            overhead = data.get("runtime_host_overhead_reserve_bytes")
+            if type(ceiling) is not int or ceiling < hardware["runtime_memory_bytes"]:
+                raise ValueError("Host accounting needs the verified VM ceiling")
+            if type(overhead) is not int or overhead < 1:
+                raise ValueError("Host accounting needs an explicit VM overhead reserve")
         # One heavy inference remains the qualified initial physical envelope.
         if data["qualified_concurrency"]["inference"] != 1:
             raise ValueError("Additional inference slots require a separately qualified implementation")
@@ -220,7 +228,18 @@ class Profile:
                 observation.resident_credit_bytes, self.data.get("model_memory_bytes", {}).get(workload.model, 0)
             )
         required = max(0, workload.peak_memory_bytes - credit) + max(0, reserved_bytes)
-        if observation.host_available_bytes - required < host_reserve:
+        host_required = required
+        # Windows already charges resident WSL physical pages. Linux model
+        # allocations can reuse them; their growth cannot exceed the verified
+        # VM ceiling plus an explicit host overhead reserve. Keep the entire
+        # workload budget against Linux headroom, and never credit native tools.
+        resident = observation.runtime_host_resident_bytes
+        ceiling = self.data.get("runtime_host_memory_ceiling_bytes")
+        overhead = self.data.get("runtime_host_overhead_reserve_bytes", 0)
+        if workload.inference and workload.model is not None and ceiling is not None:
+            if type(resident) is int and 0 <= resident <= ceiling + overhead:
+                host_required = min(required, max(0, ceiling + overhead - resident))
+        if observation.host_available_bytes - host_required < host_reserve:
             return decision(False, "WAITING_FOR_HOST_MEMORY", True)
         if observation.commit_available_bytes is not None and required > observation.commit_available_bytes:
             return decision(False, "WAITING_FOR_COMMIT_CAPACITY", True)
@@ -323,6 +342,22 @@ def capture(profile):
     except (OSError, ValueError, StopIteration):
         pass
     resident_model, resident_bytes = capture_resident_credit(profile)
+    runtime_host_resident = None
+    runtime_host = host.get("wsl_runtime", {})
+    if (
+        runtime_host.get("source") == "Get-Process/vmmemWSL.WorkingSet64"
+        and runtime_host.get("process_count") == 1
+        and runtime_host.get("boot_id") == host.get("boot_id")
+    ):
+        runtime_host_resident, _ = _measurement(
+            runtime_host.get("working_set_bytes"),
+            raw=runtime_host,
+            source="Get-Process/vmmemWSL.WorkingSet64",
+            stamp=runtime_host.get("captured_at"),
+            receipt_stamp=captured,
+            now=now,
+            integer=True,
+        )
     return Observation(
         captured,
         available,
@@ -337,6 +372,7 @@ def capture(profile):
         resident_model=resident_model,
         resident_credit_bytes=resident_bytes,
         runtime_identity_valid=capture_runtime_identity(profile),
+        runtime_host_resident_bytes=runtime_host_resident,
     )
 
 

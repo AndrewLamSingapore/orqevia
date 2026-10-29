@@ -115,6 +115,20 @@ if ($os -and $null -ne $os.TotalVisibleMemorySize -and $null -ne $os.FreePhysica
     $memory.reason = $null
 } else { $memory.reason = if ($os) { 'METRIC_NOT_REPORTED' } else { $osFailure } }
 $memory.captured_at = $osCapturedAt
+$wslRuntime = New-Observation 'Get-Process/vmmemWSL.WorkingSet64'
+$wslRuntime.working_set_bytes = $null
+$wslRuntime.process_count = 0
+$wslRuntime.boot_id = $bootId
+try {
+    $wslProcesses = @(Get-Process -Name 'vmmemWSL' -ErrorAction Stop)
+    $wslRuntime.process_count = $wslProcesses.Count
+    if ($wslProcesses.Count -eq 1 -and $wslProcesses[0].WorkingSet64 -gt 0) {
+        $wslRuntime.working_set_bytes = [long]$wslProcesses[0].WorkingSet64
+        $wslRuntime.collection_status = 'OBSERVED'
+        $wslRuntime.reason = $null
+    } else { $wslRuntime.reason = 'SINGLE_WSL_VM_NOT_OBSERVED' }
+} catch { $wslRuntime.reason = Get-CollectionReason $_ }
+$wslRuntime.captured_at = Get-EpochNow
 
 $disk = New-Observation 'Win32_LogicalDisk.Size/FreeSpace'
 $disk.device = if ($env:SystemDrive) { [string]$env:SystemDrive } else { 'C:' }
@@ -298,6 +312,7 @@ $receipt = [ordered]@{
     field_status = $fieldStatus
     cpu = $cpu
     memory = $memory
+    wsl_runtime = $wslRuntime
     disk = $disk
     network = $network
     gpu = if ($resourceSensors) { $resourceSensors.gpu } else { @{ collection_status='UNAVAILABLE'; available_bytes=$null } }
