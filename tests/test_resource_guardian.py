@@ -61,6 +61,36 @@ def guardian():
     return ResourceGuardian(profile(), sampler=lambda _: observation())
 
 
+def test_runtime_drift_cannot_borrow_previously_qualified_memory(monkeypatch):
+    from contextlib import contextmanager
+    import io
+    from app.resource_guardian import capture_runtime_identity
+
+    data = copy.deepcopy(profile().data)
+    data.update(
+        require_runtime_identity=True,
+        qualified_runtime_version="measured",
+        qualified_context_tokens=131072,
+        qualified_output_tokens=32768,
+        model_digests={"gemma3:12b": "a" * 64},
+    )
+    policy = Profile(data)
+    runtime = {"version": "measured", "models": [{"name": "gemma3:12b", "digest": "a" * 64}]}
+
+    @contextmanager
+    def response(url, **kwargs):
+        yield io.BytesIO(json.dumps(runtime).encode())
+
+    monkeypatch.setattr("urllib.request.urlopen", response)
+    assert capture_runtime_identity(policy) is True
+    runtime["models"][0]["digest"] = "b" * 64
+    assert capture_runtime_identity(policy) is False
+    work = Workload("inference", 128 * MIB, inference=True, model="gemma3:12b")
+    denied = policy.decide(replace(observation(), runtime_identity_valid=False), work)
+    assert not denied.admitted and denied.reason == "MODEL_RUNTIME_QUALIFICATION_MISMATCH"
+    assert policy.decide(replace(observation(), runtime_identity_valid=True), work).admitted
+
+
 def test_modes_cannot_raise_measured_ceiling_or_invent_gpu():
     p = profile()
     for mode in MODES:

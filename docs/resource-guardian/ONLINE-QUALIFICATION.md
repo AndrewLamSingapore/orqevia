@@ -44,6 +44,10 @@ inference was submitted by this qualification work.
   deployment queue guard is installed.
 - Test mode changes/restart against both a paused state and the Owner-resumed
   generation1 state. Modes never grant or reverse Owner admission authority.
+- Revalidate pinned model digests, runtime version and the configured token
+  envelope at local admission, including drift after server startup. Unknown or
+  mismatched identities retain the job without starting an unmeasured model.
+  Existing remote-provider authorization is independent of this local check.
 
 ## Evidence and production decision
 

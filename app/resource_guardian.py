@@ -65,6 +65,7 @@ class Observation:
     disk_busy_percent: float | None = None
     resident_model: str | None = None
     resident_credit_bytes: int = 0
+    runtime_identity_valid: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -118,6 +119,14 @@ class Profile:
                 raise ValueError("Resident credit needs a qualified context envelope")
             if type(data.get("resident_base_reserve_bytes")) is not int or data["resident_base_reserve_bytes"] < 1:
                 raise ValueError("Resident credit needs a measured non-model process reserve")
+        if data.get("require_runtime_identity"):
+            if not isinstance(data.get("qualified_runtime_version"), str) or not data["qualified_runtime_version"]:
+                raise ValueError("Runtime qualification needs a measured version")
+            if set(data.get("model_digests", {})) != set(data.get("model_memory_bytes", {})):
+                raise ValueError("Runtime qualification needs every budgeted model digest")
+            for key in ("qualified_context_tokens", "qualified_output_tokens"):
+                if type(data.get(key)) is not int or data[key] < 1:
+                    raise ValueError("Runtime qualification needs the measured token envelope")
         # One heavy inference remains the qualified initial physical envelope.
         if data["qualified_concurrency"]["inference"] != 1:
             raise ValueError("Additional inference slots require a separately qualified implementation")
@@ -171,6 +180,13 @@ class Profile:
 
         if workload.inference and owner_paused and workload.priority < 50:
             return decision(False, "OWNER_BACKGROUND_PAUSED")
+        if (
+            workload.inference
+            and workload.model is not None
+            and self.data.get("require_runtime_identity")
+            and observation.runtime_identity_valid is not True
+        ):
+            return decision(False, "MODEL_RUNTIME_QUALIFICATION_MISMATCH", True)
         try:
             age = current - number(observation.captured_at)
             if not 0 <= age <= self.data["freshness_seconds"]:
@@ -320,7 +336,35 @@ def capture(profile):
         disk_busy_percent=host.get("disk", {}).get("busy_percent"),
         resident_model=resident_model,
         resident_credit_bytes=resident_bytes,
+        runtime_identity_valid=capture_runtime_identity(profile),
     )
+
+
+def capture_runtime_identity(profile):
+    """Revalidate model/runtime/token pins at admission, including after startup."""
+    data = profile.data
+    if not data.get("require_runtime_identity"):
+        return None
+    try:
+        import urllib.request
+        from .settings import SETTINGS
+
+        if (
+            SETTINGS.context_tokens > data["qualified_context_tokens"]
+            or SETTINGS.max_output_tokens > data["qualified_output_tokens"]
+        ):
+            return False
+
+        def read(path):
+            with urllib.request.urlopen(SETTINGS.ollama_base_url.rstrip("/") + path, timeout=0.5) as response:
+                return json.loads(response.read(131072))
+
+        if read("/api/version").get("version") != data["qualified_runtime_version"]:
+            return False
+        installed = {model["name"]: model["digest"] for model in read("/api/tags")["models"]}
+        return all(installed.get(name) == digest for name, digest in data["model_digests"].items())
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return False
 
 
 def resident_credit(profile, before, after, current, memory_stat, *, now=None):
