@@ -23,7 +23,7 @@ def main():
            'direct_execution','connector_sdk']
     names.extend(['agent_coaching','coaching_observation','autonomy_sync_receipts'])
     names.extend(['academy', 'academy_api', 'probability_curriculum'])
-    names.extend(['pif', 'mel', 'intelligence_capabilities_api'])
+    names.extend(['pif', 'pif_acceleration', 'mel', 'intelligence_capabilities_api'])
     names.append('workspace_observation')
     names.append('supreme_intelligence_benchmark')
     names.append('supreme_independence_candidate')

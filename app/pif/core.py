@@ -9,10 +9,12 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import random
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from itertools import accumulate
 from typing import Any, Iterable, Mapping, Sequence
 
 
@@ -241,6 +243,15 @@ class MarkovModel:
     def forecast(self, start: str | Mapping[str, float], steps: int) -> dict[str, float]:
         integer(steps)
         current = self.initial(start)
+        # The operational eight-state model stays on the existing path. Wider
+        # models can opt into the already-installed numerical backend after
+        # service-level benchmarks; no mandatory native module is introduced.
+        if len(self.states) >= 24 and steps >= 2 and os.getenv('ORQEVIA_PIF_NUMPY_ENABLED', '0') == '1':
+            try:
+                from .numpy_backend import forecast as numpy_forecast
+                return dict(zip(self.states, numpy_forecast(self.matrix, current, steps)))
+            except (ImportError, ValueError, ArithmeticError):
+                pass  # Original validated implementation remains available.
         # Exponentiation avoids a horizon-sized loop. Matrix multiplication is
         # intentionally CPU/stdlib for these small discrete state models.
         power = self.matrix
@@ -387,11 +398,17 @@ def simulate(
     initial = model.initial(start)
     final = [0] * len(model.states)
     trajectories = []
+    population = range(len(model.states))
+    initial_cumulative = tuple(accumulate(initial))
+    row_cumulative = {}
     for _ in range(samples):
-        state = rng.choices(range(len(model.states)), weights=initial, k=1)[0]
+        state = rng.choices(population, cum_weights=initial_cumulative, k=1)[0]
         trajectory = [model.states[state]]
         for _ in range(steps):
-            state = rng.choices(range(len(model.states)), weights=model.matrix[state], k=1)[0]
+            cumulative = row_cumulative.get(state)
+            if cumulative is None:
+                cumulative = row_cumulative[state] = tuple(accumulate(model.matrix[state]))
+            state = rng.choices(population, cum_weights=cumulative, k=1)[0]
             trajectory.append(model.states[state])
         final[state] += 1
         trajectories.append(trajectory)
@@ -451,6 +468,8 @@ def absorbing_analysis(model: MarkovModel) -> dict[str, Any]:
     # and a finite expected absorption time cannot be asserted for all states.
     reachable = set(absorbing)
     for _ in model.states:
+        if len(reachable) == len(model.states):
+            break
         reachable.update(i for i in transient if any(model.matrix[i][j] > 0 for j in reachable))
     if len(reachable) != len(model.states):
         return {"status": "UNAVAILABLE", "reason": "NONABSORBING_CLOSED_CLASS"}
@@ -485,6 +504,8 @@ def stationary_distribution(model: MarkovModel) -> dict[str, Any]:
     for start in range(size):
         reachable = {start}
         for _ in range(size):
+            if len(reachable) == size:
+                break
             reachable.update(j for i in tuple(reachable) for j, p in enumerate(model.matrix[i]) if p > 0)
         if len(reachable) != size:
             return {"status": "NOT_APPLICABLE", "reason": "REDUCIBLE_CHAIN_NO_UNIQUE_LAW_ASSERTED"}
