@@ -54,6 +54,10 @@ inference was submitted by this qualification work.
   plus an explicit overhead reserve. Linux still reserves the full unallocated
   model budget; native tools receive no VM credit. Missing/stale evidence keeps
   conservative full host/commit accounting.
+  Verified already-resident guest free/cache pages also reduce incremental host
+  growth: resident Windows pages minus nonavailable Linux memory and the explicit
+  overhead reserve. This supports a cold model with cached VM pages, while the
+  separate Linux budget and Windows reserve remain mandatory.
 
 ## Evidence and production decision
 

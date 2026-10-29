@@ -239,6 +239,15 @@ class Profile:
         if workload.inference and workload.model is not None and ceiling is not None:
             if type(resident) is int and 0 <= resident <= ceiling + overhead:
                 host_required = min(required, max(0, ceiling + overhead - resident))
+                # MemAvailable includes reusable guest cache/free pages. Any
+                # resident host pages above the guest's nonavailable memory
+                # and overhead reserve are already charged reusable capacity.
+                # Keep Linux's separate full-budget/reserve check below.
+                available = observation.runtime_available_bytes
+                if type(available) is int and 0 <= available <= capacity["runtime_memory_bytes"]:
+                    used = capacity["runtime_memory_bytes"] - available
+                    reusable = max(0, resident - used - overhead)
+                    host_required = min(host_required, max(0, required - reusable))
         if observation.host_available_bytes - host_required < host_reserve:
             return decision(False, "WAITING_FOR_HOST_MEMORY", True)
         if observation.commit_available_bytes is not None and host_required > observation.commit_available_bytes:
