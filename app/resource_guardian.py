@@ -241,7 +241,7 @@ class Profile:
                 host_required = min(required, max(0, ceiling + overhead - resident))
         if observation.host_available_bytes - host_required < host_reserve:
             return decision(False, "WAITING_FOR_HOST_MEMORY", True)
-        if observation.commit_available_bytes is not None and required > observation.commit_available_bytes:
+        if observation.commit_available_bytes is not None and host_required > observation.commit_available_bytes:
             return decision(False, "WAITING_FOR_COMMIT_CAPACITY", True)
         if workload.inference:
             if observation.runtime_available_bytes is None:

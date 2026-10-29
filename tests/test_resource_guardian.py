@@ -108,6 +108,8 @@ def test_precharged_vm_memory_is_not_reserved_twice_against_windows():
     current = replace(observation(), host_available_bytes=4 * GIB, runtime_host_resident_bytes=8 * GIB)
     local = Workload("inference", 3 * GIB, inference=True, model="gemma3:12b")
     assert policy.decide(current, local).admitted
+    assert policy.decide(replace(current, commit_available_bytes=256 * MIB), local).admitted
+    assert not policy.decide(replace(current, commit_available_bytes=64 * MIB), local).admitted
     assert not policy.decide(replace(current, runtime_host_resident_bytes=None), local).admitted
     assert not policy.decide(replace(current, runtime_host_resident_bytes=GIB), local).admitted
     assert not policy.decide(replace(current, host_available_bytes=2 * GIB), local).admitted

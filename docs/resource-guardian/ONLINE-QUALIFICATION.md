@@ -48,6 +48,12 @@ inference was submitted by this qualification work.
   envelope at local admission, including drift after server startup. Unknown or
   mismatched identities retain the job without starting an unmeasured model.
   Existing remote-provider authorization is independent of this local check.
+- Account for WSL physical pages already charged to Windows. The existing host
+  sampler now records a single vmmemWSL working set with source, timestamp and
+  boot identity. Remaining host growth is bounded by the verified VM ceiling
+  plus an explicit overhead reserve. Linux still reserves the full unallocated
+  model budget; native tools receive no VM credit. Missing/stale evidence keeps
+  conservative full host/commit accounting.
 
 ## Evidence and production decision
 
@@ -70,10 +76,14 @@ would stall ordinary jobs. Even with memory budgets, the current VM needs a
 measured cold-load/reserve calculation; do not relax margins or claim a warm
 model proves all cold starts. A larger WSL limit is one possible reversible
 software option, not new hardware and not an executed configuration change.
-No .wslconfig currently exists; an example18GiB limit needs actual runtime
-verification and host headroom qualification after a future authorized quiet
-restart. The Owner currently prioritizes uninterrupted work, so no such restart
-is performed by this source qualification.
+A later Owner-authorized naturally idle Docker/WSL restart applied an18GiB
+ceiling with unchanged4GiB swap. Actual MemTotal became18,857,222,144B
+(17.56GiB); all nine original container identities returned healthy, verified
+HTTPS wasREADY and Owner generation1 remainedOPEN. No active job was cancelled,
+Windows restart, offline backup or logging change occurred. The first attempt
+retained the old VM and is preserved as a failed check; the second fully stopped
+the WSL VM before restart. Host headroom and cold/warm qualification remain
+separate live acceptance requirements.
 
 Production activation remains conditional on a verified complete profile,
 matching model/runtime/context identities, verified readonly host/cgroup mounts,
