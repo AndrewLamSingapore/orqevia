@@ -251,6 +251,18 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this byte-pinned, claimed-only candidate note. The original
+    # history and Owner-only Verified proof below remain unchanged.
+    budget_title = "## Coaching task-budget candidate - 30 October 2026"
+    assert after.count(budget_title) == 1
+    budget_start = after.index(budget_title)
+    budget_end = after.index("\n## ", budget_start + len(budget_title)) + 1
+    budget_update = after[budget_start:budget_end].encode("utf-8")
+    assert len(budget_update) == 750
+    assert hashlib.sha256(budget_update).hexdigest() == "4e612880714143d175897fe169843e5e2f431866365b64c820331df21b9a8a1e"
+    assert b"### Claimed, not independently checked" in budget_update
+    assert b"### Verified" not in budget_update
+    after = after[:budget_start] + after[budget_end:]
     # Admit only this exact dated runtime claim; all prior records remain pinned.
     live_title = "## Resource Guardian live acceptance - 29 October 2026"
     assert after.count(live_title) == 1
