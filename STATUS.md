@@ -1,5 +1,19 @@
 # STATUS.md — Portfolio status record
 
+## Coaching task-budget candidate - 30 October 2026
+
+### Claimed, not independently checked
+
+Source now distinguishes the existing600second structured-role budget from the
+patient1800second probability-assessment budget, with bounded explicit global
+and task-family overrides. The old running producer hardcoded300seconds and
+cut off progressing probability work. Original failures/results are retained.
+No inference concurrency, retry, provider-spending or Owner-admission increase
+is introduced.66targeted tests and63subtests passed. Deployment and runtime
+enforcement are recorded separately; these test results do not certify every
+role or imply remote-access/disaster-recovery acceptance. See
+[the budget notes](docs/COACHING-TASK-BUDGETS.md).
+
 ## Resource Guardian live acceptance - 29 October 2026
 
 ### Claimed, not independently checked
