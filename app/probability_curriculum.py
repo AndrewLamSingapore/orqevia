@@ -309,7 +309,7 @@ def assessment_request(agent, seed, phase):
     schema = {
         "type": "object",
         "properties": {
-            "calculation": {"type": "string"},
+            "calculation": {"type": "string", "minLength": 1, "maxLength": 1200},
             "results": _schema(answers),
         },
         "required": ["calculation", "results"],

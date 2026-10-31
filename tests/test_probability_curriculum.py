@@ -123,3 +123,15 @@ def test_joint_axes_and_rounding_are_explicit_and_worked_examples_are_separate()
         assert "rounded to six decimal places" in context["answer_format"]
         assert "within 0.000001" not in context["answer_format"]
         assert ("worked_examples" in context) == (phase != "baseline")
+
+
+def test_generation_calculation_length_matches_the_unchanged_semantic_assessor():
+    from app.response_schema import validate_response_value
+    request=assessment_request('a10',7005,'practice')
+    _,answers=exercise('a10',7005,'practice')
+    assert request['response_schema']['properties']['calculation']=={
+        'type':'string','minLength':1,'maxLength':1200}
+    for length,valid in [(0,False),(1,True),(1200,True),(1201,False),(1221,False)]:
+        response={'calculation':'x'*length,'results':answers}
+        assert (not validate_response_value(response,request['response_schema'])) is valid
+        assert review_assessment('a10',7005,'practice',json.dumps(response))[0] is valid

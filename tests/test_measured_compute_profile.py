@@ -138,3 +138,13 @@ def test_bounded_work_respects_memory_reserve_without_model_requirement(measured
     monkeypatch.setattr(psutil,'virtual_memory',lambda:SimpleNamespace(available=8192*1048576-1))
     with pytest.raises(PermissionError,match='reserve'):
         cp.require_bounded_work_capacity()
+
+
+def test_owned_guardian_reservation_preserves_model_eligibility_without_double_reserving_ram(measured,monkeypatch):
+    import psutil
+    monkeypatch.setattr(psutil,'virtual_memory',lambda:SimpleNamespace(available=1))
+    with pytest.raises(PermissionError,match='reserve'):
+        cp.require_compute_capacity('gemma3:1b')
+    cp.require_compute_capacity('gemma3:1b',already_admitted=True)
+    with pytest.raises(PermissionError,match='Model'):
+        cp.require_compute_capacity('unmeasured-model',already_admitted=True)

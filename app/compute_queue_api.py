@@ -1,6 +1,7 @@
 """Protected API and executors for ORQEVIA's governed shared job queue."""
 from __future__ import annotations
 
+from asyncio import CancelledError
 import os
 import json
 import hashlib
@@ -127,9 +128,13 @@ def _execute(job: dict, provider: Provider) -> dict:
         raise PermissionError('Local provider is not an existing configured role')
     metrics=OutcomeMetrics(DATA/'compute-ledger.db')
     started=time.monotonic();answer=None;failure='LOCAL_INFERENCE_FAILED'
+    capacity=(lambda model:require_compute_capacity(model,already_admitted=True)
+              if job.get('lifecycle_state')=='ADMITTED' and queue.guardian is not None
+              else require_compute_capacity(model))
     try:
         answer=DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
-            settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
+            settings=SETTINGS,capacity=capacity,
+            options=generation_options,
             cancelled=lambda:queue.get(job['id'])['status']=='cancelled',
             progress=lambda text:queue.update_progress(job['id'],text),
             stage=lambda phase:queue.transition(job['id'],phase))))
@@ -179,18 +184,24 @@ def _run_direct(job_id: str) -> None:
                 future = executor.submit(_execute, claimed, provider)
                 try:
                     result = future.result(timeout=deadline + 30)
-                except FutureTimeout:
+                except FutureTimeout as exc:
+                    queue.record_execution_failure(claimed['id'], exc, provider.kind)
                     queue.abort(claimed["id"], "LOCAL_EXECUTION_TIMEOUT")
                     outcome = "TIMEOUT"
                     current.set_attribute('status', 'TIMEOUT')
                     return
-            queue.finish(claimed["id"], **result)
-            outcome = "OK"
-            current.set_attribute('status', 'OK')
-        except ValueError:
-            outcome = "ALREADY_TERMINAL"
-        except Exception as exc:
+            try:
+                queue.finish(claimed["id"], **result)
+            except ValueError:
+                if queue.get(claimed['id'])['status'] == 'running':
+                    raise
+                outcome = 'ALREADY_TERMINAL'
+            else:
+                outcome = 'OK'
+            current.set_attribute('status', outcome)
+        except (Exception, CancelledError) as exc:
             current.set_attribute('status', 'ERROR')
+            queue.record_execution_failure(claimed['id'], exc, provider.kind)
             if provider.kind == 'cloud':
                 from .provider_runtime import ProviderFailure
                 code = exc.code if isinstance(exc, ProviderFailure) else 'EXTERNAL_EXECUTION_FAILED'
@@ -201,8 +212,9 @@ def _run_direct(job_id: str) -> None:
                     pass
             else:
                 try:
-                    queue.finish(claimed["id"], error='LOCAL_EXECUTION_FAILED',
-                                 retryable=not isinstance(exc, PermissionError))
+                    queue.finish(claimed["id"],
+                                 error='LOCAL_EXECUTION_TIMEOUT' if isinstance(exc, TimeoutError) else 'LOCAL_EXECUTION_FAILED',
+                                 retryable=not isinstance(exc, (PermissionError, TimeoutError, CancelledError)))
                 except ValueError:
                     pass
         finally:

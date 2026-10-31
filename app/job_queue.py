@@ -10,6 +10,7 @@ import sqlite3
 import threading
 import time
 import uuid
+from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -181,6 +182,21 @@ class JobQueue:
     def _event(self, c: sqlite3.Connection, job_id: str | None, event: str, details: dict) -> None:
         c.execute("INSERT INTO compute_events VALUES(?,?,?,?,?)",
                   (str(uuid.uuid4()), job_id, event, json.dumps(details, separators=(",", ":")), utcnow()))
+
+    def record_execution_failure(self, job_id: str, error: BaseException, provider_kind: str) -> None:
+        """Record value-free provenance before terminal mapping changes the stage."""
+        from .execution_diagnostics import failure_details
+        try:
+            with self.lock, self.connect() as c:
+                row = c.execute('SELECT lifecycle_state,status FROM compute_jobs WHERE id=?', (job_id,)).fetchone()
+                if row is None:
+                    return
+                details = failure_details(error, stage=row['lifecycle_state'] or 'EXECUTING',
+                                          provider_kind=provider_kind)
+                self._event(c, job_id, 'execution_failure', details)
+        except Exception:
+            # A diagnostic outage must not replace the actual task outcome.
+            record_counter('orqevia.execution.diagnostic_failures', 1, {'component':'compute-queue'})
 
     def submit(self, *, agent: str, prompt: str, priority: str | int = "normal",
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
@@ -556,8 +572,14 @@ class JobQueue:
                         from .home_eco import ExecutionBudget
                         budget = ExecutionBudget.for_job(dict(row))
                         timing = json.loads(row['timings_json'] or '{}')
+                        queued_at = timing.get('queued_at')
+                        wait_source = 'TIMINGS_QUEUED_AT'
+                        if type(queued_at) not in (int, float) or not math.isfinite(queued_at):
+                            queued_at = datetime.fromisoformat(row['created_at']).timestamp()
+                            wait_source = 'JOB_CREATED_AT'
                         timing.update(admitted_at=claim_time,
-                                      queue_wait_seconds=max(0, claim_time-timing.get('queued_at', claim_time)),
+                                      queue_wait_seconds=max(0, claim_time-queued_at),
+                                      queue_wait_source=wait_source,
                                       budget=asdict(budget))
                         c.execute("UPDATE compute_jobs SET lifecycle_state='ADMITTED',timings_json=?,local_inflight=?,lease_until=?,started_at=? WHERE id=?",
                                   (json.dumps(timing), int(provider.kind == 'local'), claim_time+budget.total+30, ts, row['id']))
@@ -647,6 +669,10 @@ class JobQueue:
             elif error and retryable and row["attempts"]<=row["max_retries"]: status="queued"
             elif error: status="failed"
             else: status="completed"
+            # Streamed progress is already durable. A terminal exception with
+            # no replacement answer must not erase that accepted partial output.
+            if error and not result and row['result']:
+                result = row['result']
             c.execute("""UPDATE compute_jobs SET status=?,result=?,error=?,actual_cost_usd=?,input_tokens=?,output_tokens=?,
                          provider=CASE WHEN ?='queued' THEN NULL ELSE provider END,cloud_inflight=0,local_inflight=0,lease_until=NULL,updated_at=?,completed_at=? WHERE id=?""",
                       (status,result,error,cost,None if input_tokens is None else int(input_tokens),None if output_tokens is None else int(output_tokens),status,ts,ts if status in TERMINAL else None,job_id))
@@ -656,6 +682,10 @@ class JobQueue:
                 self.guardian.record_outcome(c, dict(row), cost)
             if self.policy.coordinated:
                 phase = 'QUEUED' if status == 'queued' else status.upper()
+                if status == 'queued':
+                    timing['queued_at'] = time.time()
+                    c.execute('UPDATE compute_jobs SET timings_json=? WHERE id=?',
+                              (json.dumps(timing), job_id))
                 if error and 'TIMEOUT' in error:
                     phase = 'TIMED_OUT'
                 delay = min(120, 5 * 2 ** max(0, row['attempts']-1)) if status == 'queued' else 0
@@ -822,19 +852,25 @@ class WorkerPool:
                         future=executor.submit(self.execute,job,provider)
                         try:
                             result=future.result(timeout=deadline+30)
-                        except FutureTimeout:
+                        except FutureTimeout as exc:
+                            self.queue.record_execution_failure(job['id'], exc, provider.kind)
                             self.queue.abort(job["id"],'LOCAL_EXECUTION_TIMEOUT')
                             outcome='TIMEOUT'
                             current.set_attribute('status','TIMEOUT')
                             continue
                     self.queue.transition(job['id'], 'PERSISTING')
-                    self.queue.finish(job["id"],**result)
-                    outcome='OK'
-                    current.set_attribute('status','OK')
-                except ValueError:
-                    outcome='ALREADY_TERMINAL'
-                except Exception as exc:
+                    try:
+                        self.queue.finish(job["id"],**result)
+                    except ValueError:
+                        if self.queue.get(job['id'])['status'] == 'running':
+                            raise
+                        outcome='ALREADY_TERMINAL'
+                    else:
+                        outcome='OK'
+                    current.set_attribute('status',outcome)
+                except (Exception, CancelledError) as exc:
                     current.set_attribute('status','ERROR')
+                    self.queue.record_execution_failure(job['id'], exc, provider.kind)
                     if provider.kind=='cloud':
                         # Unknown billing remains reserved; no blind replay of an
                         # ambiguous external request, and no raw upstream error body.
@@ -848,7 +884,7 @@ class WorkerPool:
                     else:
                         try:
                             timeout = isinstance(exc, TimeoutError)
-                            self.queue.finish(job["id"],error='LOCAL_EXECUTION_TIMEOUT' if timeout else 'LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,(PermissionError, TimeoutError)))
+                            self.queue.finish(job["id"],error='LOCAL_EXECUTION_TIMEOUT' if timeout else 'LOCAL_EXECUTION_FAILED',retryable=not isinstance(exc,(PermissionError, TimeoutError, CancelledError)))
                         except ValueError:
                             pass
                 finally:

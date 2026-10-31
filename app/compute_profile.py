@@ -85,11 +85,18 @@ def generation_options():
     return dict(profile.get('generation_options',{})) if profile else {}
 
 
-def require_compute_capacity(model, endpoint=None):
+def require_compute_capacity(model, endpoint=None, *, already_admitted=False):
+    """Validate the model; apply RAM admission only without an owned reservation.
+
+    The trusted HOME_ECO executor may reuse its active ResourceGuardian
+    reservation. RAM consumed by that admitted model is not a cancellation.
+    """
     profile=runtime_compute_profile()
     if not profile:return
     if model not in profile['models']:
         raise PermissionError('Model is outside measured Compute Profile')
+    if already_admitted is True:
+        return
     if profile:
         try:require_bounded_work_capacity()
         except PermissionError:

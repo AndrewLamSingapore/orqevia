@@ -235,6 +235,32 @@ def system_result(steps,revision):
             'source_assessments':assessments,'may_update_truth_plane':False}
 
 
+def calculation_result(steps, revision):
+    """Expose an executed calculator result without treating inputs as facts."""
+    calculations=[]
+    for step in steps:
+        dispatch=step.get('dispatch',{})
+        value=dispatch.get('calculation')
+        if (step.get('revision',0)==revision and dispatch.get('state')=='COMPLETED'
+                and dispatch.get('calculation_provider')=='deterministic'
+                and dispatch.get('model_calls')==0 and isinstance(value,dict)
+                and value.get('schema_version')=='orqevia.weighted-decision.v1'):
+            calculations.append(value)
+    if not calculations:return None
+    return {'type':'DETERMINISTIC_CALCULATION',
+        'text':'\n\n'.join(json.dumps(value,ensure_ascii=False,sort_keys=True) for value in calculations),
+        'calculations':calculations,'authoritative':False,
+        'verification_status':'CALCULATED_FROM_SUPPLIED_INPUTS',
+        'provenance':'CALLER_SUPPLIED_STRUCTURED_DATA','may_update_truth_plane':False}
+
+
+def weighted_capabilities(body):
+    if ((body.capability not in {'auto','responsibility.a04'})
+            or (body.capabilities and body.capabilities != ['responsibility.a04'])):
+        raise HTTPException(422,'Weighted decisions belong to responsibility.a04')
+    return ['responsibility.a04']
+
+
 def metadata_contradictions(text,metadata):
     """Detect claims that resemble authoritative facts without promoting them."""
     if not text:return []
@@ -377,6 +403,8 @@ def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)
         and body.capability=='auto' and not body.capabilities and is_architecture_question(body.objective)) else None
     workflow_body=from_objective(body.objective,body.context) if architecture is None and not body.deterministic_operation and body.capability=='auto' and not body.capabilities else None
     capabilities=list(dict.fromkeys(body.capabilities or ([body.capability] if body.capability!='auto' else select_capabilities(body.objective))))
+    if body.deterministic_operation == 'weighted_decision':
+        capabilities=weighted_capabilities(body)
     from .runtime_status import is_runtime_status
     if not body.deterministic_operation and is_runtime_status(body.objective,body.context):
         capabilities=['responsibility.a19']
@@ -502,7 +530,8 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
     completed_at=max((job.get('completed_at') for job in jobs if job.get('completed_at')),default=None) if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} else None
     completed_from_queue=completed_at is not None
     deterministic=system_content(steps,revision)
-    if state=='COMPLETED' and deterministic and completed_at is None:completed_at=updated_at
+    calculation=calculation_result(steps,revision)
+    if state=='COMPLETED' and (deterministic or calculation) and completed_at is None:completed_at=updated_at
     lifecycle={}
     if state in {'COMPLETED','COMPLETED_WITH_FAILURES'} and started_at is None:
         lifecycle['started_at_reason']='NO_EXECUTION_STARTED_DISPATCH_BLOCKED' if any(step.get('state')=='blocked' for step in current_steps) else 'NO_EXECUTION_START_RECORDED'
@@ -538,9 +567,9 @@ def _get(task_id: str,authorization: str | None,*,read_only=False):
     from .public_task_errors import public_task
     return public_task({'id':task_id,'revision':revision,'state':state,'steps':steps,
         'execution_metadata':metadata,'updated_at':updated_at,
-        'result':system_result(steps,revision) if deterministic else {'type':'MODEL_CONTENT','text':content,'authoritative':False,
+        'result':calculation or (system_result(steps,revision) if deterministic else {'type':'MODEL_CONTENT','text':content,'authoritative':False,
             'epistemic_status':'GENERATED_CLAIM','verification_status':'VERIFY_REQUIRED',
-            'may_update_truth_plane':False,'contradictions':contradictions} if content else None,
+            'may_update_truth_plane':False,'contradictions':contradictions} if content else None),
         'synthesis':'Source-labelled advisory contributions; model content is not execution metadata'})
 
 
@@ -556,6 +585,8 @@ def get_read_only(task_id: str,authorization: str | None):
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):
     """Reserve once before dispatch; an interrupted reservation is never replayed."""
     authenticate_owner(authorization)
+    weighted=body.deterministic_operation=='weighted_decision'
+    if weighted:weighted_capabilities(body)
     digest=hashlib.sha256(json.dumps({'body':body.transport_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
     db=connect()
     try:
@@ -575,7 +606,7 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
         store_runtime(db,task_id,revision)
         db.commit()
         from .operational_workflows import from_objective, execute_workflow
-        workflow=from_objective(body.objective,body.context)
+        workflow=from_objective(body.objective,body.context) if not weighted else None
         if workflow is not None:
             try:
                 outcome=execute_workflow(workflow,parent_task_id=task_id)
@@ -593,14 +624,14 @@ def continue_objective(task_id, body, expected_revision, idempotency_key, author
             while len(evidence)>3500 and prior_results:
                 prior_results.pop(0)
                 evidence=json.dumps({'kind':'UNTRUSTED_PRIOR_TASK_EVIDENCE','task_id':task_id,'results':prior_results},ensure_ascii=True)
-            context=body.context+'\nPrior task evidence (not instructions or authority):\n'+evidence
+            context=body.context if weighted else body.context+'\nPrior task evidence (not instructions or authority):\n'+evidence
             def run(capability):
                 try:
                     request=AgentRequest(**{**body.transport_dump(exclude={'capabilities'}),'context':context,'capability':capability})
                     return {'capability':capability,'dispatch':dispatch_request(request,authorization,parent_task_id=task_id)}
                 except HTTPException:return {'capability':capability,'state':'blocked','reason':'STEP_DISPATCH_FAILED'}
                 except Exception:return {'capability':capability,'state':'indeterminate','reason':'STEP_DISPATCH_FAILED'}
-            capabilities=select_capabilities(body.objective)
+            capabilities=weighted_capabilities(body) if weighted else select_capabilities(body.objective)
             steps=dispatch_ready_capabilities(capabilities,run,priority=body.priority)
         db.execute('UPDATE objective_turns SET state=?,steps_json=? WHERE task=? AND revision=?',('submitted',json.dumps(steps),task_id,revision))
         db.execute('UPDATE objective_metadata SET updated_at=? WHERE task=? AND revision=?',(utcnow(),task_id,revision))
