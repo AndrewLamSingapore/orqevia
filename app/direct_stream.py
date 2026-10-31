@@ -168,6 +168,7 @@ async def infer(
             # Embedding models expose only the /api/embed route; the chat
             # stream contract does not apply. Bounded, no secrets, advisory.
             started_embed = time.monotonic()
+            effective_options = options() if callable(options) else dict(options or {})
             async with httpx.AsyncClient(timeout=network_timeout) as client:
                 response = await client.post(
                     settings.ollama_base_url + "/api/embed",
@@ -175,7 +176,9 @@ async def infer(
                         "model": provider.model,
                         "prompt": job["prompt"],
                         "options": {
-                            key: value for key, value in options.items() if key in ("temperature", "seed", "num_ctx")
+                            key: value
+                            for key, value in effective_options.items()
+                            if key in ("temperature", "seed", "num_ctx")
                         },
                     },
                 )
