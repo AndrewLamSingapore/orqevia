@@ -54,6 +54,7 @@ def enforcement_matrix(requested, settings, journal):
     mode = settings.get("ORQEVIA_OUTPUT_QUEUE_MODE", "direct")
     coordinated = mode == "home_eco" and journal.get("lifecycle_columns_present", False)
     pause = journal.get("background_admission") or {}
+    single_flight = journal.get("single_flight") or {}
     return {
         "requested_profile": requested,
         "actual_scheduling_mode": mode,
@@ -61,8 +62,10 @@ def enforcement_matrix(requested, settings, journal):
         "profile_matches": coordinated and requested == "HOME_ECO",
         "shared_admission": "DEPLOYED_NOT_FUNCTIONALLY_VERIFIED" if coordinated else "NOT_ENFORCED",
         "patient_deadlines": "NOT_VERIFIED",
-        "duplicate_requests_prevented": None,
-        "duplicate_counter_state": "NOT_INSTRUMENTED",
+        "duplicate_requests_prevented": single_flight.get("coalesced_consumers"),
+        "duplicate_counter_state": (
+            "DURABLE_SINGLE_FLIGHT" if single_flight else "NOT_INSTRUMENTED"
+        ),
         "actual_inference_requests": None,
         "actual_inference_request_state": "NOT_MEASURED_BY_MODEL_RESIDENCY_OR_JOB_STATUS",
         "scheduler_bypass": "DIRECT_DISPATCH_BYPASSES_SHARED_ADMISSION"
@@ -102,6 +105,9 @@ with sqlite3.connect('file:/data/compute-queue.db?mode=ro',uri=True,timeout=3) a
   result['background_trigger_present']=bool(db.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND name='compute_owner_background_admission'").fetchone())
   result['background_starts_since_pause']=db.execute('SELECT count(*) FROM compute_jobs WHERE priority<50 AND started_at>?',(row['changed_at'],)).fetchone()[0] if row else None
  result['coaching_pause_marker_present']=pathlib.Path('/data/coaching.pause').exists()
+ if db.execute("SELECT 1 FROM sqlite_master WHERE name='compute_single_flights'").fetchone():
+  result['single_flight']={'flights':db.execute('SELECT count(*) FROM compute_single_flights').fetchone()[0],
+   'coalesced_consumers':sum(1 for _ in db.execute('SELECT count(*) FROM compute_flight_consumers GROUP BY flight_id HAVING count(*)>1'))}
 mem={}
 for line in pathlib.Path('/proc/meminfo').read_text().splitlines():
  k,_,v=line.partition(':')

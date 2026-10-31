@@ -124,6 +124,9 @@ class SingleFlightQueue:
                 ).fetchone()
                 if flight:
                     flight_id = flight["id"]
+                    from .observability import record_counter
+
+                    record_counter("orqevia.singleflight.coalesced", 1, {"component": "compute-queue"})
                 else:
                     if (
                         db.execute(
