@@ -229,15 +229,15 @@ def test_expired_worker_recovery_keeps_original_job_and_bounded_retries(tmp_path
     assert restarted.get(job["id"])["lifecycle_state"] == "COMPLETED"
 
 
-def test_retry_backoff_prevents_immediate_reexecution(tmp_path):
+def test_retry_without_artificial_delay_keeps_bounded_attempts(tmp_path):
     queue = queue_at(tmp_path / "jobs.db")
     job = queue.submit(agent="a17", prompt="fixture", model="gemma3:12b", max_retries=1)
     queue.claim("worker", [MODEL])
     queue.finish(job["id"], error="TRANSIENT_LOCAL_FAILURE")
+    retried = queue.claim("worker", [MODEL])
+    assert retried["id"] == job["id"] and retried["attempts"] == 2
+    queue.finish(job["id"], error="TRANSIENT_LOCAL_FAILURE")
     assert queue.claim("worker", [MODEL]) is None
-    with queue.connect() as db:
-        db.execute("UPDATE compute_jobs SET not_before=0 WHERE id=?", (job["id"],))
-    assert queue.claim("worker", [MODEL])["id"] == job["id"]
 
 
 @pytest.mark.parametrize("agent", registered_agent_ids(include_orchestrator=False))

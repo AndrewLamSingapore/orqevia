@@ -688,7 +688,9 @@ class JobQueue:
                               (json.dumps(timing), job_id))
                 if error and 'TIMEOUT' in error:
                     phase = 'TIMED_OUT'
-                delay = min(120, 5 * 2 ** max(0, row['attempts']-1)) if status == 'queued' else 0
+                # Owner efficiency stage: no artificial retry delay. Bounded
+                # attempts still apply; the wake event advances work at once.
+                delay = 0
                 c.execute('UPDATE compute_jobs SET lifecycle_state=?,not_before=? WHERE id=?',
                           (phase, time.time()+delay, job_id))
                 self._event(c, job_id, 'lifecycle', {'phase': phase, 'retry_backoff_seconds': delay})
