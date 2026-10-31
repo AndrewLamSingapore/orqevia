@@ -1,7 +1,9 @@
-"""Value-free failure provenance for the existing execution-event journal.
+"""Failure provenance for the existing execution-event journal.
 
-Never serialize exception messages, request/response objects, frame locals,
-URLs or source paths. Reason codes describe only known application conditions.
+Owner transparency directive, 31 October 2026: nothing hidden. Exception
+messages are recorded in full with an explicit truncation flag above 8000
+characters. Frame metadata stays bounded file/function/line only. Reason
+codes describe known application conditions.
 """
 
 from __future__ import annotations
@@ -53,8 +55,9 @@ def failure_details(error: BaseException, *, stage="UNKNOWN", provider_kind="UNK
         frames.append({"file": name, "function": function, "line": frame.tb_lineno})
         frames = frames[-8:]
         frame = frame.tb_next
-    # Only exact built-in application exception messages can select a fixed
-    # code. Arbitrary upstream exception text is never copied or hashed.
+    # Owner transparency directive, 31 October 2026: nothing hidden. The full
+    # exception message is recorded with an explicit truncation flag when it
+    # exceeds the durable bound. Reason codes still select fixed classes.
     reason = "UNCLASSIFIED_EXECUTION_FAILURE"
     if type(error) in (RuntimeError, PermissionError, TimeoutError, ValueError):
         try:
@@ -67,6 +70,11 @@ def failure_details(error: BaseException, *, stage="UNKNOWN", provider_kind="UNK
         reason = "EXECUTION_CANCELLED"
     if isinstance(error, MemoryError):
         reason = "MEMORY_EXHAUSTED"
+    try:
+        message = str(error)
+    except Exception:
+        message = ""
+    message_truncated = len(message) > 8000
     return {
         "schema_version": "orqevia.execution-failure.v1",
         "exception_class": _identifier(type(error).__name__),
@@ -75,5 +83,7 @@ def failure_details(error: BaseException, *, stage="UNKNOWN", provider_kind="UNK
         "provider_kind": provider_kind if provider_kind in ("local", "cloud") else "UNKNOWN",
         "reason_code": reason,
         "frames": frames,
-        "message_recorded": False,
+        "message_recorded": True,
+        "message": message[:8000] if message_truncated else message,
+        "message_truncated": message_truncated,
     }

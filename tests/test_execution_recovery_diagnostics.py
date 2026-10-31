@@ -33,7 +33,7 @@ def events(queue, job):
         ]
 
 
-def test_execution_value_error_terminalizes_and_preserves_redacted_chain_and_stage(tmp_path):
+def test_execution_value_error_terminalizes_and_records_full_message_chain_and_stage(tmp_path):
     queue = JobQueue(tmp_path / "queue.db", QueuePolicy(coordinated=True))
     job = queue.submit(agent="a17", prompt="fixture", model="fixture-model", max_retries=0)
 
@@ -55,8 +55,9 @@ def test_execution_value_error_terminalizes_and_preserves_redacted_chain_and_sta
     diagnostics = events(queue, job)
     assert len(diagnostics) == 1 and diagnostics[0]["stage"] == "MODEL_LOADING"
     assert [c["class"] for c in diagnostics[0]["cause_chain"]] == ["ValueError", "KeyError"]
-    assert "fixture-secret" not in json.dumps(diagnostics) and "private request text" not in json.dumps(diagnostics)
-    assert diagnostics[0]["message_recorded"] is False
+    assert diagnostics[0]["message_recorded"] is True
+    assert "private request text" in diagnostics[0]["message"]
+    assert diagnostics[0]["message_truncated"] is False
 
 
 def test_retry_is_bounded_and_reuses_the_original_idempotent_job(tmp_path):
@@ -129,7 +130,7 @@ def test_direct_executor_execution_value_error_is_not_mistaken_for_terminal_stat
     assert events(queue, job)[0]["exception_class"] == "ValueError"
 
 
-def test_reason_codes_are_fixed_and_unknown_permission_messages_are_never_copied():
+def test_reason_codes_are_fixed_and_unknown_permission_messages_are_openly_recorded():
     known = failure_details(
         PermissionError("Measured Compute Profile memory reserve reached; local inference held"),
         stage="MODEL_LOADING",
@@ -138,4 +139,5 @@ def test_reason_codes_are_fixed_and_unknown_permission_messages_are_never_copied
     assert known["reason_code"] == "MEMORY_ADMISSION_RESERVE"
     private = failure_details(PermissionError("/private/credential?token=fixture-secret"))
     assert private["reason_code"] == "UNCLASSIFIED_EXECUTION_FAILURE"
-    assert "fixture-secret" not in json.dumps(private)
+    assert private["message_recorded"] is True
+    assert "fixture-secret" in private["message"]
