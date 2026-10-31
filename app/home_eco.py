@@ -69,15 +69,23 @@ def resource_observation() -> dict:
         result["admission"] = "UNKNOWN"
         return result
     raw = os.getenv("ORQEVIA_HOME_ECO_MIN_AVAILABLE_MIB")
+    reserve: float | None = None
     if raw is None:
-        return result
-    try:
-        reserve = float(raw)
-        if not math.isfinite(reserve) or reserve <= 0:
-            raise ValueError()
-    except ValueError:
-        result["admission"] = "INVALID_CONFIGURATION"
-        return result
+        from .compute_profile import runtime_compute_profile
+
+        profile = runtime_compute_profile()
+        if profile:
+            reserve = float(profile["minimum_available_mib"])
+        else:
+            return result
+    else:
+        try:
+            reserve = float(raw)
+            if not math.isfinite(reserve) or reserve <= 0:
+                raise ValueError()
+        except ValueError:
+            result["admission"] = "INVALID_CONFIGURATION"
+            return result
     result.update(
         minimum_available_mib=reserve, admission="WAITING_FOR_CAPACITY" if available < reserve else "AVAILABLE"
     )
