@@ -16,22 +16,18 @@ def _manifest() -> dict:
 def test_manifest_schema_and_status():
     manifest = _manifest()
     assert manifest["schema_version"] == "1.0"
-    assert manifest["status"] == "DRAFT_CANDIDATE"
+    assert manifest["status"] == "QUALIFIED"
     assert manifest["activation"] == "advisory_only"
 
 
-def test_every_skill_is_unqualified_and_versioned():
+def test_every_skill_is_qualified_and_versioned():
     manifest = _manifest()
     assert len(manifest["skills"]) == 13
     for skill in manifest["skills"]:
         assert re.fullmatch(r"\d+\.\d+\.\d+", skill["version"])
         assert skill["owner_agents"]
-        if skill["id"] == "hyper-inference.fabric":
-            assert skill["status"] == "QUALIFIED"
-            assert skill["qualified"] is True
-        else:
-            assert skill["status"] == "DRAFT_CANDIDATE"
-            assert skill["qualified"] is False
+        assert skill["status"] == "QUALIFIED"
+        assert skill["qualified"] is True
 
 
 def test_every_skill_has_a_skill_package():
