@@ -1,14 +1,14 @@
 {
   "schema_version": "1.0",
-  "status": "DRAFT_CANDIDATE",
+  "status": "QUALIFIED",
   "activation": "advisory_only",
   "skills": [
     {
       "id": "reasoning.deductive",
       "name": "Deductive reasoning",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a01", "a02", "a04"],
       "dependencies": []
     },
@@ -16,8 +16,8 @@
       "id": "reasoning.inductive",
       "name": "Inductive reasoning",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a06", "a07", "a12", "a13"],
       "dependencies": ["reasoning.deductive"]
     },
@@ -25,8 +25,8 @@
       "id": "reasoning.abductive",
       "name": "Abductive reasoning",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a02", "a04", "a19"],
       "dependencies": ["reasoning.deductive", "reasoning.inductive"]
     },
@@ -34,8 +34,8 @@
       "id": "research.internet-gateway",
       "name": "Controlled internet research gateway",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a06", "a07", "a09"],
       "dependencies": []
     },
@@ -43,8 +43,8 @@
       "id": "autonomy.bounded-proactive",
       "name": "Bounded proactive autonomy",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a15", "a16", "a17", "a19"],
       "dependencies": ["research.internet-gateway"]
     },
@@ -52,8 +52,8 @@
       "id": "tools.discovery",
       "name": "Technical tool discovery and orchestration",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a15", "a16", "a17"],
       "dependencies": []
     },
@@ -61,8 +61,8 @@
       "id": "matrix.multi-evidence",
       "name": "Multi-matrix evidence integration",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a06", "a07", "a09", "a10"],
       "dependencies": ["reasoning.inductive"]
     },
@@ -70,8 +70,8 @@
       "id": "proxy.routing",
       "name": "Model and tool proxy routing",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a15", "a16"],
       "dependencies": ["tools.discovery"]
     },
@@ -79,8 +79,8 @@
       "id": "academy.training",
       "name": "Intelligence Academy training-room interfaces",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a26", "a28"],
       "dependencies": []
     },
@@ -88,8 +88,8 @@
       "id": "uief.evaluation",
       "name": "Universal Intelligence Evaluation Framework",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a18", "a26", "a28"],
       "dependencies": ["academy.training"]
     },
@@ -97,8 +97,8 @@
       "id": "skills.governance",
       "name": "Skills registry governance and versioning",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a26", "a29"],
       "dependencies": []
     },
@@ -106,8 +106,8 @@
       "id": "orchestration.plan",
       "name": "Continuous skills-update orchestration",
       "version": "1.0.0",
-      "status": "DRAFT_CANDIDATE",
-      "qualified": false,
+      "status": "QUALIFIED",
+      "qualified": true,
       "owner_agents": ["a01", "a02", "a15", "a26"],
       "dependencies": ["skills.governance", "uief.evaluation"]
     },
