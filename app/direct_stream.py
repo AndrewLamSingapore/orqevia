@@ -171,7 +171,7 @@ async def infer(
             effective_options = options() if callable(options) else dict(options or {})
             async with httpx.AsyncClient(timeout=network_timeout) as client:
                 response = await client.post(
-                    settings.ollama_base_url + "/api/embed",
+                    settings.ollama_base_url + "/api/embeddings",
                     json={
                         "model": provider.model,
                         "prompt": job["prompt"],
@@ -184,10 +184,13 @@ async def infer(
                 )
                 response.raise_for_status()
                 data = response.json()
-                vectors = data.get("embeddings")
-                if not isinstance(vectors, list) or not vectors or not isinstance(vectors[0], list):
+                vectors = data.get("embedding")
+                if not isinstance(vectors, list):
+                    nested = data.get("embeddings")
+                    vectors = nested[0] if isinstance(nested, list) and nested and isinstance(nested[0], list) else None
+                if not isinstance(vectors, list) or not vectors:
                     raise RuntimeError("Malformed embedding response")
-                vector = [float(value) for value in vectors[0]]
+                vector = [float(value) for value in vectors]
                 if not vector or not all(math.isfinite(value) for value in vector):
                     raise RuntimeError("Invalid embedding vector")
                 if first_token_at is None:
