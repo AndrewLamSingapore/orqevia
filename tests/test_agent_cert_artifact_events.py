@@ -432,7 +432,7 @@ def test_failed_attempt_cannot_replay_while_real_writer_has_dequeued_unfinished_
     calls = []
     def held_open(path, *a, **k):
         mode = a[0] if a else k.get('mode', 'r')
-        if path == ledger.path and mode == 'a' and not entered.is_set():
+        if path == ledger.path and mode in ('a', 'ab', 'a+b') and not entered.is_set():
             entered.set()
             assert release.wait(2)
         return original_open(path, *a, **k)

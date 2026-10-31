@@ -5,6 +5,7 @@ Execution/admission never acquires it. Historical journal bytes are preserved.
 """
 from contextlib import contextmanager
 from dataclasses import dataclass,field,asdict
+import datetime as _datetime_module
 from datetime import datetime,timezone
 import hashlib
 import io
@@ -124,7 +125,7 @@ def _prefix_boundary(stream, *, needs_newline):
         'invalid_sequence_or_json_records':invalid,
         'new_records_start_offset':size+int(bool(size and needs_newline)),
         'scope':'NEW_APPENDS_ONLY_REQUIRES_ALL_WRITERS_USING_APPEND_PROTOCOL',
-        'recorded_at':datetime.now(timezone.utc).isoformat()}
+        'recorded_at':_datetime_module.datetime.now(timezone.utc).isoformat()}
 
 
 def _read_append_state(path):
