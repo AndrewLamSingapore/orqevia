@@ -97,10 +97,12 @@ class AgentDispatchTests(HarnessApiTests):
                                embedding_model='embed',multi_specialist_workers=1)
         backends=local_model_backends(settings)
         assert [(item.name,item.model,item.tier.name) for item in backends]==[
-            ('ollama-fast','small:1b','NANO'),('ollama-deep','deep:4b','MINI')]
+            ('ollama-fast','small:1b','NANO'),('ollama-deep','deep:4b','MINI'),
+            ('ollama-embedding','embed','NANO')]
         same=PrimeSettings(ollama_base_url='http://fixture',fast_model='same',deep_model='same',
                            embedding_model='embed',multi_specialist_workers=1)
-        assert len(local_model_backends(same))==1
+        assert [(item.name,item.model) for item in local_model_backends(same)]==[
+            ('ollama-fast','same'),('ollama-embedding','embed')]
 
     def test_structured_agent_output_avoids_conflicting_user_facing_identity_preface(self):
         request = AgentRequest(capability='responsibility.a12', objective='Output strict JSON.',
