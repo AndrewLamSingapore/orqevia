@@ -48,3 +48,20 @@ def test_real_local_result_usage_precedes_queue_completion(tmp_path,monkeypatch,
     assert details['success'] is (not failure)
     assert details['retries']==0 and details['provider']==backend.name
     assert 'private' not in raw and 'answer' not in raw
+
+
+def test_embedding_provider_executes_as_configured_local_role(tmp_path,monkeypatch):
+    from app import compute_queue_api as compute,direct_stream
+    from app.job_queue import Provider
+    from app.settings import SETTINGS
+    monkeypatch.setattr(compute,'DATA',tmp_path)
+    async def infer(*args,**kwargs):
+        return {'result':'{"embedding":true}','input_tokens':3,'output_tokens':0,'actual_cost_usd':0}
+    monkeypatch.setattr(direct_stream,'infer',infer)
+    job={'id':'embedding-attempt','agent':'a16','classification':'R0','task_class':'research'}
+    provider=Provider('ollama-embedding','local',SETTINGS.embedding_model,32768,0,1)
+    result=compute._execute(job,provider)
+    assert result['input_tokens']==3
+    with sqlite3.connect(tmp_path/'compute-ledger.db') as db:
+        rows=db.execute('SELECT tier FROM reasoning_attempts').fetchall()
+    assert rows and rows[0][0]=='NANO'

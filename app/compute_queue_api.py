@@ -125,7 +125,12 @@ def _execute(job: dict, provider: Provider) -> dict:
     tier=next((backend.tier.name for backend in local_model_backends()
                if backend.name==provider.name and backend.model==provider.model),None)
     if tier is None:
-        raise PermissionError('Local provider is not an existing configured role')
+        # The embedding lane is a configured local role outside tier routing;
+        # it must never become a default NANO inference route.
+        if provider.name=='ollama-embedding' and provider.model==SETTINGS.embedding_model:
+            tier='NANO'
+        else:
+            raise PermissionError('Local provider is not an existing configured role')
     metrics=OutcomeMetrics(DATA/'compute-ledger.db')
     started=time.monotonic();answer=None;failure='LOCAL_INFERENCE_FAILED'
     capacity=(lambda model:require_compute_capacity(model,already_admitted=True)
