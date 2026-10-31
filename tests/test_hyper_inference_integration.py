@@ -48,7 +48,7 @@ class SkillRouterWiringTests(unittest.TestCase):
     def test_skill_pack_includes_advisory_fabric_summary(self):
         pack = select_skill_pack("a17", "planning", Tier.MINI)
         fabric = pack["advisory_fabric"]
-        self.assertEqual(fabric["status"], "DRAFT_CANDIDATE")
+        self.assertEqual(fabric["status"], "QUALIFIED")
         self.assertEqual(fabric["authority"], "ADVISORY_ONLY")
         self.assertEqual(len(fabric["engine_families"]), 12)
         self.assertEqual(len(fabric["channel_ids"]), 10)

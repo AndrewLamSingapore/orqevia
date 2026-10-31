@@ -114,7 +114,7 @@ def select_skill_pack(agent_id: str, task_class: str, tier: Tier) -> dict:
         advisory_fabric = {
             "engine_families": sorted({spec["family"] for spec in ENGINE_SPECS.values()}),
             "channel_ids": sorted(CHANNEL_SPECS),
-            "status": "DRAFT_CANDIDATE",
+            "status": "QUALIFIED",
             "authority": "ADVISORY_ONLY",
         }
     except Exception:
