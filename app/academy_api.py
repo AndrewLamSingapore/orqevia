@@ -12,6 +12,7 @@ from .client_auth import authenticate_owner
 from .coaching_observation import coaching_snapshot
 from .probability_curriculum import catalog, learning_path, LESSONS, VERSION
 from .agent_registry import RegistryError, registered_agent_ids
+from .settings import SETTINGS
 
 router = APIRouter(prefix="/api/academy", tags=["academy"])
 
@@ -91,7 +92,7 @@ def notify(job_id: str, authorization: str | None = Header(None)):
         job = queue.get(job_id)
         if (
             job["agent"] != row["agent"]
-            or job["model"] != "gemma3:12b"
+            or job["model"] != SETTINGS.deep_model
             or hashlib.sha256(job["prompt"].encode()).hexdigest() != row["prompt_sha256"]
             or job["allow_cloud"]
             or job["external_execution"]

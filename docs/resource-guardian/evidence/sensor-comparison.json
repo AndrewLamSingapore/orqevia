@@ -1,0 +1,105 @@
+﻿{
+    "BeforeSeconds":  8.1151723,
+    "AfterSeconds":  [
+                         1.0323451,
+                         0.8469873,
+                         0.8425309
+                     ],
+    "Sensors":  {
+                    "schema":  "abex.resource-sensors.v1",
+                    "observed_at":  1793235573.916,
+                    "gpu":  {
+                                "collection_status":  "OBSERVED_USAGE_CAPACITY_UNKNOWN",
+                                "source":  "Win32_PerfFormattedData_GPUPerformanceCounters",
+                                "available_bytes":  null,
+                                "dedicated_usage_bytes":  374009856,
+                                "shared_usage_bytes":  621379584,
+                                "busiest_engine_percent":  1,
+                                "scope":  "OBSERVED_ENGINES_NOT_TOTAL_SHARED_GPU_BUDGET"
+                            },
+                    "thermal":  {
+                                    "collection_status":  "UNAVAILABLE",
+                                    "source":  "MSAcpi_ThermalZoneTemperature",
+                                    "maximum_c":  null,
+                                    "scope":  "ACPI_ZONES_NOT_CPU_DIE_OR_GPU_JUNCTION"
+                                },
+                    "memory":  {
+                                   "collection_status":  "OBSERVED",
+                                   "source":  "Win32_PerfFormattedData_PerfOS_Memory",
+                                   "commit_available_bytes":  21630631936,
+                                   "committed_bytes":  18992726016,
+                                   "commit_limit_bytes":  40623357952,
+                                   "pages_per_second":  7
+                               },
+                    "disk":  {
+                                 "collection_status":  "OBSERVED",
+                                 "source":  "Win32_PerfFormattedData_PerfDisk_PhysicalDisk",
+                                 "busy_percent":  1,
+                                 "queue_length":  0
+                             },
+                    "processes":  [
+                                      {
+                                          "Id":  14392,
+                                          "ProcessName":  "vmmemWSL",
+                                          "WorkingSet64":  4378398720
+                                      },
+                                      {
+                                          "Id":  18580,
+                                          "ProcessName":  "python",
+                                          "WorkingSet64":  1507008512
+                                      },
+                                      {
+                                          "Id":  5512,
+                                          "ProcessName":  "msedge",
+                                          "WorkingSet64":  542515200
+                                      },
+                                      {
+                                          "Id":  12956,
+                                          "ProcessName":  "OneDrive",
+                                          "WorkingSet64":  377020416
+                                      },
+                                      {
+                                          "Id":  7776,
+                                          "ProcessName":  "explorer",
+                                          "WorkingSet64":  368132096
+                                      },
+                                      {
+                                          "Id":  4436,
+                                          "ProcessName":  "MsMpEng",
+                                          "WorkingSet64":  338321408
+                                      },
+                                      {
+                                          "Id":  4420,
+                                          "ProcessName":  "codex",
+                                          "WorkingSet64":  329224192
+                                      },
+                                      {
+                                          "Id":  9316,
+                                          "ProcessName":  "msedge",
+                                          "WorkingSet64":  288878592
+                                      },
+                                      {
+                                          "Id":  3560,
+                                          "ProcessName":  "codex",
+                                          "WorkingSet64":  270782464
+                                      },
+                                      {
+                                          "Id":  7160,
+                                          "ProcessName":  "msedge",
+                                          "WorkingSet64":  265863168
+                                      },
+                                      {
+                                          "Id":  1920,
+                                          "ProcessName":  "dwm",
+                                          "WorkingSet64":  247771136
+                                      },
+                                      {
+                                          "Id":  14000,
+                                          "ProcessName":  "TextInputHost",
+                                          "WorkingSet64":  211574784
+                                      }
+                                  ]
+                },
+    "Scope":  "NATIVE_READ_ONLY_SAMPLER_OVERHEAD_NOT_APPLICATION_THROUGHPUT",
+    "ProductionInstalled":  false
+}

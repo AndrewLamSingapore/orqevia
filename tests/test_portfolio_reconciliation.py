@@ -251,6 +251,50 @@ def test_frozen_receipts_remain_separate_from_new_reconciliation():
 
 def test_status_insertion_preserves_all_existing_sections_and_history():
     after = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    # Admit only this exact dated runtime claim; all prior records remain pinned.
+    live_title = "## Resource Guardian live acceptance - 29 October 2026"
+    assert after.count(live_title) == 1
+    live_start = after.index(live_title)
+    live_end = after.index("\n## ", live_start + len(live_title)) + 1
+    live_update = after[live_start:live_end].encode("utf-8")
+    assert len(live_update) == 1046
+    assert hashlib.sha256(live_update).hexdigest() == "be2deff0585fd3ee36cd0e280019991a6c05cccc480600eb1247afb72000460e"
+    assert b"### Claimed, not independently checked" in live_update
+    assert b"### Verified" not in live_update
+    after = after[:live_start] + after[live_end:]
+    # Admit only this exact claimed-only qualification record; all old bytes stay pinned.
+    current_title = "## Online Resource Guardian qualification - 29 October 2026"
+    assert after.count(current_title) == 1
+    current_start = after.index(current_title)
+    current_end = after.index("\n## ", current_start + len(current_title)) + 1
+    current_update = after[current_start:current_end].encode("utf-8")
+    assert len(current_update) == 700
+    assert hashlib.sha256(current_update).hexdigest() == "419698999e9581fcc7b1bbe5430548e7a3e62323553b91f077bc0b0f2b8ef0b3"
+    assert b"### Claimed, not independently checked" in current_update
+    assert b"### Verified" not in current_update
+    after = after[:current_start] + after[current_end:]
+    # Preserve the earlier29October candidate checkpoint as exact dated history.
+    resource_title = '## Resource Guardian candidate - 29 October 2026'
+    assert after.count(resource_title) == 1
+    resource_start = after.index(resource_title)
+    resource_end = after.index("\n## ", resource_start + len(resource_title)) + 1
+    resource_update = after[resource_start:resource_end].encode("utf-8")
+    assert len(resource_update) == 1026
+    assert hashlib.sha256(resource_update).hexdigest() == "9a79019053e4ac65a79c79da2aca8c130ed0f77ab52e05cf6b590c1d9dbce666"
+    assert b"### Claimed, not independently checked" in resource_update
+    assert b"### Verified" not in resource_update
+    after = after[:resource_start] + after[resource_end:]
+    # Admit only this exact dated implementation/runtime distinction. All
+    # earlier history and Owner-only Verified records retain their byte pins.
+    eco_title='## Selective-expert MoE and patient inference - 28 October 2026'
+    assert after.count(eco_title)==1
+    eco_start=after.index(eco_title)
+    eco_end=after.index('\n## ',eco_start+len(eco_title))+1
+    eco_update=after[eco_start:eco_end].encode('utf-8')
+    assert len(eco_update)==3501
+    assert hashlib.sha256(eco_update).hexdigest()=='2087f7bacff6564ff93e85fbf7edbc66487e00347da52657213031cbb73dcec3'
+    assert b'### Verified' not in eco_update
+    after=after[:eco_start]+after[eco_end:]
     # Exact current preservation note; all prior historical pins remain.
     checkpoint_title = '## Live dashboard and generic Codex preservation checkpoint - 27 October 2026'
     assert after.count(checkpoint_title) == 1

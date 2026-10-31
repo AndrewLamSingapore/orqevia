@@ -1,5 +1,88 @@
 # STATUS.md — Portfolio status record
 
+## Resource Guardian live acceptance - 29 October 2026
+
+### Claimed, not independently checked
+
+ABEX deployed application source5247611ed3a8 in immutable image5eb620f737da.
+Guardian is enforced in HOME_ECO; a real backend/OTel restart preserved it and
+Owner-resumed OPEN generation1. All nine service roles run, all five declared
+health checks pass, and21logical roles retain one physical inference slot.
+Verified HTTPS17screen navigation, objective/artifact persistence and local1B/
+12Bcold/warm checks passed within the calibrated3GiB host/10%VM reserve.
+The prior4GiB gate failure is retained; bounded trials do not certify arbitrary
+workload safety or semantic role quality. Same-drive service rollback is qualified;
+off-device/data-volume recovery is not. Offline backup/logging remain parked.
+No original resources were deleted and no Windows restart occurred. All nine
+source CI checks passed; merge into main and C++ feature activation are not claimed.
+See [dated runtime acceptance](docs/resource-guardian/LIVE-ACCEPTANCE-20261029.md).
+
+## Online Resource Guardian qualification - 29 October 2026
+
+### Claimed, not independently checked
+
+Owner confirmed DeepSeek collaboration and resumed normal production; the live
+admission record is generation1. Offline backup/logging are explicitly parked.
+This candidate corrects routed-model memory lookup, verified warm-model memory
+accounting, host-field provenance and event-driven capacity reuse. It preserves
+Owner admission in both states and introduces no deployment queue guard or new
+service. No production Guardian activation is claimed. Source tests, runtime
+observations and remaining release conditions are in
+[online qualification](docs/resource-guardian/ONLINE-QUALIFICATION.md).
+
+## Selective-expert MoE and patient inference - 28 October 2026
+
+### Under implementation; source candidate only
+
+The Owner permanently selected multi-service containers as the primary architecture;
+docs/ARCHITECTURE_V1.md records RulesA-H. Preserve service boundaries, one logical
+coordinator and21logical agents. New containers require documented need; measured
+benefits and explicit Owner approval are required for consolidation. A fresh
+read-only inspection found17containers/9running,69images,15volumes,7networks and
+3Compose projects. No topology change, restart or production resume was performed.
+
+The Owner requested a saved checkpoint for later continuation. The permanent
+direction is docs/INTELLIGENT_EFFICIENCY_DOCTRINE.md; the implementation pathway
+is docs/MULTI-LANE-EXECUTION-PATHWAY.md. Production background remains PAUSED.
+That pathway includes the Owner's intelligent central-coordinator and bounded
+coordinator-coaching direction; these are planned, not deployed capabilities.
+Bounded qualification passed6schema-constrained1Btrials and1embedding batch;
+the deep scheduling reasoning trial FAILED correctness. No production model
+or thread setting was enabled from these tests. Monitoring classification source
+passed32targeted tests;3HTTPSfunctional probes and API/UI deployment remain open.
+Complete HOME_ECO/ULTRA_ECO, global deduplication and21-agent current end-to-end
+quality are not production accepted. Read docs/moe/07-LIVE-PAUSE-HANDOVER.md.
+
+The Owner authorized implementation of selective agent activation, patient
+shared inference and computational-waste reduction. The MoE assessment is in
+docs/moe/README.md. Native neural MoE is an optional unperformed experiment;
+the existing default-one specialist selector is preserved.
+
+The source candidate adds opt-in HOME_ECO admission and lifecycle timing to
+the existing SQLite queue, bounded waiting count, priority aging, retry
+backoff, cancellation ownership and patient coaching budgets. A read-only
+runtime compliance command separates requested profile from deployed behavior.
+The first regression run passed137tests plus73subtests, including21 deterministic
+scheduler pipelines. The later admission/coaching/API/observer run passed36tests
+plus63subtests. These isolated tests do not establish real-model task quality.
+
+At08:13UTC the nine-service runtime used direct scheduling and balanced settings.
+At08:46UTC an Owner-authorized persistent background pause was installed in the
+existing compute database. Its trigger holds new noninteractive admissions
+without cancelling active or queued jobs. The Windows supervisor was corrected
+and reloaded; it preserves the pause instead of archiving it every30seconds.
+No Docker service was restarted. Existing work completed; no background job
+started after the pause in the observed window. The12B model unloaded naturally
+at08:50UTC, with unchanged2minute retention. Docker Ollama fell from about804%CPU
+and13.65GiB to idle CPU and about60MiB. This demonstrates workload deferral and
+idle memory release, not faster inference or equivalent-work efficiency gains.
+
+ULTRA_ECO, global deduplication, fair coordinated execution, model-quality/thread
+benchmarks and request-to-mission binding are not production-verified. Existing
+fast/deep/embedding roles remain configurable. The Owner superseded exclusive
+model/provider rules; see docs/MODEL-SELECTION-POLICY.md. No model was deleted,
+installed or silently downgraded. The background pause requires explicit resume.
+
 ## Live dashboard and generic Codex preservation checkpoint - 27 October 2026
 
 ### Claimed, not independently checked
@@ -402,6 +485,24 @@ Interpretation updated: 6 October 2026. Dated observations below retain their or
 STATUS.md is the human-readable portfolio status index: it records dated claims, evidence, and open work. It is not a universal source of truth or a synchronization target. Each product owns its source, configuration, contracts, and domain records; runtime, deployment, identity, registries, and evidence each have their own scoped authority. Reconcile disagreements by domain ownership, version, and provenance. Runtime claims require observed deployment identity and evidence receipts; a source commit or CI result alone does not establish them. Historical SSOT mentions below describe the former arrangement and do not reinstate it.
 
 STATUS.md records current portfolio status claims and their evidence classification. Each product owns its source, configuration, contracts, and domain records in its repository.
+
+## Resource Guardian candidate - 29 October 2026
+
+### Claimed, not independently checked
+
+The isolated `codex/resource-guardian-20261029` candidate extends the saved PR 467
+coordinator source with optional resource admission, persistent operating modes,
+owned tool/build execution and native Windows telemetry enrichment. The focused
+queue/host/profile/admission run passed 120 tests; the later resource-specific
+run passed 26 cases (overlapping coverage, not additive). A finite 252-file syntax
+workload completed across 21 logical identities at one and two owned processes.
+Short-command wrapper overhead was observed; no general throughput gain is claimed.
+See [the implementation report](docs/resource-guardian/REPORT.md).
+
+Production Guardian enforcement, model-memory qualification, protected sampler
+deployment and default HOME_ECO acceptance remain pending. Ordinary background
+admission remains paused and this source update does not grant resume or release.
+No item is promoted into an Owner-only Verified section.
 
 ## How to use this file
 

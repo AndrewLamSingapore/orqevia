@@ -1,0 +1,168 @@
+{
+  "schema": "abex.guardian.acceptance.v1",
+  "at": "2026-10-29T08:22:04.220172+00:00",
+  "status": "ACCEPT_BOUNDED_LOCAL_RESOURCE_ENVELOPE",
+  "source_revision": "5247611ed3a8f8dbb411a7e9ac556c116e7dce3d",
+  "image": "orqevia:guardian-5247611ed3a8",
+  "image_id": "sha256:5eb620f737daf43729f39603f124394800b5abe54904ee07255c4cc1d56709f8",
+  "profile_file_sha256": "5a9d559ed88c60e77e289800940d044c6087c894975b7f085197f712f91149a0",
+  "profile_policy_digest": "9bd5fbb2b5e279c4f209b794a243f0025536d15172b56226142a6cd910722c28",
+  "mode": "HOME_ECO",
+  "mode_survived_actual_restart": true,
+  "owner_admission": {
+    "paused": 0,
+    "generation": 1
+  },
+  "registry_count": 21,
+  "physical_inference_concurrency": 1,
+  "host_reserve_bytes": 3221225472,
+  "runtime_reserve_fraction": 0.1,
+  "ultra_eco_new_build_slots": 0,
+  "hardware": {
+    "logical_processors": 16,
+    "host_memory_bytes": 33644036096,
+    "runtime_memory_bytes": 18857222144,
+    "disk_bytes": 999012954112
+  },
+  "verified_https": true,
+  "browser_screens": 17,
+  "source_match": true,
+  "parked": {
+    "offline_backup": "NOT_EXECUTED_OWNER_PARKED",
+    "intelligence_logging": "NOT_APPLIED_OWNER_PARKED"
+  },
+  "limitations": [
+    "No current off-device or clean-host/data-volume restore acceptance",
+    "Thermal/power telemetry unavailable",
+    "21-role semantic competence not certified by echo/registration tests",
+    "Unregistered tools and Windows Ollama are not automatically controlled",
+    "Host telemetry uses existing60second cadence; future workloads require continued calibration",
+    "Legacy interface composite revision is UNKNOWN in task metadata; immutable image identity is pinned",
+    "Ollama container replacement requires qualifying/rebinding the exact readonly cgroup directory"
+  ],
+  "no_original_resources_deleted": true,
+  "no_windows_restart": true,
+  "no_owner_pause_mutation": true,
+  "no_new_billable_compute": true,
+  "trials": [
+    {
+      "label": "fast-qualified",
+      "model": "gemma3:1b",
+      "status": "PASS",
+      "samples": 98,
+      "host_minimum_bytes": 7872606208,
+      "model_load_seconds": 2.298831271,
+      "request_seconds": 3.1793006980005885,
+      "queue_wait_seconds": 230.00586605072021,
+      "allow_cloud": false,
+      "resource_peak_scope": "SAMPLER_INCLUDES_OTHER_WORK_WHILE_TEST_WAITS"
+    },
+    {
+      "label": "deep-cold-qualified",
+      "model": "gemma3:12b",
+      "status": "PASS",
+      "samples": 260,
+      "host_minimum_bytes": 3781197824,
+      "model_load_seconds": 15.199177342,
+      "request_seconds": 21.86048310499973,
+      "queue_wait_seconds": 827.412348985672,
+      "allow_cloud": false,
+      "resource_peak_scope": "SAMPLER_INCLUDES_OTHER_WORK_WHILE_TEST_WAITS"
+    },
+    {
+      "label": "deep-warm-qualified",
+      "model": "gemma3:12b",
+      "status": "PASS",
+      "samples": 1,
+      "host_minimum_bytes": 3743805440,
+      "model_load_seconds": 0.002317298,
+      "request_seconds": 3.4502711029999773,
+      "queue_wait_seconds": 848.6632475852966,
+      "allow_cloud": false,
+      "resource_peak_scope": "WARM_TRACE_ONE_SAMPLE_NOT_A_MEASURED_CPU_PEAK"
+    },
+    {
+      "label": "native-final",
+      "model": "gemma3:12b",
+      "status": "PASS",
+      "samples": 83,
+      "host_minimum_bytes": 3495186432,
+      "model_load_seconds": 0.003636257,
+      "request_seconds": 7.234624310000072,
+      "queue_wait_seconds": 311.3513603210449,
+      "allow_cloud": false,
+      "resource_peak_scope": "SAMPLER_INCLUDES_OTHER_WORK_WHILE_TEST_WAITS"
+    }
+  ],
+  "canary_checks": [
+    {
+      "name": "docker-engine",
+      "status": "PASS"
+    },
+    {
+      "name": "persistent-containers",
+      "status": "PASS"
+    },
+    {
+      "name": "backend-health",
+      "status": "PASS"
+    },
+    {
+      "name": "cloud-inference-configuration",
+      "status": "PASS"
+    },
+    {
+      "name": "interface-local",
+      "status": "PASS"
+    },
+    {
+      "name": "cloudflare-tunnel",
+      "status": "PASS"
+    },
+    {
+      "name": "auth-boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "host-telemetry-freshness",
+      "status": "PASS"
+    },
+    {
+      "name": "model-runtime",
+      "status": "PASS"
+    },
+    {
+      "name": "fabrics-and-ai-scaffold-imports",
+      "status": "PASS"
+    },
+    {
+      "name": "agent-liveness-receipt",
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "deployment-identity",
+      "status": "PASS"
+    },
+    {
+      "name": "queue-runtime-and-cost",
+      "status": "PASS"
+    },
+    {
+      "name": "workflow-and-notebook-persistence",
+      "status": "PASS"
+    },
+    {
+      "name": "rollback-readiness",
+      "status": "PASS"
+    },
+    {
+      "name": "disaster-recovery-backup",
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "permanent-supervision-tasks",
+      "status": "PASS"
+    }
+  ],
+  "local_acceptance_receipt_sha256": "2327bbae347ed6d3bf22b1a9f6d5449ca3aeb4dc3cf5e0b1fbf6532986428a54"
+}

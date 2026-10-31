@@ -308,8 +308,28 @@ services:
     environment:
       ORQEVIA_INTEGRATION_TOKEN: ${ORQEVIA_INTEGRATION_TOKEN:-}
     command: ["/bin/sh", "-c", "test -n \"$${ORQEVIA_INTEGRATION_TOKEN}\" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
+    ports:
+      - "127.0.0.1:8445:8443"
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - type: bind
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/ca.crt
+        target: /run/orqevia-tls/ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.crt
+        target: /run/orqevia-tls/server.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${ORQEVIA_INTERFACE_TLS_DIR:-./deploy/unconfigured-tls}/server.key
+        target: /run/orqevia-tls/server.key
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       backend:
         condition: service_healthy

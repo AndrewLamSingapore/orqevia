@@ -1,0 +1,507 @@
+{
+  "scope": "READ_ONLY_ABEX_HARDWARE_AND_WORKLOAD_AUDIT_NOT_CERTIFICATION",
+  "observed_at": "2026-10-29T00:38:11.477034+00:00",
+  "cpu": {
+    "Name": "AMD Ryzen 7 PRO 8840HS w/ Radeon 780M Graphics ",
+    "NumberOfCores": 8,
+    "NumberOfLogicalProcessors": 16,
+    "LoadPercentage": 14,
+    "MaxClockSpeed": 3301,
+    "CurrentClockSpeed": 3301
+  },
+  "physical_memory": {
+    "DeviceLocator": "DIMM 0",
+    "Capacity": 34359738368,
+    "Speed": 5600,
+    "ConfiguredClockSpeed": 5600,
+    "Manufacturer": "Hynix"
+  },
+  "os": {
+    "Caption": "Microsoft Windows 11 Home",
+    "Version": "10.0.26300",
+    "BuildNumber": "26300",
+    "LastBootUpTime": "/Date(1793232745500)/",
+    "TotalVisibleMemorySize": 32855504,
+    "FreePhysicalMemory": 17409604,
+    "TotalVirtualMemorySize": 39671248,
+    "FreeVirtualMemory": 21673480
+  },
+  "gpu": {
+    "Name": "AMD Radeon 780M Graphics",
+    "AdapterRAM": 536870912,
+    "DriverVersion": "32.0.31035.1003",
+    "VideoProcessor": "AMD Radeon Graphics Processor (0x1900)",
+    "Status": "OK"
+  },
+  "storage": {
+    "FriendlyName": "Lexar SSD NM610 PRO 1TB",
+    "MediaType": "SSD",
+    "BusType": "NVMe",
+    "HealthStatus": "Healthy",
+    "OperationalStatus": "OK",
+    "Size": 1000204886016
+  },
+  "volumes": {
+    "DeviceID": "C:",
+    "Size": 999012954112,
+    "FreeSpace": 700565721088
+  },
+  "pagefile": {
+    "Name": "C:\\pagefile.sys",
+    "AllocatedBaseSize": 6656,
+    "CurrentUsage": 20,
+    "PeakUsage": 20
+  },
+  "docker_capacity": {
+    "cpus": 16,
+    "memory_bytes": 16414040064,
+    "server_version": "29.9.2"
+  },
+  "thermal_status": "UNAVAILABLE_NO_TEMPERATURE_OR_THROTTLING_CLAIM",
+  "idle_baseline": {
+    "samples": [
+      {
+        "elapsed_seconds": 0.692,
+        "cpu_percent": 11.0,
+        "available_memory_bytes": 17896603648,
+        "memory_percent": 46.8,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 1.193,
+        "cpu_percent": 14.7,
+        "available_memory_bytes": 17857437696,
+        "memory_percent": 46.9,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 1.695,
+        "cpu_percent": 18.1,
+        "available_memory_bytes": 17992568832,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 2.195,
+        "cpu_percent": 15.4,
+        "available_memory_bytes": 18000592896,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 2.696,
+        "cpu_percent": 15.5,
+        "available_memory_bytes": 17996800000,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 3.197,
+        "cpu_percent": 21.9,
+        "available_memory_bytes": 18036187136,
+        "memory_percent": 46.4,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 3.698,
+        "cpu_percent": 15.1,
+        "available_memory_bytes": 18034339840,
+        "memory_percent": 46.4,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 4.2,
+        "cpu_percent": 23.0,
+        "available_memory_bytes": 17994485760,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 4.701,
+        "cpu_percent": 45.7,
+        "available_memory_bytes": 17989316608,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 5.202,
+        "cpu_percent": 35.9,
+        "available_memory_bytes": 18009432064,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 5.703,
+        "cpu_percent": 28.1,
+        "available_memory_bytes": 17991139328,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 6.204,
+        "cpu_percent": 30.2,
+        "available_memory_bytes": 17999409152,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 6.705,
+        "cpu_percent": 23.2,
+        "available_memory_bytes": 17980850176,
+        "memory_percent": 46.6,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 7.206,
+        "cpu_percent": 20.8,
+        "available_memory_bytes": 17983729664,
+        "memory_percent": 46.5,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 7.707,
+        "cpu_percent": 24.3,
+        "available_memory_bytes": 17956769792,
+        "memory_percent": 46.6,
+        "swap_used_bytes": 21995520
+      },
+      {
+        "elapsed_seconds": 8.208,
+        "cpu_percent": 25.6,
+        "available_memory_bytes": 17979805696,
+        "memory_percent": 46.6,
+        "swap_used_bytes": 21995520
+      }
+    ],
+    "sample_count": 16,
+    "cpu_mean_percent": 23.03125,
+    "cpu_p95_percent": 35.9,
+    "cpu_peak_percent": 45.7,
+    "minimum_available_memory_bytes": 17857437696,
+    "peak_pagefile_used_bytes": 21995520,
+    "elapsed_seconds": 8.208119899999929,
+    "disk_bytes_read": 22389760,
+    "disk_bytes_written": 68760576
+  },
+  "registered_agents": [
+    {
+      "id": "a01",
+      "role": "Strategic reasoning owner",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a28",
+      "role": "Risk identification",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a06",
+      "role": "Research direction",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a16",
+      "role": "System architecture design",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a04",
+      "role": "Option evaluation; Structured comparison",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a07",
+      "role": "Evidence discovery",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a15",
+      "role": "Technical execution ownership",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a09",
+      "role": "Knowledge organization",
+      "tools": [
+        "provided_context.read",
+        "action.propose",
+        "artifact.create"
+      ]
+    },
+    {
+      "id": "a05",
+      "role": "Portfolio prioritization; Resource optimization",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a18",
+      "role": "Functional testing; Compliance verification",
+      "tools": [
+        "provided_context.read",
+        "action.propose",
+        "sandbox.wasm.execute"
+      ]
+    },
+    {
+      "id": "a17",
+      "role": "Design-to-code conversion",
+      "tools": [
+        "provided_context.read",
+        "action.propose",
+        "sandbox.wasm.execute"
+      ]
+    },
+    {
+      "id": "a20",
+      "role": "Economic analysis ownership; Market and pricing analysis",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a19",
+      "role": "Operational resilience evaluation",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a21",
+      "role": "Cost analysis; Value/ROI evaluation",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a29",
+      "role": "Release readiness gate",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a26",
+      "role": "Quality governance ownership; Independent review",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a02",
+      "role": "Objective-to-task decomposition; Milestone and dependency planning",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a12",
+      "role": "KPI definition; Descriptive/diagnostic analysis",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a13",
+      "role": "Forecasting",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a14",
+      "role": "Data quality checks",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    },
+    {
+      "id": "a10",
+      "role": "Data and analytics coordination",
+      "tools": [
+        "provided_context.read",
+        "action.propose"
+      ]
+    }
+  ],
+  "runtime_source": {
+    "ORQEVIA_COMPUTE_EXECUTION_MODE": null,
+    "ORQEVIA_COMPUTE_PROFILE": "balanced",
+    "ORQEVIA_RUNTIME_REVISION": "f37673b4ce618cc7cd672c987594f849d9985f02"
+  },
+  "repository_heads": [
+    {
+      "name": "prime",
+      "head": "006d98d01262ebc5d1a643ee018785b2997628df",
+      "ci_workflows": [
+        "candidate-offhost-tests.yml",
+        "canonical-read-only.yml",
+        "ci.yml",
+        "observatory-verifier-offhost.yml",
+        "orqevia-fresh-initialization-validation-20261011.yml",
+        "orqevia-fresh-initialization-validation-20261016.yml",
+        "orqevia-fresh-initialization-validation-20261019.yml",
+        "orqevia-oidc-claim-probe.yml",
+        "orqevia-protected-installation-20261016.yml",
+        "orqevia-verifier-oidc.yml",
+        "orqevia-verifier-signer.yml",
+        "portal-integration.yml",
+        "publish-image.yml",
+        "release-acceptance.yml",
+        "stable-spine.yml",
+        "status-authority.yml",
+        "sync-public-agent-registry.yml"
+      ]
+    },
+    {
+      "name": "game-platform",
+      "head": "39dbb912f6a232c4e606015f57d0d2df707663ab",
+      "ci_workflows": [
+        "quality.yml",
+        "status-authority.yml"
+      ],
+      "npm_script_names": [
+        "test",
+        "check",
+        "test:schema-recovery",
+        "smoke:production",
+        "stage:fresh-database",
+        "test:fresh-install"
+      ]
+    },
+    {
+      "name": "sky-tablet",
+      "head": "49f658516ecc8b2c1b32b46d87322c4fe96f4a2e",
+      "ci_workflows": [
+        "add-cinematic-score.yml",
+        "production-assessment.yml",
+        "royal-game-regression.yml",
+        "status-authority.yml"
+      ],
+      "npm_script_names": [
+        "test",
+        "build",
+        "serve",
+        "test:browser",
+        "check"
+      ]
+    },
+    {
+      "name": "authority-engine",
+      "head": "46674de0a997f6e275f2b347b0c3e5c4b3beb2db",
+      "ci_workflows": [
+        "quality.yml",
+        "status-authority.yml"
+      ],
+      "npm_script_names": [
+        "dev",
+        "build",
+        "check:server",
+        "check:orqevia",
+        "check:agent-registry",
+        "test:authority",
+        "check:portfolio-contracts",
+        "smoke:production",
+        "lint",
+        "verify:sound",
+        "preview",
+        "test:decision-kernel",
+        "benchmark:decision-kernel"
+      ]
+    },
+    {
+      "name": "the-portal",
+      "head": "e8ca346d465ee3cf62d77c3ebb02a8cc8e2eb643",
+      "ci_workflows": [
+        "grounding-query.yml",
+        "quality.yml",
+        "status-authority.yml",
+        "v2-preview.yml",
+        "v2-production.yml"
+      ],
+      "npm_script_names": [
+        "preverify",
+        "smoke:evidence-lab",
+        "smoke:card-links",
+        "check",
+        "verify",
+        "verify:portfolio",
+        "sandbox:living",
+        "experiment:decisive",
+        "smoke:production",
+        "smoke:browser",
+        "smoke:v2",
+        "synthetic:result",
+        "prime:recovery",
+        "prime:authorization",
+        "prime:publish",
+        "prime:report",
+        "test:admission:postgres",
+        "test:private:postgres"
+      ]
+    },
+    {
+      "name": "velyqua",
+      "head": "2309947f4c10c5956f9e975096214d03a0a2c788",
+      "ci_workflows": [
+        "quality.yml",
+        "status-authority.yml"
+      ],
+      "npm_script_names": [
+        "start",
+        "ios",
+        "android",
+        "web",
+        "build",
+        "typecheck",
+        "test",
+        "verify",
+        "export:ios",
+        "release:check",
+        "smoke:production",
+        "check:server"
+      ]
+    },
+    {
+      "name": "AndrewLamSingapore",
+      "head": "f4a4380ffd107fc0150bcdfca6bcf4b9ce31cdc2",
+      "ci_workflows": [
+        "ci.yml",
+        "portfolio-contracts.yml",
+        "status-authority.yml"
+      ]
+    }
+  ]
+}

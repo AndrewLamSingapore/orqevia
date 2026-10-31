@@ -19,6 +19,7 @@ import uuid
 from urllib.parse import urlsplit
 
 from .agent_registry import agent_record, registered_agent_ids
+from .home_eco import bounded_setting
 from .coaching_exercises import METHODS, VERSION, practice_request, review_practice
 
 PHASES = ('baseline', 'practice', 'acceptance')
@@ -38,7 +39,7 @@ def record_execution_gap(root, job, source_revision):
     path = Path(root)/'agent-coaching.db'
     if (not path.is_file() or job.get('status') != 'failed' or
         job.get('error') != 'STRICT_JSON_CONTRACT_FAILED' or
-        job.get('model') != 'gemma3:12b' or
+        not job.get('model') or job.get('allow_cloud') or job.get('external_execution') or
         job.get('agent') not in registered_agent_ids(include_orchestrator=False) or
         not re.fullmatch('[a-f0-9]{40}', source_revision or '')):
         return False
@@ -390,7 +391,7 @@ class CoachingController:
             if row['program_id']=='role' and row['phase']=='acceptance' and row['baseline_request_sha256']!=request_hash:
                 return self.self_repair(db,row,'ACCEPTANCE_REQUEST_CHANGED')
             job = self.queue.submit(agent=row['agent'],prompt=prompt,priority='background',model_role='deep',model=self.model,
-                                    ram_mb=1024,vram_mb=0,timeout_seconds=300,max_retries=0,max_cost_usd=0,
+                                    ram_mb=1024,vram_mb=0,timeout_seconds=int(bounded_setting('ORQEVIA_COACHING_EXECUTION_SECONDS',1800,60,7200)),max_retries=0,max_cost_usd=0,
                                     allow_cloud=False,external_execution=False,classification='R0',
                                     data_classification='LOCAL_ONLY',task_class='classification',response_format='strict_json',
                                     response_schema=request.get('response_schema'),idempotency_key=key,
@@ -409,8 +410,9 @@ def main():
     root = Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
     controller = CoachingController(root/'agent-coaching.db',queue,
         source_revision=os.environ['ORQEVIA_COACHING_SOURCE_REVISION'],model=SETTINGS.deep_model)
-    if SETTINGS.deep_model != 'gemma3:12b' or SETTINGS.evaluator_model != 'gemma3:12b':
-        raise ValueError('HIGHEST_MODEL_UNAVAILABLE')
+    # The Owner superseded exclusive model names on 28 October. The controller
+    # still binds its configured model and exact request to each assessment;
+    # no quality oracle or historical result is weakened or rewritten.
     while not stop.is_set():
         try:
             if (root/'coaching.pause').exists():

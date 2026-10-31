@@ -1,0 +1,14 @@
+{
+  "current_bytes": 13684744192,
+  "peak_charge_bytes": 14280974336,
+  "memory_stat": {
+    "anon": 11534188544,
+    "file": 2111692800,
+    "file_mapped": 29810688,
+    "inactive_file": 406224896,
+    "active_file": 1705463808,
+    "kernel": 36884480
+  },
+  "current_working_set_bytes": 13278519296,
+  "model_quality_claimed": false
+}

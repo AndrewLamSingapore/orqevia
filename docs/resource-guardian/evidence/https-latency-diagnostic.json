@@ -1,0 +1,44 @@
+[
+  {
+    "host": "localhost",
+    "elapsed_seconds": 2.116081699999995,
+    "status": 200,
+    "state": "READY",
+    "certificate_verified": true
+  },
+  {
+    "host": "localhost",
+    "elapsed_seconds": 2.1192403000000013,
+    "status": 200,
+    "state": "READY",
+    "certificate_verified": true
+  },
+  {
+    "host": "localhost",
+    "elapsed_seconds": 2.1226808000001256,
+    "status": 200,
+    "state": "READY",
+    "certificate_verified": true
+  },
+  {
+    "host": "127.0.0.1",
+    "elapsed_seconds": 0.09251860000017587,
+    "status": 200,
+    "state": "READY",
+    "certificate_verified": true
+  },
+  {
+    "host": "127.0.0.1",
+    "elapsed_seconds": 0.09964629999990393,
+    "status": 200,
+    "state": "READY",
+    "certificate_verified": true
+  },
+  {
+    "host": "127.0.0.1",
+    "elapsed_seconds": 0.08576379999999517,
+    "status": 200,
+    "state": "READY",
+    "certificate_verified": true
+  }
+]

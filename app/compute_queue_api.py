@@ -11,12 +11,11 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Literal
 
-import httpx
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from .job_queue import JobQueue, Provider, QueuePolicy, WorkerPool
-from .agent_registry import RegistryError, canonical_agent_id, registered_agent_ids
+from .agent_registry import registered_agent_ids
 from .observability import record_counter, record_duration, span
 from .settings import SETTINGS
 from .compute_profile import validate_configuration, require_compute_capacity, generation_options, runtime_compute_profile
@@ -51,7 +50,7 @@ POLICY = QueuePolicy.from_env()
 # Additional slots are candidates only, requiring explicit backend and hash-pinned
 # measured-profile support. It is never inferred merely from spare host CPU.
 _candidate_slots = candidate_global_concurrency(os.environ, runtime_compute_profile())
-POLICY = replace(POLICY, global_concurrency=_candidate_slots,
+POLICY = replace(POLICY, global_concurrency=(1 if POLICY.coordinated else _candidate_slots),
                  per_agent_concurrency=1,
                  background_concurrency=(_candidate_slots - 1 if _candidate_slots > 1 else 0))
 validate_configuration(SETTINGS,POLICY)
@@ -132,7 +131,8 @@ def _execute(job: dict, provider: Provider) -> dict:
         answer=DirectExecutor(action_ledger()).execute(record,lambda:asyncio.run(infer(job,provider,
             settings=SETTINGS,capacity=require_compute_capacity,options=generation_options,
             cancelled=lambda:queue.get(job['id'])['status']=='cancelled',
-            progress=lambda text:queue.update_progress(job['id'],text))))
+            progress=lambda text:queue.update_progress(job['id'],text),
+            stage=lambda phase:queue.transition(job['id'],phase))))
         failure='STRICT_JSON_CONTRACT_FAILED' if answer.get('error')=='STRICT_JSON_CONTRACT_FAILED' else None
         return answer
     finally:
@@ -154,13 +154,12 @@ def _publish_completed_job(job_id: str) -> None:
 
 pool=WorkerPool(queue,providers(),_execute,on_complete=_publish_completed_job)
 
-# Permanent Owner posture (2026-10-26): no output queues. Every submitted job
-# executes immediately on its own thread; the execution journal is retained so
-# fabric evidence (f05/f07/f08) and the ledger remain verifiable. The legacy
-# consumer pool is only used when explicitly re-enabled with queued mode.
+# Direct mode remains compatible with the 26 October posture. The Owner's
+# 28 October patient-operation directive authorizes the explicit home_eco
+# mode, which reuses the durable queue and existing shared worker pool.
 OUTPUT_QUEUE_MODE = os.getenv("ORQEVIA_OUTPUT_QUEUE_MODE", "direct").strip().lower()
-if OUTPUT_QUEUE_MODE not in {"direct", "queued"}:
-    raise RuntimeError("ORQEVIA_OUTPUT_QUEUE_MODE must be 'direct' or 'queued'")
+if OUTPUT_QUEUE_MODE not in {"direct", "queued", "home_eco"}:
+    raise RuntimeError("ORQEVIA_OUTPUT_QUEUE_MODE must be 'direct', 'queued' or 'home_eco'")
 _direct_stop = threading.Event()
 _reaper_thread: threading.Thread | None = None
 
@@ -230,19 +229,23 @@ def _run_direct(job_id: str) -> None:
 
 def dispatch(job_id: str) -> None:
     """Execute a submitted job immediately; there is no output queue."""
+    if OUTPUT_QUEUE_MODE != 'direct':
+        queue.wake.set()
+        return
     threading.Thread(target=_run_direct, args=(job_id,), daemon=True,
                      name="direct-" + job_id[:8]).start()
 
 
 def _direct_reap_loop() -> None:
     while not _direct_stop.is_set():
+        queue.wake.clear()
         try:
             queue.recover_expired()
             for row in queue.list(status="queued", limit=500):
                 dispatch(row["id"])
         except Exception:
             pass
-        _direct_stop.wait(15)
+        queue.wake.wait(15)
 
 
 def authorize(authorization: str | None) -> None:
@@ -367,10 +370,6 @@ def submit_job(body: SubmitJob,authorization: str|None=Header(None)):
         ):
             raise HTTPException(422,'Hugging Face requires explicit cloud, disclosure, and cost opt-in')
     try:
-        canonical = canonical_agent_id(body.agent)
-    except RegistryError:
-        canonical = body.agent.strip().lower()
-    try:
         row = queue.submit(**body.model_dump())
         if OUTPUT_QUEUE_MODE == "direct": dispatch(row["id"])
         return row
@@ -429,6 +428,7 @@ def start_compute_queue() -> None:
 def stop_compute_queue() -> None:
     if OUTPUT_QUEUE_MODE == "direct":
         _direct_stop.set()
+        queue.wake.set()
         if _reaper_thread: _reaper_thread.join(timeout=3)
         return
     pool.stop()

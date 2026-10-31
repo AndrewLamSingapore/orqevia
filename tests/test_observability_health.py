@@ -93,6 +93,37 @@ def test_complete_monitoring_preserves_observation_and_yields_current_zero(tmp_p
     assert report["critical_issues"]["coverage_complete"] is True
 
 
+def test_service_functionality_separates_missing_probe_from_verification_failure(tmp_path):
+    value=receipt()
+    value['services'][-1]['checks']=[]
+    value['canary']['checks'][0]['status']='FAIL'
+    value['canary']['failed_count']=1
+    value['canary']['overall']='FAIL'
+    health=snapshot(tmp_path,value)['service_health']
+    assert health['functionality']['status']=='UNKNOWN'
+    assert health['functionality']['confirmed_failure_count']==0
+    assert health['verification']['status']=='CRITICAL'
+    assert not health['coverage']['complete']
+
+
+def test_actual_service_failure_is_unhealthy_even_when_other_coverage_is_missing(tmp_path):
+    value=receipt()
+    value['services'][-1]['checks']=[]
+    value['services'][0]['checks'][0]['status']='FAIL'
+    health=snapshot(tmp_path,value)['service_health']
+    assert health['functionality']['status']=='UNHEALTHY'
+    assert health['functionality']['confirmed_failure_count']==1
+
+
+def test_verified_services_remain_healthy_when_only_attestation_fails(tmp_path):
+    value=receipt()
+    target=next(c for c in value['canary']['checks'] if c['name']=='deployment-identity')
+    target['status']='FAIL';value['canary']['failed_count']=1;value['canary']['overall']='FAIL'
+    health=snapshot(tmp_path,value)['service_health']
+    assert health['functionality']['status']=='HEALTHY'
+    assert health['verification']['status']=='DEGRADED'
+
+
 def test_no_collector_is_not_configured_and_not_a_current_zero(tmp_path):
     report = operational_health_snapshot(data_dir=tmp_path, now=NOW)
     assert report["service_health"]["status"] == "NOT_CONFIGURED"

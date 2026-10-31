@@ -3,7 +3,6 @@ import asyncio
 import json
 import hashlib
 import httpx
-import uuid
 import time
 
 
@@ -102,8 +101,17 @@ def validate_owned_inference_request(actual, original, provider, *, settings, op
         raise ValueError('Owned inference payload changed')
 
 
-async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,progress=lambda _text:None):
+async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,progress=lambda _text:None,stage=lambda _phase:None):
+    coordinated = job.get('lifecycle_state') == 'ADMITTED'
+    started_at = time.monotonic()
+    first_token_at = None
+    last_progress_at = started_at
+    if coordinated:
+        from .home_eco import ExecutionBudget
+        budget = ExecutionBudget.for_job(job)
+        stage('MODEL_LOADING')
     async def run():
+        nonlocal first_token_at, last_progress_at
         response_format = job.get('response_format', 'text')
         if response_format not in {'text', 'strict_json'}:
             raise RuntimeError('Invalid response format')
@@ -111,13 +119,11 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,
         payload, schema, inference_receipt = inference_request(
             job, provider, settings=settings, options=options)
         capacity(provider.model)
-        dispatched = False
-        complete = False
-        dispatched = True
-        async with httpx.AsyncClient(timeout=float(job['timeout_seconds'])) as client:
+        network_timeout = budget.first_progress if coordinated else float(job['timeout_seconds'])
+        async with httpx.AsyncClient(timeout=network_timeout) as client:
             async with client.stream('POST',settings.ollama_base_url+'/api/chat',json=payload) as response:
                 response.raise_for_status();parts=[];final=None
-                last_progress_at=None
+                last_published_at=None
                 last_progress_size=0
                 async for line in response.aiter_lines():
                     if not line:continue
@@ -131,18 +137,26 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,
                     if 'done' in item and type(item['done']) is not bool:
                         raise RuntimeError('Malformed model completion')
                     content=message.get('content','')
+                    if content:
+                        last_progress_at = time.monotonic()
+                        if first_token_at is None:
+                            first_token_at = last_progress_at
+                            if coordinated:
+                                stage('INFERENCING')
                     parts.append(content)
                     combined=''.join(parts)
                     now=time.monotonic()
                     if (combined.strip() and
-                            (last_progress_at is None or now-last_progress_at>=0.4 or
+                            (last_published_at is None or now-last_published_at>=0.4 or
                              len(combined)-last_progress_size>=120)):
                         try:progress(combined)
                         except Exception:pass
-                        last_progress_at=now
+                        last_published_at=now
                         last_progress_size=len(combined)
                     if item.get('done') is True:final=item
                 if final is None or not ''.join(parts).strip():raise RuntimeError('Incomplete or empty model response')
+                if coordinated:
+                    stage('POSTPROCESSING')
                 contract_error = ''
                 if response_format == 'strict_json':
                     from .structured_output import parse_json, StructuredOutputError
@@ -159,17 +173,34 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,
                     'output_tokens':int(final.get('eval_count',0)),'actual_cost_usd':0,
                     'model_load_ns':int(final.get('load_duration',0)), 'inference_ns':int(final.get('eval_duration',0)),
                     'inference_receipt': inference_receipt}
+                if coordinated:
+                    result['timing_metrics'] = {
+                        'first_token_seconds': first_token_at-started_at if first_token_at is not None else None,
+                        'request_seconds': time.monotonic()-started_at,
+                        'model_load_seconds': int(final.get('load_duration',0))/1e9,
+                        'prompt_evaluation_seconds': int(final.get('prompt_eval_duration',0))/1e9,
+                        'token_generation_seconds': int(final.get('eval_duration',0))/1e9,
+                        'tokens_per_second': int(final.get('eval_count',0))/(int(final['eval_duration'])/1e9) if int(final.get('eval_duration',0))>0 else None,
+                        'loading_phase_scope': 'AWAITING_FIRST_TOKEN_INCLUDES_PROMPT_EVALUATION',
+                    }
                 if contract_error:
                     # Preserve original rejected output and actual usage in
                     # the queue; fail the job without an automatic retry.
                     result.update(error=contract_error, retryable=False)
-                complete = True
                 return result
     task=asyncio.create_task(run())
     try:
-        async with asyncio.timeout(float(job['timeout_seconds'])):
+        async with asyncio.timeout(budget.total if coordinated else float(job['timeout_seconds'])):
             while not task.done():
                 if cancelled():raise RuntimeError('Task cancelled by client')
+                if coordinated:
+                    now = time.monotonic()
+                    if first_token_at is None and now-started_at > budget.first_progress:
+                        raise TimeoutError('MODEL_FIRST_PROGRESS_TIMEOUT')
+                    if first_token_at is not None and now-last_progress_at > budget.stalled_progress:
+                        raise TimeoutError('MODEL_PROGRESS_STALLED')
+                    if first_token_at is not None and now-first_token_at > budget.active:
+                        raise TimeoutError('ACTIVE_INFERENCE_BUDGET_EXCEEDED')
                 await asyncio.wait({task},timeout=.05)
             return await task
     finally:

@@ -50,6 +50,10 @@ class FakeRunner:
             return 0, json.dumps({"tick_epoch": NOW - 10, "source_revision": "a" * 40})
         if "logs" in args:
             return 0, producer.iso(NOW - 12) + ' Metrics {"otelcol.signal": "metrics", "data points": 9}'
+        if script and ":2000/ready" in script:
+            return 0, json.dumps(
+                {"ready": True, "status": 200, "ready_connections": 4, "connector_id": "fixture-connector"}
+            )
         return 0, "NAME ID SIZE MODIFIED\nfixture:1 abc 1GB now\n"
 
 
@@ -82,6 +86,16 @@ def https_fixture(path, context, timeout):
     return 200, b'{"ok":true,"observation_count":10}' if path.endswith("/health") else b"ORQEVIA"
 
 
+def https_url_fixture(url, context, timeout, *, read_body=True):
+    assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
+    assert 0 < timeout <= 3
+    if url == producer.GATEWAY_HTTPS_URL:
+        return 200, {"x-orqevia-health-scope": "GATEWAY_ONLY"}, b"ok"
+    if url in producer.TUNNEL_PUBLIC_ROUTES.values():
+        raise urllib.error.HTTPError(url, 403, "Forbidden", {"server": "cloudflare", "cf-ray": "fixture-ray"}, None)
+    raise AssertionError(url)
+
+
 def collect(context, tmp_path, *, runner=None, previous=None, canary=None):
     return producer.collect(
         context,
@@ -92,7 +106,9 @@ def collect(context, tmp_path, *, runner=None, previous=None, canary=None):
         canary=canary,
         archive_root=tmp_path,
         reader=https_fixture,
+        url_reader=https_url_fixture,
         tls_context=ssl.create_default_context(),
+        public_tls_context=ssl.create_default_context(),
     )
 
 
@@ -119,11 +135,66 @@ def test_process_and_db_read_do_not_invent_worker_or_tunnel_readiness(context, t
     assert backend["reason"] == "WORKER_HEARTBEAT_NOT_EXPOSED"
     for service in report["services"][-3:]:
         assert service["process_state"] == "running"
-        assert service["checks"][-1]["status"] == "NOT_CONFIGURED"
+        assert all(row["status"] in {"PASS", "UNKNOWN"} for row in service["checks"])
+    gateway = report["services"][-3]["checks"][-1]
+    assert gateway["check_id"] == "gateway-https" and gateway["status"] == "PASS"
+    tunnel = report["services"][-1]["checks"]
+    assert tunnel[0]["check_id"] == "tunnel-connection" and tunnel[0]["status"] == "PASS"
+    assert tunnel[1]["check_id"] == "tunnel-https" and tunnel[1]["status"] == "PASS"
     path = tmp_path / "receipt.json"
     path.write_text(json.dumps(report), encoding="utf-8")
     projected = operational_health_snapshot(receipt_path=path, data_dir=tmp_path / "data", now=NOW)
     assert projected["critical_issues"]["critical_count"] is None
+
+
+def test_gateway_https_probe_validates_health_body_and_scope_header(context):
+    def wrong_body(url, tls_context, timeout, *, read_body=True):
+        return 200, {"x-orqevia-health-scope": "GATEWAY_ONLY"}, b"nope"
+
+    row = producer.gateway_https_check(
+        ssl.create_default_context(), producer.Budget(), reader=wrong_body
+    )
+    assert row["status"] == "FAIL" and row["reason"] == "GATEWAY_HTTPS_RESPONSE_INVALID"
+    assert row["certificate_verified"] is True
+
+
+def test_tunnel_https_probe_requires_cloudflare_edge_markers(context):
+    def non_edge(url, tls_context, timeout, *, read_body=True):
+        raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+
+    row = producer.tunnel_https_check(
+        "cloudflared-dual",
+        producer.TUNNEL_PUBLIC_ROUTES["cloudflared-dual"],
+        ssl.create_default_context(),
+        producer.Budget(),
+        reader=non_edge,
+    )
+    assert row["status"] == "FAIL" and row["reason"] == "CLOUDFLARE_EDGE_RESPONSE_UNRECOGNIZED"
+    assert row["certificate_verified"] is True
+
+
+def test_gateway_tls_failure_has_no_plaintext_fallback(context):
+    def tls_failure(url, tls_context, timeout, *, read_body=True):
+        raise urllib.error.URLError(ssl.SSLCertVerificationError("fixture"))
+
+    row = producer.gateway_https_check(
+        ssl.create_default_context(), producer.Budget(), reader=tls_failure
+    )
+    assert row["status"] == "FAIL" and row["certificate_verified"] is False
+
+
+def test_tunnel_connection_reads_connector_own_ready_endpoint(context, tmp_path):
+    class NoReadyRunner(FakeRunner):
+        def run(self, args, *, script=None, timeout=3):
+            if script and ":2000/ready" in script:
+                return 0, json.dumps({"ready": False, "status": 200, "ready_connections": 0})
+            return super().run(args, script=script, timeout=timeout)
+
+    report = collect(context, tmp_path, runner=NoReadyRunner())
+    rows = report["services"][-1]["checks"]
+    assert rows[0]["status"] == "FAIL"
+    assert rows[0]["reason"] == "NO_READY_TUNNEL_CONNECTIONS"
+    assert rows[0]["ready_connections"] == 0
 
 
 @pytest.mark.parametrize(
