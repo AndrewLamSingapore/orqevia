@@ -88,7 +88,7 @@ class AgentRequest(BaseModel):
     response_format: Literal['text','strict_json'] = 'text'
     response_schema: dict | None = None
     response_schema_order: Literal['canonical', 'declared'] = 'canonical'
-    deterministic_operation: Literal['sha256','json_format','json_validate','schedule_single_slot',
+    deterministic_operation: Literal['sha256','json_format','json_validate','schedule_single_slot','weighted_decision',
         'certification_role_review',
         'certification_identity_review','certification_initialization',
         'certification_initialization_review','certification_artifact_event',
@@ -620,6 +620,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         root=Path(os.getenv('PRIME_DATA_DIR','/data'))
         from .objective_api import runtime_snapshot
         runtime = runtime_snapshot()
+        calculation_action = None
         try:
             if body.deterministic_operation == 'certification_authority_event':
                 from . import agent_registry
@@ -678,6 +679,16 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             elif body.deterministic_operation == 'schedule_single_slot':
                 from .deterministic_scheduling import solve_from_context
                 data = solve_from_context(body.context.encode('utf-8'))
+            elif body.deterministic_operation == 'weighted_decision':
+                if actor != 'a04' or body.capability != 'responsibility.a04':
+                    raise ValueError('Weighted decisions belong to a04')
+                from .weighted_decision import solve_from_context
+                calculation_action = ActionRecord(task_id,actor,'decision.weighted.calculate',
+                    'weighted-calculator',classification=body.classification,
+                    model_backend='deterministic',parameters_summary={
+                        'input_sha256':hashlib.sha256(body.context.encode('utf-8')).hexdigest()})
+                data = DirectExecutor(action_ledger()).execute(calculation_action,
+                    lambda:solve_from_context(body.context.encode('utf-8')))
             else:
                 data=build_report(task_id,root) if runtime_status else deterministic_ops.execute(body.deterministic_operation,body.context.encode())
         except (ValueError, UnicodeError):
@@ -697,10 +708,12 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         initialization_review = body.deterministic_operation == 'certification_initialization_review'
         artifact_review = body.deterministic_operation == 'certification_artifact_review'
         authority_review = body.deterministic_operation == 'certification_authority_review'
+        weighted_decision = body.deterministic_operation == 'weighted_decision'
         review_ledger = None
-        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review:
+        if runtime_status or role_review or identity_review or initialization or initialization_review or artifact_review or authority_review or weighted_decision:
             from .agent_cert_role_review import ARTIFACT_REVIEW_ACTION, AUTHORITY_REVIEW_ACTION
-            action_type = (AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
+            action_type = ('decision.weighted.artifact' if weighted_decision else
+                            AUTHORITY_REVIEW_ACTION if authority_review else ARTIFACT_REVIEW_ACTION if artifact_review else
                            'agent.certification.initialization.review' if initialization_review else
                            'agent.certification.initialization.artifact' if initialization else
                            'agent.certification.identity.review' if identity_review else
@@ -725,6 +738,11 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
             'execution_model':'DETERMINISTIC','agent_id':actor,
             'capability':'responsibility.a19' if runtime_status else body.capability,
             'runtime_source_revision':runtime_revision}
+        if weighted_decision:
+            result.update(calculation_action_id=calculation_action.action_id,
+                artifact_action_id=action.action_id,calculation_provider='deterministic',
+                calculation_action_durable=review_ledger.flush(timeout=1) is True,
+                model_backend='deterministic',calculation=data)
         if role_review or identity_review or initialization_review or artifact_review or authority_review:
             # Buffered audit delivery is not durable evidence. Review callers
             # must reject this operation for attestation when flush is false.

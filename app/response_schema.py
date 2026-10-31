@@ -29,6 +29,7 @@ _TYPES = frozenset({"object", "array", "integer", "number", "boolean", "string",
 _PRIMITIVES = _TYPES - {"object", "array"}
 _OBJECT_KEYS = frozenset({"type", "properties", "required", "additionalProperties"})
 _ARRAY_KEYS = frozenset({"type", "items", "minItems", "maxItems"})
+_STRING_KEYS = frozenset({"type", "minLength", "maxLength"})
 
 
 class ResponseSchemaError(ValueError):
@@ -77,7 +78,8 @@ def canonicalize_schema(schema: Any, *, require_object_root: bool = True,
             kind = sorted(kind)
         elif type(kind) is not str or kind not in _TYPES:
             raise ResponseSchemaError("Schema requires a supported explicit type")
-        allowed = _OBJECT_KEYS if kind == "object" else _ARRAY_KEYS if kind == "array" else {"type"}
+        allowed = (_OBJECT_KEYS if kind == "object" else _ARRAY_KEYS if kind == "array"
+                   else _STRING_KEYS if kind == "string" else {"type"})
         if set(node) - allowed:
             raise ResponseSchemaError("Unsupported schema keyword")
         active.add(id(node))
@@ -116,6 +118,15 @@ def canonicalize_schema(schema: Any, *, require_object_root: bool = True,
                         not 0 <= lower <= upper <= MAX_ARRAY_ITEMS):
                     raise ResponseSchemaError("Invalid or excessive array bounds")
                 result.update(items=visit(node["items"], depth + 1), minItems=lower, maxItems=upper)
+            elif kind == "string" and ("minLength" in node or "maxLength" in node):
+                lower, upper = node.get("minLength", 0), node.get("maxLength", MAX_STRING_BYTES)
+                if (type(lower) is not int or type(upper) is not int or
+                        not 0 <= lower <= upper <= MAX_STRING_BYTES):
+                    raise ResponseSchemaError("Invalid or excessive string bounds")
+                # Keep old schemas/hashes unchanged when no length is specified.
+                for key in ("minLength", "maxLength"):
+                    if key in node:
+                        result[key] = node[key]
             return result
         finally:
             active.remove(id(node))
@@ -234,6 +245,9 @@ def validate_response_value(value: Any, schema: Any) -> tuple[str, ...]:
                 return
             for index, child in enumerate(item):
                 visit(child, node["items"], f"{path}[{index}]")
+        elif expected == "string":
+            if not node.get("minLength", 0) <= len(item) <= node.get("maxLength", MAX_STRING_BYTES):
+                violations.append(f"{path}:string_length")
 
     visit(value, canonical, "$")
     return tuple(violations)

@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
@@ -82,3 +84,29 @@ class ContinuationTests(WorkflowObjectiveIntegrationTests):
             assert len(body.context)<=80000
             assert 'UNTRUSTED_PRIOR_TASK_EVIDENCE' in body.context
             assert body.objective=='Explain the prior result'
+
+    def test_thin_weighted_continuation_routes_a04_without_inference(self):
+        from tests.test_weighted_decision import request
+        from app import compute_queue_api
+        with patch.dict(os.environ,{'PRIME_DATA_DIR':str(Path(self.root)/'prime-data'),
+                                    'PRIME_REGISTRY_V1_ENABLED':'1',
+                                    'ORQEVIA_REGISTRY_V1_ENABLED':'1'}):
+            task=self.start()
+            changes={'objective':'Compute the weighted decision across the supplied options.',
+                     'context':json.dumps(request()),'deterministic_operation':'weighted_decision'}
+            with patch.object(compute_queue_api.queue,'submit',
+                              side_effect=AssertionError('Weighted continuation must not submit inference')):
+                result=self.follow(task,**changes)
+            assert result.status_code==202,result.text
+            assert result.json()['revision']==1
+            with patch.object(compute_queue_api.queue,'submit',
+                              side_effect=AssertionError('Idempotent replay must not execute')):
+                replay=self.follow(task,**changes)
+            assert replay.status_code==202,replay.text
+            assert replay.json()['idempotent_replay'] is True
+            status=self.client.get('/interface/v1/tasks/'+task,headers=self.headers()).json()
+            steps=[step for step in status['steps'] if step.get('revision')==1]
+            assert steps and steps[0]['capability']=='responsibility.a04'
+            assert steps[0]['dispatch'].get('state')=='COMPLETED'
+            assert steps[0]['dispatch']['calculation']['decision']=='TIE'
+            assert status['result']['type']=='DETERMINISTIC_CALCULATION'

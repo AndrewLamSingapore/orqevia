@@ -127,7 +127,9 @@ async def infer(job,provider,*,settings,capacity,options,cancelled=lambda:False,
                 last_progress_size=0
                 async for line in response.aiter_lines():
                     if not line:continue
-                    capacity(provider.model)
+                    # Capacity is an admission check, performed before the
+                    # request. Loading/active inference consumes its reserved
+                    # RAM; reapplying that reserve would cancel accepted work.
                     item=json.loads(line)
                     if not isinstance(item,dict):raise RuntimeError('Malformed model response')
                     if item.get('error'):raise RuntimeError(item['error'])

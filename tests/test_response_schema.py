@@ -135,6 +135,22 @@ def test_array_bounds_are_canonical_and_enforced():
         canonicalize_schema(excessive)
 
 
+def test_string_bounds_are_answer_free_and_count_characters_without_mutating_legacy_hashes():
+    bounded=object_schema({'calculation':{'type':'string','minLength':1,'maxLength':1200}})
+    assert validate_response_value({'calculation':'x'*1200},bounded)==()
+    assert validate_response_value({'calculation':'x'*1201},bounded)==('$["calculation"]:string_length',)
+    assert validate_response_value({'calculation':''},bounded)==('$["calculation"]:string_length',)
+    assert validate_response_value({'calculation':'界'*1200},bounded)==()
+    assert canonicalize_schema(object_schema({'legacy':{'type':'string'}}))['properties']['legacy']=={'type':'string'}
+
+
+@pytest.mark.parametrize('bounds',[{'minLength':True},{'maxLength':-1},{'minLength':3,'maxLength':2},
+    {'maxLength':MAX_STRING_BYTES+1},{'minLength':1.5}])
+def test_invalid_string_bounds_are_rejected_before_dispatch(bounds):
+    with pytest.raises(ResponseSchemaError):
+        canonicalize_schema(object_schema({'field':{'type':'string',**bounds}}))
+
+
 def test_schema_depth_node_property_name_and_bytes_limits():
     deep = {"type": "integer"}
     for _ in range(MAX_SCHEMA_DEPTH + 1):

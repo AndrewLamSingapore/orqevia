@@ -1,15 +1,153 @@
-"""Non-authorizing action records and asynchronous, observable audit delivery."""
+"""Non-authorizing actions with asynchronous, cross-process serialized delivery.
+
+The append lock protects only journal bytes, sequence and hash predecessor.
+Execution/admission never acquires it. Historical journal bytes are preserved.
+"""
+from contextlib import contextmanager
 from dataclasses import dataclass,field,asdict
+import datetime as _datetime_module
 from datetime import datetime,timezone
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import queue
 import re
+import tempfile
 import threading
 import time
 import uuid
+
+
+APPEND_PROTOCOL = 'orqevia.action-append.v2'
+
+
+class LedgerTailError(ValueError):
+    """The existing tail cannot be safely continued without explicit recovery."""
+
+
+@contextmanager
+def _append_lock(path: Path, timeout=5):
+    """Serialize cooperating append workers; never used around mission work."""
+    lock_path=path.with_name(path.name+'.append.lock')
+    with lock_path.open('a+b') as handle:
+        if os.fstat(handle.fileno()).st_size==0:
+            handle.write(b'\0');handle.flush()
+        deadline=time.monotonic()+timeout
+        while True:
+            try:
+                if os.name=='nt':
+                    import msvcrt
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(),msvcrt.LK_NBLCK,1)
+                else:
+                    import fcntl
+                    fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
+                break
+            except OSError as error:
+                import errno
+                if error.errno not in (errno.EACCES,errno.EAGAIN,errno.EDEADLK):
+                    raise
+                if time.monotonic()>=deadline:
+                    raise TimeoutError('Action append lock unavailable') from None
+                time.sleep(min(.05,max(0,deadline-time.monotonic())))
+        try:
+            yield
+        finally:
+            if os.name=='nt':
+                import msvcrt
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(),msvcrt.LK_UNLCK,1)
+            else:
+                import fcntl
+                fcntl.flock(handle.fileno(),fcntl.LOCK_UN)
+
+
+def _canonical_event(value):
+    return json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode('utf-8')
+
+
+def _journal_tail(stream):
+    """Read only the last nonempty record, preserving an invalid partial tail."""
+    size=os.fstat(stream.fileno()).st_size
+    if not size:return None,False
+    stream.seek(size-1);needs_newline=stream.read(1)!=b'\n'
+    end=size;buffer=b''
+    while end:
+        start=max(0,end-65536)
+        stream.seek(start);buffer=stream.read(end-start)+buffer
+        lines=buffer.split(b'\n')
+        candidates=lines if start==0 else lines[1:]
+        for line in reversed(candidates):
+            if not line.strip():continue
+            try:
+                value=json.loads(line)
+                if (type(value) is not dict or type(value.get('sequence')) is not int
+                        or not 1<=value['sequence']<2**63
+                        or type(value.get('sha256')) is not str
+                        or re.fullmatch('[0-9a-f]{64}',value['sha256']) is None
+                        or type(value.get('previous_sha256')) is not str
+                        or re.fullmatch('[0-9a-f]{64}',value['previous_sha256']) is None
+                        or hashlib.sha256(_canonical_event({k:v for k,v in value.items() if k!='sha256'})).hexdigest()!=value['sha256']):
+                    raise ValueError()
+                return value,needs_newline
+            except (ValueError,TypeError,UnicodeError,OverflowError,RecursionError):
+                raise LedgerTailError('Action journal tail is incomplete or invalid; original bytes preserved') from None
+        end=start
+    return None,needs_newline
+
+
+def _prefix_boundary(stream, *, needs_newline):
+    """Anchor an unqualified prefix once, never rewrite historical collisions."""
+    stream.seek(0);digest=hashlib.sha256();counts={};invalid=0;records=0
+    reader=io.BufferedReader(stream)
+    try:
+        for line in reader:
+            digest.update(line)
+            if not line.strip():continue
+            records+=1
+            try:
+                value=json.loads(line);sequence=value.get('sequence') if type(value) is dict else None
+                if type(sequence) is not int or not 1<=sequence<2**63:
+                    raise ValueError()
+                counts[sequence]=counts.get(sequence,0)+1
+            except (ValueError,TypeError,UnicodeError,OverflowError,RecursionError):
+                invalid+=1
+    finally:
+        reader.detach()
+    size=os.fstat(stream.fileno()).st_size
+    maximum=max(counts,default=0)
+    return {'status':'HISTORICAL_PREFIX_UNQUALIFIED' if size else 'EMPTY_PREFIX',
+        'prefix_bytes':size,'prefix_sha256':digest.hexdigest(),
+        'prefix_records':records,'maximum_sequence':maximum,
+        'duplicate_sequence_values':sum(count>1 for count in counts.values()),
+        'invalid_sequence_or_json_records':invalid,
+        'new_records_start_offset':size+int(bool(size and needs_newline)),
+        'scope':'NEW_APPENDS_ONLY_REQUIRES_ALL_WRITERS_USING_APPEND_PROTOCOL',
+        'recorded_at':_datetime_module.datetime.now(timezone.utc).isoformat()}
+
+
+def _read_append_state(path):
+    try:
+        with path.open('rb') as stream:
+            raw=stream.read(65537)
+        return json.loads(raw) if len(raw)<=65536 else None
+    except (OSError,ValueError,TypeError,UnicodeError,RecursionError):
+        return None
+
+
+def _save_append_state(path, state):
+    """Atomic auxiliary checkpoint; a stale/missing copy is reconstructed."""
+    temporary=None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent,prefix=path.name+'.',suffix='.tmp',delete=False) as stream:
+            temporary=Path(stream.name)
+            stream.write(json.dumps(state,sort_keys=True,separators=(',',':')).encode('utf-8')+b'\n')
+            stream.flush();os.fsync(stream.fileno())
+        os.replace(temporary,path)
+    finally:
+        if temporary is not None and temporary.exists():temporary.unlink()
 
 
 @dataclass
@@ -39,7 +177,7 @@ def safe(value):
 
 class ActionLedger:
     def __init__(self,path: Path,capacity=1024):
-        self.path=Path(path)
+        self.path=Path(path).resolve()
         self.pending=queue.Queue(maxsize=capacity)
         self.persisted=0
         self.dropped=0
@@ -70,21 +208,48 @@ class ActionLedger:
                 if kind=='stop':return
                 if kind=='flush':value.set();continue
                 self.path.parent.mkdir(parents=True,exist_ok=True)
-                if self.sequence==0 and self.path.exists() and self.path.stat().st_size:
-                    last=json.loads(self.path.read_text(encoding='utf-8').splitlines()[-1])
-                    self.sequence=last['sequence'];self.previous=last['sha256']
-                event={**value,'sequence':self.sequence+1,'previous_sha256':self.previous}
-                raw=json.dumps(event,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
-                digest=hashlib.sha256(raw).hexdigest()
-                with self.path.open('a',encoding='utf-8',newline='\n') as stream:
-                    stream.write(json.dumps({**event,'sha256':digest},sort_keys=True)+'\n')
-                    stream.flush()
-                    os.fsync(stream.fileno())
-                self.sequence+=1;self.previous=digest;self.persisted+=1
+                with _append_lock(self.path):
+                    self._append(value)
             except Exception as exc:
                 self.dropped+=1
                 self.last_error=type(exc).__name__
             finally:self.pending.task_done()
+
+    def _append(self, value):
+        state_path=self.path.with_name(self.path.name+'.append-state.json')
+        # Opening/re-reading happens inside the common append lock. Cached
+        # writer counters are observations only, never sequence authority.
+        with self.path.open('a+b',buffering=0) as stream:
+            last,needs_newline=_journal_tail(stream)
+            before=os.fstat(stream.fileno())
+            state=_read_append_state(state_path)
+            identity=[before.st_dev,before.st_ino]
+            matches=(type(state) is dict and state.get('protocol')==APPEND_PROTOCOL
+                and state.get('journal_identity')==identity and state.get('journal_bytes')==before.st_size
+                and last is not None and state.get('sequence')==last['sequence']
+                and state.get('sha256')==last['sha256'] and type(state.get('qualification_boundary')) is dict)
+            boundary=state['qualification_boundary'] if matches else _prefix_boundary(stream,needs_newline=needs_newline)
+            sequence=(last['sequence'] if matches else max(boundary['maximum_sequence'],last['sequence'] if last else 0))+1
+            if sequence>=2**63:raise LedgerTailError('Action journal sequence exceeds supported format')
+            previous=last['sha256'] if last else '0'*64
+            event={k:v for k,v in value.items() if k not in {'sequence','previous_sha256','sha256'}}
+            event.update(sequence=sequence,previous_sha256=previous)
+            # Do not add protocol/boundary fields to action records: existing
+            # exact-field attestation readers keep their original contracts.
+            digest=hashlib.sha256(_canonical_event(event)).hexdigest()
+            raw=(b'\n' if before.st_size and needs_newline else b'')+(
+                json.dumps({**event,'sha256':digest},sort_keys=True)+'\n').encode('utf-8')
+            remaining=memoryview(raw)
+            while remaining:
+                written=stream.write(remaining)
+                if not written:raise OSError('Action append did not progress')
+                remaining=remaining[written:]
+            os.fsync(stream.fileno())
+            after=os.fstat(stream.fileno())
+            _save_append_state(state_path,{'protocol':APPEND_PROTOCOL,
+                'journal_identity':[after.st_dev,after.st_ino],'journal_bytes':after.st_size,
+                'sequence':sequence,'sha256':digest,'qualification_boundary':boundary})
+            self.sequence=sequence;self.previous=digest;self.persisted+=1
 
     def status(self):
         return {'persisted':self.persisted,'pending':self.pending.qsize(),'dropped':self.dropped,

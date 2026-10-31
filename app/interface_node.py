@@ -234,7 +234,7 @@ class Objective(BaseModel):
     objective: str=Field(min_length=1,max_length=20000)
     context: str=Field(default='',max_length=80000)
     idempotency_key: str=Field(min_length=1,max_length=100)
-    deterministic_operation: Literal['sha256','json_format','json_validate'] | None = None
+    deterministic_operation: Literal['sha256','json_format','json_validate','weighted_decision'] | None = None
 
 
 @router.post('/objectives',status_code=202)
