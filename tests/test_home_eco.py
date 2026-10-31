@@ -240,6 +240,31 @@ def test_retry_without_artificial_delay_keeps_bounded_attempts(tmp_path):
     assert queue.claim("worker", [MODEL]) is None
 
 
+def test_resource_observation_uses_measured_profile_reserve(tmp_path, monkeypatch):
+    import pathlib
+
+    from app import compute_profile
+    from app.home_eco import resource_observation
+
+    real_read_text = pathlib.Path.read_text
+
+    def fake_meminfo(self, *args, **kwargs):
+        if self.as_posix() == "/proc/meminfo":
+            return "MemTotal: 32000000 kB\nMemAvailable: 8000000 kB\n"
+        return real_read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(pathlib.Path, "read_text", fake_meminfo)
+    monkeypatch.setattr(
+        compute_profile,
+        "runtime_compute_profile",
+        lambda: {"minimum_available_mib": 1799},
+    )
+    monkeypatch.delenv("ORQEVIA_HOME_ECO_MIN_AVAILABLE_MIB", raising=False)
+    observation = resource_observation()
+    assert observation["minimum_available_mib"] == 1799
+    assert observation["admission"] in {"AVAILABLE", "WAITING_FOR_CAPACITY"}
+
+
 @pytest.mark.parametrize("agent", registered_agent_ids(include_orchestrator=False))
 def test_all_registered_agents_dispatch_execute_persist_and_observe(tmp_path, agent):
     # An actual deterministic tool executor exercises the whole scheduler path.

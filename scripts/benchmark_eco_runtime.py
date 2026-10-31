@@ -10,6 +10,7 @@ import argparse
 import ctypes
 import datetime as dt
 import json
+import os
 from pathlib import Path
 import statistics
 import subprocess
@@ -30,9 +31,10 @@ for name,source in SOURCES.items():
 def paused(db):
  row=db.execute('SELECT paused FROM compute_background_admission WHERE id=1').fetchone()
  return row is not None and row[0]==1
+OWNER_OPEN = os.getenv('ORQEVIA_OWNER_BENCHMARK_ALLOW_OPEN', '0') == '1'
 with queue.connect() as db:
- if not paused(db):raise RuntimeError('OWNER_BACKGROUND_PAUSE_NOT_ACTIVE')
- if db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone():raise RuntimeError('EXISTING_WORK_ACTIVE')
+ if not paused(db) and not OWNER_OPEN:raise RuntimeError('OWNER_BACKGROUND_PAUSE_NOT_ACTIVE')
+ if not OWNER_OPEN and db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone():raise RuntimeError('EXISTING_WORK_ACTIVE')
 job=queue.submit(agent='a19',prompt=spec['prompt'],priority='background',model=spec['model'],
  model_role=spec['role'],preferred_provider='ollama-'+spec['role'],task_class='classification' if spec['role']=='fast' else 'complex_reasoning',
  max_retries=0,timeout_seconds=180,max_cost_usd=0,allow_cloud=False,
@@ -45,7 +47,7 @@ try:
  # before admitting it at interactive priority. No global pause is released.
  with queue.connect() as db:
   db.execute('BEGIN IMMEDIATE')
-  if not paused(db) or db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone():raise RuntimeError('EXISTING_WORK_ACTIVE')
+  if (not paused(db) and not OWNER_OPEN) or (not OWNER_OPEN and db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone()):raise RuntimeError('EXISTING_WORK_ACTIVE')
   db.execute("UPDATE compute_jobs SET status='held',priority=50,lease_until=? WHERE id=? AND status='queued'",(time.time()+240,job['id']))
   queue._event(db,job['id'],'owner_qualification_reserved',{'purpose':'explicit-isolated-eco-test','threads':spec['threads'],'model':spec['model']})
  available=providers()
