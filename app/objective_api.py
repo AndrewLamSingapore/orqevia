@@ -261,6 +261,37 @@ def weighted_capabilities(body):
     return ['responsibility.a04']
 
 
+_WEIGHTED_CONTEXT_KEYS = frozenset({'criterion_weights', 'option_criterion_scores'})
+_WEIGHTED_INTENT_PHRASES = ('weighted decision', 'weighted options',
+    'weighted comparison', 'weighted scoring')
+
+
+def weighted_context_shape(context: str) -> bool:
+    """Recognize only the exact typed weighted-input JSON envelope, never prose."""
+    try:
+        value = json.loads(context)
+    except (ValueError, UnicodeError, RecursionError):
+        return False
+    return type(value) is dict and set(value) == _WEIGHTED_CONTEXT_KEYS
+
+
+def weighted_intent(objective: str) -> bool:
+    """Clear weighted-calculation wording; weights never come from prose."""
+    text = objective.lower()
+    return any(phrase in text for phrase in _WEIGHTED_INTENT_PHRASES)
+
+
+def automatic_weighted_operation(body):
+    """Narrow deterministic selector: exact structured input plus explicit a04
+    capability or clear weighted-calculation intent. No prose parsing, answer
+    keys or model fallback. Malformed typed inputs stay on the bounded path."""
+    if body.deterministic_operation is not None or not weighted_context_shape(body.context):
+        return False
+    if body.capability == 'responsibility.a04':
+        return True
+    return body.capability == 'auto' and not body.capabilities and weighted_intent(body.objective)
+
+
 def metadata_contradictions(text,metadata):
     """Detect claims that resemble authoritative facts without promoting them."""
     if not text:return []
@@ -397,6 +428,8 @@ def store_runtime(db,task,revision):
 @router.post('',status_code=202)
 def submit(body: ObjectiveRequest,authorization: str | None=Header(default=None)):
     authenticate_owner(authorization)
+    if automatic_weighted_operation(body):
+        body=body.model_copy(update={'deterministic_operation':'weighted_decision'})
     from .operational_workflows import from_objective, execute_workflow
     from .system_architecture import architecture_answer,is_architecture_question
     architecture=architecture_answer(body.objective) if (not body.deterministic_operation
@@ -585,9 +618,14 @@ def get_read_only(task_id: str,authorization: str | None):
 def continue_objective(task_id, body, expected_revision, idempotency_key, authorization):
     """Reserve once before dispatch; an interrupted reservation is never replayed."""
     authenticate_owner(authorization)
+    # Bind the continuation digest to the original caller payload before any
+    # internal automatic-routing normalization, so policy normalization never
+    # rewrites prior accepted request bindings.
+    digest=hashlib.sha256(json.dumps({'body':body.transport_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
+    if automatic_weighted_operation(body):
+        body=body.model_copy(update={'deterministic_operation':'weighted_decision'})
     weighted=body.deterministic_operation=='weighted_decision'
     if weighted:weighted_capabilities(body)
-    digest=hashlib.sha256(json.dumps({'body':body.transport_dump(),'expected_revision':expected_revision},sort_keys=True).encode()).hexdigest()
     db=connect()
     try:
         db.execute('BEGIN IMMEDIATE')

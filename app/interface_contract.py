@@ -9,6 +9,7 @@ import os
 import re
 import time
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -174,6 +175,7 @@ class Continuation(BaseModel):
     context: str=Field(default='',max_length=76000)
     expected_revision: int=Field(ge=0,strict=True)
     idempotency_key: str=Field(min_length=1,max_length=100)
+    deterministic_operation: Literal['sha256','json_format','json_validate','weighted_decision'] | None = None
 
 
 @router.post('/tasks/{task_id}/continue',status_code=202)
@@ -190,7 +192,7 @@ def continue_task(task_id: str,body: dict,request: Request):
     policy=node.client_policy(client)
     objective=node.objective_api.ObjectiveRequest(objective=turn.objective,context=turn.context,
         data_classification=policy.get('data_classification','LOCAL_ONLY'),max_cost_usd=policy.get('max_cost_usd',0),
-        priority=node.dispatch_priority(policy))
+        priority=node.dispatch_priority(policy),deterministic_operation=turn.deterministic_operation)
     return node.objective_api.continue_objective(task_id,objective,turn.expected_revision,turn.idempotency_key,node.owner_transport())
 
 

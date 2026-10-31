@@ -73,3 +73,59 @@ def test_thin_objective_contract_accepts_the_explicit_calculator_operation():
     body=Objective(objective='Compare.',context=json.dumps(request()),
         idempotency_key='weighted-fixture',deterministic_operation='weighted_decision')
     assert body.deterministic_operation=='weighted_decision'
+
+
+def test_thin_continuation_contract_accepts_the_calculator_operation():
+    from app.interface_contract import Continuation
+    body=Continuation(objective='Compare.',context=json.dumps(request()),
+        expected_revision=0,idempotency_key='weighted-follow',
+        deterministic_operation='weighted_decision')
+    assert body.deterministic_operation=='weighted_decision'
+
+
+def test_automatic_a04_routing_with_exact_structured_context(api,monkeypatch):
+    client,compute=api
+    def forbidden(*args,**kwargs):raise AssertionError('Calculator must not submit inference')
+    monkeypatch.setattr(compute.queue,'submit',forbidden)
+    headers={'Authorization':'Bearer isolated-test-owner'}
+    response=client.post('/api/agents/objectives',headers=headers,json={
+        'objective':'Compare the supplied weighted options.','context':json.dumps(request()),
+        'capability':'responsibility.a04'})
+    assert response.status_code==202,response.text
+    task=client.get('/api/agents/objectives/'+response.json()['id'],headers=headers).json()
+    assert task['state']=='COMPLETED'
+    assert task['steps'][0]['capability']=='responsibility.a04'
+    assert task['result']['type']=='DETERMINISTIC_CALCULATION'
+    assert json.loads(task['result']['text'])['decision']=='TIE'
+    assert task['execution_metadata']['inference_attempts']['status']=='NOT_APPLICABLE'
+
+
+def test_auto_capability_with_weighted_intent_and_structured_context(api,monkeypatch):
+    client,compute=api
+    def forbidden(*args,**kwargs):raise AssertionError('Calculator must not submit inference')
+    monkeypatch.setattr(compute.queue,'submit',forbidden)
+    headers={'Authorization':'Bearer isolated-test-owner'}
+    response=client.post('/api/agents/objectives',headers=headers,json={
+        'objective':'Compute the weighted decision across the supplied options.',
+        'context':json.dumps(request())})
+    assert response.status_code==202,response.text
+    task=client.get('/api/agents/objectives/'+response.json()['id'],headers=headers).json()
+    assert task['state']=='COMPLETED'
+    assert task['steps'][0]['capability']=='responsibility.a04'
+    assert task['result']['type']=='DETERMINISTIC_CALCULATION'
+
+
+def test_a04_or_weighted_wording_without_structured_context_keeps_model_routing(api):
+    client,_=api
+    headers={'Authorization':'Bearer isolated-test-owner'}
+    for objective,context,capability in [
+        ('Compare A and B.','plain prose context','responsibility.a04'),
+        ('Compute the weighted decision.','plain prose context','auto'),
+        ('Compute the weighted decision.',json.dumps({'criterion_weights':{},'extra':1}),'auto')]:
+        response=client.post('/api/agents/objectives',headers=headers,json={
+            'objective':objective,'context':context,'capability':capability})
+        assert response.status_code==202,response.text
+        task=client.get('/api/agents/objectives/'+response.json()['id'],headers=headers).json()
+        steps=task['steps']
+        assert steps and 'job' in steps[0]
+        assert task['state'] not in ('COMPLETED',)
