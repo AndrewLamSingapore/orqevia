@@ -31,6 +31,9 @@ from app.spine import SpineStore, StableSpine
 
 class HarnessApiTests(unittest.TestCase):
     def setUp(self):
+        # A previous lifespan test may have left the shared reaper running.
+        # Stop it before swapping its global queue to this disposable store.
+        compute_queue_api.stop_compute_queue()
         self.case = tempfile.TemporaryDirectory()
         os.environ["ORQEVIA_HARNESS_DB"] = os.path.join(self.case.name, "harness.db")
         harness_api._runtime_cache = None
@@ -52,6 +55,9 @@ class HarnessApiTests(unittest.TestCase):
 
     def tearDown(self):
         self.client.close()
+        # Joining the reaper before deleting SQLite files prevents it from
+        # recreating a database inside TemporaryDirectory.cleanup().
+        compute_queue_api.stop_compute_queue()
         self.case.cleanup()
 
     def test_pilot_dispatch_traverses_spine_harness_and_local_queue(self):

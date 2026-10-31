@@ -25,6 +25,23 @@ from .coaching_exercises import METHODS, VERSION, practice_request, review_pract
 PHASES = ('baseline', 'practice', 'acceptance')
 STORAGE_LIMIT_BYTES = 512*1024*1024
 
+def coaching_execution_seconds(program):
+    """Active execution budgets by task family; queue waiting is separate.
+
+    Structured roles reuse the existing 600-second qualification budget.
+    Multi-topic probability assessments use the patient 1800-second budget.
+    Explicit global and task-family settings remain configurable and bounded.
+    """
+    defaults = {'role': 600, 'probability-foundations': 1800}
+    if program not in defaults:
+        raise ValueError('unknown coaching program')
+    global_value = bounded_setting('ORQEVIA_COACHING_EXECUTION_SECONDS',
+                                   defaults[program], 60, 7200)
+    specific = ('ORQEVIA_COACHING_ROLE_EXECUTION_SECONDS' if program == 'role'
+                else 'ORQEVIA_COACHING_PROBABILITY_EXECUTION_SECONDS')
+    return int(bounded_setting(specific, global_value, 60, 7200))
+
+
 def canonical(value):
     return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)
 
@@ -391,7 +408,7 @@ class CoachingController:
             if row['program_id']=='role' and row['phase']=='acceptance' and row['baseline_request_sha256']!=request_hash:
                 return self.self_repair(db,row,'ACCEPTANCE_REQUEST_CHANGED')
             job = self.queue.submit(agent=row['agent'],prompt=prompt,priority='background',model_role='deep',model=self.model,
-                                    ram_mb=1024,vram_mb=0,timeout_seconds=int(bounded_setting('ORQEVIA_COACHING_EXECUTION_SECONDS',1800,60,7200)),max_retries=0,max_cost_usd=0,
+                                    ram_mb=1024,vram_mb=0,timeout_seconds=coaching_execution_seconds(row['program_id']),max_retries=0,max_cost_usd=0,
                                     allow_cloud=False,external_execution=False,classification='R0',
                                     data_classification='LOCAL_ONLY',task_class='classification',response_format='strict_json',
                                     response_schema=request.get('response_schema'),idempotency_key=key,
