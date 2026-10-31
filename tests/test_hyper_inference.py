@@ -280,6 +280,19 @@ class AdaptiveRouterTests(unittest.TestCase):
         self.assertTrue(result.escalation["required"])
         self.assertIn("discriminating evidence for contradictory results", result.evidence_requests)
 
+    def test_router_recovers_after_malformed_input_and_keeps_serving(self):
+        router = AdaptiveInferenceRouter()
+        for malformed in ({}, {"objective": 123}, {"agent_id": "a01"}):
+            with self.assertRaises((ValueError, TypeError, KeyError, AttributeError)):
+                router.route(**malformed)
+        result = router.route(
+            objective="Deduce the conclusion using modus ponens",
+            agent_id="a01",
+            agent_permissions={"reason.advisory"},
+        )
+        self.assertEqual(result.task_class, "deduction")
+        self.assertFalse(result.executed_external_action)
+
 
 class AcademyExerciseTests(unittest.TestCase):
     def test_twelve_section77_exercises_are_defined(self):
