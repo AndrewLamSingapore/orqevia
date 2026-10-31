@@ -67,13 +67,10 @@ def local_model_backends(settings=SETTINGS) -> tuple[Backend, ...]:
 
     Fast is the measured small-task path. A distinct deep model supplies the
     bounded local MINI tier; no local model is promoted to FLAGSHIP by name.
-    A distinct embedding model supplies the local knowledge lane.
     """
     backends = [Backend('ollama-fast', settings.fast_model, Tier.NANO, 'local')]
     if settings.deep_model != settings.fast_model:
         backends.append(Backend('ollama-deep', settings.deep_model, Tier.MINI, 'local'))
-    if settings.embedding_model and settings.embedding_model not in {settings.fast_model, settings.deep_model}:
-        backends.append(Backend('ollama-embedding', settings.embedding_model, Tier.NANO, 'local'))
     return tuple(backends)
 
 
