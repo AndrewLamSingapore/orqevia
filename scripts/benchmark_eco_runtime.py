@@ -51,7 +51,11 @@ try:
   db.execute("UPDATE compute_jobs SET status='held',priority=50,lease_until=? WHERE id=? AND status='queued'",(time.time()+240,job['id']))
   queue._event(db,job['id'],'owner_qualification_reserved',{'purpose':'explicit-isolated-eco-test','threads':spec['threads'],'model':spec['model']})
  available=providers()
- claimed=queue.claim('owner-eco-qualification',available,held_job_id=job['id'])
+ claim_deadline=time.monotonic()+180
+ while claimed is None and time.monotonic()<claim_deadline:
+  claimed=queue.claim('owner-eco-qualification',available,held_job_id=job['id'])
+  if not claimed:
+   time.sleep(3)
  if not claimed:raise RuntimeError('OWNER_TEST_ADMISSION_UNAVAILABLE')
  provider=next(p for p in available if p.name==claimed['provider'])
  settings=dataclasses.replace(SETTINGS,context_tokens=spec['context'],max_output_tokens=128,keep_alive='2m')
@@ -68,6 +72,7 @@ try:
   result={'result':json.dumps({'vectors':len(vectors),'dimensions':len(vectors[0]) if vectors else 0,'identical_input_similarity':similarity}),
    'input_tokens':int(raw.get('prompt_eval_count',0)),'output_tokens':0,'actual_cost_usd':0}
   metrics={k:raw.get(k) for k in ('total_duration','load_duration','prompt_eval_count')}
+  cross_check=None;oracle_matches_deterministic=None
  else:
   claimed['lifecycle_state']='ADMITTED'
   result=asyncio.run(sys.modules['app.eco_trial_stream'].infer(claimed,provider,settings=settings,
