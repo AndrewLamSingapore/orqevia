@@ -16,6 +16,7 @@ import ssl
 import statistics
 import subprocess
 import time
+import urllib.error
 import urllib.request
 
 
@@ -160,6 +161,13 @@ def sample(*, ca_file=None):
                 "https://localhost:8443/interface/v1/health", context=context, timeout=8
             ) as response:
                 https = {"status": response.status, "seconds": time.monotonic() - began, "certificate_verified": True}
+        except urllib.error.HTTPError as exc:
+            https = {
+                "status": exc.code,
+                "seconds": time.monotonic() - began,
+                "certificate_verified": True,
+                "boundary_enforced": exc.code == 401,
+            }
         except OSError as exc:
             https = {"status": "UNVERIFIED", "error_class": type(exc).__name__}
     return {
