@@ -20,7 +20,7 @@ from scripts.observe_ollama_load import CGROUP_PATHS, OLLAMA, command, parse_cgr
 
 
 WORKER = r"""
-import asyncio,dataclasses,datetime,inspect,json,math,sqlite3,sys,time,types,urllib.request
+import asyncio,dataclasses,datetime,inspect,json,math,os,sqlite3,sys,time,types,urllib.request
 from app.compute_queue_api import queue,providers
 from app.settings import SETTINGS
 from app.compute_profile import require_compute_capacity
@@ -89,7 +89,7 @@ try:
  allowed=set(inspect.signature(queue.finish).parameters)
  finished=queue.finish(job['id'],**{k:v for k,v in result.items() if k in allowed})
  with queue.connect() as db:
-  if not paused(db):raise RuntimeError('OWNER_PAUSE_DRIFT_DETECTED')
+  if not paused(db) and not OWNER_OPEN:raise RuntimeError('OWNER_PAUSE_DRIFT_DETECTED')
  print(json.dumps({'job_id':job['id'],'job_status':finished['status'],'model':provider.model,
   'quality_pass':quality,'answer':result['result'],'input_tokens':result.get('input_tokens'),
   'output_tokens':result.get('output_tokens'),'timing':metrics,'stage_events':stages,
@@ -214,6 +214,11 @@ def main():
     parser.add_argument("--threads", nargs="+", type=int, default=[8, 4, 6])
     parser.add_argument("--repetitions", type=int, default=2)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--owner-open",
+        action="store_true",
+        help="Owner-authorized open-stage run; sets ORQEVIA_OWNER_BENCHMARK_ALLOW_OPEN=1 inside the backend worker",
+    )
     args = parser.parse_args()
     if not 1 <= args.repetitions <= 3 or any(t not in (4, 6, 8) for t in args.threads):
         parser.error("Use bounded measured candidates4/6/8 and1..3 repetitions")
@@ -235,8 +240,21 @@ def main():
             program = "SPEC=" + repr(spec) + "\nSOURCES=" + repr(sources) + "\n" + WORKER
             observations = [{**metrics(), "explorer": shell_responsiveness()}]
             began = time.monotonic()
+            exec_args = ["docker", "exec", "-i", "orqevia-epoch-20261016-backend-1", "python", "-B", "-"]
+            if args.owner_open:
+                exec_args = [
+                    "docker",
+                    "exec",
+                    "-i",
+                    "-e",
+                    "ORQEVIA_OWNER_BENCHMARK_ALLOW_OPEN=1",
+                    "orqevia-epoch-20261016-backend-1",
+                    "python",
+                    "-B",
+                    "-",
+                ]
             process = subprocess.Popen(
-                ["docker", "exec", "-i", "orqevia-epoch-20261016-backend-1", "python", "-B", "-"],
+                exec_args,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
