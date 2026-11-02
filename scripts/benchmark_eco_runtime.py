@@ -48,13 +48,17 @@ try:
  with queue.connect() as db:
   db.execute('BEGIN IMMEDIATE')
   if (not paused(db) and not OWNER_OPEN) or (not OWNER_OPEN and db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone()):raise RuntimeError('EXISTING_WORK_ACTIVE')
-  db.execute("UPDATE compute_jobs SET status='held',priority=50,lease_until=? WHERE id=? AND status='queued'",(time.time()+240,job['id']))
+  db.execute("UPDATE compute_jobs SET status='held',priority=50,lease_until=? WHERE id=? AND status='queued'",(time.time()+2400,job['id']))
   queue._event(db,job['id'],'owner_qualification_reserved',{'purpose':'explicit-isolated-eco-test','threads':spec['threads'],'model':spec['model']})
  available=providers()
- claim_deadline=time.monotonic()+180
+ claim_deadline=time.monotonic()+1800
+ last_log=0.0
  while claimed is None and time.monotonic()<claim_deadline:
   claimed=queue.claim('owner-eco-qualification',available,held_job_id=job['id'])
   if not claimed:
+   if time.monotonic()-last_log>30:
+    print(json.dumps({'phase':'waiting_for_interactive_slot','elapsed_seconds':round(time.monotonic()-began,1)}),file=sys.stderr,flush=True)
+    last_log=time.monotonic()
    time.sleep(3)
  if not claimed:raise RuntimeError('OWNER_TEST_ADMISSION_UNAVAILABLE')
  provider=next(p for p in available if p.name==claimed['provider'])
