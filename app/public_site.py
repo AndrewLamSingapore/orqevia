@@ -17,21 +17,21 @@ NAV = (
     ("/intelligence", "Intelligence"),
     ("/capabilities", "Capabilities"),
     ("/architecture", "Architecture"),
-    ("/trust", "Trust & Governance"),
+    ("/trust", "Security"),
     ("/access", "Access"),
 )
 PAGES = {
     "/": (
         "Overview",
-        "INTELLIGENCE, WITH INTENTION",
-        "Intelligence.<br><em>Under your authority.</em>",
-        "A sovereign workspace for grounded reasoning, governed agents and work you can inspect. One continuous experience, from desktop to iPhone.",
+        "THE ORQEVIA WORKSPACE",
+        "Useful intelligence.<br><em>Work you can inspect.</em>",
+        "Bring reasoning, tools, knowledge and recoverable missions into one workspace. Continue your work on desktop and mobile.",
     ),
     "/intelligence": (
         "Intelligence",
-        "THE SOVEREIGN INTELLIGENCE PLANE",
+        "REASONING, TOOLS AND KNOWLEDGE",
         "A clear path<br><em>from intent to evidence.</em>",
-        "Bring objectives, documents and reasoning into one accountable workflow. Inspect the sources, routing and execution records behind a result.",
+        "Start with an objective. Use available models and tools, retrieve relevant knowledge and inspect the evidence behind a result.",
     ),
     "/capabilities": (
         "Capabilities",
@@ -42,14 +42,14 @@ PAGES = {
     "/architecture": (
         "Architecture",
         "ONE COHERENT SYSTEM",
-        "Connected thinking.<br><em>Preserved authority.</em>",
-        "A shared workspace and API connect to existing governance, model routing, orchestration and evidence. The intelligence plane adds coordination within these boundaries.",
+        "One workspace.<br><em>Direct execution.</em>",
+        "One logical coordination path selects relevant capabilities, tools and models. Durable task records preserve progress while measured resource limits protect useful work.",
     ),
     "/trust": (
-        "Trust & Governance",
-        "CONFIDENCE MUST BE EARNED",
-        "Trust is a practice.<br><em>Evidence is the record.</em>",
-        "Authentication, scoped access and existing approval controls define what can happen. Execution evidence defines what actually happened.",
+        "Security",
+        "PRIVATE BY DEFAULT",
+        "Private work.<br><em>Clear permissions.</em>",
+        "Authenticated sessions, scoped permissions and isolated credentials protect private work. Spending and consequential external actions keep their own technical authorization boundaries.",
     ),
     "/access": (
         "Access",
@@ -60,16 +60,16 @@ PAGES = {
 }
 FEATURES = {
     "/": (
-        "From a question to accountable work.",
-        "A useful intelligence platform makes its reasoning context and operational limits inspectable.",
+        "From an objective to useful work.",
+        "Choose an outcome, use the capabilities you need and keep the resulting work and evidence together.",
         (
             (
                 "Ground the answer",
                 "Work with source-attributed document retrieval and distinguish retrieved evidence from generated interpretation.",
             ),
             (
-                "Govern the action",
-                "Submit bounded objectives through the existing authenticated execution path, with the same ownership and resource controls.",
+                "Run the mission",
+                "Submit authorized objectives directly. The runtime selects available models and tools within the task permissions and measured resource capacity.",
             ),
             (
                 "Inspect the result",
@@ -78,12 +78,12 @@ FEATURES = {
         ),
     ),
     "/intelligence": (
-        "Coordination within proven boundaries.",
-        "OSIP brings existing components into one authorized view. Provider configuration is separate from live inference qualification.",
+        "Choose the right capability for the task.",
+        "Explore available capabilities in one workspace. Installed models, configured providers and demonstrated execution are shown separately.",
         (
             (
                 "Model intelligence",
-                "Inspect configured roles, locality and model availability. Routing retains the existing classification, cost and resource limits.",
+                "Inspect model locality and availability. Routing respects task privacy, cost and measured resource capacity.",
             ),
             (
                 "Grounded reasoning",
@@ -108,19 +108,19 @@ FEATURES = {
                 "Ingest supported documents and retrieve attributed context through the existing owner-scoped knowledge service.",
             ),
             (
-                "Read-only observatory",
-                "Inspect available operational observations in GOD’S EYE. Observation never grants execution authority.",
+                "Live systems",
+                "Inspect operational observations, model activity and resource usage. Read access never grants control of a system.",
             ),
         ),
     ),
     "/architecture": (
-        "A continuous chain of accountability.",
-        "Product sovereignty is preserved. ORQEVIA does not require the other portfolio products to operate.",
+        "Fewer steps between intent and results.",
+        "Local models, task state and knowledge stay with their owning services. External integrations report their own availability.",
         (
             ("Shared interfaces", "Desktop and iPhone use the same authorized workspace and service contracts."),
             (
-                "Stable governance",
-                "The existing Stable Spine, capability registry and execution boundaries remain the governing mechanisms.",
+                "One execution path",
+                "Capabilities share direct task dispatch, recoverable execution records and narrowly scoped permission checks. No agent hierarchy is needed for ordinary work.",
             ),
             (
                 "Inspectable outcomes",
@@ -129,7 +129,7 @@ FEATURES = {
         ),
     ),
     "/trust": (
-        "Governance is part of the execution path.",
+        "Technical boundaries that protect your work.",
         "A successful page load, registered agent or passing unit test is never a claim of general production certification.",
         (
             (
@@ -138,7 +138,7 @@ FEATURES = {
             ),
             (
                 "Consequential decisions",
-                "Existing approval requirements remain in force. A recorded approval does not by itself establish successful execution.",
+                "Financial transfers, credential changes and consequential external actions require the permissions for that exact operation. Routine authorized work runs directly.",
             ),
             (
                 "Honest availability",
@@ -176,7 +176,7 @@ def render(path: str) -> str:
     )
     content = f'<section class="editorial"><div class="editorial-heading"><h2>{escape(section_title)}</h2><p>{escape(section_intro)}</p></div><div class="capability-list">{cards}</div></section>'
     if path in {"/", "/architecture", "/intelligence"}:
-        content += '<section class="editorial"><div class="editorial-heading"><h2>Every step leaves<br>a trace.</h2><p>Conceptual workflow. Each service retains its own authority; an unavailable step stays unavailable.</p></div><ol class="flow"><li>Intent</li><li>Governance</li><li>Reasoning</li><li>Evidence</li><li>Observation</li></ol><p class="disclosure">Model-generated output requires verification. ORQEVIA makes no claim of proven AGI or ASI. Capability and certification records are scoped to their actual evidence.</p></section>'
+        content += '<section class="editorial"><div class="editorial-heading"><h2>Every step leaves<br>a trace.</h2><p>Conceptual workflow. Available tools and models execute authorized tasks; unavailable capabilities remain explicit.</p></div><ol class="flow"><li>Objective</li><li>Tools &amp; models</li><li>Execution</li><li>Evidence</li><li>Result</li></ol><p class="disclosure">Model-generated output requires verification. ORQEVIA makes no claim of proven AGI or ASI. Capability and certification records are scoped to their actual evidence.</p></section>'
     navigation = "".join(
         f'<a href="{url}"' + (' aria-current="page"' if path == url else "") + f">{escape(label)}</a>"
         for url, label in NAV

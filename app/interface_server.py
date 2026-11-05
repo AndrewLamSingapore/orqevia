@@ -44,6 +44,10 @@ if open_access.enabled():
         expose_headers=["*"],
     )
 from .orqevia_bridge import router as intelligence_bridge_router
+from .capability_depot import router as capability_depot_router
+app.include_router(capability_depot_router)
+from .evidence_lens_bridge import router as evidence_lens_router
+app.include_router(evidence_lens_router)
 app.include_router(intelligence_bridge_router)
 from .workflow_bridge import router as workflow_bridge_router
 app.include_router(workflow_bridge_router)

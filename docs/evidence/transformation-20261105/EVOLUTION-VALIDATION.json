@@ -1,0 +1,16 @@
+{
+  "observed_date": "2026-11-05",
+  "scope": "CHILD_TARGETED_SOURCE_VALIDATION_NOT_RELEASE_ACCEPTANCE",
+  "source_files": ["app/evolution_experiments.py", "scripts/run_evolution_experiment.py", "tests/test_evolution_experiments.py"],
+  "targeted_command": "uv run pytest -q tests/test_evolution_experiments.py",
+  "passed": 7,
+  "failed": 0,
+  "elapsed_seconds": 2.84,
+  "strict_ruff": "PASS (E9,F)",
+  "ruff_format": "PASS",
+  "latest_run_id_for_child_source": "7cba20c95444bfc5a59cc490ddb016ed1f2850fd7d04159a538a53394e94db26",
+  "production_mutations": 0,
+  "model_calls": 0,
+  "financial_transactions": 0,
+  "commit_push_deploy": "NOT_PERFORMED_BY_CHILD"
+}

@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 const port = Number(process.env.PWA_TEST_PORT || 4173);
+const origin = process.env.PWA_TEST_ORIGIN || `http://localhost:${port}`;
 
 export default defineConfig({
   testDir: "./browser-tests",
@@ -18,7 +19,7 @@ export default defineConfig({
     ["html", { outputFolder: "browser-results/html", open: "never" }],
   ],
   use: {
-    baseURL: `http://localhost:${port}`,
+    baseURL: origin,
     serviceWorkers: "block",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -27,7 +28,7 @@ export default defineConfig({
   },
   webServer: {
     command: "node browser-test-server.mjs",
-    url: `http://localhost:${port}/pwa/`,
+    url: `${origin}/pwa/`,
     timeout: 20_000,
     reuseExistingServer: !process.env.CI,
   },

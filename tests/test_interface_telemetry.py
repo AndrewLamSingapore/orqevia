@@ -90,7 +90,6 @@ def test_ready_agents_require_observed_queue_and_current_models(monkeypatch, tmp
     from app import interface_telemetry
     from app.agent_registry import registered_agent_ids
     monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
     agents = sorted(registered_agent_ids(include_orchestrator=False))
     current = datetime.now(timezone.utc).isoformat()
     with sqlite3.connect(tmp_path / 'compute-queue.db') as db:
@@ -125,7 +124,6 @@ def test_ready_agents_require_fresh_timestamps_but_observed_history_remains(monk
     from app import interface_telemetry
     from app.agent_registry import registered_agent_ids
     monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
     monkeypatch.setenv('ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS', '60')
     agents = sorted(registered_agent_ids(include_orchestrator=False))
     current = datetime.now(timezone.utc)
@@ -159,7 +157,6 @@ def test_malformed_freshness_window_fails_closed(monkeypatch, tmp_path):
     from app import interface_telemetry
     from app.agent_registry import registered_agent_ids
     monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
     monkeypatch.setenv('ORQEVIA_READY_ACTIVITY_MAX_AGE_SECONDS', 'not-a-number')
     current = datetime.now(timezone.utc).isoformat()
     agents = sorted(registered_agent_ids(include_orchestrator=False))
@@ -186,7 +183,6 @@ def test_malformed_freshness_window_fails_closed(monkeypatch, tmp_path):
 def test_fresh_failures_cancellations_and_running_jobs_are_activity_not_confirmed_readiness(monkeypatch, tmp_path):
     from app import interface_telemetry
     monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
     now = datetime.now(timezone.utc)
     original = (now - timedelta(hours=2)).isoformat()
     current = now.isoformat()
@@ -218,7 +214,7 @@ def test_fresh_failures_cancellations_and_running_jobs_are_activity_not_confirme
 def test_confirmed_readiness_requires_original_completion_and_fresh_model_observation(monkeypatch, tmp_path):
     from app import interface_telemetry
     monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '1')
+    monkeypatch.setenv('ORQEVIA_OUTPUT_QUEUE_MODE', 'home_eco')
     now = datetime.now(timezone.utc)
     current = now.isoformat()
     old_completion = (now-timedelta(hours=2)).isoformat()
@@ -239,10 +235,12 @@ def test_confirmed_readiness_requires_original_completion_and_fresh_model_observ
     report=interface_telemetry.snapshot('fixture-client','MEMBER',model_runtime_probe=stale_runtime)
     assert report['ready_agent_count'] is None
     assert all(a['readiness_status']!='CONFIRMED' for a in report['agents'])
-    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED','0')
+    # Retired registry enablement cannot disable authenticated native execution.
+    monkeypatch.setenv('PRIME_REGISTRY_V1_ENABLED', '0')
+    monkeypatch.setenv('ORQEVIA_REGISTRY_V1_ENABLED', '0')
     report=interface_telemetry.snapshot('fixture-client','MEMBER',model_runtime_probe=runtime)
-    assert report['disabled_agent_count']==21 and report['ready_agent_count']==0
-    assert all(a['reason_code']=='ADVISORY_DISPATCH_DISABLED' for a in report['agents'])
+    assert report['disabled_agent_count']==0 and report['ready_agent_count']==1
+    assert all(a['reason_code']!='ADVISORY_DISPATCH_DISABLED' for a in report['agents'])
 
 
 def test_naive_missing_future_and_stale_timestamps_never_become_fresh():
@@ -273,15 +271,22 @@ def test_dashboard_styles_are_allowed_by_the_existing_real_csp(monkeypatch):
     pwa=Path(__file__).parents[1]/'clients/pwa'
     monkeypatch.setenv('ORQEVIA_PWA_ORIGIN','https://testserver')
     app=FastAPI();app.add_middleware(pwa_sessions.PWASessionMiddleware)
+    app.mount('/pwa/design',StaticFiles(directory=pwa.parent/'shared'))
     app.mount('/pwa',StaticFiles(directory=pwa,html=True))
-    with TestClient(app,base_url='https://testserver') as client:response=client.get('/pwa/')
+    with TestClient(app,base_url='https://testserver') as client:
+        response=client.get('/pwa/')
+        stylesheet=client.get('/pwa/style.css')
+        tokens=client.get('/pwa/design/tokens.css')
     assert response.status_code==200
     assert "default-src 'self'" in response.headers['content-security-policy']
     assert 'unsafe-inline' not in response.headers['content-security-policy']
     assert '<style' not in response.text
     assert 'style=' not in response.text
-    assert '<link rel="stylesheet" href="/pwa/dashboard.css">' in response.text
-    assert 'padding-top:max(env(safe-area-inset-top),0px)' in (pwa/'dashboard.css').read_text(encoding='utf-8')
+    assert '<link rel="stylesheet" href="/pwa/style.css">' in response.text
+    assert '<link rel="stylesheet" href="/pwa/design/tokens.css">' in response.text
+    assert stylesheet.status_code==tokens.status_code==200
+    assert 'text/css' in stylesheet.headers['content-type']
+    assert 'env(safe-area-inset-bottom)' in stylesheet.text
 
 
 def test_endpoint_preserves_auth_expiry_scope_and_no_store(monkeypatch, tmp_path):

@@ -283,13 +283,12 @@ def _join_objective_ids(root, activity):
 
 
 def execution_configuration():
-    flag = os.getenv('PRIME_REGISTRY_V1_ENABLED', os.getenv('ORQEVIA_REGISTRY_V1_ENABLED', ''))
     return {
-        'dispatch_status': 'ENABLED' if flag == '1' else 'DISABLED' if flag == '0' else 'UNKNOWN',
+        'dispatch_status': 'ENABLED',
         'execution_mode': os.getenv('ORQEVIA_OUTPUT_QUEUE_MODE', 'direct').strip().lower(),
         'runtime_model': 'LOGICAL_ON_DEMAND_SHARED_INFERENCE',
         'dedicated_worker_expected': False,
-        'source': 'RUNTIME_CONFIGURATION',
+        'source': 'NATIVE_DIRECT_DISPATCH',
     }
 
 
@@ -307,9 +306,7 @@ def role_observation(agent, record, *, collector_available, now, max_age_seconds
     blocker = None
     if agent.get('lifecycle_status') != 'active':
         readiness, reason = 'DISABLED', 'ROLE_LIFECYCLE_NOT_ACTIVE'
-    elif configuration['dispatch_status'] == 'DISABLED':
-        readiness, reason = 'DISABLED', 'ADVISORY_DISPATCH_DISABLED'
-    elif configuration['dispatch_status'] != 'ENABLED' or configuration['execution_mode'] not in {'direct', 'queued'}:
+    elif configuration['dispatch_status'] != 'ENABLED' or configuration['execution_mode'] not in {'direct', 'queued', 'home_eco'}:
         reason = 'EXECUTION_CONFIGURATION_UNCONFIRMED'
     elif not collector_available:
         reason = 'COMPUTE_JOURNAL_UNAVAILABLE'
@@ -426,7 +423,7 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
     readiness_observed = (fresh_count is not None and model_runtime.get('status') == 'OBSERVED'
                           and model_time['status'] == 'OBSERVED'
                           and configuration['dispatch_status'] in {'ENABLED', 'DISABLED'}
-                          and configuration['execution_mode'] in {'direct', 'queued'})
+                          and configuration['execution_mode'] in {'direct', 'queued', 'home_eco'})
     ready = sum(item['readiness_status'] == 'CONFIRMED' for item in agents) if readiness_observed else None
     metrics.append(metric('observed_agents', observed_count,
                           'OBSERVED' if observed_count is not None else 'UNAVAILABLE',

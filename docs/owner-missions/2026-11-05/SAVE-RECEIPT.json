@@ -1,0 +1,9 @@
+{
+  "schema": "orqevia.owner-directive-receipt.v1",
+  "received_at": "2026-11-05T00:39:39.695Z",
+  "file": "docs\\owner-missions\\2026-11-05\\OWNER-DIRECTIVES-VERBATIM.md",
+  "sha256": "76a350c40395a42c835357011b7b43330d5d9cf0f27c24df4be5f657220bafbb",
+  "characters": 61046,
+  "verbatim": true,
+  "scope": "Four full mission directives and save instruction, extracted from the current user message only; no other conversation or secrets copied."
+}

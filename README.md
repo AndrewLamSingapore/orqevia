@@ -6,7 +6,7 @@
 
 # ORQEVIA · 奥启维亚
 
-### Governed AI operations, evidence-gated decisions and explainable execution
+### Local intelligence, useful tools and recoverable missions
 
 [Public walkthrough](https://authority-engine-app.vercel.app/orqevia) ·
 [Architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) ·
@@ -19,13 +19,28 @@
 ![PWA](https://img.shields.io/badge/interface-installable_PWA-0A7E8C?style=flat-square)
 ![Evidence first](https://img.shields.io/badge/design-evidence_first-1F5A73?style=flat-square)
 
-ORQEVIA is a governed operations-intelligence workspace. It separates what was
+ORQEVIA is an intelligence and execution workspace. It separates what was
 observed, what a model recommends and what the system was authorized to do.
 The result is a working environment for bounded analysis, traceable execution,
 durable memory and operational evidence.
 
 The public walkthrough is open. The owner workspace is protected by Cloudflare
 Access, TLS and server-side session authorization.
+
+## Current execution model - 5 November 2026
+
+Ordinary authorized objectives use direct task dispatch, task-qualified models,
+shared knowledge and recoverable execution records. Capability identities are
+an inventory, not a required management hierarchy. Scoped authentication,
+secrets, consequential-action permissions and resource capacity remain technical
+boundaries. The source release check verifies component hashes and capability
+identity; historical portfolio manifests and generated checkpoints do not grant
+runtime authority or gate the current release.
+
+The live ABEX handoff is the workspace-root `ORQEVIA-CURRENT-STATE.md`.
+Deployment receipts, not source documentation, establish what is running.
+Older release/status material below remains dated evidence where its assumptions
+have been superseded by the Owner mission.
 
 ## Start here
 
@@ -58,7 +73,7 @@ Access, TLS and server-side session authorization.
 | Evidence | Execution receipts, artifact hashes, provenance and runtime binding |
 | Memory | Durable decisions, searchable agent notebooks and scoped project/organization records |
 | Intelligence | Operations telemetry, geospatial observations, source-grounded retrieval and cited evidence |
-| Governance | Owner/member boundaries, model lifecycle, debate resolution and security controls |
+| Security | Owner/member isolation, credential protection, spending boundaries and recovery |
 | Interfaces | Authenticated PWA, mobile-safe layouts and service-backed operational views |
 
 ## System map

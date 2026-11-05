@@ -103,7 +103,7 @@ def actions(task_id: str, response: Response, action_type: str = '',
     try:
         from .objective_api import runtime_snapshot
         before = runtime_snapshot()
-        root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+        root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data'))
         if action_type in _AUTHORITY_ACTIONS:
             lines = read_authority_action_span(root, task_id, _AUTHORITY_ACTIONS[action_type])
         elif action_type == AUTHORITY_REVIEW_ACTION:

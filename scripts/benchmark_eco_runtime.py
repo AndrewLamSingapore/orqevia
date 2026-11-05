@@ -35,32 +35,45 @@ OWNER_OPEN = os.getenv('ORQEVIA_OWNER_BENCHMARK_ALLOW_OPEN', '0') == '1'
 with queue.connect() as db:
  if not paused(db) and not OWNER_OPEN:raise RuntimeError('OWNER_BACKGROUND_PAUSE_NOT_ACTIVE')
  if not OWNER_OPEN and db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone():raise RuntimeError('EXISTING_WORK_ACTIVE')
-job=queue.submit(agent='a19',prompt=spec['prompt'],priority='background',model=spec['model'],
+if 'reservation_seconds' not in inspect.signature(queue.submit).parameters:
+ raise RuntimeError('DEPLOY_CURRENT_ATOMIC_RESERVATION_IMPLEMENTATION_BEFORE_QUALIFICATION')
+job=queue.submit(agent='a19',prompt=spec['prompt'],priority=50,model=spec['model'],
  model_role=spec['role'],preferred_provider='ollama-'+spec['role'],task_class='classification' if spec['role']=='fast' else 'complex_reasoning',
  max_retries=0,timeout_seconds=180,max_cost_usd=0,allow_cloud=False,
  response_format='text' if spec['role']=='embedding' else 'strict_json',
- response_schema=spec.get('response_schema'))
+ response_schema=spec.get('response_schema'),reservation_seconds=2400)
 claimed=None;began=time.monotonic();stages=[]
 try:
- # The initial background submission cannot be stolen by the live reaper:
- # the Owner pause trigger holds it. Reserve only this explicit test as held
- # before admitting it at interactive priority. No global pause is released.
+ # The reservation is atomic at submission, including during open admission.
+ # It affects only this test; production admission and unrelated work continue.
  with queue.connect() as db:
   db.execute('BEGIN IMMEDIATE')
   if (not paused(db) and not OWNER_OPEN) or (not OWNER_OPEN and db.execute("SELECT 1 FROM compute_jobs WHERE status='running' OR cloud_inflight=1 LIMIT 1").fetchone()):raise RuntimeError('EXISTING_WORK_ACTIVE')
-  db.execute("UPDATE compute_jobs SET status='held',priority=50,lease_until=? WHERE id=? AND status='queued'",(time.time()+240,job['id']))
+  if queue.get(job['id'])['status']!='held':raise RuntimeError('TEST_RESERVATION_LOST')
   queue._event(db,job['id'],'owner_qualification_reserved',{'purpose':'explicit-isolated-eco-test','threads':spec['threads'],'model':spec['model']})
  available=providers()
- claimed=queue.claim('owner-eco-qualification',available,held_job_id=job['id'])
+ claim_deadline=time.monotonic()+1800
+ last_log=0.0
+ while claimed is None and time.monotonic()<claim_deadline:
+  claimed=queue.claim('owner-eco-qualification',available,held_job_id=job['id'])
+  if not claimed:
+   if time.monotonic()-last_log>30:
+    print(json.dumps({'phase':'waiting_for_interactive_slot','elapsed_seconds':round(time.monotonic()-began,1)}),file=sys.stderr,flush=True)
+    last_log=time.monotonic()
+   time.sleep(3)
  if not claimed:raise RuntimeError('OWNER_TEST_ADMISSION_UNAVAILABLE')
  provider=next(p for p in available if p.name==claimed['provider'])
  settings=dataclasses.replace(SETTINGS,context_tokens=spec['context'],max_output_tokens=128,keep_alive='2m')
  options={'num_thread':spec['threads'],'temperature':0,'seed':11}
  if spec['role']=='embedding':
   payload={'model':provider.model,'input':spec['inputs'],'keep_alive':'2m','options':options}
-  req=urllib.request.Request(SETTINGS.ollama_base_url+'/api/embed',data=json.dumps(payload).encode(),headers={'Content-Type':'application/json'})
-  with urllib.request.urlopen(req,timeout=180) as response:raw=json.load(response)
-  vectors=raw.get('embeddings',[])
+  # This installed Ollama exposes /api/embeddings; match the live provider route.
+  vectors=[];raw={}
+  for text in spec['inputs']:
+   payload={'model':provider.model,'prompt':text,'keep_alive':'2m','options':options}
+   req=urllib.request.Request(SETTINGS.ollama_base_url+'/api/embeddings',data=json.dumps(payload).encode(),headers={'Content-Type':'application/json'})
+   with urllib.request.urlopen(req,timeout=180) as response:raw=json.load(response)
+   vectors.append(raw.get('embedding',[]))
   valid=len(vectors)==3 and len(vectors[0])>0 and all(len(v)==len(vectors[0]) and all(isinstance(x,(int,float)) and math.isfinite(x) for x in v) for v in vectors)
   def cos(a,b):return sum(x*y for x,y in zip(a,b))/math.sqrt(sum(x*x for x in a)*sum(y*y for y in b))
   similarity=cos(vectors[0],vectors[1]) if valid else None
@@ -68,6 +81,7 @@ try:
   result={'result':json.dumps({'vectors':len(vectors),'dimensions':len(vectors[0]) if vectors else 0,'identical_input_similarity':similarity}),
    'input_tokens':int(raw.get('prompt_eval_count',0)),'output_tokens':0,'actual_cost_usd':0}
   metrics={k:raw.get(k) for k in ('total_duration','load_duration','prompt_eval_count')}
+  cross_check=None;oracle_matches_deterministic=None
  else:
   claimed['lifecycle_state']='ADMITTED'
   result=asyncio.run(sys.modules['app.eco_trial_stream'].infer(claimed,provider,settings=settings,

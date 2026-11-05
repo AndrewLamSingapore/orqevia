@@ -13,7 +13,7 @@ from pathlib import Path
 from app.agent_notebooks import AgentNotebookStore
 
 BASE = os.getenv("ORQEVIA_LOCAL_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or os.getenv("PRIME_SPINE_TOKEN") or "").strip()
+TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or "").strip()
 ADMIN = (
     os.getenv("ORQEVIA_NOTEBOOK_ADMIN_TOKEN", "").strip()
     or hmac.new(TOKEN.encode(), b"orqevia-notebook-admin-v1", hashlib.sha256).hexdigest()

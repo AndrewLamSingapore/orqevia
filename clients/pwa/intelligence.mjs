@@ -48,7 +48,7 @@ if(typeof document!=='undefined'){
   reset.addEventListener('click',()=>{geoFilter=null;void refresh();});
 
   const p=panel("God's Eye · Geospatial observations"), rows=Array.isArray(result.records)?result.records:[];
-  const collected=rows.map(r=>Date.parse(r.ingested_at)).filter(Number.isFinite).sort((a,b)=>b-a)[0];p.append(node('p',`${rows.length} stored observations · collected ${Number.isFinite(collected)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(collected))+' SGT':'time unknown'} · public USGS data; not global live coverage.${Number.isFinite(collected)&&Date.now()-collected>86400000?(active==='gods-eye'?' Authorized collection controls are in Intelligence.':' Press Sync USGS now to refresh the collection.'):''}`));drawMap(p,rows);
+  const collected=rows.map(r=>Date.parse(r.ingested_at)).filter(Number.isFinite).sort((a,b)=>b-a)[0];p.append(node('p',`${rows.length} stored observations · collected ${Number.isFinite(collected)?new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',dateStyle:'medium',timeStyle:'short'}).format(new Date(collected))+' SGT':'time unknown'} · public USGS data; not global live coverage.${Number.isFinite(collected)&&Date.now()-collected>86400000?' An authorized owner can sync the source collection.':''}`));drawMap(p,rows);
   if(!rows.length)p.append(node('p','No observations stored. Refresh after an authorized ingestion run.'));
   for(const r of rows){const d=record(p,`${r.place||r.event_id} · M${r.magnitude} · ${agoLabel(r.observed_at)}`,r);source(d,'Original provider evidence',r.source_url);}
  }
@@ -57,8 +57,8 @@ if(typeof document!=='undefined'){
   form.addEventListener('submit',async e=>{e.preventDefault();const epoch=generation;button.disabled=true;out.textContent='Retrieving cited evidence…';try{const result=await request('/api/orqevia/intelligence/rag/retrieve',{body:{query:input.value},timeout:30000});if(epoch!==generation)return;out.replaceChildren(node('p',`Retrieval: ${result.status||'UNKNOWN'}`),node('pre',JSON.stringify(result,null,2)));for(const citation of result.results||[])source(out,'Open cited source',citation.source);}catch(err){if(epoch===generation)out.textContent=`Retrieval unavailable: ${err.message}. Retry when the service is available.`;}finally{button.disabled=false;}});
  }
  async function refresh(){
-  if(!['intelligence','gods-eye'].includes(active)||pending)return;
-  $('intelligence-title').textContent=active==='gods-eye'?"God's Eye":'Intelligence';
+  if(active!=='intelligence'||pending)return;
+  $('intelligence-title').textContent='Connected observations & geographic tools';
   if(!navigator.onLine){root.replaceChildren();status('offline','Offline. Reconnect and press Refresh. No cached private data is shown.');return;}
   if(!session){root.replaceChildren();const access=document.documentElement?.dataset.accessState;status(access==='untrusted'?'error':'loading',access==='untrusted'?'This device is not currently trusted. Restore access once using the recovery form below.':'Restoring trusted access. If the connection is unavailable, retry below.');return;}
   const epoch=generation, controller=new AbortController();pending=controller;const timer=setTimeout(()=>controller.abort(),30000);root.replaceChildren();status('loading','Loading authorized observations…');
@@ -76,20 +76,20 @@ if(typeof document!=='undefined'){
     for(const m of t.metrics||[])record(op,m.metric_id,m);
     let readyMap=null;try{const rj=await request('/pwa/agent-readiness.json',{timeout:5000});readyMap=rj&&rj.agents&&!Array.isArray(rj.agents)?rj.agents:null;}catch{}for(const a of t.agents||[]){const signed=readyMap&&readyMap[a.agent_id]&&readyMap[a.agent_id].initialization_signed;record(op,`${a.agent_id} · ${a.availability||'UNKNOWN'}${signed?` · INITIALIZATION SIGNED (${signed})`:''}`,a);}
    }else{op.append(node('p',`Operational telemetry unavailable: ${telemetry.reason.message}. Intelligence remains independently usable.`));failures++;}
-   const tasks=node('a','Open your owned tasks and original artifacts');tasks.href='/pwa/?view=evidence';op.append(tasks);
+   const tasks=node('a','Open your owned tasks and original artifacts');tasks.href='/pwa/?view=missions';op.append(tasks);
    for(const [key,title] of [['alerts','Alerts, exceptions and anomalies'],['history','Historical event feed'],['sources','Providers and provenance']]){const p=panel(title),r=values.get(key);if(r.status==='fulfilled'){if(key==='alerts'&&!r.value.alerts?.length)p.append(node('p','No alerts have fired. This does not assert that no hazards exist.'));record(p,'Inspect underlying records',r.value);}else{p.append(node('p',`Unavailable: ${r.reason.message}`));failures++;}}
-   mountIntegrationPanels(panel('Integration availability'),{request,owner:session?.role==='OWNER',readOnly:active==='gods-eye',node,record,source,isCurrent:()=>epoch===generation});
+   mountIntegrationPanels(panel('Integration availability'),{request,owner:session?.role==='OWNER',readOnly:session?.role!=='OWNER',node,record,source,isCurrent:()=>epoch===generation});
    status(failures?'error':'ready',failures?`Loaded with ${failures} unavailable service(s). See each panel; Refresh retries recovery.`:'Authorized observations loaded. Open any record to inspect evidence and provenance.');
   }catch(e){if(epoch===generation)status('error',`Unable to load: ${e.message}. Press Refresh to recover.`);}
   finally{clearTimeout(timer);if(pending===controller)pending=null;}
  }
- window.addEventListener('orqevia-session',e=>{generation++;pending?.abort();pending=null;session=e.detail;sync.hidden=session?.role!=='OWNER'||active==='gods-eye';root.replaceChildren();void refresh();});
- window.addEventListener('orqevia-view',e=>{active=e.detail.name;sync.hidden=session?.role!=='OWNER'||active==='gods-eye';generation++;pending?.abort();pending=null;void refresh();});
+ window.addEventListener('orqevia-session',e=>{generation++;pending?.abort();pending=null;session=e.detail;sync.hidden=session?.role!=='OWNER';root.replaceChildren();void refresh();});
+ window.addEventListener('orqevia-view',e=>{active=e.detail.name;sync.hidden=session?.role!=='OWNER';generation++;pending?.abort();pending=null;void refresh();});
  window.addEventListener('offline',()=>{generation++;pending?.abort();pending=null;root.replaceChildren();status('offline','Offline. Reconnect to recover authorized observations.');});
  window.addEventListener('online',()=>void refresh());$('intelligence-refresh').addEventListener('click',()=>void refresh());
  const sync=$('intelligence-ingest');
  sync.addEventListener('click',async()=>{
-  if(session?.role!=='OWNER'||sync.disabled||active==='gods-eye')return;
+  if(session?.role!=='OWNER'||sync.disabled)return;
   sync.disabled=true;const epoch=generation;status('loading','Synchronizing public USGS observations…');
   try{const result=await request('/api/orqevia/intelligence/ingest/run',{body:{},timeout:30000});if(epoch!==generation)return;if(!result.ok)throw new Error('Provider ingestion failed; previous observations preserved');await refresh();}
   catch(e){if(epoch===generation)status('error',`Source synchronization unavailable: ${e.message}. Previous observations are preserved; retry when available.`);}

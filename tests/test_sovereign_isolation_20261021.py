@@ -168,7 +168,9 @@ def phase(root: Path, name: str) -> dict:
     checks: dict = {}
     with TestClient(production_entry.app, base_url=OWNER_ORIGIN, client=("127.0.0.1", 43001)) as client:
         assert client.get("/health").json() == {"ok": True}
-        assert client.get("/control").status_code == 200
+        control=client.get("/control",follow_redirects=False)
+        assert control.status_code == 307
+        assert control.headers['location'] == '/pwa/?view=console'
         assert client.get("/health", headers={"Host": "untrusted.invalid"}).status_code == 403
         assert client.get("/api/compute-queue/jobs").status_code == 401
         checks["real_asgi_lifespan_and_health"] = "PASS"

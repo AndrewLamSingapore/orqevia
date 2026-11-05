@@ -1,0 +1,29 @@
+{
+  "segments": [
+    {
+      "file": "01-INTERFACE-AND-NOMAD.md",
+      "characters": 20673,
+      "sha256": "1c08e5bb3b8cbba9a024a28137a71ccf2edf09eb02ec0e0cee46f7a95e7491f3",
+      "source_start_character": 0
+    },
+    {
+      "file": "02-LEGACY-GOVERNANCE-RETIREMENT.md",
+      "characters": 7798,
+      "sha256": "4ff9b276f5d76149691a9bd2da6b0b6494c5fb7492404fca1ef8b6ab51ab69bf",
+      "source_start_character": 20673
+    },
+    {
+      "file": "03-WALLET-REALITY-AUDIT.md",
+      "characters": 6277,
+      "sha256": "c5d3630b7ab9c4f2f8b5d7092e6cd888b370a1c07b10391830da417054f4ffe1",
+      "source_start_character": 28471
+    },
+    {
+      "file": "04-ZERO-INHERITANCE-EVOLUTION.md",
+      "characters": 26298,
+      "sha256": "48332428085fb716af5e56b6ec7a61e27739917409581c8095db1035b4d357e1",
+      "source_start_character": 34748
+    }
+  ],
+  "reassembly_matches_verbatim": true
+}

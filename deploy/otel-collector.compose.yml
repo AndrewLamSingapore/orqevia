@@ -1,18 +1,25 @@
-# Existing single-node telemetry, sharing the monolith's network namespace.
-# Compose must restart this dependent when it replaces the backend container.
+# Existing telemetry service with its own network namespace and verified TLS.
+# The private DNS alias must match the existing leaf certificate's SAN.
 services:
+  backend:
+    environment:
+      ORQEVIA_OTEL_ENDPOINT: https://${ORQEVIA_OTEL_COLLECTOR_HOST:?verified certificate hostname required}:4318
+      ORQEVIA_OTEL_COLLECTOR_HOST: ${ORQEVIA_OTEL_COLLECTOR_HOST:?verified certificate hostname required}
+      ORQEVIA_OTEL_CA_FILE: /run/orqevia-tls/ca.crt
+    volumes:
+      - ${ORQEVIA_INTERFACE_TLS_DIR:?existing TLS directory required}/ca.crt:/run/orqevia-tls/ca.crt:ro
   otel-collector:
     image: otel/opentelemetry-collector@sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda
     user: "0"
-    network_mode: service:backend
-    depends_on:
-      backend:
-        condition: service_healthy
-        restart: true
+    networks:
+      default:
+        aliases: ["${ORQEVIA_OTEL_COLLECTOR_HOST:?verified certificate hostname required}"]
     command: ["--config=/etc/otel/config.yaml"]
     volumes:
       - ./deploy/otel-collector.config.yaml:/etc/otel/config.yaml:ro
       - orqevia-otel-data:/otel
+      - ${ORQEVIA_INTERFACE_TLS_DIR:?existing TLS directory required}/server.crt:/run/orqevia-tls/server.crt:ro
+      - ${ORQEVIA_INTERFACE_TLS_DIR:?existing TLS directory required}/server.key:/run/orqevia-tls/server.key:ro
     labels:
       com.orqevia.managed: "true"
       com.orqevia.role: "otel-collector"

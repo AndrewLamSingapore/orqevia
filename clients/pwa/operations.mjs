@@ -3,7 +3,7 @@ import './intelligence-capabilities.mjs';
 // Agent text is rendered as text, never interpreted as markup or authority.
 const $=id=>document.getElementById(id);
 const element=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-let session=null,active=new URL(location.href).searchParams.get('view')==='operations',epoch=0,pending=null,current=null;
+let session=null,active=new URL(location.href).searchParams.get('view')==='console',epoch=0,pending=null,current=null;
 let fabricCatalog=[],fabricRequest=null,fabricSequence=0,fabricRun=null,fabricRunSequence=0;
 let fabricAudioUrl=null,fabricAudioTimer=null,fabricMediaSequence=0,fabricImageSequence=0;
 let requestsInFlight=0;
@@ -66,7 +66,7 @@ async function load(){
  if(!active)return;pending?.abort();const controller=new AbortController();pending=controller;const generation=epoch;
  if(!session||session.role!=='OWNER'){clear();status('Restore the bound owner connection to view the Operations Board.');return;}
  if(!navigator.onLine){clear();status('Offline. Private records were cleared. Reconnect to load current evidence.');return;}
- status('Loading the governed Operations Board…');const timeout=setTimeout(()=>controller.abort(),20000);
+ status('Loading available operations…');const timeout=setTimeout(()=>controller.abort(),20000);
  void loadFabrics();
  try{const value=await api('status',undefined,controller.signal);if(generation!==epoch||!active)return;current=value;drawMetrics(value);drawRecords(value.gaps?.items||[]);status(`Observed ${value.observed_at||value.metrics?.observed_at}. Claims, execution observations and verified facts remain distinct.`);}
  catch(error){if(generation===epoch)status(controller.signal.aborted?'The registry timed out. Refresh to retry.':error.message,true);}
@@ -284,11 +284,11 @@ $('operations-challenge-form')?.addEventListener('submit',event=>{event.preventD
 $('operations-puzzle-form')?.addEventListener('submit',event=>{event.preventDefault();const lines=$('operations-puzzle-pieces').value.split('\n').map(x=>x.trim()).filter(Boolean);void command('puzzle.create',{title:$('operations-puzzle-title').value.trim(),objective:$('operations-puzzle-objective').value.trim(),requirements:lines.map((description,index)=>({key:'piece-'+(index+1),description,evidence_criteria:'Source-attributed contribution and independent validation of the exact assembled records.'})),assigned_agent_ids:evidence($('operations-puzzle-agents').value),completion_condition:$('operations-puzzle-condition').value.trim(),evidence_ids:evidence($('operations-puzzle-evidence').value)});});
 for(const kind of kinds){const option=element('option',kind.replaceAll('_',' '));option.value=kind;$('operations-kind')?.append(option);}
 if($('operations-kind'))$('operations-kind').value='gaps';
-function show(name){active=name==='operations';$('operations-view')?.classList.toggle('hidden',!active);if(active)void load();else pending?.abort();}
+function show(name){active=name==='console';$('operations-view')?.classList.toggle('hidden',!active);if(active)void load();else pending?.abort();}
 window.addEventListener('orqevia-view',event=>show(event.detail.name));
 window.addEventListener('orqevia-session',event=>{const next=event.detail;if(next?.clientId!==session?.clientId||next?.role!==session?.role||next?.generation!==session?.generation){clear();$('operations-view')?.querySelectorAll('form').forEach(form=>form.reset());}session=next;if(active)void load();});
 window.addEventListener('offline',()=>{clear();if(active)status('Offline. Private records were cleared. Reconnect to refresh.');});
 window.addEventListener('online',()=>{if(active)void load();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pending?.abort();else if(active)void load();});
 setInterval(()=>{if(active&&!document.hidden)void load();},60000);
-show(active?'operations':'home');window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));
+show(active?'console':'home');window.dispatchEvent(new CustomEvent('orqevia-dashboard-ready'));

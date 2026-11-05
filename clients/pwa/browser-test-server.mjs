@@ -1,5 +1,7 @@
 /** Minimal static server for loopback-only Playwright verification. */
 import { createServer } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
+import { readFileSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,7 +39,7 @@ function targetFor(requestUrl) {
   return target;
 }
 
-const server = createServer(async (request, response) => {
+const handler = async (request, response) => {
   const target = targetFor(request.url || "/");
   if (!target) {
     const path = new URL(request.url || "/", `http://${HOST}:${PORT}`).pathname;
@@ -63,10 +65,12 @@ const server = createServer(async (request, response) => {
   } catch {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");
   }
-});
+};
+const tls = process.env.PWA_TEST_CERT && process.env.PWA_TEST_KEY;
+const server = tls ? createHttpsServer({cert:readFileSync(process.env.PWA_TEST_CERT),key:readFileSync(process.env.PWA_TEST_KEY)},handler) : createServer(handler);
 
 server.listen(PORT, HOST, () => {
-  console.log(`PWA browser test server listening on http://${HOST}:${PORT}/pwa/`);
+  console.log(`PWA browser test server listening on ${tls?'https':'http'}://${HOST}:${PORT}/pwa/`);
 });
 
 for (const signal of ["SIGINT", "SIGTERM"]) {

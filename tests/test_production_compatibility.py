@@ -25,12 +25,13 @@ def shell(monkeypatch, tmp_path):
 def test_minimal_health_and_static_no_secrets(shell, monkeypatch):
     entry, client = shell
     assert client.get('/health').json() == {'ok': True}
-    for path in ['/control', '/control/app.js']:
-        response = client.get(path)
-        assert response.status_code == 200
+    for path, expected in [('/control', 307), ('/control/app.js', 410)]:
+        response = client.get(path, follow_redirects=False)
+        assert response.status_code == expected
         assert 'fixture-owner-secret' not in response.text
         assert response.headers['cache-control'] == 'no-store'
         assert response.headers['x-frame-options'] == 'DENY'
+    assert client.get('/control', follow_redirects=False).headers['location'] == '/pwa/?view=console'
     monkeypatch.delenv('ORQEVIA_SPINE_TOKEN')
     assert client.get('/health').status_code == 503
     assert client.get('/health').json() == {'ok': False}
@@ -125,7 +126,7 @@ def test_exact_configured_docker_gateway_can_reach_loopback_owner_binding(shell,
     monkeypatch.setenv('ORQEVIA_OWNER_TRUSTED_PEERS', '172.30.9.1')
     client = TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('172.30.9.1', 50000))
     assert client.get('/health').json() == {'ok': True}
-    assert client.get('/control').status_code == 200
+    assert client.get('/control', follow_redirects=False).status_code == 307
     other = TestClient(entry.app, base_url='http://127.0.0.1:8000', client=('172.30.9.2', 50001))
     assert other.get('/health').status_code == 403
 

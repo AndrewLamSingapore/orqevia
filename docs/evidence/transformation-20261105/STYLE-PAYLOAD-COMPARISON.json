@@ -1,0 +1,26 @@
+{
+  "scope": "DETERMINISTIC_SOURCE_PAYLOAD_COMPARISON_NOT_NETWORK_LATENCY_OR_REASONING_PERFORMANCE",
+  "before": {
+    "linked_stylesheets": 7,
+    "bytes": 44777,
+    "gzip_bytes_separate_responses": 13106,
+    "paths": [
+      "/pwa/style.css",
+      "/pwa/dashboard.css",
+      "/pwa/intelligence.css",
+      "/pwa/knowledge.css",
+      "/pwa/command-center.css",
+      "/pwa/design/tokens.css",
+      "/pwa/sovereign.css"
+    ]
+  },
+  "after": {
+    "linked_stylesheets": 2,
+    "bytes": 21706,
+    "gzip_bytes_separate_responses": 5513,
+    "paths": [
+      "/pwa/design/tokens.css",
+      "/pwa/style.css"
+    ]
+  }
+}

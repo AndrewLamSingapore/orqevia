@@ -1,0 +1,32 @@
+{
+  "recorded_at": "2026-11-05T01:33:51.542429+00:00",
+  "scope": "SOURCE_FOLLOWUP_AND_PREPARED_HOST_ACCEPTANCE_NOT_EXECUTED",
+  "logout_regressions": {
+    "passed": 41,
+    "failed": 0,
+    "seconds": 14.11
+  },
+  "stale_contract_regressions": {
+    "passed": 68,
+    "failed": 0,
+    "seconds": 25.42
+  },
+  "lint": "PASS",
+  "diff_check": "PASS",
+  "source_hashes": {
+    "app/pwa_sessions.py": "1bfdf3d331206cea6f09a7d565fcc85f026b7fe0b65b2be860aa339baeda5aea",
+    "tests/test_pwa_sessions.py": "8f19ea996c436aeaba316e3e298bbb40df010122052da18db24d4d04dc53e2b6",
+    "tests/test_agent_role_contract_matrix.py": "ef4bf8a45ef048e9d618173d00c09f1e39d2a94729ec3785f1931f1942931211",
+    "tests/test_runtime_operations_contract.py": "834085fc38698c74758bf0d7c26490ea956a8082c1a4b73bbf1cc63ceeb5c537",
+    "tests/test_sovereign_isolation_20261021.py": "1ca6582e38a41bb91f824d48fefd497c879563125a73b3638bcc5b915ff72a8d",
+    ".env.example": "d2fa2a14f8a6a00e420d16de328582f19b9cf3e2f2e24885cc66e1603aa230b1"
+  },
+  "host_verifier": {
+    "path": "C:\\Users\\Admin\\Documents\\ABEX\\operations\\reboot-sweep-20261105\\verify_live_release.py",
+    "sha256": "8575c4eec11ccdbb5ae57e1a136c52246db13d87dde177c69cf56518e60ba254",
+    "status": "PREPARED_NOT_EXECUTED",
+    "credentials_logged_or_written": false,
+    "lifetime_seconds": 900,
+    "normal_helper_housekeeping": "Existing enrollment removes obsolete per-minute admission counters; no session/device/user-content deletion added."
+  }
+}

@@ -24,7 +24,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from .offline_survival import OfflineSurvival, OperationRejected
 from .offline_survival import DependencyClass
 from .memory import MemoryStore
-from .path_migration import migrate_legacy_database
 
 
 class DeferredRequest(BaseModel):
@@ -75,7 +74,6 @@ def memory() -> MemoryStore:
     """Return governed memory on the same durable external data volume."""
     global _memory, _memory_path
     path = Path(os.getenv("ORQEVIA_MEMORY_DB", str(_db_path().parent / "orqevia-memory.db")))
-    migrate_legacy_database(path, "jarvis-memory.db")
     with _lock:
         if _memory is None or _memory_path != path:
             _memory = MemoryStore(str(path))
@@ -138,7 +136,6 @@ def capability_status() -> dict[str, Any]:
     ollama = _probe(os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/") + "/api/tags")
     data = _db_path().parent
     memory_path = Path(os.getenv("ORQEVIA_MEMORY_DB", str(data / "orqevia-memory.db")))
-    migrate_legacy_database(memory_path, "jarvis-memory.db")
     memory_ready = False
     if memory_path.is_file():
         try:

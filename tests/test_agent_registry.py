@@ -77,15 +77,14 @@ def test_legacy_migration_preserves_roles_and_denies_removed_identities():
     assert may_delegate('a02', 'a03', depth=2) is False
 
 
-def test_mutated_authority_and_hierarchy_fail_closed(tmp_path, monkeypatch):
+def test_mutated_identity_and_permission_declarations_fail_closed(tmp_path, monkeypatch):
     import json
     import pytest
     import app.agent_registry as registry
     original = json.loads(registry.REGISTRY_PATH.read_text())
-    for mutation in ['duplicate', 'cycle', 'delegation', 'approval', 'lead_status']:
+    for mutation in ['duplicate', 'delegation', 'approval', 'lead_status']:
         data = json.loads(json.dumps(original))
         if mutation == 'duplicate': data['agents'][1]['agent_id'] = 'a01'
-        if mutation == 'cycle': data['agents'][1]['reports_to'] = 'a02'
         if mutation == 'delegation': data['agents'][1]['can_delegate'] = True
         if mutation == 'approval': next(a for a in data['agents'] if a['agent_id'] == 'a17')['human_approval'] = 'not_required'
         if mutation == 'lead_status': data['leads'][0]['status'] = 'planned'
@@ -96,3 +95,31 @@ def test_mutated_authority_and_hierarchy_fail_closed(tmp_path, monkeypatch):
             registry.load_agent_registry.cache_clear()
             with pytest.raises(RegistryError): registry.load_agent_registry()
         registry.load_agent_registry.cache_clear()
+
+
+def test_direct_capabilities_do_not_require_a_management_graph(tmp_path, monkeypatch):
+    import json
+    import app.agent_registry as registry
+
+    data = json.loads(registry.REGISTRY_PATH.read_text())
+    declared_permissions = {agent['agent_id']: list(agent['allowed_delegation_targets']) for agent in data['agents']}
+    data.pop('leads')
+    for agent in data['agents']:
+        agent.pop('reports_to')
+        agent['escalation_relationships'] = []
+    path = tmp_path / 'capabilities.json'
+    path.write_text(json.dumps(data))
+    with monkeypatch.context() as patch:
+        patch.setattr(registry, 'REGISTRY_PATH', path)
+        registry.load_agent_registry.cache_clear()
+        try:
+            available = registry.registered_agent_ids(include_orchestrator=False)
+            assert len(available) == 21
+            for agent in data['agents']:
+                assert registry.agent_record(agent['agent_id'])['allowed_delegation_targets'] == declared_permissions[agent['agent_id']]
+                for capability in agent['capability_requirements']:
+                    assert registry.responsibility_owner(capability) == agent['agent_id']
+            assert registry.may_delegate('a02', 'a17') is False
+            assert registry.requires_owner_approval(consequential=True) is True
+        finally:
+            registry.load_agent_registry.cache_clear()

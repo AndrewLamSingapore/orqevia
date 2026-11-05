@@ -17,7 +17,7 @@ from app.agent_registry import load_agent_registry
 PROJECT_ID = "ORQ-001"
 OUTPUT = Path(os.getenv("ORQ001_OUTPUT", "/data/orq-001"))
 BASE_URL = os.getenv("ORQ001_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or os.getenv("PRIME_SPINE_TOKEN") or "").strip()
+TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or "").strip()
 REQUIRED_FILES = (
     "ORQ-001-report.md",
     "ORQ-001-results.json",

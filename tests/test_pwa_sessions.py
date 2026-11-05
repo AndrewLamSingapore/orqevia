@@ -323,6 +323,52 @@ def test_invalid_or_revoked_device_fails_closed_without_changing_identity(setup)
             row=db.execute('SELECT client_id,role,revoked FROM devices WHERE client_id=?',(identity,)).fetchone()
         assert row==(identity,'MEMBER',1)
 
+
+@pytest.mark.parametrize('aliases',['modern','legacy','remembered_only'])
+def test_logout_revokes_only_its_bound_device_and_prevents_remembered_reopen(setup,aliases):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client,TestClient(app,base_url=ORIGIN) as other:
+        enrolled,_=enroll(pwa,client);identity=enrolled.json()['clientId']
+        independent,_=enroll(pwa,other);other_id=independent.json()['clientId']
+        session=client.cookies.get(pwa.ORQEVIA_COOKIE)
+        device=client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
+        client.cookies.clear()
+        if aliases!='remembered_only':client.cookies.set(pwa.COOKIE if aliases=='legacy' else pwa.ORQEVIA_COOKIE,session)
+        client.cookies.set(pwa.DEVICE_COOKIE if aliases=='legacy' else pwa.ORQEVIA_DEVICE_COOKIE,device)
+        assert client.post('/pwa/api/logout',headers=HEADERS).status_code==200
+        with pwa.database() as db:
+            assert db.execute('SELECT revoked FROM sessions WHERE client_id=?',(identity,)).fetchone()==(1,)
+            assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(identity,)).fetchone()==(1,)
+            assert db.execute('SELECT revoked FROM sessions WHERE client_id=?',(other_id,)).fetchone()==(0,)
+            assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(other_id,)).fetchone()==(0,)
+        with TestClient(app,base_url=ORIGIN) as reopened:
+            reopened.cookies.set(pwa.ORQEVIA_DEVICE_COOKIE,device)
+            assert reopened.get('/pwa/api/session').json()['authenticated'] is False
+            reopened.cookies.set(pwa.ORQEVIA_COOKIE,session)
+            reopened.cookies.set(pwa.ORQEVIA_DEVICE_COOKIE,device)
+            assert reopened.get('/pwa/api/session').json()['authenticated'] is False
+        assert other.get('/pwa/api/session').json()['clientId']==other_id
+
+
+@pytest.mark.parametrize('conflict',['device_aliases','session_aliases','different_device'])
+def test_logout_rejects_conflicting_or_unrelated_credentials_without_revoking_either_device(setup,conflict):
+    root,pwa,app,node=setup
+    with TestClient(app,base_url=ORIGIN) as client,TestClient(app,base_url=ORIGIN) as other:
+        first,_=enroll(pwa,client);second,_=enroll(pwa,other)
+        first_session=client.cookies.get(pwa.ORQEVIA_COOKIE)
+        first_device=client.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
+        second_session=other.cookies.get(pwa.ORQEVIA_COOKIE)
+        second_device=other.cookies.get(pwa.ORQEVIA_DEVICE_COOKIE)
+        client.cookies.clear()
+        client.cookies.set(pwa.ORQEVIA_COOKIE,first_session)
+        client.cookies.set(pwa.ORQEVIA_DEVICE_COOKIE,second_device if conflict=='different_device' else first_device)
+        if conflict=='device_aliases':client.cookies.set(pwa.DEVICE_COOKIE,second_device)
+        if conflict=='session_aliases':client.cookies.set(pwa.COOKIE,second_session)
+        assert client.post('/pwa/api/logout',headers=HEADERS).status_code==400
+        with pwa.database() as db:
+            for identity in (first.json()['clientId'],second.json()['clientId']):
+                assert db.execute('SELECT revoked FROM sessions WHERE client_id=?',(identity,)).fetchone()==(0,)
+                assert db.execute('SELECT revoked FROM devices WHERE client_id=?',(identity,)).fetchone()==(0,)
 def test_revoked_device_cannot_be_reissued_while_short_session_is_active(setup):
     root,pwa,app,node=setup
     with TestClient(app,base_url=ORIGIN) as client:

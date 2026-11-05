@@ -66,8 +66,15 @@ def test_external_surface_has_no_owner_or_legacy_routes():
         '/api/orqevia/{path}','/orqevia/{path}',
         '/api/orqevia/knowledge/{path:path}', '/api/orqevia/knowledge/{path}',
     }
+    native_owner_routes = {
+        '/api/orqevia/depot': {'GET'},
+        '/api/orqevia/evolution/experiments': {'GET'},
+        '/api/orqevia/evolution/experiment': {'POST'},
+    }
     # The existing public design shell and static mount expose no owner tools.
     public_static={'/design', '/public-assets'}
+    from app.public_site import PAGES
+    public_pages = set(PAGES)
     public_metadata = {
         f'/api/public/{brand}/{operation}'
         for brand in ('jarvis', 'orqevia')
@@ -76,13 +83,22 @@ def test_external_surface_has_no_owner_or_legacy_routes():
     assert public_metadata <= paths
     assert paths and all(
         path.startswith(allowed_prefixes) or path in bounded_bridge or path in public_static or path in public_metadata
+        or path in native_owner_routes or path in public_pages or path == '/robots.txt'
         for path in paths
     )
     assert not any(path.startswith('/control') for path in paths)
-    assert not any(path.startswith('/api/') and path not in bounded_bridge | public_metadata for path in paths)
+    assert not any(path.startswith('/api/') and path not in bounded_bridge | public_metadata | set(native_owner_routes) for path in paths)
     for route in app.routes:
         if getattr(route, 'path', None) in public_metadata:
             assert route.methods == {'GET'}
+        if getattr(route, 'path', None) in native_owner_routes:
+            assert route.methods == native_owner_routes[route.path]
+        if getattr(route, 'path', None) in public_pages:
+            assert route.methods == {'GET'}
+    with TestClient(app, base_url='https://testserver') as client:
+        for path, methods in native_owner_routes.items():
+            response = client.request(next(iter(methods)), path)
+            assert response.status_code == 401, (path, response.status_code)
 
 
 def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkeypatch):

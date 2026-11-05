@@ -1,0 +1,45 @@
+{
+  "schema": "orqevia.branding-public-qualification.v1",
+  "scope": "TARGETED_LOCAL_SOURCE_QUALIFICATION_NO_LIVE_DEPLOYMENT",
+  "test_files": [
+    "tests/test_pwa_branding.py",
+    "tests/test_orqevia_candidate_verifier.py",
+    "tests/test_interface_server.py"
+  ],
+  "passed": 11,
+  "failed": 0,
+  "log": "python-branding-public-targeted.log",
+  "changes": {
+    "superseded_expectations": [
+      "v1 PNG pins/install identity replaced by positive current v2 dimensions and SHA256 pins plus original SVG pin",
+      "Public overview asserts current heading and functioning canonical workspace entry instead of retired authority prose",
+      "Independent verifier requires the exact nonempty current icon manifest, existing icon files, canonical linked mark/apple icon and no old active links"
+    ],
+    "real_source_fix_by_parent": "SW v44 cached a retired official-v1 image while omitting the current v2 maskable512. Parent replaced that single allowlist entry; exact cache-set tests now pass.",
+    "preserved_protections": [
+      "Legacy JARVIS glyph cannot reappear under a renamed PNG",
+      "Historical old asset files are preserved but excluded from current manifest/HTML/cache",
+      "Public response contains no private composer/account controls",
+      "Unauthenticated private identity endpoint returns401 under closed posture",
+      "Canonical workspace shell still returns200 over HTTPS fixture transport"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/verify_orqevia_candidate.py",
+      "sha256": "c7ff46adf268efb04e2c110bbcdc0eb044c5b75ad58111dd00f2bae6e3323f03"
+    },
+    {
+      "path": "tests/test_pwa_branding.py",
+      "sha256": "ae5769fe0e1695c6f86a7efe856690364aacd691620a5f70d37c74ce1300fefc"
+    },
+    {
+      "path": "tests/test_interface_server.py",
+      "sha256": "41cf9a0d76ad4d57fd9ee343afe2d6493aa009fca61e5bed42c0d1d686a8ea60"
+    },
+    {
+      "path": "clients/pwa/sw.js",
+      "sha256": "af805dafea75bb0555f7f09aaf9683cb441b50b83804eb0c20cb35810e96c6ad"
+    }
+  ]
+}

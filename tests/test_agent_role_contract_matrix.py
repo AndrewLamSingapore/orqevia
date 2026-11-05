@@ -100,19 +100,22 @@ def test_forged_capability_fails_before_enqueue(dispatch_harness, agent_id):
     assert ledger.events == []
 
 
-def test_authentication_and_registry_switch_fail_before_enqueue(dispatch_harness, monkeypatch):
+def test_authentication_precedes_enqueue_and_retired_registry_switch_cannot_disable_native_dispatch(dispatch_harness, monkeypatch):
     client, queue, ledger = dispatch_harness
     payload = {"capability": "responsibility.a01", "objective": "Advise."}
     assert client.post("/api/agents/dispatch", json=payload).status_code == 401
+    assert queue.submitted == [] and ledger.events == []
     monkeypatch.setenv("ORQEVIA_REGISTRY_V1_ENABLED", "0")
     response = client.post(
         "/api/agents/dispatch",
         headers={"Authorization": "Bearer fixture-owner-token"},
         json=payload,
     )
-    assert response.status_code == 503
-    assert queue.submitted == []
-    assert ledger.events == []
+    assert response.status_code == 202
+    assert len(queue.submitted) == 1
+    assert queue.submitted[0]['agent'] == 'a01'
+    assert queue.submitted[0]['allow_cloud'] is False
+    assert ledger.events == ['started','completed']
 
 
 def test_fixture_scope_is_registration_not_runtime_certification():

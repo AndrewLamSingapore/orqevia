@@ -8,6 +8,10 @@
 data
 models
 __pycache__
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
 *.py[cod]
 .venv
 venv

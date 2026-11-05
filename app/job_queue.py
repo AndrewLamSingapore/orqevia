@@ -202,7 +202,7 @@ class JobQueue:
                model_role: str = "auto", model: str = "", ram_mb: int = 1024,
                vram_mb: int = 0, timeout_seconds: int = 300, max_retries: int = 2,
                max_cost_usd: float = 0.0, allow_cloud: bool = False,
-               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', response_schema: dict | None = None, response_schema_order: str = 'canonical', idempotency_key: str | None = None, request_digest: str | None = None) -> dict:
+               external_execution: bool = False, harness_envelope: dict | None = None, classification: str = "R0", preferred_provider: str | None = None, data_classification: str = 'LOCAL_ONLY', task_class: str = 'auto', response_format: str = 'text', response_schema: dict | None = None, response_schema_order: str = 'canonical', idempotency_key: str | None = None, request_digest: str | None = None, reservation_seconds: int = 0) -> dict:
         # Bind the complete submitted request before local normalization. Reusing
         # a key with a changed request must never disclose or dispatch a new job.
         if idempotency_key is not None:
@@ -210,11 +210,14 @@ class JobQueue:
                 raise ValueError('invalid idempotency_key')
             submitted={key:value for key,value in locals().items() if key not in {'self','idempotency_key','request_digest'}
                        and not (key == 'response_schema' and value is None)
-                       and not (key == 'response_schema_order' and value == 'canonical')}
+                       and not (key == 'response_schema_order' and value == 'canonical')
+                       and not (key == 'reservation_seconds' and value == 0)}
             request_hash=(request_digest if isinstance(request_digest,str) and re.fullmatch('[0-9a-f]{64}',request_digest)
                           else hashlib.sha256(json.dumps(submitted,sort_keys=True,allow_nan=False,separators=(',',':')).encode()).hexdigest())
             key_hash=hashlib.sha256(idempotency_key.encode()).hexdigest()
         if not agent.strip() or not prompt.strip(): raise ValueError("agent and prompt are required")
+        if type(reservation_seconds) is not int or not 0 <= reservation_seconds <= 3600:
+            raise ValueError('Reservation must be bounded to 0..3600 seconds')
         if response_format not in {'text', 'strict_json'}: raise ValueError('invalid response_format')
         if type(response_schema_order) is not str or response_schema_order not in {'canonical', 'declared'}:
             raise ValueError('invalid response_schema_order')
@@ -234,7 +237,7 @@ class JobQueue:
         role = model_role.lower()
         if role not in {"auto", "fast", "deep", "embedding", "evaluator"}: raise ValueError("invalid model_role")
         job_cap = min(max(0.0, float(max_cost_usd)), self.policy.max_job_cost_usd)
-        status = "queued"
+        status = "held" if reservation_seconds else "queued"
         approval = "not_required"  # retained database column; never a prerequisite
         jid, ts = str(uuid.uuid4()), utcnow()
         with self.lock, self.connect() as c:
@@ -259,6 +262,11 @@ class JobQueue:
                max(1,min(86400,int(timeout_seconds))),max(0,min(10,int(max_retries))),job_cap,
                int(allow_cloud),int(external_execution),status,approval,ts,ts))
             self._event(c,jid,"submitted",{"status":status,"priority":p,"approval":approval,"agent":canonical_agent})
+            if reservation_seconds:
+                # Internal callers reserve in the INSERT transaction, so another
+                # process cannot execute a benchmark before its owner claims it.
+                c.execute('UPDATE compute_jobs SET lease_until=? WHERE id=?',
+                          (time.time() + reservation_seconds, jid))
             if self.policy.coordinated:
                 c.execute("UPDATE compute_jobs SET lifecycle_state='QUEUED',timings_json=? WHERE id=?",
                           (json.dumps({'created_at': time.time(), 'queued_at': time.time()}), jid))

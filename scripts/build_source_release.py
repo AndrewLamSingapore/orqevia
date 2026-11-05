@@ -54,7 +54,7 @@ def build(output):
         "source_revision": revision,
         "source_dirty": dirty,
         "deployment_eligible": not dirty,
-        "architecture_version": "JARVIS PRIME Architecture v1",
+        "architecture_version": json.loads((ROOT / "system.manifest.json").read_text())["execution_model"],
         "manifest_sha256": hashlib.sha256((output / "SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
         "files": len(rows),
     }

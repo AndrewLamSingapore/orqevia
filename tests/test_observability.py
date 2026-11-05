@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
+import pytest
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -138,6 +139,24 @@ def test_disabled_install_performs_no_network_probe():
     app = FastAPI()
     result = observability.install_observability(app, ObservabilitySettings(enabled=False))
     assert result == {"status": "DISABLED", "network_probe_performed": False}
+
+
+def test_private_collector_requires_explicit_host_tls_and_existing_ca(tmp_path):
+    ca = tmp_path / "public-ca.crt"
+    ca.write_text("Public certificate fixture; validation is performed by the exporter at handshake.")
+    configured = dict(collector_host="collector.internal", certificate_file=str(ca))
+    assert ObservabilitySettings(endpoint="https://collector.internal:4318", **configured).validated_endpoint()
+    for endpoint in (
+        "http://collector.internal:4318",
+        "https://other.internal:4318",
+        "https://collector.internal:443",
+        "https://collector.internal:4318/private",
+        "https://user:pass@collector.internal:4318",
+    ):
+        with pytest.raises(ValueError):
+            ObservabilitySettings(endpoint=endpoint, **configured).validated_endpoint()
+    with pytest.raises(ValueError):
+        ObservabilitySettings(endpoint="https://collector.internal:4318", collector_host="collector.internal").validated_endpoint()
 
 
 def test_production_apps_disable_native_fastapi_telemetry(tmp_path, monkeypatch):

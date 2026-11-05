@@ -1,0 +1,61 @@
+{
+  "status": "ARCHIVED_NOT_SERVED",
+  "date": "2026-11-05",
+  "canonical_interface": "/pwa/",
+  "files": [
+    {
+      "source_path": "app/main.py",
+      "archive_path": "docs/history/frontend-retirement-20261105/main.py.txt",
+      "bytes": 141496,
+      "sha256": "e4670f0b1f9d9af6facd9921e01b1a56efd27531b06e672127afd9f9e7e2850e"
+    },
+    {
+      "source_path": "app/control_surface.py",
+      "archive_path": "docs/history/frontend-retirement-20261105/control_surface.py.txt",
+      "bytes": 8949,
+      "sha256": "dd80b8b1c330ea8a88e129696f7f36c28a2d9af557293b9bfc872b95e56c24ec"
+    },
+    {
+      "source_path": "app/control_surface.html",
+      "archive_path": "docs/history/frontend-retirement-20261105/control_surface.html",
+      "bytes": 23803,
+      "sha256": "f07e73d6adf5b6aa2d314a879193d96e5e698a7c8bd0a6eb4097b20295e9a9f5"
+    },
+    {
+      "source_path": "app/orqevia/ui.py",
+      "archive_path": "docs/history/frontend-retirement-20261105/orqevia/ui.py.txt",
+      "bytes": 6582,
+      "sha256": "bf3c6dd1baa1d7f3231d6c414de4bd27bb30f3d7ee4ed95c34e04f7053119228"
+    },
+    {
+      "source_path": "app/orqevia/static/index.html",
+      "archive_path": "docs/history/frontend-retirement-20261105/orqevia/index.html",
+      "bytes": 10524,
+      "sha256": "9f535932063bc94429fbc02df2f3a2c7789edd161b6a39a465af51644247869e"
+    },
+    {
+      "source_path": "app/orqevia/static/app.js",
+      "archive_path": "docs/history/frontend-retirement-20261105/orqevia/app.js",
+      "bytes": 13460,
+      "sha256": "b0900e5afd0fe031cd3d7acf91aee9114961bbed910f3f96afdc53aa423ff1fa"
+    },
+    {
+      "source_path": "app/orqevia/static/styles.css",
+      "archive_path": "docs/history/frontend-retirement-20261105/orqevia/styles.css",
+      "bytes": 7572,
+      "sha256": "eb3a62a68be2e91c35403e3b5d31d0140a755bee2d33c606d16d2dc460d8398b"
+    },
+    {
+      "source_path": "app/orqevia/static/manifest.webmanifest",
+      "archive_path": "docs/history/frontend-retirement-20261105/orqevia/manifest.webmanifest",
+      "bytes": 473,
+      "sha256": "fc7a6304428317e24395ee76434f1df2ddfa270c8f15bf77cf4a7647763fd7e4"
+    },
+    {
+      "source_path": "app/main.py:HTML rendered UTF-8 payload",
+      "archive_path": "docs/history/frontend-retirement-20261105/main.html",
+      "bytes": 25704,
+      "sha256": "9a6fddf8c555ac41e2c366a35a29f26a3a6678b5aa68b9aaa9dd7eea2004bdb1"
+    }
+  ]
+}

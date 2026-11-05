@@ -1,0 +1,54 @@
+{
+  "scope": "Default-branch license facts inspected 2026-11-05; package-version transitive audit is not claimed.",
+  "items": [
+    {
+      "repo": "tabler/tabler-icons",
+      "file": "LICENSE",
+      "sha": "3e82379dab3fe93d9ee22251949604ed63ddea39",
+      "url": "https://github.com/tabler/tabler-icons/blob/main/LICENSE",
+      "heading": "MIT License  Copyright (c) 2020-2026 Paweł Kuna  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to d"
+    },
+    {
+      "repo": "ollama/ollama",
+      "file": "LICENSE",
+      "sha": "8e3dc978a7ca8c53f56bbedc5b558116140fc02e",
+      "url": "https://github.com/ollama/ollama/blob/main/LICENSE",
+      "heading": "MIT License  Copyright (c) Ollama  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Sof"
+    },
+    {
+      "repo": "qdrant/qdrant",
+      "file": "LICENSE",
+      "sha": "456fb05e0e936f439cf42c517b19797dafd53ff9",
+      "url": "https://github.com/qdrant/qdrant/blob/master/LICENSE",
+      "heading": "                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCT"
+    },
+    {
+      "repo": "kiwix/kiwix-tools",
+      "file": "COPYING",
+      "sha": "443254047416efc10bc53cb1adb5421680d5a647",
+      "url": "https://github.com/kiwix/kiwix-tools/blob/main/COPYING",
+      "heading": " \t\t    GNU GENERAL PUBLIC LICENSE \t\t       Version 3, 29 June 2007   Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>  Everyone is permitted to copy and distribute verbatim copies  "
+    },
+    {
+      "repo": "maplibre/maplibre-gl-js",
+      "file": "LICENSE.txt",
+      "sha": "1e8acbb54fa7baddc844377507cc5a79353174fb",
+      "url": "https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt",
+      "heading": "Copyright (c) 2023, MapLibre contributors  All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions a"
+    },
+    {
+      "repo": "gchq/CyberChef",
+      "file": "LICENSE",
+      "sha": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+      "url": "https://github.com/gchq/CyberChef/blob/master/LICENSE",
+      "heading": "                                  Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUC"
+    },
+    {
+      "repo": "tailwindlabs/tailwindcss",
+      "file": "LICENSE",
+      "sha": "d6a82290738a9f78946cbcb4594535d6984086dd",
+      "url": "https://github.com/tailwindlabs/tailwindcss/blob/main/LICENSE",
+      "heading": "MIT License  Copyright (c) Tailwind Labs, Inc.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to de"
+    }
+  ]
+}

@@ -79,17 +79,15 @@ def prepare():
     common = {
         "ORQEVIA_SPINE_TOKEN": secret,
         "ORQEVIA_REGISTRY_V1_ENABLED": "1",
-        "PRIME_REGISTRY_V1_ENABLED": "1",
+
         "ORQEVIA_NODE_ID": "ABEX-OSIP-ISOLATED-STAGE",
         "ORQEVIA_NODE_ROLE": "AUTHORITATIVE",
         "ORQEVIA_PWA_OWNER_ACCOUNT_ID": owner,
         "ORQEVIA_OPEN_ACCESS": "0",
         "ORQEVIA_PWA_ACCESS_MODE": "pairing",
         "ORQEVIA_DATA_DIR": "/data",
-        "PRIME_DATA_DIR": "/data",
         "ORQEVIA_SPINE_DB": "/data/orqevia-spine.db",
         "ORQEVIA_RUNTIME_REVISION": revision,
-        "PRIME_RUNTIME_REVISION": revision,
         "ORQEVIA_OTEL_ENABLED": "0",
         "ORQEVIA_INTERFACE_RUNTIME_REVISION": revision,
         "ORQEVIA_INTERFACE_CANDIDATE_STATUS": "ISOLATED_CANDIDATE",
@@ -102,7 +100,6 @@ def prepare():
     backend_env = {
         **common,
         "ORQEVIA_PROVIDER_CATALOG": "/run/provider-catalog.json",
-        "PRIME_PROVIDER_CATALOG": "/run/provider-catalog.json",
         "ORQEVIA_QUEUE_CONCURRENCY": "1",
         "ORQEVIA_AGENT_CONCURRENCY": "1",
         "ORQEVIA_LOCAL_RAM_MB": "8192",
@@ -216,7 +213,7 @@ def prepare():
                 "8100",
                 "--no-proxy-headers",
             ],
-            "environment": {**common, "ORQEVIA_DATA_DIR": "/data/intelligence", "PRIME_SPINE_TOKEN": secret},
+            "environment": {**common, "ORQEVIA_DATA_DIR": "/data/intelligence", "ORQEVIA_SPINE_TOKEN": secret},
             "volumes": [data],
             "mem_limit": "1g",
         },
@@ -314,7 +311,7 @@ def refresh():
         env = service.get("environment", {})
         for key in (
             "ORQEVIA_RUNTIME_REVISION",
-            "PRIME_RUNTIME_REVISION",
+            "ORQEVIA_RUNTIME_REVISION",
             "ORQEVIA_INTERFACE_RUNTIME_REVISION",
             "ORQEVIA_LOCAL_RELEASE",
         ):
@@ -324,7 +321,7 @@ def refresh():
         services[name]["environment"].update(
             {
                 "ORQEVIA_REGISTRY_V1_ENABLED": "1",
-                "PRIME_REGISTRY_V1_ENABLED": "1",
+
                 "ORQEVIA_NODE_ID": "ABEX-OSIP-ISOLATED-STAGE",
                 "ORQEVIA_NODE_ROLE": "AUTHORITATIVE",
             }

@@ -126,11 +126,15 @@ ConvertTo-Json -Compress @{opened=$script:opened;private_api=$LocalBase;no_open_
         self.assertNotIn("Remove-Item", trace)
         self.assertNotIn(":latest", compose)
 
-    def test_direct_runtime_enables_registry_dispatch(self):
+    def test_native_direct_runtime_has_no_registry_enablement_ceremony(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-        self.assertIn("ORQEVIA_REGISTRY_V1_ENABLED: ${ORQEVIA_REGISTRY_V1_ENABLED:-1}", compose)
+        self.assertNotIn("REGISTRY_V1_ENABLED", compose)
         example = (ROOT / ".env.example").read_text(encoding="utf-8")
-        self.assertIn("ORQEVIA_REGISTRY_V1_ENABLED=1", example)
+        self.assertNotIn("REGISTRY_V1_ENABLED", example)
+        production = (ROOT / "app/production_entry.py").read_text(encoding="utf-8")
+        direct = (ROOT / "app/direct_entry.py").read_text(encoding="utf-8")
+        self.assertIn("app.mount('/', direct_entry.app)", production)
+        self.assertIn('from .agent_dispatch_api import router as agents', direct)
 
     def test_hf_overlay_mounts_only_governed_read_only_inputs_to_backend(self):
         overlay = (ROOT / "docker-compose.huggingface.yml").read_text(encoding="utf-8")

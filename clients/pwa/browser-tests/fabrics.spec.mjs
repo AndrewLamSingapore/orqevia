@@ -39,8 +39,8 @@ async function fixture(page,{role='OWNER',catalogError=false,holdExecution=false
   return reply({},404);
  });
  await page.goto('/pwa/');await waitForSession(page);
- if((await page.viewportSize()).width<760){await page.locator('#mobile-more-open').click();await page.locator('#mobile-more-dialog [data-view="operations"]').click();}
- else await page.locator('.desktop-navigation [data-view="operations"]').click();
+ if((await page.viewportSize()).width<760){await page.locator('#mobile-more-open').click();await page.locator('#mobile-more-dialog [data-view="console"]').click();}
+ else await page.locator('.command-grid [data-view="console"]').click();
  return observed;
 }
 
