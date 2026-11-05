@@ -10,7 +10,16 @@ RUN python -m pip install --no-cache-dir --no-deps --only-binary=:all: --require
 RUN mkdir -p /opt/orqevia-retired-source && mv /app/app /opt/orqevia-retired-source/app && mv /app/config /opt/orqevia-retired-source/config
 COPY app /app/app
 COPY config /app/config
-COPY clients/pwa /app/clients/pwa
+# Keep the existing static root so the preserved HTTPS profile bind mount
+# remains served. Runtime assets only; browser fixtures are not web content.
+COPY clients/pwa/index.html clients/pwa/reset.html clients/pwa/projects.html /app/app/pwa_static/
+COPY clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/storage.mjs clients/pwa/release.mjs clients/pwa/recovery.js clients/pwa/voice.mjs clients/pwa/sw.js /app/app/pwa_static/
+COPY clients/pwa/dashboard.mjs clients/pwa/academy.mjs clients/pwa/intelligence.mjs clients/pwa/integration-panels.mjs clients/pwa/knowledge.mjs clients/pwa/workspace-tools.mjs /app/app/pwa_static/
+COPY clients/pwa/command-map.mjs clients/pwa/sovereign.mjs clients/pwa/operations.mjs clients/pwa/intelligence-capabilities.mjs clients/pwa/command-center.mjs clients/pwa/projects.mjs clients/pwa/reset.mjs /app/app/pwa_static/
+COPY clients/pwa/style.css clients/pwa/dashboard.css clients/pwa/intelligence.css clients/pwa/knowledge.css clients/pwa/command-center.css clients/pwa/command-map.css clients/pwa/sovereign.css clients/pwa/projects.css /app/app/pwa_static/
+COPY clients/pwa/manifest.webmanifest clients/pwa/agent-readiness.json clients/pwa/registry.json /app/app/pwa_static/
+COPY clients/pwa/icons /app/app/pwa_static/icons
+COPY clients/pwa/vendor /app/app/pwa_static/vendor
 COPY clients/public /app/clients/public
 COPY clients/shared /app/clients/shared
 COPY skills /app/skills
