@@ -1,0 +1,310 @@
+{
+  "schema": "orqevia.maplibre-assets.v1",
+  "upstream": {
+    "package": "maplibre-gl",
+    "version": "6.14.0",
+    "license": "BSD-3-Clause",
+    "license_sha256": "ee5fc05a0677eaf69601d2c7db0d9ecd6cc27c3abc1d0733bc9ed34707cf8ef2",
+    "css_sha256": "bacba6a85a867fcf602f2ff88331b8acf7edf3fbd063a519888cfbff39970193",
+    "css_bytes": 83263,
+    "source_copy": "docs/third-party/maplibre-gl/6.14.0/maplibre-gl.css",
+    "unchanged_modules": {
+      "maplibre-gl.mjs": {
+        "bytes": 1078892,
+        "sha256": "244d36122c1398da3a8259817cc6d71e04321afe6404f32606b4b6c6cc4f26fb"
+      },
+      "maplibre-gl-shared.mjs": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "maplibre-gl-worker.mjs": {
+        "bytes": 508314,
+        "sha256": "5f1e2f0e1624082b7e88a06e4c86085992b0f8c02929801e552f3f7a119856a9"
+      }
+    }
+  },
+  "modification": "Percent-decoded original SVG image bytes materialized as same-origin files; CSS image URLs rewritten only. No original image content changed.",
+  "generated_css_sha256": "6fd702e8e79848a957ebd27375acc480f9912057e4594b94bd35f1f643e54e48",
+  "image_occurrences": 39,
+  "icons": [
+    {
+      "sha256": "0c49212964a6721daee17bca2e2e407c5b4a6b4275d02522e8cc291e9ef42d94",
+      "path": "/pwa/vendor/maplibre-icons/0c49212964a6721daee17bca2e2e407c5b4a6b4275d02522e8cc291e9ef42d94.svg",
+      "occurrences": 2,
+      "bytes": 355,
+      "source_data_url_sha256": [
+        "f11083b1a18a70412171a0a389902088f5e62602ba66e438c5d327f15368eedf"
+      ]
+    },
+    {
+      "sha256": "15cacf2640edada1d9305f91923ee4319d4d47ed313e638b480e5c4e86100cc0",
+      "path": "/pwa/vendor/maplibre-icons/15cacf2640edada1d9305f91923ee4319d4d47ed313e638b480e5c4e86100cc0.svg",
+      "occurrences": 1,
+      "bytes": 393,
+      "source_data_url_sha256": [
+        "93045be9d6a5a04caaea3e3cb56a28f1fda4cd3ef35c3cbc3866eaa4f28a3f69"
+      ]
+    },
+    {
+      "sha256": "17db250543e8976ae9ac61188cd6ad21e2e45738a1f82c8b290a8842e242a7fa",
+      "path": "/pwa/vendor/maplibre-icons/17db250543e8976ae9ac61188cd6ad21e2e45738a1f82c8b290a8842e242a7fa.svg",
+      "occurrences": 1,
+      "bytes": 295,
+      "source_data_url_sha256": [
+        "eb8eee654cac74459b8730df95067d656c06b8d396cf768482f1607c27d93811"
+      ]
+    },
+    {
+      "sha256": "1be7b179bd9e552879e9bfb1b7f69252c9714ad68919057ae5589fb28efe74e3",
+      "path": "/pwa/vendor/maplibre-icons/1be7b179bd9e552879e9bfb1b7f69252c9714ad68919057ae5589fb28efe74e3.svg",
+      "occurrences": 1,
+      "bytes": 283,
+      "source_data_url_sha256": [
+        "2d4631c14c51d874d0522db60d5f5f4d7baf9340b953334b55b76d610a31569f"
+      ]
+    },
+    {
+      "sha256": "1f27a14e6589f280952bcf25afb1aea390108840594e2ac58e3c0963a1725758",
+      "path": "/pwa/vendor/maplibre-icons/1f27a14e6589f280952bcf25afb1aea390108840594e2ac58e3c0963a1725758.svg",
+      "occurrences": 1,
+      "bytes": 352,
+      "source_data_url_sha256": [
+        "f6ffd80a4f06b005e216345154d2e3f9bb412f4fd3ff94af729d57b5f999367b"
+      ]
+    },
+    {
+      "sha256": "34cea383cb4cd18cad595fef2b80d67a8635f5ed06075def8a2d738cb36d7705",
+      "path": "/pwa/vendor/maplibre-icons/34cea383cb4cd18cad595fef2b80d67a8635f5ed06075def8a2d738cb36d7705.svg",
+      "occurrences": 2,
+      "bytes": 363,
+      "source_data_url_sha256": [
+        "b6726dd9ab4ca047f8a2b66f6615b489d84321399e14e2d4849e84cde3e2fcd0"
+      ]
+    },
+    {
+      "sha256": "39701bfe72ebdd60adae82c2e16ec40473e4910b22d6c0a9e7b82085852ae194",
+      "path": "/pwa/vendor/maplibre-icons/39701bfe72ebdd60adae82c2e16ec40473e4910b22d6c0a9e7b82085852ae194.svg",
+      "occurrences": 1,
+      "bytes": 307,
+      "source_data_url_sha256": [
+        "8c8d305016dc6581ed1bd566f11b4e381c6b229b1c39a1508d59b073d7ea79f2"
+      ]
+    },
+    {
+      "sha256": "44f6374dd1e9d11c5ce84678e42b68d332cf1cf60181b8db0bb64bed9d11e7a1",
+      "path": "/pwa/vendor/maplibre-icons/44f6374dd1e9d11c5ce84678e42b68d332cf1cf60181b8db0bb64bed9d11e7a1.svg",
+      "occurrences": 2,
+      "bytes": 355,
+      "source_data_url_sha256": [
+        "957f46f68a1d51461d266b7ecf4602e659d5a483e9fe3972407c97bed1b32514"
+      ]
+    },
+    {
+      "sha256": "4fc153e3910692aaf2cb824587f00ac388bd5db3d8cf9dd3b07c5e4dec3c0516",
+      "path": "/pwa/vendor/maplibre-icons/4fc153e3910692aaf2cb824587f00ac388bd5db3d8cf9dd3b07c5e4dec3c0516.svg",
+      "occurrences": 1,
+      "bytes": 375,
+      "source_data_url_sha256": [
+        "8822ff99d25a177dfe33f6215818e2fff22b5e835998e0f87f42e13f777861ee"
+      ]
+    },
+    {
+      "sha256": "5f20cda759f9dfd160e15b874beff26bc5016e9491adecc7b42b77bfd4cc72f8",
+      "path": "/pwa/vendor/maplibre-icons/5f20cda759f9dfd160e15b874beff26bc5016e9491adecc7b42b77bfd4cc72f8.svg",
+      "occurrences": 1,
+      "bytes": 352,
+      "source_data_url_sha256": [
+        "e65e5d54bd6fafdd483d0c0b5fdb1260eb34bdb68d0c057f3a0b1552827f9b12"
+      ]
+    },
+    {
+      "sha256": "63be8c5f6d00dcd51ba89dac57b4d5820d07da7edfffcb54385135c083cbda70",
+      "path": "/pwa/vendor/maplibre-icons/63be8c5f6d00dcd51ba89dac57b4d5820d07da7edfffcb54385135c083cbda70.svg",
+      "occurrences": 1,
+      "bytes": 195,
+      "source_data_url_sha256": [
+        "e272b0976a7f1c6fc60a1fffd63f3b3f1fc90d182438d0ce5c27466a108cd2ff"
+      ]
+    },
+    {
+      "sha256": "7e4e1438b7ac74a9d0bd0fabb9334b0cc8a5070a0e483067c25afe7ff588630c",
+      "path": "/pwa/vendor/maplibre-icons/7e4e1438b7ac74a9d0bd0fabb9334b0cc8a5070a0e483067c25afe7ff588630c.svg",
+      "occurrences": 2,
+      "bytes": 222,
+      "source_data_url_sha256": [
+        "c699372c96ef55815678bfaa866956fbd938da614ea8697e71b4bf172edbc2e7"
+      ]
+    },
+    {
+      "sha256": "823cfdb002fd5ac30089f009c3a3a1010e5e7549be83d9ece4a628dd8b4ba0ec",
+      "path": "/pwa/vendor/maplibre-icons/823cfdb002fd5ac30089f009c3a3a1010e5e7549be83d9ece4a628dd8b4ba0ec.svg",
+      "occurrences": 1,
+      "bytes": 195,
+      "source_data_url_sha256": [
+        "4ebd278659fe8a8f36b5c78b66a16ec8c4b9018e4f79c5a8bd9e1fc7df5df2ff"
+      ]
+    },
+    {
+      "sha256": "83c87b27775e66471647eef204d0da47e675f2b76f47777d94cb21e722656bd2",
+      "path": "/pwa/vendor/maplibre-icons/83c87b27775e66471647eef204d0da47e675f2b76f47777d94cb21e722656bd2.svg",
+      "occurrences": 1,
+      "bytes": 183,
+      "source_data_url_sha256": [
+        "2ca4523610d169c13b75746ef8aa77aa70aca096927163d7463d22ed192cbbbb"
+      ]
+    },
+    {
+      "sha256": "8ce7681dd40b70561eb14c110818be3864ab9609638d9f9852e7d57d8eb93321",
+      "path": "/pwa/vendor/maplibre-icons/8ce7681dd40b70561eb14c110818be3864ab9609638d9f9852e7d57d8eb93321.svg",
+      "occurrences": 1,
+      "bytes": 393,
+      "source_data_url_sha256": [
+        "45442f6a1dba2d3926d3e0f6e56076d0be238420ef36b3c95b26a7be194e2e2e"
+      ]
+    },
+    {
+      "sha256": "8d93360487e74e8a7c164bc0b40d0a5c412322c768611030c4d9e9fe6e106433",
+      "path": "/pwa/vendor/maplibre-icons/8d93360487e74e8a7c164bc0b40d0a5c412322c768611030c4d9e9fe6e106433.svg",
+      "occurrences": 1,
+      "bytes": 363,
+      "source_data_url_sha256": [
+        "4044146ace4bd30762bb6517d92d2b7845beb0a22024df0b9e8255fb038a68ac"
+      ]
+    },
+    {
+      "sha256": "90525760610ce9e97c15848547446fa1eb214c5a7337c0af8cac9fe206523325",
+      "path": "/pwa/vendor/maplibre-icons/90525760610ce9e97c15848547446fa1eb214c5a7337c0af8cac9fe206523325.svg",
+      "occurrences": 3,
+      "bytes": 12713,
+      "source_data_url_sha256": [
+        "303cee0b20ffd446b3f6409823e90b506c90812edffb810818c85210e5f76c74"
+      ]
+    },
+    {
+      "sha256": "9198782876e7f0b4cbea37a3aa3ec657892c7b46670e309a36a9248d7e919a12",
+      "path": "/pwa/vendor/maplibre-icons/9198782876e7f0b4cbea37a3aa3ec657892c7b46670e309a36a9248d7e919a12.svg",
+      "occurrences": 1,
+      "bytes": 295,
+      "source_data_url_sha256": [
+        "028c2704990e305bc93fd2f0618cf9ef3772e0fca5d166a648390d8cfc80ca42"
+      ]
+    },
+    {
+      "sha256": "93be6e6eaf9592f2679a6178de593c67de6dcda3fbf8dd4e47bc46125c49d095",
+      "path": "/pwa/vendor/maplibre-icons/93be6e6eaf9592f2679a6178de593c67de6dcda3fbf8dd4e47bc46125c49d095.svg",
+      "occurrences": 1,
+      "bytes": 304,
+      "source_data_url_sha256": [
+        "d259a5f56b130d29935d6dfe3a7695c03093c47b6247d7dc1aba452d0414e2b7"
+      ]
+    },
+    {
+      "sha256": "9a91d5c1959956fd28039c03dd018bbef3d9bc2bd5483bb7643123b374d2fdac",
+      "path": "/pwa/vendor/maplibre-icons/9a91d5c1959956fd28039c03dd018bbef3d9bc2bd5483bb7643123b374d2fdac.svg",
+      "occurrences": 2,
+      "bytes": 324,
+      "source_data_url_sha256": [
+        "bdfc580391be25cd82133d9627729188490f4d19c4ed7d3898d1e23ce9c76c4a"
+      ]
+    },
+    {
+      "sha256": "9b97e729dd80311f3f281caf19879ee76db4ad765766bda2b9de72a49e4c7b55",
+      "path": "/pwa/vendor/maplibre-icons/9b97e729dd80311f3f281caf19879ee76db4ad765766bda2b9de72a49e4c7b55.svg",
+      "occurrences": 1,
+      "bytes": 1705,
+      "source_data_url_sha256": [
+        "bcd8bfce40e0dbf904f8f623286518b7ac1814e396a992cf55f31aeb58b275bd"
+      ]
+    },
+    {
+      "sha256": "a630e3902ef422103890a1e9c4db6fee22a77933f3955d3060c17a37cb4367d1",
+      "path": "/pwa/vendor/maplibre-icons/a630e3902ef422103890a1e9c4db6fee22a77933f3955d3060c17a37cb4367d1.svg",
+      "occurrences": 1,
+      "bytes": 159,
+      "source_data_url_sha256": [
+        "d60e8d9da7e7d786987cb691795cf9ebcc3ed020de26710568e680d76173e92b"
+      ]
+    },
+    {
+      "sha256": "c56c8ca2fc376dd6a4c759342480d9a1505d06966db842de7f2ed84c95793b4b",
+      "path": "/pwa/vendor/maplibre-icons/c56c8ca2fc376dd6a4c759342480d9a1505d06966db842de7f2ed84c95793b4b.svg",
+      "occurrences": 1,
+      "bytes": 340,
+      "source_data_url_sha256": [
+        "735eed6c9c725cede6f4c3bd87ad5e3f46f1ca357578b7223e8af153a39d44bd"
+      ]
+    },
+    {
+      "sha256": "c6fb4141b2c94f3b031c53b7aa6dba340a6c14bbb5a53b58537fac5be956788c",
+      "path": "/pwa/vendor/maplibre-icons/c6fb4141b2c94f3b031c53b7aa6dba340a6c14bbb5a53b58537fac5be956788c.svg",
+      "occurrences": 1,
+      "bytes": 171,
+      "source_data_url_sha256": [
+        "55116c09819c5f4335d9bb22e54966c025f9b90f359df337e57c2ba078a43621"
+      ]
+    },
+    {
+      "sha256": "d3b08006e83c335171a606e37e00df7e6f22ae333f5d2d99dc088c9e6f887151",
+      "path": "/pwa/vendor/maplibre-icons/d3b08006e83c335171a606e37e00df7e6f22ae333f5d2d99dc088c9e6f887151.svg",
+      "occurrences": 1,
+      "bytes": 171,
+      "source_data_url_sha256": [
+        "96287fe19173f1a25d7ee64dd9764dddf9669ebabefba030fd8cbc0f603680e4"
+      ]
+    },
+    {
+      "sha256": "d54635f006637049438b63b3939f94ef36376f527c83395582c2ee36b12b6692",
+      "path": "/pwa/vendor/maplibre-icons/d54635f006637049438b63b3939f94ef36376f527c83395582c2ee36b12b6692.svg",
+      "occurrences": 1,
+      "bytes": 234,
+      "source_data_url_sha256": [
+        "3a51df8f12c82a4ebc2094594fca51075d9595d2a79bc398bd215bb753864e97"
+      ]
+    },
+    {
+      "sha256": "db4abba776b4bd1adc1b0fa14b18f14a6a29c48a293ec2aeb2f34137fe15a47e",
+      "path": "/pwa/vendor/maplibre-icons/db4abba776b4bd1adc1b0fa14b18f14a6a29c48a293ec2aeb2f34137fe15a47e.svg",
+      "occurrences": 1,
+      "bytes": 375,
+      "source_data_url_sha256": [
+        "96776e1695642bb0a94638879dc6a1c3061c8315af9d2a6ace82418babb08e20"
+      ]
+    },
+    {
+      "sha256": "eb44a3cd2353ac07b24e0ddd5e23a7e498077593d12a513f8bde04b7c8a2a6b1",
+      "path": "/pwa/vendor/maplibre-icons/eb44a3cd2353ac07b24e0ddd5e23a7e498077593d12a513f8bde04b7c8a2a6b1.svg",
+      "occurrences": 1,
+      "bytes": 1702,
+      "source_data_url_sha256": [
+        "0ed51c83a480831cd175473af409d792dae9fa6edfaf33877829114ed0e904d4"
+      ]
+    },
+    {
+      "sha256": "ed10cdc5b3a537724fd44343df6f89b5b4a2c066f4c72dbb060b44e525f1e044",
+      "path": "/pwa/vendor/maplibre-icons/ed10cdc5b3a537724fd44343df6f89b5b4a2c066f4c72dbb060b44e525f1e044.svg",
+      "occurrences": 2,
+      "bytes": 324,
+      "source_data_url_sha256": [
+        "21c38af74254ec1bbde1ac7bd3bb7cc8d8cac09d1289f15714bb10359b0a1c9f"
+      ]
+    },
+    {
+      "sha256": "fa8bf5109255576612a5ee4200a191f3be4d6f3d8e9bc57ede8fcfc08b7b2833",
+      "path": "/pwa/vendor/maplibre-icons/fa8bf5109255576612a5ee4200a191f3be4d6f3d8e9bc57ede8fcfc08b7b2833.svg",
+      "occurrences": 1,
+      "bytes": 375,
+      "source_data_url_sha256": [
+        "10628b272fbba20efe60873b9ef8325509283794997308ae9854997dea359d10"
+      ]
+    },
+    {
+      "sha256": "fcdf3881a2c7b8ebcd3849e287595fafdf088adc8a0b1a7c0fcc240de99d1eb7",
+      "path": "/pwa/vendor/maplibre-icons/fcdf3881a2c7b8ebcd3849e287595fafdf088adc8a0b1a7c0fcc240de99d1eb7.svg",
+      "occurrences": 1,
+      "bytes": 393,
+      "source_data_url_sha256": [
+        "bceb3a5db2a36724296a2acb4a90da8943a90c9c2ad788517ed597a8565935e8"
+      ]
+    }
+  ]
+}
