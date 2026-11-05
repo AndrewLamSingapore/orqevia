@@ -18,7 +18,7 @@ PATHS={'health':{'GET'},'documents':{'GET'},'ingest':{'POST'},'retrieve':{'POST'
 
 def identity(request):
     actor=existing.access(request,mutation=True)
-    if existing.pwa_sessions.COOKIE in request.cookies:
+    if any(name in request.cookies for name in (existing.pwa_sessions.ORQEVIA_COOKIE, existing.pwa_sessions.COOKIE)):
         account=existing.pwa_sessions.require_session(request).get('ownerAccountId')
     else:account=existing.client_policy(actor).get('owner_account_id')
     if open_access.enabled():

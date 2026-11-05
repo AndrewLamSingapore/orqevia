@@ -19,9 +19,10 @@ router = APIRouter()
 
 
 def _owner(request: Request, *, mutation: bool) -> str:
-    if open_access.enabled() and pwa_sessions.COOKIE not in request.cookies:
+    cookie_session = any(name in request.cookies for name in (pwa_sessions.ORQEVIA_COOKIE, pwa_sessions.COOKIE))
+    if open_access.enabled() and not cookie_session:
         return open_access.OPEN_OWNER_ID
-    if pwa_sessions.COOKIE not in request.cookies:
+    if not cookie_session:
         raise HTTPException(401, "Trusted Owner session required")
     if any(key in request.headers for key in ("authorization", "x-client-id", "x-orqevia-client-id")):
         raise HTTPException(400, "Ambiguous client identity")
