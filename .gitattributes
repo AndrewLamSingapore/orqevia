@@ -99,3 +99,5 @@ governance/observations/abex-integration-followup-20261013.json -text
 # Markdown two-space hard line breaks, including on Windows checkouts.
 docs/owner-missions/2026-11-05/*.md -text whitespace=-blank-at-eol
 docs/owner-missions/2026-11-05/OWNER-AUTONOMY-AMENDMENT.txt -text
+# The original mark is pinned by byte hash in the branding contract.
+clients/pwa/icons/orqevia-mark.svg -text
