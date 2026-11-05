@@ -70,6 +70,7 @@ body[data-view=home] .workspace-title { display: none; }
 .oq-detail small { display: block; margin-top: 6px; font-weight: 400; }
 .oq-detail .oq-tag { flex: none; max-width: 40%; align-self: flex-start; }
 .oq-approval-actions, .workflow-tabs, .mode-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.oq-approval { min-width: 0; overflow-wrap: anywhere; }
 .workflow-tabs button { background: transparent; color: var(--oq-text); font-size: .8rem; }
 .workflow-tabs button[aria-pressed=true] { background: var(--oq-panel); color: var(--oq-panel-text); }
 #intelligence-workspace, #coaching-view, #capability-view, #operations-view, #approval-view, #osip-view { margin-bottom: 20px; }
