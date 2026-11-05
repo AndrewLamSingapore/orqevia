@@ -161,7 +161,7 @@ def main():
     names.extend(['capability_depot', 'evidence_lens_bridge', 'evolution_experiments',
                   'native_runtime_configuration', 'qualification_reservation',
                   'service_health_probes', 'historical_source_preparation',
-                  'control_surface_contract'])
+                  'control_surface_contract', 'pwa_bridge_cookie_compatibility'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

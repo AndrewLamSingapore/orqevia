@@ -35,7 +35,7 @@ def _admit(actor: str):
 
 
 def _identity(request: Request):
-    if pwa_sessions.COOKIE not in request.cookies:
+    if not any(name in request.cookies for name in (pwa_sessions.ORQEVIA_COOKIE, pwa_sessions.COOKIE)):
         return identity(request)
     # PWASessionMiddleware rejects caller identity headers, then injects its
     # verified internal identity for /interface/v1. Validate that exact identity.

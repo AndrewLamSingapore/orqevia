@@ -49,3 +49,18 @@ test('mobile metric status labels fit their own cards without hidden clipping',a
  await page.goto('/pwa/?view=console');await waitForSession(page);await expect(page.locator('.operations-metric strong').filter({hasText:'UNAVAILABLE'})).toHaveCount(1);
  for(const width of [320,390]){await page.setViewportSize({width,height:844});await expectNoHorizontalOverflow(page);const clipped=await page.locator('.operations-metric strong').evaluateAll(nodes=>nodes.filter(node=>node.scrollWidth>node.clientWidth+1).map(node=>({text:node.textContent,scroll:node.scrollWidth,client:node.clientWidth})));expect(clipped).toEqual([]);}
 });
+
+test('saved experiment summaries wrap complete 64-character identifiers on compact screens',async({page})=>{
+ const runID='0123456789abcdef'.repeat(4);
+ await mockSession(page);
+ await page.route('**/api/orqevia/evolution/experiments',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({experiments:[{run_id:runID,observed_at_utc:'2026-11-05T03:00:00Z',evidence_scope:'HELD_OUT_SYNTHETIC'}],read_only:true})}));
+ await page.goto('/pwa/?view=evolution');await waitForSession(page);
+ const summary=page.locator('#evolution-history summary');await expect(summary).toContainText(runID);
+ for(const width of [320,390]){
+  await page.setViewportSize({width,height:844});
+  await expectNoHorizontalOverflow(page);
+  const measured=await summary.evaluate((node,id)=>({complete:node.textContent.includes(id),client:node.clientWidth,scroll:node.scrollWidth,wrap:getComputedStyle(node).overflowWrap,ellipsis:getComputedStyle(node).textOverflow==='ellipsis'}),runID);
+  expect(measured.complete).toBe(true);expect(measured.ellipsis).toBe(false);expect(measured.wrap).toBe('anywhere');expect(measured.scroll).toBeLessThanOrEqual(measured.client+1);
+ }
+ await summary.click();await expect(page.locator('#evolution-history pre')).toBeVisible();await expect(page.locator('#evolution-history pre')).toContainText(runID);await expectNoHorizontalOverflow(page);
+});
