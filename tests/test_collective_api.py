@@ -53,7 +53,7 @@ def test_service_auth_owner_scope_and_legacy_open_flag_cannot_bypass(environment
     assert (
         client.get("/api/collective/v1/status", headers={**headers(), "X-ORQEVIA-Owner": "0" * 64}).status_code == 403
     )
-    response = client.get("/api/collective/v1/status", headers=headers())
+    response = client.get("/api/collective/v1/status", headers=headers(), params={"verify_integrity": True})
     assert response.status_code == 200
     value = response.json()
     assert value["protocol"] == api.PROTOCOL and value["grants_execution_authority"] is False
@@ -74,6 +74,68 @@ def test_service_auth_owner_scope_and_legacy_open_flag_cannot_bypass(environment
     assert policy["data"]["contribution_grants_authority"] is False
     monkeypatch.setenv("ORQEVIA_COLLECTIVE_ENABLED", "0")
     assert client.get("/api/collective/v1/status", headers=headers()).status_code == 503
+
+
+def test_default_status_reads_counts_without_replay_and_explicit_check_stays_authenticated(environment, monkeypatch):
+    _, client = environment
+    from app import collective_runtime
+
+    store = collective_runtime.get_store()
+
+    def expensive_replay(_):
+        pytest.fail("The default HTTP status request must not replay the complete history")
+
+    monkeypatch.setattr(store, "integrity", expensive_replay)
+    for parameters in ({}, {"verify_integrity": False}):
+        response = client.get("/api/collective/v1/status", headers=headers(), params=parameters)
+        assert response.status_code == 200
+        metrics = response.json()["data"]["metrics"]
+        assert metrics["agents"]["registered"] == 21
+        assert metrics["registry_health"] == "NOT_CHECKED"
+        assert metrics["integrity"]["pass"] is None and metrics["integrity"]["observed_at"] is None
+        assert response.json()["grants_execution_authority"] is False
+    assert client.get("/api/collective/v1/status", params={"verify_integrity": True}).status_code == 401
+    assert (
+        client.get(
+            "/api/collective/v1/status",
+            headers={**headers(), "X-ORQEVIA-Owner": "0" * 64},
+            params={"verify_integrity": True},
+        ).status_code
+        == 403
+    )
+
+
+def test_explicit_integrity_status_detects_materialized_tamper_without_cached_health(environment):
+    _, client = environment
+    from app import collective_runtime
+
+    checked = client.get("/api/collective/v1/status", headers=headers(), params={"verify_integrity": True})
+    assert checked.status_code == 200
+    healthy = checked.json()["data"]["metrics"]
+    assert healthy["registry_health"] == "PASS" and healthy["integrity"]["pass"] is True
+    store = collective_runtime.get_store()
+    principal = collective_runtime._configured_principal("OWNER", "fixture-owner-session")
+    with store.connect() as database:
+        row = database.execute(
+            "SELECT id FROM registry_records WHERE tenant_id=? AND owner_id=? AND kind='agents' LIMIT 1",
+            (principal.tenant_id, principal.owner_id),
+        ).fetchone()
+        assert row is not None
+        assert (
+            database.execute(
+                "UPDATE registry_records SET state='FORGED' WHERE tenant_id=? AND owner_id=? AND id=?",
+                (principal.tenant_id, principal.owner_id, row[0]),
+            ).rowcount
+            == 1
+        )
+    light = client.get("/api/collective/v1/status", headers=headers()).json()["data"]["metrics"]
+    assert light["registry_health"] == "NOT_CHECKED" and light["integrity"]["pass"] is None
+    changed = client.get("/api/collective/v1/status", headers=headers(), params={"verify_integrity": True})
+    assert changed.status_code == 200
+    failed = changed.json()["data"]["metrics"]
+    assert failed["registry_health"] == "FAIL" and failed["integrity"]["pass"] is False
+    assert failed["integrity"]["audit_chain"] is True
+    assert failed["integrity"]["materialized_records_match_audit"] is False
 
 
 def test_request_cannot_self_assign_verifier_system_or_agent_role(environment):
@@ -150,6 +212,11 @@ def test_cookie_gateway_enforces_origin_current_role_and_bound_owner(environment
         client = TestClient(interface_server.app, base_url="https://testserver")
         cookie = {"Cookie": pwa_sessions.COOKIE + "=" + COOKIE}
         assert client.get("/interface/v1/collective/status", headers=cookie).status_code == 200
+        assert (
+            client.get("/interface/v1/collective/status", headers=cookie, params={"verify_integrity": True}).status_code
+            == 200
+        )
+        assert seen[-1].url.params["verify_integrity"] == "true"
         assert client.post("/interface/v1/collective/reconcile", headers=cookie, json={}).status_code == 403
         assert (
             client.post(
@@ -173,7 +240,7 @@ def test_cookie_gateway_enforces_origin_current_role_and_bound_owner(environment
             db.execute("UPDATE sessions SET role='OWNER',owner_account_id='another-owner'")
         assert client.get("/interface/v1/collective/status", headers=cookie).status_code == 403
         client.close()
-    assert len(seen) == 1
+    assert len(seen) == 2
 
 
 def test_gateway_sanitizes_untrusted_error_body(environment):

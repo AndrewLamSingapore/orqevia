@@ -250,12 +250,12 @@ def fabric_registry(request: Request):
 
 
 @router.get("/status")
-def status(request: Request):
+def status(request: Request, verify_integrity: bool = Query(default=False)):
     principal = _principal(request)
     from .collective_runtime import board_status
 
     try:
-        return _response(request, board_status(principal))
+        return _response(request, board_status(principal, verify_integrity=verify_integrity))
     except (CollectiveError, OSError, sqlite3.Error, RuntimeError) as error:
         _failure(error)
 

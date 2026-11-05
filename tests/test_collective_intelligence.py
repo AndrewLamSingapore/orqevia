@@ -1066,3 +1066,65 @@ def test_snapshot_is_read_only_and_restore_preserves_audit_pagination(board, tmp
     assert recovered.audit(owner, limit=5) == first
     with pytest.raises(CollectiveConflict):
         CollectiveStore.restore(tmp_path / "recovery.db", store.path, expected_sha256=saved["sha256"])
+
+
+def test_existing_metrics_and_snapshot_callers_still_verify_integrity_by_default(board, monkeypatch):
+    store, owner, _, _, _ = board
+    original = store.integrity
+    observed = []
+
+    def verify(principal):
+        observed.append((principal.tenant_id, principal.owner_id))
+        return original(principal)
+
+    monkeypatch.setattr(store, "integrity", verify)
+    assert store.metrics(owner)["registry_health"] == "PASS"
+    assert store.snapshot(owner)["metrics"]["integrity"]["pass"] is True
+    assert observed == [(owner.tenant_id, owner.owner_id)] * 2
+
+
+def test_light_metrics_and_snapshot_never_invoke_full_integrity_or_claim_pass(board, monkeypatch):
+    store, owner, _, _, _ = board
+
+    def expensive_replay(_):
+        pytest.fail("A routine metric read must not replay the complete audit history")
+
+    monkeypatch.setattr(store, "integrity", expensive_replay)
+    for metrics in (
+        store.metrics(owner, verify_integrity=False),
+        store.snapshot(owner, verify_integrity=False)["metrics"],
+    ):
+        assert metrics["agents"]["registered"] == 21
+        assert metrics["registry_health"] == "NOT_CHECKED"
+        assert metrics["integrity"]["status"] == "NOT_CHECKED"
+        assert metrics["integrity"]["events_checked"] == 0
+        for key in (
+            "pass",
+            "audit_chain",
+            "foreign_keys",
+            "sqlite_quick_check",
+            "materialized_records_match_audit",
+            "chain_head",
+            "observed_at",
+        ):
+            assert metrics["integrity"][key] is None
+        assert metrics["integrity"]["scope"] == "Tenant/owner event chain; SQLite structural checks are database-wide"
+
+
+def test_light_metrics_and_explicit_verification_preserve_other_owner_isolation(board):
+    store, owner, _, _, _ = board
+    other = CollectivePrincipal(owner.tenant_id, "other-owner", "other-session", roles=frozenset({"OWNER"}))
+    store.provision(other)
+    item = claim(store, other, title="Other owner's private fixture")
+    with store.connect() as database:
+        database.execute(
+            "UPDATE registry_records SET state='FORGED' WHERE tenant_id=? AND owner_id=? AND id=?",
+            (other.tenant_id, other.owner_id, item["id"]),
+        )
+    assert store.metrics(owner, verify_integrity=False)["knowledge"]["claims"] == 0
+    assert store.metrics(other, verify_integrity=False)["knowledge"]["claims"] == 1
+    assert store.metrics(owner)["registry_health"] == "PASS"
+    verification = store.metrics(other)
+    assert verification["registry_health"] == "FAIL"
+    assert verification["integrity"]["audit_chain"] is True
+    assert verification["integrity"]["materialized_records_match_audit"] is False
