@@ -23,11 +23,11 @@ assert.equal(coachingPhaseCounts([{...agents[0],baseline_pass:'true'},...agents.
 
 const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 assert.ok(html.includes('id="coaching-view"'));
-assert.ok(html.includes('data-view="coaching"'));
+assert.ok(html.includes('data-view="evolution"'));
 assert.ok(html.includes('id="coaching-summary"') && html.includes('id="coaching-roles"'));
 assert.ok(!html.includes('21/21 agents ready'));
 
-const css = readFileSync(new URL('./dashboard.css', import.meta.url), 'utf8');
-assert.ok(css.includes('.coaching-roles'));
+const css = readFileSync(new URL('./style.css', import.meta.url), 'utf8');
+assert.ok(css.includes('#coaching-roles'));
 
 console.log('Coaching dashboard: status transitions, malformed/future rejection, DOM and style wiring PASS');

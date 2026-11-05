@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const source = readFileSync(new URL('../app/control_surface.html', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../docs/history/frontend-retirement-20261105/control_surface.html', import.meta.url), 'utf8');
 const healthSource = source.slice(source.indexOf('async function health(){'), source.indexOf('async function loadOverview(){'));
 const overviewSource = source.slice(source.indexOf('async function loadOverview(){'), source.indexOf('async function loadSystem(){'));
 

@@ -101,3 +101,6 @@ docs/owner-missions/2026-11-05/*.md -text whitespace=-blank-at-eol
 docs/owner-missions/2026-11-05/OWNER-AUTONOMY-AMENDMENT.txt -text
 # The original mark is pinned by byte hash in the branding contract.
 clients/pwa/icons/orqevia-mark.svg -text
+
+# Retired renderer evidence must retain its original bytes on every checkout.
+docs/history/frontend-retirement-20261105/** -text whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof

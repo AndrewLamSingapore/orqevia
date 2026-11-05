@@ -85,7 +85,7 @@ def test_bridge_does_not_forward_unallowlisted_routes(monkeypatch):
 
 def test_active_gods_eye_is_map_and_extension_preserves_existing_runtime():
     root=Path(__file__).resolve().parents[1]
-    html=(root/'app/orqevia/static/index.html').read_text(encoding='utf-8')
+    html=(root/'docs/history/frontend-retirement-20261105/orqevia/index.html').read_text(encoding='utf-8')
     assert 'src="/orqevia/gods-eye/map.html"' in html
     extension=(root/'deploy/extend-abex-interface.py').read_text()
     assert "intelligence-link" in extension
@@ -117,7 +117,7 @@ def test_failed_atomic_json_write_preserves_previous_restart_state(monkeypatch,t
 
 def test_ui_health_uses_the_authenticated_companion_and_error_is_not_empty_map():
     root=Path(__file__).resolve().parents[1]
-    js=(root/'app/orqevia/static/app.js').read_text(encoding='utf-8')
+    js=(root/'docs/history/frontend-retirement-20261105/orqevia/app.js').read_text(encoding='utf-8')
     assert "fetch('/api/orqevia/intelligence/health'" in js
     assert 'fetch("/api/orqevia/proxy/"' not in js
     mapjs=(root/'clients/pwa/command-map.mjs').read_text(encoding='utf-8')

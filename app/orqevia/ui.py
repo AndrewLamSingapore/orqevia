@@ -1,19 +1,12 @@
-"""Standalone, read-only ORQEVIA unified interface surface.
+"""Existing intelligence APIs, bounded read proxy, and retained map assets.
 
-This module serves the responsive ORQEVIA interface and an allow-listed,
-read-only proxy into ORQEVIA's existing public/read endpoints. It is deliberately
-NOT mounted into the production ``app.main`` or ``app.interface_server`` apps.
+The alternate interface is retired. Root redirects to the single canonical PWA;
+only that current PWA and the useful gods-eye map assets are served here.
 
-Run it separately, for example:
-
-    ORQEVIA_BASE_URL=http://127.0.0.1:8000 uvicorn app.orqevia.ui:app --port 8100
-
-Security properties
--------------------
-* Only GET requests are forwarded.
-* Only an explicit allow-list of read-only paths is forwarded.
-* Authorization and cookie headers are never forwarded upstream.
-* The surface never writes, executes, or mutates ORQEVIA state.
+The READ_ONLY_PATHS proxy forwards only listed GET requests, without incoming
+authorization or cookie headers, and does not mutate upstream state. The
+separate intelligence router retains its existing execution/ingestion methods
+and the deployment wrapper's existing authentication boundary.
 """
 from __future__ import annotations
 
@@ -22,7 +15,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from ..observability import PRIVACY_FASTAPI_TELEMETRY
 
@@ -45,15 +38,15 @@ READ_ONLY_URLS = {path: f"{UPSTREAM}/{path}" for path in READ_ONLY_PATHS}
 VIEWS = [
     "home",
     "intelligence",
-    "ideas",
-    "architecture",
-    "build",
-    "test",
-    "deploy",
-    "present",
-    "evidence",
     "agents",
-    "gods-eye",
+    "missions",
+    "knowledge",
+    "workspace",
+    "assets",
+    "wallets",
+    "live-systems",
+    "evolution",
+    "console",
     "settings",
 ]
 
@@ -62,7 +55,7 @@ app = FastAPI(title="ORQEVIA Unified Interface", docs_url=None, redoc_url=None, 
 app.include_router(intelligence_router)
 PWA_ASSETS=Path(__file__).resolve().parents[2]/'clients'/'pwa'
 if not PWA_ASSETS.exists():PWA_ASSETS=Path(__file__).resolve().parents[1]/'pwa_static'
-app.mount('/pwa',StaticFiles(directory=PWA_ASSETS),name='map-assets')
+app.mount('/pwa',StaticFiles(directory=PWA_ASSETS,html=True),name='canonical-pwa-assets')
 
 from ..postgres_intelligence import DatabaseUnavailable
 @app.exception_handler(DatabaseUnavailable)
@@ -76,6 +69,8 @@ def manifest() -> dict:
     return {
         "name": "ORQEVIA · 奥启维亚",
         "tagline": "Unified Interface",
+        "renderer": "RETIRED",
+        "canonical_interface": "/pwa/?view=intelligence",
         "views": VIEWS,
         "upstream": {"base_url": UPSTREAM, "read_only": True},
         "boundaries": {
@@ -140,8 +135,8 @@ async def gods_eye_proof(task_id: str) -> JSONResponse:
 
 
 @app.get("/")
-def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-store"})
+def index() -> RedirectResponse:
+    return RedirectResponse("/pwa/?view=intelligence", status_code=307, headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/orqevia/proxy/{path:path}")
@@ -171,5 +166,5 @@ async def proxy(path: str) -> JSONResponse:
     return JSONResponse({"connected": True, "path": path, "data": data})
 
 
-# Mounted last so the explicit routes above win.
-app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="orqevia-static")
+# Retain the useful map assets without exposing the retired alternate shell.
+app.mount("/gods-eye", StaticFiles(directory=STATIC_DIR / "gods-eye", html=True), name="gods-eye-assets")

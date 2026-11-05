@@ -41,7 +41,9 @@ Skipped tests and unavailable external/live environments remain explicit limits.
 
 ## Interface
 
-The frontend unit suite passed 114 cases. The main 34-case browser suite passed
+The original frontend unit command passed 114 cases. The expanded command now
+also includes the formerly separate dashboard, coaching, health, map and Control
+Surface scripts and passes **131 cases**. The main 34-case browser suite passed
 on Chromium, Firefox and WebKit (102 cases). Focused Projects/error-recovery and
 metric-clipping regressions also passed on all three engines. Thirty desktop
 and mobile source-preview images cover the major surfaces. There were no body
@@ -51,6 +53,26 @@ reference screenshot prevents an exact visual comparison claim.
 Actual production screenshots and authenticated live workflows require a later
 deployment receipt. Source-preview images are labeled accordingly.
 
+The first consolidated CI run passed its 6,120-case canonical Python selection
+(one skip, 92 passing subtests), eleven release/access cases, locked tooling and
+all browser checks. Its standalone dashboard script caught an obsolete six-button
+navigation assertion omitted from the original local unit command. After checking
+that all capabilities remained accessible, the standalone layout assertions were
+updated to the twelve canonical views, complete mobile More navigation and current
+touch targets. The entire exact CI frontend command then passed locally, alongside
+all three Dell packaging cases. Historical XSS/health oracles remain unchanged and
+read the archived renderer; native Console authorization and inert rendering have
+their own checks. The same PR requires another CI verification; no failed check
+is being bypassed.
+
+The final source sweep also retired dormant renderers that could otherwise
+reappear through alternative entrypoints. Exact originals are retained under
+`docs/history/frontend-retirement-20261105/`, with byte hashes and inert Python
+archive extensions. Related API, authorization, integration, route retirement and
+canonical-state regressions passed 58 cases; custody and unchanged API-body
+comparisons passed in the focused retirement suite. The useful geographic view
+remains served. The runtime build does not copy the historical documentation.
+
 ## Security, integrity and scope
 
 Focused tests cover OWNER-only discovery/experiment access, strict empty-body
@@ -59,7 +81,7 @@ isolation, modern session/device revocation, atomic finite qualification leases,
 TLS collector identity and shell-less service probes. Existing financial ceilings
 remain. Registry bytes and historical signatures were preserved.
 
-The source-integrity scan checked 1,770 tracked files and found no configured
+The source-integrity scan checked 1,776 tracked files and found no configured
 secret-pattern matches. This is a scoped scan, not proof that every dependency
 or historical artifact is vulnerability-free. Ruff baseline and changed-file
 gates passed; final CI must verify the consolidated committed tree.

@@ -1,10 +1,9 @@
-"""Read-only ORQEVIA Control Surface composed around the existing APIs."""
+"""Legacy read-only API adapters; the retired renderer redirects to the PWA."""
 import os
-from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
 
 from . import cognitive_api, spine_api
 from .routing_policy import policy_manifest
@@ -12,7 +11,6 @@ from .memory import MemoryStore
 
 
 router = APIRouter(tags=["control-surface"])
-HTML_PATH = Path(__file__).with_name("control_surface.html")
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
@@ -29,24 +27,22 @@ def _trusted_authorization(request: Request) -> str:
     return f"Bearer {token}"
 
 
-@router.get("/control", response_class=HTMLResponse)
-def control_surface() -> HTMLResponse:
-    return HTMLResponse(
-        HTML_PATH.read_text(encoding="utf-8"),
-        headers={"Cache-Control": "no-store"},
-    )
+@router.get("/control", response_class=RedirectResponse)
+def control_surface() -> RedirectResponse:
+    return RedirectResponse("/pwa/?view=console", status_code=307, headers={"Cache-Control": "no-store"})
 
 
 @router.get("/api/control-surface/manifest")
 def control_surface_manifest() -> dict:
     return {
-        "name": "ORQEVIA Control Surface",
+        "name": "ORQEVIA legacy API adapters",
         "version": "2.0.0",
-        "mode": "approval-gated",
-        "authority": "ORQEVIA CORE",
+        "mode": "legacy-api-adapters",
+        "renderer": "RETIRED",
+        "canonical_interface": "/pwa/?view=console",
         "availability": {
             "host": "local-only",
-            "control_url": "http://127.0.0.1:8000/control",
+            "control_url": "/pwa/?view=console",
             "off_host": "unavailable",
         },
         "access": {
@@ -82,13 +78,8 @@ def control_surface_manifest() -> dict:
         },
         "memory_classes": MemoryStore.policy_manifest(),
         "owner_workspace": {
-            "version": "2.0.0",
-            "executive_overview": True,
-            "global_read_search": True,
-            "health_guidance": True,
-            "evidence_filtering": True,
-            "audit_timeline": True,
-            "client_side_export": True,
+            "renderer": "RETIRED",
+            "canonical_interface": "/pwa/?view=console",
             "server_side_writes": "approval-decisions-only",
             "executes_actions": False,
         },
@@ -205,9 +196,10 @@ def control_surface_acceptance(request: Request) -> dict:
             "missing": missing,
         })
     return {
-        "name": "ORQEVIA Control Surface P1 acceptance",
+        "name": "Historical Control Surface API continuity",
         "status": "pass" if all(item["status"] == "pass" for item in results) else "fail",
-        "mode": "approval-gated",
+        "mode": "legacy-api-adapters",
+        "renderer": "RETIRED",
         "access": "trusted-local",
         "sign_in_required": False,
         "local_only": True,

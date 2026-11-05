@@ -36,7 +36,12 @@ The canonical surfaces are Command Center, Intelligence, Agents, Missions,
 Knowledge, Workspace, Assets, Wallets, Live Systems, Evolution, Console and
 Settings. Projects, cache repair, public pages and the map use the same identity.
 Old view queries canonicalize to these surfaces; the old control renderer and
-proxied intelligence HTML/scripts/styles are retired. Authenticated APIs and
+proxied intelligence HTML/scripts/styles are retired. Dormant renderers in the
+older main entrypoint, Control Surface and intelligence companion also redirect
+to the same PWA, so selecting an older entrypoint cannot resurrect the old UI.
+Their exact original bytes and hashes remain inert historical evidence in
+`docs/history/frontend-retirement-20261105/`; useful APIs and geographic assets
+are retained. Authenticated APIs and
 owned-task Evidence Lens functions remain available through the new Console.
 Existing sessions and recovery data remain valid.
 

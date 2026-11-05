@@ -52,5 +52,11 @@
   "historical_dell_readme": "clients/dell/README.md is pinned historical initial-delivery documentation, not current production state",
   "product": "ORQEVIA",
   "execution_model": "DIRECT_TASK_DISPATCH",
-  "verification_scope": "SOURCE_INTEGRITY_ONLY"
+  "verification_scope": "SOURCE_INTEGRITY_ONLY",
+  "frontend": {
+    "canonical_interface": "/pwa/",
+    "alternate_renderers": "RETIRED",
+    "historical_archive": "docs/history/frontend-retirement-20261105",
+    "legacy_api_boundaries": "PRESERVED"
+  }
 }
