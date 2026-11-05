@@ -158,6 +158,9 @@ def main():
     names.extend(['resource_guardian', 'home_eco', 'background_admission',
                   'eco_runtime_benchmark', 'runtime_compliance_observer'])
     names.extend(['deterministic_scheduling', 'operational_health_collector'])
+    names.extend(['capability_depot', 'evidence_lens_bridge', 'evolution_experiments',
+                  'native_runtime_configuration', 'qualification_reservation',
+                  'service_health_probes', 'historical_source_preparation'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]
