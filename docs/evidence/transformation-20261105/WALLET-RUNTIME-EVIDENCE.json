@@ -1,0 +1,757 @@
+{
+  "schema": "orqevia.wallet-reality-audit.v1",
+  "observed_at_utc": "2026-11-05T00:47:21.332527+00:00",
+  "read_only": true,
+  "source_main_sha": "9439c84a99eea5017e7d3caf3e0ceb7dd8ee3b84",
+  "simulation_checkpoint_sha": "0a7c936736b7ecd0cec7ad9ae57f1728645dfc31",
+  "containers": [
+    {
+      "name": "/orqevia-epoch-20261016-interface-1",
+      "image": "orqevia:main-16f1587",
+      "image_id": "sha256:e9dd3b40379a514080af37fadf394c2d4ae388c0a51a8afe3c13266d87b0b502",
+      "state": "running",
+      "revision": "16f1587687f6d88767d803ef38a72fa4a303f5b2",
+      "financial_environment_names": [
+        "ORQEVIA_PWA_MAX_COST_USD"
+      ],
+      "mount_targets": [
+        "/data",
+        "/run/orqevia-host-metrics",
+        "/run/orqevia-tls/ca.crt",
+        "/run/orqevia-tls/server.crt",
+        "/run/orqevia-tls/server.key",
+        "/app/app/pwa_static/ORQEVIA-ABEX-HTTPS.mobileconfig"
+      ]
+    },
+    {
+      "name": "/orqevia-epoch-20261016-otel-collector-1",
+      "image": "otel/opentelemetry-collector@sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda",
+      "image_id": "sha256:63e5e8eccf4268be02388ba9f2dc36b80b5e47721291293411c0e83152d75bda",
+      "state": "running",
+      "revision": "6c65793ec707f673304e52dfcb642684fda1a048",
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/otel",
+        "/etc/otel/config.yaml"
+      ]
+    },
+    {
+      "name": "/orqevia-epoch-20261016-backend-1",
+      "image": "orqevia:main-16f1587",
+      "image_id": "sha256:e9dd3b40379a514080af37fadf394c2d4ae388c0a51a8afe3c13266d87b0b502",
+      "state": "running",
+      "revision": "16f1587687f6d88767d803ef38a72fa4a303f5b2",
+      "financial_environment_names": [
+        "ORQEVIA_MEDIA_MAX_COST_USD",
+        "ORQEVIA_MAX_JOB_COST_USD",
+        "ORQEVIA_DAILY_COST_USD"
+      ],
+      "mount_targets": [
+        "/data",
+        "/run/orqevia-inputs",
+        "/run/orqevia-resource-profile",
+        "/app/config/provider-catalog.active.json",
+        "/run/secrets/hf_token",
+        "/run/secrets/higgsfield_api_key"
+      ]
+    },
+    {
+      "name": "/orqevia-epoch-20261016-integration-gateway-1",
+      "image": "caddy@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e",
+      "image_id": "sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e",
+      "state": "running",
+      "revision": null,
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/etc/caddy/Caddyfile",
+        "/run/orqevia-tls/ca.crt",
+        "/run/orqevia-tls/server.crt",
+        "/run/orqevia-tls/server.key"
+      ]
+    },
+    {
+      "name": "/orqevia-epoch-20261016-ollama-1",
+      "image": "ollama/ollama@sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "image_id": "sha256:da6e0dc5651df159e45686fd663c4dbe1624a52c44d7280eeac1551d8f865532",
+      "state": "running",
+      "revision": null,
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/root/.ollama"
+      ]
+    },
+    {
+      "name": "/orqevia-coaching-coaching-1",
+      "image": "orqevia-coaching:main-fe4c4e3",
+      "image_id": "sha256:74124d9fa04677f5c6e1c2ac444cef3fb2b6799e8116ab131a7679860f18791b",
+      "state": "running",
+      "revision": "fe4c4e3429ea3bde6d07049761c826b731f2d6d1",
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/data",
+        "/run/orqevia-tls/ca.crt"
+      ]
+    },
+    {
+      "name": "/orqevia-intelligence-1",
+      "image": "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+      "image_id": "sha256:be7ac5864c58d86dcadf2bc45eea6336946a9f37f033c24948cbc5da09384dd0",
+      "state": "running",
+      "revision": "sgscope-v1",
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/data",
+        "/run/intelligence-healthcheck.py"
+      ]
+    },
+    {
+      "name": "/orqevia-epoch-20261016-cloudflared-dual-1",
+      "image": "cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "image_id": "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "state": "running",
+      "revision": null,
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/etc/cloudflared/config.yml",
+        "/etc/cloudflared/origin-ca.crt",
+        "/etc/cloudflared/tunnel-credentials.json"
+      ]
+    },
+    {
+      "name": "/orqevia-epoch-20261016-cloudflared-1",
+      "image": "cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "image_id": "sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4",
+      "state": "running",
+      "revision": null,
+      "financial_environment_names": [],
+      "mount_targets": [
+        "/run/orqevia-tls/ca.crt"
+      ]
+    }
+  ],
+  "runtime": {
+    "orqevia-epoch-20261016-backend-1": {
+      "observed_at_utc": "2026-11-05T00:47:22.102194+00:00",
+      "databases": [
+        {
+          "path": "/data/agent-authority.db",
+          "bytes": 421888,
+          "tables": [
+            "agent_authority_events"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/agent-coaching.db",
+          "bytes": 2924544,
+          "tables": [
+            "coaching_cohorts",
+            "coaching_sessions",
+            "coaching_events",
+            "coaching_controller",
+            "coaching_sessions_archive_20261021",
+            "coaching_programs",
+            "academy_retained_methods",
+            "coaching_performance_gaps"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/agent-tool-bridge.db",
+          "bytes": 28672,
+          "tables": [
+            "bridge_sessions",
+            "bridge_steps"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/coaching.db",
+          "bytes": 0,
+          "tables": [],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/collective-intelligence.db",
+          "bytes": 450166784,
+          "tables": [
+            "schema_migrations",
+            "registry_records",
+            "registry_relations",
+            "audit_events",
+            "sqlite_sequence",
+            "command_receipts",
+            "deduplication_keys"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/collective-workspace.db",
+          "bytes": 90112,
+          "tables": [
+            "sketch",
+            "messages",
+            "subscriptions",
+            "deliveries",
+            "tasks",
+            "task_events",
+            "audit",
+            "sqlite_sequence"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/compute-ledger.db",
+          "bytes": 3411968,
+          "tables": [
+            "reasoning_attempts",
+            "compute_events"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/compute-queue.db",
+          "bytes": 35758080,
+          "tables": [
+            "compute_jobs",
+            "compute_approvals",
+            "compute_events",
+            "backend_admission",
+            "backend_admission_refresh",
+            "compute_submission_keys",
+            "compute_background_admission",
+            "compute_background_admission_events",
+            "compute_background_admission_holds",
+            "compute_resource_policy",
+            "compute_resource_decisions",
+            "compute_resource_outcomes",
+            "compute_resource_permits",
+            "compute_resource_process_keys"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/debates.db",
+          "bytes": 32768,
+          "tables": [
+            "debates"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/evidence-lens.db",
+          "bytes": 61440,
+          "tables": [
+            "evidence_actions",
+            "evidence_events",
+            "sqlite_sequence"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/fabric-runtime/executions.db",
+          "bytes": 4468736,
+          "tables": [
+            "executions"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/interface.db",
+          "bytes": 49152,
+          "tables": [
+            "requests",
+            "client_accounts"
+          ],
+          "financial_tables": [
+            {
+              "table": "client_accounts",
+              "rows": 49,
+              "columns": [
+                "client",
+                "account"
+              ]
+            }
+          ]
+        },
+        {
+          "path": "/data/jarvis-memory.db",
+          "bytes": 24576,
+          "tables": [
+            "episodic_memory",
+            "durable_memory"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/media-jobs.db",
+          "bytes": 32768,
+          "tables": [
+            "media_jobs"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/model-registry.db",
+          "bytes": 233472,
+          "tables": [
+            "model_versions",
+            "model_events",
+            "model_assignments",
+            "mel_experiments",
+            "pif_models",
+            "pif_active",
+            "pif_events",
+            "pif_predictions"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/objectives.db",
+          "bytes": 823296,
+          "tables": [
+            "objectives",
+            "objective_turns",
+            "objective_metadata",
+            "objective_runtime"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/offline-queue.db",
+          "bytes": 20480,
+          "tables": [
+            "deferred_operations"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/operational-health.db",
+          "bytes": 36864,
+          "tables": [
+            "operational_checks",
+            "operational_incidents",
+            "operational_incident_transitions"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/orqevia-memory.db",
+          "bytes": 11464704,
+          "tables": [
+            "episodic_memory",
+            "durable_memory",
+            "notebook_schema_versions",
+            "agent_notebooks",
+            "agent_memory_records",
+            "agent_memory_versions",
+            "agent_memory_audit",
+            "notebook_projects",
+            "notebook_project_members",
+            "notebook_conditioning_profiles",
+            "agent_memory_fts",
+            "agent_memory_fts_data",
+            "agent_memory_fts_idx",
+            "agent_memory_fts_content",
+            "agent_memory_fts_docsize",
+            "agent_memory_fts_config",
+            "memory_embeddings"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/orqevia-spine.db",
+          "bytes": 45056,
+          "tables": [
+            "trust_registry",
+            "event_bus",
+            "audit_trail",
+            "sqlite_sequence",
+            "approvals",
+            "trust_evidence"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/portfolio-events.db",
+          "bytes": 1933312,
+          "tables": [
+            "portfolio_events",
+            "event_projections",
+            "semantic_graph_nodes",
+            "cognitive_review_queue",
+            "event_evaluations"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/prime-spine.db",
+          "bytes": 45056,
+          "tables": [
+            "trust_registry",
+            "event_bus",
+            "audit_trail",
+            "sqlite_sequence",
+            "approvals",
+            "trust_evidence"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/project-workflows.db",
+          "bytes": 2572288,
+          "tables": [
+            "project_runs",
+            "project_tasks",
+            "project_events",
+            "project_handoffs",
+            "project_artifacts"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/pwa-sessions.db",
+          "bytes": 716800,
+          "tables": [
+            "pairing",
+            "sessions",
+            "admission",
+            "devices"
+          ],
+          "financial_tables": []
+        },
+        {
+          "path": "/data/release-gate.db",
+          "bytes": 16384,
+          "tables": [
+            "release_gate_events"
+          ],
+          "financial_tables": []
+        }
+      ],
+      "financial_named_files_in_data": [],
+      "application_sources": {
+        "/app/app": {
+          "financial_simulation_module_exists": false,
+          "financial_api_module_exists": false,
+          "term_matches": [
+            {
+              "path": "/app/app/provider_usage.py",
+              "terms": [
+                "wallet",
+                "treasury"
+              ]
+            }
+          ],
+          "module_sha256": {
+            "provider_usage.py": "a8b01e2555bad62345023ddeee208cf4d6e865ce4547f90851d1cf6b2f5eaef8",
+            "job_queue.py": "d8a40fd5cb4b5fbcd7fef29e2e87c7f01c9da5fd634f97cde9e40373f2758b19",
+            "direct_entry.py": "85c19fcf46c5469eca723f675963d570a45251c544511014c89abe377602e240",
+            "client_auth.py": "39667a06550d73b81e9c9843e5e03d387da23cadeda125526960c3893c11f32c",
+            "media_api.py": "2408c57ea1512d11ba2f3bd95001b3cd98329e1d237fc136620ce1c16c7dc7b3",
+            "web_search.py": "de22e3844f90bb4a1119063bf6dfa7bca7b77e728b9549f395b589448fc210d2"
+          },
+          "module_normalized_sha256": {
+            "provider_usage.py": "b27074ad171fa921ea840d1b449da36f1204bd6bd35ddbfcab2d71172fc6aada",
+            "job_queue.py": "591df949e0fabc239019c7fd577e322d945bd8ae9af9bd3100629bcdb922ba2e",
+            "direct_entry.py": "2d60acaded4618de143b1385738c529da3b145e77017aa83ebf2c2e2e0780064",
+            "client_auth.py": "e34bc9c89858a305cb360413d81cb290911f79b363458c8c3e54cf324fd6c90b",
+            "media_api.py": "f80c4700910042443dc2feec745bc8faf53be975ff356bb4ae49814f797f78b1",
+            "web_search.py": "84c353afce427b3a6b92ad94325c4cbad5586b8f6a6e39a7b2a47e739a5a4c7e"
+          }
+        }
+      },
+      "financial_sdk_distributions": [],
+      "financial_environment_names": [
+        "ORQEVIA_MEDIA_MAX_COST_USD",
+        "ORQEVIA_MAX_JOB_COST_USD",
+        "ORQEVIA_DAILY_COST_USD"
+      ],
+      "numeric_budget_configuration": {
+        "ORQEVIA_MAX_JOB_COST_USD": 2.0,
+        "ORQEVIA_DAILY_COST_USD": 10.0,
+        "ORQEVIA_MEDIA_MAX_COST_USD": 0.25,
+        "ORQEVIA_MEDIA_MAX_JOBS_PER_DAY": 3.0,
+        "ORQEVIA_MEDIA_MAX_CONCURRENT_JOBS": 1.0
+      },
+      "higgsfield_enabled": true,
+      "open_access_enabled": false,
+      "queue_groups": [
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": null,
+          "status": "cancelled",
+          "count": 85
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": null,
+          "status": "failed",
+          "count": 35
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": null,
+          "status": "queued",
+          "count": 1
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-deep",
+          "status": "cancelled",
+          "count": 16
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-deep",
+          "status": "completed",
+          "count": 2647
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-deep",
+          "status": "failed",
+          "count": 504
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-deep",
+          "status": "running",
+          "count": 1
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-embedding",
+          "status": "completed",
+          "count": 5
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-embedding",
+          "status": "failed",
+          "count": 5
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-fast",
+          "status": "cancelled",
+          "count": 5
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-fast",
+          "status": "completed",
+          "count": 3582
+        },
+        {
+          "allow_cloud": 0,
+          "external_execution": 0,
+          "provider": "ollama-fast",
+          "status": "failed",
+          "count": 253
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-a01-gptoss-groq-third",
+          "status": "completed",
+          "count": 3
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-a19-gptoss-groq-chronology",
+          "status": "completed",
+          "count": 2
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-gemma-nano",
+          "status": "completed",
+          "count": 11
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-gemma-nano",
+          "status": "failed",
+          "count": 2
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-qwen-certification",
+          "status": "completed",
+          "count": 2
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-qwen-certification",
+          "status": "failed",
+          "count": 3
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-qwen-normal-deepinfra",
+          "status": "completed",
+          "count": 87
+        },
+        {
+          "allow_cloud": 1,
+          "external_execution": 0,
+          "provider": "hf-qwen-normal-deepinfra",
+          "status": "failed",
+          "count": 9
+        }
+      ],
+      "compute_accounting_rows": {
+        "reasoning_attempts": 7378,
+        "compute_events": 0
+      },
+      "media_job_groups": [
+        {
+          "provider_id": "higgsfield",
+          "operation": "image",
+          "status": "completed",
+          "count": 7
+        }
+      ],
+      "provider_catalog_sanitized": [
+        {
+          "id": "hf-gemma-nano",
+          "provider_kind": "huggingface",
+          "model": "google/gemma-3-4b-it:deepinfra",
+          "location": "cloud",
+          "enabled": true,
+          "qualification_status": "QUALIFIED",
+          "concurrency": 1,
+          "allowed_task_classes": [
+            "classification"
+          ]
+        }
+      ]
+    },
+    "orqevia-intelligence-1": {
+      "observed_at_utc": "2026-11-05T00:47:23.349942+00:00",
+      "databases": [
+        {
+          "path": "/data/intelligence/observations.db",
+          "bytes": 40960,
+          "tables": [
+            "observations"
+          ],
+          "financial_tables": []
+        }
+      ],
+      "financial_named_files_in_data": [],
+      "application_sources": {
+        "/app/app": {
+          "financial_simulation_module_exists": false,
+          "financial_api_module_exists": false,
+          "term_matches": [
+            {
+              "path": "/app/app/provider_usage.py",
+              "terms": [
+                "wallet",
+                "treasury"
+              ]
+            }
+          ],
+          "module_sha256": {
+            "provider_usage.py": "a8b01e2555bad62345023ddeee208cf4d6e865ce4547f90851d1cf6b2f5eaef8",
+            "job_queue.py": "99216683f0410169fc57a14bbaa6116dd4eeb92695801a9716118f4eee5eb517",
+            "direct_entry.py": "57e6c7e8a3e54cf9e991abd09ac4fe6384c875f7c2ae9b1ce193ed11973ba22e",
+            "client_auth.py": "bc9a348a648d4fca19ca15043992dda650f8e97ce61729858a1e6735f163f8e0"
+          },
+          "module_normalized_sha256": {
+            "provider_usage.py": "b27074ad171fa921ea840d1b449da36f1204bd6bd35ddbfcab2d71172fc6aada",
+            "job_queue.py": "f32b489eabb5d74efb77f5d0e49b1e7d36d1236a625cd9edf14fa2e4e54ad1c3",
+            "direct_entry.py": "5a7eaeefb78c20866c7e079171cf0e67b1c410bd3d3ad6a7e892108a8ef46e39",
+            "client_auth.py": "9f2f47c3f329f2e06c0c460968d72bc5f4d406d2d08b88dc2abaa59c9f269eba"
+          }
+        },
+        "/service/app": {
+          "financial_simulation_module_exists": false,
+          "financial_api_module_exists": false,
+          "term_matches": [
+            {
+              "path": "/service/app/provider_usage.py",
+              "terms": [
+                "wallet",
+                "treasury"
+              ]
+            }
+          ],
+          "module_sha256": {
+            "provider_usage.py": "a8b01e2555bad62345023ddeee208cf4d6e865ce4547f90851d1cf6b2f5eaef8",
+            "job_queue.py": "7dd391a6aebeb098248e00a5b4bb83bcc2119a32e71c08a6995bad6186254d30",
+            "direct_entry.py": "cd53835f9a9fecdce2095b8023c4fc0daf469acb96e6c624efd5330fb3e668c2",
+            "client_auth.py": "bc9a348a648d4fca19ca15043992dda650f8e97ce61729858a1e6735f163f8e0"
+          },
+          "module_normalized_sha256": {
+            "provider_usage.py": "b27074ad171fa921ea840d1b449da36f1204bd6bd35ddbfcab2d71172fc6aada",
+            "job_queue.py": "9f79eb5eceb80132058ac3049c856d322598872bcf50cebf211dc5fba39077a5",
+            "direct_entry.py": "42b5365a5f35039bd5ac4a29c745dc053ea493a7b973a1036ac0704ac054ea1f",
+            "client_auth.py": "9f2f47c3f329f2e06c0c460968d72bc5f4d406d2d08b88dc2abaa59c9f269eba"
+          }
+        }
+      },
+      "financial_sdk_distributions": [],
+      "financial_environment_names": [],
+      "numeric_budget_configuration": {
+        "ORQEVIA_MAX_JOB_COST_USD": null,
+        "ORQEVIA_DAILY_COST_USD": null,
+        "ORQEVIA_MEDIA_MAX_COST_USD": null,
+        "ORQEVIA_MEDIA_MAX_JOBS_PER_DAY": null,
+        "ORQEVIA_MEDIA_MAX_CONCURRENT_JOBS": null
+      },
+      "higgsfield_enabled": false,
+      "open_access_enabled": false
+    }
+  },
+  "source_module_sha256": {
+    "provider_usage.py": "b27074ad171fa921ea840d1b449da36f1204bd6bd35ddbfcab2d71172fc6aada",
+    "job_queue.py": "591df949e0fabc239019c7fd577e322d945bd8ae9af9bd3100629bcdb922ba2e",
+    "direct_entry.py": "2d60acaded4618de143b1385738c529da3b145e77017aa83ebf2c2e2e0780064",
+    "client_auth.py": "e34bc9c89858a305cb360413d81cb290911f79b363458c8c3e54cf324fd6c90b",
+    "media_api.py": "f80c4700910042443dc2feec745bc8faf53be975ff356bb4ae49814f797f78b1",
+    "web_search.py": "84c353afce427b3a6b92ad94325c4cbad5586b8f6a6e39a7b2a47e739a5a4c7e"
+  },
+  "agent_ids": [
+    "a01",
+    "a02",
+    "a04",
+    "a05",
+    "a06",
+    "a07",
+    "a09",
+    "a10",
+    "a12",
+    "a13",
+    "a14",
+    "a15",
+    "a16",
+    "a17",
+    "a18",
+    "a19",
+    "a20",
+    "a21",
+    "a26",
+    "a28",
+    "a29"
+  ]
+}

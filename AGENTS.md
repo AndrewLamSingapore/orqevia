@@ -1,3 +1,16 @@
+# Owner mission amendment - 5 November 2026
+
+Read `ORQEVIA-CURRENT-STATE.md` first, then
+`docs/owner-missions/2026-11-05/README.md`. Four complete Owner directives are
+preserved verbatim there: unified NOMAD-inspired interface replacement,
+legacy-governance retirement, read-only wallet reality audit, and evidence-based
+zero-inheritance evolution. Implement authorized engineering autonomously;
+Linux is authorized where useful. The wallet audit remains read-only and does
+not authorize transactions or changes to financial controls. Preserve security,
+HTTPS, user data, models, rollback evidence, and the REA/MiroFish exclusion.
+Keep the permanent batching law below. Mission requirements are not evidence
+of completed implementation; report source and runtime verification separately.
+
 # ORQEVIA status and domain ownership
 
 ## Latest Owner amendments - 28 October 2026

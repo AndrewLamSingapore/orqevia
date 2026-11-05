@@ -22,9 +22,10 @@ API_PATHS = {
 }
 
 def access(request, *, mutation=False):
-    if open_access.enabled() and pwa_sessions.COOKIE not in request.cookies:
+    cookie_session = any(name in request.cookies for name in (pwa_sessions.ORQEVIA_COOKIE, pwa_sessions.COOKIE))
+    if open_access.enabled() and not cookie_session:
         return open_access.OPEN_OWNER_ID
-    if pwa_sessions.COOKIE in request.cookies:
+    if cookie_session:
         if any(k in request.headers for k in ('authorization', 'x-client-id', 'x-orqevia-client-id')):
             raise HTTPException(400, 'Ambiguous client identity')
         if not pwa_sessions.origin_valid(request, request.method not in {'GET','HEAD'}):
@@ -74,10 +75,9 @@ async def intelligence_api(request: Request,path: str):
 
 @router.get('/orqevia/{path:path}')
 async def intelligence_ui(request: Request,path: str):
-    if not path:
-        return RedirectResponse('/pwa/?view=gods-eye',status_code=307)
+    access(request)
     if any(part in {'..','.'} for part in path.split('/')) or '\\' in path or ':' in path:
         raise HTTPException(404,'Unavailable asset')
-    if path and not path.endswith(('.html','.js','.mjs','.css','.png','.webmanifest')):
-        raise HTTPException(404,'Unavailable asset')
-    return await forward(request,'/'+path)
+    if not path or path.endswith('.html'):
+        return RedirectResponse('/pwa/?view=intelligence',status_code=307)
+    raise HTTPException(410, 'Legacy interface asset retired')

@@ -103,7 +103,7 @@ def inference_attempt_projection(jobs):
     except (KeyError,TypeError,ValueError,RegistryError):
         return reject('INVALID_QUEUE_BINDING')
     result['missing_job_ids']=sorted(bound)
-    path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'compute-ledger.db'
+    path=Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'compute-ledger.db'
     if not path.is_file():return {**result, 'status':'UNAVAILABLE', 'reason':'COMPUTE_LEDGER_UNAVAILABLE'}
     try:
         from .compute_catalog import load_catalog
@@ -391,7 +391,7 @@ def select_capabilities(objective: str) -> list[str]:
 
 
 def connect(*, read_only=False):
-    path=Path(os.getenv('PRIME_DATA_DIR','/data'))/'objectives.db'
+    path=Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'objectives.db'
     if read_only:
         if not path.is_file():raise HTTPException(404,'Objective not found')
         return sqlite3.connect(path.resolve().as_uri()+'?mode=ro',timeout=15,uri=True)
@@ -408,10 +408,10 @@ def connect(*, read_only=False):
 
 
 def runtime_snapshot():
-    source=os.getenv('PRIME_RUNTIME_REVISION',os.getenv('PRIME_INTERFACE_RUNTIME_REVISION','')).strip().lower()
-    host=os.getenv('PRIME_INTERFACE_HOST_ID','').strip()
-    version=os.getenv('PRIME_INTERFACE_RUNTIME_VERSION','').strip()
-    image=os.getenv('PRIME_RUNTIME_IMAGE_DIGEST','').strip() or None
+    source=os.getenv('ORQEVIA_RUNTIME_REVISION',os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION','')).strip().lower()
+    host=os.getenv('ORQEVIA_INTERFACE_HOST_ID','').strip()
+    version=os.getenv('ORQEVIA_INTERFACE_RUNTIME_VERSION','').strip()
+    image=os.getenv('ORQEVIA_RUNTIME_IMAGE_DIGEST','').strip() or None
     return {
         'host_id':host if re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,95}',host) else 'UNKNOWN',
         'source_revision':source if re.fullmatch(r'[0-9a-f]{40}',source) else 'UNKNOWN',

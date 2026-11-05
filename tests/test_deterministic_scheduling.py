@@ -159,7 +159,6 @@ def test_dispatch_end_to_end_schedule_single_slot(tmp_path, monkeypatch):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
-    monkeypatch.setenv("PRIME_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("ORQEVIA_REGISTRY_V1_ENABLED", "1")
     monkeypatch.setenv("ORQEVIA_SPINE_TOKEN", "test-owner-token")
@@ -199,7 +198,6 @@ def test_dispatch_rejects_malformed_schedule_spec(tmp_path, monkeypatch):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
-    monkeypatch.setenv("PRIME_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("ORQEVIA_REGISTRY_V1_ENABLED", "1")
     monkeypatch.setenv("ORQEVIA_SPINE_TOKEN", "test-owner-token")

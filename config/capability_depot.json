@@ -1,0 +1,219 @@
+{
+  "schema": "orqevia.capability-depot-manifest.v1",
+  "capabilities": [
+    {
+      "id": "local-inference",
+      "name": "Local intelligence",
+      "kind": "model-runtime",
+      "version": "runtime-observed",
+      "offline": true,
+      "source": "app/job_queue.py",
+      "dependencies": [
+        "Ollama",
+        "installed model"
+      ],
+      "resources": {
+        "allocation": "measured HOME_ECO envelope"
+      },
+      "task_classes": [
+        "conversation",
+        "classification",
+        "complex_reasoning"
+      ],
+      "operations": [
+        "infer",
+        "cancel",
+        "observe"
+      ],
+      "endpoint": "/interface/v1/objectives"
+    },
+    {
+      "id": "local-knowledge",
+      "name": "Local knowledge",
+      "kind": "retrieval",
+      "version": "V2/V3",
+      "offline": true,
+      "source": "app/local_knowledge.py",
+      "dependencies": [
+        "existing FAISS index",
+        "local embedding model"
+      ],
+      "resources": {
+        "storage": "existing document collections; incremental generations"
+      },
+      "task_classes": [
+        "research",
+        "writing"
+      ],
+      "operations": [
+        "ingest",
+        "retrieve",
+        "reindex",
+        "answer"
+      ],
+      "endpoint": "/api/orqevia/knowledge/health"
+    },
+    {
+      "id": "agent-capabilities",
+      "name": "Agent capability library",
+      "kind": "agent-capabilities",
+      "version": "1.0.0",
+      "offline": true,
+      "source": "app/agent_registry.py",
+      "dependencies": [],
+      "resources": {
+        "execution": "on demand; shared task-aware inference"
+      },
+      "task_classes": [
+        "planning",
+        "coding",
+        "research",
+        "analysis"
+      ],
+      "operations": [
+        "discover",
+        "assign",
+        "observe"
+      ],
+      "endpoint": "/interface/v1/registry"
+    },
+    {
+      "id": "predictive-intelligence",
+      "name": "Predictive intelligence",
+      "kind": "deterministic-tool",
+      "version": "source-revision",
+      "offline": true,
+      "source": "app/pif/core.py",
+      "dependencies": [],
+      "resources": {
+        "compute": "bounded deterministic calculations"
+      },
+      "task_classes": [
+        "analysis"
+      ],
+      "operations": [
+        "forecast",
+        "simulate",
+        "inspect-evidence"
+      ],
+      "endpoint": "/api/collective/v1/intelligence/pif/status"
+    },
+    {
+      "id": "model-efficiency",
+      "name": "Model efficiency",
+      "kind": "runtime-optimization",
+      "version": "source-revision",
+      "offline": true,
+      "source": "app/mel/service.py",
+      "dependencies": [
+        "qualified model profile"
+      ],
+      "resources": {
+        "allocation": "existing resource guardian"
+      },
+      "task_classes": [
+        "classification",
+        "complex_reasoning"
+      ],
+      "operations": [
+        "observe"
+      ],
+      "endpoint": "/api/collective/v1/intelligence/mel/status"
+    },
+    {
+      "id": "academy",
+      "name": "Learning and evaluation",
+      "kind": "learning",
+      "version": "source-revision",
+      "offline": true,
+      "source": "app/probability_curriculum.py",
+      "dependencies": [
+        "local inference for model assessments"
+      ],
+      "resources": {
+        "execution": "bounded assessment budgets"
+      },
+      "task_classes": [
+        "learning",
+        "evaluation"
+      ],
+      "operations": [
+        "lessons",
+        "assess",
+        "inspect-results"
+      ],
+      "endpoint": "/pwa/api/academy/probability"
+    },
+    {
+      "id": "durable-memory",
+      "name": "Persistent memory",
+      "kind": "memory",
+      "version": "source-revision",
+      "offline": true,
+      "source": "app/memory.py",
+      "dependencies": [
+        "existing orqevia-memory.db"
+      ],
+      "resources": {
+        "storage": "existing SQLite store"
+      },
+      "task_classes": [
+        "research",
+        "planning",
+        "conversation"
+      ],
+      "operations": [
+        "read",
+        "write-scoped-record"
+      ],
+      "endpoint": "/pwa/api/notebooks"
+    },
+    {
+      "id": "offline-continuity",
+      "name": "Offline continuity",
+      "kind": "recovery",
+      "version": "source-revision",
+      "offline": true,
+      "source": "app/offline_survival.py",
+      "dependencies": [
+        "durable mission state"
+      ],
+      "resources": {
+        "storage": "existing offline queue"
+      },
+      "task_classes": [
+        "planning",
+        "recovery"
+      ],
+      "operations": [
+        "observe",
+        "defer",
+        "reconcile-authorized"
+      ],
+      "endpoint": "/control/api/survival/status"
+    },
+    {
+      "id": "image-generation",
+      "name": "Media generation",
+      "kind": "external-service",
+      "version": "runtime-configured",
+      "offline": false,
+      "source": "app/media_generation.py",
+      "dependencies": [
+        "configured HTTPS provider",
+        "scoped spending permission"
+      ],
+      "resources": {
+        "cost": "existing per-job and daily provider limits"
+      },
+      "task_classes": [
+        "image-generation"
+      ],
+      "operations": [
+        "generate-with-budget",
+        "observe"
+      ],
+      "endpoint": "/media/v1/health"
+    }
+  ]
+}

@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from . import direct_entry, objective_api, agent_dispatch_api, compute_queue_api, artifact_delivery, evidence_lens_api
 from .agent_capability_observatory import project_capability_observatory
@@ -139,13 +139,12 @@ def health():
 
 @app.get('/control', dependencies=[Depends(local_authorization)])
 def control():
-    return HTMLResponse(Path(__file__).with_name('production_control.html').read_text(encoding='utf-8'))
+    return RedirectResponse('/pwa/?view=console', status_code=307)
 
 
 @app.get('/control/app.js', dependencies=[Depends(local_authorization)])
 def control_script():
-    from fastapi.responses import Response
-    return Response(Path(__file__).with_name('production_control.js').read_text(encoding='utf-8'), media_type='text/javascript')
+    return Response(status_code=410)
 
 
 @app.post('/control/api/objectives', status_code=202)

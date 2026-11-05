@@ -71,7 +71,7 @@ try:
     root=pathlib.Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
     queue=pathlib.Path(os.getenv('ORQEVIA_COMPUTE_QUEUE_DB',str(root/'compute-queue.db')))
     queue_count=read(queue,'SELECT COUNT(*) FROM compute_jobs')[0]
-    objective_path=pathlib.Path(os.getenv('PRIME_DATA_DIR','/data'))/'objectives.db'
+    objective_path=pathlib.Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'objectives.db'
     objective_count=read(objective_path,'SELECT COUNT(*) FROM objectives')[0]
     execution=read(queue,'SELECT MAX(started_at),MAX(completed_at) FROM compute_jobs')
     model_keys=('ORQEVIA_FAST_MODEL','ORQEVIA_DEEP_MODEL','ORQEVIA_EVALUATOR_MODEL','ORQEVIA_EMBED_MODEL')

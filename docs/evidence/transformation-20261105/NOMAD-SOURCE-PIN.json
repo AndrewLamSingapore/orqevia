@@ -1,0 +1,92 @@
+{
+  "schema": "orqevia.nomad-recon.v1",
+  "observed_at_utc": "2026-11-05T00:45:00Z",
+  "repository": "Crosstalk-Solutions/project-nomad",
+  "revision": "54ee30a44902e5c252b477f8685c26ec3064ab72",
+  "total_tree_entries": 754,
+  "tree_truncated": false,
+  "releases": [
+    {
+      "tag": "v1.35.1",
+      "published": "2026-10-05T22:29:55Z",
+      "prerelease": false,
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad/releases/tag/v1.35.1"
+    },
+    {
+      "tag": "v1.35.0",
+      "published": "2026-09-29T22:55:47Z",
+      "prerelease": false,
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad/releases/tag/v1.35.0"
+    },
+    {
+      "tag": "v1.35.0-rc.2",
+      "published": "2026-09-24T23:20:46Z",
+      "prerelease": true,
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad/releases/tag/v1.35.0-rc.2"
+    },
+    {
+      "tag": "v1.35.0-rc.1",
+      "published": "2026-09-13T19:33:26Z",
+      "prerelease": true,
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad/releases/tag/v1.35.0-rc.1"
+    },
+    {
+      "tag": "v1.34.1",
+      "published": "2026-09-02T18:59:46Z",
+      "prerelease": false,
+      "url": "https://github.com/Crosstalk-Solutions/project-nomad/releases/tag/v1.34.1"
+    }
+  ],
+  "inspected_paths": [
+    "LICENSE",
+    "SECURITY.md",
+    "admin/app/controllers/easy_setup_controller.ts",
+    "admin/app/controllers/home_controller.ts",
+    "admin/app/controllers/supply_depot_controller.ts",
+    "admin/app/models/service.ts",
+    "admin/app/services/app_auto_update_service.ts",
+    "admin/app/services/auto_update_service.ts",
+    "admin/app/services/benchmark_service.ts",
+    "admin/app/services/collection_manifest_service.ts",
+    "admin/app/services/collection_update_service.ts",
+    "admin/app/services/container_registry_service.ts",
+    "admin/app/services/content_auto_update_service.ts",
+    "admin/app/services/creator_pack_service.ts",
+    "admin/app/services/custom_app_guard.ts",
+    "admin/app/services/docker_service.ts",
+    "admin/app/services/download_service.ts",
+    "admin/app/services/eval_generation_service.ts",
+    "admin/app/services/eval_retrieval_service.ts",
+    "admin/app/services/kiwix_catalog_service.ts",
+    "admin/app/services/map_service.ts",
+    "admin/app/services/ollama_compute.ts",
+    "admin/app/services/ollama_service.ts",
+    "admin/app/services/queue_service.ts",
+    "admin/app/services/rag_pipeline_service.ts",
+    "admin/app/services/rag_service.ts",
+    "admin/app/services/system_service.ts",
+    "admin/app/services/system_update_service.ts",
+    "admin/app/services/zim_extraction_service.ts",
+    "admin/database/seeders/service_seeder.ts",
+    "admin/inertia/app/app.tsx",
+    "admin/inertia/components/CategoryCard.tsx",
+    "admin/inertia/components/DynamicIcon.tsx",
+    "admin/inertia/components/StyledButton.tsx",
+    "admin/inertia/components/layout/BackToHomeHeader.tsx",
+    "admin/inertia/css/app.css",
+    "admin/inertia/layouts/AppLayout.tsx",
+    "admin/inertia/pages/home.tsx",
+    "admin/inertia/pages/supply-depot.tsx",
+    "admin/package.json",
+    "admin/start/routes.ts",
+    "admin/tailwind.config.ts",
+    "admin/tests/eval/README.md",
+    "collections/creator-pack-license.md",
+    "install/management_compose.yaml"
+  ],
+  "limitations": [
+    "Selected user screenshot is not attached in this conversation; no exact visual match established.",
+    "Source reconnaissance only; NOMAD not installed or run.",
+    "Third-party license inventory identifies direct dependencies; transitive legal/security audit is incomplete."
+  ]
+}

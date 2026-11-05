@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-05",
+  "scope": "SOURCE_TARGETED_TESTS_AND_READ_ONLY_PREDEPLOY_OBSERVATION",
+  "source_files": ["scripts/probe_service_health.py", "tests/test_service_health_probes.py"],
+  "targeted_command": "uv run pytest -q tests/test_service_health_probes.py",
+  "passed": 21,
+  "failed": 0,
+  "elapsed_seconds": 0.39,
+  "ruff_strict": "PASS E9,F",
+  "ruff_format": "PASS",
+  "live_receipt": "PREDEPLOY-PROBES-20261105.json",
+  "predeploy_overall": "UNKNOWN",
+  "predeploy_otel": "UNKNOWN_LEGACY_LOOPBACK_SOCKET_ONLY_TLS_UNQUALIFIED",
+  "predeploy_tunnels": "4_REGISTERED_CONNECTIONS_EACH_NO_LATER_OBSERVED_INTERRUPTION",
+  "plaintext_http_requests": 0,
+  "raw_logs_exported": false,
+  "environment_values_exported": false,
+  "service_restarts": 0,
+  "production_config_changes": 0,
+  "commit_push_deploy": "NOT_PERFORMED_BY_CHILD"
+}

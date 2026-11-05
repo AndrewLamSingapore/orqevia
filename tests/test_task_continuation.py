@@ -88,9 +88,7 @@ class ContinuationTests(WorkflowObjectiveIntegrationTests):
     def test_thin_weighted_continuation_routes_a04_without_inference(self):
         from tests.test_weighted_decision import request
         from app import compute_queue_api
-        with patch.dict(os.environ,{'PRIME_DATA_DIR':str(Path(self.root)/'prime-data'),
-                                    'PRIME_REGISTRY_V1_ENABLED':'1',
-                                    'ORQEVIA_REGISTRY_V1_ENABLED':'1'}):
+        with patch.dict(os.environ,{'ORQEVIA_DATA_DIR':str(Path(self.root)/'native-data')}):
             task=self.start()
             changes={'objective':'Compute the weighted decision across the supplied options.',
                      'context':json.dumps(request()),'deterministic_operation':'weighted_decision'}

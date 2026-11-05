@@ -79,9 +79,9 @@ test("compact iPhone-sized God's Eye loads records without auto-starting WebGL",
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/pwa/");
   await waitForSession(page);
-  await page.locator('.function-grid [data-view="gods-eye"]').click();
+  await page.locator('.command-grid [data-view="intelligence"]').click();
 
-  await expect(page.locator("#intelligence-title")).toHaveText("God's Eye");
+  await expect(page.locator("#intelligence-title")).toHaveText("Connected observations & geographic tools");
   await expect(page.locator("#intelligence-state")).toHaveAttribute("data-state", "ready");
   await expect(
     page.locator("#intelligence-content summary").filter({ hasText: "Compact fixture" }),

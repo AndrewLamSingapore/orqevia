@@ -1,7 +1,7 @@
 """Privacy-first optional OpenTelemetry instrumentation.
 
-Telemetry is disabled by default. When enabled, collection is restricted to a
-loopback OTLP/HTTP endpoint. Request/response bodies, prompts, credentials,
+Telemetry is disabled by default. Collection uses loopback or an explicitly
+configured private TLS collector. Request/response bodies, prompts, credentials,
 question text and arbitrary headers are never recorded.
 """
 
@@ -13,6 +13,7 @@ from functools import wraps
 import inspect
 import math
 import os
+from pathlib import Path
 import threading
 import time
 from typing import Any, Mapping
@@ -93,6 +94,8 @@ class ObservabilitySettings:
     environment: str = "abex-local"
     sample_ratio: float = 0.1
     service_version: str = "UNKNOWN"
+    collector_host: str = ""
+    certificate_file: str = ""
 
     @classmethod
     def from_env(cls) -> "ObservabilitySettings":
@@ -115,19 +118,34 @@ class ObservabilitySettings:
             environment=os.getenv("ORQEVIA_OTEL_ENVIRONMENT", "abex-local").strip() or "abex-local",
             sample_ratio=max(0.0, min(1.0, sample_ratio)),
             service_version=os.getenv("ORQEVIA_RUNTIME_REVISION", "UNKNOWN").strip() or "UNKNOWN",
+            collector_host=os.getenv("ORQEVIA_OTEL_COLLECTOR_HOST", "").strip().lower(),
+            certificate_file=os.getenv("ORQEVIA_OTEL_CA_FILE", "").strip(),
         )
 
     def validated_endpoint(self) -> str:
         parsed = urlsplit(self.endpoint)
+        local = parsed.hostname in {"127.0.0.1", "localhost", "::1"}
+        # A separately recoverable private collector is opt-in, TLS-only,
+        # explicitly named by the operator, and verified with the mounted CA.
+        private_tls = (
+            bool(self.collector_host)
+            and parsed.hostname == self.collector_host
+            and parsed.scheme == "https"
+            and parsed.port == 4318
+            and bool(self.certificate_file)
+            and Path(self.certificate_file).is_absolute()
+            and Path(self.certificate_file).is_file()
+        )
         if (
             parsed.scheme not in {"http", "https"}
-            or parsed.hostname not in {"127.0.0.1", "localhost", "::1"}
+            or not (local or private_tls)
             or parsed.username
             or parsed.password
             or parsed.query
             or parsed.fragment
+            or parsed.path not in {"", "/"}
         ):
-            raise ValueError("OTLP endpoint must be a credential-free loopback URL")
+            raise ValueError("OTLP requires loopback or an explicitly configured, CA-verified private TLS collector")
         return self.endpoint
 
 
@@ -355,7 +373,8 @@ def install_observability(app, settings: ObservabilitySettings | None = None) ->
                     "deployment.environment": settings.environment,
                 }
             )
-            trace_exporter = OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces", timeout=3)
+            certificate = {"certificate_file": settings.certificate_file} if settings.certificate_file else {}
+            trace_exporter = OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces", timeout=3, **certificate)
             trace_provider = TracerProvider(
                 resource=resource,
                 sampler=ParentBased(TraceIdRatioBased(settings.sample_ratio)),
@@ -369,7 +388,7 @@ def install_observability(app, settings: ObservabilitySettings | None = None) ->
                     export_timeout_millis=3000,
                 )
             )
-            metric_exporter = OTLPMetricExporter(endpoint=f"{endpoint}/v1/metrics", timeout=3)
+            metric_exporter = OTLPMetricExporter(endpoint=f"{endpoint}/v1/metrics", timeout=3, **certificate)
             meter_provider = MeterProvider(
                 resource=resource,
                 metric_readers=[

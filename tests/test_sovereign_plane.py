@@ -23,12 +23,11 @@ def environment(tmp_path, monkeypatch):
         "ORQEVIA_SPINE_TOKEN": TOKEN,
         "ORQEVIA_PWA_OWNER_ACCOUNT_ID": "test-owner",
         "ORQEVIA_DATA_DIR": str(tmp_path),
-        "PRIME_DATA_DIR": str(tmp_path),
         "ORQEVIA_SPINE_DB": str(tmp_path / "spine.db"),
         "ORQEVIA_PWA_ORIGIN": "https://testserver",
         "ORQEVIA_OPEN_ACCESS": "0",
         "ORQEVIA_PWA_ACCESS_MODE": "pairing",
-        "PRIME_PROVIDER_CATALOG": "",
+        "ORQEVIA_PROVIDER_CATALOG": "",
     }.items():
         monkeypatch.setenv(key, value)
     app = FastAPI()

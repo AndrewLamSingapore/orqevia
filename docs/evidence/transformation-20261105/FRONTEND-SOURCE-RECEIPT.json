@@ -1,0 +1,57 @@
+{
+  "schema": "orqevia.frontend-source-receipt.v1",
+  "scope": "SOURCE_ONLY_PARENT_OWNS_BATCH_COMMIT_DEPLOYMENT",
+  "base_head": "d79ef92a6031a10a73def4a5703a4614f696d040",
+  "files": [
+    {
+      "path": "clients/pwa/browser-tests/projects.spec.mjs",
+      "bytes": 1380,
+      "sha256": "d5124ea04ad7445710c49b96c29a39542cbf6f8502b4ac34932ddd0e9863939a"
+    },
+    {
+      "path": "clients/pwa/index.html",
+      "bytes": 47952,
+      "sha256": "58e17313865475e3cb48063078a8e1c96af67c20a286902c6ca38c1c45584567"
+    },
+    {
+      "path": "clients/pwa/projects.mjs",
+      "bytes": 15176,
+      "sha256": "a053297e09421ac7d372d72c7ce3c8636c50194bfaf8e8508f0f4cbc1eeab3ba"
+    }
+  ],
+  "tests": {
+    "unit": {
+      "passed": 114,
+      "failed": 0,
+      "log": "frontend-unit-final.log"
+    },
+    "main_browser_suite": {
+      "chromium_passed": 34,
+      "firefox_passed": 34,
+      "webkit_passed": 34,
+      "transport": "verified HTTPS",
+      "logs": [
+        "browser-chromium-final.log",
+        "browser-cross-engine-final.log"
+      ]
+    },
+    "projects_recovery": {
+      "chromium_passed": 1,
+      "firefox_passed": 1,
+      "webkit_passed": 1,
+      "log": "browser-projects-final.log"
+    },
+    "later_integration": {
+      "passed": 6,
+      "scope": "Command-center tests passed before an initially mismatched Projects test assertion; Projects then fixed and verified in all engines.",
+      "log": "browser-final-integration.log"
+    }
+  },
+  "screenshots": "VISUAL-ROUTE-RECEIPT.json",
+  "limits": [
+    "Browser APIs are explicit fixtures, not live deployment evidence.",
+    "Selected Owner screenshot was not attached; upstream source/reference comparison only.",
+    "Physical mobile/PWA installation remains unverified.",
+    "No arbitrary lifecycle installer, funded wallet, financial transaction or new inference result is claimed."
+  ]
+}

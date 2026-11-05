@@ -3,7 +3,7 @@ const panel=document.getElementById('coaching-view');
 if(panel){
   const box=document.createElement('section');box.className='dashboard-card';box.id='academy-program';
   const title=document.createElement('h2');title.textContent='Probability learning';
-  const state=document.createElement('p');state.id='academy-state';state.setAttribute('role','status');state.textContent='Open Coaching to load the curriculum.';
+  const state=document.createElement('p');state.id='academy-state';state.setAttribute('role','status');state.textContent='Open Evolution to load the curriculum.';
   const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Refresh learning';
   const select=document.createElement('select');select.setAttribute('aria-label','Agent learning record');
   const retained=document.createElement('p');retained.id='academy-retention';
@@ -32,8 +32,8 @@ if(panel){
     finally{if(active===controller)active=null;}
   }
   refresh.addEventListener('click',()=>void load());select.addEventListener('change',()=>void loadMethods());
-  window.addEventListener('orqevia-view',event=>{if(event.detail?.name==='coaching')void load();});
-  window.addEventListener('orqevia-session',event=>{epoch++;active?.abort();active=null;authenticated=Boolean(event.detail?.clientId);lessons.replaceChildren();select.replaceChildren();retained.textContent='';state.textContent=authenticated?'Open Coaching to load the curriculum.':'Restore your trusted connection.';if(authenticated&&!panel.classList.contains('hidden'))void load();});
+  window.addEventListener('orqevia-view',event=>{if(event.detail?.name==='evolution')void load();});
+  window.addEventListener('orqevia-session',event=>{epoch++;active?.abort();active=null;authenticated=Boolean(event.detail?.clientId);lessons.replaceChildren();select.replaceChildren();retained.textContent='';state.textContent=authenticated?'Open Evolution to load the curriculum.':'Restore your trusted connection.';if(authenticated&&!panel.classList.contains('hidden'))void load();});
   window.addEventListener('offline',()=>{epoch++;active?.abort();active=null;state.textContent='Offline. Reconnect and refresh.';});
   window.addEventListener('online',()=>{if(!panel.classList.contains('hidden'))void load();});
 }

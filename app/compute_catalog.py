@@ -48,7 +48,7 @@ def task_tier(objective, task_class='auto'):
 
 
 def load_catalog(path=None):
-    name=path or os.getenv('PRIME_PROVIDER_CATALOG','')
+    name=path or os.getenv('ORQEVIA_PROVIDER_CATALOG','')
     if not name:return []
     data=json.loads(Path(name).read_text())
     entries=data.get('models',[])

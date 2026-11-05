@@ -246,7 +246,7 @@ def _joined_contract_event_review(body, authorization, *, actor, task_id, runtim
                 'IDENTITY_CURRENT_RUNTIME_REQUIRED')
         subject_task = joined['task_id']
         require(subject_task != task_id, 'IDENTITY_REVIEW_TASK_MUST_BE_DISTINCT')
-        root = Path(os.getenv('PRIME_DATA_DIR', '/data'))
+        root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data'))
         if bounded_event:
             root = _path(root)
             require(_path(root / 'objectives.db').is_file()
@@ -412,7 +412,7 @@ def joined_role_review(body, authorization, *, actor, task_id, runtime):
         tier = max(Tier[original.minimum_tier], task_tier(original.objective, original.task_class),
                    required_tier(original.objective, original.context))
         skills = None
-        if os.getenv('PRIME_SKILL_PACKS_ENABLED', '0') == '1':
+        if os.getenv('ORQEVIA_SKILL_PACKS_ENABLED', '0') == '1':
             from .skill_router import select_skill_pack
             skills = select_skill_pack(execution['agent_id'], original.task_class, tier)
         prompt = packed_inference_prompt(original, tier, execution['agent_id'], correlation, skills)
@@ -488,8 +488,6 @@ class BaselineProbeRequest(BaseModel):
 def baseline_probe(body: BaselineProbeRequest, authorization: str | None = Header(default=None)):
     """One authenticated, local-only execution observation; never certification."""
     authenticate_owner(authorization)
-    if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
-        raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     if not _baseline_probe_slot.acquire(blocking=False):
         raise HTTPException(429,'Baseline probe already running')
     try:
@@ -548,7 +546,7 @@ def packed_inference_prompt(body: AgentRequest, tier: Tier, actor: str, task_id:
     rather than silently removing information needed to answer the objective.
     """
     contextual = body
-    if os.getenv('PRIME_CONTEXT_PACKS_ENABLED', '0') == '1' and body.context.strip():
+    if os.getenv('ORQEVIA_CONTEXT_PACKS_ENABLED', '0') == '1' and body.context.strip():
         from .context_pack import ContextCandidate, ContextPackError, build_context_pack
         import json
         now = time.time()
@@ -601,8 +599,6 @@ def dispatch(body: AgentRequest, authorization: str | None = Header(default=None
 
 def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_task_id=None):
     authenticate_owner(authorization)
-    if os.getenv('PRIME_REGISTRY_V1_ENABLED','0') != '1':
-        raise HTTPException(503,'Registry-v1 advisory dispatch is not enabled')
     started = time.perf_counter()
     from .runtime_status import is_runtime_status,build_report,validate_report
     runtime_status=not body.deterministic_operation and is_runtime_status(body.objective,body.context)
@@ -617,7 +613,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         from pathlib import Path
         import json
         task_id=parent_task_id or str(uuid.uuid4())
-        root=Path(os.getenv('PRIME_DATA_DIR','/data'))
+        root=Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
         from .objective_api import runtime_snapshot
         runtime = runtime_snapshot()
         calculation_action = None
@@ -786,7 +782,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
         raise HTTPException(409,{'state':route.state,'reason':route.reason})
     task_id=str(uuid.uuid4())
     skill_pack=None
-    if os.getenv('PRIME_SKILL_PACKS_ENABLED','0') == '1':
+    if os.getenv('ORQEVIA_SKILL_PACKS_ENABLED','0') == '1':
         from .skill_router import SkillRegistryError, select_skill_pack
         try:
             skill_pack=select_skill_pack(actor,body.task_class,tier)

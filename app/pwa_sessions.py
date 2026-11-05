@@ -345,11 +345,24 @@ async def enroll(request:Request):
 
 @router.post('/logout')
 def logout(request:Request):
-    raw=request.cookies.get(COOKIE,'') or request.cookies.get(ORQEVIA_COOKIE,'')
-    device_raw=request.cookies.get(DEVICE_COOKIE,'')
+    def single_cookie(*names):
+        values={request.cookies.get(name,'') for name in names}-{''}
+        if len(values)>1:raise HTTPException(400,'Conflicting device credentials')
+        value=next(iter(values),'')
+        if value and not re.fullmatch(r'[A-Za-z0-9_-]{43}',value):raise HTTPException(400,'Invalid device credential')
+        return value
+    raw=single_cookie(COOKIE,ORQEVIA_COOKIE)
+    device_raw=single_cookie(DEVICE_COOKIE,ORQEVIA_DEVICE_COOKIE)
     with database() as db:
-        db.execute('UPDATE sessions SET revoked=1 WHERE session_hash=?',(digest(raw),))
-        db.execute('UPDATE devices SET revoked=1 WHERE device_hash=?',(digest(device_raw),))
+        current=db.execute('SELECT client_id,owner_account_id,role FROM sessions WHERE session_hash=?',(digest(raw),)).fetchone() if raw else None
+        remembered=db.execute('SELECT client_id,owner_account_id,role FROM devices WHERE device_hash=?',(digest(device_raw),)).fetchone() if device_raw else None
+        if current and remembered and tuple(current)!=tuple(remembered):raise HTTPException(400,'Session and device identity disagree')
+        identity=current or remembered
+        if identity:
+            # A device's opaque client identity binds both records. Never select
+            # another account/device from a conflicting caller-supplied alias.
+            db.execute('UPDATE sessions SET revoked=1 WHERE client_id=?',(identity[0],))
+            db.execute('UPDATE devices SET revoked=1 WHERE client_id=?',(identity[0],))
     response=JSONResponse({'authenticated':False})
     return _delete_credentials(response)
 

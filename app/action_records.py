@@ -311,7 +311,7 @@ _ledgers={}
 _lock=threading.Lock()
 def action_ledger():
     with _lock:
-        key=os.getenv('PRIME_DATA_DIR','/data')
+        key=os.getenv('ORQEVIA_DATA_DIR','/data')
         if key not in _ledgers:
             try:_ledgers[key]=ActionLedger(Path(key)/'action-records.jsonl')
             except Exception as exc:_ledgers[key]=UnavailableLedger(type(exc).__name__)

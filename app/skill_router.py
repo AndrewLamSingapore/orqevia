@@ -14,7 +14,7 @@ from .agent_registry import agent_record, canonical_agent_id, registered_agent_i
 from .tier_router import Tier
 
 
-SKILL_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "config" / "prime_skill_registry.json"
+SKILL_REGISTRY_PATH = Path(__file__).resolve().parent.parent / "config" / "capability_guidance.json"
 ALLOWED_TASK_CLASSES = frozenset({
     "auto", "classification", "conversation", "research", "planning", "writing",
     "coding", "architecture", "complex_reasoning",

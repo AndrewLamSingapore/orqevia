@@ -4,6 +4,9 @@ receivers:
     protocols:
       http:
         endpoint: 0.0.0.0:4318
+        tls:
+          cert_file: /run/orqevia-tls/server.crt
+          key_file: /run/orqevia-tls/server.key
 processors:
   memory_limiter:
     limit_mib: 128
@@ -21,12 +24,15 @@ exporters:
       max_megabytes: 64
       max_backups: 5
       max_days: 30
+  otlphttp/phoenix:
+    # Existing host-private trace integration; no new public listener.
+    endpoint: http://host.docker.internal:6006
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [debug, file]
+      exporters: [debug, file, otlphttp/phoenix]
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, batch]

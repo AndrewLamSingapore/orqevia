@@ -46,8 +46,8 @@ def production_health():
 
 
 def qualified_profile():
-    path=os.getenv('PRIME_QUALIFIED_PROFILE_PATH','')
-    expected=os.getenv('PRIME_QUALIFIED_PROFILE_SHA256','').lower()
+    path=os.getenv('ORQEVIA_QUALIFIED_PROFILE_PATH','')
+    expected=os.getenv('ORQEVIA_QUALIFIED_PROFILE_SHA256','').lower()
     unknown={'status':'UNAVAILABLE','profile_sha256':None,'execution_backends':{},
              'current_backend_availability':'UNMEASURED'}
     if not path or not re.fullmatch('[0-9a-f]{64}',expected):return unknown
@@ -78,7 +78,7 @@ def objective_count(root, current_task_id=None):
         base.update(status='OBSERVED',count=count)
         with sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as db:
             rows=db.execute('SELECT id,state,steps_json FROM objectives').fetchall()
-        queue_path=Path(os.getenv('PRIME_COMPUTE_QUEUE_DB',str(Path(root)/'compute-queue.db'))).resolve()
+        queue_path=Path(os.getenv('ORQEVIA_COMPUTE_QUEUE_DB',str(Path(root)/'compute-queue.db'))).resolve()
         jobs={}
         if queue_path.is_relative_to(Path(root).resolve()) and queue_path.is_file():
             with sqlite3.connect(queue_path.as_uri()+'?mode=ro',uri=True,timeout=2) as db:

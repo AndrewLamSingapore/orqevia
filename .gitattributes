@@ -94,3 +94,8 @@ governance/observations/abex-dell-reconciliation-20261013.json -text
 
 # Preserve the follow-up integration receipt bytes.
 governance/observations/abex-integration-followup-20261013.json -text
+
+# Owner directives are verbatim evidence. Preserve UTF-8 bytes and intentional
+# Markdown two-space hard line breaks, including on Windows checkouts.
+docs/owner-missions/2026-11-05/*.md -text whitespace=-blank-at-eol
+docs/owner-missions/2026-11-05/OWNER-AUTONOMY-AMENDMENT.txt -text

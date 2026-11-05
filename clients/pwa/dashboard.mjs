@@ -1,4 +1,4 @@
-import {InterfaceAPI, safeID, terminal} from './core.mjs';
+import {InterfaceAPI, safeID, terminal, canonicalView} from './core.mjs';
 
 export function telemetryFreshness(value, now=Date.now()) {
   if(value?.schema_version!=='orqevia.telemetry.v1'||typeof value.source?.instance!=='string'||typeof value.source?.revision!=='string'||!Array.isArray(value.metrics)||!Array.isArray(value.agents)||value.agents.length>1000||new Set(value.agents.map(a=>a?.agent_id)).size!==value.agents.length||value.agents.some(a=>!safeID(a?.agent_id))) return 'UNKNOWN';
@@ -158,29 +158,26 @@ if(typeof document!=='undefined') {
   const panelIds=new Set(['system-overview','live-system-health','active-tasks','live-activity']);
   function invalidatePending(){sessionEpoch++;pending?.abort();pending=null;}
   const text=(id,value)=>{if($(id))$(id).textContent=value;};
-  function view(name,updateRoute=true,panel=null){
-    const known=new Set([...document.querySelectorAll('[data-view]')].map(x=>x.dataset.view));known.add('objective');if(!known.has(name))name='home';
-    panel=name==='home'&&panelIds.has(panel)?panel:null;
-    if(updateRoute){const url=new URL(location.href);url.searchParams.set('view',name);if(panel)url.searchParams.set('panel',panel);else url.searchParams.delete('panel');history.pushState({},'',url);}
-    const intelligence=['intelligence','gods-eye'].includes(name);
-    $('intelligence-workspace')?.classList.toggle('hidden',!intelligence);
-    window.dispatchEvent(new CustomEvent('orqevia-view',{detail:{name}}));
-    $('dashboard').classList.toggle('hidden',name!=='home');
-    $('task-workspace').classList.toggle('hidden',!['objective','evidence','data & tools'].includes(name));
-    $('capability-view').classList.toggle('hidden',['home','objective','intelligence','gods-eye','coaching','plane','approvals','operations'].includes(name));
-    $('coaching-view').classList.toggle('hidden',name!=='coaching');
-    text('capability-title',name==='objective'?'New objective':name[0].toUpperCase()+name.slice(1));
-    const descriptions={agents:'Registry membership, readiness and recorded execution evidence are reported separately from current authenticated observations.',evidence:'Open your owned task to retrieve its original result and integrity-checked artifacts. Other accounts’ tasks are not exposed.','data & tools':'Upload TXT, Markdown or JSON through the existing authenticated objective interface. Live System Health reports each host metric with its current observation status.',settings:'Manage the existing server session and permissions through Your connection.',intelligence:'Use the existing objective interface for bounded analysis. Every returned result retains its own execution record.',ideas:'Submit an objective through the existing orchestrator. Results and evidence remain attached to the original task.',architecture:'Request architectural analysis through the existing authorized objective interface.',build:'Inspect the available build operations and their source-bound execution evidence. A generated response alone is not proof that code was built.',test:'Inspect available checks and their recorded outcomes. Source tests and live execution receipts retain their own evidence scope.',deploy:'Production deployment remains an owner-authorized operation; this interface has no deployment adapter.',present:'A presentation execution adapter is unavailable. Existing objectives can request a draft; no completed deck is invented.'};
-    text('capability-description',descriptions[name]||'Use the existing owned objective and task interfaces.');
+  function view(requested,updateRoute=true,panel=null){
+    const name=canonicalView(requested);
+    panel=panelIds.has(panel)?panel:null;
+    if(updateRoute||name!==requested){const url=new URL(location.href);url.searchParams.set('view',name);if(panel)url.searchParams.set('panel',panel);else url.searchParams.delete('panel');history[updateRoute?'pushState':'replaceState']({},'',url);}
+    if(document.body)document.body.dataset.view=name;
+    const shown={dashboard:name==='home','live-system-view':name==='live-systems','intelligence-workspace':name==='intelligence','knowledge-view':name==='knowledge','task-workspace':name==='missions','capability-view':['agents','workspace'].includes(name),'coaching-view':name==='evolution','depot-view':name==='assets','wallets-view':name==='wallets','settings-view':name==='settings'};
+    for(const [id,visible] of Object.entries(shown))$(id)?.classList.toggle('hidden',!visible);
+    const titles={home:'Command Center',intelligence:'Intelligence',agents:'Agents',missions:'Missions',knowledge:'Knowledge',workspace:'Workspace',assets:'Supply Depot',wallets:'Wallets & budgets','live-systems':'Live systems',evolution:'Evolution',console:'Console',settings:'Settings'};
+    text('workspace-title',titles[name]);
+    text('capability-title',titles[name]);
+    text('capability-description',name==='agents'?'Available capabilities, observed activity and assignment evidence. Registration does not mean an agent is currently executing.':'Projects, agent notebooks, recoverable files and useful construction tools.');
     $('agent-provenance-list').classList.toggle('hidden',name!=='agents');
-    for(const item of document.querySelectorAll('[data-view]'))item.setAttribute('aria-current',String(item.dataset.view===name));
-    if(name==='settings')$('account-button').click();
-    if(name==='objective')$('objective').focus();
-    if(panel)$(panel)?.scrollIntoView?.({block:'start',behavior:'smooth'});else window.scrollTo({top:0,behavior:'smooth'});
+    for(const item of document.querySelectorAll('[data-view]'))item.setAttribute('aria-current',String(canonicalView(item.dataset.view)===name));
+    window.dispatchEvent(new CustomEvent('orqevia-view',{detail:{name,requested}}));
+    if(requested==='objective')$('objective').focus();
+    if(panel)$(panel)?.scrollIntoView?.({block:'start'});else window.scrollTo({top:0});
   }
   for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>view(button.dataset.view,true,button.dataset.panel));
-  for(const button of document.querySelectorAll('[data-new-objective]'))button.addEventListener('click',()=>view('objective'));
-  for(const button of document.querySelectorAll('[data-open-task]'))button.addEventListener('click',()=>{view('evidence');$('resume-button').click();});
+  for(const button of document.querySelectorAll('[data-new-objective]'))button.addEventListener('click',()=>view('missions'));
+  for(const button of document.querySelectorAll('[data-open-task]'))button.addEventListener('click',()=>{view('missions');$('resume-button').click();});
   window.addEventListener('orqevia-open-view',e=>view(e.detail.name,true,e.detail.panel));
   const route=()=>{const params=new URL(location.href).searchParams;view(params.get('view')||'home',false,params.get('panel'));};
   window.addEventListener('popstate',route);

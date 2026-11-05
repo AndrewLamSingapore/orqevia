@@ -23,18 +23,19 @@ def component_hash_matches(path, expected):
     return any(hashlib.sha256(value).hexdigest()==expected for value in (raw,lf,crlf))
 
 def validate():
-    from check_canonical_state import main as check_current
-    from check_status_authority import validate_status_authority
-    check_current()
-    validate_status_authority()
+    try:
+        from .check_canonical_state import validate_source
+    except ImportError:
+        from check_canonical_state import validate_source
+    source = validate_source(ROOT)
     manifest=json.loads((ROOT/'system.manifest.json').read_text())
     for item in manifest['components'].values():
         path=(ROOT/item['path']).resolve()
         assert path.is_relative_to(ROOT)
         assert component_hash_matches(path,item['sha256'])
     registry=json.loads((ROOT/'config/agent_registry.json').read_text())
-    assert len(registry['agents'])==21
-    assert len({a['agent_id'] for a in registry['agents']})==21
+    assert registry['agents']
+    assert len({a['agent_id'] for a in registry['agents']})==len(registry['agents'])
     files=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard'],cwd=ROOT,text=True).splitlines()
     findings=[]
     for name in sorted(set(files)):
@@ -51,5 +52,5 @@ def validate():
         assert schema['$schema']=='https://json-schema.org/draft/2020-12/schema'
         assert schema['type']=='object' and isinstance(schema['properties'],dict)
         assert isinstance(schema.get('required',[]),list)
-    return {'status':'PASS','files_checked':len(set(files)),'registry_agents':21,'schema_check':'JSON parsing and top-level contract invariants; not a full metaschema validator','secret_pattern_findings':0,'secret_scan_scope':'Private-key blocks and known provider/Git token patterns; human diff review still required'}
+    return {'status':'PASS','files_checked':len(set(files)),'registry_agents':source['registry_agents'],'schema_check':'JSON parsing and top-level contract invariants; not a full metaschema validator','secret_pattern_findings':0,'secret_scan_scope':'Private-key blocks and known provider/Git token patterns; human diff review still required'}
 if __name__=='__main__':print(json.dumps(validate()))

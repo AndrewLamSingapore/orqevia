@@ -319,7 +319,7 @@ def owned_work_snapshot(client_id: str, policy: dict, *, limit: int = 50) -> dic
     if type(limit) is not int or not 1 <= limit <= 50:
         return {**result, "reason": "INVALID_DISPLAY_PAGE"}
     root = Path(os.getenv("ORQEVIA_DATA_DIR", "/data"))
-    objective_path = Path(os.getenv("PRIME_DATA_DIR", "/data")) / "objectives.db"
+    objective_path = Path(os.getenv("ORQEVIA_DATA_DIR", "/data")) / "objectives.db"
     try:
         with ExitStack() as stack:
             read_policy = _policy_reader(root, stack)

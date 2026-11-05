@@ -64,8 +64,8 @@ class AgentDispatchTests(HarnessApiTests):
                                        json={**payload,'timeout_seconds':31})
             assert excessive.status_code==422
             os.environ['ORQEVIA_REGISTRY_V1_ENABLED']='0'
-            disabled=self.client.post('/api/agents/probe/baseline',headers=self.headers,json=payload)
-            assert disabled.status_code==503
+            native=self.client.post('/api/agents/probe/baseline',headers=self.headers,json=payload)
+            assert native.status_code==200
 
     def test_baseline_probe_rejects_concurrent_request(self):
         _baseline_probe_slot.acquire()
@@ -77,6 +77,7 @@ class AgentDispatchTests(HarnessApiTests):
             _baseline_probe_slot.release()
 
     def test_all_21_advisory_agents_use_direct_observed_shared_queue(self):
+        os.environ.pop('ORQEVIA_REGISTRY_V1_ENABLED',None)
         for actor in sorted(registered_agent_ids(include_orchestrator=False)):
             response=self.client.post('/api/agents/dispatch',headers=self.headers,json={
                 'capability':'responsibility.'+actor,'objective':'Classify as yes or no.',

@@ -164,3 +164,8 @@ export class InterfaceAPI {
   async artifact(item,signal) { const id=item.artifactId??item.artifact_id; if(!safeID(id)||!/^[0-9a-f]{64}$/i.test(item.sha256))throw new ClientError('input'); const value=await this.request(`/interface/v1/artifacts/${encodeURIComponent(id)}`,{mode:'bytes',retry:true,signal}); const hash=await sha256(value.bytes); if(hash!==item.sha256.toLowerCase()||hash!==value.headers.get('X-Artifact-SHA256')?.toLowerCase()||value.bytes.length!==item.bytes)throw new ClientError('integrity');return {...value,hash,id}; }
   async upload(file) { if(file.size>1024*1024||! /\.(txt|md|json)$/i.test(file.name))throw new ClientError('input'); const bytes=await file.arrayBuffer(); const result=await this.request('/pwa/api/uploads',{method:'POST',headers:{'content-type':'application/octet-stream','X-Filename':encodeURIComponent(file.name)},body:bytes}); if(result.sha256?.toLowerCase()!==await sha256(bytes)||result.bytes!==file.size)throw new ClientError('integrity');return result; }
 }
+
+// The replacement has one canonical route for each capability surface.
+export const VIEWS = Object.freeze(['home', 'intelligence', 'agents', 'missions', 'knowledge', 'workspace', 'assets', 'wallets', 'live-systems', 'evolution', 'console', 'settings']);
+const ALIASES = Object.freeze({objective:'missions', evidence:'missions', 'data & tools':'workspace', 'gods-eye':'intelligence', plane:'intelligence', coaching:'evolution', approvals:'settings', operations:'console', ideas:'workspace', architecture:'workspace', build:'workspace', test:'workspace', deploy:'workspace', present:'workspace'});
+export function canonicalView(value) { return VIEWS.includes(value) ? value : Object.hasOwn(ALIASES,value) ? ALIASES[value] : 'home'; }

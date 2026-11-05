@@ -10,7 +10,7 @@ test("an objective is submitted through the existing session boundary and reache
   await page.goto("/pwa/");
   await waitForSession(page);
 
-  await page.locator('.desktop-navigation [data-new-objective]').click();
+  await page.locator('.command-grid [data-view="missions"]').click();
   await expect(page.locator("#objective-form")).toBeVisible();
   await page.locator("#objective").fill("Verify the ORQEVIA browser workflow");
   await page.locator("#submit-button").click();

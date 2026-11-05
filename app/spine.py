@@ -16,7 +16,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 from .generated.portfolio_contracts import validate_action_envelope
-from .path_migration import migrate_legacy_database
 from . import open_access
 
 POLICY_STATES = {"AUTO", "BOUNDED_AUTO", "GATED", "PROHIBITED"}
@@ -108,7 +107,6 @@ class SpineStore:
 
     def __init__(self, path: str | None = None):
         self.path = path or os.getenv("ORQEVIA_SPINE_DB") or "/tmp/orqevia-spine.db"
-        migrate_legacy_database(self.path, "prime-spine.db")
         parent = Path(self.path).parent
         parent.mkdir(parents=True, exist_ok=True)
         self._init()
@@ -265,7 +263,7 @@ class SpineStore:
                 "correlation_id": item["correlation_id"],
                 "request": {"action": item["action_type"], "parameters": envelope.get("parameters", {}), "actor": envelope.get("actor_id")},
                 "evidence": record.get("evidence", envelope.get("context", {}).get("evidence", [])),
-                "reasoning_route": record.get("reasoning_route", record.get("source", "deterministic_prime_spine")),
+                "reasoning_route": record.get("reasoning_route", record.get("source", "deterministic_action_boundary")),
                 "policy": {"state": item["policy_state"], "record": record},
                 "approval": None if not approval else {"status": approval["status"], "decided_at": approval["decided_at"], "decision": approval["decision_note"]},
                 "result": {"execution_status": item["execution_status"], "verification": verification},
@@ -302,7 +300,7 @@ class StableSpine:
         decision = classify_action(envelope, self.store.get_trust(str(envelope["action"])))
         verification = Verification().as_dict()
         record = dict(decision_record or {})
-        record.setdefault("source", "deterministic_prime_spine")
+        record.setdefault("source", "deterministic_action_boundary")
 
         state = decision["state"]
         execution_status = "AUTHORIZED"

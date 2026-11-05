@@ -1,0 +1,26 @@
+# One release artifact, separate service containers and one logical coordinator.
+# Reuse the retained dependency image; do not pull or replace installed models.
+ARG BASE_IMAGE=orqevia:main-16f1587
+FROM ${BASE_IMAGE}
+WORKDIR /app
+COPY requirements.runtime-overlay-linux.lock /tmp/orqevia-runtime-overlay.lock
+RUN python -m pip install --no-cache-dir --no-deps --only-binary=:all: --require-hashes --index-url https://pypi.org/simple -r /tmp/orqevia-runtime-overlay.lock
+# Preserve prior program bytes outside the import/static roots. User data lives
+# in the existing /data volumes and is never changed by this build.
+RUN mkdir -p /opt/orqevia-retired-source && mv /app/app /opt/orqevia-retired-source/app && mv /app/config /opt/orqevia-retired-source/config
+COPY app /app/app
+COPY config /app/config
+COPY clients/pwa /app/clients/pwa
+COPY clients/public /app/clients/public
+COPY clients/shared /app/clients/shared
+COPY skills /app/skills
+COPY scripts/intelligence_healthcheck.py /app/scripts/intelligence_healthcheck.py
+COPY governance/golden-gen4-manifest.json /app/governance/golden-gen4-manifest.json
+COPY governance/agent-cert-verifier-azure-pins.json /app/governance/agent-cert-verifier-azure-pins.json
+ARG ORQEVIA_RUNTIME_REVISION
+ENV ORQEVIA_RUNTIME_REVISION=${ORQEVIA_RUNTIME_REVISION} \
+    ORQEVIA_INTERFACE_RUNTIME_REVISION=${ORQEVIA_RUNTIME_REVISION} \
+    ORQEVIA_COACHING_SOURCE_REVISION=${ORQEVIA_RUNTIME_REVISION} \
+    ORQEVIA_SOURCE_REVISION=${ORQEVIA_RUNTIME_REVISION}
+LABEL org.opencontainers.image.revision=${ORQEVIA_RUNTIME_REVISION}
+CMD ["python", "-X", "faulthandler", "-m", "uvicorn", "app.production_entry:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]

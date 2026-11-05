@@ -23,7 +23,6 @@ def environment(tmp_path, monkeypatch):
         "ORQEVIA_SPINE_TOKEN": TOKEN,
         "ORQEVIA_PWA_OWNER_ACCOUNT_ID": OWNER,
         "ORQEVIA_DATA_DIR": str(tmp_path),
-        "PRIME_DATA_DIR": str(tmp_path),
         "ORQEVIA_COLLECTIVE_ENABLED": "1",
         "ORQEVIA_PWA_ORIGIN": "https://testserver",
         "ORQEVIA_PWA_ACCESS_MODE": "pairing",

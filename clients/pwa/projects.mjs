@@ -211,7 +211,7 @@ $("workflow-form").addEventListener("submit", async event => {
   }
 });
 
-$("refresh-runs").addEventListener("click", () => loadRuns().catch(error => setMessage(error.message, true)));
+$("refresh-runs").addEventListener("click", () => loadRuns().then(() => setMessage("Project runs refreshed.")).catch(error => setMessage(error.message, true)));
 
 async function loadNotebooks() {
   try {
@@ -368,4 +368,7 @@ for (const button of document.querySelectorAll("[data-tab]")) {
     await loadTemplates();
     await loadRuns();
   }
-})();
+})().catch(error => {
+  if (!session) $("session-state").textContent = "Connection unavailable";
+  setMessage(`Project tools unavailable: ${error.message}. Use Refresh to retry, or restore your connection in Command Center.`, true);
+});

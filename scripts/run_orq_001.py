@@ -27,14 +27,13 @@ PROJECT_ID = "ORQ-001"
 BASE_URL = os.getenv("ORQ001_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 OUTPUT = Path(os.getenv("ORQ001_OUTPUT", "/data/orq-001"))
 STATE_PATH = OUTPUT / "orq-001-run-state.json"
-TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or os.getenv("PRIME_SPINE_TOKEN") or "").strip()
+TOKEN = (os.getenv("ORQEVIA_SPINE_TOKEN") or "").strip()
 SOURCE_REVISION = (
     os.getenv("ORQEVIA_RUNTIME_REVISION")
-    or os.getenv("PRIME_RUNTIME_REVISION")
     or os.getenv("ORQEVIA_INTERFACE_RUNTIME_REVISION")
     or "UNKNOWN"
 )
-IMAGE_DIGEST = os.getenv("ORQEVIA_RUNTIME_IMAGE_DIGEST") or os.getenv("PRIME_RUNTIME_IMAGE_DIGEST") or "UNKNOWN"
+IMAGE_DIGEST = os.getenv("ORQEVIA_RUNTIME_IMAGE_DIGEST") or "UNKNOWN"
 
 
 def utcnow() -> str:
@@ -638,7 +637,7 @@ def main() -> None:
             "queue_metrics": queue_metrics,
             "registry_dispatch_flag": {
                 "ORQEVIA_REGISTRY_V1_ENABLED": os.getenv("ORQEVIA_REGISTRY_V1_ENABLED"),
-                "PRIME_REGISTRY_V1_ENABLED": os.getenv("PRIME_REGISTRY_V1_ENABLED"),
+                "ORQEVIA_NATIVE_DISPATCH": os.getenv("ORQEVIA_NATIVE_DISPATCH"),
             },
         },
         "events": [],

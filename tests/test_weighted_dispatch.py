@@ -11,7 +11,7 @@ from tests.test_weighted_decision import request
 
 @pytest.fixture(autouse=True)
 def calculator_storage(monkeypatch, tmp_path):
-    monkeypatch.setenv("PRIME_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
 
 
 def test_a04_dispatch_calculates_persists_artifact_and_records_real_tool_actions(api, tmp_path, monkeypatch):

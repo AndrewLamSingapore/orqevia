@@ -3,7 +3,6 @@ import json
 import sqlite3
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -179,44 +178,10 @@ def test_unknown_read_does_not_initialize_objective_or_lens_storage(client,tmp_p
     assert not (tmp_path/'evidence-lens.db').exists()
 
 
-def test_owner_control_exposes_explicit_capture_and_read_only_proof(client):
-    page=client.get('/control')
+def test_owner_control_uses_canonical_console_and_retires_legacy_renderer(client):
+    page=client.get('/control', follow_redirects=False)
     script=client.get('/control/app.js')
-    assert page.status_code==200 and script.status_code==200
-    assert 'id="what-happened"' in page.text
-    assert 'id="record-proof"' in page.text
-    assert 'id="prove-it"' in page.text
-    assert 'Record proof explicitly' in script.text
-    assert "response.status===404 && method==='prove'" in script.text
-    assert "'Objective not found.'" in script.text
-    assert "el('record-proof').onclick=()=>lens('record')" in script.text
-    assert "el('prove-it').onclick=()=>lens('prove')" in script.text
-    assert 'innerHTML' not in script.text
-    assert 'Evidence producer:' in script.text
-    assert 'Not proven:' in script.text
-    assert 'Time freshness:' in script.text
-    source=Path(production_entry.__file__).with_name('production_control.js').read_text(encoding='utf-8')
-    assert "method==='record' ? {method:'POST'" in source
-    assert "method==='happened' ? 'objectives/' : 'evidence/from-objective/'" in source
-
-
-def test_one_shot_live_canary_records_only_unverified_synthetic_proof(client, monkeypatch):
-    from scripts import lens_live_canary
-
-    def local_transport(base, method, path, *, payload=None, origin=None):
-        assert base == ORIGIN
-        headers = {'Origin': origin} if origin else {}
-        response = client.request(method, path, json=payload, headers=headers)
-        return response.status_code, response.content
-
-    monkeypatch.setattr(lens_live_canary, '_request', local_transport)
-    result = lens_live_canary.run(ORIGIN)
-    assert result['integrity'] == 'VALID'
-    assert result['currentness'] == 'CURRENT'
-    assert result['verification'] == 'UNVERIFIED'
-    assert result['model_invoked'] is False
-    assert result['scope'] == 'ONE_DETERMINISTIC_LOCAL_SYNTHETIC_OBJECTIVE'
-    readback = client.get('/control/api/evidence/from-objective/' + result['task_id'])
-    assert readback.status_code == 200
-    assert readback.json()['record_id'] == result['record_id']
-    assert readback.json()['proof']['time_freshness'] == 'UNKNOWN'
+    assert page.status_code==307 and script.status_code==410
+    assert page.headers['location']=='/pwa/?view=console'
+    assert page.headers['cache-control']=='no-store'
+    assert 'record-proof' not in page.text+script.text

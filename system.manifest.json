@@ -1,9 +1,7 @@
 {
-  "schema_version": "1.0.0",
-  "architecture_version": "JARVIS PRIME Architecture v1",
+  "schema_version": "1.1.0",
   "source_revision": {
-    "resolution": "git rev-parse HEAD at build; recorded in external build receipt",
-    "predecessor": "f289ce06dec167fd1028f949134aa2c2bb19b930"
+    "resolution": "git rev-parse HEAD at build; recorded in external build receipt"
   },
   "components": {
     "registry": {
@@ -33,7 +31,6 @@
     "CLOUD_MINI",
     "CLOUD_FLAGSHIP"
   ],
-  "governance": "DIRECT_OBSERVED_WITH_NARROW_CONSEQUENTIAL_CONTROLS",
   "client_types": [
     "DELL",
     "PWA",
@@ -53,7 +50,7 @@
   "evidence_manifest_version": "1.0.0",
   "evidence_index": "docs/evidence-index.v1.json",
   "historical_dell_readme": "clients/dell/README.md is pinned historical initial-delivery documentation, not current production state",
-  "canonical_operational_source": "governance/operational-manifest.json",
-  "authority_scope": "SUBORDINATE_PRODUCT_COMPONENT_MANIFEST",
-  "ecosystem_release_id": "jarvis-prime-unified-2026-09-15"
+  "product": "ORQEVIA",
+  "execution_model": "DIRECT_TASK_DISPATCH",
+  "verification_scope": "SOURCE_INTEGRITY_ONLY"
 }

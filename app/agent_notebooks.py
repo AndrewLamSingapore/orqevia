@@ -23,7 +23,6 @@ from typing import Any, Callable, Iterable, Mapping
 from urllib.request import Request, urlopen
 
 from .agent_registry import RegistryError, canonical_agent_id, load_agent_registry, registered_agent_ids
-from .path_migration import migrate_legacy_database
 
 SCHEMA_VERSION = 1
 SECTIONS = (
@@ -174,7 +173,6 @@ class AgentNotebookStore:
     ) -> None:
         data_dir = Path(os.getenv("ORQEVIA_DATA_DIR", "/data").strip() or "/data")
         self.path = Path(path or os.getenv("ORQEVIA_MEMORY_DB") or data_dir / "orqevia-memory.db")
-        migrate_legacy_database(self.path, "jarvis-memory.db")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._embedder = embedder or self._default_embedder
         self._lock = threading.RLock()

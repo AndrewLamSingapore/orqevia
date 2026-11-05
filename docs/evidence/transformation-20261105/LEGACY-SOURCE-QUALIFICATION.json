@@ -1,0 +1,69 @@
+{
+  "recorded_at": "2026-11-05T01:08:22.547139+00:00",
+  "scope": "WORKTREE_SOURCE_QUALIFICATION_NOT_DEPLOYED",
+  "head_before_parent_batch_commit": "d79ef92a6031a10a73def4a5703a4614f696d040",
+  "production_changed_by_this_agent": false,
+  "final_combined_targeted_result": {
+    "passed": 210,
+    "failed": 0,
+    "elapsed_seconds": 24.3,
+    "warning": "Existing Starlette httpx TestClient deprecation"
+  },
+  "new_file_strict_lint": "PASS",
+  "new_file_format": "PASS",
+  "source_integrity_check": {
+    "status": "PASS",
+    "components": 4,
+    "capability_identities": 21,
+    "scope": "SOURCE_INTEGRITY_NOT_DEPLOYMENT"
+  },
+  "source_files": {
+    "app/__init__.py": "a9c5bb17331311272c688416c4814d7530a3fb8be7b82dfb2458aeebd98797cb",
+    "app/action_records.py": "ffd69bfebea34b9282ab0b75d0324da11ff830cbc27383df2de3c888f3b47ba5",
+    "app/agent_cert_event_api.py": "904503343880de3e9adc0c4914e2114be64ff39f52df1852068cbced21e9123d",
+    "app/agent_dispatch_api.py": "df936eeeaffde570eac66ab59f559616846c3c65f7bfe7f4017ede7d7ea56123",
+    "app/agent_registry.py": "75b4365dcfb55557506cc6c1d4c7e642ceb2dfddd0f9a3318d482fa38fc14159",
+    "app/compute_catalog.py": "dc613d2380e288aa0d0572d0c3df5f11481c2426525b7bc8aa1cfeaf59e5a218",
+    "app/interface_telemetry.py": "c252f384e174cbe32c6c5bccc2e1b2c0027e67ae781bd336fe52799d89106524",
+    "app/objective_api.py": "13c9c2afd10f074987da14d854f2d163382faa41d2c2a3db6bd9e0a9e5347f3c",
+    "app/runtime_status.py": "7bc23999f98f05692320fb227ef041b35e28f405e554b8e620b5950d6a5d1dd6",
+    "app/skill_router.py": "eb9bce3add5bab39b3e544605e962f9737ce19cdbb4a369305c051100562adb9",
+    "app/spine.py": "d32d8be31761bbf33af4334cfc3ff2433f6cd4c1e01c6dd46b6636d899e4868b",
+    "app/workspace_observation.py": "baafe7083b993a633d25f10e41b10dbd973cb78c7cf18f15702b6c8afada3acd",
+    "app/memory.py": "abe5c3f2d3cdce06d4fc009180b92a19c4590fa7de0b06fd343c1bdda4d65ed4",
+    "app/agent_notebooks.py": "7f48b30646570231cc41083259a1d85f8d33bc33683b205e4d9bba6129d8baea",
+    "app/production_survival.py": "f64131c6857b6683b9c5fa782b4eddda10557053a5d909fa1faced89ec28b5c9",
+    "app/public_site.py": "62f2fdbf7cb57733dd9c0e38da38da07404c3fc61974adfe8dfbf2dd63b7011b",
+    "app/production_entry.py": "a6c3dfb84bced70bc42b85d022e4ce878d76b1f486acffc53c14940bc4f36508",
+    "app/orqevia_bridge.py": "3e7035bac385b499e8af7444e10497002ef64b340343698ac6eac2d1c1596fb5",
+    "app/evidence_lens_bridge.py": "aab728793d45960e5caf1e4fdab60e37581909896f2310715ad002b7fb82df52",
+    "scripts/check_canonical_state.py": "caf0a29eca112cff418fc44fb19cdf48d06ce1cbf806e03c685d65d5fdaf6574",
+    "scripts/validate_canonical.py": "2c4255b899717567e146103eae5822467d0f8eff261dd7d19b6ecdd333d2608f",
+    "scripts/lens_live_canary.py": "7564a9c7793eaad8209b1d407536e0bd0e0f8a03aed51a4062f9c4838fb1ddde",
+    "system.manifest.json": "35c54cbe118100c83a3c93229f3079ea3d13c287febc82b78f0c8582597b17b8",
+    "config/capability_guidance.json": "cdfd3b9bdb9b51bba5ad0773bacfb22791827fa0a20381b8f39d998c24fbb879",
+    "tests/test_native_runtime_configuration.py": "d3bee272c5d8ee41b2df95ac83d856b83e3fea61e534958a23a615921ddfa8ac",
+    "tests/test_evidence_lens_bridge.py": "2c950cad959c2f37b8543bba431053d4cfb9d3e18aacd1598fad9cfdfa3a13ff",
+    "tests/test_canonical_state.py": "549410527d55809496444c740b88ba33e25d248e7ab1f5ddb16b494a84d55322"
+  },
+  "archived_files": {
+    "pre-retirement-source/PLAN.md": "1541e7cffd27a9b2ba99fe4ac908ea0eff7532fb0394e3efc64fc8bf1d0dd72a",
+    "pre-retirement-source/README.md": "beddd949239c924f5308e2b5a34fa3e0051198212740991431358b54762b2169",
+    "pre-retirement-source/system.manifest.json": "a26b4880e2d03d90d42c7787fb73e4bc5e3771cec3655fb9cd952cd0cc4dca30",
+    "pre-retirement-source/app/protected_env.py": "19bad1df6ff123fda53883044bc30decf04ddaa54debd0153604fdc243092c74",
+    "pre-retirement-source/app/__init__.py": "42c8bddde40cdf1daed076c4ae109006f91c94004e51b368d9088d9e2a067d29",
+    "pre-retirement-source/config/prime_skill_registry.json": "cdfd3b9bdb9b51bba5ad0773bacfb22791827fa0a20381b8f39d998c24fbb879",
+    "pre-retirement-source/scripts/check_canonical_state.py": "8bce3bc3246ad85c16b1fe4996893e88ef284e6011ed1392cbcb14c995c63250",
+    "pre-retirement-source/scripts/lens_live_canary.py": "18c613c95299a992d47f8680e55b7b6b5d5239b80c2220f7117dc2bee47cadf8",
+    "pre-retirement-source/scripts/validate_canonical.py": "ce118c9e304b7a549f0065f08f12bc0710a6ad1c4659376418f2d11a8b38014d",
+    "pre-retirement-source/tests/test_canonical_state.py": "588b3a661b186ceda0f8a39898ed8c6146b912a58c0ccb359d134c099479555e",
+    "retired-interface-source/production_control.html": "70094edba8b5696c2b903a1a97434b22242a5859aa41e7ccdf30cb82c2135acb",
+    "retired-interface-source/production_control.js": "a18c4e6c94b98079d274f53b000fd136295d232102feb670b0b40cac8d7a6f2e"
+  },
+  "remaining_limitations": [
+    "Parent must run consolidated full suite, CI and deployment.",
+    "Historical source identifiers/capability aliases remain; management graph is no longer mandatory for direct capability loading.",
+    "No production latency/cognitive improvement claim from this source qualification.",
+    "Private intelligence old static files require deployment no-host-port verification."
+  ]
+}
