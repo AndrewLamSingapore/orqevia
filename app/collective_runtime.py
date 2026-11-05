@@ -937,9 +937,9 @@ async def reconcile_loop() -> None:
         await asyncio.sleep(60)
 
 
-def board_status(principal: CollectivePrincipal) -> dict:
+def board_status(principal: CollectivePrincipal, *, verify_integrity: bool = False) -> dict:
     _bound(principal)
-    snapshot = get_store().snapshot(principal)
+    snapshot = get_store().snapshot(principal, verify_integrity=verify_integrity)
     return {
         **snapshot,
         "adapters": dict(_LAST_STATE),

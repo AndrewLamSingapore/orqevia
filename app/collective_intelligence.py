@@ -2018,7 +2018,7 @@ class CollectiveStore:
                         missing.append({"dependency_id": dependency["id"], "missing_id": dependency["data"][key]})
         return {"missing": missing, "bounded": len(dependencies) == 200}
 
-    def metrics(self, p: CollectivePrincipal) -> dict:
+    def metrics(self, p: CollectivePrincipal, *, verify_integrity: bool = True) -> dict:
         started = time.perf_counter()
         with self.connect() as db:
             rows = db.execute(
@@ -2086,7 +2086,27 @@ class CollectiveStore:
         total = lambda kind: sum(counts.get(kind, {}).values())
         state = lambda kind, name: counts.get(kind, {}).get(name, 0)
         agents = total("agents")
-        integrity = self.integrity(p)
+        if verify_integrity:
+            integrity = self.integrity(p)
+            registry_health = "PASS" if integrity["pass"] else "FAIL"
+        else:
+            # Current counts are useful without replaying the entire immutable
+            # history on every dashboard poll. Never imply an unchecked PASS or
+            # reuse an earlier verification as evidence of current integrity.
+            integrity = {
+                "status": "NOT_CHECKED",
+                "pass": None,
+                "sqlite_quick_check": None,
+                "foreign_keys": None,
+                "audit_chain": None,
+                "events_checked": 0,
+                "materialized_records_match_audit": None,
+                "chain_head": None,
+                "observed_at": None,
+                "scope": "Tenant/owner event chain; SQLite structural checks are database-wide",
+                "reason": "Full integrity verification was not requested; current metrics grant no execution authority",
+            }
+            registry_health = "NOT_CHECKED"
         return {
             "api_version": "1.0",
             "scope": {"tenant_id": p.tenant_id, "owner_id": p.owner_id},
@@ -2135,7 +2155,7 @@ class CollectiveStore:
                 "awaiting_approval": state("gaps", "AWAITING_APPROVAL"),
                 "reopened": reopen_counts.get("gap.reopen", 0),
             },
-            "registry_health": "PASS" if integrity["pass"] else "FAIL",
+            "registry_health": registry_health,
             "integrity": integrity,
             "resources": {
                 "sqlite_bytes": self.path.stat().st_size,
@@ -2151,11 +2171,11 @@ class CollectiveStore:
             "authority": "READ_ONLY_MEASUREMENTS",
         }
 
-    def snapshot(self, p: CollectivePrincipal) -> dict:
+    def snapshot(self, p: CollectivePrincipal, *, verify_integrity: bool = True) -> dict:
         return {
             "api_version": "1.0",
             "observed_at": self._now(),
-            "metrics": self.metrics(p),
+            "metrics": self.metrics(p, verify_integrity=verify_integrity),
             "claims": self.query(p, "knowledge_claims", filters={"limit": 100}),
             "challenges": self.query(p, "knowledge_challenges", filters={"limit": 100}),
             "puzzles": self.query(p, "puzzles", filters={"limit": 100}),

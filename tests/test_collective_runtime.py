@@ -39,6 +39,24 @@ def complete(queue, result, *, agent="a01", prompt="Inspect actual fixture sourc
     return queue.finish(job["id"], result=result, inference_receipt={"model": "fixture-model"})
 
 
+def test_routine_board_poll_avoids_full_replay_and_keeps_configured_owner_scope(runtime, monkeypatch):
+    rt, _, _, owner = runtime
+    store = rt.get_store()
+
+    def expensive_replay(_):
+        pytest.fail("Dashboard polling must not invoke the full audit replay")
+
+    monkeypatch.setattr(store, "integrity", expensive_replay)
+    for _ in range(2):
+        status = rt.board_status(owner)
+        assert status["metrics"]["registry_health"] == "NOT_CHECKED"
+        assert status["metrics"]["integrity"]["pass"] is None
+        assert status["metrics"]["agents"]["registered"] == 21
+    other = CollectivePrincipal(owner.tenant_id, "other-owner", "other-session", roles=frozenset({"OWNER"}))
+    with pytest.raises(CollectiveDenied):
+        rt.board_status(other)
+
+
 def test_completed_job_publication_actual_digest_private_notebook_idempotency(runtime):
     rt, queue, notebooks, owner = runtime
     job = complete(queue, "This source-bound fixture result remains a hypothesis.")
