@@ -796,7 +796,7 @@ def dispatch_request(body: AgentRequest, authorization: str | None, *, parent_ta
     if prompt_bytes > budget_bytes:
         raise HTTPException(413, 'Inference prompt exceeds configured input budget')
     from .compute_queue_api import queue
-    path = [actor] if record['can_delegate'] else [record['reports_to'],actor]
+    path = [actor]
     routing_ms=(time.perf_counter()-started)*1000
     ledger=action_ledger()
     action=ActionRecord(task_id,actor,'inference.enqueue','compute-queue',

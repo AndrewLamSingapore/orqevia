@@ -14,7 +14,7 @@ from pydantic import Field
 
 from .agent_dispatch_api import AgentRequest, dispatch_request
 from .agent_registry import RegistryError, agent_record, canonical_agent_id, responsibility_owner
-from .agent_runtime import DOMAIN_CHILDREN
+from .capability_selection import select_capability
 from . import compute_queue_api
 from .client_auth import authenticate_owner
 from .ready_work import WorkItem, run_ready_work
@@ -377,17 +377,7 @@ def dispatch_ready_capabilities(capabilities, run, *, priority='normal'):
 
 def select_capabilities(objective: str) -> list[str]:
     """Pick one default reasoning owner; callers may explicitly request more."""
-    text=objective.lower()
-    scored=[]
-    for domain,children in DOMAIN_CHILDREN.items():
-        for actor,keywords in children:
-            score=sum(keyword in text for keyword in keywords)
-            if score:
-                scored.append((score,domain,actor))
-    scored.sort(key=lambda row:(-row[0],row[1],row[2]))
-    if not scored:
-        return ['responsibility.a02']
-    return ['responsibility.'+canonical_agent_id(scored[0][2])]
+    return [select_capability(objective)]
 
 
 def connect(*, read_only=False):

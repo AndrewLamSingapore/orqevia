@@ -1,0 +1,19 @@
+{
+  "schema": "orqevia.historical-source-archive.v1",
+  "source_revision": "7ff5bf0562ba3b91c84eb41d3dc93f181de962ab",
+  "scope": "DATED_PORTFOLIO_RECONCILIATION_NOT_PRODUCT_RUNTIME_AUTHORITY",
+  "files": [
+    {
+      "source": "tests/test_portfolio_reconciliation.py",
+      "archive": "test_portfolio_reconciliation.py.txt",
+      "bytes": 70481,
+      "sha256": "333abc13dbc099f0e49d94845d66f92ab192211e26851163cec739419bed1b87"
+    },
+    {
+      "source": "STATUS.md",
+      "archive": "STATUS.before-resume.md.txt",
+      "bytes": 232560,
+      "sha256": "499ca3f31b3a6042fed3a0394c7d5a7ea8e1ab821295660c700d71bd895c2c91"
+    }
+  ]
+}

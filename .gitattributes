@@ -114,3 +114,6 @@ clients/pwa/vendor/MAPLIBRE-LICENSE.txt -text
 clients/pwa/vendor/MAPLIBRE-ASSET-PROVENANCE.json -text
 clients/pwa/vendor/maplibre-icons/*.svg -text
 docs/third-party/maplibre-gl/6.14.0/maplibre-gl.css -text
+
+# Retired portfolio checks and their baseline are exact historical evidence.
+docs/history/portfolio-reconciliation-20261106/** -text whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof

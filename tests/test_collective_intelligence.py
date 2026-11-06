@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
@@ -1128,3 +1129,54 @@ def test_light_metrics_and_explicit_verification_preserve_other_owner_isolation(
     assert verification["registry_health"] == "FAIL"
     assert verification["integrity"]["audit_chain"] is True
     assert verification["integrity"]["materialized_records_match_audit"] is False
+
+
+@pytest.mark.parametrize("writer_action", ["audited_append", "materialized_tamper"])
+def test_integrity_uses_one_snapshot_while_an_independent_writer_commits(board, monkeypatch, writer_action):
+    store, owner, _, _, _ = board
+    existing = claim(store, owner, title="Existing independently checked evidence")
+    baseline = store.integrity(owner)
+    writer = CollectiveStore(store.path)
+    reader_thread = threading.get_ident()
+    replay_started = threading.Event()
+    writer_finished = threading.Event()
+    original_digest = digest
+
+    def commit_during_replay():
+        assert replay_started.wait(timeout=5), "Reader did not reach audit replay"
+        try:
+            if writer_action == "audited_append":
+                source(writer, owner, "Independent writer committed during integrity replay")
+            else:
+                with writer.connect() as database:
+                    database.execute(
+                        "UPDATE registry_records SET state='FORGED' WHERE tenant_id=? AND owner_id=? AND id=?",
+                        (owner.tenant_id, owner.owner_id, existing["id"]),
+                    )
+        finally:
+            writer_finished.set()
+
+    def digest_while_writer_commits(value):
+        if threading.get_ident() == reader_thread and not replay_started.is_set():
+            # The complete audit query has already finished. A distinct SQLite
+            # connection must be able to commit before materialized reads start.
+            replay_started.set()
+            assert writer_finished.wait(timeout=5), "Read verification blocked the independent WAL writer"
+        return original_digest(value)
+
+    monkeypatch.setattr("app.collective_intelligence.digest", digest_while_writer_commits)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(commit_during_replay)
+        observed = store.integrity(owner)
+        future.result(timeout=5)
+
+    assert observed == baseline
+    after_commit = store.integrity(owner)
+    if writer_action == "audited_append":
+        assert after_commit["pass"] is True
+        assert after_commit["events_checked"] > baseline["events_checked"]
+        assert after_commit["chain_head"] != baseline["chain_head"]
+    else:
+        assert after_commit["audit_chain"] is True
+        assert after_commit["materialized_records_match_audit"] is False
+        assert after_commit["pass"] is False

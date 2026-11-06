@@ -2,12 +2,15 @@ import hashlib
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from scripts.sqlite_backup import (
     backup_one,
     discover_databases,
     integrity_report,
     restore_test,
     run_backup,
+    main,
 )
 
 
@@ -72,3 +75,37 @@ def test_run_backup_produces_manifest(tmp_path):
     manifest = run_backup(tmp_path / "data", tmp_path / "backups")
     assert manifest["database_count"] == 2
     assert all(item["integrity"] == "ok" for item in manifest["databases"])
+
+
+def test_restore_row_mismatch_is_a_failure_and_retained_copy_is_preserved(tmp_path):
+    source = _make_db(tmp_path / "snapshot.db")
+    destination = tmp_path / "retained-restore.db"
+    before = source.read_bytes()
+    result = restore_test(source, expected_row_counts={"parent": 4, "child": 4}, destination=destination)
+    assert result["integrity"] == "ok"
+    assert result["row_counts_match"] is False
+    assert result["status"] == "FAIL"
+    assert destination.is_file() and source.read_bytes() == before
+    restored_bytes = destination.read_bytes()
+    with pytest.raises(FileExistsError):
+        restore_test(source, destination=destination)
+    assert destination.read_bytes() == restored_bytes
+
+
+def test_foreign_key_violation_fails_restore_and_cli(tmp_path):
+    source = _make_db(tmp_path / "broken.db")
+    with sqlite3.connect(source) as db:
+        db.execute("INSERT INTO child(parent_id) VALUES(9999)")
+    assert restore_test(source)["status"] == "FAIL"
+    assert main(["verify", str(source)]) == 1
+    assert main(["restore-test", str(source)]) == 1
+
+
+def test_backup_never_overwrites_existing_recovery_copy(tmp_path, monkeypatch):
+    source = _make_db(tmp_path / "source.db")
+    monkeypatch.setattr("scripts.sqlite_backup._utc_stamp", lambda: "fixed-checkpoint")
+    first = backup_one(source, tmp_path / "backups")
+    saved = Path(first["backup"]).read_bytes()
+    with pytest.raises(FileExistsError):
+        backup_one(source, tmp_path / "backups")
+    assert Path(first["backup"]).read_bytes() == saved

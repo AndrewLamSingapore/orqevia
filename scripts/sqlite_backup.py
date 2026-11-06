@@ -46,6 +46,7 @@ def discover_databases(data_dir: str | Path) -> list[Path]:
 def integrity_report(db_path: str | Path) -> dict:
     path = Path(db_path)
     with closing(sqlite3.connect(_read_only_uri(path), uri=True, timeout=5)) as db:
+        db.execute("BEGIN")
         integrity = db.execute("PRAGMA integrity_check").fetchone()[0]
         violations = db.execute("PRAGMA foreign_key_check").fetchall()
         tables = sorted(
@@ -55,7 +56,7 @@ def integrity_report(db_path: str | Path) -> dict:
             )
         )
         row_counts = {
-            table: db.execute(f'SELECT COUNT(*) FROM "{table}"').fetchone()[0]
+            table: db.execute('SELECT COUNT(*) FROM "' + table.replace('"', '""') + '"').fetchone()[0]
             for table in tables
         }
     return {
@@ -72,6 +73,8 @@ def backup_one(src: str | Path, backup_dir: str | Path) -> dict:
     dest_dir = Path(backup_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"{source.name}.{_utc_stamp()}.bak"
+    with dest.open("xb"):
+        pass
     with closing(sqlite3.connect(_read_only_uri(source), uri=True, timeout=20)) as live:
         with closing(sqlite3.connect(dest)) as target:
             live.backup(target)
@@ -83,20 +86,33 @@ def backup_one(src: str | Path, backup_dir: str | Path) -> dict:
     }
 
 
-def restore_test(backup_path: str | Path, expected_row_counts: dict | None = None) -> dict:
+def restore_test(
+    backup_path: str | Path,
+    expected_row_counts: dict | None = None,
+    *,
+    destination: str | Path | None = None,
+) -> dict:
     backup = Path(backup_path)
     if not backup.is_file():
         return {"backup": str(backup), "status": "MISSING"}
-    with tempfile.TemporaryDirectory(prefix="orqevia-restore-test-") as tmp:
-        restored = Path(tmp) / "restored.db"
+    def restore_into(restored: Path) -> dict:
+        restored.parent.mkdir(parents=True, exist_ok=True)
+        with restored.open("xb"):
+            pass
         with closing(sqlite3.connect(_read_only_uri(backup), uri=True, timeout=20)) as source:
             with closing(sqlite3.connect(restored)) as target:
                 source.backup(target)
         report = integrity_report(restored)
-        report["status"] = "PASS" if report["integrity"] == "ok" else "FAIL"
         if expected_row_counts is not None:
             report["row_counts_match"] = report["row_counts"] == expected_row_counts
+        passed = report["integrity"] == "ok" and report["foreign_key_violations"] == 0
+        report["status"] = "PASS" if passed and report.get("row_counts_match", True) else "FAIL"
         return report
+
+    if destination is not None:
+        return restore_into(Path(destination))
+    with tempfile.TemporaryDirectory(prefix="orqevia-restore-test-") as tmp:
+        return restore_into(Path(tmp) / "restored.db")
 
 
 def run_backup(data_dir: str | Path, backup_dir: str | Path) -> dict:
@@ -124,6 +140,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     restore = sub.add_parser("restore-test", help="restore a backup to a scratch file and verify")
     restore.add_argument("backup_path")
+    restore.add_argument("--destination", help="retain the restored copy at a new, exclusive path")
 
     return parser.parse_args(argv)
 
@@ -133,9 +150,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "backup":
         print(json.dumps(run_backup(args.data_dir, args.backup_dir), indent=2, sort_keys=True))
     elif args.command == "verify":
-        print(json.dumps(integrity_report(args.db_path), indent=2, sort_keys=True))
+        report = integrity_report(args.db_path)
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if report["integrity"] == "ok" and report["foreign_key_violations"] == 0 else 1
     elif args.command == "restore-test":
-        print(json.dumps(restore_test(args.backup_path), indent=2, sort_keys=True))
+        report = restore_test(args.backup_path, destination=args.destination)
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if report["status"] == "PASS" else 1
     return 0
 
 
