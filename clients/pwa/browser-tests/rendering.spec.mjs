@@ -24,7 +24,7 @@ test('all original map icons load from same-origin SVG files under the closed po
   const backgrounds=[...controls.querySelectorAll('.maplibregl-ctrl-icon'),toggle].map(node=>getComputedStyle(node).backgroundImage);
   return {images,backgrounds,violations:globalThis.__policyFailures};
  });
- expect(measured.images).toHaveLength(31);expect(measured.images.every(image=>image.same_origin&&image.width>0&&image.height>0)).toBe(true);
+ expect(measured.images).toHaveLength(32);expect(measured.images.every(image=>image.same_origin&&image.width>0&&image.height>0)).toBe(true);
  expect(measured.backgrounds.every(image=>image==='none'||image.includes('/pwa/vendor/maplibre-icons/'))).toBe(true);
  expect(measured.violations).toEqual([]);
 });

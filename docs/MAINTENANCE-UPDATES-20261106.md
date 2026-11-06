@@ -12,6 +12,8 @@ OpenTelemetry1.45.2, pytest9.2.0, Ruff0.17.4 and pip26.3. Optional PostgreSQL
 adapter3.3.8 can be explicitly included in the common runtime image without
 selecting PostgreSQL or migrating any database. Native requirements retain the
 existing FAISS capability and update Torch2.15.0/sentence-transformers6.2.0.
+The already configured optional CPU ONNX runtime updates to1.31.1; model graph
+bytes, hashes, thread settings and fallback choice remain explicit and retained.
 
 PWA candidates: MapLibre6.16.0, Playwright1.65.0, pnpm12.18.0 and Node26 CI.
 The existing closed CSP remains unchanged. Reviewed upstream CSS SHA256 is
