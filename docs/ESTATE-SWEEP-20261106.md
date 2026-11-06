@@ -70,8 +70,11 @@ and all-ref recovery bundle are preserved. No financial authority is activated.
 ## Updates and release boundaries
 
 This batch also updates the reviewed Python dependency closure, browser assets
-and tooling. Playwright 1.64.1 respects the existing release-age policy; no
-exception is added for the too-recent 1.65 release. Native inference libraries
+and tooling. Browser automation retains Playwright 1.63.0 after reproducing the
+[upstream 1.64 native-select CSP regression](https://github.com/microsoft/playwright/issues/43497).
+The 1.65 release remains within the existing 24-hour release-age floor at the
+dated check; no age exception or CSP relaxation is added. The browser suite also
+checks that author-supplied inline styles are blocked. Native inference libraries
 and vendor binaries require their own compatibility and live receipts.
 
 The ABEX private inventory covers 81,051 folders and 253,928 files, including

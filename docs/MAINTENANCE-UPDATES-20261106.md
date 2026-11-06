@@ -15,9 +15,11 @@ existing FAISS capability and update Torch2.15.0/sentence-transformers6.2.0.
 The already configured optional CPU ONNX runtime updates to1.31.1; model graph
 bytes, hashes, thread settings and fallback choice remain explicit and retained.
 
-PWA candidates: MapLibre6.16.0, Playwright1.64.1, pnpm12.18.0 and Node26 CI.
+PWA candidates: MapLibre6.16.0, Playwright1.63.0, pnpm12.18.0 and Node26 CI.
 Playwright1.65.0 was downloaded and checked, but its publication is inside the
-existing24-hour pnpm release-age floor. Select the newest eligible1.64.1 and
+existing24-hour pnpm release-age floor. Eligible1.64.1 reproduced the upstream
+native-select CSP regression ([issue43497](https://github.com/microsoft/playwright/issues/43497)).
+Retain qualified1.63.0 with unchanged closed CSP and explicit negative style probes, and
 keep the normal frozen-lockfile policy; do not add age exclusions.
 The existing closed CSP remains unchanged. Reviewed upstream CSS SHA256 is
 `a90798a1953017790e590f7e1bd35ff103a8a4263972cb47290b78adf86f8c20`;

@@ -58,3 +58,17 @@ test('full consequential-action hashes and metadata wrap at 320 and 390 pixels',
  }
  expect(await page.evaluate(()=>globalThis.__policyFailures)).toEqual([]);
 });
+
+test('closed policy still rejects author-supplied inline styles',async({page})=>{
+ await closedPage(page);
+ const result=await page.evaluate(async()=>{
+  const before=globalThis.__policyFailures.length;
+  const node=document.createElement('p');node.id='blocked-author-style';node.textContent='Controlled policy rejection probe';
+  node.setAttribute('style','color:rgb(1, 2, 3)');document.body.append(node);
+  const style=document.createElement('style');style.textContent='#blocked-author-style{background-color:rgb(4, 5, 6)}';document.head.append(style);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  return {color:getComputedStyle(node).color,background:getComputedStyle(node).backgroundColor,violations:globalThis.__policyFailures.slice(before)};
+ });
+ expect(result.color).not.toBe('rgb(1, 2, 3)');expect(result.background).not.toBe('rgb(4, 5, 6)');
+ expect(result.violations).toContain('style-src-attr');expect(result.violations).toContain('style-src-elem');
+});
