@@ -2215,6 +2215,10 @@ class CollectiveStore:
     def integrity(self, p: CollectivePrincipal) -> dict:
         self._scope(p)
         with self.connect() as db:
+            # SELECT/PRAGMA reads do not start a transaction in sqlite3's
+            # default mode. Keep structural checks, audit replay and every
+            # materialized lookup on the same snapshot while WAL writers run.
+            db.execute("BEGIN")
             quick = db.execute("PRAGMA quick_check").fetchone()[0] == "ok"
             foreign_keys = not db.execute("PRAGMA foreign_key_check").fetchall()
             rows = db.execute(

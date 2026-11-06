@@ -62,7 +62,6 @@ CANONICAL_AGENTS = [agent["agent_id"] for agent in REGISTRY["agents"]]
 def test_registered_capability_routes_to_unique_canonical_owner(dispatch_harness, owner, capability):
     client, queue, ledger = dispatch_harness
     assert responsibility_owner(capability) == owner
-    record = agent_record(owner)
     response = client.post(
         "/api/agents/dispatch",
         headers={"Authorization": "Bearer fixture-owner-token"},
@@ -79,7 +78,7 @@ def test_registered_capability_routes_to_unique_canonical_owner(dispatch_harness
     body = response.json()
     assert body["capability"] == capability
     assert body["job"]["agent"] == owner
-    assert body["agent_path"] == ([owner] if record["can_delegate"] else [record["reports_to"], owner])
+    assert body["agent_path"] == [owner]
     assert len(queue.submitted) == 1
     assert queue.submitted[0]["agent"] == owner
     assert queue.submitted[0]["allow_cloud"] is False

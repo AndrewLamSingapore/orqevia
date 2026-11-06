@@ -1,0 +1,30 @@
+{
+  "schema": "orqevia.task-capability-routes.v1",
+  "default": "responsibility.a02",
+  "scope": "ONE_ADVISORY_CAPABILITY_NO_AUTHORITY_TRANSFER",
+  "routes": [
+    {"capability": "responsibility.a11", "terms": ["metric", "metrics", "measure", "baseline", "kpi"]},
+    {"capability": "responsibility.a12", "terms": ["analysis", "analyze", "data", "dataset"]},
+    {"capability": "responsibility.a13", "terms": ["forecast", "scenario", "projection"]},
+    {"capability": "responsibility.a14", "terms": ["quality", "provenance", "completeness", "validation"]},
+    {"capability": "responsibility.a21", "terms": ["cost", "expense", "budget", "price"]},
+    {"capability": "responsibility.a22", "terms": ["value", "revenue", "income", "benefit"]},
+    {"capability": "responsibility.a23", "terms": ["resource", "capacity", "allocation"]},
+    {"capability": "responsibility.a24", "terms": ["commercial", "market", "pricing", "business"]},
+    {"capability": "responsibility.a16", "terms": ["architecture", "design", "system", "interface"]},
+    {"capability": "responsibility.a17", "terms": ["implement", "implementation", "build", "code", "deploy", "fix"]},
+    {"capability": "responsibility.a18", "terms": ["test", "verify", "acceptance", "regression"]},
+    {"capability": "responsibility.a19", "terms": ["reliability", "failure", "resilience", "recovery"]},
+    {"capability": "responsibility.a26", "terms": ["critic", "critique", "contradiction", "challenge"]},
+    {"capability": "responsibility.a27", "terms": ["verify", "verification", "audit", "complete"]},
+    {"capability": "responsibility.a28", "terms": ["risk", "failure", "hazard", "consequence"]},
+    {"capability": "responsibility.a29", "terms": ["release", "readiness", "rollback", "ship"]},
+    {"capability": "responsibility.a07", "terms": ["evidence", "source", "support", "claim"]},
+    {"capability": "responsibility.a08", "terms": ["compare", "comparison", "benchmark", "versus"]},
+    {"capability": "responsibility.a09", "terms": ["knowledge", "synthesis", "context"]},
+    {"capability": "responsibility.a02", "terms": ["plan", "planning", "sequence", "objective"]},
+    {"capability": "responsibility.a03", "terms": ["roadmap", "milestone", "dependency"]},
+    {"capability": "responsibility.a04", "terms": ["decision", "option", "trade off", "choose"]},
+    {"capability": "responsibility.a05", "terms": ["portfolio", "initiative", "priority"]}
+  ]
+}

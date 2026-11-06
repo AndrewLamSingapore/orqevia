@@ -27,7 +27,6 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .agent_registry import agent_record, load_agent_registry
-from .agent_runtime import AgentAuthorityRuntime
 from .client_auth import authenticate_owner
 from .memory import MemoryStore
 
@@ -590,7 +589,6 @@ class ProjectWorkflowService:
     def __init__(self, store: ProjectWorkflowStore | None = None) -> None:
         self.store = store or ProjectWorkflowStore()
         self.template = load_template()
-        self.authority = AgentAuthorityRuntime()
         from .agent_notebooks import get_notebook_store
 
         self.notebooks = get_notebook_store()
@@ -663,44 +661,42 @@ class ProjectWorkflowService:
         return self.status(run_id)
 
     def _create_handoffs(self, run_id: str) -> None:
-        if self.store.handoffs(run_id):
-            return
-        for task in self.store.tasks(run_id):
-            agent = agent_record(task["agent_id"])
-            source = agent["reports_to"]
-            trace = str(uuid.uuid4())
-            event = self.authority.handoff(
-                source=source,
-                target=task["agent_id"],
-                relation="delegate",
-                depth=1 if source == "prime" else 2,
-                trace_id=trace,
-                consequential=False,
-            )
-            with self.store.transaction() as db:
+        tasks = self.store.tasks(run_id)
+        source = "workflow:" + run_id
+        # Keep the existing persistence/API shape, including historical rows.
+        # All new assignments are one transaction and carry no delegated power.
+        with self.store.transaction() as db:
+            existing = {
+                row[0] for row in db.execute("SELECT task_id FROM project_handoffs WHERE run_id=?", (run_id,))
+            }
+            for task in tasks:
+                if task["task_id"] in existing:
+                    continue
+                agent_record(task["agent_id"])
+                trace = str(uuid.uuid4())
                 db.execute(
                     """INSERT INTO project_handoffs
                     (event_id,run_id,timestamp,task_id,source_agent,target_agent,trace_id,status,allowed)
                     VALUES(?,?,?,?,?,?,?,?,?)""",
                     (
-                        event["event_id"],
+                        str(uuid.uuid4()),
                         run_id,
-                        event["timestamp"],
+                        utcnow(),
                         task["task_id"],
                         source,
                         task["agent_id"],
                         trace,
-                        event["status"],
-                        int(event["allowed"]),
+                        "DIRECT_TASK_ASSIGNMENT",
+                        1,
                     ),
                 )
                 self.store.event(
                     db,
                     run_id,
-                    "handoff_allowed",
+                    "task_assigned",
                     task_id=task["task_id"],
                     agent_id=task["agent_id"],
-                    details={"source": source, "trace_id": trace},
+                    details={"source": source, "trace_id": trace, "delegation_transfers_authority": False},
                 )
 
     def _prompt_for_task(self, run_id: str, task: dict[str, Any]) -> str:

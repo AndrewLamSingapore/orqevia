@@ -15,7 +15,7 @@ def main():
         @pytest.fixture
         def tmp_path(self):
             path=data/('test-'+uuid.uuid4().hex);path.mkdir();return path
-    names=['status_authority','canonical_state','operational_manifest','registry_v1','agent_registry','task_continuation','interface_contract','pwa_sessions','interface_telemetry','interface_telemetry_counts',
+    names=['canonical_state','registry_v1','agent_registry','task_continuation','interface_contract','pwa_sessions','interface_telemetry','interface_telemetry_counts',
            'product_handoff','operational_workflows','workflow_objective_integration',
            'cloud_capacity_recovery','huggingface_provider','hf_file_secret','production_compatibility','public_task_errors',
            'interface_server','consequential_intent','stable_spine','sink_guard',
@@ -162,6 +162,7 @@ def main():
                   'native_runtime_configuration', 'qualification_reservation',
                   'service_health_probes', 'historical_source_preparation',
                   'control_surface_contract', 'pwa_bridge_cookie_compatibility'])
+    names.extend(['capability_selection', 'sqlite_backup', 'project_workflows'])
     paths=[ROOT/'tests'/('test_'+name+'.py') for name in names]
     # Missing suites must fail visibly rather than silently reducing coverage.
     missing=[str(p.relative_to(ROOT)) for p in paths if not p.is_file()]

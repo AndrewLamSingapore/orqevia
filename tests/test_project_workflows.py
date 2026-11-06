@@ -119,6 +119,41 @@ def test_workflow_store_is_idempotent(tmp_path):
     assert len(store.tasks(first["run_id"])) == 21
 
 
+def test_direct_task_assignments_preserve_partial_history_without_reporting_parents(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ORQEVIA_MEMORY_DB", str(tmp_path / "agent-memory.db"))
+    store = ProjectWorkflowStore(tmp_path / "workflow.db")
+    service = ProjectWorkflowService(store=store)
+    request = ProjectWorkflowRequest(
+        project_key="ORQ-DIRECT",
+        title="Direct task assignment recovery",
+        idempotency_key="test-direct-0001",
+        inputs=INPUTS,
+    )
+    run = store.create(
+        request,
+        actor="owner",
+        template=service.template,
+        financials=calculate_financials(INPUTS, ScenarioParameters()),
+    )
+    run_id = run["run_id"]
+    tasks = store.tasks(run_id)
+    monkeypatch.setattr(project_workflows, "agent_record", lambda actor: {"id": actor})
+    actual_tasks = store.tasks
+    monkeypatch.setattr(store, "tasks", lambda _: tasks[:1])
+    service._create_handoffs(run_id)
+    preserved = store.handoffs(run_id)[0]
+    monkeypatch.setattr(store, "tasks", actual_tasks)
+    service._create_handoffs(run_id)
+    service._create_handoffs(run_id)
+    assignments = store.handoffs(run_id)
+    assert len(assignments) == len(tasks)
+    assert preserved in assignments
+    assert len({row["task_id"] for row in assignments}) == len(tasks)
+    assert all(row["source_agent"] == "workflow:" + run_id for row in assignments)
+    assert all(row["status"] == "DIRECT_TASK_ASSIGNMENT" and row["allowed"] for row in assignments)
+
+
 def test_worker_executes_all_agents_and_marks_restart_verified(tmp_path, monkeypatch):
     monkeypatch.setenv("ORQEVIA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("ORQEVIA_MEMORY_DB", str(tmp_path / "agent-memory.db"))
