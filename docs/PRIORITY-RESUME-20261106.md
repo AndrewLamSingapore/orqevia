@@ -50,3 +50,13 @@ general automatic routing uses one capability. Broad unseen cognitive improvemen
 generic depot installation/removal and authoritative provider balances remain
 separate evidence requirements. Wallet work remains read-only; REA/MiroFish stay
 excluded and port8081 remains retired.
+
+
+The first complete local run passed7,192 tests plus102 subtests and exposed one
+remaining historical STATUS byte-pin failure. The entire original portfolio
+reconciliation test and pre-resume STATUS are now preserved byte-for-byte under
+docs/history/portfolio-reconciliation-20261106/ with their source commit and
+hashes. Its active test verifies archive custody; it no longer freezes today's
+portfolio note or treats old product observations as current runtime policy.
+Authentication, integrity, financial controls and executable runtime tests are
+unchanged by this retirement. The failed full-run receipt remains preserved.
