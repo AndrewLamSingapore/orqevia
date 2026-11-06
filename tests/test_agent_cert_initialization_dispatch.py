@@ -47,7 +47,7 @@ def event(configured, monkeypatch):
     assert captured['observation']['state'] == 'EXECUTED'
     subject = captured['dispatch']['task_id']
     captured['objective_read'] = [200, objective_api.get_read_only(subject, 'fixture-owner')]
-    assert ledger.flush(timeout=1) is True
+    assert ledger.flush(timeout=1) is True, ledger.status()
     captured['action_records'] = ledger.path.read_bytes().decode().splitlines(keepends=True)
     captured['action_chain_join'] = action_span(captured['action_records'], task_id=subject,
         agent_id='a19', action_type=initialization_report.ACTION_TYPE, schema=initialization_report.SCHEMA,

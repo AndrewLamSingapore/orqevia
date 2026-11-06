@@ -132,7 +132,7 @@ def identity(tmp_path, monkeypatch):
         metadata = DirectExecutor(ledger).execute(action, lambda: factory.create(kind='json',
             content=json.dumps(content, ensure_ascii=False), task_id=REVIEW_TASK, creator='a26',
             provenance='Deterministic computation; zero model calls', runtime_revision=SOURCE))
-        assert ledger.flush(timeout=1) is True
+        assert ledger.flush(timeout=1) is True, ledger.status()
         retrieved, raw = factory.retrieve(metadata['artifact_id'])
         assert retrieved == metadata
         original_lines = ledger.path.read_text(encoding='utf-8').splitlines(keepends=True)
