@@ -7,7 +7,7 @@
     "registry": {
       "path": "config/agent_registry.json",
       "version": "2.0.0",
-      "sha256": "e77609902a691e879ac1ee1722fd1a5fcbb4fd99c0b4fa125b1408475b1259cb"
+      "sha256": "def01365184c9f38fa0adf007e4838ed747e5e7dfa3f0d410ca134e32e9239f7"
     },
     "interface": {
       "path": "docs/interface-contract.v1.json",
@@ -27,7 +27,7 @@
     "architecture": {
       "path": "config/runtime-architecture.json",
       "version": "1.0",
-      "sha256": "32c8726b55c504e0b05200db23ae62262792327a9351599821af6b712efdcffa"
+      "sha256": "ce3b7da81d282fb6edcb483c068293e3415f35b38a7517412cde5a801687c291"
     }
   },
   "routing": [
