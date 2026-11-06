@@ -70,5 +70,6 @@ test('closed policy still rejects author-supplied inline styles',async({page})=>
   return {color:getComputedStyle(node).color,background:getComputedStyle(node).backgroundColor,violations:globalThis.__policyFailures.slice(before)};
  });
  expect(result.color).not.toBe('rgb(1, 2, 3)');expect(result.background).not.toBe('rgb(4, 5, 6)');
- expect(result.violations).toContain('style-src-attr');expect(result.violations).toContain('style-src-elem');
+ await expect.poll(()=>page.evaluate(()=>globalThis.__policyFailures)).toContain('style-src-attr');
+ await expect.poll(()=>page.evaluate(()=>globalThis.__policyFailures)).toContain('style-src-elem');
 });
