@@ -3,14 +3,12 @@
     {
       "agent_id": "a01",
       "authority": "advisory",
-      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Strategy Lead",
+      "name": "Strategy Capability",
       "produces": "Strategic framing, priorities, decision criteria and delegated strategy work.",
       "public_description": "Strategic reasoning owner",
       "receives": "Objectives, constraints, evidence summaries and portfolio context.",
-      "reports_to": "prime",
       "role": "Strategic reasoning owner",
       "status": "registered",
       "version": "1.0.0",
@@ -115,14 +113,6 @@
       "migration_sources": [
         "a01"
       ],
-      "escalation_relationships": [
-        "prime"
-      ],
-      "allowed_delegation_targets": [
-        "a02",
-        "a04",
-        "a05"
-      ],
       "excluded_capabilities": [
         "responsibility.a02",
         "responsibility.a03",
@@ -152,19 +142,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Strategy"
     },
     {
       "agent_id": "a02",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Planning and Roadmap Agent",
       "produces": "Sequenced tasks, owners, prerequisites, acceptance criteria and escalation points.",
       "public_description": "Objective-to-task decomposition; Milestone and dependency planning",
       "receives": "Approved objectives, constraints, dependencies and available capacity.",
-      "reports_to": "lead_strategy",
       "role": "Objective-to-task decomposition; Milestone and dependency planning",
       "status": "registered",
       "version": "1.0.0",
@@ -279,10 +268,6 @@
         "a02",
         "a03"
       ],
-      "escalation_relationships": [
-        "a01"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a04",
@@ -311,19 +296,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Strategy"
     },
     {
       "agent_id": "a04",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Decision and Comparison Agent",
       "produces": "Weighted comparison, assumptions, tradeoffs and decision-ready recommendation.",
       "public_description": "Option evaluation; Structured comparison",
       "receives": "Decision question, options, criteria, evidence, uncertainty and constraints.",
-      "reports_to": "lead_strategy",
       "role": "Option evaluation; Structured comparison",
       "status": "registered",
       "version": "1.0.0",
@@ -438,10 +422,6 @@
         "a04",
         "a08"
       ],
-      "escalation_relationships": [
-        "a01"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -470,19 +450,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Strategy"
     },
     {
       "agent_id": "a05",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Portfolio and Capacity Agent",
       "produces": "Portfolio ranking, sequencing recommendations, conflicts, deferrals and rebalancing triggers.",
       "public_description": "Portfolio prioritization; Resource optimization",
       "receives": "Candidate initiatives, strategic objectives, dependencies, capacity, value estimates and risk findings.",
-      "reports_to": "lead_strategy",
       "role": "Portfolio prioritization; Resource optimization",
       "status": "registered",
       "version": "1.0.0",
@@ -597,10 +576,6 @@
         "a05",
         "a23"
       ],
-      "escalation_relationships": [
-        "a01"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -629,19 +604,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Strategy"
     },
     {
       "agent_id": "a06",
       "authority": "advisory",
-      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Research Lead",
+      "name": "Research Capability",
       "produces": "Research plan, evidence standard, specialist assignments and synthesized findings.",
       "public_description": "Research direction",
       "receives": "Research questions, decision context, source constraints and evidence gaps.",
-      "reports_to": "prime",
       "role": "Research direction",
       "status": "registered",
       "version": "1.0.0",
@@ -746,13 +720,6 @@
       "migration_sources": [
         "a06"
       ],
-      "escalation_relationships": [
-        "prime"
-      ],
-      "allowed_delegation_targets": [
-        "a07",
-        "a09"
-      ],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -782,19 +749,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Research"
     },
     {
       "agent_id": "a07",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Evidence Agent",
       "produces": "Source set, provenance, claim-to-evidence links, confidence and gaps.",
       "public_description": "Evidence discovery",
       "receives": "Research questions, source criteria, date bounds and known claims.",
-      "reports_to": "lead_research",
       "role": "Evidence discovery",
       "status": "registered",
       "version": "1.0.0",
@@ -899,10 +865,6 @@
       "migration_sources": [
         "a07"
       ],
-      "escalation_relationships": [
-        "a06"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -932,19 +894,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Research"
     },
     {
       "agent_id": "a09",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Knowledge Agent",
       "produces": "Structured knowledge, reusable summaries, links, conflicts and freshness markers.",
       "public_description": "Knowledge organization",
       "receives": "Verified findings, definitions, decisions, provenance and update signals.",
-      "reports_to": "lead_research",
       "role": "Knowledge organization",
       "status": "registered",
       "version": "1.0.0",
@@ -1050,10 +1011,6 @@
       "migration_sources": [
         "a09"
       ],
-      "escalation_relationships": [
-        "a06"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -1089,19 +1046,18 @@
           "scope": "prime-artifact-store",
           "approval": "Owner master directive grants additive application-owned artifacts; signed TAP remains mandatory"
         }
-      }
+      },
+      "division": "Research"
     },
     {
       "agent_id": "a10",
       "authority": "advisory",
-      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Data Lead",
+      "name": "Data Capability",
       "produces": "Coordinated data architecture decisions, analytical plans and governed outputs.",
       "public_description": "Data and analytics coordination",
       "receives": "Data requests, schemas, pipeline questions and architecture tradeoffs.",
-      "reports_to": "prime",
       "role": "Data and analytics coordination",
       "status": "registered",
       "version": "1.0.0",
@@ -1206,14 +1162,6 @@
       "migration_sources": [
         "a10"
       ],
-      "escalation_relationships": [
-        "prime"
-      ],
-      "allowed_delegation_targets": [
-        "a12",
-        "a13",
-        "a14"
-      ],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -1243,19 +1191,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Data"
     },
     {
       "agent_id": "a12",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Metrics and Analysis Agent",
       "produces": "Descriptive results, diagnostic findings, uncertainty and reproducible analysis notes.",
       "public_description": "KPI definition; Descriptive/diagnostic analysis",
       "receives": "Validated datasets, metric definitions, analytical question and assumptions.",
-      "reports_to": "lead_data",
       "role": "KPI definition; Descriptive/diagnostic analysis",
       "status": "registered",
       "version": "1.0.0",
@@ -1370,10 +1317,6 @@
         "a11",
         "a12"
       ],
-      "escalation_relationships": [
-        "a10"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -1402,19 +1345,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Data"
     },
     {
       "agent_id": "a13",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Forecast Agent",
       "produces": "Forecasts, intervals, scenarios, backtests, limitations and monitoring triggers.",
       "public_description": "Forecasting",
       "receives": "Time-indexed validated data, forecast horizon, drivers, constraints and loss criteria.",
-      "reports_to": "lead_data",
       "role": "Forecasting",
       "status": "registered",
       "version": "1.0.0",
@@ -1519,10 +1461,6 @@
       "migration_sources": [
         "a13"
       ],
-      "escalation_relationships": [
-        "a10"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -1552,19 +1490,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Data"
     },
     {
       "agent_id": "a14",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Data Quality Agent",
       "produces": "Completeness, consistency, validity, timeliness and reliability findings with remediation advice.",
       "public_description": "Data quality checks",
       "receives": "Datasets, schemas, lineage, validation rules and intended analytical use.",
-      "reports_to": "lead_data",
       "role": "Data quality checks",
       "status": "registered",
       "version": "1.0.0",
@@ -1669,10 +1606,6 @@
       "migration_sources": [
         "a14"
       ],
-      "escalation_relationships": [
-        "a10"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -1702,19 +1635,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Data"
     },
     {
       "agent_id": "a15",
       "authority": "advisory",
-      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Engineering Lead",
+      "name": "Engineering Capability",
       "produces": "Technical plan, delegated engineering work, integration decisions and readiness evidence.",
       "public_description": "Technical execution ownership",
       "receives": "Approved requirements, architecture constraints, risks, telemetry and quality gates.",
-      "reports_to": "prime",
       "role": "Technical execution ownership",
       "status": "registered",
       "version": "1.0.0",
@@ -1819,15 +1751,6 @@
       "migration_sources": [
         "a15"
       ],
-      "escalation_relationships": [
-        "prime"
-      ],
-      "allowed_delegation_targets": [
-        "a16",
-        "a17",
-        "a18",
-        "a19"
-      ],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -1857,19 +1780,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Engineering"
     },
     {
       "agent_id": "a16",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "required_for_execution",
       "model": "unassigned",
       "name": "Architecture Agent",
       "produces": "Architecture recommendations, decision records, interfaces, boundaries and failure assumptions.",
       "public_description": "System architecture design",
       "receives": "Requirements, system telemetry and interface, caching, consistency and CAP tradeoffs.",
-      "reports_to": "lead_engineering",
       "role": "System architecture design",
       "status": "registered",
       "version": "1.0.0",
@@ -1974,10 +1896,6 @@
       "migration_sources": [
         "a16"
       ],
-      "escalation_relationships": [
-        "a15"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2007,19 +1925,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Engineering"
     },
     {
       "agent_id": "a17",
       "authority": "restricted",
-      "can_delegate": false,
       "human_approval": "required_for_execution",
       "model": "unassigned",
       "name": "Implementation Agent",
       "produces": "Proposed code changes, migrations, implementation notes and test evidence.",
       "public_description": "Design-to-code conversion",
       "receives": "Approved design, acceptance criteria, repository context, constraints and test requirements.",
-      "reports_to": "lead_engineering",
       "role": "Design-to-code conversion",
       "status": "registered",
       "version": "1.0.0",
@@ -2125,10 +2042,6 @@
       "migration_sources": [
         "a17"
       ],
-      "escalation_relationships": [
-        "a15"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2165,19 +2078,18 @@
           "approval": "Owner master directive grants bounded safe sandbox execution; signed TAP remains mandatory",
           "native_commands": false
         }
-      }
+      },
+      "division": "Engineering"
     },
     {
       "agent_id": "a18",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Test and Verification Agent",
       "produces": "Test plan, results, defect reports, regression evidence and coverage gaps.",
       "public_description": "Functional testing; Compliance verification",
       "receives": "Requirements, implementation artifacts, interfaces, fixtures and risk scenarios.",
-      "reports_to": "lead_engineering",
       "role": "Functional testing; Compliance verification",
       "status": "registered",
       "version": "1.0.0",
@@ -2293,10 +2205,6 @@
         "a18",
         "a27"
       ],
-      "escalation_relationships": [
-        "a15"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2332,19 +2240,18 @@
           "approval": "Owner master directive grants bounded safe sandbox execution; signed TAP remains mandatory",
           "native_commands": false
         }
-      }
+      },
+      "division": "Engineering"
     },
     {
       "agent_id": "a19",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Reliability Agent",
       "produces": "Failure-mode analysis, resilience recommendations, recovery checks and stability risks.",
       "public_description": "Operational resilience evaluation",
       "receives": "Architecture, telemetry, service objectives, dependency map and failure history.",
-      "reports_to": "lead_engineering",
       "role": "Operational resilience evaluation",
       "status": "registered",
       "version": "1.0.0",
@@ -2449,10 +2356,6 @@
       "migration_sources": [
         "a19"
       ],
-      "escalation_relationships": [
-        "a15"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2482,19 +2385,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Engineering"
     },
     {
       "agent_id": "a20",
       "authority": "advisory",
-      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Commercial and Economic Lead",
+      "name": "Commercial and Economic Capability",
       "produces": "Economic framing, delegated analyses, integrated commercial case and decision advice.",
       "public_description": "Economic analysis ownership; Market and pricing analysis",
       "receives": "Commercial objective, constraints, demand evidence, cost data and resource context.",
-      "reports_to": "prime",
       "role": "Economic analysis ownership; Market and pricing analysis",
       "status": "registered",
       "version": "1.0.0",
@@ -2609,12 +2511,6 @@
         "a20",
         "a24"
       ],
-      "escalation_relationships": [
-        "prime"
-      ],
-      "allowed_delegation_targets": [
-        "a21"
-      ],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2643,19 +2539,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Economic"
     },
     {
       "agent_id": "a21",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Cost and Value Agent",
       "produces": "Cost model, unit economics, sensitivity analysis and major cost drivers.",
       "public_description": "Cost analysis; Value/ROI evaluation",
       "receives": "Resource plan, price inputs, usage assumptions, time horizon and uncertainty.",
-      "reports_to": "lead_economic",
       "role": "Cost analysis; Value/ROI evaluation",
       "status": "registered",
       "version": "1.0.0",
@@ -2770,10 +2665,6 @@
         "a21",
         "a22"
       ],
-      "escalation_relationships": [
-        "a20"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2802,19 +2693,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Economic"
     },
     {
       "agent_id": "a26",
       "authority": "advisory",
-      "can_delegate": true,
       "human_approval": "not_required",
       "model": "unassigned",
-      "name": "Independent Quality Lead",
+      "name": "Independent Quality Capability",
       "produces": "Independent critique, defects, strengths, conflicts and requested corrections.",
       "public_description": "Quality governance ownership; Independent review",
       "receives": "Work product, requirements, evidence, assumptions and review rubric.",
-      "reports_to": "prime",
       "role": "Quality governance ownership; Independent review",
       "status": "registered",
       "version": "1.0.0",
@@ -2929,13 +2819,6 @@
         "a25",
         "a26"
       ],
-      "escalation_relationships": [
-        "prime"
-      ],
-      "allowed_delegation_targets": [
-        "a28",
-        "a29"
-      ],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -2964,19 +2847,18 @@
         "responsibility.a27",
         "responsibility.a28",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Quality"
     },
     {
       "agent_id": "a28",
       "authority": "advisory",
-      "can_delegate": false,
       "human_approval": "not_required",
       "model": "unassigned",
       "name": "Risk Agent",
       "produces": "Risk register, likelihood-impact assessment, controls, owners and residual risk.",
       "public_description": "Risk identification",
       "receives": "Plans, architecture, dependencies, assumptions, controls and operating context.",
-      "reports_to": "lead_quality",
       "role": "Risk identification",
       "status": "registered",
       "version": "1.0.0",
@@ -3081,10 +2963,6 @@
       "migration_sources": [
         "a28"
       ],
-      "escalation_relationships": [
-        "a26"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -3114,19 +2992,18 @@
         "responsibility.a26",
         "responsibility.a27",
         "responsibility.a29"
-      ]
+      ],
+      "division": "Quality"
     },
     {
       "agent_id": "a29",
       "authority": "restricted",
-      "can_delegate": false,
       "human_approval": "required_for_execution",
       "model": "unassigned",
       "name": "Release Agent",
       "produces": "Release readiness decision, blocking findings, approval request and rollback conditions.",
       "public_description": "Release readiness gate",
       "receives": "Approved change set, test and verification results, risk acceptance, rollback plan and release criteria.",
-      "reports_to": "lead_quality",
       "role": "Release readiness gate",
       "status": "registered",
       "version": "1.0.0",
@@ -3231,10 +3108,6 @@
       "migration_sources": [
         "a29"
       ],
-      "escalation_relationships": [
-        "a26"
-      ],
-      "allowed_delegation_targets": [],
       "excluded_capabilities": [
         "responsibility.a01",
         "responsibility.a02",
@@ -3264,106 +3137,23 @@
         "responsibility.a26",
         "responsibility.a27",
         "responsibility.a28"
-      ]
+      ],
+      "division": "Quality"
     }
   ],
-  "last_updated": "2026-09-13",
-  "leads": [
-    {
-      "agent_id": "a01",
-      "domain": "strategy",
-      "id": "lead_strategy",
-      "model": "unassigned",
-      "name": "Strategy Lead",
-      "public_description": "Owns strategic reasoning and coordinates strategy work.",
-      "reports_to": "prime",
-      "status": "registered"
-    },
-    {
-      "agent_id": "a06",
-      "domain": "research",
-      "id": "lead_research",
-      "model": "unassigned",
-      "name": "Research Lead",
-      "public_description": "Directs research and determines what evidence is required.",
-      "reports_to": "prime",
-      "status": "registered"
-    },
-    {
-      "agent_id": "a10",
-      "domain": "data",
-      "id": "lead_data",
-      "model": "unassigned",
-      "name": "Data Lead",
-      "public_description": "Coordinates data work and analytical outputs, including database, caching, batch/stream and normalization tradeoffs.",
-      "reports_to": "prime",
-      "status": "registered"
-    },
-    {
-      "agent_id": "a15",
-      "domain": "engineering",
-      "id": "lead_engineering",
-      "model": "unassigned",
-      "name": "Engineering Lead",
-      "public_description": "Owns technical execution and coordinates engineering agents.",
-      "reports_to": "prime",
-      "status": "registered"
-    },
-    {
-      "agent_id": "a20",
-      "domain": "economic",
-      "id": "lead_economic",
-      "model": "unassigned",
-      "name": "Economic Lead",
-      "public_description": "Oversees economic analysis and commercial outcomes.",
-      "reports_to": "prime",
-      "status": "registered"
-    },
-    {
-      "agent_id": "a26",
-      "domain": "quality",
-      "id": "lead_quality",
-      "model": "unassigned",
-      "name": "Quality Lead",
-      "public_description": "Leads quality governance, standards and assurance.",
-      "reports_to": "prime",
-      "status": "registered"
-    }
-  ],
-  "numbering_policy": "Exactly21 logical agents; retain historical immutable IDs without renumbering. PRIME is an unnumbered orchestrator and aliases are not agents.",
-  "orchestrator": {
-    "authority": "coordinating",
-    "can_delegate": true,
-    "human_approval": "required_for_action",
-    "id": "prime",
-    "model": "hybrid",
-    "name": "JARVIS PRIME",
-    "produces": "Bounded task routing, synthesized decisions, recommendations, approval requests and audit events.",
-    "public_description": "Receives the objective, governs execution, routes work and coordinates all specialist agents.",
-    "receives": "Human objectives, governed system telemetry, evidence and lead outputs.",
-    "reports_to": "human_operator",
-    "role": "Cognitive Control Plane / Orchestrator",
-    "status": "registered",
-    "allowed_delegation_targets": [
-      "a01",
-      "a06",
-      "a10",
-      "a15",
-      "a20",
-      "a26"
-    ]
-  },
+  "last_updated": "2026-11-06",
   "publication_policy": {
     "allowed_fields": [
       "agent_id",
       "name",
       "role",
       "authority",
-      "can_delegate",
       "status",
       "model",
       "human_approval",
-      "public_description"
+      "public_description",
+      "division",
+      "capability_requirements"
     ],
     "default": "deny",
     "forbidden_fields": [
@@ -3377,198 +3167,11 @@
       "internal_instructions"
     ]
   },
-  "registry_id": "jarvis-prime-agent-registry",
+  "registry_id": "orqevia-owned-capabilities",
   "registry_status": "implemented_pending_runtime_acceptance",
-  "runtime_policy": {
-    "active_count_must_not_be_hardcoded": true,
-    "active_count_source": "live_runtime_telemetry",
-    "consequential_action_requires_human_approval": true,
-    "max_delegation_depth": 2,
-    "registered_count_is_not_active_count": true,
-    "unknown_agent_policy": "deny",
-    "model_identity_is_not_agent_identity": true,
-    "registry_grants_execution_authority": false,
-    "activation_kind": "advisory reasoning; consequential permissions remain independent"
-  },
-  "schema_version": "2.0",
-  "registry_version": "1.0.0",
-  "registry_name": "JARVIS Agent Registry v1",
-  "responsibility_coverage": [
-    {
-      "responsibility_id": "responsibility.a01",
-      "historical_agent": "a01",
-      "owner": "a01",
-      "description": "Strategic reasoning owner"
-    },
-    {
-      "responsibility_id": "responsibility.a02",
-      "historical_agent": "a02",
-      "owner": "a02",
-      "description": "Objective-to-task decomposition"
-    },
-    {
-      "responsibility_id": "responsibility.a03",
-      "historical_agent": "a03",
-      "owner": "a02",
-      "description": "Milestone and dependency planning"
-    },
-    {
-      "responsibility_id": "responsibility.a04",
-      "historical_agent": "a04",
-      "owner": "a04",
-      "description": "Option evaluation"
-    },
-    {
-      "responsibility_id": "responsibility.a08",
-      "historical_agent": "a08",
-      "owner": "a04",
-      "description": "Structured comparison"
-    },
-    {
-      "responsibility_id": "responsibility.a05",
-      "historical_agent": "a05",
-      "owner": "a05",
-      "description": "Portfolio prioritization"
-    },
-    {
-      "responsibility_id": "responsibility.a23",
-      "historical_agent": "a23",
-      "owner": "a05",
-      "description": "Resource optimization"
-    },
-    {
-      "responsibility_id": "responsibility.a06",
-      "historical_agent": "a06",
-      "owner": "a06",
-      "description": "Research direction"
-    },
-    {
-      "responsibility_id": "responsibility.a07",
-      "historical_agent": "a07",
-      "owner": "a07",
-      "description": "Evidence discovery"
-    },
-    {
-      "responsibility_id": "responsibility.a09",
-      "historical_agent": "a09",
-      "owner": "a09",
-      "description": "Knowledge organization"
-    },
-    {
-      "responsibility_id": "responsibility.a10",
-      "historical_agent": "a10",
-      "owner": "a10",
-      "description": "Data and analytics coordination"
-    },
-    {
-      "responsibility_id": "responsibility.a11",
-      "historical_agent": "a11",
-      "owner": "a12",
-      "description": "KPI definition"
-    },
-    {
-      "responsibility_id": "responsibility.a12",
-      "historical_agent": "a12",
-      "owner": "a12",
-      "description": "Descriptive/diagnostic analysis"
-    },
-    {
-      "responsibility_id": "responsibility.a13",
-      "historical_agent": "a13",
-      "owner": "a13",
-      "description": "Forecasting"
-    },
-    {
-      "responsibility_id": "responsibility.a14",
-      "historical_agent": "a14",
-      "owner": "a14",
-      "description": "Data quality checks"
-    },
-    {
-      "responsibility_id": "responsibility.a15",
-      "historical_agent": "a15",
-      "owner": "a15",
-      "description": "Technical execution ownership"
-    },
-    {
-      "responsibility_id": "responsibility.a16",
-      "historical_agent": "a16",
-      "owner": "a16",
-      "description": "System architecture design"
-    },
-    {
-      "responsibility_id": "responsibility.a17",
-      "historical_agent": "a17",
-      "owner": "a17",
-      "description": "Design-to-code conversion"
-    },
-    {
-      "responsibility_id": "responsibility.a18",
-      "historical_agent": "a18",
-      "owner": "a18",
-      "description": "Functional testing"
-    },
-    {
-      "responsibility_id": "responsibility.a27",
-      "historical_agent": "a27",
-      "owner": "a18",
-      "description": "Compliance verification"
-    },
-    {
-      "responsibility_id": "responsibility.a19",
-      "historical_agent": "a19",
-      "owner": "a19",
-      "description": "Operational resilience evaluation"
-    },
-    {
-      "responsibility_id": "responsibility.a20",
-      "historical_agent": "a20",
-      "owner": "a20",
-      "description": "Economic analysis ownership"
-    },
-    {
-      "responsibility_id": "responsibility.a24",
-      "historical_agent": "a24",
-      "owner": "a20",
-      "description": "Market and pricing analysis"
-    },
-    {
-      "responsibility_id": "responsibility.a21",
-      "historical_agent": "a21",
-      "owner": "a21",
-      "description": "Cost analysis"
-    },
-    {
-      "responsibility_id": "responsibility.a22",
-      "historical_agent": "a22",
-      "owner": "a21",
-      "description": "Value/ROI evaluation"
-    },
-    {
-      "responsibility_id": "responsibility.a25",
-      "historical_agent": "a25",
-      "owner": "a26",
-      "description": "Quality governance ownership"
-    },
-    {
-      "responsibility_id": "responsibility.a26",
-      "historical_agent": "a26",
-      "owner": "a26",
-      "description": "Independent review"
-    },
-    {
-      "responsibility_id": "responsibility.a28",
-      "historical_agent": "a28",
-      "owner": "a28",
-      "description": "Risk identification"
-    },
-    {
-      "responsibility_id": "responsibility.a29",
-      "historical_agent": "a29",
-      "owner": "a29",
-      "description": "Release readiness gate"
-    }
-  ],
+  "schema_version": "3.0",
+  "registry_version": "2.0.0",
+  "registry_name": "ORQEVIA capability inventory",
   "named_operating_roles": {
     "A12 Builder": {
       "canonical_id": "a17",
@@ -3579,5 +3182,167 @@
       "meaning": "Independent testing role; historical uppercase A13 alias remains unchanged"
     }
   },
-  "owner_directive_sha256": "0acd2229308eba420a3520a11b09fe1a3a915b5c43a1417c0a83b3a5428fcb79"
+  "owner_directive_sha256": "0acd2229308eba420a3520a11b09fe1a3a915b5c43a1417c0a83b3a5428fcb79",
+  "orchestrator": {
+    "id": "orqevia",
+    "name": "ORQEVIA",
+    "role": "Logical task coordination",
+    "public_description": "Selects owned capabilities for the current objective; coordination grants no execution authority.",
+    "authority": "coordinating",
+    "status": "registered",
+    "model": "task_qualified"
+  },
+  "coordination": {
+    "execution_model": "DIRECT_CAPABILITY_HANDOFF",
+    "reports_to_required": false,
+    "delegation_transfers_authority": false,
+    "tool_permissions": "Independent scoped authorization at execution; capability selection grants none"
+  },
+  "responsibility_coverage": [
+    {
+      "responsibility_id": "responsibility.a01",
+      "owner": "a01",
+      "description": "Strategic reasoning owner"
+    },
+    {
+      "responsibility_id": "responsibility.a02",
+      "owner": "a02",
+      "description": "Objective-to-task decomposition"
+    },
+    {
+      "responsibility_id": "responsibility.a03",
+      "owner": "a02",
+      "description": "Milestone and dependency planning"
+    },
+    {
+      "responsibility_id": "responsibility.a04",
+      "owner": "a04",
+      "description": "Option evaluation"
+    },
+    {
+      "responsibility_id": "responsibility.a08",
+      "owner": "a04",
+      "description": "Structured comparison"
+    },
+    {
+      "responsibility_id": "responsibility.a05",
+      "owner": "a05",
+      "description": "Portfolio prioritization"
+    },
+    {
+      "responsibility_id": "responsibility.a23",
+      "owner": "a05",
+      "description": "Resource optimization"
+    },
+    {
+      "responsibility_id": "responsibility.a06",
+      "owner": "a06",
+      "description": "Research direction"
+    },
+    {
+      "responsibility_id": "responsibility.a07",
+      "owner": "a07",
+      "description": "Evidence discovery"
+    },
+    {
+      "responsibility_id": "responsibility.a09",
+      "owner": "a09",
+      "description": "Knowledge organization"
+    },
+    {
+      "responsibility_id": "responsibility.a10",
+      "owner": "a10",
+      "description": "Data and analytics coordination"
+    },
+    {
+      "responsibility_id": "responsibility.a11",
+      "owner": "a12",
+      "description": "KPI definition"
+    },
+    {
+      "responsibility_id": "responsibility.a12",
+      "owner": "a12",
+      "description": "Descriptive/diagnostic analysis"
+    },
+    {
+      "responsibility_id": "responsibility.a13",
+      "owner": "a13",
+      "description": "Forecasting"
+    },
+    {
+      "responsibility_id": "responsibility.a14",
+      "owner": "a14",
+      "description": "Data quality checks"
+    },
+    {
+      "responsibility_id": "responsibility.a15",
+      "owner": "a15",
+      "description": "Technical execution ownership"
+    },
+    {
+      "responsibility_id": "responsibility.a16",
+      "owner": "a16",
+      "description": "System architecture design"
+    },
+    {
+      "responsibility_id": "responsibility.a17",
+      "owner": "a17",
+      "description": "Design-to-code conversion"
+    },
+    {
+      "responsibility_id": "responsibility.a18",
+      "owner": "a18",
+      "description": "Functional testing"
+    },
+    {
+      "responsibility_id": "responsibility.a27",
+      "owner": "a18",
+      "description": "Compliance verification"
+    },
+    {
+      "responsibility_id": "responsibility.a19",
+      "owner": "a19",
+      "description": "Operational resilience evaluation"
+    },
+    {
+      "responsibility_id": "responsibility.a20",
+      "owner": "a20",
+      "description": "Economic analysis ownership"
+    },
+    {
+      "responsibility_id": "responsibility.a24",
+      "owner": "a20",
+      "description": "Market and pricing analysis"
+    },
+    {
+      "responsibility_id": "responsibility.a21",
+      "owner": "a21",
+      "description": "Cost analysis"
+    },
+    {
+      "responsibility_id": "responsibility.a22",
+      "owner": "a21",
+      "description": "Value/ROI evaluation"
+    },
+    {
+      "responsibility_id": "responsibility.a25",
+      "owner": "a26",
+      "description": "Quality governance ownership"
+    },
+    {
+      "responsibility_id": "responsibility.a26",
+      "owner": "a26",
+      "description": "Independent review"
+    },
+    {
+      "responsibility_id": "responsibility.a28",
+      "owner": "a28",
+      "description": "Risk identification"
+    },
+    {
+      "responsibility_id": "responsibility.a29",
+      "owner": "a29",
+      "description": "Release readiness gate"
+    }
+  ]
 }

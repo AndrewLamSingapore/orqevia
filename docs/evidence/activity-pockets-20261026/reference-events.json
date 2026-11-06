@@ -1,0 +1,649 @@
+[
+  {
+    "actor": "academy",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.671287Z",
+    "details": {
+      "id": "9bbc2f43c61e483c9fcc8f05426591cf",
+      "kind": "skill_validation",
+      "sha256": "b7997e9e18babd7e39a5c24ec8e823ab1549a40fef5a0575afe513a4fdf02205"
+    },
+    "event_type": "evidence.recorded",
+    "id": "05574314fd4b4f149180e0d068a8255e",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "library",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "library",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "library",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.671287Z",
+    "details": {
+      "id": "41ec18e9b91a4a9d8ed2ee63b85ec387",
+      "kind": "library_skill",
+      "sha256": "125aa5b25b73cc73307b9e0aa0adf588c1709330ec55cf977ee64673b3149a4f"
+    },
+    "event_type": "evidence.recorded",
+    "id": "ae94a6ecb72a444182653e113141985e",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "library",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "library",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "library",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.674310Z",
+    "details": {
+      "id": "4f8e8a273aed407f8d60f99acf83f23e",
+      "kind": "qualification",
+      "sha256": "1a5b0e6d27db090358f05501d668ef07d8050b44e846eb51521048cb9dbfed3a"
+    },
+    "event_type": "evidence.recorded",
+    "id": "c01900a8aaea4d02940e4d6aad79ee60",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "pwa:11111111111111111111111111111111",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.674310Z",
+    "details": {
+      "manifest_sha256": "e7ff08043d88398eac493963d87cb795db2bf1547d14e567921a07e58b25a50a",
+      "skill_version": "1.0.0"
+    },
+    "event_type": "pocket.created",
+    "id": "ca4b34567f6947cebf2845e71e23d50b",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "orqevia",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.696735Z",
+    "details": {
+      "factory_state": "READY",
+      "objective_id": "195d61f13dc24a30b195225bb6fbf952"
+    },
+    "event_type": "orqevia.objective.submitted",
+    "id": "4d5acdcb7fdd4228953836e673a84c7d",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "library",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.761322Z",
+    "details": {
+      "id": "61f5da4b06d746d6a2665daa9e9bcc49",
+      "kind": "qualification",
+      "sha256": "da78b713f87f95105e6c7b29d2082cea1a52331ab25d42b1c6f377adab158feb"
+    },
+    "event_type": "evidence.recorded",
+    "id": "768437c0d38141dc99204fa5a31adcf5",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory-worker",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.761322Z",
+    "details": {
+      "cursor": 0,
+      "run_id": "936c384e64b74a0caeda1860e5ced441",
+      "version": "1.0.0"
+    },
+    "event_type": "execution.started",
+    "id": "ffc9eb9bf9c3460a8c9e4f6416381d12",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.840847Z",
+    "details": {
+      "id": "8e07e907c6104f0bb425286eeb67986c",
+      "kind": "output",
+      "sha256": "81454bc5edae5c8e90104f6603d660623b23ed6c821e891a43c51471b2fc3370"
+    },
+    "event_type": "evidence.recorded",
+    "id": "c9e2c4099bdd464fab2b363186fce227",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory-worker",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:33.841399Z",
+    "details": {
+      "output_id": "8e07e907c6104f0bb425286eeb67986c",
+      "records": 2,
+      "run_id": "936c384e64b74a0caeda1860e5ced441",
+      "status": "READY"
+    },
+    "event_type": "execution.finished",
+    "id": "ab54c9fd6b9841da9939dda043631b52",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "library",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:35.930427Z",
+    "details": {
+      "id": "7226ccffa9a344f0914036327faa9b2a",
+      "kind": "qualification",
+      "sha256": "2fa08c8ef34db7ac56bb33dfa7102dcff4693b698aefd5b6b311eefdb9516091"
+    },
+    "event_type": "evidence.recorded",
+    "id": "8dea2c3bb8cb4723b47c84ba21474ffa",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory-worker",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:35.959721Z",
+    "details": {
+      "cursor": 1,
+      "run_id": "0baf40f087bf497ab84df7f7af74b059",
+      "version": "1.0.0"
+    },
+    "event_type": "execution.started",
+    "id": "dec3b28604a44150898a8d7303d767ec",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "a07",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:36.044615Z",
+    "details": {
+      "bytes": 350,
+      "code": "LAYOUT_FIELDS_MISSING",
+      "run_id": "0baf40f087bf497ab84df7f7af74b059",
+      "seconds": 0.06199999999989814
+    },
+    "event_type": "execution.failed",
+    "id": "45e7ee75576f4760bad041cb60910fd8",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "academy",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:36.056030Z",
+    "details": {
+      "id": "f3b40862c100456aa05715a908bb5595",
+      "kind": "academy_training",
+      "sha256": "958afcb7eea0672f2d4654cb42d43601affe9830a88342bd39d4d5f7f64b4868"
+    },
+    "event_type": "evidence.recorded",
+    "id": "f34e1ec8c2f9460fbb4f798834ffee31",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "academy",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:36.060917Z",
+    "details": {
+      "id": "192bbee5bacb4754818afff59a92dad5",
+      "kind": "coaching_proposal",
+      "sha256": "c1fd41610d5f93cef11d28ee8abb376ef65ed6ed4c79b78744cfdd353fcb17d0"
+    },
+    "event_type": "evidence.recorded",
+    "id": "07fc93cf2e4645bd86368af128e30463",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "academy",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:36.060917Z",
+    "details": {
+      "evidence_id": "45e7ee75576f4760bad041cb60910fd8",
+      "proposal_id": "192bbee5bacb4754818afff59a92dad5"
+    },
+    "event_type": "coaching.proposed",
+    "id": "cd7df3abbbb74ae68a8c323d18f745ee",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory-worker",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:36.061456Z",
+    "details": {
+      "reason": "QUALITY_FAILURE",
+      "run_id": "0baf40f087bf497ab84df7f7af74b059",
+      "status": "PAUSED"
+    },
+    "event_type": "execution.finished",
+    "id": "85d37d9e5a1c484d9aee045d9378ccc4",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "academy",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:38.156324Z",
+    "details": {
+      "id": "fa1b7781b0804a9dbe2a666ed03fe3a1",
+      "kind": "academy_assessment",
+      "sha256": "23a1542ee912709e2fd257996d772aeec051347ab05250bd7c6ba11ccc568103"
+    },
+    "event_type": "evidence.recorded",
+    "id": "b538a6f908b945619136e482cfe5d76f",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "academy",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:38.156324Z",
+    "details": {
+      "id": "2022153bd0ed4d209de244e3a77d017f",
+      "kind": "evaluation",
+      "sha256": "d08317493ed431c302e573aa7c3956a4cb1d7661aab5bf89b80492b1d4fc20d8"
+    },
+    "event_type": "evidence.recorded",
+    "id": "00c2bf13df2d4366947d5818a306967d",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "a18",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:38.156324Z",
+    "details": {
+      "evaluation_id": "2022153bd0ed4d209de244e3a77d017f",
+      "passed": true
+    },
+    "event_type": "evaluation.completed",
+    "id": "057178b156ee4c25b90ad5cf3f1b8efa",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "library",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:38.260301Z",
+    "details": {
+      "id": "4d300df7e79d428bae8cd15f007af089",
+      "kind": "library_skill",
+      "sha256": "518137aaae9292b9a91f289b3e9492a9d99561e7d30669b4478d48f5c392a62d"
+    },
+    "event_type": "evidence.recorded",
+    "id": "e288b14d54f84e869a44030bb0ab5b06",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "library",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "library",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:38.261305Z",
+    "details": {
+      "id": "208919b100cb4f8183e6903580b4504d",
+      "kind": "promotion",
+      "sha256": "67abaa9c4b5e1875f91ffe1bb7b764ab45768a1022426488b121cc0fb8c7a0bb"
+    },
+    "event_type": "evidence.recorded",
+    "id": "13de1ba750634101a57ee83ade392a8f",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "pwa:11111111111111111111111111111111",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:38.261305Z",
+    "details": {
+      "decision_id": "208919b100cb4f8183e6903580b4504d"
+    },
+    "event_type": "promotion.approved",
+    "id": "5a662862be6d476fb84bbf36e6624299",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "library",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:40.268879Z",
+    "details": {
+      "id": "de36f2c695be48a6a95563060d595734",
+      "kind": "qualification",
+      "sha256": "d1d2be9f3bf92b7a4b18ba8cdc26261296d584c0de370950e0db5b7e5b5bcc46"
+    },
+    "event_type": "evidence.recorded",
+    "id": "01b7e4afaec541f1aba20b05607ca993",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory-worker",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:40.270391Z",
+    "details": {
+      "cursor": 1,
+      "run_id": "d03f531cbd664faea00e2acf5fa34ec6",
+      "version": "1.0.1"
+    },
+    "event_type": "execution.started",
+    "id": "7739b30416de419b885d44f792f37226",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:40.370744Z",
+    "details": {
+      "id": "f873b199da9a40bcb7bcce916ed3dffc",
+      "kind": "output",
+      "sha256": "c1cfa62d38bee0542c9205ffae78a35a8acc28e0f2e7723f9ffb8321c4bc9908"
+    },
+    "event_type": "evidence.recorded",
+    "id": "485cf0de9df1444daba3998e985ce2dd",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  },
+  {
+    "actor": "factory-worker",
+    "audit_refs": [],
+    "compatibility": [
+      "activity-pockets/1"
+    ],
+    "created_at": "2026-10-26T08:43:40.371765Z",
+    "details": {
+      "output_id": "f873b199da9a40bcb7bcce916ed3dffc",
+      "records": 2,
+      "run_id": "d03f531cbd664faea00e2acf5fa34ec6",
+      "status": "COMPLETED"
+    },
+    "event_type": "execution.finished",
+    "id": "848b86ce657b4236a8c09212c1203c36",
+    "owner": "lam",
+    "permissions": [],
+    "pocket_id": "195d61f13dc24a30b195225bb6fbf952",
+    "provenance": {
+      "component": "factory",
+      "origin": "controlled-fixture",
+      "reference": "195d61f13dc24a30b195225bb6fbf952",
+      "source_revision": "20bdad87a97e649eb751dd6c7add53d3fb9d65fe"
+    },
+    "schema_version": "1.0"
+  }
+]

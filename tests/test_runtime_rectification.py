@@ -37,6 +37,8 @@ def test_post_generation_gate_fails_closed_and_blocks_execution_claims():
     result=evaluate_generated_answer(gateway=EvalGateway(high),task_id='task',intent='send it',answer='PRIME sent the external message.',memory_context=[],portal_context=[],consequential=True)
     assert result['released'] is False
     assert result['scores']['policy_conformance']==0
+    native=evaluate_generated_answer(gateway=EvalGateway(high),task_id='native-task',intent='send it',answer='ORQEVIA sent the external message.',memory_context=[],portal_context=[],consequential=True)
+    assert native['released'] is False and native['scores']['policy_conformance']==0
     invalid=evaluate_generated_answer(gateway=EvalGateway('not json'),task_id='task',intent='answer',answer='draft',memory_context=[],portal_context=[])
     assert invalid['released'] is False and invalid['parse_error']=='ValueError'
 

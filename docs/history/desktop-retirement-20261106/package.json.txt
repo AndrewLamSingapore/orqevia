@@ -1,0 +1,14 @@
+{
+  "name": "jarvis-prime-dell-interface-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fail-closed Dell thin client for the authoritative ABEX JARVIS PRIME Interface Node.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -510,17 +510,6 @@ class CollectiveStore:
                     self._link(db, p, mapping["id"], item_id := f"agent:{agent['agent_id']}", "agent")
                     self._link(db, p, mapping["id"], capability_id, "capability")
                     self._audit(db, p, "registry.seed", mapping, reason="Canonical capability mapping")
-                parent_id = (
-                    f"orchestrator:{root_id}" if agent["reports_to"] == root_id else f"agent:{agent['reports_to']}"
-                )
-                dependency = self._create(
-                    db,
-                    p,
-                    "dependencies",
-                    {"source": item_id, "target": parent_id, "relation": "reports_to", "execution_dependency": False},
-                )
-                self._link(db, p, dependency["id"], item_id, "source")
-                self._link(db, p, dependency["id"], parent_id, "target")
             policy = self._create(
                 db,
                 p,

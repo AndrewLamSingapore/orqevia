@@ -1,12 +1,12 @@
 {
-  "name": "jarvis-prime-dell-interface-client",
-  "version": "0.1.0",
+  "name": "orqevia-dell-interface-client",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Fail-closed Dell thin client for the authoritative ABEX JARVIS PRIME Interface Node.",
+  "description": "Scoped ORQEVIA API relay; desktop and mobile share the HTTPS PWA.",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test"
+    "test": "node --test test/client.test.mjs test/url-transport.test.mjs"
   },
   "engines": {
     "node": ">=20"

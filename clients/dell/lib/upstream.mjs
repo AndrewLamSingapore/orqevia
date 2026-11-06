@@ -55,7 +55,7 @@ export class InterfaceNode {
     });
     const observed = createHash('sha256').update(canonical, 'utf8').digest('hex').toUpperCase();
     if (body.hostname !== this.config.expectedHost) throw new Error('ABEX hostname mismatch');
-    if (body.role !== 'AUTHORITATIVE_ORQEVIA') throw new Error('Upstream does not claim authoritative PRIME role');
+    if (body.role !== 'AUTHORITATIVE_ORQEVIA') throw new Error('Upstream does not claim the owned ORQEVIA interface role');
     if (String(body.protocolVersion) !== '1') throw new Error('Unsupported Interface Node protocol version');
     if (observed !== this.config.identitySha256) throw new Error('ABEX identity pin mismatch');
     this.identityVerifiedAt = Date.now();

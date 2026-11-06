@@ -88,7 +88,20 @@ async def _lifespan(application):
     """
     async with direct_entry.lifespan(application) as state:
         compute_queue_api.start_compute_queue()
-        yield state
+        from .activity_pockets.api import default_factory
+        from .activity_pockets.worker import Worker
+        import logging
+        import sqlite3
+        worker = None
+        try:
+            worker = Worker(default_factory()).start()
+        except (OSError, ValueError, TypeError, KeyError, sqlite3.Error):
+            logging.getLogger(__name__).error('Activity Pocket configuration unavailable; its status API reports 503')
+        try:
+            yield state
+        finally:
+            if worker:
+                worker.stop()
 
 
 app = FastAPI(title='ORQEVIA local control', lifespan=_lifespan, telemetry=PRIVACY_FASTAPI_TELEMETRY,
@@ -244,6 +257,11 @@ from .sovereign_plane import router as sovereign_plane_router
 app.include_router(sovereign_plane_router)
 from .collective_api import router as collective_board_router
 app.include_router(collective_board_router)
+from .activity_pockets.api import build_router as pocket_router, console_router as pocket_console_router
+from .activity_pockets.orqevia import build_router as pocket_objective_router
+app.include_router(pocket_router())
+app.include_router(pocket_objective_router())
+app.include_router(pocket_console_router())
 from .pif_api import router as pif_router
 from .mel_api import router as mel_router
 app.include_router(pif_router)

@@ -1,13 +1,9 @@
 import http from 'node:http';
 import { createHash, randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig, publicConfig } from './lib/config.mjs';
 import { InterfaceNode, sanitizeTask } from './lib/upstream.mjs';
 
-const ROOT = fileURLToPath(new URL('./public/', import.meta.url));
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' };
 const MAX_BODY = 32_768;
 const MAX_ARTIFACT = 100 * 1024 * 1024;
 
@@ -34,16 +30,13 @@ async function relayJson(response, res, sanitize = value => value) {
   return json(res, response.status, sanitize(value));
 }
 
-async function serveStatic(pathname, res) {
-  const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
-  const safe = normalize(relative).replace(/^(\.\.[/\\])+/, '');
-  const target = join(ROOT, safe);
-  if (!target.startsWith(ROOT)) return json(res, 404, { error: 'Not found' });
-  try {
-    const bytes = await readFile(target);
-    res.writeHead(200, { 'content-type': MIME[extname(target)] || 'application/octet-stream', 'content-length': bytes.length, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
-    res.end(bytes);
-  } catch { json(res, 404, { error: 'Not found' }); }
+function workspaceRedirect(pathname, config, res) {
+  if (!['/', '/index.html'].includes(pathname)) return json(res, 410, {error: 'This renderer is retired. Use the ORQEVIA workspace.'});
+  const base = config.baseUrl;
+  if (!base || base.protocol !== 'https:' || base.username || base.password) return json(res, 503, {error: 'Configure the verified HTTPS ORQEVIA origin.'});
+  const target = new URL('/pwa/', base);
+  res.writeHead(307, {location: target.href, 'cache-control': 'no-store'});
+  res.end();
 }
 
 export function createDellServer(config = loadConfig(), fetchImpl = fetch) {
@@ -55,7 +48,7 @@ export function createDellServer(config = loadConfig(), fetchImpl = fetch) {
     try {
       const url = new URL(req.url, 'http://localhost');
       if (url.pathname === '/api/local/status' && req.method === 'GET') return json(res, 200, publicConfig(config));
-      if (!url.pathname.startsWith('/api/')) return serveStatic(url.pathname, res);
+      if (!url.pathname.startsWith('/api/')) return workspaceRedirect(url.pathname, config, res);
       if (!config.ready) return json(res, 503, { error: 'Dell client is locked until ABEX connection settings are complete', details: config.errors });
 
       if (url.pathname === '/api/health' && req.method === 'GET') return relayJson(await upstream.health(), res);
@@ -107,7 +100,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const config = loadConfig();
   const server = createDellServer(config);
   server.listen(config.port, config.listenHost, () => {
-    console.log(`JARVIS Dell thin client: http://${config.listenHost}:${config.port}`);
+    console.log(`ORQEVIA Dell API relay: http://${config.listenHost}:${config.port}`);
     console.log(config.ready ? `Locked to ${config.expectedHost}; authority remains ABEX_ONLY.` : `LOCKED: ${config.errors.join('; ')}`);
   });
 }

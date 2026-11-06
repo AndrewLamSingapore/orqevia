@@ -27,7 +27,11 @@ durable memory and operational evidence.
 The public walkthrough is open. The owner workspace is protected by Cloudflare
 Access, TLS and server-side session authorization.
 
-## Current execution model - 5 November 2026
+## Current execution model - 6 November 2026
+
+Read [the current source state](ORQEVIA-CURRENT-STATE.md) and [the consolidated estate sweep](docs/ESTATE-SWEEP-20261106.md). The native capability inventory has no lead/reporting authority; desktop and mobile share one HTTPS workspace. Parked useful engineering is consolidated with the dependency updates. Historical data, trust boundaries and recovery evidence are retained. Source facts and actual deployment verification remain separate.
+
+### Direct execution foundations
 
 Ordinary authorized objectives use direct task dispatch, task-qualified models,
 shared knowledge and recoverable execution records. Capability identities are

@@ -1,0 +1,178 @@
+{
+  "$defs": {
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "academy",
+            "library",
+            "tools",
+            "factory",
+            "orqevia"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "origin": {
+          "default": "runtime",
+          "enum": [
+            "runtime",
+            "controlled-fixture",
+            "legacy-adapter"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "reference": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "source_revision": {
+          "pattern": "^[a-f0-9]{40}$",
+          "title": "Source Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "source_revision",
+        "reference"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "$id": "https://orqevia.local/contracts/activity-pockets/v1/PromotionDecision",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approved": {
+      "title": "Approved",
+      "type": "boolean"
+    },
+    "approver": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Approver",
+      "type": "string"
+    },
+    "audit_refs": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Refs",
+      "type": "array"
+    },
+    "candidate_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Candidate Sha256",
+      "type": "string"
+    },
+    "compatibility": {
+      "default": [
+        "activity-pockets/1"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "title": "Compatibility",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "evaluation_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Evaluation Id",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "owner": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Owner",
+      "type": "string"
+    },
+    "permissions": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Permissions",
+      "type": "array"
+    },
+    "pocket_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Pocket Id",
+      "type": "string"
+    },
+    "previous_version": {
+      "pattern": "^\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}$",
+      "title": "Previous Version",
+      "type": "string"
+    },
+    "promoted_version": {
+      "pattern": "^\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}$",
+      "title": "Promoted Version",
+      "type": "string"
+    },
+    "proposal_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Proposal Id",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "reason": {
+      "maxLength": 1000,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "owner",
+    "provenance",
+    "pocket_id",
+    "proposal_id",
+    "evaluation_id",
+    "approver",
+    "approved",
+    "candidate_sha256",
+    "reason",
+    "previous_version",
+    "promoted_version"
+  ],
+  "title": "PromotionDecision",
+  "type": "object"
+}

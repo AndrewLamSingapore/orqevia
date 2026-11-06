@@ -1,0 +1,20 @@
+{
+  "scope": "HISTORICAL_NONEXECUTABLE_BYTES_NOT_CURRENT_AUTHORITY",
+  "files": [
+    {
+      "path": "console.html.txt",
+      "sha256": "9b0b936dc1717795d0179234fd31dd5c4a3cbfbdd6dc2dea7641030de3dc2eaa",
+      "bytes": 2208
+    },
+    {
+      "path": "console.js.txt",
+      "sha256": "1118c5b57833fa0a53572ecbeb480a8986a9f85d79b5ce46dfa566c07df86161",
+      "bytes": 4286
+    },
+    {
+      "path": "CUSTODY.json",
+      "sha256": "915f55922df4c9e6a2d1be535600053915eb4e16d0fbb5964281353a8589021e",
+      "bytes": 483
+    }
+  ]
+}

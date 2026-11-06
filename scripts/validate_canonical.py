@@ -47,7 +47,7 @@ def validate():
         # Report paths only: never print matched secret material.
         if secret_pattern_labels(raw):findings.append(name)
     assert not findings,{'suspected_secret_paths':findings}
-    for name in ('contracts/task-v1.schema.json','contracts/artifact-v1.schema.json','config/agent_registry_v1.schema.json'):
+    for name in ('contracts/task-v1.schema.json','contracts/artifact-v1.schema.json',manifest['configuration_schemas']['registry']):
         schema=json.loads((ROOT/name).read_text())
         assert schema['$schema']=='https://json-schema.org/draft/2020-12/schema'
         assert schema['type']=='object' and isinstance(schema['properties'],dict)

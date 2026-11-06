@@ -1,0 +1,26 @@
+{
+  "schema": "orqevia.runtime-architecture.v1",
+  "product": "ORQEVIA",
+  "host": "ABEX",
+  "execution_model": "DIRECT_CAPABILITY_HANDOFF",
+  "logical_coordinator": "orqevia",
+  "declaration_scope": "SOURCE_CONFIGURATION_NOT_LIVE_HEALTH_OR_ACCEPTANCE",
+  "service_roles": [
+    "backend",
+    "interface",
+    "coaching",
+    "intelligence",
+    "ollama",
+    "integration-gateway",
+    "cloudflared",
+    "cloudflared-dual",
+    "otel-collector"
+  ],
+  "native_roles": [
+    "local-knowledge",
+    "local-ollama",
+    "phoenix"
+  ],
+  "public_entrypoint": "https://localhost:8443/pwa/",
+  "external_action_authorization": "Independent scoped permission at execution; coordination grants none"
+}

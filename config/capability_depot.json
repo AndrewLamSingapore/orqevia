@@ -214,6 +214,38 @@
         "observe"
       ],
       "endpoint": "/media/v1/health"
+    },
+    {
+      "id": "activity-pockets",
+      "name": "Activity runs",
+      "kind": "owned-workflow",
+      "version": "1.0.0",
+      "offline": false,
+      "source": "app/activity_pockets/factory.py",
+      "dependencies": [
+        "approved HTTPS catalogue source",
+        "independent role evidence",
+        "existing Academy and Library"
+      ],
+      "resources": {
+        "execution": "one bounded worker in the existing backend",
+        "model_weights": "none added",
+        "spending": "zero by default within existing controls"
+      },
+      "task_classes": [
+        "research",
+        "structured-extraction"
+      ],
+      "operations": [
+        "create",
+        "observe",
+        "pause",
+        "resume",
+        "cancel",
+        "retire",
+        "read-preserved-results"
+      ],
+      "endpoint": "/api/activity-pockets/status"
     }
   ]
 }

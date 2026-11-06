@@ -41,7 +41,13 @@ HEADERS = {
     "User-Agent": "ORQEVIA-Research/1.0 (bounded primary-source retrieval)",
 }
 _TEXT = {"type": "string"}
-_URL = {"type": "string", "minLength": 1, "maxLength": MAX_URL, "format": "uri"}
+_URL = {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": MAX_URL,
+    "format": "uri",
+    "pattern": "^[Hh][Tt][Tt][Pp][Ss]://.*$",
+}
 _SHA = {"type": "string", "pattern": "^[a-f0-9]{64}$"}
 
 CONTRACTS = {

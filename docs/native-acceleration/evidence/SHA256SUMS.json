@@ -1,0 +1,7 @@
+{
+  "environment-validation.json": "529939e5358e289d9982c29e4f1dda8eed304edc5a457caf8fedd0bd36b851ff",
+  "journal-readonly.json": "20ea0f1d8f10f610e1aea7ee8e1cb6a39255afd10f25a9fd78764aa50c67d0f0",
+  "linux-baseline.json": "9866f89f4ad973526ef6f923d7a4329d129121edc2aa43b84f3d49173d2326ef",
+  "linux-py312-final.json": "32731b96e3bf88257d0ac69d21c3ceccd099990d3252edaa10f4e5ec81abb814",
+  "windows-py312-final.json": "92a97281a0c1597836c0cb4931f6c3e25d311a61f101a5ff0486c081260596f0"
+}

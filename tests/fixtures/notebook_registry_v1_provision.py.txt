@@ -1,0 +1,61 @@
+def provision_all(self) -> dict[str, Any]:
+        registry = load_agent_registry()
+        agents = registry["agents"]
+        created = 0
+        identity_seeded = 0
+        with self._transaction() as db:
+            now = utcnow()
+            for agent in agents:
+                agent_id = agent["agent_id"]
+                existing = db.execute("SELECT 1 FROM agent_notebooks WHERE agent_id=?", (agent_id,)).fetchone()
+                db.execute(
+                    """INSERT INTO agent_notebooks(agent_id,registry_version,created_at,updated_at,enabled)
+                    VALUES(?,?,?,?,1)
+                    ON CONFLICT(agent_id) DO UPDATE SET registry_version=excluded.registry_version,updated_at=excluded.updated_at""",
+                    (agent_id, registry["registry_version"], now, now),
+                )
+                if not existing:
+                    created += 1
+                identity = {
+                    "agent_id": agent_id,
+                    "name": agent["name"],
+                    "role": agent["role"],
+                    "purpose": agent["purpose"],
+                    "reports_to": agent["reports_to"],
+                    "responsibilities": [item["id"] for item in agent["responsibilities"]],
+                    "authority": agent["authority"],
+                    "human_approval": agent["human_approval"],
+                    "boundaries": list(agent["non_responsibilities"]),
+                }
+                if not db.execute(
+                    """SELECT 1 FROM agent_memory_records
+                    WHERE agent_id=? AND section='identity' AND source=? AND deleted_at IS NULL""",
+                    (agent_id, "config/agent_registry.json"),
+                ).fetchone():
+                    self._insert_record(
+                        db,
+                        agent_id=agent_id,
+                        scope="private",
+                        project_id=None,
+                        section="identity",
+                        record_type="identity",
+                        logical_key="identity.registry",
+                        content=identity,
+                        source="config/agent_registry.json",
+                        source_ref=f"registry:{registry['registry_version']}#agents/{agent_id}",
+                        evidence_refs=["config/agent_registry.json"],
+                        principal=NotebookPrincipal("system", "OWNER"),
+                        verification_status="verified_source",
+                        confidence=1.0,
+                        retention_class="identity",
+                        task_id=None,
+                        idempotency_key=f"seed:{agent_id}:registry:{registry['registry_version']}",
+                        request_id=None,
+                        embed=False,
+                    )
+                    identity_seeded += 1
+        return {
+            "agents_registered": len(agents),
+            "notebooks_created": created,
+            "identity_records_seeded": identity_seeded,
+        }

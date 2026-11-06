@@ -1,0 +1,145 @@
+{
+  "$defs": {
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "academy",
+            "library",
+            "tools",
+            "factory",
+            "orqevia"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "origin": {
+          "default": "runtime",
+          "enum": [
+            "runtime",
+            "controlled-fixture",
+            "legacy-adapter"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "reference": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "source_revision": {
+          "pattern": "^[a-f0-9]{40}$",
+          "title": "Source Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "source_revision",
+        "reference"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "$id": "https://orqevia.local/contracts/activity-pockets/v1/ExecutionEvent",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Actor",
+      "type": "string"
+    },
+    "audit_refs": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Refs",
+      "type": "array"
+    },
+    "compatibility": {
+      "default": [
+        "activity-pockets/1"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "title": "Compatibility",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "details": {
+      "additionalProperties": true,
+      "title": "Details",
+      "type": "object"
+    },
+    "event_type": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Event Type",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "owner": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Owner",
+      "type": "string"
+    },
+    "permissions": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Permissions",
+      "type": "array"
+    },
+    "pocket_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Pocket Id",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "owner",
+    "provenance",
+    "pocket_id",
+    "event_type",
+    "actor"
+  ],
+  "title": "ExecutionEvent",
+  "type": "object"
+}

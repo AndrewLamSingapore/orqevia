@@ -1,0 +1,62 @@
+[
+  {
+    "original": "clients\\dell\\public\\index.html",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\public\\index.html.txt",
+    "sha256": "6f586b9b423b5767222ad703e12d40be33e9cb73eaec54939c8a55b2c5625c3a"
+  },
+  {
+    "original": "clients\\dell\\public\\app.js",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\public\\app.js.txt",
+    "sha256": "007a594cdb467861d980dac73e63990b0277fa934fc0f0e742341b32e05cdbfe"
+  },
+  {
+    "original": "clients\\dell\\public\\styles.css",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\public\\styles.css.txt",
+    "sha256": "ea7a28b0a42dd03c36075831378699d82fe4047a45172d46838f9e54052bd314"
+  },
+  {
+    "original": "clients\\dell\\server.mjs",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\server.mjs.txt",
+    "sha256": "2463f2ef3799048d7f570b498a55d1360052ec51c91870358f5b71c57ceb3120"
+  },
+  {
+    "original": "clients\\dell\\lib\\config.mjs",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\lib\\config.mjs.txt",
+    "sha256": "2d207c477da873226abc712a79a35a1225057742d3c3e9be829a83d54eee0f03"
+  },
+  {
+    "original": "clients\\dell\\lib\\upstream.mjs",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\lib\\upstream.mjs.txt",
+    "sha256": "4c69bb9c4dff9901afd0233bdc12abf6ba785814e5c7160877fe0cba7b0913c6"
+  },
+  {
+    "original": "clients\\dell\\SOURCE-SHA256.json",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\SOURCE-SHA256.json.txt",
+    "sha256": "b71ac1fd9d4c7ff915a6e12b1a13e27997f43481787c6cf21f8dad5be43310c6"
+  },
+  {
+    "original": "clients\\dell\\README.md",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\README.md.txt",
+    "sha256": "7c1f05f96c7105cd8c1b8f2fd2f82fa019c9d92a5f6ebd1d855516061203927f"
+  },
+  {
+    "original": "clients\\dell\\PACKAGING.md",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\PACKAGING.md.txt",
+    "sha256": "908994d9ffab1db3a4da23df778a71028d5ad3a556de2318cf726b58233260c2"
+  },
+  {
+    "original": "clients\\dell\\.env.example",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\.env.example.txt",
+    "sha256": "8869e334a0e90ba17f97c12cdbe8e7dea85028846d8a88ba3527c7cb9a00c239"
+  },
+  {
+    "original": "clients\\dell\\package.json",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\package.json.txt",
+    "sha256": "825fe561cdeb5a05929bb16d5a93e370bd545495a706b6abbb5db67dda9ab3b6"
+  },
+  {
+    "original": "clients\\dell\\tools\\package_client.py",
+    "preserved_as": "docs\\history\\desktop-retirement-20261106\\tools\\package_client.py.txt",
+    "sha256": "b350550db5c20ecd7ce744389e93492f607e67a3dae05db5e52081a97b1a00a8"
+  }
+]

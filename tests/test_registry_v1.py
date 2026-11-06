@@ -27,9 +27,9 @@ def test_every_historical_responsibility_is_preserved_verbatim_once():
 @pytest.mark.parametrize('domain,intent,expected', [
     ('economic','commercial market business',['a20']),
     ('quality','critic critique challenge',['a26']),
-    ('quality','verification audit complete',['a15','a18']),
-    ('economic','resource capacity allocation',['a01','a05']),
-    ('research','compare comparison versus',['a01','a04']),
+    ('quality','verification audit complete',['a18']),
+    ('economic','resource capacity allocation',['a05']),
+    ('research','compare comparison versus',['a04']),
 ])
 def test_consolidated_responsibility_reaches_its_owner(tmp_path, domain, intent, expected):
     runtime = AgentAuthorityRuntime(tmp_path/'authority.db')
@@ -40,16 +40,18 @@ def test_consolidated_responsibility_reaches_its_owner(tmp_path, domain, intent,
     assert [event['target_agent'] for event in events] == expected
 
 
-def test_all_canonical_paths_are_valid_and_unrelated_delegation_is_denied(tmp_path):
+def test_all_owned_paths_are_direct_and_invalid_paths_fail_closed(tmp_path):
     runtime = AgentAuthorityRuntime(tmp_path/'authority.db')
     for agent in registry.load_agent_registry()['agents']:
-        path = [agent['id']] if agent['can_delegate'] else [agent['reports_to'],agent['id']]
+        path = [agent['id']]
         runtime.begin_path(path)
         assert agent['tap_relationship']['delegation_transfers_authority'] is False
         assert agent['compute_requirements']['dedicated_model'] is False
+    runtime.begin_path(['a26', 'a18'])
+    runtime.begin_path(['a17'])
     with pytest.raises(AgentAuthorityError):
-        runtime.begin_path(['a26','a18'])
+        runtime.begin_path(['a17', 'a17'])
     with pytest.raises(AgentAuthorityError):
-        runtime.begin_path(['a17'])
+        runtime.begin_path(['invented'])
     with pytest.raises(registry.RegistryError):
         registry.responsibility_owner('invented.capability')

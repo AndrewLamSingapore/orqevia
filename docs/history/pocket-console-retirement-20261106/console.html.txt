@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Activity Pockets | ORQEVIA</title>
+<style>body{font:16px system-ui;background:#101820;color:#edf4f7;max-width:1000px;margin:auto;padding:24px}a{color:#8de1e8}button,input,select,textarea{font:inherit;padding:12px;margin:6px 0;max-width:100%;box-sizing:border-box}button{cursor:pointer;min-height:44px}label{display:block}input,select,textarea{width:100%}article,section{border:1px solid #52616b;padding:18px;margin:18px 0;border-radius:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}#message{padding:12px;background:#23313c}small{display:block;color:#b8cbd7}.actions{display:flex;gap:8px;flex-wrap:wrap}h1,h2{line-height:1.2}</style>
+<nav><a href="/pwa/?view=operations">ORQEVIA Operations</a></nav>
+<h1>Activity Pocket Factory</h1><p>Authorized source extraction, coaching evidence and controlled improvements.</p>
+<p id="message" role="status" aria-live="polite">Loading authenticated Factory status…</p>
+<button id="refresh">Refresh all evidence</button>
+<section><h2>Runtime and sources</h2><pre id="runtime">Waiting for service</pre></section>
+<section><h2>Create an activity pocket</h2><form id="create"><label>Objective<input id="objective" required minlength="10" value="Extract the authorized catalogue and preserve source evidence."></label>
+<label>Permitted source<select id="source" required></select></label>
+<label>Success criteria<textarea id="criteria" required>Extract valid product IDs, titles, prices and currencies with source provenance.</textarea></label>
+<button type="submit">Submit objective</button><small>The worker runs due tasks automatically. Changes to extraction behavior require recorded owner approval after evaluation.</small></form></section>
+<section><h2>Pockets and execution evidence</h2><div id="pockets">Loading pockets…</div></section>
+<section><h2>All-agent coaching and qualification coverage</h2><p>Internal coaching, independent qualification and worker diagnostics have separate evidence.</p><pre id="coverage">Loading coverage…</pre></section>
+<script src="/activity-pockets/app.js" defer></script></html>

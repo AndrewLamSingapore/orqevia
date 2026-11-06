@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .agent_notebooks import AgentNotebookStore, get_notebook_store
-from .agent_registry import canonical_agent_id
+from .agent_registry import canonical_agent_id, orchestrator_id
 
 UPSTREAM_PROFILE_MAX_CHARS = 1800
 
@@ -89,7 +89,7 @@ class BehaviorProfileStore:
 
     def get(self, agent_id: str) -> BehaviorProfile:
         canonical = canonical_agent_id(agent_id)
-        if canonical == "prime":
+        if canonical == orchestrator_id():
             raise ValueError("orchestrator conditioning is not supported")
         with self.connect() as db:
             row = db.execute(
@@ -104,7 +104,7 @@ class BehaviorProfileStore:
 
     def set(self, agent_id: str, profile: BehaviorProfile, *, updated_by: str) -> dict[str, Any]:
         canonical = canonical_agent_id(agent_id)
-        if canonical == "prime":
+        if canonical == orchestrator_id():
             raise ValueError("orchestrator conditioning is not supported")
         import json
 

@@ -1,5 +1,16 @@
-# Superseded entrypoint
+# ORQEVIA on desktop
 
-This former operational document is superseded by [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the private ORQEVIA repository and [Architecture v1](https://github.com/AndrewLamSingapore/orqevia/blob/main/docs/ARCHITECTURE_V1.md). It is not a current installation, governance or acceptance instruction.
+Use the verified ABEX HTTPS origin with `/pwa/` on desktop and mobile. Existing
+trusted sessions and the HTTPS profile continue to apply. There is one current
+workspace; this package no longer serves its former independent renderer.
 
-Read [the channel contract](https://github.com/AndrewLamSingapore/prime/blob/main/governance/CHANNEL_CONTRACT.md). Current deployment inputs and entrypoints are defined in `deploy/product-runtime-v1.json`; Dell packaging is documented in `clients/dell/PACKAGING.md`. Historical content remains in Git history.
+The optional local API relay retains its pinned upstream identity, HTTPS,
+loopback binding, scoped client credential and idempotency checks. Current
+settings use ORQEVIA_* names. Historical JARVIS_* settings remain readable for
+migration; conflicting aliases fail closed. Credentials are never placed in the
+workspace URL. The relay root redirects to the configured HTTPS PWA even when
+the separate API credential has not been provisioned.
+
+See PACKAGING.md for deterministic source packaging. Original renderer bytes
+are retained in docs/history/desktop-retirement-20261106 and Git history.
+Actual Dell hardware and off-device connectivity require their own verification.

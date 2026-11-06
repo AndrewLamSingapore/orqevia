@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "scope": "controlled-fixture-real-component-integration",
+  "started_at": "2026-10-26T08:43:31.948534+00:00",
+  "completed_at": "2026-10-26T08:44:17.317518+00:00",
+  "source_revision": "7e45a56dd1125bb73168cff238bed7cc0acfd5ec",
+  "working_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tested_file_manifest_sha256": "6601a10d3c98821e40f912835c254c9ca313588b2e02ede861c5519d3bd7f8c4",
+  "python": "3.12.15",
+  "command": [
+    "C:\\Users\\Admin\\Documents\\ABEX\\work\\activity-pocket-factory-20261026\\.venv\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_activity_pockets.py",
+    "--basetemp=C:\\Users\\Admin\\Documents\\ABEX\\work\\activity-pocket-factory-20261026\\.artifacts\\activity-pockets\\run-09326fdf0a004378b0acb0d9ead87984\\pytest",
+    "--junitxml=C:\\Users\\Admin\\Documents\\ABEX\\work\\activity-pocket-factory-20261026\\.artifacts\\activity-pockets\\run-09326fdf0a004378b0acb0d9ead87984\\acceptance.xml"
+  ],
+  "exit_code": 0,
+  "result": "VERIFIED",
+  "tests": 41,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "fixture_qualification_is_production_certification": false,
+  "production_deployed": false,
+  "live_fleet_qualification": "PARKED_BY_OWNER",
+  "artifacts": [
+    "acceptance.xml",
+    "reference-events.json",
+    "reference-outputs.json",
+    "source-files.json",
+    "test-output.txt"
+  ]
+}

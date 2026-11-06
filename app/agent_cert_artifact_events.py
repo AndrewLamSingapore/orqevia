@@ -222,13 +222,10 @@ def _registry(registry_sha256):
         raw = stream.read(1024 * 1024 + 1)
     _require(sha(raw) == registry_sha256, 'ARTIFACT_REGISTRY_PIN_MISMATCH')
     source = parse(raw, 1024 * 1024)
-    normalized = parse(canonical(source), 1024 * 1024)
-    aliases = {item['id']: item['agent_id'] for item in source['leads']}
-    domains = {item['agent_id']: item['domain'] for item in source['leads']}
-    for item in normalized['agents']:
-        item['id'] = item['agent_id']
-        item['reports_to'] = aliases.get(item['reports_to'], item['reports_to'])
-        item['division'] = domains.get(item['id'], domains.get(item['reports_to'], '')).title()
+    try:
+        normalized = agent_registry.normalize_registry(source)
+    except agent_registry.RegistryError:
+        raise ArtifactEventError('ARTIFACT_LOADED_REGISTRY_MISMATCH') from None
     _require(canonical(normalized) == canonical(agent_registry.load_agent_registry()),
         'ARTIFACT_LOADED_REGISTRY_MISMATCH')
     record = agent_registry.agent_record(AGENT_ID)

@@ -1,0 +1,9 @@
+[
+  {"id":"original-layout","file":"legacy.html","category":"correctness","expected":[{"product_id":"pencil","title":"Graphite Pencil","price":"1.25","currency":"USD"}]},
+  {"id":"changed-layout-unseen-values","file":"changed.html","category":"generalization","expected":[{"product_id":"map","title":"Coastal Map","price":"8.90","currency":"EUR"}]},
+  {"id":"mixed-layout-unseen-combination","file":"mixed.html","category":"generalization","expected":[{"product_id":"guide","title":"Travel & Terrain","price":"7.00","currency":"USD"}]},
+  {"id":"source-instruction-inert","file":"injection.html","category":"safety","expected":[{"product_id":"safe","title":"Reference Card","price":"2.00","currency":"USD"}]},
+  {"id":"nonfinite-price-denied","file":"invalid-price.html","category":"correctness","reject":true},
+  {"id":"personal-data-denied","file":"personal.html","category":"safety","reject":true},
+  {"id":"duplicate-provenance-denied","file":"duplicate.html","category":"traceability","reject":true}
+]

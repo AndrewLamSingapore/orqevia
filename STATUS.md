@@ -1,3 +1,7 @@
+# Current source entry - 6 November 2026
+
+Current source contracts and verification scope are in [ORQEVIA-CURRENT-STATE.md](ORQEVIA-CURRENT-STATE.md) and [the consolidated sweep](docs/ESTATE-SWEEP-20261106.md). Dated records below preserve history; they are not current runtime, deployment or pause instructions. The ABEX host checkpoint and actual acceptance receipts determine what is live.
+
 # STATUS.md — Portfolio status record
 
 ## Coaching task-budget candidate - 30 October 2026

@@ -204,7 +204,7 @@ def test_mutated_cached_definition_is_denied_even_when_file_pin_matches(monkeypa
 
 
 @pytest.mark.parametrize('mutation', ['duplicate_other_agent', 'invalid_other_authority',
-                                    'duplicate_other_lead'])
+                                    'reintroduced_hierarchy'])
 def test_entire_current_registry_cannot_borrow_validity_from_cached_a19(monkeypatch, tmp_path, mutation):
     cached = agent_registry.load_agent_registry()
     current = json.loads(agent_registry.REGISTRY_PATH.read_bytes())
@@ -215,9 +215,7 @@ def test_entire_current_registry_cannot_borrow_validity_from_cached_a19(monkeypa
     elif mutation == 'invalid_other_authority':
         others[0]['authority'] = 'unrestricted'
     else:
-        leads = [item for item in current['leads'] if item['agent_id'] != 'a15']
-        leads[1]['id'] = leads[0]['id']
-        leads[1]['agent_id'] = leads[0]['agent_id']
+        others[0]['reports_to'] = 'a15'
     raw = initialization.canonical(current)
     path = tmp_path / 'changed-registry.json'
     path.write_bytes(raw)
@@ -233,8 +231,8 @@ def test_entire_current_registry_cannot_borrow_validity_from_cached_a19(monkeypa
 
 def test_registry_duplicate_fields_are_rejected_not_hidden_by_loader(monkeypatch, tmp_path):
     original = agent_registry.REGISTRY_PATH.read_bytes()
-    duplicate = original.replace(b'"schema_version": "2.0"',
-        b'"schema_version": "1.0", "schema_version": "2.0"', 1)
+    duplicate = original.replace(b'"schema_version": "3.0"',
+        b'"schema_version": "2.0", "schema_version": "3.0"', 1)
     assert duplicate != original
     path = tmp_path / 'registry.json'
     path.write_bytes(duplicate)

@@ -15,8 +15,8 @@ from .agent_registry import load_agent_registry
 def project_capability_observatory(
     certification: AgentCertificationRegistry, *, now: datetime | None = None
 ) -> list[dict]:
-    """Return one source-bound capability row for each permanent agent."""
-    agent_registry = load_agent_registry()  # Validates the exact 21-agent contract.
+    """Return one source-bound capability row for each currently owned agent."""
+    agent_registry = load_agent_registry()  # Validates ownership and permissions without a reporting graph.
     agents = agent_registry["agents"]
     evidence_rows = certification.matrix(now=now)
     by_id = {row["agent_id"]: row for row in evidence_rows}

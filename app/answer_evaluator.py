@@ -9,9 +9,9 @@ from typing import Any
 from .model_gateway import ModelGateway
 from .release_gate import release_gates
 
-LOGGER = logging.getLogger("prime.answer_evaluator")
+LOGGER = logging.getLogger("orqevia.answer_evaluator")
 METRICS = ("source_coverage", "supported_claims", "contradiction_resistance", "uncertainty_calibration", "required_evidence", "policy_conformance", "task_success")
-ACTION_CLAIM = re.compile(r"\b(i|we|prime)\s+(sent|published|purchased|deleted|deployed|executed|approved|transferred)\b", re.I)
+ACTION_CLAIM = re.compile(r"\b(i|we|orqevia|prime)\s+(sent|published|purchased|deleted|deployed|executed|approved|transferred)\b", re.I)
 
 
 def _json_object(text: str) -> dict[str, Any]:

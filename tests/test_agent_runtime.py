@@ -14,29 +14,30 @@ def assert_raises(exc_type, fn):
     raise AssertionError(f"expected {exc_type.__name__}")
 
 
-def test_deterministic_path_uses_registered_lead_and_specialist(tmp_path):
+def test_task_path_selects_the_owned_capability_directly(tmp_path):
     rt = runtime(tmp_path)
-    assert rt.resolve_path("engineering", "implement code for the service") == ["a15", "a17"]
-    assert rt.resolve_path("research", "compare benchmark options") == ["a01", "a04"]
+    assert rt.resolve_path("engineering", "implement code for the service") == ["a17"]
+    assert rt.resolve_path("research", "compare benchmark options") == ["a04"]
 
 
-def test_prime_to_lead_and_lead_to_child_handoffs_are_enforced(tmp_path):
+def test_native_handoffs_are_identity_checked_and_recorded(tmp_path):
     rt = runtime(tmp_path)
     trace = rt.begin_path(["a15", "a17"])
     rows = list(reversed(rt.recent(10)))
     assert trace
     assert [(row["source_agent"], row["target_agent"], row["status"]) for row in rows] == [
-        ("prime", "a15", "allowed"),
+        ("orqevia", "a15", "allowed"),
         ("a15", "a17", "allowed"),
     ]
 
 
-def test_cross_division_delegation_is_denied_and_audited(tmp_path):
+def test_cross_domain_handoff_is_direct_and_unknown_identity_is_denied_and_audited(tmp_path):
     rt = runtime(tmp_path)
-    assert_raises(AgentAuthorityError, lambda: rt.handoff(source="a15", target="a07", relation="delegate"))
+    assert rt.handoff(source='a15', target='a07')['allowed'] is True
+    assert_raises(AgentAuthorityError, lambda: rt.handoff(source='a15', target='invented'))
     event = rt.recent(1)[0]
-    assert event["status"] == "denied"
-    assert event["allowed"] == 0
+    assert event['status'] == 'denied'
+    assert event['allowed'] == 0
 
 
 def test_unknown_agent_fails_closed():

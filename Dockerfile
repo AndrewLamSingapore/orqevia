@@ -28,9 +28,8 @@ COPY app ./app
 COPY scripts/intelligence_healthcheck.py ./scripts/intelligence_healthcheck.py
 COPY mbti_in_thoughts ./mbti_in_thoughts
 COPY config ./config
-# The deterministic architecture lookup reads the current golden record at /app/governance.
-# Keep the image scope narrow; other governance files are not runtime inputs.
-COPY governance/golden-gen4-manifest.json ./governance/
+COPY skills ./skills
+# Current architecture facts are in config; historical Golden records are not runtime authority.
 # Only the verifier's public key metadata is needed in the runtime image.
 COPY governance/agent-cert-verifier-azure-pins.json ./governance/agent-cert-verifier-azure-pins.json
 COPY clients/pwa/index.html clients/pwa/recovery.js clients/pwa/release.mjs clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/storage.mjs clients/pwa/style.css clients/pwa/sw.js clients/pwa/voice.mjs clients/pwa/manifest.webmanifest ./app/pwa_static/
@@ -47,6 +46,7 @@ COPY clients/public ./app/public_static
 COPY clients/shared ./app/shared_static
 COPY clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/operations.mjs ./app/pwa_static/
 COPY clients/pwa/intelligence-capabilities.mjs ./app/pwa_static/
+COPY clients/pwa/activity-pockets.mjs ./app/pwa_static/
 COPY clients/pwa/command-center.mjs ./app/pwa_static/
 
 # Keep revision metadata after dependency installation so a new source commit

@@ -32,7 +32,7 @@ if (typeof document !== 'undefined' && document.getElementById('depot-view')) {
         const details=make('details');details.append(make('summary','Resource requirements'),make('pre',JSON.stringify(item.resources,null,2)));card.append(details);
       }
       if(Array.isArray(item.operations)&&item.operations.length)card.append(make('p','Supported operations: '+item.operations.map(x=>typeof x==='string'?x:x?.name||x?.id||'Unspecified').join(', ')));
-      const destinations={'local-inference':'missions','local-knowledge':'knowledge','agent-capabilities':'agents','predictive-intelligence':'console','model-efficiency':'console','durable-memory':'workspace','offline-continuity':'live-systems',knowledge:'knowledge', memory:'workspace', agents:'agents', inference:'intelligence', models:'intelligence', fabric:'console', academy:'evolution', resource_guardian:'live-systems'};
+      const destinations={'activity-pockets':'workspace','local-inference':'missions','local-knowledge':'knowledge','agent-capabilities':'agents','predictive-intelligence':'console','model-efficiency':'console','durable-memory':'workspace','offline-continuity':'live-systems',knowledge:'knowledge', memory:'workspace', agents:'agents', inference:'intelligence', models:'intelligence', fabric:'console', academy:'evolution', resource_guardian:'live-systems'};
       const destination=destinations[item.id];
       if(destination){const button=make('button','Open capability');button.type='button';button.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('orqevia-open-view',{detail:{name:destination}})));card.append(button);}
       root.append(card);

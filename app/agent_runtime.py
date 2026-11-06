@@ -1,8 +1,8 @@
-"""Runtime authority enforcement and sanitized agent execution ledger.
+"""Owned capability handoffs and sanitized agent execution records.
 
 This module is deliberately independent from model output. The LLM can propose
-work, but every agent hand-off is checked against the canonical registry before
-execution and recorded without prompts, credentials, endpoints or result text.
+work; owned identities are checked before each handoff. Tool permissions remain
+independent of collaboration and recorded without prompts, credentials, endpoints or result text.
 """
 from __future__ import annotations
 
@@ -16,59 +16,17 @@ from typing import Any
 
 from .agent_registry import (
     RegistryError,
-    agent_record,
     canonical_agent_id,
-    domain_lead,
     may_consult,
     may_delegate,
     orchestrator_id,
     registered_agent_ids,
     requires_owner_approval,
 )
-from . import open_access
 
 
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-DOMAIN_CHILDREN: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
-    "strategy": (
-        ("a02", ("plan", "planning", "sequence", "objective")),
-        ("a03", ("roadmap", "milestone", "dependency")),
-        ("a04", ("decision", "option", "trade-off", "choose")),
-        ("a05", ("portfolio", "initiative", "priority")),
-    ),
-    "research": (
-        ("a07", ("evidence", "source", "support", "claim")),
-        ("a08", ("compare", "comparison", "benchmark", "versus")),
-        ("a09", ("knowledge", "synthesis", "context")),
-    ),
-    "data": (
-        ("a11", ("metric", "measure", "baseline", "kpi")),
-        ("a12", ("analysis", "analyze", "data", "dataset")),
-        ("a13", ("forecast", "scenario", "projection")),
-        ("a14", ("quality", "provenance", "completeness", "validation")),
-    ),
-    "engineering": (
-        ("a16", ("architecture", "design", "system", "interface")),
-        ("a17", ("implement", "build", "code", "deploy", "fix")),
-        ("a18", ("test", "verify", "acceptance", "regression")),
-        ("a19", ("reliability", "failure", "resilience", "recovery")),
-    ),
-    "economic": (
-        ("a22", ("value", "revenue", "income", "benefit")),
-        ("a21", ("cost", "expense", "budget", "price")),
-        ("a23", ("resource", "capacity", "allocation")),
-        ("a24", ("commercial", "market", "pricing", "business")),
-    ),
-    "quality": (
-        ("a27", ("verify", "verification", "audit", "complete")),
-        ("a26", ("critic", "critique", "contradiction", "challenge")),
-        ("a28", ("risk", "failure", "hazard", "consequence")),
-        ("a29", ("release", "readiness", "rollback", "ship")),
-    ),
-}
 
 
 class AgentAuthorityError(RuntimeError):
@@ -76,7 +34,7 @@ class AgentAuthorityError(RuntimeError):
 
 
 class AgentAuthorityRuntime:
-    """Fail-closed runtime policy gate backed by a durable SQLite event ledger."""
+    """Identity-checked handoffs backed by durable, non-authorizing execution records."""
 
     def __init__(self, db_path: str | Path | None = None):
         if db_path is None:
@@ -84,7 +42,7 @@ class AgentAuthorityRuntime:
             try:
                 data.mkdir(parents=True, exist_ok=True)
             except PermissionError:
-                data = Path("/tmp/prime")
+                data = Path("/tmp/orqevia")
                 data.mkdir(parents=True, exist_ok=True)
             db_path = data / "agent-authority.db"
         self.db_path = str(db_path)
@@ -151,8 +109,16 @@ class AgentAuthorityRuntime:
         external_action: bool = False,
         latency_ms: float | None = None,
     ) -> dict[str, Any]:
-        target = canonical_agent_id(target_agent)
-        source = canonical_agent_id(source_agent) if source_agent else None
+        def identity(value):
+            try:
+                return canonical_agent_id(value)
+            except RegistryError:
+                if allowed:
+                    raise
+                return 'UNREGISTERED'
+
+        target = identity(target_agent)
+        source = identity(source_agent) if source_agent else None
         approval_required = requires_owner_approval(consequential=consequential)
         with self.lock, self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -184,25 +150,15 @@ class AgentAuthorityRuntime:
         }
 
     def resolve_path(self, specialist: str, intent: str) -> list[str]:
-        """Resolve domain lead + bounded child agent using deterministic keywords."""
-        domain = (specialist or "strategy").strip().lower()
-        if domain not in DOMAIN_CHILDREN:
-            raise AgentAuthorityError(f"unregistered specialist domain: {specialist}")
-        lead = domain_lead(domain)
-        text = (intent or "").lower()
-        choices = DOMAIN_CHILDREN[domain]
-        best_agent, best_score = choices[0][0], -1
-        for agent_id, keywords in choices:
-            score = sum(1 for keyword in keywords if keyword in text)
-            if score > best_score:
-                best_agent, best_score = agent_id, score
-        best_agent=canonical_agent_id(best_agent)
-        record=agent_record(best_agent)
-        # A consolidated responsibility can move domains. Follow its canonical
-        # parent rather than delegating across an unauthorized historical edge.
-        if record.get('can_delegate'):
-            return [best_agent]
-        return [record['reports_to'],best_agent]
+        """Resolve the task's owned capability without a supervisor hop."""
+        from .capability_selection import select_capability
+        from .agent_registry import responsibility_owner, domain_lead
+
+        try:
+            domain_lead(specialist or 'strategy')  # Reject invented domain names.
+            return [responsibility_owner(select_capability(intent or specialist or 'strategy'))]
+        except RegistryError as exc:
+            raise AgentAuthorityError(str(exc)) from None
 
     def authorize(
         self,
@@ -215,18 +171,16 @@ class AgentAuthorityRuntime:
         owner_approved: bool = False,
         external_action: bool = False,
     ) -> tuple[bool, str]:
-        if open_access.enabled():
-            return True, "open access mode"
         try:
             source_id, target_id = canonical_agent_id(source), canonical_agent_id(target)
-        except RegistryError as exc:
-            return False, str(exc)
+        except RegistryError:
+            return False, "unregistered capability identity"
         if relation == "delegate":
             allowed = may_delegate(source_id, target_id, depth=depth)
-            reason = "canonical direct delegation allowed" if allowed else "delegation edge is not permitted by canonical registry"
+            reason = "owned capability handoff allowed" if allowed else "unknown, identical or invalid capability handoff"
         elif relation == "consult":
             allowed = may_consult(source_id, target_id)
-            reason = "canonical consultation allowed" if allowed else "consultation edge is not permitted by canonical registry"
+            reason = "owned capability consultation allowed" if allowed else "unknown or identical capability consultation"
         else:
             return False, f"unsupported agent relation: {relation}"
         if external_action and consequential and not owner_approved:
@@ -256,7 +210,8 @@ class AgentAuthorityRuntime:
         if not allowed:
             status = "denied"
         event = self._record(
-            trace_id=trace, source_agent=source, target_agent=target, relation=relation,
+            trace_id=trace, source_agent=canonical_agent_id(source) if allowed else source,
+            target_agent=canonical_agent_id(target) if allowed else target, relation=relation,
             stage=f"handoff:{relation}", status=status, allowed=allowed, reason=reason,
             consequential=consequential, owner_approved=owner_approved, external_action=external_action,
         )
@@ -271,13 +226,18 @@ class AgentAuthorityRuntime:
         trace_id: str | None = None,
         consequential: bool = False,
     ) -> str:
-        if len(path) not in {1, 2}:
-            raise AgentAuthorityError("agent path must contain one lead and at most one specialist")
+        try:
+            path = [canonical_agent_id(agent) for agent in path]
+        except RegistryError as exc:
+            raise AgentAuthorityError(str(exc)) from None
+        if not path or len(path) != len(set(path)) or orchestrator_id() in path:
+            raise AgentAuthorityError("agent path requires distinct owned capabilities")
         trace = trace_id or str(uuid.uuid4())
-        prime = orchestrator_id()
-        self.handoff(source=prime, target=path[0], relation="delegate", trace_id=trace, consequential=consequential)
-        if len(path) == 2:
-            self.handoff(source=path[0], target=path[1], relation="delegate", depth=2, trace_id=trace, consequential=consequential)
+        source = orchestrator_id()
+        for depth, target in enumerate(path, 1):
+            self.handoff(source=source, target=target, relation="delegate", depth=depth,
+                         trace_id=trace, consequential=consequential)
+            source = target
         return trace
 
     def stage(

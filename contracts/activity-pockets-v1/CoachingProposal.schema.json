@@ -1,0 +1,220 @@
+{
+  "$defs": {
+    "ExtractionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "price_fields": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9-]{0,31}$",
+            "type": "string"
+          },
+          "title": "Price Fields",
+          "type": "array"
+        },
+        "title_fields": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9-]{0,31}$",
+            "type": "string"
+          },
+          "title": "Title Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title_fields",
+        "price_fields"
+      ],
+      "title": "ExtractionConfig",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "academy",
+            "library",
+            "tools",
+            "factory",
+            "orqevia"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "origin": {
+          "default": "runtime",
+          "enum": [
+            "runtime",
+            "controlled-fixture",
+            "legacy-adapter"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "reference": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "source_revision": {
+          "pattern": "^[a-f0-9]{40}$",
+          "title": "Source Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "source_revision",
+        "reference"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "$id": "https://orqevia.local/contracts/activity-pockets/v1/CoachingProposal",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "audit_refs": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Audit Refs",
+      "type": "array"
+    },
+    "compatibility": {
+      "default": [
+        "activity-pockets/1"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "title": "Compatibility",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "evaluation_methodology": {
+      "title": "Evaluation Methodology",
+      "type": "string"
+    },
+    "expected_benefit": {
+      "title": "Expected Benefit",
+      "type": "string"
+    },
+    "from_version": {
+      "pattern": "^\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}$",
+      "title": "From Version",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "observed_deficiency": {
+      "title": "Observed Deficiency",
+      "type": "string"
+    },
+    "owner": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Owner",
+      "type": "string"
+    },
+    "permissions": {
+      "default": [],
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Permissions",
+      "type": "array"
+    },
+    "pocket_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Pocket Id",
+      "type": "string"
+    },
+    "proposed_change": {
+      "$ref": "#/$defs/ExtractionConfig"
+    },
+    "proposer": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Proposer",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "regression_results": {
+      "default": [],
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Regression Results",
+      "type": "array"
+    },
+    "risk_assessment": {
+      "title": "Risk Assessment",
+      "type": "string"
+    },
+    "rollback_procedure": {
+      "title": "Rollback Procedure",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "supporting_evidence": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        "type": "string"
+      },
+      "title": "Supporting Evidence",
+      "type": "array"
+    },
+    "to_version": {
+      "pattern": "^\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}$",
+      "title": "To Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "owner",
+    "provenance",
+    "pocket_id",
+    "proposer",
+    "observed_deficiency",
+    "supporting_evidence",
+    "proposed_change",
+    "expected_benefit",
+    "evaluation_methodology",
+    "risk_assessment",
+    "rollback_procedure",
+    "from_version",
+    "to_version"
+  ],
+  "title": "CoachingProposal",
+  "type": "object"
+}
