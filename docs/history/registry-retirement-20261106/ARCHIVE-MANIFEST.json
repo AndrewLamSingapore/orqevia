@@ -1,0 +1,55 @@
+{
+  "scope": "HISTORICAL_NONEXECUTABLE_BYTES_NOT_CURRENT_AUTHORITY",
+  "files": [
+    {
+      "path": "CUSTODY.json",
+      "sha256": "80b51544fadb01d95dfca0b29fb23439716a14095cafb2d563dd95fafd377b4b",
+      "bytes": 1375
+    },
+    {
+      "path": "system.manifest.json",
+      "sha256": "a05f6eb305ddce6319ba2fbe008c0d91708677e4e16cd1a95551b7c4e163c6b2",
+      "bytes": 2113
+    },
+    {
+      "path": "app/agent_cert_artifact_events.py.txt",
+      "sha256": "3e3b5e5473ad7c3096754860f3c8af0af0f5fae690883560738cc9c99c9c3392",
+      "bytes": 31593
+    },
+    {
+      "path": "app/agent_cert_initialization.py.txt",
+      "sha256": "6380b0e131b06a5012b8307bfad9a7e2626d7d0a2286f3212e4482d1881924fe",
+      "bytes": 19629
+    },
+    {
+      "path": "app/agent_notebooks.py.txt",
+      "sha256": "7f48b30646570231cc41083259a1d85f8d33bc33683b205e4d9bba6129d8baea",
+      "bytes": 70244
+    },
+    {
+      "path": "app/agent_registry.py.txt",
+      "sha256": "75b4365dcfb55557506cc6c1d4c7e642ceb2dfddd0f9a3318d482fa38fc14159",
+      "bytes": 12757
+    },
+    {
+      "path": "app/agent_runtime.py.txt",
+      "sha256": "27b0b5e59d134aa2f512224fc4102aa39cb778f1fe6b70164fe059442bc284f3",
+      "bytes": 15311
+    },
+    {
+      "path": "app/collective_intelligence.py.txt",
+      "sha256": "2ba67766fc8abf7f695458856e4ff5098cdd0107875e1e45807ffe9f27887655",
+      "bytes": 112013
+    },
+    {
+      "path": "config/agent_registry.json",
+      "sha256": "5c41c170f3e9e993ccccfa1e095fed5e7a054d8904f8e0f410cafad9a3015833",
+      "bytes": 120771
+    },
+    {
+      "path": "config/agent_registry_v1.schema.json",
+      "sha256": "9269956607a1134a5d3174f37b5adb081058ab8586b307bdc7d2681bc7e26814",
+      "bytes": 1119
+    }
+  ]
+}

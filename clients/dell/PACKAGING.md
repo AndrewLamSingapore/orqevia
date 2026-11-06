@@ -1,3 +1,11 @@
+# Current desktop package - 6 November 2026
+
+Version 0.2.0 opens the canonical HTTPS workspace through its configured origin;
+the local relay retains its existing scoped API transport. The original renderer
+is retired. SOURCE-SHA256.json binds the current reviewed source. Its transport
+hash is updated only after the existing negative URL/identity tests pass.
+Earlier packaging instructions below are historical context.
+
 > Portfolio status authority: [STATUS.md](https://github.com/AndrewLamSingapore/orqevia/blob/main/STATUS.md) in the private ORQEVIA repository. This document describes this repository only; it cannot override the canonical architecture or establish live deployment status.
 
 # Reproducible Dell client package
@@ -11,10 +19,10 @@ python -B tools/package_client.py --build --archive client.zip --evidence build
 
 Use a new archive filename for every build; existing files are never overwritten. Omit `--build` to verify an existing archive. Both canonical and URL/security tests execute against extracted archive bytes before PASS. Archive entries use fixed timestamps, permissions, ordering and uncompressed storage, making bytes independent of local filesystem timestamps and compression-library versions. Evidence directories have unique names and are excluded from the archive and Git.
 
-`SOURCE-SHA256.json` is the reviewed source lock; `lib/upstream.mjs` additionally has a fixed approval hash in the tooling. Source changes require review and an explicit lock update. The URL regression corrects a historical root-path join that could discard the ABEX origin, and denies redirects. Runtime credentials are supplied only through `JARVIS_CLIENT_TOKEN`; no credentials, deployment certificates, private configuration, DPAPI files or ABEX workspace paths belong in this package. `.env.example` contains placeholders only.
+`SOURCE-SHA256.json` is the reviewed source lock; `lib/upstream.mjs` additionally has a fixed approval hash in the tooling. Source changes require review and an explicit lock update. The URL regression corrects a historical root-path join that could discard the ABEX origin, and denies redirects. Runtime credentials are supplied only through `ORQEVIA_CLIENT_TOKEN`; no credentials, deployment certificates, private configuration, DPAPI files or ABEX workspace paths belong in this package. `.env.example` contains placeholders only.
 
 Historical physical-integration bundles remain separate immutable evidence. This portable package is a deterministic source release, not a regeneration of those sealed ZIP bytes and not a fresh enrollment mechanism.
 
 ## Historical README
 
-README.md is hash-pinned historical initial-delivery documentation. Its locked/unconfigured/TAP descriptions do not define current production. Root Architecture v1 supersedes those assumptions; enrollment and deployment are proved by separate evidence.
+README.md describes the current shared HTTPS workspace. Earlier initial-delivery bytes are preserved in the desktop-retirement history. Source/package checks are separate from actual Dell hardware, enrollment and runtime evidence.

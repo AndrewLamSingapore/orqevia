@@ -1,3 +1,7 @@
+# Current batch - 6 November 2026
+
+The Owner full-estate sweep supersedes stale parked-work instructions. Read ORQEVIA-CURRENT-STATE.md and docs/ESTATE-SWEEP-20261106.md. Keep this session in one branch/PR, qualify locally, and perform one verified cutover. Historical proposals are either integrated or explicitly retired with recovery custody; they must not silently regain authority.
+
 # ORQEVIA implementation priorities - 5 November 2026
 
 This is a working backlog, not an execution authority or a fixed routing chain.

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orqevia.invalid/schemas/capability-inventory-v3.json",
+  "title": "ORQEVIA owned capability inventory",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "registry_version",
+    "agents",
+    "orchestrator",
+    "coordination",
+    "responsibility_coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "3.0"
+    },
+    "registry_version": {
+      "const": "2.0.0"
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "agent_id",
+          "immutable_id",
+          "purpose",
+          "responsibilities",
+          "capability_requirements",
+          "tool_eligibility",
+          "model_tier_eligibility",
+          "tap_relationship"
+        ],
+        "properties": {}
+      }
+    },
+    "orchestrator": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "const": "orqevia"
+        }
+      }
+    },
+    "coordination": {
+      "type": "object",
+      "required": [
+        "delegation_transfers_authority"
+      ],
+      "properties": {
+        "delegation_transfers_authority": {
+          "const": false
+        }
+      }
+    },
+    "responsibility_coverage": {
+      "type": "array"
+    }
+  }
+}

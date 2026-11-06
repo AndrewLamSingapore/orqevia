@@ -11,6 +11,12 @@ RUN python -m pip install --no-cache-dir --no-deps --require-hashes --index-url 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Keep the optional installed PostgreSQL adapter available when one qualified
+# image is used for the existing backend, interface and worker service roles.
+COPY requirements-postgres.txt ./
+ARG ORQEVIA_POSTGRES_ENABLED=0
+RUN if [ "$ORQEVIA_POSTGRES_ENABLED" = "1" ]; then pip install --no-cache-dir -r requirements-postgres.txt; fi
+
 # Install the reviewed upstream MBTI-in-Thoughts runtime wheel. Its research
 # dependency declarations are removed because that pinned Torch/LangChain
 # environment conflicts with ORQEVIA's production dependency closure.
@@ -19,11 +25,11 @@ RUN pip install --no-cache-dir --no-deps /tmp/mbti_in_thoughts-1.0.0-1orqevia-py
     && rm /tmp/mbti_in_thoughts-1.0.0-1orqevia-py3-none-any.whl
 
 COPY app ./app
+COPY scripts/intelligence_healthcheck.py ./scripts/intelligence_healthcheck.py
 COPY mbti_in_thoughts ./mbti_in_thoughts
 COPY config ./config
-# The deterministic architecture lookup reads the current golden record at /app/governance.
-# Keep the image scope narrow; other governance files are not runtime inputs.
-COPY governance/golden-gen4-manifest.json ./governance/
+COPY skills ./skills
+# Current architecture facts are in config; historical Golden records are not runtime authority.
 # Only the verifier's public key metadata is needed in the runtime image.
 COPY governance/agent-cert-verifier-azure-pins.json ./governance/agent-cert-verifier-azure-pins.json
 COPY clients/pwa/index.html clients/pwa/recovery.js clients/pwa/release.mjs clients/pwa/app.mjs clients/pwa/core.mjs clients/pwa/storage.mjs clients/pwa/style.css clients/pwa/sw.js clients/pwa/voice.mjs clients/pwa/manifest.webmanifest ./app/pwa_static/
@@ -40,6 +46,7 @@ COPY clients/public ./app/public_static
 COPY clients/shared ./app/shared_static
 COPY clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/operations.mjs ./app/pwa_static/
 COPY clients/pwa/intelligence-capabilities.mjs ./app/pwa_static/
+COPY clients/pwa/activity-pockets.mjs ./app/pwa_static/
 COPY clients/pwa/command-center.mjs ./app/pwa_static/
 
 # Keep revision metadata after dependency installation so a new source commit

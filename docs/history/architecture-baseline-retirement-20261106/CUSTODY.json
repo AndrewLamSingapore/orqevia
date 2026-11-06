@@ -1,0 +1,17 @@
+[
+  {
+    "original": "app/system_architecture.py",
+    "preserved_as": "docs\\history\\architecture-baseline-retirement-20261106\\app\\system_architecture.py.txt",
+    "sha256": "2f7f5ca80627188ae4058459ca0251d8bd58fa4efdd95bfcfb68f0ae34d4b9ad"
+  },
+  {
+    "original": "governance/golden-gen4-manifest.json",
+    "preserved_as": "docs\\history\\architecture-baseline-retirement-20261106\\governance\\golden-gen4-manifest.json.txt",
+    "sha256": "1c7f82e464cf41879b7511c91e945e8e0676fe75808220869b444d6d2d74f710"
+  },
+  {
+    "original": "tests/test_system_architecture.py",
+    "preserved_as": "docs\\history\\architecture-baseline-retirement-20261106\\tests\\test_system_architecture.py.txt",
+    "sha256": "6f763c15f4983838cb702a587a0cda38d062eabe16a2f78fea82876b64ee240c"
+  }
+]

@@ -4,7 +4,14 @@ const LOOPBACK_NAMES = new Set(['127.0.0.1', '::1', 'localhost']);
 const SHA256 = /^[a-f0-9]{64}$/i;
 
 export function loadConfig(env = process.env) {
-  const rawUrl = env.JARVIS_ABEX_BASE_URL?.trim() || '';
+  const conflicts = [];
+  const setting = suffix => {
+    const current = env['ORQEVIA_' + suffix]?.trim();
+    const historical = env['JARVIS_' + suffix]?.trim();
+    if (current && historical && current !== historical) conflicts.push('Conflicting current and historical ' + suffix + ' settings');
+    return current || historical || '';
+  };
+  const rawUrl = setting('ABEX_BASE_URL') || '';
   let baseUrl;
   let urlError = '';
   try {
@@ -18,14 +25,14 @@ export function loadConfig(env = process.env) {
     urlError = 'ABEX URL is missing or invalid';
   }
 
-  const expectedHost = env.JARVIS_ABEX_EXPECTED_HOST?.trim() || '';
-  const identitySha256 = env.JARVIS_ABEX_IDENTITY_SHA256?.trim() || '';
-  const clientId = env.JARVIS_CLIENT_ID?.trim() || '';
-  const token = env.JARVIS_CLIENT_TOKEN?.trim() || '';
-  const listenHost = env.JARVIS_DELL_LISTEN_HOST?.trim() || '127.0.0.1';
-  const port = Number(env.JARVIS_DELL_LISTEN_PORT || 4317);
+  const expectedHost = setting('ABEX_EXPECTED_HOST') || '';
+  const identitySha256 = setting('ABEX_IDENTITY_SHA256') || '';
+  const clientId = setting('CLIENT_ID') || '';
+  const token = setting('CLIENT_TOKEN') || '';
+  const listenHost = setting('DELL_LISTEN_HOST') || '127.0.0.1';
+  const port = Number(setting('DELL_LISTEN_PORT') || 4317);
 
-  const errors = [];
+  const errors = [...conflicts];
   if (urlError) errors.push(urlError);
   if (!expectedHost) errors.push('Expected ABEX hostname is missing');
   if (!SHA256.test(identitySha256)) errors.push('ABEX identity pin must be a SHA-256 hex value');

@@ -4,7 +4,7 @@
   "scope": "ONE_ADVISORY_CAPABILITY_NO_AUTHORITY_TRANSFER",
   "routes": [
     {"capability": "responsibility.a11", "terms": ["metric", "metrics", "measure", "baseline", "kpi"]},
-    {"capability": "responsibility.a12", "terms": ["analysis", "analyze", "data", "dataset"]},
+    {"capability": "responsibility.a12", "terms": ["data", "dataset", "anomalies", "statistical analysis"]},
     {"capability": "responsibility.a13", "terms": ["forecast", "scenario", "projection"]},
     {"capability": "responsibility.a14", "terms": ["quality", "provenance", "completeness", "validation"]},
     {"capability": "responsibility.a21", "terms": ["cost", "expense", "budget", "price"]},

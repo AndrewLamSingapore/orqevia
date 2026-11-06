@@ -1,0 +1,7 @@
+{
+  "Type": "json-file",
+  "Config": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}

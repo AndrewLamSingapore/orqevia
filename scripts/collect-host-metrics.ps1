@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0) { throw 'Collector accepts no caller arguments' }
 
-$Root = 'C:\ProgramData\ABEX\PrimeHostMetrics'
+$Root = 'C:\ProgramData\ABEX\ORQEVIAHostMetrics'
 $OutputDirectory = Join-Path $Root 'receipt'
 $OutputPath = Join-Path $OutputDirectory 'host-metrics.json'
 $MaximumReceiptBytes = 131072

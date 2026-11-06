@@ -30,8 +30,8 @@ MAX_REGISTRY_BYTES = 1024 * 1024
 MAX_AGE_SECONDS = 300
 _DEFINITION_FIELDS = (
     'agent_id', 'immutable_id', 'name', 'role', 'purpose', 'version',
-    'lifecycle_status', 'status', 'authority', 'human_approval', 'can_delegate',
-    'reports_to', 'capability_requirements', 'responsibilities',
+    'lifecycle_status', 'status', 'authority', 'human_approval',
+    'capability_requirements', 'responsibilities',
     'non_responsibilities', 'input_contract', 'output_contract',
     'tool_eligibility', 'model_tier_eligibility', 'tap_relationship',
     'failure_fallback',
@@ -211,26 +211,16 @@ def _owned_domains(registry_sha256, agent_id='a19', capability_id='responsibilit
         _require(sha(raw) == registry_sha256, 'INITIALIZATION_REGISTRY_MISMATCH')
         source = _parse(raw, MAX_REGISTRY_BYTES)
         loaded = agent_registry.load_agent_registry()
-        _require(source.get('schema_version') == '2.0'
+        _require(source.get('schema_version') == '3.0'
                  and source.get('registry_version') == loaded.get('registry_version')
-                 and type(source.get('agents')) is list and len(source['agents']) == 21,
+                 and type(source.get('agents')) is list and bool(source['agents']),
                  'INITIALIZATION_REGISTRY_INVALID')
-        # The Registry loader caches its complete validated domain. Reconcile
-        # the entire current strict source, not just A19: an unchanged A19 must
-        # never borrow validity from a cached Registry while another agent or
-        # lead has been corrupted. These are the loader's only transformations.
-        normalized = _parse(canonical(source), MAX_REGISTRY_BYTES)
-        leads = normalized.get('leads')
-        _require(type(leads) is list and len(leads) == 6
-                 and all(type(item) is dict for item in leads),
-                 'INITIALIZATION_REGISTRY_INVALID')
-        aliases = {item['id']: item['agent_id'] for item in leads}
-        domains = {item['agent_id']: item['domain'] for item in leads}
-        for item in normalized['agents']:
-            _require(type(item) is dict, 'INITIALIZATION_REGISTRY_INVALID')
-            item['id'] = item['agent_id']
-            item['reports_to'] = aliases.get(item['reports_to'], item['reports_to'])
-            item['division'] = domains.get(item['id'], domains.get(item['reports_to'], '')).title()
+        # Reconcile the entire independently validated current source. An
+        # unchanged selected agent cannot borrow validity from a stale cache.
+        try:
+            normalized = agent_registry.normalize_registry(source)
+        except agent_registry.RegistryError:
+            raise InitializationError('INITIALIZATION_LOADED_REGISTRY_MISMATCH') from None
         _require(canonical(normalized) == canonical(loaded),
                  'INITIALIZATION_LOADED_REGISTRY_MISMATCH')
         records = [item for item in source['agents']
@@ -241,17 +231,9 @@ def _owned_domains(registry_sha256, agent_id='a19', capability_id='responsibilit
         _require(all(key in record and key in actual for key in _DEFINITION_FIELDS),
                  'INITIALIZATION_DEFINITION_INVALID')
         definition = {key: record[key] for key in _DEFINITION_FIELDS}
-        # The loader canonically resolves public lead aliases. Only that exact
-        # documented transformation is permitted; stale/mutated cache is denied.
-        leads = source.get('leads')
-        _require(type(leads) is list and len(leads) == 6,
-                 'INITIALIZATION_REGISTRY_INVALID')
-        aliases = {item['id']: item['agent_id'] for item in leads}
-        definition['reports_to'] = aliases.get(record['reports_to'], record['reports_to'])
         _require(canonical(definition) == canonical({key: actual[key] for key in _DEFINITION_FIELDS}),
                  'INITIALIZATION_LOADED_DEFINITION_MISMATCH')
         _require(record['immutable_id'] == agent_id and record['authority'] in ('advisory', 'restricted')
-                 and type(record['can_delegate']) is bool
                  and capability_id in record['capability_requirements']
                  and 'provided_context.read' in record['tool_eligibility']
                  and agent_registry.responsibility_owner(capability_id) == agent_id

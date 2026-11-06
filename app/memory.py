@@ -1,4 +1,4 @@
-"""JARVIS cognitive memory v1.
+"""ORQEVIA cognitive memory.
 
 Operational telemetry does not belong here. This store accepts notable episodes
 and promotes only explicitly durable, keyed items into update-in-place memory.
@@ -16,8 +16,8 @@ from typing import Any, Mapping
 
 MEMORY_POLICIES = {
     "working": {"persistence": "request", "retention": "request_lifetime", "authority": "runtime", "auto_promote": False},
-    "episodic": {"persistence": "episodic_memory", "retention": "until_reviewed", "authority": "prime", "auto_promote": True},
-    "semantic": {"persistence": "durable_memory", "retention": "until_superseded", "authority": "prime", "auto_promote": True},
+    "episodic": {"persistence": "episodic_memory", "retention": "until_reviewed", "authority": "orqevia", "auto_promote": True},
+    "semantic": {"persistence": "durable_memory", "retention": "until_superseded", "authority": "orqevia", "auto_promote": True},
     "procedural": {"persistence": "durable_memory", "retention": "versioned_until_retired", "authority": "owner_or_verified_policy", "auto_promote": False},
     "protected": {"persistence": "durable_memory", "retention": "owner_controlled", "authority": "owner_only", "auto_promote": False},
 }

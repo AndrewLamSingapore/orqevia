@@ -1,3 +1,17 @@
+# Current Owner supersession - 6 November 2026
+
+The Owner resumed all authorized engineering and production after reboot and
+requested a complete ORQEVIA estate sweep, removal of obsolete PRIME dependencies,
+updates and end-to-end production qualification. Linux and CLI/network use are
+authorized. The 31 October efficiency-study supersession and permanent batching
+law override older pause, model-exclusive, approval-ceremony and deployment-gate
+instructions below. Current state starts at ORQEVIA-CURRENT-STATE.md.
+
+Preserve user data, models, security, HTTPS, trusted sessions and rollback
+evidence. Wallet investigation is read-only. REA and MiroFish remain excluded.
+Historical schemas and signed records preserve their original identities for
+verification; they are not a separate active PRIME coordinator.
+
 # Owner mission amendment - 5 November 2026
 
 Read `ORQEVIA-CURRENT-STATE.md` first, then

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 from urllib.request import Request, urlopen
 
-from .agent_registry import RegistryError, canonical_agent_id, load_agent_registry, registered_agent_ids
+from .agent_registry import RegistryError, canonical_agent_id, load_agent_registry, registered_agent_ids, orchestrator_id
 
 SCHEMA_VERSION = 1
 SECTIONS = (
@@ -387,6 +387,7 @@ class AgentNotebookStore:
 
     def provision_all(self) -> dict[str, Any]:
         registry = load_agent_registry()
+        registry_digest = hashlib.sha256(canonical_json(registry).encode('utf8')).hexdigest()
         agents = registry["agents"]
         created = 0
         identity_seeded = 0
@@ -408,18 +409,23 @@ class AgentNotebookStore:
                     "name": agent["name"],
                     "role": agent["role"],
                     "purpose": agent["purpose"],
-                    "reports_to": agent["reports_to"],
+                    "coordination": "DIRECT_CAPABILITY_HANDOFF",
+                    "registry_version": registry['registry_version'],
+                    "registry_sha256": registry_digest,
                     "responsibilities": [item["id"] for item in agent["responsibilities"]],
                     "authority": agent["authority"],
                     "human_approval": agent["human_approval"],
                     "boundaries": list(agent["non_responsibilities"]),
                 }
-                if not db.execute(
-                    """SELECT 1 FROM agent_memory_records
-                    WHERE agent_id=? AND section='identity' AND source=? AND deleted_at IS NULL""",
+                source_ref = f"registry:{registry['registry_version']}:{registry_digest}#agents/{agent_id}"
+                prior = db.execute(
+                    """SELECT memory_id,source_ref,content_hash FROM agent_memory_records
+                    WHERE agent_id=? AND section='identity' AND source=? AND deleted_at IS NULL
+                      AND superseded_by IS NULL ORDER BY created_at DESC,rowid DESC LIMIT 1""",
                     (agent_id, "config/agent_registry.json"),
-                ).fetchone():
-                    self._insert_record(
+                ).fetchone()
+                if prior is None or prior['source_ref'] != source_ref:
+                    created_identity = self._insert_record(
                         db,
                         agent_id=agent_id,
                         scope="private",
@@ -429,18 +435,26 @@ class AgentNotebookStore:
                         logical_key="identity.registry",
                         content=identity,
                         source="config/agent_registry.json",
-                        source_ref=f"registry:{registry['registry_version']}#agents/{agent_id}",
+                        source_ref=source_ref,
                         evidence_refs=["config/agent_registry.json"],
                         principal=NotebookPrincipal("system", "OWNER"),
                         verification_status="verified_source",
                         confidence=1.0,
                         retention_class="identity",
                         task_id=None,
-                        idempotency_key=f"seed:{agent_id}:registry:{registry['registry_version']}",
+                        idempotency_key=f"seed:{agent_id}:registry:{registry['registry_version']}:{registry_digest}",
                         request_id=None,
                         embed=False,
+                        supersedes_id=prior['memory_id'] if prior else None,
                     )
-                    identity_seeded += 1
+                    if prior and prior['memory_id'] != created_identity['memory_id']:
+                        db.execute("UPDATE agent_memory_records SET superseded_by=?,conflict_status='superseded',updated_at=? WHERE memory_id=?",
+                                   (created_identity['memory_id'], now, prior['memory_id']))
+                        self._audit(db, NotebookPrincipal('system', 'OWNER'), 'correct', True,
+                                    owner_agent_id=agent_id, memory_id=prior['memory_id'],
+                                    reason='Current source identity supersedes dated registry projection; original content preserved',
+                                    details={'replacement_id': created_identity['memory_id']})
+                    identity_seeded += int(not created_identity.get('idempotent_replay', False))
         return {
             "agents_registered": len(agents),
             "notebooks_created": created,
@@ -453,7 +467,7 @@ class AgentNotebookStore:
         except RegistryError as exc:
             raise NotebookNotFound("agent notebook does not exist") from exc
         if (
-            canonical == "prime"
+            canonical == orchestrator_id()
             or not db.execute("SELECT 1 FROM agent_notebooks WHERE agent_id=? AND enabled=1", (canonical,)).fetchone()
         ):
             raise NotebookNotFound("agent notebook does not exist")
@@ -545,7 +559,7 @@ class AgentNotebookStore:
             rows = db.execute(
                 """SELECT memory_id,section,record_type,content_json
                 FROM agent_memory_records
-                WHERE embedding_json IS NULL AND deleted_at IS NULL
+                WHERE embedding_json IS NULL AND deleted_at IS NULL AND superseded_by IS NULL
                 ORDER BY updated_at LIMIT ?""",
                 (max(1, min(int(limit), 256)),),
             ).fetchall()
@@ -1265,7 +1279,7 @@ class AgentNotebookStore:
                     raise NotebookPermissionDenied("private notebook isolation")
             acl, acl_args = self._acl_sql(principal)
             sql = f"""SELECT m.* FROM agent_memory_records m
-                WHERE m.deleted_at IS NULL AND ({acl})
+                WHERE m.deleted_at IS NULL AND m.superseded_by IS NULL AND ({acl})
                 AND (m.expires_at IS NULL OR m.expires_at>?)"""
             args: list[Any] = [*acl_args, utcnow()]
             if agent_id:

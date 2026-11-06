@@ -1,0 +1,12 @@
+[
+  {
+    "original": "app/main.py",
+    "preserved_as": "docs\\history\\entrypoint-retirement-20261106\\app\\main.py.txt",
+    "sha256": "5b02eb80469071ac5bcea702d5960f41a729bffeee3e4f8d3c4d243593cf5aa7"
+  },
+  {
+    "original": "deploy/runtime-manifest.yaml",
+    "preserved_as": "docs\\history\\entrypoint-retirement-20261106\\deploy\\runtime-manifest.yaml.txt",
+    "sha256": "03220f23d95a57d1652fad7bc8dc0f37dcb3562179f779d5d41975c9d9c01724"
+  }
+]

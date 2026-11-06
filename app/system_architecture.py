@@ -12,39 +12,19 @@ PATTERNS=(r'how many agents',r'list (?:your|the) agents',r'which agent (?:answer
           r'(?:列出|有哪些|什么).{0,12}(?:已注册)?代理')
 GOVERNANCE_PATTERNS=(r'phase.?2.*(?:verified|production.ready|golden|accepted)',r'(?:verified|production.ready|golden|accepted).*phase.?2',
                      r'(?:is|are).*(?:prime|jarvis).*(?:verified|production.ready|golden|accepted)')
-PLATFORM_PATTERNS=(r'(?:abex|dell|prime|jarvis).*(?:architecture|system|host|computer|relationship|role)',
-                   r'(?:architecture|system|host|computer|relationship|role).*(?:abex|dell|prime|jarvis)')
+PLATFORM_PATTERNS=(r'(?:abex|dell|orqevia|prime|jarvis).*(?:architecture|system|host|computer|relationship|role)',
+                   r'(?:architecture|system|host|computer|relationship|role).*(?:abex|dell|orqevia|prime|jarvis)')
 ROOT=Path(__file__).resolve().parent.parent
 
 def is_architecture_question(text: str)->bool:
     return any(re.search(pattern,text or '',re.I) for pattern in (*PATTERNS,*GOVERNANCE_PATTERNS,*PLATFORM_PATTERNS))
 
 def _governance_answer(question: str)->dict[str,Any]:
-    # Pre-gen4 records were removed per Owner order ("delete anything before gen4");
-    # their bytes remain recoverable from Git history. gen4 is the current record only.
-    historical=bool(re.search(r'(?:gen(?:eration)?[ -]?[123]\b|golden[ -]?[123]\b)',question,re.I))
-    if historical:
-        return {'status':'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST',
-                'text':'HISTORICAL GOLDEN GEN1/2/3 RECORDS ARE RETIRED: superseded and removed on 2026-10-16 per Owner order; they remain recoverable from Git history. The current baseline is orqevia-golden-gen4-20261016. Historical acceptance cannot stand in for current runtime identity.'}
-    path=ROOT/'governance'/'golden-gen4-manifest.json'
-    try:value=json.loads(path.read_text(encoding='utf-8'))
-    except (OSError,ValueError,TypeError):
-        return {'status':'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST','text':'The requested governance record is unavailable. Runtime or model assertions cannot replace it.'}
-    acceptance=value.get('acceptance',{}).get('state','UNVERIFIED')
-    source=value.get('source',{}).get('accepted_commit','UNAVAILABLE')
-    image=value.get('build',{}).get('image_id','UNAVAILABLE')
-    runtime=_runtime()
-    live=runtime=={'source_revision':source,'image_digest':image}
-    asks_all=bool(re.search(r'\ball\b',question,re.I))
-    scope='CURRENT ORQEVIA GOLDEN GEN4 ACCEPTANCE'
-    text=(f"{scope}: {acceptance}\nRECORDED SOURCE: {source}\n"
-          f"CURRENT RUNTIME IDENTITY MATCH: {'PASS' if live else 'UNVERIFIED'}\n"
-          f"ALL CAPABILITIES ACCEPTED: {'NO' if asks_all else 'NOT ASSESSED'}\n"
-          f"RECORDED INDEPENDENT REVIEW: {value.get('qualification',{}).get('independent_review','UNAVAILABLE')}\n"
-          'CURRENT DELL ROUND-TRIP: UNVERIFIED\n'
-          'Audio remains excluded from the accepted scope. Acceptance records alone do not prove current runtime health.')
-    return {'status':'VERIFIED' if live and not asks_all else 'UNVERIFIED',
-            'provenance':'GOVERNANCE_MANIFEST_AND_RUNTIME', 'text':text}
+    return {'status': 'UNVERIFIED', 'provenance': 'RETIRED_HISTORICAL_ACCEPTANCE',
+            'text': ('PRIME/JARVIS Phase-2 and Golden acceptance are dated historical records. '
+                     'They are retired as current ORQEVIA authority and remain in Git/history custody. '
+                     'Current source identity, individual capabilities and actual live acceptance must be verified separately. '
+                     'No historical generation or source declaration proves present runtime health.')}
 
 def _runtime()->dict[str,Any]:
     source=os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION',os.getenv('ORQEVIA_RUNTIME_REVISION','UNKNOWN')).strip().lower()
@@ -53,28 +33,37 @@ def _runtime()->dict[str,Any]:
     return {'source_revision':source,'image_digest':image}
 
 def _platform_answer()->dict[str,Any]:
-    path=ROOT/'governance'/'golden-gen4-manifest.json'
-    try:value=json.loads(path.read_text(encoding='utf-8'));registry=load_agent_registry()
-    except (OSError,ValueError,TypeError,RegistryError):
-        return {'status':'UNAVAILABLE','provenance':'GOVERNANCE_MANIFEST_AND_AGENT_REGISTRY','text':f'Platform architecture is UNAVAILABLE because {path.name} or the agent registry could not be read. ORQEVIA will not infer it from model memory.'}
-    authority=value.get('authority',{});source=value.get('source',{});interface=value.get('interface',{});build=value.get('build',{})
-    required=(authority.get('production_authority'),source.get('accepted_commit'),
-              interface.get('exposure'),build.get('image_id'))
-    if (not all(isinstance(item,str) and item.strip() for item in required)
-            or not isinstance(value.get('generation'),int) or value.get('generation')<1
-            or not re.fullmatch(r'[0-9a-f]{40}',source.get('accepted_commit',''))
-            or not registry.get('agents')):
-        return {'status':'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST_AND_AGENT_REGISTRY','text':'Platform architecture is UNVERIFIED because required host, generation, source, image, exposure or registry bindings are incomplete. ORQEVIA will not infer them from model memory.'}
-    runtime=_runtime()
-    live=runtime=={'source_revision':source['accepted_commit'],'image_digest':build['image_id']}
-    lines=[f"PRODUCTION AUTHORITY/HOST: {authority.get('production_authority','UNAVAILABLE')}",
-           f"GOLDEN GENERATION: {value.get('generation','UNAVAILABLE')}",
-           f"RECORDED ACCEPTED SOURCE: {source.get('accepted_commit','UNAVAILABLE')}",
-           f"REGISTERED AGENTS: {len(registry.get('agents',[]))}",
-           f"INTERFACE EXPOSURE: {interface.get('exposure','UNAVAILABLE')}",
-           f"CURRENT RUNTIME IDENTITY MATCH: {'PASS' if live else 'UNVERIFIED'}",
-           'Dell live peer verification requires a separate current round-trip.']
-    return {'status':'VERIFIED' if live else 'UNVERIFIED','provenance':'GOVERNANCE_MANIFEST_AGENT_REGISTRY_AND_RUNTIME','text':'\n'.join(lines)}
+    path = ROOT/'config/runtime-architecture.json'
+    try:
+        value = json.loads(path.read_text(encoding='utf8'))
+        registry = load_agent_registry()
+        if (value.get('schema') != 'orqevia.runtime-architecture.v1'
+                or value.get('product') != 'ORQEVIA'
+                or value.get('logical_coordinator') != orchestrator_id()
+                or value.get('declaration_scope') != 'SOURCE_CONFIGURATION_NOT_LIVE_HEALTH_OR_ACCEPTANCE'
+                or not value.get('service_roles')):
+            raise ValueError('invalid current architecture declaration')
+    except OSError:
+        return {'status': 'UNAVAILABLE', 'provenance': 'CURRENT_SOURCE_ARCHITECTURE',
+                'text': 'Current source architecture is unavailable. ORQEVIA will not infer live topology from model memory.'}
+    except (ValueError, TypeError, RegistryError):
+        return {'status': 'UNVERIFIED', 'provenance': 'CURRENT_SOURCE_ARCHITECTURE',
+                'text': 'Current source architecture is unavailable or incomplete. ORQEVIA will not infer live topology from model memory.'}
+    runtime = _runtime()
+    bound = runtime['source_revision'] != 'UNAVAILABLE' and bool(re.fullmatch(r'sha256:[0-9a-f]{64}', runtime['image_digest']))
+    lines = [f"SOURCE-DECLARED HOST: {value['host']}",
+             f"LOGICAL COORDINATOR: {value['logical_coordinator']}",
+             f"EXECUTION MODEL: {value['execution_model']}",
+             f"REGISTERED AGENTS: {len(registry['agents'])}",
+             f"DECLARED SERVICE ROLES: {', '.join(value['service_roles'])}",
+             f"HTTPS ENTRYPOINT: {value['public_entrypoint']}",
+             f"PROCESS SOURCE: {runtime['source_revision']}",
+             f"PROCESS IMAGE: {runtime['image_digest']}",
+             'LIVE SERVICE HEALTH AND COMPLETE ACCEPTANCE: NOT PROBED',
+             'A Dell or physical phone connection requires its own actual round-trip.']
+    return {'status': 'VERIFIED' if bound else 'UNVERIFIED',
+            'provenance': 'CURRENT_SOURCE_ARCHITECTURE_AND_PROCESS_IDENTITY',
+            'scope': 'SOURCE_DECLARATION_AND_PROCESS_IDENTITY_NOT_SERVICE_HEALTH', 'text': '\n'.join(lines)}
 
 def architecture_answer(question: str)->dict[str,Any]:
     """Fail closed: registry/runtime absence becomes UNAVAILABLE, never model intuition."""

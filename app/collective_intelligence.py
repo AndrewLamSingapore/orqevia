@@ -121,6 +121,27 @@ class CollectivePrincipal:
             raise CollectiveDenied("service and owner principals cannot impersonate agents")
 
 
+def _agent_mirror_body(agent, source_sha):
+    return {
+                    "canonical_id": agent["agent_id"],
+                    "name": agent["name"],
+                    "purpose": agent["purpose"],
+                    "capability_requirements": agent["capability_requirements"],
+                    "source": "config/agent_registry.json",
+                    "source_sha256": source_sha,
+                    "registered": True,
+                    "enrolled": True,
+                    "source_model": agent["model"],
+                    "authority": agent["authority"],
+                    "qualification": "UNVERIFIED",
+                    "runtime_health": "UNKNOWN",
+                    "contribution_ready": True,
+                    "questioning_ready": True,
+                    "gap_workflow_ready": True,
+                    "readiness_basis": "authenticated queue adapter required; no runtime success implied",
+                }
+
+
 class CollectiveStore:
     """Synchronous store with bounded contracts. Use a server-owned path only.
 
@@ -471,24 +492,7 @@ class CollectiveStore:
             )
             self._audit(db, p, "registry.seed", root, reason="Validated canonical orchestrator source")
             for agent in registry["agents"]:
-                body = {
-                    "canonical_id": agent["agent_id"],
-                    "name": agent["name"],
-                    "purpose": agent["purpose"],
-                    "capability_requirements": agent["capability_requirements"],
-                    "source": "config/agent_registry.json",
-                    "source_sha256": source_sha,
-                    "registered": True,
-                    "enrolled": True,
-                    "source_model": agent["model"],
-                    "authority": agent["authority"],
-                    "qualification": "UNVERIFIED",
-                    "runtime_health": "UNKNOWN",
-                    "contribution_ready": True,
-                    "questioning_ready": True,
-                    "gap_workflow_ready": True,
-                    "readiness_basis": "authenticated queue adapter required; no runtime success implied",
-                }
+                body = _agent_mirror_body(agent, source_sha)
                 item = self._create(
                     db, p, "agents", body, state="SOURCE_MIRROR", object_id=f"agent:{agent['agent_id']}"
                 )
@@ -510,17 +514,6 @@ class CollectiveStore:
                     self._link(db, p, mapping["id"], item_id := f"agent:{agent['agent_id']}", "agent")
                     self._link(db, p, mapping["id"], capability_id, "capability")
                     self._audit(db, p, "registry.seed", mapping, reason="Canonical capability mapping")
-                parent_id = (
-                    f"orchestrator:{root_id}" if agent["reports_to"] == root_id else f"agent:{agent['reports_to']}"
-                )
-                dependency = self._create(
-                    db,
-                    p,
-                    "dependencies",
-                    {"source": item_id, "target": parent_id, "relation": "reports_to", "execution_dependency": False},
-                )
-                self._link(db, p, dependency["id"], item_id, "source")
-                self._link(db, p, dependency["id"], parent_id, "target")
             policy = self._create(
                 db,
                 p,
@@ -553,6 +546,78 @@ class CollectiveStore:
             self._audit(db, p, "registry.provision", version, reason="Transactional canonical registry mirror")
         return {"agents": len(registry["agents"]), "source_sha256": source_sha, "replayed": False}
 
+    def migrate_canonical_registry(self, p: CollectivePrincipal, *, expected_source_sha256: str) -> dict:
+        """Explicit migration of the known v1 mirror; never repairs unknown data."""
+        from .agent_registry import _unique_object, normalize_registry
+
+        self._role(p, 'OWNER', 'SYSTEM')
+        previous = '5c41c170f3e9e993ccccfa1e095fed5e7a054d8904f8e0f410cafad9a3015833'
+        raw = REGISTRY_PATH.read_bytes()
+        target = hashlib.sha256(raw).hexdigest()
+        registry = normalize_registry(json.loads(raw, object_pairs_hook=_unique_object))
+        if canonical_json(registry) != canonical_json(load_agent_registry()):
+            raise CollectiveConflict('current source and loaded capability inventory differ')
+        if expected_source_sha256 != previous:
+            raise CollectiveConflict('only the known prior registry has a qualified migration')
+        with self._transaction() as db:
+            current = self._get(db, p, 'canonical-registry', 'registry_versions')
+            if current['data']['source_sha256'] == target:
+                return {'migrated': False, 'replayed': True, 'source_sha256': target}
+            if current['data']['source_sha256'] != previous:
+                raise CollectiveConflict('unexpected prior source; original mirror preserved')
+            agents = registry['agents']
+            for agent in agents:
+                item = self._get(db, p, 'agent:'+agent['agent_id'], 'agents')
+                body = item['data']
+                if (item['state'] != 'SOURCE_MIRROR' or body.get('source_sha256') != previous
+                        or body.get('canonical_id') != agent['agent_id']
+                        or set(body.get('capability_requirements', [])) != set(agent['capability_requirements'])
+                        or body.get('authority') != agent['authority']):
+                    raise CollectiveConflict('prior owned capability mirror differs; no automatic repair')
+                self._update(db, p, item, {**body, **_agent_mirror_body(agent, target)}, expected_version=item['version'])
+                for capability in agent['capability_requirements']:
+                    item = self._get(db, p, 'capability:'+capability, 'capabilities')
+                    if item['data'] != {'canonical_id': capability, 'source_sha256': previous}:
+                        raise CollectiveConflict('prior capability ownership differs; original mirror preserved')
+                    self._update(db, p, item, {'canonical_id': capability, 'source_sha256': target},
+                                 expected_version=item['version'])
+            root_id = 'orchestrator:'+registry['orchestrator']['id']
+            root_body = {'canonical_id': registry['orchestrator']['id'], 'authority': 'SOURCE_DEFINITION_ONLY'}
+            if db.execute('SELECT 1 FROM registry_records WHERE tenant_id=? AND owner_id=? AND id=?',
+                          (*self._scope(p), root_id)).fetchone():
+                retained = self._get(db, p, root_id, 'orchestrators')
+                if retained['state'] != 'HISTORICAL_SOURCE_MIRROR' or retained['data'] != root_body:
+                    raise CollectiveConflict('new coordinator identity already exists outside the known migration')
+                self._update(db, p, retained, root_body, state='SOURCE_MIRROR', expected_version=retained['version'])
+            else:
+                self._create(db, p, 'orchestrators', root_body, object_id=root_id, state='SOURCE_MIRROR')
+            old_root = self._get(db, p, 'orchestrator:prime', 'orchestrators')
+            if old_root['data'] != {'canonical_id': 'prime', 'authority': 'SOURCE_DEFINITION_ONLY'}:
+                raise CollectiveConflict('prior coordinator mirror differs; no automatic repair')
+            self._update(db, p, old_root, old_root['data'], state='HISTORICAL_SOURCE_MIRROR',
+                         expected_version=old_root['version'])
+            historical = 1
+            ids = {agent['agent_id'] for agent in agents}
+            rows = db.execute("SELECT id FROM registry_records WHERE tenant_id=? AND owner_id=? AND kind='dependencies'",
+                              self._scope(p)).fetchall()
+            for row in rows:
+                item = self._get(db, p, row['id'])
+                body = item['data']
+                if (set(body) == {'source', 'target', 'relation', 'execution_dependency'}
+                        and body['relation'] == 'reports_to' and body['execution_dependency'] is False
+                        and body['source'] in {'agent:'+identity for identity in ids}
+                        and body['target'] in {'orchestrator:prime', *('agent:'+identity for identity in ids)}):
+                    self._update(db, p, item, body, state='HISTORICAL_SOURCE_MIRROR', expected_version=item['version'])
+                    historical += 1
+            version = self._update(db, p, current, {'source': 'config/agent_registry.json',
+                                  'source_sha256': target, 'schema_version': SCHEMA_VERSION,
+                                  'canonical_registry_version': registry['registry_version'],
+                                  'previous_source_sha256': previous}, expected_version=current['version'])
+            self._audit(db, p, 'registry.migrate', version,
+                        reason='Flat native capability source; old hierarchy and all user/audit history preserved')
+        return {'migrated': True, 'replayed': False, 'source_sha256': target,
+                'agents': len(agents), 'historical_source_records': historical}
+
     def query(
         self, p: CollectivePrincipal, kind: str, id: str | None = None, filters: Mapping[str, Any] | None = None
     ) -> dict:
@@ -572,6 +637,8 @@ class CollectiveStore:
             if filters.get("state") is not None:
                 where += " AND state=?"
                 params.append(self._text(filters["state"], "state", max_length=48))
+            else:
+                where += " AND state<>'HISTORICAL_SOURCE_MIRROR'"
             rows = db.execute(
                 f"SELECT id FROM registry_records WHERE {where} ORDER BY created_at,id LIMIT ? OFFSET ?",
                 (*params, limit, offset),
@@ -1882,7 +1949,7 @@ class CollectiveStore:
         with self.connect() as db:
             self._get(db, p, subject_id)
             rows = db.execute(
-                "SELECT id,body_json FROM registry_records WHERE tenant_id=? AND owner_id=? AND kind='dependencies'",
+                "SELECT id,body_json FROM registry_records WHERE tenant_id=? AND owner_id=? AND kind='dependencies' AND state<>'HISTORICAL_SOURCE_MIRROR'",
                 self._scope(p),
             ).fetchall()
             dependencies = [(row["id"], json.loads(row["body_json"])) for row in rows]

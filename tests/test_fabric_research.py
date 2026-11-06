@@ -4,6 +4,7 @@ import asyncio
 import gzip
 import hashlib
 import json
+import re
 from unittest.mock import patch
 
 import httpx
@@ -332,3 +333,6 @@ def test_contract_has_only_the_approved_operation_and_no_verification_claim():
     assert contract["operations"][0]["operation"] == "fetch_primary_source"
     assert contract["operations"][0]["input_schema"]["additionalProperties"] is False
     assert "VERIFIED" not in contract
+    pattern = contract["operations"][0]["input_schema"]["properties"]["url"]["pattern"]
+    assert re.fullmatch(pattern, URL) and re.fullmatch(pattern, URL.upper())
+    assert not re.fullmatch(pattern, URL.replace("https://", "http://"))

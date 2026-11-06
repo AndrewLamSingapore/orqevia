@@ -49,8 +49,8 @@ const materialized=materializeImages(original.toString('utf8'));
 
 test('reviewed upstream map CSS and exact decoded SVG bytes reproduce every generated icon',()=>{
   assert.equal(hash(original),UPSTREAM_CSS_SHA256);assert.equal(provenance.upstream.version,MAPLIBRE_VERSION);
-  assert.equal(materialized.occurrences,39);assert.equal(materialized.icons.length,31);
-  assert.equal(provenance.image_occurrences,39);assert.equal(provenance.icons.length,31);
+  assert.equal(materialized.occurrences,39);assert.equal(materialized.icons.length,32);
+  assert.equal(provenance.image_occurrences,39);assert.equal(provenance.icons.length,32);
   assert.equal(read('vendor/maplibre-gl.css'),materialized.css);
   assert.equal(hash(materialized.css),provenance.generated_css_sha256);
   assert.doesNotMatch(materialized.css,/data:image\//i);

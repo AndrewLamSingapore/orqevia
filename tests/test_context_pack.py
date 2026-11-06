@@ -101,7 +101,7 @@ def test_missing_invalidation_version_is_error_and_unknown_current_version_is_ex
 
 
 def test_every_canonical_agent_can_receive_only_its_slice():
-    agents = sorted(registered_agent_ids() - {"prime"})
+    agents = sorted(registered_agent_ids(include_orchestrator=False))
     assert len(agents) == 21
     items = [candidate(agent, f"data for {agent}", agent_ids=(agent,)) for agent in agents]
     for agent in agents:

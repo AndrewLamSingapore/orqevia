@@ -42,8 +42,8 @@ def test_attestation_verifier_defaults_bind_the_deployed_candidate():
     assert "ExpectedReceiptDigest = 'sha256:74064717221f5948d04ef62e5b0e1f0dee3d17580e3621b4dc7a86bd9bf1955b'" in script
 
 
-def test_status_records_post_deploy_evidence_without_new_verified_claim():
-    status = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+def test_dated_status_preserves_post_deploy_evidence_without_new_verified_claim():
+    status = (ROOT / "docs/history/status-authority-retirement-20261106/STATUS.md.txt").read_text(encoding="utf-8")
     start = status.index("## ORQEVIA signed naming candidate deployment - 19 October 2026")
     end = status.index("\n## ", start + 1) + 1
     section = status[start:end]

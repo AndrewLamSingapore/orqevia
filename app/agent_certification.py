@@ -93,6 +93,24 @@ def _invalid_manifest_constant(_):
     raise ValueError("nonfinite certification manifest constant")
 
 
+def _custody_redirected(path: Path) -> bool:
+    """Reject links and Windows reparse points, including contained junctions."""
+    if path.is_symlink():
+        return True
+    is_junction = getattr(path, "is_junction", None)
+    if is_junction is not None and is_junction():
+        return True
+    try:
+        # lstat observes the selected entry rather than its redirect target.
+        return bool(getattr(path.lstat(), "st_file_attributes", 0) & 0x400)
+    except FileNotFoundError:
+        return False
+
+def _custody_ancestry_redirected(path: Path) -> bool:
+    path = path.absolute()  # retain link entries; do not resolve before inspecting
+    return any(_custody_redirected(item) for item in (path, *path.parents))
+
+
 def _artifact_digest_ok(agent_dir: Path, name: object, expected: object) -> bool:
     if not isinstance(name, str) or not name or "\\" in name:
         return False
@@ -101,10 +119,12 @@ def _artifact_digest_ok(agent_dir: Path, name: object, expected: object) -> bool
     evidence = Path(name)
     if evidence.is_absolute() or ".." in evidence.parts:
         return False
+    if _custody_ancestry_redirected(agent_dir):
+        return False
     cursor = agent_dir
     for part in evidence.parts:
         cursor = cursor / part
-        if cursor.is_symlink():
+        if _custody_redirected(cursor):
             return False
     artifact = cursor.resolve()
     if not artifact.is_relative_to(agent_dir.resolve()) or not artifact.is_file():
@@ -186,12 +206,12 @@ class AgentCertificationRegistry:
         """Read one bounded manifest snapshot; never cache across projections."""
         agent_dir = self.root / agent_id
         try:
-            if self.root.is_symlink() or agent_dir.is_symlink():
+            if _custody_ancestry_redirected(self.root) or _custody_redirected(agent_dir):
                 raise ValueError("certification root or agent directory is a symlink")
             if not agent_dir.resolve().is_relative_to(self.root.resolve()):
                 raise ValueError("agent directory escapes certification root")
             manifest = agent_dir / "certification.json"
-            if manifest.is_symlink():
+            if _custody_redirected(manifest):
                 raise ValueError("certification manifest is a symlink")
             with manifest.open("rb") as stream:
                 raw = stream.read(MAX_EVIDENCE_BYTES + 1)

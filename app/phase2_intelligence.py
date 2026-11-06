@@ -588,6 +588,8 @@ class Phase2Kernel:
             raise PermissionError("owner-private context scope denied")
         if scope == "MEMBER_PRIVATE" and (authority.role != "MEMBER" or scope_id != authority.actor_id):
             raise PermissionError("member-private context scope denied")
+        if scope == "APPLICATION" and (authority.role != "APPLICATION" or scope_id != authority.actor_id):
+            raise PermissionError("application context scope denied")
         if scope in {"SYSTEM", "GLOBAL"} and authority.role != "SYSTEM":
             raise PermissionError("system context scope denied")
         if epistemic_class in {"OBSERVED", "MEASURED", "RETRIEVED", "CALCULATED"} and not verification_ref:

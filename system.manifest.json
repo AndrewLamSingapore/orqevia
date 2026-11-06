@@ -6,8 +6,8 @@
   "components": {
     "registry": {
       "path": "config/agent_registry.json",
-      "version": "1.0.0",
-      "sha256": "5c41c170f3e9e993ccccfa1e095fed5e7a054d8904f8e0f410cafad9a3015833"
+      "version": "2.0.0",
+      "sha256": "def01365184c9f38fa0adf007e4838ed747e5e7dfa3f0d410ca134e32e9239f7"
     },
     "interface": {
       "path": "docs/interface-contract.v1.json",
@@ -23,6 +23,11 @@
       "path": "contracts/artifact-v1.schema.json",
       "version": "1.0.0",
       "sha256": "2288c7c9e69069e184a75e5d0be7e8fd28562abe6a9196f8f2503e0c752e0208"
+    },
+    "architecture": {
+      "path": "config/runtime-architecture.json",
+      "version": "1.0",
+      "sha256": "ce3b7da81d282fb6edcb483c068293e3415f35b38a7517412cde5a801687c291"
     }
   },
   "routing": [
@@ -38,7 +43,7 @@
   ],
   "mobile_strategy": "PWA",
   "configuration_schemas": {
-    "registry": "config/agent_registry_v1.schema.json",
+    "registry": "config/agent_registry_v3.schema.json",
     "deployment": "deploy/product-runtime-v1.json",
     "provider_template": "config/provider-catalog.unconfigured.json"
   },
@@ -49,7 +54,6 @@
   "deployment_identity": "External receipt binds runtime identity and immutable manifest to Git revision; no private material in source",
   "evidence_manifest_version": "1.0.0",
   "evidence_index": "docs/evidence-index.v1.json",
-  "historical_dell_readme": "clients/dell/README.md is pinned historical initial-delivery documentation, not current production state",
   "product": "ORQEVIA",
   "execution_model": "DIRECT_TASK_DISPATCH",
   "verification_scope": "SOURCE_INTEGRITY_ONLY",
@@ -58,5 +62,11 @@
     "alternate_renderers": "RETIRED",
     "historical_archive": "docs/history/frontend-retirement-20261105",
     "legacy_api_boundaries": "PRESERVED"
+  },
+  "desktop_client": {
+    "interface": "Shared HTTPS /pwa/",
+    "package": "clients/dell/SOURCE-SHA256.json",
+    "historical_renderer": "docs/history/desktop-retirement-20261106",
+    "hardware_verification": "Separate actual-device evidence required"
   }
 }

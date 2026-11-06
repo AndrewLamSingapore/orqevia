@@ -31,7 +31,8 @@ def test_each_actual_owned_capability_has_distinct_source_report_and_case(agent,
     assert report['agent_id'] == actual['id'] == agent
     assert report['capability_id'] == cap
     assert report['owned_domains']['definition']['authority'] == actual['authority']
-    assert report['owned_domains']['definition']['can_delegate'] is actual['can_delegate']
+    assert report['owned_domains']['definition']['tool_eligibility'] == actual['tool_eligibility']
+    assert 'can_delegate' not in report['owned_domains']['definition']
     selected = next(r for r in actual['responsibilities'] if r['id'] == cap)
     if (agent, cap) != ('a19', 'responsibility.a19'):
         assert report['owned_domains']['selected_capability'] == selected

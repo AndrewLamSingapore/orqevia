@@ -12,7 +12,7 @@ import pytest
 
 from app.agent_cert_azure_es256 import AzureES256CertificationVerifier
 from app.agent_cert_identity_review import canonical, sha, read_action_span
-from app.agent_cert_initialization_review import ORACLE_ID
+from app.agent_cert_initialization_review import ORACLE_ID, validate_initialization_execution
 from app.agent_certification import AgentCertificationRegistry
 from app.agent_registry import REGISTRY_PATH, agent_record
 from app.artifact_factory import ArtifactFactory
@@ -24,7 +24,20 @@ from tests.test_agent_cert_reviewed_signing import fixture as ephemeral_key, REV
 
 @pytest.fixture
 def signed_input(initialization, tmp_path):
-    result = run(initialization)
+    try:
+        result = run(initialization)
+    except Exception as failure:
+        # Keep the original failure and all production limits. These fixtures
+        # contain synthetic evidence only; add bounded diagnostics for a slow
+        # durable writer or a failed original-event join in constrained CI.
+        failure.add_note(f'Temporary initialization ledger: {initialization.ledger.status()}')
+        try:
+            validate_initialization_execution(initialization.payload['execution'],
+                source_revision=SOURCE, runtime_image_id=IMAGE,
+                registry_sha256=sha(REGISTRY_PATH.read_bytes()), now=datetime.now(timezone.utc))
+        except ValueError as original:
+            failure.add_note(f'Temporary original event revalidation: {original}')
+        raise
     metadata, raw = ArtifactFactory(initialization.root / 'artifacts').retrieve(result['artifact']['artifact_id'])
     assert metadata == result['artifact']
     content = json.loads(raw)

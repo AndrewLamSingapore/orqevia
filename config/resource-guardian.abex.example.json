@@ -65,7 +65,7 @@
       "build": 1
     }
   },
-  "host_metrics_path": "C:/ProgramData/ABEX/PrimeHostMetrics/receipt/host-metrics.json",
+  "host_metrics_path": "C:/ProgramData/ABEX/ORQEVIAHostMetrics/receipt/host-metrics.json",
   "model_memory_bytes": {},
   "limitations": [
     "Provisional configurable reserves; runtime qualification pending",

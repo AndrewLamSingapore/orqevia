@@ -226,7 +226,7 @@ def test_canonical_mirror_provenance_readiness_and_queries(board):
         "note": "Only trusted observed inventory is counted; source presence alone is not live operation",
     }
     assert store.lookup_agent(owner, "a01")["data"]["canonical_id"] == "a01"
-    assert store.lookup_dependencies(owner, "agent:a02")["dependencies"]
+    assert store.lookup_dependencies(owner, "agent:a02")["dependencies"] == []
     assert store.find_missing_capabilities(owner, ["not.a.capability"])["missing"] == ["not.a.capability"]
     assert store.find_unresolved_dependencies(owner)["missing"] == []
 

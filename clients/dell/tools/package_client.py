@@ -2,13 +2,14 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path, PurePosixPath
 import subprocess
 import uuid
 import zipfile
 
 SOURCE=Path(__file__).resolve().parents[1]
-PIN='4c69bb9c4dff9901afd0233bdc12abf6ba785814e5c7160877fe0cba7b0913c6'
+PIN='b83201a71a55c043203e630da60e7286e887ee5d6df8ae5d01afbfdb99917452'
 def sha(data):return hashlib.sha256(data).hexdigest()
 def canonical_source_bytes(path):
     # Git may materialize text files with CRLF on Windows even though the
@@ -46,12 +47,16 @@ def package(source,archive,evidence,node='node',build=False):
             path=stage/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(actual)
     version=subprocess.run([node,'-p','process.versions.node'],capture_output=True,text=True,check=True).stdout.strip()
     if int(version.split('.')[0])<20:raise ValueError('NODE_20_REQUIRED')
+    test_count = 0
     for test in ['test/client.test.mjs','test/url-transport.test.mjs']:
-        result=subprocess.run([node,str(stage/test)],capture_output=True,text=True,timeout=45)
+        result=subprocess.run([node,'--test','--test-reporter=tap',str(stage/test)],capture_output=True,text=True,timeout=45)
         (stage/(Path(test).stem+'.txt')).write_text(result.stdout+result.stderr,encoding='utf-8')
         if result.returncode:raise ValueError('ARCHIVED_TEST_FAILED')
+        count = re.search(r'^# tests\s+(\d+)\s*$', result.stdout, re.M)
+        if not count:raise ValueError('ARCHIVED_TEST_COUNT_UNAVAILABLE')
+        test_count += int(count.group(1))
     receipt={'status':'PASS','sha256':sha(archive.read_bytes()),'members':len(content),'node':version,
-             'transport_sha256':PIN,'archived_tests':11,'format':'ZIP_STORED/fixed-1980/0644/sorted'}
+             'transport_sha256':PIN,'archived_tests':test_count,'format':'ZIP_STORED/fixed-1980/0644/sorted'}
     (stage/'RECEIPT.json').write_text(json.dumps(receipt,indent=2))
     return receipt
 

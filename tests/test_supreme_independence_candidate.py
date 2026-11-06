@@ -38,7 +38,7 @@ def test_local_control_plane_survives_simulated_external_dependency_loss(tmp_pat
     registry = load_agent_registry()
     assert len(registry["agents"]) == 21
     assert len(registry["responsibility_coverage"]) == 29
-    assert "prime" in registered_agent_ids()
+    assert "orqevia" in registered_agent_ids() and "prime" not in registered_agent_ids()
 
     memory = MemoryStore(str(tmp_path / "memory.db"))
     memory.put_governed(

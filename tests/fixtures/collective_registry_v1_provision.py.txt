@@ -1,0 +1,141 @@
+def provision(self, p: CollectivePrincipal) -> dict:
+        """Mirror the validated canonical source. Never derives runtime health or permission."""
+        self._role(p, "OWNER", "SYSTEM")
+        registry = load_agent_registry()
+        raw = REGISTRY_PATH.read_bytes()
+        source_sha = hashlib.sha256(raw).hexdigest()
+        with self._transaction() as db:
+            board_policy_id = "policy:authorized-board-participation"
+            if not db.execute(
+                "SELECT 1 FROM registry_records WHERE tenant_id=? AND owner_id=? AND id=?",
+                (*self._scope(p), board_policy_id),
+            ).fetchone():
+                self._create(
+                    db,
+                    p,
+                    "policies",
+                    {
+                        "name": "Default authorized board participation for all 21 canonical agents",
+                        "default_enrolled": True,
+                        "required_behaviors": [
+                            "READ_AUTHORIZED_RECORDS",
+                            "PUBLISH_MEANINGFUL_OUTCOMES",
+                            "ACKNOWLEDGE_APPLICABLE_INSTRUCTIONS",
+                            "TRACK_ACTIONABLE_GAPS",
+                        ],
+                        "boards": [
+                            "SHARED_COLLECTIVE_BOARD",
+                            "OWN_PRIVATE_NOTEBOOK",
+                            "AUTHORIZED_PROJECT_BOARDS",
+                            "REVIEWED_REPOSITORY_RELAY",
+                        ],
+                        "access_basis": "EXISTING_AUTHENTICATION_AND_SCOPE",
+                        "board_content_is_untrusted": True,
+                        "contribution_grants_authority": False,
+                        "continuous_model_execution_required": False,
+                        "source": "Owner default participation directive 2026-10-23",
+                    },
+                    object_id=board_policy_id,
+                    state="DEFAULT_PARTICIPATION",
+                )
+            existing = db.execute(
+                "SELECT id FROM registry_records WHERE tenant_id=? AND owner_id=? AND id='canonical-registry'",
+                self._scope(p),
+            ).fetchone()
+            if existing:
+                current = self._get(db, p, "canonical-registry")
+                if current["data"]["source_sha256"] != source_sha:
+                    raise CollectiveConflict("canonical source changed; explicit mirror migration is required")
+                return {"agents": len(registry["agents"]), "source_sha256": source_sha, "replayed": True}
+            root_id = registry["orchestrator"]["id"]
+            root = self._create(
+                db,
+                p,
+                "orchestrators",
+                {"canonical_id": root_id, "authority": "SOURCE_DEFINITION_ONLY"},
+                state="SOURCE_MIRROR",
+                object_id=f"orchestrator:{root_id}",
+            )
+            self._audit(db, p, "registry.seed", root, reason="Validated canonical orchestrator source")
+            for agent in registry["agents"]:
+                body = {
+                    "canonical_id": agent["agent_id"],
+                    "name": agent["name"],
+                    "purpose": agent["purpose"],
+                    "capability_requirements": agent["capability_requirements"],
+                    "source": "config/agent_registry.json",
+                    "source_sha256": source_sha,
+                    "registered": True,
+                    "enrolled": True,
+                    "source_model": agent["model"],
+                    "authority": agent["authority"],
+                    "qualification": "UNVERIFIED",
+                    "runtime_health": "UNKNOWN",
+                    "contribution_ready": True,
+                    "questioning_ready": True,
+                    "gap_workflow_ready": True,
+                    "readiness_basis": "authenticated queue adapter required; no runtime success implied",
+                }
+                item = self._create(
+                    db, p, "agents", body, state="SOURCE_MIRROR", object_id=f"agent:{agent['agent_id']}"
+                )
+                self._audit(db, p, "registry.seed", item, reason="Validated canonical identity; no privilege transfer")
+            for agent in registry["agents"]:
+                for capability in agent["capability_requirements"]:
+                    capability_id = f"capability:{capability}"
+                    self._create(
+                        db,
+                        p,
+                        "capabilities",
+                        {"canonical_id": capability, "source_sha256": source_sha},
+                        state="SOURCE_MIRROR",
+                        object_id=capability_id,
+                    )
+                    mapping = self._create(
+                        db, p, "agent_capabilities", {"agent_id": agent["agent_id"], "capability": capability}
+                    )
+                    self._link(db, p, mapping["id"], item_id := f"agent:{agent['agent_id']}", "agent")
+                    self._link(db, p, mapping["id"], capability_id, "capability")
+                    self._audit(db, p, "registry.seed", mapping, reason="Canonical capability mapping")
+                parent_id = (
+                    f"orchestrator:{root_id}" if agent["reports_to"] == root_id else f"agent:{agent['reports_to']}"
+                )
+                dependency = self._create(
+                    db,
+                    p,
+                    "dependencies",
+                    {"source": item_id, "target": parent_id, "relation": "reports_to", "execution_dependency": False},
+                )
+                self._link(db, p, dependency["id"], item_id, "source")
+                self._link(db, p, dependency["id"], parent_id, "target")
+            policy = self._create(
+                db,
+                p,
+                "policies",
+                {
+                    "name": "Collective knowledge carries no execution authority",
+                    "shadow_routing_only": True,
+                    "restricted_changes_require_approval": True,
+                    "gods_eye_read_only": True,
+                    "mandatory_paid_aws_dependency": False,
+                    "source": "Owner consolidated directive 2026-10-23",
+                },
+                object_id="policy:collective-boundary",
+                state="ENFORCED_BY_SERVICE",
+            )
+            self._audit(db, p, "registry.seed", policy, reason="Knowledge and authority boundaries")
+            version = self._create(
+                db,
+                p,
+                "registry_versions",
+                {
+                    "source": "config/agent_registry.json",
+                    "source_sha256": source_sha,
+                    "schema_version": SCHEMA_VERSION,
+                    "canonical_registry_version": registry["registry_version"],
+                },
+                state="SOURCE_MIRROR",
+                object_id="canonical-registry",
+            )
+            self._audit(db, p, "registry.provision", version, reason="Transactional canonical registry mirror")
+        return {"agents": len(registry["agents"]), "source_sha256": source_sha, "replayed": False}

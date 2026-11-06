@@ -10,6 +10,7 @@ COPY clients/pwa/reset.html clients/pwa/reset.mjs clients/pwa/projects.html clie
 COPY clients/pwa/dashboard.mjs clients/pwa/dashboard.css clients/pwa/intelligence.mjs clients/pwa/integration-panels.mjs clients/pwa/intelligence.css clients/pwa/command-center.css /app/app/pwa_static/
 COPY clients/pwa/knowledge.mjs clients/pwa/knowledge.css clients/pwa/workspace-tools.mjs clients/pwa/command-map.mjs clients/pwa/command-map.css clients/pwa/agent-readiness.json clients/pwa/registry.json /app/app/pwa_static/
 COPY clients/pwa/sovereign.css clients/pwa/sovereign.mjs clients/pwa/operations.mjs clients/pwa/intelligence-capabilities.mjs /app/app/pwa_static/
+COPY clients/pwa/activity-pockets.mjs /app/app/pwa_static/
 COPY clients/pwa/command-center.mjs /app/app/pwa_static/
 COPY clients/pwa/vendor /app/app/pwa_static/vendor
 COPY clients/pwa/icons /app/app/pwa_static/icons

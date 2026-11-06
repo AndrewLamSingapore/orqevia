@@ -6,8 +6,8 @@ import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 
-export const MAPLIBRE_VERSION='6.14.0';
-export const UPSTREAM_CSS_SHA256='bacba6a85a867fcf602f2ff88331b8acf7edf3fbd063a519888cfbff39970193';
+export const MAPLIBRE_VERSION='6.16.0';
+export const UPSTREAM_CSS_SHA256='a90798a1953017790e590f7e1bd35ff103a8a4263972cb47290b78adf86f8c20';
 export const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const DATA_IMAGE=/url\(\s*(?:"(data:image\/[^"]*)"|'(data:image\/[^']*)'|(data:image\/[^)\s]+))\s*\)/g;
 

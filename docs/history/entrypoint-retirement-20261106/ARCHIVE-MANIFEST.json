@@ -1,0 +1,25 @@
+{
+  "scope": "HISTORICAL_NONEXECUTABLE_BYTES_NOT_CURRENT_AUTHORITY",
+  "files": [
+    {
+      "path": "CUSTODY.json",
+      "sha256": "23d1c26507b5e7e541de6dc48ea12a22bafd62bca0908b5bcd1c4e550db26228",
+      "bytes": 465
+    },
+    {
+      "path": "README.md",
+      "sha256": "ffd1d524a8870f49980d8d1682f4e5dbdc7e6cb331cfea9641dc0778a4086d66",
+      "bytes": 602
+    },
+    {
+      "path": "app/main.py.txt",
+      "sha256": "5b02eb80469071ac5bcea702d5960f41a729bffeee3e4f8d3c4d243593cf5aa7",
+      "bytes": 114115
+    },
+    {
+      "path": "deploy/runtime-manifest.yaml.txt",
+      "sha256": "03220f23d95a57d1652fad7bc8dc0f37dcb3562179f779d5d41975c9d9c01724",
+      "bytes": 1277
+    }
+  ]
+}

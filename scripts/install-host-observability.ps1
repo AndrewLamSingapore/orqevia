@@ -1,7 +1,7 @@
 # Update the existing scheduled sampler and its fixed hook; register no task.
 param([Parameter(Mandatory=$true)][string]$PublicCaPath)
 $ErrorActionPreference = 'Stop'
-$CollectorRoot = 'C:\ProgramData\ABEX\PrimeHostMetrics'
+$CollectorRoot = 'C:\ProgramData\ABEX\ORQEVIAHostMetrics'
 $CheckpointParent = 'C:\Users\Admin\AppData\Local\ORQEVIA\checkpoints'
 $Checkpoint = Join-Path $CheckpointParent ('collector-install-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ'))
 $OwnerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value

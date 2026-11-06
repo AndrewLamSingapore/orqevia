@@ -1,4 +1,4 @@
-const RELEASE='orqevia-shell-v46';
+const RELEASE='orqevia-shell-v47';
 
 // Shell coherence is separate from API health, authorization and data freshness.
 // No session, enrollment, TaskStore reference or plaintext draft is cleared here.
