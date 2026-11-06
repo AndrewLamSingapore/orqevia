@@ -2560,3 +2560,7 @@ status semantics from product release CI, and hardens restore verdicts and copy
 preservation. See docs/PRIORITY-RESUME-20261106.md. Targeted tests have passed;
 full local regression, CI and actual final-image end-to-end acceptance remain
 distinct pending evidence at this candidate checkpoint. No new Verified claim.
+
+### Maintenance update candidate - 6 November 2026
+
+The subsequent Owner request to check/download/install updates arrived after PR488 was deployed. A separate consolidated maintenance batch now pins current stable application/native/browser dependencies, preserves same-origin reviewed map bytes and advances the coherent shell to47. PWA unit checks pass136/136; Linux/API/security/WASM/full regression, required CI and actual deployment acceptance are still pending. Source candidates do not establish installed production versions. See docs/MAINTENANCE-UPDATES-20261106.md and protected host receipts in operations/resume-priority-20261106/updates/. Data, models, security and prior rollback evidence remain retained.

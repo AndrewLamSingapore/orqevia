@@ -72,8 +72,8 @@ Focused candidate continuation tests: `node clients/pwa/followup-tests.mjs` — 
 
 ## Browser assurance
 
-`clients/pwa` pins Node 22 in `.nvmrc`, pnpm 12.14.0 in `package.json`,
-Playwright 1.63.0 in the lockfile, and the service-worker shell as
+`clients/pwa` pins Node 26 in `.nvmrc`, pnpm 12.18.0 in `package.json`,
+Playwright 1.65.0 in the lockfile, and the service-worker shell as
 `orqevia-shell-v30`.
 
 ```powershell

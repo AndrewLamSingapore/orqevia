@@ -11,6 +11,12 @@ RUN python -m pip install --no-cache-dir --no-deps --require-hashes --index-url 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Keep the optional installed PostgreSQL adapter available when one qualified
+# image is used for the existing backend, interface and worker service roles.
+COPY requirements-postgres.txt ./
+ARG ORQEVIA_POSTGRES_ENABLED=0
+RUN if [ "$ORQEVIA_POSTGRES_ENABLED" = "1" ]; then pip install --no-cache-dir -r requirements-postgres.txt; fi
+
 # Install the reviewed upstream MBTI-in-Thoughts runtime wheel. Its research
 # dependency declarations are removed because that pinned Torch/LangChain
 # environment conflicts with ORQEVIA's production dependency closure.

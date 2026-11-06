@@ -2,7 +2,7 @@
   "name": "orqevia-map-assets",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@12.14.0",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
     "node": ">=22"
   },
@@ -13,9 +13,9 @@
     "test:browser:report": "playwright show-report browser-results/html"
   },
   "dependencies": {
-    "maplibre-gl": "6.14.0"
+    "maplibre-gl": "6.16.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.63.0"
+    "@playwright/test": "1.65.0"
   }
 }

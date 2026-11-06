@@ -1,6 +1,4 @@
-# Small additive closure over the retained, pinned production dependency image.
-# pypdf wheel matches uv.lock; PostgreSQL preserves the intelligence image's
-# optional installed adapter. CPython 3.12, Linux x86_64; HTTPS PyPI only.
+# Additive installed capability closure; official PyPI hashes checked 6 November 2026.
 pypdf==6.21.4 --hash=sha256:33e4fb41ca352810eb4e9838aa0d82d6888a5f8bf682f43e99cce5faa666255c
-psycopg==3.3.3 --hash=sha256:f96525a72bcfade6584ab17e89de415ff360748c766f0106959144dcbb38c698
-psycopg-binary==3.3.3 --hash=sha256:263a24f39f26e19ed7fc982d7859a36f17841b05bebad3eb47bb9cd2dd785351
+psycopg==3.3.8 --hash=sha256:ca50af6072ba9ea6866f33021975230c2555d7bfdb9d8f94ca3af5c3d1bf2167
+psycopg-binary==3.3.8 --hash=sha256:a7cdba018e4decf3837793c1e18dbe3dd71709adef54892ab83d81c00e866dc3
