@@ -120,3 +120,31 @@ def test_migration_requires_privileged_scoped_identity(legacy_scope):
     with pytest.raises(collective.CollectiveNotFound):
         store.migrate_canonical_registry(other, expected_source_sha256=PREVIOUS)
     assert snapshot(store) == before
+
+
+def test_prior_mirror_can_be_restored_with_append_only_audit_then_migrated_again(legacy_scope):
+    store, owner = legacy_scope
+    with store.connect() as db:
+        before = [store._get(db, owner, row[0]) for row in db.execute("SELECT id FROM registry_records")]
+    store.migrate_canonical_registry(owner, expected_source_sha256=PREVIOUS)
+    with store._transaction() as db:
+        for original in before:
+            current = store._get(db, owner, original["id"])
+            if current["data"] != original["data"] or current["state"] != original["state"]:
+                store._update(
+                    db, owner, current, original["data"], state=original["state"], expected_version=current["version"]
+                )
+        new_root = store._get(db, owner, "orchestrator:orqevia")
+        store._update(
+            db,
+            owner,
+            new_root,
+            new_root["data"],
+            state="HISTORICAL_SOURCE_MIRROR",
+            expected_version=new_root["version"],
+        )
+    assert store.integrity(owner)["pass"]
+    assert store.query(owner, "registry_versions", "canonical-registry")["data"]["source_sha256"] == PREVIOUS
+    assert store.migrate_canonical_registry(owner, expected_source_sha256=PREVIOUS)["migrated"]
+    assert store.query(owner, "orchestrators")["total"] == 1
+    assert store.integrity(owner)["pass"]

@@ -12,6 +12,7 @@ from app.agent_registry import RegistryError, responsibility_owner
     "objective, expected",
     [
         ("Investigate dataset anomalies", "responsibility.a12"),
+        ("Analyze ORQEVIA runtime authority architecture", "responsibility.a16"),
         ("Estimate budget exposure", "responsibility.a21"),
         ("Compare competing approaches", "responsibility.a08"),
         ("Implement a parser", "responsibility.a17"),

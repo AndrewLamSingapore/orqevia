@@ -1,0 +1,27 @@
+{
+  "at_utc": "2026-11-06T06:50:49.738581+00:00",
+  "scope": "HISTORICAL_NONEXECUTABLE_BYTES_NOT_CURRENT_AUTHORITY",
+  "files": [
+    {
+      "path": "STATUS.md.txt",
+      "original": "STATUS.md",
+      "source_revision": "30088d5e72676a3e66f5a8d2f09f5620bc073c2a",
+      "bytes": 234756,
+      "sha256": "4371765130e6929df9e98593739197464174faa252101135957f359a3cfbaf0f"
+    },
+    {
+      "path": "scripts/check_status_authority.py.txt",
+      "original": "scripts/check_status_authority.py",
+      "source_revision": "30088d5e72676a3e66f5a8d2f09f5620bc073c2a",
+      "bytes": 2960,
+      "sha256": "511c7dcfa9c36af2942079a7227c45cff60a0713e175fb14c04577317daccaa2"
+    },
+    {
+      "path": "tests/test_status_authority.py.txt",
+      "original": "tests/test_status_authority.py",
+      "source_revision": "30088d5e72676a3e66f5a8d2f09f5620bc073c2a",
+      "bytes": 5449,
+      "sha256": "921b471909faa0c9d9dc318f4f0c63f04a36d2b2b11bc50f086b184991f7bc23"
+    }
+  ]
+}

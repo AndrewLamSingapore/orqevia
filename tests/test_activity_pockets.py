@@ -373,14 +373,62 @@ def test_ownership_and_authentication_survive_estate_open_access(environment, mo
         assert client.get("/api/activity-pockets/status").status_code == 426
 
 
-def test_stale_qualification_prevents_create_and_runtime(environment):
+def test_stale_role_evidence_does_not_block_fixed_native_extraction_or_claim_competence(environment):
     factory = environment["make"](("/catalog",))
     body = manifest()
     factory.create(body, OWNER, "fresh")
     factory.clock = lambda: time.time() + 3 * 3600
-    assert factory.run_one(body.id, OWNER, "stale")["status"] == "PAUSED"
+    assert factory.run_one(body.id, OWNER, "stale")["status"] == "COMPLETED"
+    current = factory.create(manifest(), OWNER, "stale-create")
+    projections = [row["projection"] for row in current["qualification_evidence"]]
+    assert projections and all(row["trust_state"] in {"UNPROVEN", "REVALIDATION-REQUIRED"} for row in projections)
+    assert all(row["role_evidence_grants_execution_permission"] is False for row in projections)
+    assert all(row["agent_model_executed"] is False for row in projections)
+    # Revoked source permission is still a real execution boundary.
+    factory.sources.clear()
+    assert factory.run_one(current["id"], OWNER, "revoked-source")["status"] == "PAUSED"
     with pytest.raises(PermissionError):
-        factory.create(manifest(), OWNER, "stale-create")
+        factory.create(manifest(), OWNER, "revoked-create")
+
+
+def test_native_extraction_runs_without_any_agent_certificate(environment):
+    factory = environment["make"](("/catalog",))
+    factory.library.qualifications = AgentCertificationRegistry(
+        environment["root"] / "no-role-certificates", source_revision=REVISION
+    )
+    body = manifest()
+    created = factory.create(body, OWNER, "no-role-certificates")
+    assert all(row["projection"]["level"] == "L0" for row in created["qualification_evidence"])
+    assert factory.run_one(body.id, OWNER, "native-read")["status"] == "COMPLETED"
+    assert factory.get(body.id, OWNER)["outputs"]
+
+
+def test_missing_role_verifier_cannot_forge_qualification_or_hold_native_work(environment, monkeypatch):
+    import app.activity_pockets.api as api
+
+    monkeypatch.setenv("ORQEVIA_RUNTIME_REVISION", REVISION)
+    monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_ENABLED", "1")
+    monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE", str(environment["root"] / "missing-public-pin.json"))
+    monkeypatch.setenv("ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256", "0" * 64)
+    api.default_factory.cache_clear()
+    try:
+        factory = api.default_factory()
+        assert factory.health(OWNER)["role_evidence_verifier"] == "UNAVAILABLE"
+        _, evidence = factory.library.assignment_evidence("a07", "lam", now=datetime.now(timezone.utc))
+        assert evidence.projection["level"] == "L0" and evidence.projection["trust_state"] == "UNPROVEN"
+    finally:
+        api.default_factory.cache_clear()
+
+
+def test_public_demo_contains_only_the_fixed_synthetic_catalogue(environment):
+    factory = environment["make"](("/catalog",))
+    client = session_client(factory)
+    client.cookies.clear()
+    response = client.get("/api/activity-pockets/demo/catalogue")
+    assert response.status_code == 200
+    assert response.headers["x-orqevia-sample"] == "synthetic-not-real-inventory"
+    assert response.text == (FIXTURES / "catalog.html").read_text(encoding="utf8")
+    assert client.get("/api/activity-pockets/status").status_code == 401
 
 
 @pytest.mark.parametrize(

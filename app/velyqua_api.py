@@ -25,8 +25,8 @@ class EventEnvelope(BaseModel):
 
 
 def _db_path() -> Path:
-    from . import main as prime_main
-    return prime_main.DB
+    from .integration_storage import database_path
+    return database_path()
 
 
 def _connect() -> sqlite3.Connection:

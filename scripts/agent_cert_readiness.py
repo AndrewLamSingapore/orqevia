@@ -88,16 +88,7 @@ def _pins(root):
 def _registry():
     raw = _read(agent_registry.REGISTRY_PATH)
     source = _parse(raw)
-    normalized = copy.deepcopy(source)
-    leads = normalized.get('leads')
-    if type(leads) is not list or len(leads) != 6:
-        raise ValueError('REGISTRY_INVALID')
-    aliases = {item['id']: item['agent_id'] for item in leads}
-    domains = {item['agent_id']: item['domain'] for item in leads}
-    for item in normalized['agents']:
-        item['id'] = item['agent_id']
-        item['reports_to'] = aliases.get(item['reports_to'], item['reports_to'])
-        item['division'] = domains.get(item['id'], domains.get(item['reports_to'], '')).title()
+    normalized = agent_registry.normalize_registry(source)
     loaded = agent_registry.load_agent_registry()
     if canonical(normalized) != canonical(loaded):
         raise ValueError('LOADED_REGISTRY_SOURCE_CHANGED')

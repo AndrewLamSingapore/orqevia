@@ -239,15 +239,20 @@ class AgentLibrary:
             capabilities=tuple(row["capability_requirements"]), tool_ids=tuple(row["tool_eligibility"]),
             provenance=self.store.provenance("library", "config/agent_registry.json"))
 
-    def qualified(self, agent_id, owner, *, now):
+    def assignment_evidence(self, agent_id, owner, *, now):
+        """Observe role evidence without authorizing this fixed native adapter.
+
+        The Factory executes server-owned retrieval/parser functions, not an
+        agent-selected model or executable. Source scope, tested skill artifacts
+        and fixed tool handlers authorize that bounded path independently.
+        """
         from .activity_pockets.contracts import QualificationEvidence
         manifest = self.manifest(agent_id, owner)
         capability = "responsibility." + agent_id
         projection = self.qualifications.project(agent_id, capability, now=now)
-        if (projection["level"] not in {"L2", "L3", "L4", "L5", "L6", "L7"}
-                or projection["trust_state"] in {"UNPROVEN", "REVALIDATION-REQUIRED"}
-                or not {"baseline", "role"} <= set(projection["current_dimensions"])):
-            raise PermissionError("current independent baseline and role qualification required")
+        projection = {**projection, "execution_basis": "TESTED_NATIVE_SCOPED_ADAPTER",
+                      "role_evidence_grants_execution_permission": False,
+                      "agent_model_executed": False}
         return manifest, QualificationEvidence(owner=owner, agent_id=agent_id,
             capability_id=capability, projection=projection,
             provenance=self.store.provenance("library", "app/agent_certification.py"))

@@ -131,7 +131,6 @@ class HistoricalControlSurfaceContractTests(unittest.TestCase):
 class ActiveRendererRetirementTests(unittest.TestCase):
     def test_actual_legacy_handlers_redirect_without_serving_archived_html(self):
         for path, handler, route, destination in (
-            ("app/main.py", "home", "/", "/pwa/"),
             ("app/control_surface.py", "control_surface", "/control", "/pwa/?view=console"),
             ("app/orqevia/ui.py", "index", "/", "/pwa/?view=intelligence"),
         ):
@@ -152,7 +151,6 @@ class ActiveRendererRetirementTests(unittest.TestCase):
 
     def test_useful_api_and_security_function_bodies_are_unchanged(self):
         for active, original, exclusions in (
-            ("app/main.py", "main.py.txt", {"home"}),
             (
                 "app/control_surface.py",
                 "control_surface.py.txt",
@@ -188,7 +186,7 @@ class ActiveRendererRetirementTests(unittest.TestCase):
         self.assertFalse((ROOT / "app/control_surface.html").exists())
         for name in ("index.html", "app.js", "styles.css", "manifest.webmanifest"):
             self.assertFalse((ROOT / "app/orqevia/static" / name).exists())
-        self.assertNotIn("HTML=", (ROOT / "app/main.py").read_text(encoding="utf-8"))
+        self.assertFalse((ROOT / "app/main.py").exists())
 
     def test_legacy_manifest_distinguishes_retired_renderer_from_api_boundaries(self):
         from app.control_surface import control_surface_manifest

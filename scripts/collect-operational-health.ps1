@@ -1,7 +1,7 @@
 # Fixed sibling hook invoked by the existing host sampler, never a new task.
 $ErrorActionPreference = 'Stop'
 if ($args.Count -ne 0) { throw 'Collector accepts no caller arguments' }
-$CollectorRoot = 'C:\ProgramData\ABEX\PrimeHostMetrics'
+$CollectorRoot = 'C:\ProgramData\ABEX\ORQEVIAHostMetrics'
 if ($PSScriptRoot -ne $CollectorRoot) { throw 'Fixed installed collector required' }
 $Python = 'C:\Users\Admin\AppData\Local\Programs\Python\Python313\python.exe'
 $IntegrityPath = Join-Path $CollectorRoot 'collector-integrity.json'

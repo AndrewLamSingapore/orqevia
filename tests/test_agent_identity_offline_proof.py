@@ -19,7 +19,7 @@ def test_authorized_local_task_is_attributed_from_send_to_result(agent, tmp_path
     assert agent["status"] == "registered" and agent["model"] == "unassigned"
     capability = agent["capability_requirements"][0]
     assert responsibility_owner(capability) == agent_id
-    path = [agent_id] if agent["can_delegate"] else [agent["reports_to"], agent_id]
+    path = [agent_id]
     runtime = AgentAuthorityRuntime(tmp_path / "authority.db")
     trace_id = runtime.begin_path(path)
     handoffs = list(reversed(runtime.recent(2)))
@@ -33,7 +33,7 @@ def test_authorized_local_task_is_attributed_from_send_to_result(agent, tmp_path
         agent_id=agent_id,
         action_type="offline.fake.execute",
         tool="deterministic-local-fake",
-        parent_agent=path[0] if len(path) == 2 else "prime",
+        parent_agent="orqevia",
     )
 
     def fake_operation():

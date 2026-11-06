@@ -71,6 +71,17 @@ def test_external_surface_has_no_owner_or_legacy_routes():
         '/api/orqevia/evolution/experiments': {'GET'},
         '/api/orqevia/evolution/experiment': {'POST'},
     }
+    pocket_owner_routes = {
+        '/api/activity-pockets': {'GET', 'POST'},
+        **{'/api/activity-pockets/' + suffix: {'GET'} for suffix in
+           ('status', 'coverage', 'tools', '{pocket_id}', '{pocket_id}/events', '{pocket_id}/archive')},
+        **{'/api/activity-pockets/' + suffix: {'POST'} for suffix in
+           ('create', 'emergency', '{pocket_id}/execute', '{pocket_id}/promote', '{pocket_id}/rollback',
+            '{pocket_id}/revalidate', '{pocket_id}/{action}')},
+        '/api/agents/objectives/activity-pocket': {'POST'},
+        '/activity-pockets': {'GET'}, '/activity-pockets/app.js': {'GET'},
+    }
+    public_demo = {'/api/activity-pockets/demo/catalogue'}
     # The existing public design shell and static mount expose no owner tools.
     public_static={'/design', '/public-assets'}
     from app.public_site import PAGES
@@ -83,11 +94,12 @@ def test_external_surface_has_no_owner_or_legacy_routes():
     assert public_metadata <= paths
     assert paths and all(
         path.startswith(allowed_prefixes) or path in bounded_bridge or path in public_static or path in public_metadata
-        or path in native_owner_routes or path in public_pages or path == '/robots.txt'
+        or path in native_owner_routes or path in pocket_owner_routes or path in public_demo
+        or path in public_pages or path == '/robots.txt'
         for path in paths
     )
     assert not any(path.startswith('/control') for path in paths)
-    assert not any(path.startswith('/api/') and path not in bounded_bridge | public_metadata | set(native_owner_routes) for path in paths)
+    assert not any(path.startswith('/api/') and path not in bounded_bridge | public_metadata | set(native_owner_routes) | set(pocket_owner_routes) | public_demo for path in paths)
     for route in app.routes:
         if getattr(route, 'path', None) in public_metadata:
             assert route.methods == {'GET'}
@@ -95,10 +107,21 @@ def test_external_surface_has_no_owner_or_legacy_routes():
             assert route.methods == native_owner_routes[route.path]
         if getattr(route, 'path', None) in public_pages:
             assert route.methods == {'GET'}
+        if getattr(route, 'path', None) in pocket_owner_routes:
+            assert route.methods <= pocket_owner_routes[route.path]
+        if getattr(route, 'path', None) in public_demo:
+            assert route.methods == {'GET'}
     with TestClient(app, base_url='https://testserver') as client:
         for path, methods in native_owner_routes.items():
             response = client.request(next(iter(methods)), path)
             assert response.status_code == 401, (path, response.status_code)
+        for path, methods in pocket_owner_routes.items():
+            for method in methods:
+                target = path.replace('{pocket_id}', 'unowned').replace('{action}', 'resume')
+                response = client.request(method, target, json={} if method == 'POST' else None)
+                assert response.status_code == 401, (path, method, response.status_code)
+        demo = client.get('/api/activity-pockets/demo/catalogue')
+        assert demo.status_code == 200 and demo.headers['x-orqevia-sample'] == 'synthetic-not-real-inventory'
 
 
 def test_future_build_observations_preserve_unknown_measurements(tmp_path,monkeypatch):

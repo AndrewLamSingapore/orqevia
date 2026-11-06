@@ -69,9 +69,9 @@ class Factory:
             if not set(manifest.permitted_operations) <= set(definition.tool_ids):
                 raise PermissionError("tool scope exceeds canonical agent eligibility")
 
-    def _qualified(self, db, manifest):
+    def _record_role_evidence(self, db, manifest):
         for agent in manifest.agent_ids:
-            _, evidence = self.library.qualified(
+            _, evidence = self.library.assignment_evidence(
                 agent, manifest.owner, now=datetime.fromtimestamp(self.clock(), timezone.utc)
             )
             self.store.put(db, "qualification", evidence, manifest.id)
@@ -101,7 +101,7 @@ class Factory:
                 manifest.permitted_operations
             ):
                 raise PermissionError("pinned skill and permitted team/tool scope differ")
-            self._qualified(db, manifest)
+            self._record_role_evidence(db, manifest)
             now = self.clock()
             db.execute(
                 "INSERT INTO pockets(id,owner,manifest,state,version,due,updated,idempotency_key,request_digest) "
@@ -191,7 +191,7 @@ class Factory:
             if action == "resume":
                 manifest = PocketManifest.model_validate_json(row["manifest"])
                 self._scope(manifest, principal)
-                self._qualified(db, manifest)
+                self._record_role_evidence(db, manifest)
                 if row["reason"] == "QUALITY_FAILURE":
                     raise PermissionError("quality pause requires a validated owner promotion or rollback")
             state = allowed[action][1]
@@ -255,10 +255,10 @@ class Factory:
                 raise PermissionError("audit evidence integrity failed")
             try:
                 self._scope(manifest, principal)
-                self._qualified(db, manifest)
+                self._record_role_evidence(db, manifest)
             except PermissionError:
                 db.execute(
-                    "UPDATE pockets SET state='PAUSED',reason='QUALIFICATION_OR_SCOPE_REQUIRED' WHERE id=?",
+                    "UPDATE pockets SET state='PAUSED',reason='AUTHORIZED_SOURCE_SCOPE_REQUIRED' WHERE id=?",
                     (pocket_id,),
                 )
                 self.store.event(db, pocket_id, row["owner"], "factory-worker", "execution.denied")
@@ -816,6 +816,9 @@ class Factory:
                 "sources": [source.public() for source in self.sources.values() if principal.owner in source.owners],
                 "coaching_authority": "app.academy.PersistentAcademy",
                 "qualification_authority": "app.agent_certification.AgentCertificationRegistry",
+                "role_evidence_grants_execution_permission": False,
+                "role_evidence_verifier": "CONFIGURED" if self.library.qualifications.verify_record else "UNAVAILABLE",
+                "execution_basis": "TESTED_NATIVE_SCOPED_ADAPTER",
                 "production_ready": False,
             }
 

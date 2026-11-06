@@ -15,6 +15,7 @@ import pytest
         "architecture-baseline-retirement-20261106",
         "pocket-console-retirement-20261106",
         "desktop-retirement-20261106",
+        "status-authority-retirement-20261106",
     ],
 )
 def test_retired_source_matches_its_custody_manifest(folder):

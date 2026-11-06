@@ -8,13 +8,13 @@ import sqlite3
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from .contracts import PocketManifest
 from .factory import Factory, Principal
 from .store import Store
-from .web import Source
+from .web import HTTPSFetcher, Source
 
 
 def session_principal(request: Request):
@@ -66,12 +66,17 @@ def default_factory():
             "ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_SHA256",
             "6cc238c7da9152519410a4cd731abd6e0e584d2cbd84c3c0863ca55b4e771bb0",
         )
-        verifier = verifier_from_azure_es256_pin_file(
-            pin,
-            pin_hash,
-            untrusted_roots=(root,),
-            normalize_crlf="ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE" not in os.environ,
-        )
+        try:
+            verifier = verifier_from_azure_es256_pin_file(
+                pin,
+                pin_hash,
+                untrusted_roots=(root,),
+                normalize_crlf="ORQEVIA_AGENT_CERT_AZURE_ES256_PIN_FILE" not in os.environ,
+            )
+        except (OSError, ValueError):
+            # Missing verifier means UNPROVEN role evidence, never accepted
+            # signatures. It cannot authorize or block the fixed native parser.
+            verifier = None
     qualifications = AgentCertificationRegistry(
         root / "agent-certification", source_revision=revision, verify_record=verifier
     )
@@ -86,7 +91,9 @@ def default_factory():
     sources = tuple(
         Source(**{**item, "urls": tuple(item["urls"]), "owners": tuple(item["owners"])}) for item in config["sources"]
     )
-    return Factory(store, qualifications, sources)
+    return Factory(
+        store, qualifications, sources, fetcher=HTTPSFetcher(ca_file=os.getenv("ORQEVIA_POCKET_SOURCE_CA_FILE"))
+    )
 
 
 class Mutation(BaseModel):
@@ -125,6 +132,14 @@ def build_router(provider=default_factory, authenticate=session_principal):
     router = APIRouter(
         prefix="/api/activity-pockets", tags=["Activity Pocket Factory"], dependencies=[Depends(privacy_headers)]
     )
+
+    @router.get("/demo/catalogue", response_class=HTMLResponse)
+    def demo_catalogue():
+        # Fixed synthetic sample only. No session, corpus or owned record is read.
+        return HTMLResponse(
+            (Path(__file__).parent / "fixtures/catalog.html").read_text(encoding="utf8"),
+            headers={"X-ORQEVIA-Sample": "synthetic-not-real-inventory"},
+        )
 
     def factory():
         try:

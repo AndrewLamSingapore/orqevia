@@ -39,8 +39,11 @@ Three open proposals are consolidated into this batch:
 - Activity Pocket Factory uses the existing Academy, Library, scoped tools,
   workflow executor and SQLite evidence. One worker runs inside the existing
   backend. The shared workspace supports owned creation, observation, lifecycle
-  controls and preserved-result reads. Approved sources and independent role
-  evidence remain necessary; an empty source configuration is not readiness.
+  controls and preserved-result reads. Approved sources and independently tested
+  extraction artifacts remain necessary. Broad role certificates are observations,
+  not permission gates for fixed native code. An empty source configuration is
+  not readiness. A fixed public synthetic catalogue supports bounded acceptance
+  without exposing user records or claiming real inventory or agent competence.
 - PIF reuses measured cumulative-weight/reachability improvements and an
   optional NumPy path. The wide-model flag remains off by default. Original
   numerical implementations remain available; no inference kernel or model
@@ -80,8 +83,8 @@ repository moved from the retired `repos/prime` path to `repos/orqevia`, with
 Actual production volumes already use ORQEVIA names and require no data move.
 
 The private host metrics path is a legacy OS binding, not another intelligence
-authority. Its protected producer and consumer must migrate together through a
-normal authorized Windows administration step. Certificates, signing domains,
+authority. Current source targets ORQEVIAHostMetrics; its protected producer and
+consumer must migrate together through normal Windows administration. Certificates, signing domains,
 old record schemas and necessary interoperability identifiers keep their original
 bytes until an explicitly verified format migration exists.
 

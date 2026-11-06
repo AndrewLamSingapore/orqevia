@@ -31,7 +31,7 @@ def test_all_21_declared_capabilities_are_not_proven_without_evidence(tmp_path):
         assert all(cases for cases in row["missing_cases"].values())
         assert row["runtime_activation"] == "UNVERIFIED"
         assert row["provenance"]["source_revision"] == REVISION
-        assert row["provenance"]["registry_version"] == "1.0.0"
+        assert row["provenance"]["registry_version"] == "2.0.0"
         assert {row[key] for key in ("quality", "autonomy", "latency_ms", "cost_usd")} == {"UNKNOWN"}
 
 

@@ -582,12 +582,15 @@ class CollectiveStore:
                     self._update(db, p, item, {'canonical_id': capability, 'source_sha256': target},
                                  expected_version=item['version'])
             root_id = 'orchestrator:'+registry['orchestrator']['id']
+            root_body = {'canonical_id': registry['orchestrator']['id'], 'authority': 'SOURCE_DEFINITION_ONLY'}
             if db.execute('SELECT 1 FROM registry_records WHERE tenant_id=? AND owner_id=? AND id=?',
                           (*self._scope(p), root_id)).fetchone():
-                raise CollectiveConflict('new coordinator identity already exists outside the known migration')
-            self._create(db, p, 'orchestrators', {'canonical_id': registry['orchestrator']['id'],
-                                                'authority': 'SOURCE_DEFINITION_ONLY'},
-                         object_id=root_id, state='SOURCE_MIRROR')
+                retained = self._get(db, p, root_id, 'orchestrators')
+                if retained['state'] != 'HISTORICAL_SOURCE_MIRROR' or retained['data'] != root_body:
+                    raise CollectiveConflict('new coordinator identity already exists outside the known migration')
+                self._update(db, p, retained, root_body, state='SOURCE_MIRROR', expected_version=retained['version'])
+            else:
+                self._create(db, p, 'orchestrators', root_body, object_id=root_id, state='SOURCE_MIRROR')
             old_root = self._get(db, p, 'orchestrator:prime', 'orchestrators')
             if old_root['data'] != {'canonical_id': 'prime', 'authority': 'SOURCE_DEFINITION_ONLY'}:
                 raise CollectiveConflict('prior coordinator mirror differs; no automatic repair')

@@ -40,7 +40,7 @@ if (root) {
       if (epoch !== generation) return;
       const sources = (Array.isArray(health.sources) ? health.sources : []).filter(source => safeID(source.id));
       state.textContent = sources.length
-        ? 'Run bounded catalogue extraction from your approved sources. Agent quality evidence is checked before execution.'
+        ? 'Run bounded catalogue extraction from your approved sources using tested extraction rules. Agent role evidence is shown separately.'
         : 'No approved catalogue source is configured. Existing runs and evidence stay available.';
       const refresh = make('button', 'Refresh activity runs');
       refresh.type = 'button';
