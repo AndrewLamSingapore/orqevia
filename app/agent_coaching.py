@@ -98,6 +98,27 @@ def effective_prompt(agent, phase, seed, feedback=(), program='role'):
         prompt += '\nPrevious assessment rejected these field contracts: '+', '.join(feedback)+'. Recompute from input facts; no corrected answer is supplied.'
     return request,prompt
 
+
+def response_contract_matches(job, request):
+    """Bind the queued output contract before any semantic grade is recorded."""
+    order = request.get('response_schema_order', 'canonical')
+    if (type(order) is not str or order not in {'canonical', 'declared'} or
+            job.get('response_format') != 'strict_json' or
+            job.get('response_schema_order', 'canonical') != order):
+        return False
+    expected, actual = request.get('response_schema'), job.get('response_schema')
+    if expected is None:
+        return actual is None
+    try:
+        from .response_schema import MAX_SCHEMA_BYTES, canonicalize_schema, validated_wire_schema
+        if type(actual) is not str or len(actual.encode('utf-8')) > MAX_SCHEMA_BYTES:
+            return False
+        validate = validated_wire_schema if order == 'declared' else canonicalize_schema
+        return validate(json.loads(actual)) == validate(expected)
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        return False
+
+
 class CoachingController:
     def __init__(self, path, queue, *, source_revision, model, clock=time.time,
                  max_daily_jobs=0, max_practice_attempts=2, cohort_interval_seconds=0,
@@ -324,7 +345,8 @@ class CoachingController:
                 bound = (job.get('agent')==row['agent'] and job.get('prompt')==prompt and
                          job.get('model')==self.model and
                          job.get('allow_cloud')==0 and job.get('external_execution')==0 and
-                         job.get('data_classification')=='LOCAL_ONLY' and job.get('actual_cost_usd',0)==0)
+                         job.get('data_classification')=='LOCAL_ONLY' and job.get('actual_cost_usd',0)==0 and
+                         response_contract_matches(job, request))
                 if not bound:
                     return self.self_repair(db,row,'EXECUTION_BINDING_MISMATCH',{'job_id':row.get('job_id')})
                 passed,errors = False,['execution_not_completed']
@@ -343,6 +365,7 @@ class CoachingController:
                             'result_sha256':hashlib.sha256((job.get('result') or '').encode()).hexdigest(),
                             'job_started_at':job.get('started_at'),'job_completed_at':job.get('completed_at'),
                             'model':job.get('model'),'provider':job.get('provider'),
+                            'response_schema_order':job.get('response_schema_order','canonical'),
                             'inference_receipt_present':bool(job.get('inference_receipt')),
                             'certification_awarded':False,'oracle':'existing.role-normal' if row['phase']!='practice' else VERSION}
                 if row['program_id']=='probability-foundations':
@@ -412,6 +435,7 @@ class CoachingController:
                                     allow_cloud=False,external_execution=False,classification='R0',
                                     data_classification='LOCAL_ONLY',task_class='classification',response_format='strict_json',
                                     response_schema=request.get('response_schema'),idempotency_key=key,
+                                    response_schema_order=request.get('response_schema_order','canonical'),
                                     request_digest=request_hash)
             db.execute("UPDATE coaching_sessions SET state='WAITING',job_id=?,job_key=?,request_sha256=?,prompt_sha256=?,baseline_request_sha256=COALESCE(baseline_request_sha256,?),updated_epoch=? WHERE id=?",
                        (job['id'],key,request_hash,prompt_hash,request_hash if row['phase']=='baseline' else None,self.clock(),row['id']))

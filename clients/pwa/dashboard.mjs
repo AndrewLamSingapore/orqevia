@@ -16,8 +16,9 @@ export function agentReadinessSummary(value) {
   return `Observed history ${observed} / 21 · recent activity ${fresh} / 21 · confirmed execution ${ready} / 21`;
 }
 
-const healthStates=new Set(['HEALTHY','DEGRADED','CRITICAL','UNKNOWN','NOT_CONFIGURED']);
+const healthStates=new Set(['HEALTHY','DEGRADED','CRITICAL','STALE','UNKNOWN','NOT_CONFIGURED']);
 const healthText=(value,fallback='UNAVAILABLE')=>typeof value==='string'?value.slice(0,512):fallback;
+const collectionState=value=>value==='UNKNOWN'?'UNAVAILABLE':['STALE','NOT_CONFIGURED'].includes(value)?value:'OBSERVED';
 export function sampleFreshness(value,ttl,now=Date.now()) {
   const at=typeof value==='number'?value*1000:typeof value==='string'&&/(Z|[+-]\d\d:\d\d)$/.test(value)?Date.parse(value):NaN;
   if(!Number.isFinite(at)||!Number.isFinite(ttl)||ttl<=0||ttl>1200||at>now+5000)return 'UNKNOWN';
@@ -38,31 +39,60 @@ export function healthFacts(value,now=Date.now()) {
       capturedAt:captured,source:healthText(meta?.source??row?.source,'SOURCE_UNAVAILABLE'),hostId:healthText(host?.source?.host_id,'HOST_UNAVAILABLE')}];
   }));
   const raw=value?.service_health, ttl=raw?.freshness_seconds;
-  const serviceFresh=parent==='OBSERVED'&&raw?.schema_version==='orqevia.service-health.v1'&&sampleFreshness(raw.observed_at,ttl,now)==='OBSERVED';
+  const serviceSample=raw?.schema_version==='orqevia.service-health.v1'?sampleFreshness(raw.observed_at,ttl,now):'UNKNOWN';
+  const collectorStale=raw?.schema_version==='orqevia.service-health.v1'&&(serviceSample==='STALE'||raw.reason==='COLLECTOR_RECEIPT_STALE');
+  const serviceFresh=parent==='OBSERVED'&&serviceSample==='OBSERVED'&&!collectorStale;
   const services=serviceFresh&&Array.isArray(raw.services)&&raw.services.length<=32?raw.services.filter(r=>safeID(r?.service_id)).map(row=>{
-    const checks=Array.isArray(row.checks)?row.checks.slice(0,16):[];
-    const fresh=checks.length>0&&checks.every(c=>['PASS','FAIL'].includes(c?.status)&&c.fresh===true&&sampleFreshness(c.observed_at,ttl,now)==='OBSERVED');
-    return {...row,status:fresh&&healthStates.has(row.status)?row.status:['NOT_CONFIGURED','UNKNOWN'].includes(row.status)?row.status:'UNKNOWN',
-      reason:fresh?healthText(row.reason,'DECLARED_CHECKS_ONLY'):healthText(row.reason,'SERVICE_CHECK_UNAVAILABLE'),checks};
+    const checkShape=check=>check!==null&&typeof check==='object'&&!Array.isArray(check)&&safeID(check.check_id)&&safeID(check.check_key);
+    const malformed=!Array.isArray(row.checks)||row.checks.length>16||row.checks.some(check=>!checkShape(check));
+    const checks=Array.isArray(row.checks)?row.checks.slice(0,16).map(check=>checkShape(check)?check:{check_id:'invalid-observation',status:'UNKNOWN',state:'UNKNOWN',reason:'MALFORMED_SERVICE_CHECK',fresh:false}):[];
+    const fresh=!malformed&&checks.length>0&&checks.every(c=>['PASS','FAIL'].includes(c.status)&&c.fresh===true&&sampleFreshness(c.observed_at,ttl,now)==='OBSERVED');
+    return {...row,status:fresh&&healthStates.has(row.status)?row.status:['NOT_CONFIGURED','STALE','UNKNOWN'].includes(row.status)?row.status:'UNKNOWN',
+      reason:malformed?'MALFORMED_SERVICE_CHECKS':fresh?healthText(row.reason,'DECLARED_CHECKS_ONLY'):healthText(row.reason,'SERVICE_CHECK_UNAVAILABLE'),checks};
   }):[];
   const ids=new Set(services.map(row=>row.service_id));
   const expected=['backend','interface','ollama','intelligence','coaching','otel-collector','integration-gateway','cloudflared','cloudflared-dual'];
   const checksFresh=(checks,age)=>Array.isArray(checks)&&checks.length>0&&checks.every(c=>['PASS','FAIL'].includes(c?.status)&&c.fresh===true&&sampleFreshness(c.observed_at,age,now)==='OBSERVED');
-  const coverageFresh=serviceFresh&&services.length===9&&ids.size===9&&expected.every(id=>ids.has(id))&&services.every(r=>checksFresh(r.checks,ttl))&&
-    raw.collector_checks?.length===3&&checksFresh(raw.collector_checks,ttl)&&raw.canary_checks?.length===16&&checksFresh(raw.canary_checks,raw.coverage?.canary_freshness_seconds);
-  let coreStatus=serviceFresh&&healthStates.has(raw.status)?raw.status:parent==='OBSERVED'&&raw?.status==='NOT_CONFIGURED'?'NOT_CONFIGURED':'UNKNOWN';
-  if(coreStatus==='HEALTHY'&&!coverageFresh)coreStatus='UNKNOWN';
+  const collectorChecks=Array.isArray(raw?.collector_checks)?raw.collector_checks.slice(0,16):[];
+  const collectorIDs=new Set(collectorChecks.map(row=>row?.check_id));
+  const collectorVerified=serviceFresh&&raw.status!=='NOT_CONFIGURED'&&raw.collector_checks?.length===3&&collectorChecks.length===3&&collectorIDs.size===3&&['collector-source','host-identity','boot-identity'].every(id=>collectorIDs.has(id))&&checksFresh(collectorChecks,ttl)&&collectorChecks.every(row=>row.status==='PASS');
+  const serviceCoverageFresh=collectorVerified&&raw.coverage?.inventory_complete===true&&raw.services?.length===9&&services.length===9&&ids.size===9&&expected.every(id=>ids.has(id))&&services.every(r=>r.reason!=='MALFORMED_SERVICE_CHECKS'&&checksFresh(r.checks,ttl));
+  const declaredNames=names=>Array.isArray(names)&&names.length>0&&names.length<=128&&names.every(safeID)&&new Set(names).size===names.length;
+  const canaryChecks=Array.isArray(raw?.canary_checks)?raw.canary_checks.slice(0,128):[];
+  const requiredCanaries=raw?.coverage?.required_canary_checks;
+  const canaryIDs=new Set(canaryChecks.map(row=>row?.check_id));
+  const canaryInventoryValid=declaredNames(requiredCanaries)&&raw.canary_checks?.length===canaryChecks.length&&canaryChecks.length===requiredCanaries.length&&canaryIDs.size===canaryChecks.length&&requiredCanaries.every(id=>canaryIDs.has(id));
+  const fullCoverageFresh=serviceCoverageFresh&&canaryInventoryValid&&checksFresh(canaryChecks,raw.coverage?.canary_freshness_seconds);
+  const functionality=raw?.functionality;
+  let coreStatus=serviceFresh&&functionality?.scope==='DECLARED_SERVICE_FUNCTIONAL_CHECKS_ONLY'?(functionality.status==='UNHEALTHY'?'CRITICAL':healthStates.has(functionality.status)?functionality.status:'UNKNOWN'):'UNKNOWN';
+  if(parent==='STALE'||parent==='OBSERVED'&&collectorStale)coreStatus='STALE';
+  else if(parent==='OBSERVED'&&raw?.schema_version==='orqevia.service-health.v1'&&raw.status==='NOT_CONFIGURED')coreStatus='NOT_CONFIGURED';
+  if(coreStatus==='HEALTHY'&&(!serviceCoverageFresh||services.some(row=>row.status!=='HEALTHY'||row.checks.some(check=>check.status!=='PASS'))))coreStatus='UNKNOWN';
+  if(['CRITICAL','DEGRADED'].includes(coreStatus)&&(!collectorVerified||!services.some(row=>row.checks.some(check=>check.status==='FAIL'&&(coreStatus!=='CRITICAL'||check.severity==='CRITICAL')&&check.fresh===true&&sampleFreshness(check.observed_at,ttl,now)==='OBSERVED'))))coreStatus='UNKNOWN';
+  const coreReason=parent!=='OBSERVED'?'APPLICATION_'+parent:raw?.schema_version!=='orqevia.service-health.v1'?'SERVICE_HEALTH_SCHEMA_UNAVAILABLE_OR_INVALID':collectorStale?'COLLECTOR_RECEIPT_STALE':coreStatus==='NOT_CONFIGURED'||!serviceFresh?healthText(raw?.reason,'SERVICE_MONITORING_NOT_CONFIGURED'):!collectorVerified?'COLLECTOR_PROVENANCE_UNAVAILABLE':coreStatus==='UNKNOWN'&&raw.coverage?.inventory_complete!==true?'SERVICE_INVENTORY_UNAVAILABLE_OR_INVALID':functionality?.scope!=='DECLARED_SERVICE_FUNCTIONAL_CHECKS_ONLY'?'CORE_FUNCTIONALITY_UNAVAILABLE':coreStatus==='UNKNOWN'&&functionality.status!=='UNKNOWN'?'SERVICE_OBSERVATIONS_INCOMPLETE_OR_INCONSISTENT':healthText(functionality.reason??raw.reason);
   const critical=value?.critical_issues;
+  const criticalSchema=critical?.schema_version==='orqevia.operational-incidents.v1';
+  const criticalSample=criticalSchema?sampleFreshness(critical.observed_at,ttl,now):'UNKNOWN';
   const count=Number.isSafeInteger(critical?.critical_count)&&critical.critical_count>=0?critical.critical_count:null;
-  const authoritative=coverageFresh&&raw.coverage?.complete===true&&critical?.schema_version==='orqevia.operational-incidents.v1'&&critical.coverage_complete===true&&critical.store_status==='OBSERVED'&&sampleFreshness(critical.observed_at,ttl,now)==='OBSERVED'&&count!==null;
-  if(coreStatus==='HEALTHY'&&!authoritative)coreStatus='UNKNOWN';
+  const allChecks=[...services.flatMap(row=>row.checks),...collectorChecks,...canaryChecks];
+  const checksByKey=new Map(allChecks.map(row=>[row?.check_key,row]));
+  const requiredCritical=raw?.coverage?.required_critical_checks;
+  const criticalSamplesFresh=declaredNames(requiredCritical)&&services.every(row=>row.reason!=='MALFORMED_SERVICE_CHECKS')&&checksByKey.size===allChecks.length&&allChecks.every(row=>safeID(row?.check_key))&&requiredCritical.length===allChecks.filter(row=>row.severity==='CRITICAL').length&&requiredCritical.every(key=>{
+    const check=checksByKey.get(key),age=key.startsWith('canary:')?raw.coverage?.canary_freshness_seconds:ttl;
+    return check?.severity==='CRITICAL'&&checksFresh([check],age);
+  });
+  const authoritative=collectorVerified&&raw.coverage?.inventory_complete===true&&canaryInventoryValid&&criticalSamplesFresh&&raw.coverage?.critical_complete===true&&criticalSchema&&critical.coverage_complete===true&&critical.store_status==='OBSERVED'&&criticalSample==='OBSERVED'&&count!==null;
+  const criticalStatus=authoritative?(count>0?'CRITICAL':'HEALTHY'):coreStatus==='STALE'||parent==='OBSERVED'&&criticalSample==='STALE'?'STALE':coreStatus==='NOT_CONFIGURED'?'NOT_CONFIGURED':'UNKNOWN';
+  const criticalReason=authoritative?healthText(critical.reason,'CRITICAL_MONITORING_COMPLETE'):parent!=='OBSERVED'?'APPLICATION_'+parent:collectorStale?'COLLECTOR_RECEIPT_STALE':criticalSample==='STALE'?'INCIDENT_OBSERVATION_STALE':!criticalSchema?'INCIDENT_SCHEMA_UNAVAILABLE_OR_INVALID':!collectorVerified?coreReason:raw.coverage?.inventory_complete!==true?'SERVICE_INVENTORY_UNAVAILABLE_OR_INVALID':!canaryInventoryValid?'CANARY_COVERAGE_METADATA_INVALID':!declaredNames(requiredCritical)?'CRITICAL_COVERAGE_METADATA_INVALID':!criticalSamplesFresh?'CRITICAL_OBSERVATION_UNAVAILABLE':critical.store_status!=='OBSERVED'?'INCIDENT_STORE_UNAVAILABLE':criticalSample!=='OBSERVED'?'INCIDENT_OBSERVATION_TIME_INVALID':healthText(critical.reason,'CRITICAL_MONITORING_COVERAGE_INCOMPLETE');
   const hostFresh=parent==='OBSERVED'&&sampleFreshness(host?.captured_at,host?.max_age_seconds,now)==='OBSERVED';
   const network=hostFresh&&sampleFreshness(host?.network?.captured_at,host?.max_age_seconds,now)==='OBSERVED'?host.network:null;
-  return {metrics,host:hostFresh?host:null,network,services,core:{status:coreStatus,observedAt:raw?.observed_at,lastSuccessAt:raw?.last_success_at,
-    reason:serviceFresh?healthText(raw.reason):parent!=='OBSERVED'?'APPLICATION_'+parent:healthText(raw?.reason,'SERVICE_MONITORING_NOT_CONFIGURED')},
-    critical:{count:authoritative?count:null,knownCount:parent==='OBSERVED'&&Number.isSafeInteger(critical?.known_critical_count)?critical.known_critical_count:null,
-      observedAt:critical?.observed_at,lastSuccessAt:critical?.last_success_at,reason:authoritative?'MONITORING_COMPLETE':parent!=='OBSERVED'?'APPLICATION_'+parent:healthText(critical?.reason,'CRITICAL_MONITORING_NOT_CONFIGURED'),
-      incidents:parent==='OBSERVED'&&Array.isArray(critical?.incidents)?critical.incidents.slice(0,100):[]}};
+  return {metrics,host:hostFresh?host:null,network,services,collectorChecks,canaryChecks,
+    monitoring:{complete:fullCoverageFresh&&raw.coverage?.complete===true,status:parent!=='OBSERVED'?parent==='STALE'?'STALE':'UNKNOWN':collectorStale?'STALE':!canaryInventoryValid?'UNKNOWN':fullCoverageFresh&&raw.coverage?.complete===true?'COMPLETE':'INCOMPLETE',reason:parent!=='OBSERVED'?'APPLICATION_'+parent:collectorStale?'COLLECTOR_RECEIPT_STALE':!canaryInventoryValid?'CANARY_COVERAGE_METADATA_INVALID':'MONITORING_COVERAGE_INCOMPLETE'},
+    core:{status:coreStatus,observedAt:raw?.observed_at,lastSuccessAt:raw?.last_success_at,
+    reason:coreReason},
+    critical:{status:criticalStatus,count:authoritative?count:null,knownCount:parent==='OBSERVED'&&criticalSchema&&Number.isSafeInteger(critical.known_critical_count)&&critical.known_critical_count>=0?critical.known_critical_count:null,
+      observedAt:critical?.observed_at,lastSuccessAt:critical?.last_success_at,reason:criticalReason,
+      incidents:parent==='OBSERVED'&&criticalSchema&&Array.isArray(critical.incidents)?critical.incidents.slice(0,100):[]}};
 }
 
 // One device-independent interpretation of the authenticated telemetry record.
@@ -260,13 +290,15 @@ if(typeof document!=='undefined') {
     }
     else line(details,`Network interfaces: ${value?.host?.network?.reason||'METRIC_NOT_COLLECTED'}`);
     line(details,'Network gauge measures the default-gateway round trip; it does not establish Internet or service readiness.');
-    text('core-services-count',health.core.status==='UNKNOWN'&&health.core.reason==='COLLECTOR_RECEIPT_STALE'?'STALE':health.core.status);$('core-services-count')?.setAttribute('data-collection-status',health.core.status==='UNKNOWN'?'UNAVAILABLE':'OBSERVED');
-    text('core-services-detail',`${health.core.reason==='COLLECTOR_RECEIPT_STALE'?'Collector receipt stale; current service health unverified':health.core.reason} · sample ${sampleLabel(health.core.observedAt)} · last complete success ${sampleLabel(health.core.lastSuccessAt)}`);
-    text('critical-count',health.critical.count===null?(health.critical.reason==='COLLECTOR_RECEIPT_STALE'?'STALE': 'UNKNOWN'):String(health.critical.count));$('critical-count')?.setAttribute('data-collection-status',health.critical.count===null?'UNAVAILABLE':'OBSERVED');
-    text('critical-detail',`${health.critical.reason==='COLLECTOR_RECEIPT_STALE'?'Collector receipt stale; verify the host sampler and operational collector before trusting a current count':health.critical.reason}${health.critical.knownCount===null?'':' · known critical records '+health.critical.knownCount+' (coverage may be incomplete)'} · sample ${sampleLabel(health.critical.observedAt)} · last complete success ${sampleLabel(health.critical.lastSuccessAt)}`);
+    text('core-services-count',health.core.status);$('core-services-count')?.setAttribute('data-collection-status',collectionState(health.core.status));
+    text('core-services-detail',`${health.core.reason==='COLLECTOR_RECEIPT_STALE'?'Collector receipt stale; current service health unverified · ':''}${health.core.reason} · sample ${sampleLabel(health.core.observedAt)} · last complete success ${sampleLabel(health.core.lastSuccessAt)}`);
+    text('critical-count',health.critical.count===null?health.critical.status:String(health.critical.count));$('critical-count')?.setAttribute('data-collection-status',health.critical.count===null?collectionState(health.critical.status):'OBSERVED');
+    text('critical-detail',`${health.critical.reason==='COLLECTOR_RECEIPT_STALE'?'Collector receipt stale; verify the host sampler and operational collector before trusting a current count · ':''}${health.critical.reason}${health.critical.count!==null||health.critical.knownCount===null?'':' · known critical records '+health.critical.knownCount+' (coverage incomplete)'} · sample ${sampleLabel(health.critical.observedAt)} · last complete success ${sampleLabel(health.critical.lastSuccessAt)}`);
     const services=$('service-health-list');services?.replaceChildren();
-    for(const service of health.services){line(services,`${service.service_id} · ${service.status} · ${service.reason} · process ${healthText(service.process_state)} · last success ${sampleLabel(service.last_success_at)}`);for(const check of service.checks)line(services,`${check.check_id}: ${check.state||check.status} · ${healthText(check.reason)} · ${healthText(check.scope)} · sample ${sampleLabel(check.observed_at)} · last success ${sampleLabel(check.last_success_at)} · ${healthText(check.source)}`);}
+    for(const service of health.services){line(services,`${service.service_id} · ${service.status} · ${service.reason} · process ${healthText(service.process_state)} · last success ${sampleLabel(service.last_success_at)}`);for(const check of service.checks)line(services,`${healthText(check?.check_id)}: ${healthText(check?.state??check?.status)} · ${healthText(check?.reason)} · ${healthText(check?.scope)} · sample ${sampleLabel(check?.observed_at)} · last success ${sampleLabel(check?.last_success_at)} · ${healthText(check?.source)}`);}
     if(!health.services.length)line(services,health.core.reason);
+    line(services,`Broader monitoring coverage: ${health.monitoring.status}${health.monitoring.complete?'':' · '+health.monitoring.reason}`);
+    for(const [scope,checks] of [['collector',health.collectorChecks],['verification',health.canaryChecks]])for(const check of checks)line(services,`${scope} / ${healthText(check?.check_id)}: ${healthText(check?.state??check?.status)} · ${healthText(check?.reason)} · sample ${sampleLabel(check?.observed_at)} · last success ${sampleLabel(check?.last_success_at)}`);
     const incidents=$('critical-incident-list');incidents?.replaceChildren();
     for(const incident of health.critical.incidents)line(incidents,`${healthText(incident.service_id)} / ${healthText(incident.check_id)} · ${healthText(incident.severity)} · ${healthText(incident.state)} · ${healthText(incident.reason)}`);
   }

@@ -21,8 +21,6 @@ from urllib.parse import urlsplit
 RECEIPT_SCHEMA = "orqevia.operational-observation.v1"
 CANARY_SCHEMA = "orqevia.full-stack-canary.v1"
 CANARY_MAX_AGE_SECONDS = 1200  # Two periods of the observed ten-minute task.
-RESOLVED_RETENTION_SECONDS = 30 * 86400
-RESOLVED_RETENTION_COUNT = 500
 _CODE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z")
 _STATES = {"PASS", "FAIL", "UNKNOWN", "NOT_CONFIGURED"}
 
@@ -74,6 +72,7 @@ CANARY_CHECKS = {
     "workflow-and-notebook-persistence": "DEGRADED",
     "rollback-readiness": "DEGRADED",
     "permanent-supervision-tasks": "DEGRADED",
+    "disaster-recovery-backup": "DEGRADED",
 }
 
 
@@ -217,7 +216,7 @@ def _aggregate(checks):
     return "HEALTHY" if checks else "NOT_CONFIGURED"
 
 
-def service_functionality(services):
+def service_functionality(services, *, inventory_complete=True):
     """Declared service functionality, independent of verification coverage.
 
     Unknown probes are not failures. A confirmed service failure still takes
@@ -227,7 +226,7 @@ def service_functionality(services):
     failures=[c for c in checks if c.get('fresh') is True and c.get('status')=='FAIL']
     if any(c.get('state')=='CRITICAL' for c in failures):status='UNHEALTHY'
     elif failures:status='DEGRADED'
-    elif len(services)!=len(SERVICE_SPECS) or any(not s.get('coverage_complete') for s in services):status='UNKNOWN'
+    elif not inventory_complete or len(services)!=len(SERVICE_SPECS) or any(not s.get('coverage_complete') for s in services):status='UNKNOWN'
     elif all(s.get('status')=='HEALTHY' for s in services):status='HEALTHY'
     else:status='UNKNOWN'
     return {'status':status,'scope':'DECLARED_SERVICE_FUNCTIONAL_CHECKS_ONLY',
@@ -434,11 +433,8 @@ def _journal(path, checks, now, boot_id):
                     (incident["id"], "RECOVERED", stamp),
                 )
         if observations:
-            db.execute(
-                "DELETE FROM operational_incidents WHERE state='RECOVERED' AND (recovered_at<? OR id NOT IN "
-                "(SELECT id FROM operational_incidents WHERE state='RECOVERED' ORDER BY recovered_at DESC,id DESC LIMIT ?))",
-                (now - RESOLVED_RETENTION_SECONDS, RESOLVED_RETENTION_COUNT),
-            )
+            # Reconciliation retains historical incidents and their transitions.
+            # Response pagination below bounds presentation, not stored history.
             db.commit()
         incidents = [
             dict(row)
@@ -551,6 +547,12 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
     canary = canary if isinstance(canary, dict) else {}
     canary_rows, canary_valid = _rows(canary.get("checks", []), "name")
     canary_stamp = _epoch(canary.get("observed_at_utc"))
+    boot_epoch = _epoch(receipt.get("boot_id"))
+    canary_same_boot = (
+        boot_epoch is not None and canary_stamp is not None and canary_stamp >= boot_epoch
+        and all(_epoch(row.get("observed_at")) is not None
+                and _epoch(row["observed_at"]) >= boot_epoch for row in canary_rows.values())
+    )
     canary_valid = (
         canary_valid
         and canary.get("schema_version") == CANARY_SCHEMA
@@ -558,13 +560,21 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
         and canary.get("check_count") == len(CANARY_CHECKS)
         and canary_stamp is not None
         and -5 <= now - canary_stamp <= CANARY_MAX_AGE_SECONDS
+        and canary_same_boot
     )
     failures = sum(row.get("status") == "FAIL" for row in canary_rows.values())
+    unknowns = sum(row.get("status") == "UNKNOWN" for row in canary_rows.values())
+    paused = sum(row.get("status") == "PAUSED" for row in canary_rows.values())
     canary_valid = (
         canary_valid
+        and all(row.get("status") in {"PASS", "FAIL", "UNKNOWN", "PAUSED"} for row in canary_rows.values())
         and type(canary.get("failed_count")) is int
         and canary["failed_count"] == failures
-        and canary.get("overall") == ("FAIL" if failures else "PASS")
+        and type(canary.get("unknown_count", 0)) is int
+        and canary.get("unknown_count", 0) == unknowns
+        and type(canary.get("paused_count", 0)) is int
+        and canary.get("paused_count", 0) == paused
+        and canary.get("overall") == ("FAIL" if failures else "UNKNOWN" if unknowns else "PASS")
     )
     histories = receipt.get("canary_check_history", {})
     histories = histories if isinstance(histories, dict) else {}
@@ -581,6 +591,8 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
                 "source": "full-stack-canary:" + name,
                 "scope": "EXISTING_CANARY_CHECK_ONLY",
             }
+            if row.get("status") == "PAUSED":
+                row.update(status="UNKNOWN", reason="OWNER_PAUSED_EXECUTION_NOT_OBSERVED")
         canary_checks.append(
             _check(
                 row,
@@ -594,8 +606,11 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
             )
         )
     if not canary_valid:
+        canary_reason = ("CANARY_BOOT_IDENTITY_UNAVAILABLE" if boot_epoch is None
+                         else "CANARY_OBSERVATION_PRECEDES_CURRENT_BOOT" if not canary_same_boot
+                         else "CANARY_RECEIPT_UNAVAILABLE_OR_INVALID")
         for check in canary_checks:
-            check.update(fresh=False, state="UNKNOWN", status="UNKNOWN", reason="CANARY_RECEIPT_UNAVAILABLE_OR_INVALID")
+            check.update(fresh=False, state="UNKNOWN", status="UNKNOWN", reason=canary_reason)
     source_verified = collector_valid and all(row["fresh"] and row["status"] == "PASS" for row in collectors)
     if not source_verified and not reason:
         for service in services:
@@ -634,15 +649,23 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
         and journal["status"] == "OBSERVED"
         and not journal["conflicts"]
     )
+    critical_checks = [check for check in all_checks if check["severity"] == "CRITICAL"]
+    critical_complete = (
+        not reason and inventory_valid and source_verified and canary_valid
+        and bool(critical_checks) and all(check["fresh"] for check in critical_checks)
+        and journal["status"] == "OBSERVED" and not journal["conflicts"]
+    )
     status = _aggregate(all_checks)
     if reason:
         status = "NOT_CONFIGURED" if not configured else "UNKNOWN"
     elif status == "HEALTHY" and not complete:
         status = "UNKNOWN"
-    count = journal["known_critical_count"] if complete else None
+    count = journal["known_critical_count"] if critical_complete else None
     count_reason = (
         "MONITORING_COMPLETE"
         if complete
+        else "CRITICAL_MONITORING_COMPLETE"
+        if critical_complete
         else "INCIDENT_STORE_UNAVAILABLE"
         if journal["status"] == "UNAVAILABLE"
         else "OBSERVATION_REGRESSION_OR_CONFLICT"
@@ -658,7 +681,7 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
             "schema_version": "orqevia.service-health.v1",
             "status": status,
             "status_scope": "LEGACY_SERVICE_AND_VERIFICATION_AGGREGATE",
-            "functionality": service_functionality(services),
+            "functionality": service_functionality(services, inventory_complete=inventory_valid),
             "verification": {"status": _aggregate(canary_checks),
                 "scope": "CANARY_VERIFICATION_NOT_SERVICE_FUNCTIONALITY",
                 "failed_check_ids": [c['check_id'] for c in canary_checks if c['status']=='FAIL'],
@@ -676,6 +699,10 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
             "canary_checks": canary_checks,
             "coverage": {
                 "complete": complete,
+                "critical_complete": critical_complete,
+                "critical_scope": "ALL_DECLARED_CRITICAL_CHECKS_AND_INCIDENT_JOURNAL",
+                "required_critical_checks": [check["check_key"] for check in critical_checks],
+                "required_canary_checks": list(CANARY_CHECKS),
                 "status": "COMPLETE" if complete else "INCOMPLETE",
                 "expected_service_count": len(SERVICE_SPECS),
                 "observed_service_count": sum(row["coverage_complete"] for row in services),
@@ -703,7 +730,8 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
             "critical_count": count,
             "known_critical_count": journal["known_critical_count"],
             "known_open_count": journal["known_open_count"],
-            "coverage_complete": complete,
+            "coverage_complete": critical_complete,
+            "coverage_scope": "ALL_DECLARED_CRITICAL_CHECKS_AND_INCIDENT_JOURNAL",
             "store_status": journal["status"],
             "observed_at": receipt.get("observed_at") if _epoch(receipt.get("observed_at")) is not None else None,
             "evaluated_at": _iso(now),
@@ -711,9 +739,10 @@ def operational_health_snapshot(*, receipt_path=None, data_dir=None, now=None):
             "incidents": journal["incidents"],
             "transitions": journal["transitions"],
             "retention": {
-                "resolved_days": RESOLVED_RETENTION_SECONDS // 86400,
-                "resolved_incidents": RESOLVED_RETENTION_COUNT,
+                "resolved_days": None,
+                "resolved_incidents": None,
                 "open_incidents_preserved": True,
+                "historical_incidents_and_transitions_preserved": True,
             },
             "limits": [
                 "KNOWN_COUNT_IS_NOT_AUTHORITATIVE_CURRENT_COUNT",

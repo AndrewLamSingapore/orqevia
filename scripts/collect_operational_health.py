@@ -235,7 +235,17 @@ def tls_check(name, path, context, budget, *, intelligence=False, reader=https_r
         )
     except TimeoutError:
         status, reason = "UNKNOWN", "COLLECTION_BUDGET_OR_TIMEOUT"
-    except urllib.error.HTTPError:
+    except urllib.error.HTTPError as error:
+        if intelligence and error.code == 401:
+            # The protected HTTPS route is supposed to reject this cookie-free
+            # sampler. Its authenticated database health is independently
+            # required by the service's fresh Docker healthcheck.
+            return check(
+                name, "HTTPS_READINESS", "PASS", iso(time.time()),
+                "HTTPS_AUTH_BOUNDARY_ENFORCED", ORIGIN + path,
+                "PROTECTED_HTTPS_AUTH_BOUNDARY_ONLY", certificate_verified=True,
+                http_status=401,
+            )
         status, reason = "FAIL", "HTTPS_HTTP_ERROR"
     except (urllib.error.URLError, ssl.SSLError, OSError):
         status, reason = "FAIL", "HTTPS_VERIFIED_CONNECTION_FAILED"
@@ -367,29 +377,39 @@ def tunnel_connection_check(service_id, name, runner, budget, now):
 def otel_check(metadata, text, now):
     backend = metadata.get(SERVICES["backend"][0], {})
     collector = metadata.get(SERVICES["otel-collector"][0], {})
-    namespace_matches = (
-        bool(backend.get("container_id")) and collector.get("network_mode") == "container:" + backend["container_id"]
+    # Current production uses an independent collector on the backend's
+    # network. Retain support for a genuinely shared legacy namespace without
+    # treating that retired layout as the only valid transport.
+    network = collector.get("network_mode")
+    network_matches = bool(backend.get("container_id")) and (
+        network == "container:" + backend["container_id"] or
+        (network not in {None, "", "none"} and network == backend.get("network_mode"))
     )
+    starts = [epoch(item.get("started_at")) for item in (backend, collector)]
+    starts_known = all(stamp is not None for stamp in starts)
     stamps = []
     for line in text.splitlines():
         stamp = epoch(line.split(" ", 1)[0])
         if (
             stamp is not None
-            and '"otelcol.signal": "metrics"' in line
-            and re.search(r'"data points":\s*[1-9][0-9]*', line)
+            and re.search(r'"otelcol.signal":\s*"(?:metrics|traces)"', line)
+            and re.search(r'"(?:data points|spans)":\s*[1-9][0-9]*', line)
+            and starts_known and all(stamp >= start for start in starts)
         ):
             stamps.append(stamp)
     stamp = max(stamps) if stamps else None
-    if not backend.get("container_id") or not collector.get("network_mode"):
+    if not backend.get("container_id") or not collector.get("container_id") or not collector.get("network_mode"):
         status, reason = "UNKNOWN", "OTEL_NAMESPACE_OBSERVATION_UNAVAILABLE"
-    elif not namespace_matches:
-        status, reason = "FAIL", "OTEL_BACKEND_NAMESPACE_MISMATCH"
+    elif not network_matches:
+        status, reason = "FAIL", "OTEL_BACKEND_NETWORK_MISMATCH"
+    elif not starts_known:
+        status, reason = "UNKNOWN", "OTEL_CONTAINER_START_OBSERVATION_UNAVAILABLE"
     elif stamp is None:
         status, reason = "UNKNOWN", "OTEL_EXPORT_OBSERVATION_UNAVAILABLE"
     elif not -5 <= now - stamp <= 120:
         status, reason = "UNKNOWN", "OTEL_EXPORT_OBSERVATION_STALE"
     else:
-        status, reason = "PASS", "RECENT_METRIC_EXPORT_CURRENT_NAMESPACE"
+        status, reason = "PASS", "RECENT_EXPORT_ON_CURRENT_BACKEND_NETWORK"
     return check(
         "otel-export",
         "TELEMETRY",
@@ -397,7 +417,7 @@ def otel_check(metadata, text, now):
         iso(stamp) if stamp is not None else iso(now),
         reason,
         "docker-logs:otel-collector",
-        "METRIC_EXPORT_CURRENT_BACKEND_NAMESPACE",
+        "RECENT_COLLECTOR_EXPORT_ON_BACKEND_NETWORK",
     )
 
 
@@ -716,7 +736,7 @@ def collect(
             ),
         )
     try:
-        _, raw = runner.run([DOCKER, "logs", "--timestamps", "--tail", "24", SERVICES["otel-collector"][0]], timeout=2)
+        _, raw = runner.run([DOCKER, "logs", "--timestamps", "--tail", "96", SERVICES["otel-collector"][0]], timeout=2)
         set_check("otel-collector", otel_check(metadata, raw, time.time()))
     except (OSError, ValueError, TimeoutError, subprocess.TimeoutExpired):
         set_check("otel-collector", otel_check(metadata, "", time.time()))

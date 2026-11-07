@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -14,7 +16,7 @@ from app.orqevia_response_contract import validate_user_facing_answer
 
 
 def canonical_branding(pwa: Path) -> bool:
-    """Require the current install identity and real linked mark, not a prefix."""
+    """Require distinct install/navigation marks and the byte-verified official hero."""
     expected = {
         "/pwa/icons/orqevia-command-v2-192.png": ("192x192", "any"),
         "/pwa/icons/orqevia-command-v2-512.png": ("512x512", "any"),
@@ -25,6 +27,11 @@ def canonical_branding(pwa: Path) -> bool:
         icons = manifest["icons"]
         identity = {icon["src"]: (icon["sizes"], icon["purpose"]) for icon in icons}
         html = (pwa / "index.html").read_text(encoding="utf-8")
+        hero = re.search(r'<div class="command-banner">(.*?)</div>', html, re.S)
+        official = {
+            "orqevia-official-v1-192.png": "d7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2",
+            "orqevia-official-v1-master.png": "b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844",
+        }
         return (
             manifest["name"] == manifest["short_name"] == "ORQEVIA"
             and len(icons) == len(expected)
@@ -34,7 +41,11 @@ def canonical_branding(pwa: Path) -> bool:
             and 'src="/pwa/icons/orqevia-mark.svg"' in html
             and 'href="/pwa/icons/orqevia-command-v2-apple-touch.png"' in html
             and "orqevia-command-v1-" not in html
-            and "orqevia-official-v1-" not in html
+            and hero is not None
+            and 'src="/pwa/icons/orqevia-official-v1-192.png"' in hero.group(1)
+            and 'alt="ORQEVIA official logo"' in hero.group(1)
+            and 'srcset="/pwa/icons/orqevia-official-v1-192.png 192w, /pwa/icons/orqevia-official-v1-master.png 1254w"' in hero.group(1)
+            and all(hashlib.sha256((pwa / "icons" / name).read_bytes()).hexdigest() == digest for name, digest in official.items())
         )
     except (OSError, ValueError, KeyError, TypeError):
         return False
