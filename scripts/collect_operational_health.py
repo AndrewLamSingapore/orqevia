@@ -61,12 +61,56 @@ INSPECT_FORMAT = (
     '{"observed_at":{{json $r.End}},"exit_code":{{$r.ExitCode}}}{{end}}{{end}}]}'
 )
 BACKEND_READ = """
-import datetime,json,os,pathlib,sqlite3
+import datetime,hashlib,json,math,os,pathlib,sqlite3
 def read(path,sql):
     c=sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=1)
     try:
         c.execute('PRAGMA query_only=ON'); return c.execute(sql).fetchone()
     finally: c.close()
+def stamp(value):
+    if not isinstance(value,str): return None
+    value=datetime.datetime.fromisoformat(value.replace('Z','+00:00'))
+    return value.timestamp() if value.tzinfo else None
+def progress(path,now):
+    c=sqlite3.connect(path.resolve().as_uri()+'?mode=ro',uri=True,timeout=1)
+    try:
+        c.execute('PRAGMA query_only=ON')
+        rows=c.execute('''SELECT id,started_at,updated_at,lease_until,
+            CASE WHEN typeof(result)='text' AND length(result) BETWEEN 1 AND 128000
+                AND length(CAST(result AS BLOB)) BETWEEN 1 AND 512000 THEN result END,
+            CASE WHEN typeof(timings_json)='text' AND length(timings_json) BETWEEN 1 AND 16384
+                THEN timings_json END FROM compute_jobs WHERE status='running' AND lifecycle_state='INFERENCING'
+            AND local_inflight=1 AND cloud_inflight=0 ORDER BY updated_at DESC LIMIT 32''')
+        candidates=[]
+        for job_id,started_at,updated_at,lease,result,timing_raw in rows:
+            try:
+                started,updated=stamp(started_at),stamp(updated_at)
+                if started is None or updated is None or updated <= started: continue
+                if not -5 <= now-updated <= 120: continue
+                if not isinstance(job_id,str) or not 1 <= len(job_id) <= 128: continue
+                if not isinstance(result,str) or not 1 <= len(result) <= 128000 or '\\x00' in result or not result.strip(): continue
+                if type(lease) not in (int,float) or not math.isfinite(lease) or lease <= now: continue
+                if not isinstance(timing_raw,str) or len(timing_raw)>16384: continue
+                timing=json.loads(timing_raw)
+                admitted=timing['admitted_at']; inferencing=timing['inferencing_at']; total=timing['budget']['total']
+                if any(type(value) not in (int,float) or not math.isfinite(value)
+                       for value in (admitted,inferencing,total)): continue
+                if not 0 < total <= 88320 or abs(started-admitted)>5 or now < admitted: continue
+                if not admitted <= inferencing <= updated or updated <= admitted or abs(lease-(admitted+total+30))>1: continue
+                lease_key=json.dumps([job_id,started_at,admitted,lease],separators=(',',':'),allow_nan=False)
+                candidates.append({'updated_at':updated_at,'started_at':started_at,
+                    'job_key_sha256':hashlib.sha256(job_id.encode()).hexdigest(),
+                    'lease_key_sha256':hashlib.sha256(lease_key.encode()).hexdigest(),
+                    'result_sha256':hashlib.sha256(result.encode()).hexdigest(),'result_characters':len(result),
+                    'validation':'VALID_LOCAL_INFERENCING_CURRENT_LEASE'})
+            except (ValueError,TypeError,KeyError,OverflowError,UnicodeError):
+                continue
+        return candidates
+    except (sqlite3.Error,ValueError):
+        pass
+    finally: c.close()
+    return []
+captured=None
 try:
     root=pathlib.Path(os.getenv('ORQEVIA_DATA_DIR','/data'))
     queue=pathlib.Path(os.getenv('ORQEVIA_COMPUTE_QUEUE_DB',str(root/'compute-queue.db')))
@@ -74,12 +118,15 @@ try:
     objective_path=pathlib.Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'objectives.db'
     objective_count=read(objective_path,'SELECT COUNT(*) FROM objectives')[0]
     execution=read(queue,'SELECT MAX(started_at),MAX(completed_at) FROM compute_jobs')
+    captured=datetime.datetime.now(datetime.timezone.utc).timestamp()
     model_keys=('ORQEVIA_FAST_MODEL','ORQEVIA_DEEP_MODEL','ORQEVIA_EVALUATOR_MODEL','ORQEVIA_EMBED_MODEL')
     result={'database_read':True,'queue_record_count':queue_count,'objective_record_count':objective_count,
         'worker_started_at':execution[0], 'worker_completed_at':execution[1],
+        'worker_progress_samples':progress(queue,captured), 'runtime_revision':os.getenv('ORQEVIA_RUNTIME_REVISION',''),
         'required_models':list(dict.fromkeys(os.getenv(k,'') for k in model_keys if os.getenv(k,'')))}
 except (OSError,sqlite3.Error,ValueError): result={'database_read':False}
-result['observed_at']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+result['observed_at']=(datetime.datetime.fromtimestamp(captured,datetime.timezone.utc)
+    if captured is not None else datetime.datetime.now(datetime.timezone.utc)).isoformat()
 print(json.dumps(result))
 """
 COACHING_READ = """
@@ -137,6 +184,171 @@ def check(name, kind, status, observed_at, reason, source, scope, **extra):
         "scope": scope,
         **extra,
     }
+
+
+PROGRESS_VALIDATION = "TWO_SAME_CONTEXT_OBSERVATIONS_WITH_INCREASED_NONEMPTY_TEXT"
+PROGRESS_WITNESS_SCHEMA = "orqevia.worker-progress-witness.v1"
+
+
+def backend_progress_witnesses(data, identity, now, previous):
+    """Compare content-free, same-context samples; an empty frame is not growth."""
+    started = epoch(identity.get("started_at"))
+    captured = epoch(data.get("observed_at"))
+    revision = identity.get("source_revision")
+    container_id = identity.get("container_id")
+    if not (
+        data.get("database_read") is True
+        and isinstance(container_id, str)
+        and re.fullmatch(r"[0-9a-f]{64}", container_id)
+        and identity.get("process_state") == "running"
+        and isinstance(revision, str)
+        and re.fullmatch(r"[0-9a-f]{40}", revision)
+        and data.get("runtime_revision") == revision
+        and started is not None
+        and captured is not None
+        and started <= captured
+        and -5 <= now - captured <= 120
+    ):
+        return []
+    samples = data.get("worker_progress_samples")
+    if not isinstance(samples, list) or len(samples) > 32:
+        return []
+    old = previous.get("progress_witnesses", []) if isinstance(previous, dict) else []
+    old = old if isinstance(old, list) and len(old) <= 32 else []
+    witnesses = []
+    for sample in samples:
+        if not isinstance(sample, dict):
+            continue
+        job_started = epoch(sample.get("started_at"))
+        updated = epoch(sample.get("updated_at"))
+        characters = sample.get("result_characters")
+        keys = ("job_key_sha256", "lease_key_sha256", "result_sha256")
+        if not (
+            sample.get("validation") == "VALID_LOCAL_INFERENCING_CURRENT_LEASE"
+            and all(isinstance(sample.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", sample[key]) for key in keys)
+            and type(characters) is int
+            and 1 <= characters <= 128000
+            and job_started is not None
+            and updated is not None
+            and started <= job_started < updated <= captured + 5
+            and -5 <= now - updated <= 120
+        ):
+            continue
+        binding = {
+            "schema": PROGRESS_WITNESS_SCHEMA,
+            "backend_container_id": container_id,
+            "backend_source_revision": revision,
+            "backend_started_at": identity["started_at"],
+            "job_started_at": sample["started_at"],
+            "job_key_sha256": sample["job_key_sha256"],
+            "lease_key_sha256": sample["lease_key_sha256"],
+        }
+        witness = {
+            **binding,
+            "result_sha256": sample["result_sha256"],
+            "result_characters": characters,
+            "first_observed_at": data["observed_at"],
+            "last_observed_at": data["observed_at"],
+            "last_updated_at": sample["updated_at"],
+            "last_genuine_progress_at": None,
+            "progress_validation": None,
+        }
+        matching = [
+            row for row in old if isinstance(row, dict) and all(row.get(key) == value for key, value in binding.items())
+        ]
+        if len(matching) == 1:
+            prior = matching[0]
+            first = epoch(prior.get("first_observed_at"))
+            last = epoch(prior.get("last_observed_at"))
+            prior_updated = epoch(prior.get("last_updated_at"))
+            genuine = epoch(prior.get("last_genuine_progress_at"))
+            prior_size = prior.get("result_characters")
+            prior_digest = prior.get("result_sha256")
+            valid_prior = (
+                first is not None
+                and last is not None
+                and prior_updated is not None
+                and job_started <= first <= last < captured
+                and job_started < prior_updated <= last + 5
+                and prior_updated <= updated
+                and type(prior_size) is int
+                and 1 <= prior_size <= 128000
+                and isinstance(prior_digest, str)
+                and re.fullmatch(r"[0-9a-f]{64}", prior_digest)
+                and (
+                    (prior.get("last_genuine_progress_at") is None and prior.get("progress_validation") is None)
+                    or (
+                        genuine is not None
+                        and first <= genuine <= last
+                        and prior.get("progress_validation") == PROGRESS_VALIDATION
+                    )
+                )
+            )
+            if valid_prior:
+                unchanged = characters == prior_size and sample["result_sha256"] == prior_digest
+                grew = characters > prior_size and sample["result_sha256"] != prior_digest and updated > prior_updated
+                if unchanged or grew:
+                    witness["first_observed_at"] = prior["first_observed_at"]
+                    # A change happened after the previous read. Its timestamp
+                    # alone can also reflect empty frames, so use that previous
+                    # observation as a conservative lower bound on real growth.
+                    witness["last_genuine_progress_at"] = (
+                        prior["last_observed_at"] if grew else prior.get("last_genuine_progress_at")
+                    )
+                    witness["progress_validation"] = PROGRESS_VALIDATION if grew else prior.get("progress_validation")
+        witnesses.append(witness)
+    return witnesses
+
+
+def backend_readiness_check(data, identity, now, previous=None):
+    """Recent admission/completion or independently witnessed output growth."""
+    executions = [
+        (epoch(value), value)
+        for value in (data.get("worker_started_at"), data.get("worker_completed_at"))
+        if epoch(value) is not None
+    ]
+    worker, observed_at = max(executions, default=(None, None))
+    started = epoch(identity.get("started_at"))
+    witnesses = backend_progress_witnesses(data, identity, now, previous or {})
+    fresh_progress = [
+        row
+        for row in witnesses
+        if epoch(row.get("last_genuine_progress_at")) is not None
+        and -5 <= now - epoch(row["last_genuine_progress_at"]) <= 120
+    ]
+    progress = max(fresh_progress, key=lambda row: epoch(row["last_genuine_progress_at"]), default=None)
+    if data.get("database_read") is False:
+        status, reason = "FAIL", "BACKEND_PERSISTENCE_READ_FAILED"
+    elif progress:
+        status, reason = "PASS", "PERSISTENCE_AND_RECENT_EXECUTION_PROGRESS_OBSERVED"
+        observed_at = progress["last_genuine_progress_at"]
+    elif worker is not None and started is not None and worker >= started and -5 <= now - worker <= 120:
+        status, reason = "PASS", "PERSISTENCE_AND_RECENT_EXECUTION_OBSERVED"
+    else:
+        status = "UNKNOWN"
+        reason = (
+            "WORKER_EXECUTION_PROGRESS_STALE"
+            if any(row["last_genuine_progress_at"] for row in witnesses)
+            else "WORKER_EXECUTION_PROGRESS_NOT_CONFIRMED"
+            if witnesses
+            else "WORKER_HEARTBEAT_NOT_EXPOSED"
+        )
+    return check(
+        "backend-readiness",
+        "DEPENDENCY",
+        status,
+        observed_at if status == "PASS" else data.get("observed_at", iso(now)),
+        reason,
+        "sqlite-select-only:backend",
+        "PERSISTENCE_AND_RECENT_WORKER_EXECUTION",
+        database_read_observed_at=data.get("observed_at"),
+        worker_started_at=data.get("worker_started_at"),
+        worker_completed_at=data.get("worker_completed_at"),
+        worker_progress_at=progress["last_genuine_progress_at"] if progress else None,
+        worker_progress_started_at=progress["job_started_at"] if progress else None,
+        worker_progress_validation=PROGRESS_VALIDATION if progress else None,
+        progress_witnesses=witnesses,
+    )
 
 
 class Budget:
@@ -241,9 +453,14 @@ def tls_check(name, path, context, budget, *, intelligence=False, reader=https_r
             # sampler. Its authenticated database health is independently
             # required by the service's fresh Docker healthcheck.
             return check(
-                name, "HTTPS_READINESS", "PASS", iso(time.time()),
-                "HTTPS_AUTH_BOUNDARY_ENFORCED", ORIGIN + path,
-                "PROTECTED_HTTPS_AUTH_BOUNDARY_ONLY", certificate_verified=True,
+                name,
+                "HTTPS_READINESS",
+                "PASS",
+                iso(time.time()),
+                "HTTPS_AUTH_BOUNDARY_ENFORCED",
+                ORIGIN + path,
+                "PROTECTED_HTTPS_AUTH_BOUNDARY_ONLY",
+                certificate_verified=True,
                 http_status=401,
             )
         status, reason = "FAIL", "HTTPS_HTTP_ERROR"
@@ -267,11 +484,7 @@ def gateway_https_check(context, budget, *, reader=https_url_get):
     """Verified HTTPS functional probe of the integration gateway's own health."""
     try:
         status, headers, raw = reader(GATEWAY_HTTPS_URL, context, budget.remaining(3))
-        passed = (
-            status == 200
-            and raw == b"ok"
-            and headers.get("x-orqevia-health-scope") == "GATEWAY_ONLY"
-        )
+        passed = status == 200 and raw == b"ok" and headers.get("x-orqevia-health-scope") == "GATEWAY_ONLY"
         return check(
             "gateway-https",
             "HTTPS_READINESS",
@@ -382,8 +595,8 @@ def otel_check(metadata, text, now):
     # treating that retired layout as the only valid transport.
     network = collector.get("network_mode")
     network_matches = bool(backend.get("container_id")) and (
-        network == "container:" + backend["container_id"] or
-        (network not in {None, "", "none"} and network == backend.get("network_mode"))
+        network == "container:" + backend["container_id"]
+        or (network not in {None, "", "none"} and network == backend.get("network_mode"))
     )
     starts = [epoch(item.get("started_at")) for item in (backend, collector)]
     starts_known = all(stamp is not None for stamp in starts)
@@ -394,7 +607,8 @@ def otel_check(metadata, text, now):
             stamp is not None
             and re.search(r'"otelcol.signal":\s*"(?:metrics|traces)"', line)
             and re.search(r'"(?:data points|spans)":\s*[1-9][0-9]*', line)
-            and starts_known and all(stamp >= start for start in starts)
+            and starts_known
+            and all(stamp >= start for start in starts)
         ):
             stamps.append(stamp)
     stamp = max(stamps) if stamps else None
@@ -478,14 +692,14 @@ def history_for(canary, previous, archive_root):
     return histories
 
 
+def bounded_rows(value, maximum):
+    return [row for row in value if isinstance(row, dict)] if isinstance(value, list) and len(value) <= maximum else []
+
+
 def merge_check_history(result, previous):
-    prior = {row.get("service_id"): row for row in previous.get("services", []) if isinstance(row, dict)}
+    prior = {row.get("service_id"): row for row in bounded_rows(previous.get("services"), 32)}
     for service in result["services"]:
-        old = {
-            row.get("check_id"): row
-            for row in prior.get(service["service_id"], {}).get("checks", [])
-            if isinstance(row, dict)
-        }
+        old = {row.get("check_id"): row for row in bounded_rows(prior.get(service["service_id"], {}).get("checks"), 16)}
         for row in service["checks"]:
             previous_row = old.get(row["check_id"], {})
             if row["status"] != "PASS":
@@ -616,36 +830,19 @@ def collect(
     )
     backend_data = {}
     try:
-        code, raw = runner.run([DOCKER, "exec", "-i", SERVICES["backend"][0], "python", "-B", "-"], script=BACKEND_READ)
+        backend_identity = metadata.get(SERVICES["backend"][0], {})
+        container_id = backend_identity.get("container_id")
+        target = container_id if isinstance(container_id, str) and container_id else SERVICES["backend"][0]
+        code, raw = runner.run([DOCKER, "exec", "-i", target, "python", "-B", "-"], script=BACKEND_READ)
         backend_data = json.loads(raw) if code == 0 else {}
-        executions = [
-            (epoch(value), value)
-            for value in (backend_data.get("worker_started_at"), backend_data.get("worker_completed_at"))
-            if epoch(value) is not None
-        ]
-        worker, worker_observed_at = max(executions, default=(None, None))
-        started = epoch(metadata.get(SERVICES["backend"][0], {}).get("started_at"))
-        if backend_data.get("database_read") is False:
-            status, reason = "FAIL", "BACKEND_PERSISTENCE_READ_FAILED"
-        elif worker is not None and started is not None and worker >= started and -5 <= time.time() - worker <= 120:
-            status, reason = "PASS", "PERSISTENCE_AND_RECENT_EXECUTION_OBSERVED"
-        else:
-            status, reason = "UNKNOWN", "WORKER_HEARTBEAT_NOT_EXPOSED"
-        set_check(
-            "backend",
-            check(
-                "backend-readiness",
-                "DEPENDENCY",
-                status,
-                worker_observed_at if status == "PASS" else backend_data.get("observed_at", iso(time.time())),
-                reason,
-                "sqlite-select-only:backend",
-                "PERSISTENCE_AND_RECENT_WORKER_EXECUTION",
-                database_read_observed_at=backend_data.get("observed_at"),
-                worker_started_at=backend_data.get("worker_started_at"),
-                worker_completed_at=backend_data.get("worker_completed_at"),
-            ),
+        old_backend = next(
+            (row for row in bounded_rows(previous.get("services"), 32) if row.get("service_id") == "backend"), {}
         )
+        old_check = next(
+            (row for row in bounded_rows(old_backend.get("checks"), 16) if row.get("check_id") == "backend-readiness"),
+            {},
+        )
+        set_check("backend", backend_readiness_check(backend_data, backend_identity, time.time(), previous=old_check))
     except (OSError, ValueError, TimeoutError, subprocess.TimeoutExpired):
         set_check(
             "backend",

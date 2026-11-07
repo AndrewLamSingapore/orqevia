@@ -93,3 +93,13 @@ test('malformed service checks remain unavailable without hiding a separately co
   for(const checks of [null,{},'invalid']){const value=snapshot();value.service_health.services[0].checks=checks;const health=healthFacts(value,now);assert.equal(health.core.status,'UNKNOWN');assert.equal(health.services[0].reason,'MALFORMED_SERVICE_CHECKS');assert.deepEqual(health.services[0].checks,[]);}
   const oversized=snapshot();for(let index=0;index<16;index++)oversized.service_health.services[0].checks.push({check_id:'extra-'+index,check_key:'service:backend:extra-'+index,severity:'DEGRADED',status:'PASS',fresh:true,observed_at:iso(0)});assert.equal(healthFacts(oversized,now).core.status,'UNKNOWN');assert.equal(healthFacts(oversized,now).critical.count,null);
 });
+
+test('validated execution growth retains its conservative clock and unavailable growth stays unknown',()=>{
+  const value=snapshot(),backend=value.service_health.services[0],check=backend.checks[0],oldKey=check.check_key;
+  Object.assign(check,{check_id:'backend-readiness',check_key:'service:backend:backend-readiness',scope:'PERSISTENCE_AND_RECENT_WORKER_EXECUTION',reason:'PERSISTENCE_AND_RECENT_EXECUTION_PROGRESS_OBSERVED',observed_at:iso(-60)});
+  value.service_health.coverage.required_critical_checks=value.service_health.coverage.required_critical_checks.map(key=>key===oldKey?check.check_key:key);
+  let facts=healthFacts(value,now);assert.equal(facts.core.status,'HEALTHY');assert.equal(facts.services[0].checks[0].observed_at,iso(-60));assert.equal(facts.services[0].checks[0].reason,check.reason);
+  check.observed_at=iso(-121);facts=healthFacts(value,now);assert.equal(facts.core.status,'UNKNOWN');assert.equal(facts.critical.count,null);
+  Object.assign(check,{status:'UNKNOWN',fresh:false,reason:'WORKER_EXECUTION_PROGRESS_NOT_CONFIRMED',observed_at:iso(0)});backend.status='UNKNOWN';value.service_health.functionality.status='UNKNOWN';
+  facts=healthFacts(value,now);assert.equal(facts.core.status,'UNKNOWN');assert.equal(facts.critical.count,null);assert.equal(facts.services[0].checks[0].reason,check.reason);
+});
