@@ -1416,7 +1416,18 @@ def _builtin(identifier, operation, value, *, principal, data_root, execution_id
     if identifier == "f08":
         from .compute_queue_api import queue
 
-        return queue.metrics()
+        def public_fields(observation, schema):
+            if not isinstance(observation, dict) or any(key not in observation for key in schema["required"]):
+                raise OutputContractViolation("Required queue metric observation is unavailable")
+            return {key: observation[key] for key in schema["properties"] if key in observation}
+
+        # The queue also exposes internal lifecycle/guardian observations. Keep
+        # this versioned public response closed without replacing absent data.
+        observed = queue.metrics()
+        schema = _BUILTIN_OUTPUTS["queue_metrics"]
+        result = public_fields(observed, schema)
+        result["policy"] = public_fields(result["policy"], schema["properties"]["policy"])
+        return result
     if identifier == "f09":
         tool_id = {"geo.distance": ("f04", "distance_km"), "mlp.reference": ("f06", "reference_infer")}[value["tool"]]
         contract = next(op for op in BUILTINS[tool_id[0]]["operations"] if op["operation"] == tool_id[1])

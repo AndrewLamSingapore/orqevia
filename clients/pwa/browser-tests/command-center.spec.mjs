@@ -3,7 +3,7 @@ import {expect,test} from '@playwright/test';
 import {mockSession,waitForSession,sessionBody,expectNoHorizontalOverflow} from './fixtures.mjs';
 const catalog={schema:'orqevia.capability-depot.v1',capabilities:[{id:'local-knowledge',name:'Local knowledge',kind:'retrieval',status:'SOURCE_INSTALLED',available:null,offline:true,version:'1',dependencies:['local embedding model'],resources:{memory:'Measured by Resource Guardian'},operations:['retrieve']}],wallet:{status:'NOT_FOUND',spend_enabled:false,signing_available:false,scope:'Fixture audit: no live signing wallet; compute usage is not funds.'}};
 
-test('official Command Center logo loads square and centered on desktop and mobile',async({page})=>{
+test('official logo and home navigation landmark work on desktop and mobile',async({page})=>{
  await mockSession(page);await page.goto('/pwa/');await waitForSession(page);
  const logo=page.locator('.command-banner img');await expect(logo).toHaveAttribute('src','/pwa/icons/orqevia-official-v1-192.png');await expect(logo).toHaveAttribute('alt','ORQEVIA official logo');await expect(logo).toHaveAttribute('srcset','/pwa/icons/orqevia-official-v1-192.png 192w, /pwa/icons/orqevia-official-v1-master.png 1254w');
  for(const width of [1440,390]){
@@ -11,6 +11,10 @@ test('official Command Center logo loads square and centered on desktop and mobi
   await expect.poll(()=>logo.evaluate(node=>node.complete&&node.naturalWidth>0&&node.naturalWidth===node.naturalHeight)).toBe(true);
   const box=await logo.evaluate(node=>{const image=node.getBoundingClientRect(),parent=node.parentElement.getBoundingClientRect();return{width:image.width,height:image.height,center:Math.abs(image.x+image.width/2-parent.x-parent.width/2),fit:getComputedStyle(node).objectFit,density:devicePixelRatio,currentSrc:node.currentSrc};});
   expect(box.width).toBe(width<640?108:132);expect(Math.abs(box.width-box.height)).toBeLessThan(1);expect(box.center).toBeLessThan(1);expect(box.fit).toBe('contain');if(box.width*box.density>192)expect(box.currentSrc).toContain('/pwa/icons/orqevia-official-v1-master.png');await expectNoHorizontalOverflow(page);
+  const navigation=page.getByRole('navigation',{name:'Command Center navigation',exact:true});await expect(navigation).toBeVisible();await expect(navigation).toHaveCSS('display','grid');await expect(page.locator('.desktop-navigation')).toBeHidden();
+  const missions=navigation.locator('button[data-view="missions"]');await expect(missions).toBeVisible();await expect(missions).toBeEnabled();await expect(navigation.locator('button[data-view="console"]')).toBeVisible();await expect(navigation.locator('a[href="/pwa/projects.html"]')).toBeVisible();
+  await missions.click();await expect(page).toHaveURL(/[?&]view=missions(?:&|$)/);await expect(page.locator('#task-workspace')).toBeVisible();await expect(navigation).toBeHidden();await expectNoHorizontalOverflow(page);
+  await page.goto('/pwa/');await waitForSession(page);
  }
 });
 

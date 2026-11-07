@@ -45,3 +45,16 @@ Regression coverage includes invalid inventory, pre-boot canaries, missing
 critical observations, incident preservation, separate authentication and Docker
 health, current OTEL export identity, malformed frontend rows, logo bytes and
 proportions, cache pins, and persisted coaching output contracts.
+
+The current-production43-operation baseline also exposed two concrete fabric
+faults before publication. F08 returned the expanded internal queue metrics into
+an older closed public result schema, producing503 and a retained failed receipt.
+Its adapter now projects actual values into the declared public fields and
+retains failure when required observations are absent. It does not invent zero
+or change the underlying queue policy.
+
+F11's unchanged native browser correctly found no desktop-home navigation
+landmark: the established home layout hides the desktop rail and uses the command
+cards instead. The existing card grid now declares its navigation role and label,
+preserving its element, layout and controls. The native probe stays unchanged;
+the actual home navigation becomes accessible to it and to assistive technology.
