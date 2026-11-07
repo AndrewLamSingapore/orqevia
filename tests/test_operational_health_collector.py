@@ -216,11 +216,51 @@ def test_host_identity_and_original_freshness_are_required(context, tmp_path, fi
 def test_otel_current_namespace_is_required():
     metadata = {
         producer.SERVICES["backend"][0]: {"container_id": "new-backend"},
-        producer.SERVICES["otel-collector"][0]: {"network_mode": "container:old-backend"},
+        producer.SERVICES["otel-collector"][0]: {"container_id": "collector-id", "network_mode": "container:old-backend"},
     }
     row = producer.otel_check(metadata, producer.iso(NOW - 1) + ' {"otelcol.signal": "metrics", "data points": 9}', NOW)
     assert row["status"] == "FAIL"
-    assert row["reason"] == "OTEL_BACKEND_NAMESPACE_MISMATCH"
+    assert row["reason"] == "OTEL_BACKEND_NETWORK_MISMATCH"
+
+
+def test_current_independent_collector_network_and_export_are_supported():
+    metadata = {
+        producer.SERVICES['backend'][0]: {'container_id': 'backend-id', 'network_mode': 'project-net',
+                                         'started_at': producer.iso(NOW - 100)},
+        producer.SERVICES['otel-collector'][0]: {'container_id': 'collector-id', 'network_mode': 'project-net',
+                                                'started_at': producer.iso(NOW - 60)},
+    }
+    logs = producer.iso(NOW - 1) + ' {"otelcol.signal": "traces", "spans": 3}'
+    row = producer.otel_check(metadata, logs, NOW)
+    assert row['status'] == 'PASS'
+    assert row['reason'] == 'RECENT_EXPORT_ON_CURRENT_BACKEND_NETWORK'
+    # Current-looking observations from before this collector start cannot pass.
+    metadata[producer.SERVICES['otel-collector'][0]]['started_at'] = producer.iso(NOW)
+    assert producer.otel_check(metadata, logs, NOW)['status'] != 'PASS'
+
+
+def test_intelligence_authentication_boundary_is_not_a_database_read(context):
+    def protected(path, tls_context, timeout):
+        assert tls_context.verify_mode == ssl.CERT_REQUIRED and tls_context.check_hostname
+        raise urllib.error.HTTPError(producer.ORIGIN + path, 401, 'Unauthorized', {}, None)
+
+    row = producer.tls_check('intelligence-https', '/api/orqevia/intelligence/health',
+                             ssl.create_default_context(), producer.Budget(), intelligence=True, reader=protected)
+    assert row['status'] == 'PASS' and row['certificate_verified'] is True
+    assert row['scope'] == 'PROTECTED_HTTPS_AUTH_BOUNDARY_ONLY'
+    assert row['http_status'] == 401
+    assert row['reason'] == 'HTTPS_AUTH_BOUNDARY_ENFORCED'
+
+
+def test_auth_boundary_does_not_hide_unhealthy_authenticated_intelligence_service(tmp_path, context):
+    report = collect(context, tmp_path)
+    service = next(row for row in report['services'] if row['service_id'] == 'intelligence')
+    service['docker_health'] = 'unhealthy'
+    with_context = tmp_path / 'operational.json'
+    with_context.write_text(json.dumps(report))
+    observed = operational_health_snapshot(receipt_path=with_context, data_dir=tmp_path / 'state', now=NOW)
+    row = next(row for row in observed['service_health']['services'] if row['service_id'] == 'intelligence')
+    assert row['status'] == 'CRITICAL'
 
 
 def test_missing_namespace_metadata_is_unavailable_without_asserting_a_mismatch():
@@ -233,14 +273,26 @@ def test_missing_namespace_metadata_is_unavailable_without_asserting_a_mismatch(
 def test_no_healthcheck_metadata_survives_an_unrelated_malformed_record():
     name = producer.SERVICES["otel-collector"][0]
     raw = "partial invalid JSON\n" + json.dumps(
-        {"name": "/" + name, "network_mode": "container:current-backend", "docker_health": None}
+        {"name": "/" + name, "container_id": "collector-id", "started_at": producer.iso(NOW - 20),
+         "network_mode": "container:current-backend", "docker_health": None}
     )
     metadata = producer.inspect_metadata(raw)
-    metadata[producer.SERVICES["backend"][0]] = {"container_id": "current-backend"}
+    metadata[producer.SERVICES["backend"][0]] = {"container_id": "current-backend", "started_at": producer.iso(NOW - 50)}
     exported = producer.iso(NOW - 1) + ' {"otelcol.signal": "metrics", "data points": 9}'
     row = producer.otel_check(metadata, exported, NOW)
     assert row["status"] == "PASS"
     assert row["observed_at"] == producer.iso(NOW - 1)
+
+
+def test_otel_cannot_pass_without_both_current_start_timestamps():
+    metadata = {
+        producer.SERVICES['backend'][0]: {'container_id': 'backend-id', 'network_mode': 'project-net'},
+        producer.SERVICES['otel-collector'][0]: {'container_id': 'collector-id', 'network_mode': 'project-net'},
+    }
+    logs = producer.iso(NOW - 1) + ' {"otelcol.signal": "traces", "spans": 3}'
+    row = producer.otel_check(metadata, logs, NOW)
+    assert row['status'] == 'UNKNOWN'
+    assert row['reason'] == 'OTEL_CONTAINER_START_OBSERVATION_UNAVAILABLE'
 
 
 def test_https_verification_failure_has_no_plaintext_fallback(context):

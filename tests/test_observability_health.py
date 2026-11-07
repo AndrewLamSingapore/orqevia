@@ -53,7 +53,7 @@ def receipt(at=NOW):
     return {
         "schema_version": RECEIPT_SCHEMA,
         "host_id": "fixture-host",
-        "boot_id": "fixture-boot",
+        "boot_id": iso(NOW - 3600),
         "observed_at": iso(at),
         "cadence_seconds": 60,
         "services": services,
@@ -272,7 +272,7 @@ def test_unverified_collector_source_does_not_recover_known_failure(tmp_path):
     assert all(row["status"] == "UNKNOWN" for row in report["service_health"]["services"])
 
 
-def test_retention_preserves_open_incidents_and_recent_recovery(tmp_path):
+def test_reconciliation_preserves_open_and_historical_recovered_incidents(tmp_path):
     value = receipt()
     value["services"][-1]["checks"][-1]["status"] = "FAIL"
     snapshot(tmp_path, value)
@@ -285,4 +285,70 @@ def test_retention_preserves_open_incidents_and_recent_recovery(tmp_path):
     snapshot(tmp_path, value)
     with sqlite3.connect(db_path) as db:
         assert db.execute("SELECT COUNT(*) FROM operational_incidents WHERE state='OPEN'").fetchone()[0] == 1
-        assert db.execute("SELECT COUNT(*) FROM operational_incidents WHERE incident_key='old'").fetchone()[0] == 0
+        assert db.execute("SELECT COUNT(*) FROM operational_incidents WHERE incident_key='old'").fetchone()[0] == 1
+
+
+def test_current_canary_unknowns_do_not_invalidate_observed_critical_checks(tmp_path):
+    value = receipt()
+    names = {'agent-liveness-receipt', 'disaster-recovery-backup'}
+    for row in value['canary']['checks']:
+        if row['name'] in names:
+            row.update(status='UNKNOWN', reason='EVIDENCE_NOT_QUALIFIED')
+    value['canary'].update(overall='UNKNOWN', unknown_count=2, paused_count=0)
+    report = snapshot(tmp_path, value)
+    health = report['service_health']
+    assert health['functionality']['status'] == 'HEALTHY'
+    assert health['verification']['status'] == 'UNKNOWN'
+    assert health['coverage']['complete'] is False
+    assert health['coverage']['critical_complete'] is True
+    assert set(health['coverage']['required_canary_checks']) == set(CANARY_CHECKS)
+    assert set(health['coverage']['required_critical_checks'])
+    unknown = [row for row in health['canary_checks'] if row['status'] == 'UNKNOWN']
+    assert {row['check_id'] for row in unknown} == names
+    assert all(row['reason'] == 'EVIDENCE_NOT_QUALIFIED' for row in unknown)
+    assert report['critical_issues']['critical_count'] == 0
+    assert report['critical_issues']['reason'] == 'CRITICAL_MONITORING_COMPLETE'
+
+
+def test_unknown_critical_observation_keeps_current_incident_count_unavailable(tmp_path):
+    value = receipt()
+    row = next(row for row in value['canary']['checks'] if row['name'] == 'backend-health')
+    row.update(status='UNKNOWN', reason='DEPENDENCY_NOT_OBSERVED')
+    value['canary'].update(overall='UNKNOWN', unknown_count=1)
+    report = snapshot(tmp_path, value)
+    assert report['service_health']['coverage']['critical_complete'] is False
+    assert report['critical_issues']['critical_count'] is None
+
+
+def test_contradictory_unknown_summary_cannot_validate_critical_coverage(tmp_path):
+    value = receipt()
+    value['canary'].update(overall='UNKNOWN', unknown_count=1)
+    report = snapshot(tmp_path, value)
+    assert report['service_health']['coverage']['critical_complete'] is False
+    assert report['critical_issues']['critical_count'] is None
+
+
+@pytest.mark.parametrize('old_child', [False, True])
+def test_canary_evidence_must_postdate_the_verified_current_boot(tmp_path, old_child):
+    value = receipt()
+    value['boot_id'] = iso(NOW - 1)
+    if old_child:
+        value['canary']['checks'][0]['observed_at'] = iso(NOW - 2)
+    else:
+        value['canary']['observed_at_utc'] = iso(NOW - 2)
+    report = snapshot(tmp_path, value)
+    assert report['service_health']['coverage']['critical_complete'] is False
+    assert report['critical_issues']['critical_count'] is None
+    assert all(row['reason'] == 'CANARY_OBSERVATION_PRECEDES_CURRENT_BOOT'
+               for row in report['service_health']['canary_checks'])
+
+
+def test_conflicting_duplicate_service_inventory_cannot_claim_healthy_core(tmp_path):
+    value = receipt()
+    duplicate = json.loads(json.dumps(value['services'][0]))
+    duplicate['process_state'] = 'exited'
+    value['services'].append(duplicate)
+    report = snapshot(tmp_path, value)
+    assert report['service_health']['coverage']['inventory_complete'] is False
+    assert report['service_health']['functionality']['status'] == 'UNKNOWN'
+    assert report['critical_issues']['critical_count'] is None

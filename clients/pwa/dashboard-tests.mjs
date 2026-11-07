@@ -32,7 +32,10 @@ assert.equal(mobileButtons.filter(button=>button.includes('id="mobile-more-open"
 const moreDialog=html.match(/<dialog id="mobile-more-dialog"[\s\S]*?<\/dialog>/)?.[0];
 assert.ok(moreDialog?.includes('data-view="console"'),'Console operations must remain available in More');
 assert.ok(moreDialog?.includes('href="/pwa/projects.html"'),'Preserve Projects and notebooks');
-const commandCenter=html.match(/<div class="command-grid">[\s\S]*?<div class="command-start">/)?.[0];
+const commandCenter=html.match(/<div class="command-grid"[^>]*>[\s\S]*?<div class="command-start">/)?.[0];
+const commandGridTag=commandCenter?.match(/^<div\b[^>]*>/)?.[0]||'';
+assert.match(commandGridTag,/\brole="navigation"/,'Home command cards expose their actual navigation landmark');
+assert.match(commandGridTag,/\baria-label="Command Center navigation"/,'Home navigation has a descriptive accessible landmark label');
 assert.ok(commandCenter?.includes('data-view="console"'),'Console must remain directly available from the mobile/desktop Command Center');
 assert.ok(commandCenter?.includes('data-view="missions"'),'Mission creation remains a direct action');
 const desktopNavigation=html.match(/<nav class="desktop-navigation"[\s\S]*?<\/nav>/)?.[0];

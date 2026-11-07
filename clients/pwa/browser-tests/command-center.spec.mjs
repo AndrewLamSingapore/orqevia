@@ -3,6 +3,39 @@ import {expect,test} from '@playwright/test';
 import {mockSession,waitForSession,sessionBody,expectNoHorizontalOverflow} from './fixtures.mjs';
 const catalog={schema:'orqevia.capability-depot.v1',capabilities:[{id:'local-knowledge',name:'Local knowledge',kind:'retrieval',status:'SOURCE_INSTALLED',available:null,offline:true,version:'1',dependencies:['local embedding model'],resources:{memory:'Measured by Resource Guardian'},operations:['retrieve']}],wallet:{status:'NOT_FOUND',spend_enabled:false,signing_available:false,scope:'Fixture audit: no live signing wallet; compute usage is not funds.'}};
 
+test('official logo and home navigation landmark work on desktop and mobile',async({page})=>{
+ await mockSession(page);await page.goto('/pwa/');await waitForSession(page);
+ const logo=page.locator('.command-banner img');await expect(logo).toHaveAttribute('src','/pwa/icons/orqevia-official-v1-192.png');await expect(logo).toHaveAttribute('alt','ORQEVIA official logo');await expect(logo).toHaveAttribute('srcset','/pwa/icons/orqevia-official-v1-192.png 192w, /pwa/icons/orqevia-official-v1-master.png 1254w');
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:900});await expect(logo).toBeVisible();
+  await expect.poll(()=>logo.evaluate(node=>node.complete&&node.naturalWidth>0&&node.naturalWidth===node.naturalHeight)).toBe(true);
+  const box=await logo.evaluate(node=>{const image=node.getBoundingClientRect(),parent=node.parentElement.getBoundingClientRect();return{width:image.width,height:image.height,center:Math.abs(image.x+image.width/2-parent.x-parent.width/2),fit:getComputedStyle(node).objectFit,density:devicePixelRatio,currentSrc:node.currentSrc};});
+  expect(box.width).toBe(width<640?108:132);expect(Math.abs(box.width-box.height)).toBeLessThan(1);expect(box.center).toBeLessThan(1);expect(box.fit).toBe('contain');if(box.width*box.density>192)expect(box.currentSrc).toContain('/pwa/icons/orqevia-official-v1-master.png');await expectNoHorizontalOverflow(page);
+  const navigation=page.getByRole('navigation',{name:'Command Center navigation',exact:true});await expect(navigation).toBeVisible();await expect(navigation).toHaveCSS('display','grid');await expect(page.locator('.desktop-navigation')).toBeHidden();
+  const missions=navigation.locator('button[data-view="missions"]');await expect(missions).toBeVisible();await expect(missions).toBeEnabled();await expect(navigation.locator('button[data-view="console"]')).toBeVisible();await expect(navigation.locator('a[href="/pwa/projects.html"]')).toBeVisible();
+  await missions.click();await expect(page).toHaveURL(/[?&]view=missions(?:&|$)/);await expect(page.locator('#task-workspace')).toBeVisible();await expect(navigation).toBeHidden();await expectNoHorizontalOverflow(page);
+  await page.goto('/pwa/');await waitForSession(page);
+ }
+});
+
+test('live health separates verified core and critical facts from incomplete or stale monitoring',async({page})=>{
+ await mockSession(page);let stale=false;
+ await page.route('**/interface/v1/telemetry',route=>{
+  const stamp=new Date().toISOString(),old=new Date(Date.now()-121000).toISOString(),last=new Date(Date.now()-3600000).toISOString();
+  const check=(key,id,severity='CRITICAL')=>({check_key:key,check_id:id,severity,status:'PASS',fresh:true,observed_at:stamp});
+  const services=['backend','interface','ollama','intelligence','coaching','otel-collector','integration-gateway','cloudflared','cloudflared-dual'].map(service_id=>({service_id,status:'HEALTHY',checks:[check('service:'+service_id+':fixture','fixture')]}));
+  const collectors=['collector-source','host-identity','boot-identity'].map(id=>check('collector:'+id,id,'DEGRADED'));
+  const names=['docker-engine','persistent-containers','backend-health','cloud-inference-configuration','interface-local','cloudflare-tunnel','auth-boundary','host-telemetry-freshness','model-runtime','fabrics-and-ai-scaffold-imports','agent-liveness-receipt','deployment-identity','queue-runtime-and-cost','workflow-and-notebook-persistence','rollback-readiness','permanent-supervision-tasks','disaster-recovery-backup'];
+  const criticalCanaries=new Set(['docker-engine','persistent-containers','backend-health','interface-local','model-runtime']);const canaries=names.map(id=>check('canary:'+id,id,criticalCanaries.has(id)?'CRITICAL':'DEGRADED'));Object.assign(canaries.at(-1),{fresh:false,status:'UNKNOWN',state:'UNKNOWN',reason:'NO_QUALIFIED_OFF_DEVICE_DESTINATION_OR_CLEAN_HOST_RESTORE_EVIDENCE'});
+  const value={schema_version:'orqevia.telemetry.v1',source:{instance:'browser-fixture',revision:'a'.repeat(40)},observed_at:stamp,freshness_seconds:60,audience:{client_id:'browser-owner'},metrics:[{metric_id:'registered_agents',collection_status:'OBSERVED',value:21},{metric_id:'active_job_records',collection_status:'OBSERVED',value:1}],agents:[],
+   service_health:{schema_version:'orqevia.service-health.v1',status:'UNKNOWN',observed_at:stale?old:stamp,last_success_at:last,freshness_seconds:120,reason:stale?'COLLECTOR_RECEIPT_STALE':'MONITORING_COVERAGE_INCOMPLETE',functionality:{status:'HEALTHY',scope:'DECLARED_SERVICE_FUNCTIONAL_CHECKS_ONLY',reason:'REQUIRED_SERVICE_PROBES_PASSED'},services,collector_checks:collectors,canary_checks:canaries,coverage:{complete:false,critical_complete:true,inventory_complete:true,canary_freshness_seconds:1200,required_canary_checks:names,required_critical_checks:[...services.flatMap(row=>row.checks),...canaries].filter(row=>row.severity==='CRITICAL').map(row=>row.check_key)}},
+   critical_issues:{schema_version:'orqevia.operational-incidents.v1',observed_at:stale?old:stamp,last_success_at:last,coverage_complete:true,store_status:'OBSERVED',critical_count:0,known_critical_count:stale?2:0,incidents:[],reason:stale?'COLLECTOR_RECEIPT_STALE':'CRITICAL_MONITORING_COMPLETE'}};
+  return route.fulfill({status:200,contentType:'application/json',headers:{'X-ORQEVIA-Protocol':'orqevia.interface.v1','Cache-Control':'no-store'},body:JSON.stringify(value)});
+ });
+ await page.goto('/pwa/?view=live-systems');await waitForSession(page);await expect(page.locator('#core-services-count')).toHaveText('HEALTHY');await expect(page.locator('#critical-count')).toHaveText('0');await expect(page.locator('#service-health-list')).toContainText('Broader monitoring coverage: INCOMPLETE');await expect(page.locator('#service-health-list')).toContainText('NO_QUALIFIED_OFF_DEVICE_DESTINATION_OR_CLEAN_HOST_RESTORE_EVIDENCE');
+ stale=true;await page.reload();await waitForSession(page);await expect(page.locator('#core-services-count')).toHaveText('STALE');await expect(page.locator('#core-services-count')).toHaveAttribute('data-collection-status','STALE');await expect(page.locator('#critical-count')).toHaveText('STALE');await expect(page.locator('#critical-count')).toHaveAttribute('data-collection-status','STALE');await expect(page.locator('#critical-detail')).toContainText('known critical records 2');await expect(page.locator('#critical-detail')).toContainText('COLLECTOR_RECEIPT_STALE');
+});
+
 test('depot and wallets disclose actual metadata without invented funds or installation authority',async({page})=>{
  await mockSession(page);const requests=[];
  await page.route('**/api/orqevia/depot',async route=>{requests.push({method:route.request().method(),headers:await route.request().allHeaders()});await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(catalog)});});

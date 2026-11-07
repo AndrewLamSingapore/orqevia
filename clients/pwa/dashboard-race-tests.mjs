@@ -46,6 +46,18 @@ test('No telemetry request until authenticated session is confirmed',async()=>{
   f.respond(0);await settle();assert.equal(f.nodes.get('telemetry-state').textContent,'OBSERVED');
 });
 
+test('malformed service check rows render unavailable diagnostics without rejecting the authenticated snapshot',async()=>{
+  const f=await fixture();f.session({role:'MEMBER'});const stamp=new Date().toISOString();
+  f.requests[0].resolve(new Response(JSON.stringify({schema_version:'orqevia.telemetry.v1',observed_at:stamp,freshness_seconds:60,
+    audience:{client_id:'fixture-client'},metrics:[],agents:[],source:{instance:'fixture-host',revision:'a'.repeat(40)},
+    service_health:{schema_version:'orqevia.service-health.v1',observed_at:stamp,freshness_seconds:120,status:'UNKNOWN',
+      functionality:{status:'UNKNOWN',scope:'DECLARED_SERVICE_FUNCTIONAL_CHECKS_ONLY',reason:'SERVICE_PROBES_INCOMPLETE'},
+      coverage:{inventory_complete:false},services:[{service_id:'backend',status:'HEALTHY',checks:[null,false,0,'invalid',[],{}]}]}}),
+    {status:200,headers:{'content-type':'application/json','X-ORQEVIA-Protocol':'orqevia.interface.v1'}}));
+  await settle();assert.equal(f.nodes.get('telemetry-state').textContent,'OBSERVED');assert.equal(f.nodes.get('core-services-count').textContent,'UNKNOWN');
+  const details=f.nodes.get('service-health-list').children.map(node=>node.textContent);assert.ok(details.some(text=>text.includes('MALFORMED_SERVICE_CHECKS')));assert.ok(details.some(text=>text.includes('invalid-observation: UNKNOWN')));
+});
+
 test('a valid-looking measurement addressed to a different client is rejected',async()=>{
   const f=await fixture();f.session({role:'MEMBER'});f.respond(0,'OTHER',Date.now(),'other-client');await settle();
   assert.equal(f.nodes.get('telemetry-state').textContent,'UNKNOWN');assert.equal(f.nodes.get('agent-provenance-list').children.length,0);

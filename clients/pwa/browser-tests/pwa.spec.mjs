@@ -42,6 +42,20 @@ test("manifest, service worker and offline shell are installable primitives", as
   expect((await releaseResponse.text()).match(/const RELEASE=['"](orqevia-shell-v\d+)['"]/)[1]).toBe(currentCacheName);
   const cacheNames = await page.evaluate(() => caches.keys());
   expect(cacheNames).toContain(currentCacheName);
+  const cachedLogos = await page.evaluate(async (cacheName) => {
+    const cache = await caches.open(cacheName);
+    return Promise.all(['192', 'master'].map(async variant => {
+      const response = await cache.match(`/pwa/icons/orqevia-official-v1-${variant}.png`);
+      if (!response) return null;
+      const bytes = await response.arrayBuffer();
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      return {ok: response.ok, bytes: bytes.byteLength, sha256: Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, '0')).join('')};
+    }));
+  }, currentCacheName);
+  expect(cachedLogos).toEqual([
+    {ok: true, bytes: 37462, sha256: 'd7cc5c2c6c63bf87a4afdad5b3cf0fa058444bb16d498ecaaa81e789d0fdeea2'},
+    {ok: true, bytes: 1531581, sha256: 'b3bdd53cc38b24c8be2896f1174b4d5f083be20f94f2042770224c72e2501844'},
+  ]);
 
   if (browserName === "webkit") {
     test.info().annotations.push({
