@@ -73,6 +73,15 @@ export function authoritativeMetadataText(task) {
   return `ORQEVIA SYSTEM RECORD\nTask UUID: ${shown(value.task_id)}\nState: ${shown(value.state)}\nCreated: ${shown(value.created_at)}\nStarted: ${shown(value.started_at)}\nCompleted: ${shown(value.completed_at)}\nRuntime: ${shown(value.runtime?.host_id)} · ${shown(value.runtime?.source_revision)}\n${contradictions?`Warning: ${contradictions} model metadata claim(s) conflict with or are unsupported by the system record.\n`:''}\nThe response below is model-generated content. Any UUID, timestamp, digest, runtime identity, or authority claim inside it is not system metadata.`;
 }
 export function currentSteps(task) { const revision=taskRevision(task);return (task.steps||[]).filter(step=>(step.revision??0)===revision).slice(0,21); }
+export function planPresentation(steps) {
+  const failedStates=new Set(['failed','blocked','indeterminate','FAILED','BLOCKED','ERROR','CANCELLED']);
+  return steps.map(step=>{
+    const jobState=step.job?.status||'';
+    const dispatchState=step.dispatch?.state||'';
+    const state=step.state||dispatchState||jobState||'Working';
+    return {capability:typeof step.capability==='string'&&step.capability?step.capability:'step',state:String(state),reason:typeof step.reason==='string'?step.reason.slice(0,80):'',failed:failedStates.has(state)};
+  });
+}
 export function resultText(task) {
   const textOf = value => typeof value === 'string' ? value : value && [value.text,value.summary,value.message].find(x => typeof x === 'string');
   const direct = textOf(task.result);

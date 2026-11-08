@@ -1,4 +1,4 @@
-import {InterfaceAPI,ClientError,errorMessage,sha256,taskID,resultText,terminal,safeID,retryable,continuationAction,submissionPayload,currentSteps,taskRevision,resultPresentation,artifactLabel,spokenText,sessionActive,authoritativeMetadataText} from './core.mjs';
+import {InterfaceAPI,ClientError,errorMessage,sha256,taskID,resultText,terminal,safeID,retryable,continuationAction,submissionPayload,currentSteps,taskRevision,resultPresentation,artifactLabel,spokenText,sessionActive,authoritativeMetadataText,planPresentation} from './core.mjs';
 import {TaskStore} from './storage.mjs';
 import {Voice} from './voice.mjs';
 const $=id=>document.getElementById(id), api=new InterfaceAPI(), store=new TaskStore();
@@ -47,6 +47,15 @@ async function renderTask(task,owner=context()){
     const state=step.job?.status||step.state||step.dispatch?.state||'Working';
     agents.append(element('span',`ORQEVIA · ${String(state).slice(0,60)}`,'agent'));
   }
+  const plan=$('mission-plan');plan.replaceChildren();
+  const planRows=planPresentation(currentSteps(task));
+  for(const row of planRows){
+    const text=row.reason?`${row.capability} · ${row.state} · ${row.reason}`:`${row.capability} · ${row.state}`;
+    const item=element('span',text.slice(0,140),'plan-step');
+    if(row.failed)item.classList.add('plan-failed');
+    plan.append(item);
+  }
+  show('mission-plan-section',planRows.length>0);
   if(terminal(task.state)&&!currentResult)message(task.state==='COMPLETED'?'This turn completed without a text result. Review its files below.':'This turn did not finish successfully. Review its available files.',task.state!=='COMPLETED');
   window.dispatchEvent(new CustomEvent('orqevia-task',{detail:{clientId:owner.clientId,generation:owner.epoch,id,revision,state:task.state,agents:currentSteps(task).map(step=>step.job?.agent).filter(Boolean),updated:task.updatedAt||task.updated_at||task.executionMetadata?.completed_at||task.execution_metadata?.completed_at||null}}));
   await store.remember(owner.clientId,id,task.state);if(!current(owner))return;await renderHistory(owner);controls();
