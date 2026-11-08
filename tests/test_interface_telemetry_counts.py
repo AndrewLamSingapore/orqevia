@@ -156,6 +156,68 @@ def test_agent_activity_requires_agent_identity_column(draft):
     assert module.agent_activity() is None
 
 
+def test_compute_journal_diagnostic_classifies_missing_database(draft):
+    module,root=draft
+    activity,diagnostic=module.compute_journal_observation()
+    assert activity is None
+    assert diagnostic['status']=='UNAVAILABLE'
+    assert diagnostic['reason']=='COMPUTE_JOURNAL_DATABASE_MISSING'
+    assert diagnostic['exception_class'] is None
+    assert type(diagnostic['phase_timings_ms']['total']) is float
+
+
+def test_compute_journal_diagnostic_classifies_missing_required_columns(draft):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,status TEXT)')
+    activity,diagnostic=module.compute_journal_observation()
+    assert activity is None
+    assert diagnostic['reason']=='COMPUTE_JOURNAL_SCHEMA_REQUIRED_COLUMNS_MISSING'
+    assert diagnostic['phase_timings_ms']['schema'] is not None
+
+
+def test_compute_journal_diagnostic_classifies_time_budget(draft,monkeypatch):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT)')
+        db.execute('INSERT INTO compute_jobs VALUES(?,?,?,?)',('1','a01','completed','2026-10-15T01:00:00Z'))
+    ticks=iter([0.0,0.5])
+    monkeypatch.setattr(module.time,'monotonic',lambda: next(ticks,0.5))
+    activity,diagnostic=module.compute_journal_observation()
+    assert activity is None
+    assert diagnostic['reason']=='COMPUTE_JOURNAL_TIME_BUDGET_EXCEEDED'
+    assert diagnostic['phase_timings_ms']['ranking_execute'] is not None
+
+
+def test_compute_journal_diagnostic_classifies_locked_store_without_exception_text(draft):
+    module,root=draft
+    path=root/'compute-queue.db'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT)')
+    locked=sqlite3.connect(path)
+    try:
+        locked.execute('BEGIN EXCLUSIVE')
+        activity,diagnostic=module.compute_journal_observation()
+        assert activity is None
+        assert diagnostic['reason']=='COMPUTE_JOURNAL_SQLITE_ERROR'
+        assert diagnostic['exception_class']=='OperationalError'
+        assert 'locked' not in str(diagnostic)
+    finally:
+        locked.rollback();locked.close()
+
+
+def test_compute_journal_diagnostic_observed_with_join_status(draft):
+    module,root=draft
+    with sqlite3.connect(root/'compute-queue.db') as db:
+        db.execute('CREATE TABLE compute_jobs(id TEXT,agent TEXT,status TEXT,updated_at TEXT,completed_at TEXT)')
+        db.execute('INSERT INTO compute_jobs VALUES(?,?,?,?,?)',('1','a01','completed','2026-10-15T01:00:00Z','2026-10-15T01:00:00Z'))
+    activity,diagnostic=module.compute_journal_observation()
+    assert activity is not None and 'a01' in activity
+    assert diagnostic['status']=='OBSERVED' and diagnostic['reason']=='COMPUTE_JOURNAL_OBSERVED'
+    assert diagnostic['objective_join']['status'] in {'NOT_ATTEMPTED','OBSERVED'}
+    assert diagnostic['phase_timings_ms']['total'] is not None
+
+
 def test_full_journal_history_does_not_exhaust_python_read_budget(draft, monkeypatch):
     module, root = draft
     from app.agent_registry import registered_agent_ids

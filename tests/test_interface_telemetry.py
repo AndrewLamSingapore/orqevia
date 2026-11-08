@@ -178,6 +178,32 @@ def test_malformed_freshness_window_fails_closed(monkeypatch, tmp_path):
     assert report['fresh_agent_count'] is None
     assert report['ready_agent_count'] is None
     assert report['queue_freshness']['status'] == 'UNAVAILABLE'
+    assert report['queue_freshness']['reason'] is None
+    assert report['compute_journal']['status'] == 'OBSERVED'
+    assert report['compute_journal']['reason'] == 'COMPUTE_JOURNAL_OBSERVED'
+
+
+def test_compute_journal_unavailable_reason_is_exposed_in_snapshot(monkeypatch, tmp_path):
+    from app import interface_telemetry
+    monkeypatch.setenv('ORQEVIA_DATA_DIR', str(tmp_path))
+    current = datetime.now(timezone.utc).isoformat()
+    ready_runtime = {
+        'status': 'OBSERVED', 'ready': True, 'endpoint': 'test',
+        'required_models': ['gemma3:1b'], 'missing_models': [],
+        'observed_at': current, 'network_probe_performed': True,
+    }
+    report = interface_telemetry.snapshot(
+        'fixture-client', 'MEMBER', model_runtime_probe=ready_runtime
+    )
+    assert report['queue_freshness']['status'] == 'UNAVAILABLE'
+    assert report['queue_freshness']['journal_status'] == 'UNAVAILABLE'
+    assert report['queue_freshness']['reason'] == 'COMPUTE_JOURNAL_DATABASE_MISSING'
+    assert report['compute_journal']['status'] == 'UNAVAILABLE'
+    assert report['compute_journal']['reason'] == 'COMPUTE_JOURNAL_DATABASE_MISSING'
+    assert type(report['compute_journal']['phase_timings_ms']['total']) is float
+    observed = next(item for item in report['metrics'] if item['metric_id'] == 'observed_agents')
+    assert observed['collection_status'] == 'UNAVAILABLE'
+    assert observed['reason'] == 'COMPUTE_JOURNAL_DATABASE_MISSING'
 
 
 def test_fresh_failures_cancellations_and_running_jobs_are_activity_not_confirmed_readiness(monkeypatch, tmp_path):

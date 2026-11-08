@@ -118,11 +118,19 @@ try:
     objective_path=pathlib.Path(os.getenv('ORQEVIA_DATA_DIR','/data'))/'objectives.db'
     objective_count=read(objective_path,'SELECT COUNT(*) FROM objectives')[0]
     execution=read(queue,'SELECT MAX(started_at),MAX(completed_at) FROM compute_jobs')
+    heartbeat=None
+    try:
+        row=read(queue,'SELECT source_revision,last_tick_epoch,tick_sequence,state FROM backend_worker_heartbeat WHERE id=1')
+        if row is not None:
+            heartbeat={'source_revision':row[0],'tick_epoch':row[1],'tick_sequence':row[2],'state':row[3]}
+    except (sqlite3.Error,ValueError):
+        heartbeat=None
     captured=datetime.datetime.now(datetime.timezone.utc).timestamp()
     model_keys=('ORQEVIA_FAST_MODEL','ORQEVIA_DEEP_MODEL','ORQEVIA_EVALUATOR_MODEL','ORQEVIA_EMBED_MODEL')
     result={'database_read':True,'queue_record_count':queue_count,'objective_record_count':objective_count,
         'worker_started_at':execution[0], 'worker_completed_at':execution[1],
         'worker_progress_samples':progress(queue,captured), 'runtime_revision':os.getenv('ORQEVIA_RUNTIME_REVISION',''),
+        'worker_heartbeat':heartbeat,
         'required_models':list(dict.fromkeys(os.getenv(k,'') for k in model_keys if os.getenv(k,'')))}
 except (OSError,sqlite3.Error,ValueError): result={'database_read':False}
 result['observed_at']=(datetime.datetime.fromtimestamp(captured,datetime.timezone.utc)
@@ -300,8 +308,23 @@ def backend_progress_witnesses(data, identity, now, previous):
     return witnesses
 
 
+def native_worker_heartbeat_fresh(data, now, max_age_seconds=120):
+    """A current tick from the native worker pool with a matching runtime revision."""
+    heartbeat = data.get("worker_heartbeat") if isinstance(data, dict) else None
+    if not isinstance(heartbeat, dict):
+        return False
+    tick = heartbeat.get("tick_epoch")
+    if type(tick) not in (int, float) or not math.isfinite(tick):
+        return False
+    revision = data.get("runtime_revision")
+    if not isinstance(revision, str) or not revision or heartbeat.get("source_revision") != revision:
+        return False
+    return -5 <= now - tick <= max_age_seconds
+
+
 def backend_readiness_check(data, identity, now, previous=None):
-    """Recent admission/completion or independently witnessed output growth."""
+    """Recent admission/completion, independently witnessed output growth, or a
+    current native worker heartbeat from the same runtime revision."""
     executions = [
         (epoch(value), value)
         for value in (data.get("worker_started_at"), data.get("worker_completed_at"))
@@ -324,6 +347,9 @@ def backend_readiness_check(data, identity, now, previous=None):
         observed_at = progress["last_genuine_progress_at"]
     elif worker is not None and started is not None and worker >= started and -5 <= now - worker <= 120:
         status, reason = "PASS", "PERSISTENCE_AND_RECENT_EXECUTION_OBSERVED"
+    elif native_worker_heartbeat_fresh(data, now):
+        status, reason = "PASS", "PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT_OBSERVED"
+        observed_at = iso(data["worker_heartbeat"]["tick_epoch"])
     else:
         status = "UNKNOWN"
         reason = (
@@ -331,8 +357,16 @@ def backend_readiness_check(data, identity, now, previous=None):
             if any(row["last_genuine_progress_at"] for row in witnesses)
             else "WORKER_EXECUTION_PROGRESS_NOT_CONFIRMED"
             if witnesses
+            else "NATIVE_WORKER_HEARTBEAT_STALE_OR_MISMATCHED"
+            if isinstance(data.get("worker_heartbeat"), dict)
             else "WORKER_HEARTBEAT_NOT_EXPOSED"
         )
+    heartbeat = data.get("worker_heartbeat") if isinstance(data, dict) else None
+    if isinstance(heartbeat, dict):
+        tick = heartbeat.get("tick_epoch")
+        heartbeat_at = iso(tick) if type(tick) in (int, float) else None
+    else:
+        heartbeat_at = None
     return check(
         "backend-readiness",
         "DEPENDENCY",
@@ -340,13 +374,18 @@ def backend_readiness_check(data, identity, now, previous=None):
         observed_at if status == "PASS" else data.get("observed_at", iso(now)),
         reason,
         "sqlite-select-only:backend",
-        "PERSISTENCE_AND_RECENT_WORKER_EXECUTION",
+        "PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT"
+        if reason == "PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT_OBSERVED"
+        else "PERSISTENCE_AND_RECENT_WORKER_EXECUTION",
         database_read_observed_at=data.get("observed_at"),
         worker_started_at=data.get("worker_started_at"),
         worker_completed_at=data.get("worker_completed_at"),
         worker_progress_at=progress["last_genuine_progress_at"] if progress else None,
         worker_progress_started_at=progress["job_started_at"] if progress else None,
         worker_progress_validation=PROGRESS_VALIDATION if progress else None,
+        worker_heartbeat_at=heartbeat_at,
+        worker_heartbeat_sequence=heartbeat.get("tick_sequence") if isinstance(heartbeat, dict) else None,
+        worker_heartbeat_state=heartbeat.get("state") if isinstance(heartbeat, dict) else None,
         progress_witnesses=witnesses,
     )
 
@@ -973,7 +1012,7 @@ def collect(
             "GATEWAY_HTTPS_IS_PUBLISHED_LOOPBACK_HEALTH",
             "TUNNEL_HTTPS_IS_CLOUDFLARE_EDGE_JOURNEY_NOT_ORIGIN_APP_ACCEPTANCE",
             "TUNNEL_CONNECTION_IS_CONNECTOR_OWN_READY_ENDPOINT",
-            "RECENT_WORKER_EXECUTION_IS_NOT_CONTINUOUS_WORKER_HEARTBEAT",
+            "NATIVE_WORKER_HEARTBEAT_IS_LIVENESS_NOT_EXECUTION_PROOF",
         ],
     }
     merge_check_history(result, previous)

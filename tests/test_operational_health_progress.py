@@ -357,6 +357,65 @@ def test_persistence_failure_overrides_growth_and_no_candidate_invents_idle_read
         assert row["status"] == "UNKNOWN" and row["reason"] == "WORKER_HEARTBEAT_NOT_EXPOSED"
 
 
+def heartbeat_data(*, tick=NOW - 10, revision=REVISION, state="IDLE", sequence=5):
+    data = progress_data()
+    data["worker_progress_samples"] = []
+    data["worker_heartbeat"] = {
+        "source_revision": revision,
+        "tick_epoch": tick,
+        "tick_sequence": sequence,
+        "state": state,
+    }
+    return data
+
+
+def test_native_worker_heartbeat_freshness_requires_revision_and_window():
+    assert producer.native_worker_heartbeat_fresh(heartbeat_data(), NOW) is True
+    assert producer.native_worker_heartbeat_fresh(heartbeat_data(tick=NOW - 200), NOW) is False
+    assert producer.native_worker_heartbeat_fresh(heartbeat_data(revision="f" * 40), NOW) is False
+    assert producer.native_worker_heartbeat_fresh(heartbeat_data(tick="not-a-number"), NOW) is False
+    assert producer.native_worker_heartbeat_fresh(progress_data(), NOW) is False
+
+
+def test_fresh_native_worker_heartbeat_qualifies_idle_backend_readiness():
+    data = heartbeat_data()
+    row = producer.backend_readiness_check(data, identity(), NOW)
+    assert row["status"] == "PASS"
+    assert row["reason"] == "PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT_OBSERVED"
+    assert row["observed_at"] == producer.iso(NOW - 10)
+    assert row["worker_heartbeat_at"] == producer.iso(NOW - 10)
+    assert row["worker_heartbeat_sequence"] == 5
+    assert row["worker_heartbeat_state"] == "IDLE"
+    assert row["worker_progress_at"] is None
+
+
+def test_stale_or_mismatched_heartbeat_does_not_invent_idle_readiness():
+    row = producer.backend_readiness_check(heartbeat_data(tick=NOW - 200), identity(), NOW)
+    assert row["status"] == "UNKNOWN"
+    assert row["reason"] == "NATIVE_WORKER_HEARTBEAT_STALE_OR_MISMATCHED"
+    row = producer.backend_readiness_check(heartbeat_data(revision="f" * 40), identity(), NOW)
+    assert row["status"] == "UNKNOWN"
+    assert row["reason"] == "NATIVE_WORKER_HEARTBEAT_STALE_OR_MISMATCHED"
+
+
+def test_persistence_failure_still_overrides_fresh_heartbeat():
+    data = heartbeat_data()
+    data["database_read"] = False
+    row = producer.backend_readiness_check(data, identity(), NOW, previous=previous_check())
+    assert row["status"] == "FAIL" and row["reason"] == "BACKEND_PERSISTENCE_READ_FAILED"
+
+
+def test_backend_read_exposes_recorded_worker_heartbeat(backend_store):
+    queue, job_id, _, clock, observe = backend_store
+    queue.record_worker_heartbeat(REVISION, "IDLE")
+    data = observe()
+    assert data["worker_heartbeat"] is not None
+    assert data["worker_heartbeat"]["source_revision"] == REVISION
+    assert data["worker_heartbeat"]["state"] == "IDLE"
+    assert type(data["worker_heartbeat"]["tick_epoch"]) is float
+    assert data["worker_heartbeat"]["tick_sequence"] >= 1
+
+
 def test_missing_optional_progress_schema_preserves_readonly_database_observation(backend_store):
     queue, _, _, _, observe = backend_store
     with queue.connect() as connection:
