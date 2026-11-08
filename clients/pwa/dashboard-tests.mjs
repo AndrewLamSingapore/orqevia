@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {agentReadinessSummary,telemetryFreshness} from './dashboard.mjs';
-import {canonicalView,VIEWS} from './core.mjs';
+import {canonicalView,VIEWS,planPresentation} from './core.mjs';
 const time=Date.parse('2026-10-12T01:00:00Z');
 const report={schema_version:'orqevia.telemetry.v1',source:{instance:'fixture',revision:'a'.repeat(40)},observed_at:new Date(time).toISOString(),freshness_seconds:60,metrics:[],agents:Array.from({length:21},(_,i)=>({agent_id:`fixture-${i}`}))};
 assert.equal(telemetryFreshness(report,time),'OBSERVED');
@@ -78,7 +78,19 @@ assert.ok(dashboardSource.includes("const facts=operationalFacts(latest);bindSna
 assert.ok(!dashboardSource.includes("count>0?'ACTIVE WORK':'IDLE'"),'Missing observations must not be classified as idle');
 const appSource=readFileSync(new URL('./app.mjs',import.meta.url),'utf8');
 assert.ok(appSource.includes('interfaceClientId:session.interfaceClientId||session.clientId'));
+assert.ok(appSource.includes("show('mission-plan-section',planRows.length>0)"),'Active missions must surface their execution-record plan');
 console.log('Shared dashboard panels, complete mobile/desktop navigation, canonical Console access, PIF/MEL discovery, retained Projects, source freshness and cache boundaries: PASS');
 
 assert.equal(telemetryFreshness({...report,agents:[]},time),'OBSERVED');
 assert.equal(telemetryFreshness({...report,agents:report.agents.slice(0,2)},time),'OBSERVED');
+const plan=planPresentation([
+  {capability:'responsibility.a04',revision:1,dispatch:{state:'COMPLETED'},job:{status:'completed'}},
+  {capability:'responsibility.b08',revision:1,state:'failed',reason:'NO_MODEL_AVAILABLE'},
+  {capability:'research.web',revision:1,dispatch:{state:'BLOCKED'}},
+  {capability:'finalize',revision:1}
+]);
+assert.equal(plan.length,4);
+assert.deepEqual(plan[0],{capability:'responsibility.a04',state:'COMPLETED',reason:'',failed:false});
+assert.equal(plan[1].state,'failed');assert.equal(plan[1].failed,true);assert.equal(plan[1].reason,'NO_MODEL_AVAILABLE');
+assert.equal(plan[2].state,'BLOCKED');assert.equal(plan[2].failed,true);
+assert.equal(plan[3].state,'Working');assert.equal(plan[3].failed,false);

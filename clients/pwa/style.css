@@ -203,3 +203,6 @@ body:not([data-view=home]) .mobile-account-button { display: none; }
 /* Status words must remain readable inside compact metric cards. */
 .operations-metric, .operations-metric strong, .operations-metric span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 @media(max-width:639px) { .operations-metric strong { font-size: 1.1rem; } }
+#mission-plan { display: flex; flex-direction: column; gap: 6px; }
+.plan-step { font-size: .8rem; line-height: 1.4; color: var(--oq-text); background: var(--oq-card, #fff); border: 1px solid var(--oq-border, #ddd); border-radius: 8px; padding: 6px 10px; overflow-wrap: anywhere; }
+.plan-failed { border-color: var(--oq-danger, #b3261e); color: var(--oq-danger, #b3261e); }
