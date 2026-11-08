@@ -102,4 +102,6 @@ test('validated execution growth retains its conservative clock and unavailable 
   check.observed_at=iso(-121);facts=healthFacts(value,now);assert.equal(facts.core.status,'UNKNOWN');assert.equal(facts.critical.count,null);
   Object.assign(check,{status:'UNKNOWN',fresh:false,reason:'WORKER_EXECUTION_PROGRESS_NOT_CONFIRMED',observed_at:iso(0)});backend.status='UNKNOWN';value.service_health.functionality.status='UNKNOWN';
   facts=healthFacts(value,now);assert.equal(facts.core.status,'UNKNOWN');assert.equal(facts.critical.count,null);assert.equal(facts.services[0].checks[0].reason,check.reason);
+  Object.assign(check,{status:'PASS',fresh:true,scope:'PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT',reason:'PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT_OBSERVED',observed_at:iso(-60)});backend.status='HEALTHY';value.service_health.functionality.status='HEALTHY';
+  facts=healthFacts(value,now);assert.equal(facts.core.status,'HEALTHY');assert.equal(facts.services[0].checks[0].reason,'PERSISTENCE_AND_NATIVE_WORKER_HEARTBEAT_OBSERVED');
 });

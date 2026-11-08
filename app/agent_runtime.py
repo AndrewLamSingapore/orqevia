@@ -261,7 +261,7 @@ class AgentAuthorityRuntime:
     def recent(self, limit: int = 100) -> list[dict[str, Any]]:
         with self.connect() as db:
             rows = db.execute(
-                "SELECT * FROM agent_authority_events ORDER BY timestamp DESC, sequence DESC LIMIT ?",
+                "SELECT * FROM agent_authority_events ORDER BY timestamp DESC, rowid DESC LIMIT ?",
                 (max(1, min(int(limit), 500)),),
             ).fetchall()
         return [dict(row) for row in rows]

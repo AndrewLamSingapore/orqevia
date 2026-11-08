@@ -155,6 +155,10 @@ class JobQueue:
             CREATE TABLE IF NOT EXISTS compute_submission_keys(
               agent TEXT NOT NULL, key_sha256 TEXT NOT NULL, request_sha256 TEXT NOT NULL,
               job_id TEXT NOT NULL, PRIMARY KEY(agent,key_sha256));
+            CREATE TABLE IF NOT EXISTS backend_worker_heartbeat(
+              id INTEGER PRIMARY KEY CHECK(id=1), source_revision TEXT NOT NULL,
+              last_tick_epoch REAL NOT NULL, tick_sequence INTEGER NOT NULL,
+              state TEXT NOT NULL);
             """)
             # executescript commits implicitly; keep the column upgrades in one
             # SQLite write transaction.
@@ -356,6 +360,22 @@ class JobQueue:
             if status: rows=c.execute("SELECT * FROM compute_jobs WHERE status=? ORDER BY priority DESC,created_at LIMIT ?",(status,min(limit,500))).fetchall()
             else: rows=c.execute("SELECT * FROM compute_jobs ORDER BY created_at DESC LIMIT ?",(min(limit,500),)).fetchall()
         return [dict(r) for r in rows]
+
+    def record_worker_heartbeat(self, source_revision: str, state: str) -> None:
+        """Monotonic native worker tick with fixed vocabulary; no free text."""
+        if not isinstance(source_revision, str) or not source_revision.strip():
+            source_revision = "UNKNOWN"
+        if state not in {"IDLE", "ACTIVE"}:
+            state = "IDLE"
+        with self.connect() as c:
+            c.execute(
+                "INSERT INTO backend_worker_heartbeat VALUES(1,?,?,1,?) "
+                "ON CONFLICT(id) DO UPDATE SET source_revision=excluded.source_revision,"
+                "last_tick_epoch=excluded.last_tick_epoch,"
+                "tick_sequence=backend_worker_heartbeat.tick_sequence+1,"
+                "state=excluded.state",
+                (source_revision, time.time(), state),
+            )
 
     def _daily_spend(self, c: sqlite3.Connection) -> float:
         row=c.execute("SELECT COALESCE(SUM(COALESCE(actual_cost_usd,estimated_cost_usd)),0) FROM compute_jobs WHERE julianday(completed_at)>=julianday('now','-1 day')").fetchone()

@@ -172,6 +172,27 @@ if OUTPUT_QUEUE_MODE not in {"direct", "queued", "home_eco"}:
     raise RuntimeError("ORQEVIA_OUTPUT_QUEUE_MODE must be 'direct', 'queued' or 'home_eco'")
 _direct_stop = threading.Event()
 _reaper_thread: threading.Thread | None = None
+_heartbeat_stop = threading.Event()
+_heartbeat_thread: threading.Thread | None = None
+
+
+def _heartbeat_loop() -> None:
+    """Tick the native worker heartbeat while the application is alive.
+
+    The tick is genuine worker-liveness evidence from the process that claims
+    jobs: ACTIVE only when a running job exists, IDLE otherwise. It never
+    submits, admits or mutates any job.
+    """
+    while not _heartbeat_stop.is_set():
+        try:
+            running = bool(queue.list(status="running", limit=1))
+            queue.record_worker_heartbeat(
+                os.getenv('ORQEVIA_RUNTIME_REVISION', ''),
+                'ACTIVE' if running else 'IDLE',
+            )
+        except Exception:
+            record_counter('orqevia.worker_heartbeat.failures', 1, {'component': 'compute-queue'})
+        _heartbeat_stop.wait(10)
 
 
 def _run_direct(job_id: str) -> None:
@@ -432,14 +453,18 @@ def provider_usage(authorization: str|None=Header(None)):
 
 
 def start_compute_queue() -> None:
-    global _reaper_thread
+    global _reaper_thread, _heartbeat_thread
     if OUTPUT_QUEUE_MODE == "direct":
-        if _reaper_thread and _reaper_thread.is_alive(): return
-        _direct_stop.clear()
-        _reaper_thread = threading.Thread(target=_direct_reap_loop, name="direct-reaper", daemon=True)
-        _reaper_thread.start()
-        return
-    pool.start()
+        if _reaper_thread is None or not _reaper_thread.is_alive():
+            _direct_stop.clear()
+            _reaper_thread = threading.Thread(target=_direct_reap_loop, name="direct-reaper", daemon=True)
+            _reaper_thread.start()
+    else:
+        pool.start()
+    if _heartbeat_thread is None or not _heartbeat_thread.is_alive():
+        _heartbeat_stop.clear()
+        _heartbeat_thread = threading.Thread(target=_heartbeat_loop, name="worker-heartbeat", daemon=True)
+        _heartbeat_thread.start()
 
 
 def stop_compute_queue() -> None:
@@ -447,5 +472,8 @@ def stop_compute_queue() -> None:
         _direct_stop.set()
         queue.wake.set()
         if _reaper_thread: _reaper_thread.join(timeout=3)
-        return
-    pool.stop()
+    else:
+        pool.stop()
+    _heartbeat_stop.set()
+    if _heartbeat_thread:
+        _heartbeat_thread.join(timeout=3)

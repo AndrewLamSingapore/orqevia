@@ -131,6 +131,15 @@ def telemetry_store_counts():
     }
 
 
+COMPUTE_JOURNAL_BUDGET_SECONDS = 0.2
+
+
+def _fixed_exception_class(exc):
+    """Fixed vocabulary only; exception text never enters telemetry."""
+    name = type(exc).__name__
+    return name if isinstance(name, str) and re.fullmatch(r'[A-Za-z0-9_]{1,64}', name) else 'EXCEPTION'
+
+
 def agent_activity():
     """Project journal metadata only, ordered by actual transition time.
 
@@ -138,19 +147,54 @@ def agent_activity():
     An unorderable newest insertion remains explicit unknown evidence instead
     of falling back to an older successful row and claiming readiness.
     """
+    return compute_journal_observation()[0]
+
+
+def compute_journal_observation():
+    """Return (activity, diagnostic) with classified failure codes and bounded timings.
+
+    activity keeps the historical contract: a per-agent projection, or None when
+    the journal could not be observed. diagnostic preserves the fixed classified
+    reason and per-phase timings so an unavailable aggregate is explainable
+    without exception text, lock details or unrelated evidence.
+    """
     root = Path(os.getenv('ORQEVIA_DATA_DIR', '/data')).resolve()
     path = root/'compute-queue.db'
+    started = time.perf_counter()
+    diagnostic = {
+        'status': 'UNAVAILABLE',
+        'reason': 'COMPUTE_JOURNAL_DATABASE_MISSING',
+        'exception_class': None,
+        'deadline_seconds': COMPUTE_JOURNAL_BUDGET_SECONDS,
+        'phase_timings_ms': {
+            'connect': None, 'schema': None, 'ranking_execute': None,
+            'objective_join': None, 'total': None,
+        },
+        'objective_join': {'status': 'NOT_ATTEMPTED', 'reason': None},
+    }
+
+    def finish(activity):
+        diagnostic['phase_timings_ms']['total'] = round((time.perf_counter() - started) * 1000, 3)
+        if activity is not None:
+            diagnostic.update(status='OBSERVED', reason='COMPUTE_JOURNAL_OBSERVED')
+        return activity, diagnostic
+
     if not path.is_file():
-        return None
+        return finish(None)
     db = None
     try:
+        phase_start = time.perf_counter()
         db = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0.2)
         db.row_factory = sqlite3.Row
-        deadline = time.monotonic() + 0.2
+        deadline = time.monotonic() + COMPUTE_JOURNAL_BUDGET_SECONDS
         db.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
+        diagnostic['phase_timings_ms']['connect'] = round((time.perf_counter() - phase_start) * 1000, 3)
+        phase_start = time.perf_counter()
         columns = {row[1] for row in db.execute('PRAGMA table_info(compute_jobs)')}
+        diagnostic['phase_timings_ms']['schema'] = round((time.perf_counter() - phase_start) * 1000, 3)
         if not {'agent', 'status'}.issubset(columns):
-            return None
+            diagnostic['reason'] = 'COMPUTE_JOURNAL_SCHEMA_REQUIRED_COLUMNS_MISSING'
+            return finish(None)
         names = ('id', 'agent', 'status', 'created_at', 'started_at', 'completed_at',
                  'updated_at', 'provider', 'model', 'task_class')
         projection = ','.join(f'j.{name}' if name in columns else f'NULL AS {name}' for name in names)
@@ -199,9 +243,13 @@ def agent_activity():
             f"SELECT j.rowid AS _rowid,{projection},{error} AS error_code,r.history_count AS _history_count "
             "FROM chosen r JOIN compute_jobs j ON j.rowid=r.source_rowid"
         )
+        phase_start = time.perf_counter()
         for raw in db.execute(query):
             if time.monotonic() >= deadline:
-                return None
+                diagnostic['phase_timings_ms']['ranking_execute'] = round(
+                    (time.perf_counter() - phase_start) * 1000, 3)
+                diagnostic['reason'] = 'COMPUTE_JOURNAL_TIME_BUDGET_EXCEEDED'
+                return finish(None)
             task = dict(raw)
             history_count = task.pop('_history_count')
             aid = task['agent']
@@ -238,10 +286,20 @@ def agent_activity():
                 task['task_id'] = None
                 task['task_id_status'] = 'OBJECTIVE_JOIN_NOT_OBSERVED'
                 task['evidence_scope'] = 'COMPUTE_EXECUTION_NOT_OUTPUT_CORRECTNESS'
-        _join_objective_ids(root, result)
-        return result
-    except (OSError, sqlite3.Error, TypeError, ValueError):
-        return None
+        diagnostic['phase_timings_ms']['ranking_execute'] = round((time.perf_counter() - phase_start) * 1000, 3)
+        join_start = time.perf_counter()
+        diagnostic['objective_join'] = _join_objective_ids(root, result)
+        diagnostic['phase_timings_ms']['objective_join'] = round((time.perf_counter() - join_start) * 1000, 3)
+        return finish(result)
+    except sqlite3.Error as exc:
+        diagnostic.update(reason='COMPUTE_JOURNAL_SQLITE_ERROR', exception_class=_fixed_exception_class(exc))
+        return finish(None)
+    except OSError as exc:
+        diagnostic.update(reason='COMPUTE_JOURNAL_STORE_IO_ERROR', exception_class=_fixed_exception_class(exc))
+        return finish(None)
+    except (TypeError, ValueError) as exc:
+        diagnostic.update(reason='COMPUTE_JOURNAL_VALUE_ERROR', exception_class=_fixed_exception_class(exc))
+        return finish(None)
     finally:
         if db is not None:
             db.close()
@@ -254,8 +312,9 @@ def _join_objective_ids(root, activity):
     ids = {task['job_id'] for task in tasks if task['job_id'] is not None}
     path = root / 'objectives.db'
     if not ids or not path.is_file():
-        return
+        return {'status': 'NOT_ATTEMPTED', 'reason': 'NO_JOB_IDS_OR_OBJECTIVE_STORE_MISSING'}
     db = None
+    deadline = None
     try:
         db = sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True, timeout=0.2)
         deadline = time.monotonic() + 0.2
@@ -276,10 +335,13 @@ def _join_objective_ids(root, activity):
             elif len(parents) > 1:
                 task['task_id_status'] = 'OBJECTIVE_JOIN_AMBIGUOUS'
     except (OSError, sqlite3.Error, TypeError, ValueError):
-        pass
+        return ({'status': 'TIME_BUDGET_EXCEEDED', 'reason': 'OBJECTIVE_JOIN_TIME_BUDGET_EXCEEDED'}
+                if deadline is not None and time.monotonic() >= deadline
+                else {'status': 'UNAVAILABLE', 'reason': 'OBJECTIVE_JOIN_STORE_ERROR'})
     finally:
         if db is not None:
             db.close()
+    return {'status': 'OBSERVED', 'reason': None}
 
 
 def execution_configuration():
@@ -366,7 +428,7 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
     from .coaching_observation import coaching_snapshot
     from .observability_health import operational_health_snapshot
     coaching = coaching_snapshot(Path(os.getenv('ORQEVIA_DATA_DIR','/data')))
-    activity = agent_activity()
+    activity, journal = compute_journal_observation()
     model_runtime = model_runtime_probe or model_runtime_readiness()
     instance = os.getenv('ORQEVIA_INTERFACE_HOST_ID', 'UNKNOWN')
     revision = os.getenv('ORQEVIA_INTERFACE_RUNTIME_REVISION', 'UNKNOWN')
@@ -427,10 +489,12 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
     ready = sum(item['readiness_status'] == 'CONFIRMED' for item in agents) if readiness_observed else None
     metrics.append(metric('observed_agents', observed_count,
                           'OBSERVED' if observed_count is not None else 'UNAVAILABLE',
-                          'compute-queue'))
+                          'compute-queue',
+                          reason=None if observed_count is not None else journal['reason']))
     metrics.append(metric('fresh_agents', fresh_count,
                           'OBSERVED' if fresh_count is not None else 'UNAVAILABLE',
-                          'compute-queue'))
+                          'compute-queue',
+                          reason=None if fresh_count is not None else journal['reason']))
     metrics.append(metric('ready_agents', ready,
                           'OBSERVED' if ready is not None else 'UNAVAILABLE',
                           'agent-registry+compute-queue+model-runtime'))
@@ -459,12 +523,15 @@ def snapshot(client_id, role, *, model_runtime_probe=None, work_observation=None
             'execution_configuration': configuration,
             'queue_freshness': {
                 'status': 'OBSERVED' if fresh_count is not None else 'UNAVAILABLE',
+                'journal_status': journal['status'],
+                'reason': None if activity is not None else journal['reason'],
                 'max_age_seconds': max_age_seconds,
                 'fresh_agent_count': fresh_count,
                 'not_fresh_agent_count': len(not_fresh_agent_ids) if fresh_count is not None else None,
                 'not_fresh_agent_ids': not_fresh_agent_ids,
                 'rule': 'latest actual task transition must have an explicit timezone, be within max age, and no more than five seconds in the future; failures count as activity, never confirmed readiness',
             },
+            'compute_journal': journal,
             'model_runtime': model_runtime,
             **operational_health_snapshot(),
             'agents': agents,

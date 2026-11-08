@@ -1,3 +1,5 @@
+import sqlite3
+
 from app.agent_runtime import AgentAuthorityError, AgentAuthorityRuntime
 from app.agent_registry import RegistryError, canonical_agent_id
 
@@ -35,6 +37,17 @@ def test_cross_domain_handoff_is_direct_and_unknown_identity_is_denied_and_audit
     rt = runtime(tmp_path)
     assert rt.handoff(source='a15', target='a07')['allowed'] is True
     assert_raises(AgentAuthorityError, lambda: rt.handoff(source='a15', target='invented'))
+    event = rt.recent(1)[0]
+    assert event['status'] == 'denied'
+    assert event['allowed'] == 0
+
+
+def test_recent_handoff_ordering_breaks_timestamp_ties_by_insertion(tmp_path):
+    rt = runtime(tmp_path)
+    rt.handoff(source='a15', target='a07')
+    assert_raises(AgentAuthorityError, lambda: rt.handoff(source='a15', target='invented'))
+    with sqlite3.connect(tmp_path / 'agent-authority.db') as db:
+        db.execute("UPDATE agent_authority_events SET timestamp='2026-01-01T00:00:00+00:00'")
     event = rt.recent(1)[0]
     assert event['status'] == 'denied'
     assert event['allowed'] == 0
