@@ -11,7 +11,9 @@
 [Public walkthrough](https://authority-engine-app.vercel.app/orqevia) ·
 [Architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) ·
 [Current status](STATUS.md) ·
+[Issues](https://github.com/AndrewLamSingapore/orqevia/issues) ·
 [Discussions](https://github.com/AndrewLamSingapore/orqevia/discussions) ·
+[Wiki](https://github.com/AndrewLamSingapore/orqevia/wiki) ·
 [Contact](https://authority-engine-app.vercel.app/contact?source=orqevia&intent=collaboration)
 
 ![MIT license](https://img.shields.io/badge/license-MIT-2E8B57?style=flat-square)
