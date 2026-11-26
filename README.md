@@ -10,7 +10,7 @@
 
 [Public walkthrough](https://authority-engine-app.vercel.app/orqevia) ·
 [Architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) ·
-[Current status](STATUS.md) ·
+[Current source state](ORQEVIA-CURRENT-STATE.md) ·
 [Issues](https://github.com/AndrewLamSingapore/orqevia/issues) ·
 [Discussions](https://github.com/AndrewLamSingapore/orqevia/discussions) ·
 [Wiki](https://github.com/AndrewLamSingapore/orqevia/wiki) ·
@@ -54,9 +54,9 @@ have been superseded by the Owner mission.
 | --- | --- |
 | Explore the product | [Public walkthrough](https://authority-engine-app.vercel.app/orqevia); the operational workspace requires authenticated access |
 | Understand the source | [System map](#system-map), [architecture](docs/TOTAL-INTEGRATION-ARCHITECTURE.md) and [PWA guide](clients/pwa/README.md) |
-| Inspect evidence | [Dated status claims](STATUS.md) and [local verification](#local-verification); source and CI do not establish current deployment |
+| Inspect evidence | [Source state and status pointers](STATUS.md) and [local verification](#local-verification); source and CI do not establish current deployment |
 
-[Browse all six projects and their source](https://github.com/AndrewLamSingapore/AndrewLamSingapore#selected-work) · [About Andrew](https://authority-engine-app.vercel.app/about)
+[Browse the project and source directory](https://github.com/AndrewLamSingapore/AndrewLamSingapore#selected-work) · [About Andrew](https://authority-engine-app.vercel.app/about)
 
 ## What makes it different
 
@@ -104,10 +104,8 @@ Owner / trusted device
 
 - [Authority Engine](https://authority-engine-app.vercel.app/) — public
   operations-intelligence portfolio and evidence hub.
-- [VELYQUA](https://velyqua.vercel.app/) — software-first living-water
-  intelligence.
-- [The Portal](https://the-portal-ten.vercel.app/) — discovery and
-  knowledge-graph experiment.
+- [VELYQUA product website](https://velyqua-website.vercel.app/) and [application](https://velyqua.vercel.app/) — software-first living-water intelligence with clearly labelled research goals.
+- [The Portal](https://the-portal-ten.vercel.app/) — guided solo discovery, collective discussion rooms and an open intelligence Observatory.
 - [Living Worlds](https://game-platform-wine-nine.vercel.app/) — governed,
   persistent world simulation.
 - [The Sky Tablet](https://sky-tablet.vercel.app/) — Mesopotamian astronomy and
@@ -115,10 +113,9 @@ Owner / trusted device
 
 ## Trust and evidence
 
-`STATUS.md` records dated portfolio claims and evidence classification. The
+`STATUS.md` points to [the current source state](ORQEVIA-CURRENT-STATE.md). Earlier portfolio status records are preserved as history. The
 [operational manifest](https://github.com/AndrewLamSingapore/orqevia/blob/main/governance/operational-manifest.json) and
-[channel contract](governance/CHANNEL_CONTRACT.md) are machine-readable
-architecture references; neither substitutes for an observed runtime receipt.
+[channel contract](governance/CHANNEL_CONTRACT.md) are dated component and reading references; neither selects current architecture nor substitutes for an observed runtime receipt.
 Historical, synthetic and live evidence remain explicitly separated.
 
 Credentials, production data and provider entitlements stay external to source

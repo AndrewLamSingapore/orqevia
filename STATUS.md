@@ -15,3 +15,7 @@ rollback evidence. The wallet audit remains read-only; REA and MiroFish remain e
 Earlier portfolio status text is retained byte-for-byte in
 `docs/history/status-authority-retirement-20261106/STATUS.md.txt`.
 It is dated evidence, not current architecture or a pause instruction.
+
+## Public profile maintenance · 26 November 2026
+
+The public README now follows the current source-state pointer and links the VELYQUA product website and current Portal experience. This is documentation maintenance; private runtime identity and acceptance were not reverified.
